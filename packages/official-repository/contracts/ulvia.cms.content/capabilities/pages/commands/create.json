@@ -145,5 +145,6 @@
                 "description": "Create a Page draft at a site path. Use installed Blocs from the editor catalogue; publication is a separate action."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "pages/create-and-publish.md", "pages/verify.md", "pages/revisions.md"]
 }

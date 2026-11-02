@@ -193,5 +193,6 @@
                 "description": "Resume one durable site contract release switch."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

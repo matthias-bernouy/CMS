@@ -147,5 +147,6 @@
                 "description": "Rename an existing Page using its current expectedRevision."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "pages/create-and-publish.md", "pages/verify.md", "pages/revisions.md"]
 }

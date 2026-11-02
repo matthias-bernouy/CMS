@@ -198,5 +198,6 @@
                 "description": "Update site-owned configuration for an installed collection using the current installation expectedRevision."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

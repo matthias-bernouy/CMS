@@ -99,5 +99,6 @@
                 "description": "Read the private source snapshot of a collection owned by this instance publication identity."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "collection-authoring.md", "collection-source.md"]
 }

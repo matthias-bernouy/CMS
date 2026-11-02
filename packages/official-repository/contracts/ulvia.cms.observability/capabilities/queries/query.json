@@ -263,5 +263,6 @@
                 "description": "Search this instance’s retained application logs. Narrow the time window, level, service, event or trace before reading. Follow nextCursor with the same filters; use observability_logs_get for entry details."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

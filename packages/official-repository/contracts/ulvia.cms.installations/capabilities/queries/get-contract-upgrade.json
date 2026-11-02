@@ -160,5 +160,6 @@
                 "description": "Read the state of one site contract release switch."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

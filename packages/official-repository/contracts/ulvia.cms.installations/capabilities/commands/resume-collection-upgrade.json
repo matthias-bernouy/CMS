@@ -160,5 +160,6 @@
                 "description": "resume collection upgrade"
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

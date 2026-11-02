@@ -143,5 +143,6 @@
                 }
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "site-files.md"]
 }

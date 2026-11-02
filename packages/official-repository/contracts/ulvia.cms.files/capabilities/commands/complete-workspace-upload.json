@@ -124,8 +124,9 @@
             "transport": "mcp",
             "tool": {
                 "name": "files_workspace_upload_complete",
-                "description": "Finalize a completed byte upload and return the current site file listing. Upload all bytes before calling this tool."
+                "description": "Finalize a completed byte upload. Success returns null; read workspace.get afterward for the file ID and immutable generation. Upload all bytes before calling this tool."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "site-files.md"]
 }

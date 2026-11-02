@@ -254,5 +254,6 @@
                 "description": "Atomically apply a current reviewed selection and grant plan without editing site content."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

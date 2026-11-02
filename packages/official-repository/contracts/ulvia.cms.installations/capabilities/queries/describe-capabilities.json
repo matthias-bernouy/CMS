@@ -50,6 +50,14 @@
                         },
                         "sensitive": {
                             "type": "boolean"
+                        },
+                        "docs": {
+                            "type": "array",
+                            "maxItems": 16,
+                            "items": {
+                                "type": "string",
+                                "maxLength": 256
+                            }
                         }
                     },
                     "required": ["id", "access", "effect", "sensitive"]
@@ -92,5 +100,6 @@
                 }
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

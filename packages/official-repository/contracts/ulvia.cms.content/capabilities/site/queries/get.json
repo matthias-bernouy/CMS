@@ -74,5 +74,6 @@
                 "description": "Read this instance’s site settings and current revision before updating them."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

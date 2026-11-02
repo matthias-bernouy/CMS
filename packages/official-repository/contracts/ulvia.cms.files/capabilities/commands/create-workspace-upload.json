@@ -165,5 +165,6 @@
                 "description": "Start a file upload in this instance. Send the raw bytes to the returned uploadUrl with the MCP bearer and Upload-Token, then complete the upload."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "site-files.md"]
 }

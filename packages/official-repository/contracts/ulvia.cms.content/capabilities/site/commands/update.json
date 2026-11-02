@@ -144,5 +144,6 @@
                 "description": "Update site name, host or visibility using the current settings expectedRevision."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

@@ -173,5 +173,6 @@
                 "description": "Publish the current revision of a site-local content Bloc."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

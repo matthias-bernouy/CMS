@@ -100,5 +100,6 @@
                 "description": "Make one site file public or private without replacing its bytes."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "site-files.md"]
 }

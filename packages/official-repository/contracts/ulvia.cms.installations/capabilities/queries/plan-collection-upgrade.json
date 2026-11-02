@@ -367,5 +367,6 @@
                 "description": "plan collection upgrade"
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

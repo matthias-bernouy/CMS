@@ -138,5 +138,6 @@
                 "description": "Validate and build a complete collection source snapshot before publishing. Read ulvia://cms/collection-authoring for the source format."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "collection-authoring.md", "collection-source.md"]
 }

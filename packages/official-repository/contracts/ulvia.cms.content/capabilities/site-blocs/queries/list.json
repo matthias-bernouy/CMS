@@ -120,5 +120,6 @@
                 "description": "List this site’s local reusable content Blocs. Use Repository tools to author distributable collection Blocs."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

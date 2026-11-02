@@ -122,5 +122,6 @@
                 "description": "List this instance’s asynchronous operations, including site upgrade progress."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

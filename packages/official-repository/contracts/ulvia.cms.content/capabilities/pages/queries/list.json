@@ -109,5 +109,6 @@
                 "description": "Find this site’s Pages by text or visibility. Follow the returned cursor and read a Page before changing it."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "pages/create-and-publish.md", "pages/verify.md", "pages/revisions.md"]
 }

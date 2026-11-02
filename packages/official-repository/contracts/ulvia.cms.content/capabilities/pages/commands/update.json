@@ -179,5 +179,6 @@
                 "description": "Update selected Page fields using its current expectedRevision. Fetch the Page again after a revision conflict."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "pages/create-and-publish.md", "pages/verify.md", "pages/revisions.md"]
 }

@@ -95,5 +95,6 @@
                 "description": "Delete a file from this instance’s managed storage. Verify the fileId before calling."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "site-files.md"]
 }

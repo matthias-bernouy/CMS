@@ -246,5 +246,6 @@
                 "description": "apply collection upgrade"
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

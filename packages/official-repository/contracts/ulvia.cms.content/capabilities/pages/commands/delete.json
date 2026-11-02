@@ -128,5 +128,6 @@
                 "description": "Delete a Page using its current expectedRevision. Read the Page first to verify the target."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "pages/create-and-publish.md", "pages/verify.md", "pages/revisions.md"]
 }

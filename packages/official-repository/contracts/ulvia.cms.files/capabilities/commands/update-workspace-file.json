@@ -100,5 +100,6 @@
                 "description": "Rename one file in this instance without changing its immutable bytes."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "site-files.md"]
 }

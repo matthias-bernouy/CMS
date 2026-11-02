@@ -171,5 +171,6 @@
                 "description": "Override one installed collection text on this site for one locale. This does not modify the collection release."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

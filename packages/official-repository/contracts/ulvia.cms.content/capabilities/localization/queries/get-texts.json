@@ -180,5 +180,6 @@
                 "description": "Read installed collection texts and their site overrides, optionally filtered by locale, group or search."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

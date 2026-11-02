@@ -117,5 +117,6 @@
                 "description": "Read the installed Bloc catalogue, settings and composition rules before writing Page content."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "pages/create-and-publish.md", "pages/verify.md", "pages/revisions.md"]
 }

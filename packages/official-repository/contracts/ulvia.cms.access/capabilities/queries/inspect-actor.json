@@ -76,5 +76,6 @@
                 "body": true
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

@@ -83,5 +83,6 @@
                 "description": "Read the site’s language configuration and current revision."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

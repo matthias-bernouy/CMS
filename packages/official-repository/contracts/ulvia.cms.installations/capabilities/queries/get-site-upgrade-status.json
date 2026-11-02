@@ -85,5 +85,6 @@
                 "description": "get collection upgrade status"
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

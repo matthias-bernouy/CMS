@@ -89,5 +89,6 @@
                 "description": "Read a generic example document. Its HTML can be edited and submitted as ordinary Page content; no link to the example is stored."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

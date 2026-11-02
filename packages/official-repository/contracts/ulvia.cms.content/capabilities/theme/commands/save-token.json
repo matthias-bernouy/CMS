@@ -165,5 +165,6 @@
                 "description": "Override one theme token on this site using the current expectedRevision. The collection release is unchanged."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

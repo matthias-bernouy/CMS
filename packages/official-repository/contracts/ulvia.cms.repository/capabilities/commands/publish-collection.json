@@ -113,5 +113,6 @@
                 "description": "Publish the exact prepared collection digest and retain its private sources in the Repository. This does not install the release on the site."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "collection-authoring.md"]
 }

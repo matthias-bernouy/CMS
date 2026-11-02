@@ -172,5 +172,6 @@
                 "description": "Read one asynchronous operation until it succeeds or fails. Use this after a site upgrade command."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

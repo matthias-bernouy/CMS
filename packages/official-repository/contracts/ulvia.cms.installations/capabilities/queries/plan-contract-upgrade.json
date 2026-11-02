@@ -574,5 +574,6 @@
                 "description": "Review exact site contract selections and capability grants against actual consumers and currently served releases. An optional single selection is merged with the current graph; full selections support coordinated changes."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

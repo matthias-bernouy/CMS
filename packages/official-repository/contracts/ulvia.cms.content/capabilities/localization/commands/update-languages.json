@@ -164,5 +164,6 @@
                 "description": "Change the primary, additional and active site languages using the current expectedRevision."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

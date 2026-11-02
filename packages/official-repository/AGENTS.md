@@ -4,6 +4,12 @@
 - Publish contracts before manifests or collections that reference them.
 - Do not add environment reads, listeners, persistence adapters or runtime code.
 - Provider implementations belong outside this directory.
+- Author contract documentation as UTF-8 Markdown below `docs/`, with exactly
+  one top-level H1 per document. Relative paths identify documents. Capabilities
+  link local documents with `docs: ["relative/path.md"]`; do not author a
+  `documentation` manifest, frontmatter IDs or a separate workflow registry.
+  Keep procedures factual and distinguish contract guarantees, Provider rules
+  and checks requiring an external browser tool.
 - Generic examples and protocol fixtures belong with the feature that tests them.
 - Keep contract metadata in `definition.json`, one capability per recursive
   `capabilities/**/*.json` fragment, and one optional mock per recursive

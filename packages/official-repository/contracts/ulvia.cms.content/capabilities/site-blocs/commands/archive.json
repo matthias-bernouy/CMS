@@ -173,5 +173,6 @@
                 "description": "Archive a site-local content Bloc using its current revision."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

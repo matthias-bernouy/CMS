@@ -85,5 +85,6 @@
                 "description": "Discard one local unpublished collection preparation. Published Repository releases are preserved."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "collection-authoring.md"]
 }

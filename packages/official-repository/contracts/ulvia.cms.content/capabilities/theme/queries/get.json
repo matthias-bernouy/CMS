@@ -269,5 +269,6 @@
                 "description": "Read an installed collection’s theme, available modes, tokens and current site values."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

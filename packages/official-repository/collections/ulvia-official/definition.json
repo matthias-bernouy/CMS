@@ -735,7 +735,7 @@
                                 "$capabilityOutput": {
                                     "contractId": "ulvia.cms.installations",
                                     "version": "1.0.0",
-                                    "digest": "sha256:cfb6892bba3bdfff585a75ad20191d129d71c1b1de5ccdd71de6b49e65f9115e",
+                                    "digest": "sha256:0cd659b4cda1e6e2838ca1fd5b64f233cc192da23da3bb63dbde310e0ce143d4",
                                     "capabilityId": "preview-provider-connection"
                                 }
                             }

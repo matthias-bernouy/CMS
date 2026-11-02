@@ -167,5 +167,6 @@
                 "description": "List descriptions and viewport frames of examples in one installed collection. Read one document with examples.get."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

@@ -117,5 +117,6 @@
                 "description": "Claim a namespace using this instance signing identity. Existing ownership is preserved."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "collection-authoring.md"]
 }

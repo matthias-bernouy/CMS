@@ -195,5 +195,6 @@
                 "description": "Read an installed collection, its configuration and the current site installation revision."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

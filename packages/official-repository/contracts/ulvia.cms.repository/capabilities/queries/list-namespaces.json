@@ -130,5 +130,6 @@
                 "description": "List remembered namespaces and verify current ownership live. Follow nextCursor; cached inventory never grants publication rights."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "collection-authoring.md"]
 }

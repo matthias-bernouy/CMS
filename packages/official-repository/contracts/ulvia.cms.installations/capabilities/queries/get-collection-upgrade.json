@@ -127,5 +127,6 @@
                 "description": "get collection upgrade"
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

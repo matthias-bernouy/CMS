@@ -112,5 +112,6 @@
                 "description": "Remember an existing namespace owned by this instance signing key. No claim or key transfer is performed."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "collection-authoring.md"]
 }

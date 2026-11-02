@@ -160,5 +160,6 @@
                 "description": "Reset one site theme-token override to its collection default using the current expectedRevision."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

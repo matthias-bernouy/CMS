@@ -257,5 +257,6 @@
                 "description": "List releases from the configured Repositories, their browser-risk digests and whether they can be installed or upgraded."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

@@ -195,5 +195,6 @@
                 "description": "Read one retained log entry from this instance using an exact id returned by observability_logs_query. Returns bounded attributes and sanitized error details."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

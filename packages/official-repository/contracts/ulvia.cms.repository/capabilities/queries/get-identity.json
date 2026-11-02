@@ -77,5 +77,6 @@
                 "description": "Read this instance publication public key; private keys remain in the host secret store."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "collection-authoring.md"]
 }

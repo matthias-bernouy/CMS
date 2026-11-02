@@ -115,5 +115,6 @@
                 "description": "Create an expiring download URL for one exact file generation. This does not make a private file public."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "site-files.md"]
 }

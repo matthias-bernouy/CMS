@@ -110,5 +110,6 @@
                 "errorStatuses": {}
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

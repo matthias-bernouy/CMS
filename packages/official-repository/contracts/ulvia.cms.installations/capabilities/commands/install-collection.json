@@ -283,5 +283,6 @@
                 "description": "Install exact collection releases on this site. Supply their digests, approved browser-risk digests and current installation expectedRevision."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md"]
 }

@@ -145,5 +145,6 @@
                 "description": "Publish or hide an existing Page using its current expectedRevision and the visible flag."
             }
         }
-    ]
+    ],
+    "docs": ["overview.md", "pages/create-and-publish.md", "pages/verify.md", "pages/revisions.md"]
 }
