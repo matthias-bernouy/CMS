@@ -28,7 +28,10 @@ test("CMS OAuth discovery, consent, authenticated tools and resources use one cl
                 body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
             })
         ).json()) as { result: any };
-    expect((await rpc("initialize")).result.capabilities).toEqual({ tools: {}, resources: {} });
+    const initialized = (await rpc("initialize")).result;
+    expect(initialized.capabilities).toEqual({ tools: {}, resources: {} });
+    expect(initialized.instructions).toContain("documentation.search");
+    expect(initialized.instructions).not.toContain('"releaseDigest"');
     const tools = (await rpc("tools/list")).result.tools;
     expect(tools).toHaveLength(2);
     expect(tools[0].outputSchema.type).toBe("object");

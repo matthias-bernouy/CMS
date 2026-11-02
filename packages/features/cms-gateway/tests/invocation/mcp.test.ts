@@ -102,5 +102,50 @@ test("MCP HTTP validates origin, media negotiation, methods and protocol version
     expect(await initialized.json()).toMatchObject({
         result: { protocolVersion: "2025-11-25", capabilities: { tools: {} } },
     });
+    expect(await (await handle(request("initialize"))).json()).not.toHaveProperty("result.instructions");
     expect(await (await handle(request("unsupported"))).json()).toMatchObject({ error: { code: -32601 } });
+});
+
+test("MCP initialization transmits host instructions only after authentication and only during initialize", async () => {
+    const { binding } = await fixture();
+    let authenticated = false;
+    let resolutions = 0;
+    const options = {
+        binding,
+        allowedOrigins: [],
+        serverInfo: { name: "test", version: "1.0.0" },
+        resolveContext: async () => {
+            if (!authenticated) {
+                throw new Error("Unauthenticated");
+            }
+            return context;
+        },
+    };
+    const handle = createCapabilityMcpHttpHandler({
+        ...options,
+        instructions: async (actual) => {
+            expect(actual).toEqual(context);
+            resolutions++;
+            return "Read the selected guide.";
+        },
+    });
+    const request = (method = "initialize") =>
+        new Request("https://cms.test/mcp", {
+            method: "POST",
+            headers: {
+                Accept: "application/json, text/event-stream",
+                "Content-Type": "application/json",
+                "MCP-Protocol-Version": "2025-11-25",
+            },
+            body: JSON.stringify({ jsonrpc: "2.0", id: 1, method }),
+        });
+    expect(await (await handle(request())).json()).toHaveProperty("error");
+    expect(resolutions).toBe(0);
+    authenticated = true;
+    expect(await (await handle(request())).json()).toHaveProperty("result.instructions", "Read the selected guide.");
+    await handle(request("ping"));
+    await handle(request("tools/list"));
+    expect(resolutions).toBe(1);
+    const fixed = createCapabilityMcpHttpHandler({ ...options, instructions: "Fixed instructions." });
+    expect(await (await fixed(request())).json()).toHaveProperty("result.instructions", "Fixed instructions.");
 });

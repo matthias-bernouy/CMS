@@ -7,7 +7,7 @@ import type { InstallationsProviderTransport } from "./InstallationsProviderTran
 export const INSTALLATIONS_CONTRACT = {
     contractId: "ulvia.cms.installations",
     version: "1.0.0",
-    digest: "sha256:0cd659b4cda1e6e2838ca1fd5b64f233cc192da23da3bb63dbde310e0ce143d4",
+    digest: "sha256:633e76b7944ece8618602ce20d78ebbeb0f517e632bc40556aec91ccd36d6fa1",
 } as const;
 
 export type InstallationsControlContract = Readonly<{ contractId: string; version: string; digest: string }>;

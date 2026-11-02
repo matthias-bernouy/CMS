@@ -4,6 +4,8 @@ Selected contracts, approved Providers, installed collections, upgrades and oper
 
 ## Before using this contract
 
+For an introduction to Ulvia concepts, documentation discovery and verification, read [Working with Ulvia](working-with-ulvia.md).
+
 Use the exact contract selected on the site. Discover the available tool schemas before calling capabilities; a documentation link does not grant execution rights. Capabilities without an MCP binding are not MCP tools. Inherited capabilities retain their declaring contract and exact parent release.
 
 ## Capabilities

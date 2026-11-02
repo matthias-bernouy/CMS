@@ -70,6 +70,36 @@ test("HTTP and MCP expose exact selected documentation with discoverable lightwe
     });
     expect([400, 422]).toContain(injected.status);
     expect(reads).toBe(before);
+    const onboarding = await binding.call(
+        "installations_documentation_search",
+        {
+            input: { query: "Working with Ulvia", contractId: admission.release.contractId, limit: 10 },
+        },
+        actor,
+    );
+    const guides = (
+        onboarding.structuredContent as {
+            output: { results: { reference: { contractId: string; releaseDigest: string; path: string } }[] };
+        }
+    ).output.results;
+    const guide = guides.find((item) => item.reference.path === "working-with-ulvia.md");
+    expect(guide?.reference).toEqual({
+        contractId: admission.release.contractId,
+        releaseDigest: admission.digest,
+        path: "working-with-ulvia.md",
+    });
+    const introduction = await binding.call(
+        "installations_documentation_get",
+        { input: { reference: guide!.reference } },
+        actor,
+    );
+    expect(introduction.structuredContent).toMatchObject({
+        output: {
+            reference: guide!.reference,
+            content: expect.stringContaining("# Working with Ulvia"),
+            nextOffset: null,
+        },
+    });
 });
 
 test("a live authorization refusal cannot read or index documentation", async () => {

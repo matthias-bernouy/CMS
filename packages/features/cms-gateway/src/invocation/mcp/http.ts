@@ -14,6 +14,7 @@ export function createCapabilityMcpHttpHandler(options: {
     resolveContext(request: Request): Promise<McpInvocationContext>;
     allowedOrigins: readonly string[];
     serverInfo: { name: string; version: string };
+    instructions?: string | ((context: McpInvocationContext) => Promise<string | undefined>);
 }) {
     return async (request: Request): Promise<Response> => {
         const origin = request.headers.get("origin");
@@ -85,6 +86,14 @@ export function createCapabilityMcpHttpHandler(options: {
                         protocolVersion: MCP_PROTOCOL_VERSION,
                         capabilities: { tools: {}, ...(options.resources ? { resources: {} } : {}) },
                         serverInfo: options.serverInfo,
+                        ...(options.instructions !== undefined
+                            ? {
+                                  instructions:
+                                      typeof options.instructions === "function"
+                                          ? await options.instructions(context)
+                                          : options.instructions,
+                              }
+                            : {}),
                     };
                     break;
                 case "ping":

@@ -5,6 +5,7 @@ import type { McpInvocationContext } from "@bernouy/cms-gateway/mcp";
 import { authorizationPage, connectionsPage } from "./pages";
 import { accessCall, mcpActor, boundedText, form, json, McpHttpError, type CmsMcpHost } from "./protocol";
 import { createAuthoringResources } from "./resources";
+import { cmsMcpInstructions } from "./instructions";
 
 export function createCmsMcpHandler(
     host: CmsMcpHost & {
@@ -23,6 +24,7 @@ export function createCmsMcpHandler(
         binding,
         allowedOrigins: [origin],
         serverInfo: { name: "ulvia-cms", version: "1.0.0" },
+        instructions: (context) => cmsMcpInstructions(host, context),
         resources: createAuthoringResources(host),
         resolveContext: async (request) => {
             const bearer = request.headers.get("authorization");

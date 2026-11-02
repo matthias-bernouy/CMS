@@ -45,6 +45,17 @@ though metadata-only admission is available for discovery and stored records.
 
 ## Agent discovery and use
 
+The CMS Edge supplies English `instructions` in the authenticated MCP
+`initialize` response. They explain when to search and how to read guides.
+When the selected `ulvia.cms.installations` release contains
+`working-with-ulvia.md` and an MCP binding for `documentation.get`, the response
+includes the actual reading tool name and arguments with that release's digest.
+Initialization resolves only contract metadata; it does not read or index the
+guide. Missing guides omit the direct reference. Clients decide how to present
+server instructions to their agent; tool-linked references remain available.
+The generic Gateway transport accepts host instructions without Ulvia-specific
+content. Simple operations with clear schemas do not require repeated searches.
+
 `ulvia.cms.installations` exposes administrator capabilities
 `documentation.search` and `documentation.get`, with HTTP QUERY bindings at
 `/documentation/search` and `/documentation/get` and MCP tools

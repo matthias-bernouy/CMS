@@ -101,6 +101,12 @@ an error rather than returning stale ownership as current access.
 
 ## Files and context
 
+Authenticated MCP initialization returns short English server instructions and,
+when available in the selected Installations release, an exact reference and
+reading-tool call for the "Working with Ulvia" guide. This uses the existing
+documentation tools; it does not add a tool per guide. The guide introduces
+concepts, goal-based searches, cross-contract workflows and verification.
+
 The instance Files workspace supports listing, upload creation/completion,
 delete and signed downloads. `workspace.upload.create` returns an `uploadUrl`:
 PUT raw bytes there using the MCP Bearer credential and `Upload-Token`, then

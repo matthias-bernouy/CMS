@@ -2,6 +2,8 @@
 
 Documentation belongs to exact immutable contract releases. Paths identify documents within their declaring contract; directories do not define document types.
 
+Start with [Working with Ulvia](working-with-ulvia.md) for concepts, example searches and cross-contract workflows.
+
 ## Search naturally
 
 Use `documentation.search` with the question you need answered, including relevant capability names or error codes when known. You do not need to know the owning contract. Optional contract and capability filters narrow the search. Hybrid ranking combines exact terminology with multilingual semantic similarity. `mode: lexical` and `degraded: true` mean semantic retrieval was unavailable; do not interpret that as proof that no relevant document exists.
