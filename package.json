@@ -39,7 +39,9 @@
         "test:edge-smoke": "bun run generate:official-bootstrap && ULVIA_RUN_EDGE_SMOKE=1 bun test packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts",
         "generate:official-bootstrap": "bun run --cwd packages/runtimes/ulvia-cli generate:bootstrap",
         "check:ui-contracts": "bun run quality/ui-contracts/check.ts",
-        "test:performance:delivery": "bun run tests/performance/delivery/run.ts"
+        "test:performance:delivery": "bun run tests/performance/delivery/run.ts",
+        "test:documentation:agent": "bun run tests/integration/instance/documentation/evaluation/host.ts",
+        "test:documentation:client": "bun run tests/integration/instance/documentation/evaluation/client.ts"
     },
     "devDependencies": {
         "@bernouy/binary-media": "workspace:*",

@@ -8,8 +8,8 @@ contracts and invokes their Provider implementations through the Gateway and
 HTTP. Remote selected capabilities exposed through MCP must also declare an
 HTTP binding. Tool arguments cannot supply a site identity or trusted actor.
 
-The current official profile exposes 63 tools: 28 Content operations, seven
-Files workspace operations, 17 collection installation/operation operations,
+The current official profile exposes 65 tools: 28 Content operations, seven
+Files workspace operations, 19 collection installation/operation and documentation operations,
 eight Repository authoring operations and three administrator observability
 reads (`logs.query`, `logs.get`, `logs.aggregate`). Account administration,
 Provider control, Secrets, Emailer, global file namespaces, log ingestion and
@@ -112,6 +112,11 @@ Four read-only MCP resources provide current context:
 `ulvia://cms/collection-authoring`, `ulvia://cms/installed-collections` and
 `ulvia://cms/site-files` and `ulvia://cms/repository-namespaces`. The installed collection and namespace resources are dynamic; follow the tool
 cursors to read later pages.
+The two Markdown guides now come from the selected contract releases, through
+`documentation.get`. Tools retain normal discovery and link exact documents in
+metadata. See [contract documentation](contract-documentation.md) for hybrid
+search, authoring and model operation.
+
 Prompts, packaged skills, persistent source workspaces, previews and a generic
 asset/context manifest are deferred. Contract and Provider source authoring
 remain CLI workflows; the new instance authoring tools focus on collections.

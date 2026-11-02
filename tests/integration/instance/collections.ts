@@ -4,7 +4,7 @@ import { exerciseCollectionCatalogue, observeRepositoryCall } from "./collection
 
 type Call = (contract: string, capability: string, input?: Record<string, unknown>) => Promise<any>;
 
-function snapshot(namespace: string, macroMarker?: string) {
+export function collectionSnapshot(namespace: string, macroMarker?: string) {
     const files = [
         {
             path: "definition.json",
@@ -75,11 +75,13 @@ export async function exerciseCollections(invoke: Call, namespace: string, provi
     await call("ulvia.cms.repository", "claim-namespace", { namespace });
     const marker = `/tmp/${namespace}-macro-must-not-run`;
     const rejected = await call("ulvia.cms.repository", "prepare-collection", {
-        sourceJson: snapshot(namespace, marker),
+        sourceJson: collectionSnapshot(namespace, marker),
     });
     expect(rejected.valid).toBe(false);
     expect((await docker(["exec", providerName, "test", "-e", marker], true)).code).not.toBe(0);
-    const prepared = await call("ulvia.cms.repository", "prepare-collection", { sourceJson: snapshot(namespace) });
+    const prepared = await call("ulvia.cms.repository", "prepare-collection", {
+        sourceJson: collectionSnapshot(namespace),
+    });
     expect(prepared.valid).toBe(true);
     const published = await call("ulvia.cms.repository", "publish-collection", {
         preparationId: prepared.preparationId,

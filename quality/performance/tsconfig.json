@@ -75,6 +75,9 @@
             ],
             "ulvia-provider/*": [
                 "../../packages/surfaces/ulvia-provider/src/*"
+            ],
+            "cms-documentation/*": [
+                "../../packages/features/cms-documentation/src/*"
             ]
         }
     },
@@ -83,6 +86,7 @@
         "../../tests/performance/delivery/**/*.ts",
         "../../tests/integration/instance/performance/**/*.ts",
         "../../tests/integration/instance/performance.docker.test.ts",
-        "../../tests/integration/instance/freshness.docker.test.ts"
+        "../../tests/integration/instance/freshness.docker.test.ts",
+        "../../tests/integration/instance/documentation/**/*.ts"
     ]
 }

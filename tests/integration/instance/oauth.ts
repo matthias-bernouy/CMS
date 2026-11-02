@@ -2,13 +2,18 @@ import { expect } from "bun:test";
 import { randomBytes, createHash } from "node:crypto";
 import { chromium } from "playwright";
 
-export async function connectBrowser(cmsUrl: string, administrator: { email: string; password: string }) {
+export async function connectBrowser(
+    cmsUrl: string,
+    administrator: { email: string; password: string },
+    browserOptions: { executablePath?: string } = {},
+) {
     const resource = `${cmsUrl}/.cms/mcp`;
+    const clientName = `Local MCP regression client ${randomBytes(6).toString("hex")}`;
     const callback = `http://localhost:${new URL(cmsUrl).port}/mcp-test-callback`;
     const registration = await fetch(`${cmsUrl}/.cms/oauth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client_name: "Local MCP regression client", redirect_uris: [callback] }),
+        body: JSON.stringify({ client_name: clientName, redirect_uris: [callback] }),
     });
     expect(registration.status).toBe(201);
     const client = (await registration.json()) as { client_id: string };
@@ -24,7 +29,7 @@ export async function connectBrowser(cmsUrl: string, administrator: { email: str
         scope: "cms:full",
         state,
     });
-    const browser = await chromium.launch({ headless: true });
+    const browser = await chromium.launch({ headless: true, ...browserOptions });
     const events: string[] = [];
     let currentPage: Awaited<ReturnType<typeof browser.newPage>> | undefined;
     try {
@@ -79,6 +84,9 @@ export async function connectBrowser(cmsUrl: string, administrator: { email: str
                 body: JSON.stringify({ jsonrpc: "2.0", id: ++nextId, method, params }),
                 signal: AbortSignal.timeout(60_000),
             });
+            if (response.status !== 200) {
+                throw new Error(`MCP ${method} HTTP ${response.status}: ${(await response.text()).slice(0, 2048)}`);
+            }
             expect(response.status).toBe(200);
             const message = (await response.json()) as { result?: any; error?: unknown };
             if (message.error) {
@@ -86,7 +94,20 @@ export async function connectBrowser(cmsUrl: string, administrator: { email: str
             }
             return message.result;
         };
-        const catalogue = (await rpc("tools/list")) as { tools: { name: string; _meta: Record<string, string> }[] };
+        const tools: { name: string; _meta: Record<string, unknown> }[] = [];
+        let cursor: string | undefined;
+        for (let page = 0; page < 16; page++) {
+            const result = await rpc("tools/list", cursor ? { cursor } : {});
+            tools.push(...result.tools);
+            cursor = result.nextCursor;
+            if (!cursor) {
+                break;
+            }
+        }
+        if (cursor || new Set(tools.map((tool) => tool.name)).size !== tools.length) {
+            throw new Error("Invalid or excessive MCP tool catalogue");
+        }
+        const catalogue = { tools };
         const call = async (contract: string, capability: string, input: Record<string, unknown> = {}) => {
             const tool = catalogue.tools.find(
                 (tool) =>
@@ -112,7 +133,11 @@ export async function connectBrowser(cmsUrl: string, administrator: { email: str
             tools: catalogue.tools,
             async revoke() {
                 await page.goto(`${cmsUrl}/.cms/connections`);
-                await page.getByRole("button", { name: "Revoke access" }).click();
+                await page
+                    .locator("li")
+                    .filter({ hasText: clientName })
+                    .getByRole("button", { name: "Revoke access" })
+                    .click();
             },
         };
     } catch (error) {

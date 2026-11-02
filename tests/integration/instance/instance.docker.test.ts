@@ -11,6 +11,7 @@ import { exerciseObservability, verifyObservabilityPersistence } from "./observa
 import { docker, mcpContainers } from "./containers";
 import { connectBrowser } from "./oauth";
 import { exerciseCollections, exerciseContent, exerciseFiles } from "./collections";
+import { exerciseDocumentation } from "./documentation/flow";
 
 const images = {
     edge: process.env.ULVIA_MCP_EDGE_DOCKER_IMAGE,
@@ -37,7 +38,8 @@ integration(
                 "packages/runtimes/ulvia-provider-server/src/checkRetention.ts",
             ]);
             connection = await connectBrowser(f.cmsUrl, f.administrator);
-            expect(connection.tools).toHaveLength(63);
+            expect(connection.tools).toHaveLength(65);
+            await exerciseDocumentation(connection, f.cmsUrl);
             await exercisePageDelivery(connection.page, f.cmsUrl);
             await exerciseBasicPage(connection, f.cmsUrl);
             await exerciseDelegationStore(f.providerName, f.id);

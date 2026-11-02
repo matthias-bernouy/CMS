@@ -71,6 +71,9 @@ backup/restore remain [open operational work](../TODO.md).
 
 ### Repository And Gateway
 
+See [contract documentation](contract-documentation.md) for immutable Markdown,
+capability references and instance-scoped hybrid discovery over HTTP and MCP.
+
 See [Instance MCP V1](instance-mcp.md) for delegated connections, collection
 authoring and the HTTP-only Repository boundary.
 

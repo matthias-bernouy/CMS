@@ -37,6 +37,7 @@ already been published to a registry.
 
 | Package | Responsibility |
 | --- | --- |
+| `@bernouy/cms-documentation` | Selection-bound Markdown retrieval and hybrid lexical/semantic search, with explicit runtime adapters for multilingual embeddings and derived Mongo vectors. |
 | `@bernouy/cms-content` | Provider-neutral Pages, routes, Blocs, settings, themes, metadata, structured data, indexing, sitemap snapshots, rendering and generic contribution inputs. |
 | `@bernouy/cms-observability` | Instance-scoped journal validation, bounded collection, query and retention services; explicit memory and Mongo adapters. |
 | `@bernouy/cms-files` | Official provider implementation for namespaces, credentials, uploads, immutable files, private signatures and image representations. |

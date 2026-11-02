@@ -62,3 +62,36 @@ collection installation/configuration, reviewed selection-grant changes and
 Files mutations. Its helpers also run in the delivery performance journey.
 Files assertions use supported image references and fresh origin reads, not an
 undeclared SVG binding or browser-cache revocation.
+
+## Native documentation journey
+
+The opt-in native journey uses a local `mongod`, separate Provider and Edge
+processes, an isolated filesystem Repository HTTP process, and a Chromium
+browser. It signs publication of the generated bootstrap into a private
+Repository, uses temporary loopback ports and removes its files and processes.
+The test manifest authorizes only its temporary Provider origin. It does not
+exercise the production Repository's Linux `flock` ownership or Docker images.
+
+```sh
+ULVIA_RUN_DOCUMENTATION_NATIVE=1 \
+ULVIA_DOCUMENTATION_CHROMIUM="/absolute/path/to/chromium" \
+ULVIA_DOCUMENTATION_MODEL_CACHE="/absolute/path/to/populated/model-cache" \
+bun test ./tests/integration/instance/documentation
+```
+
+The Chromium and model-cache variables are optional: omitted Chromium uses
+Playwright's installed browser; omitted model cache permits a first-use model
+download. `ULVIA_DOCUMENTATION_MONGOD` may select an explicit mongod executable.
+
+The journey reads linked documentation through the real OAuth/MCP boundary,
+checks tool pagination, rejects stale and foreign-scope input, creates and
+verifies a Page, rejects a stale revision, publishes and inspects its rendered
+heading and overflow at 375 and 1280 pixels, uploads/downloads a file, restarts
+the Provider and verifies persistence, then revokes access. Docker's main
+instance journey runs the same documentation/Page checks.
+
+The [extended native scenarios](documentation/README.md) also exercise collection
+publication and upgrades, asynchronous operation errors and replay, concurrent
+authors, separate-instance isolation and revocation among multiple connections.
+These are scripted protocol journeys; they do not evaluate an autonomous agent's
+ability to invent sources or follow the documentation without prompting.

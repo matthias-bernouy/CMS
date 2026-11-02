@@ -12,6 +12,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   CI defects, measured rendering costs, strengths and the delivery sequence.
 - [Workspace architecture](architecture/README.md): layers, dependency rules,
   domain boundaries and runtime composition.
+- [Contract documentation](architecture/contract-documentation.md): versioned
+  Markdown, capability links, hybrid search and agent verification guidance.
 - [Package map](architecture/packages.md): every current workspace package and
   its responsibility.
 - [Imports](architecture/imports.md): public exports, local aliases, adapters and
