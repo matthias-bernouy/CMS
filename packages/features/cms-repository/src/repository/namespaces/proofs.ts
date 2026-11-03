@@ -2,12 +2,9 @@ import { RepositoryRequestError } from "../core/errors";
 import { createHash, createPrivateKey, createPublicKey, sign, verify } from "node:crypto";
 import { canonicalIJsonBytes, parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import type { NamespaceProof } from "./interfaces";
+import { assertRepositoryNamespace } from "./validation";
 
-export function assertRepositoryNamespace(namespace: string): void {
-    if (!/^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u.test(namespace) || namespace.length > 96) {
-        throw new RepositoryRequestError("REJECTED", "Invalid repository namespace");
-    }
-}
+export { assertRepositoryNamespace } from "./validation";
 
 /** Canonical Ed25519 SPKI DER, encoded as unpadded base64url. Never accepts private keys. */
 export function namespacePublicKey(encoded: string) {

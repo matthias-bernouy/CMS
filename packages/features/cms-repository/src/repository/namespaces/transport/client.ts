@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
-import { boundedResponseBytes, repositoryUrl } from "../publication/transport";
-import type { RepositoryNamespace } from "./interfaces";
-import { assertRepositoryNamespace, namespacePublicKey, repositoryDigest, signNamespaceProof } from "./proofs";
+import { boundedResponseBytes, repositoryUrl } from "../../publication/transport";
+import type { RepositoryNamespace } from "../interfaces";
+import { assertRepositoryNamespace, namespacePublicKey, repositoryDigest, signNamespaceProof } from "../proofs";
 import type { RepositoryOwnerCredential } from "./request";
 
 export class RepositoryNamespaceClient {

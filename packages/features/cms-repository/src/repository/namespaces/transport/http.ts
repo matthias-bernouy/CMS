@@ -1,6 +1,6 @@
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
-import { readRepositoryMutationBody } from "../publication/protocol";
-import type { RepositoryNamespaceAuthority } from "./authority";
+import { readRepositoryMutationBody } from "../../publication/protocol";
+import type { RepositoryNamespaceAuthority } from "../authority";
 
 /** Public ownership endpoints. Operator authentication grants no namespace recovery authority. */
 export class RepositoryNamespaceEndpoint {

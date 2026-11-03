@@ -2,7 +2,7 @@ import { repositoryUrl } from "../publication/transport";
 import { randomUUID } from "node:crypto";
 import { canonicalIJsonBytes, parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { signNamespaceProof, repositoryDigest } from "../namespaces/proofs";
-import type { RepositoryOwnerCredential } from "../namespaces/request";
+import type { RepositoryOwnerCredential } from "../namespaces/transport/request";
 import type { RepositorySourceSnapshot } from "./interfaces";
 
 export class RepositorySourceClient {

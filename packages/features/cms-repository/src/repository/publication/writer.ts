@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { isSha256Digest } from "@bernouy/binary-media";
-import { repositoryWriteHeaders, type RepositoryOwnerCredential } from "../namespaces/request";
+import { repositoryWriteHeaders, type RepositoryOwnerCredential } from "../namespaces/transport/request";
 import { encodePublicationUpload, type PublicationUploadManifest } from "./protocol";
 import type { PublicationAsset, PublicationEnvelope, PublicationUploadReceipt, RemoteCoordinate } from "./types";
 import { concurrentlyMap } from "./transport/concurrency";

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { signNamespaceProof } from "./proofs";
+import { signNamespaceProof } from "../proofs";
 
 /** CMS runtimes resolve the private key from their injected SecretReader; only public keys leave the host. */
 export type RepositoryOwnerCredential = Readonly<{

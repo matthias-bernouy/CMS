@@ -7,7 +7,7 @@ import { MAX_REPOSITORY_RESPONSE_BYTES } from "cms-repository/repository-http/ge
 import { boundedResponseBytes, repositoryUrl } from "./transport";
 import type { PublicationEnvelope, RemoteCoordinate, RepositoryArtifactKind, RepositoryDownloadAsset } from "./types";
 import { RemoteRepositoryWriter } from "./writer";
-import type { RepositoryOwnerCredential } from "../namespaces/request";
+import type { RepositoryOwnerCredential } from "../namespaces/transport/request";
 import { boundedStream, verifiedAsset } from "./transport/assets";
 
 export type { RemoteCoordinate } from "./types";

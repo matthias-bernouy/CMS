@@ -6,6 +6,8 @@ export type UserDeletionStores = {
     users: UsersRepository;
     credentials: LocalCredentialStore;
     pats: PatRepository;
+    /** Holds a host-owned lifecycle fence before any store is mutated. */
+    withUserDeletion?: (sub: string, deletion: () => Promise<void>) => Promise<void>;
     beforeMembershipDelete?: (user: TUser) => Promise<void>;
 };
 
@@ -20,6 +22,15 @@ export type UserDeletionStores = {
  *
  */
 export async function deleteUserCompletely(stores: UserDeletionStores, user: TUser): Promise<void> {
+    const deletion = () => removeUserFromStores(stores, user);
+    if (stores.withUserDeletion) {
+        await stores.withUserDeletion(user.sub, deletion);
+    } else {
+        await deletion();
+    }
+}
+
+async function removeUserFromStores(stores: UserDeletionStores, user: TUser): Promise<void> {
     if (user.provider === "local" && user.email) {
         const cred = await stores.credentials.getByEmail(user.email);
         if (cred) {

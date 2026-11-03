@@ -11,6 +11,7 @@ import type { ProviderAccess } from "@bernouy/cms-gateway/access/providers";
 import type { ProviderAdministration } from "./providers";
 import type { CollectionAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import type { McpAuthorization } from "@bernouy/cms-auth/oauth";
+import type { UserDeletionStores } from "@bernouy/cms-auth/management";
 import type {
     AuthenticationCredential,
     LocalCredentialStore,
@@ -73,6 +74,7 @@ export interface CmsCollectionDependencies {
 }
 
 export interface CmsAccessDependencies {
+    readonly withUserDeletion?: UserDeletionStores["withUserDeletion"];
     readonly mcpAuthorization?: McpAuthorization;
     readonly users: UsersRepository;
     readonly credentials: LocalCredentialStore;

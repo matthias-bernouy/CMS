@@ -173,6 +173,7 @@ export function registerAccessCapabilities(
                     users: dependencies.users,
                     credentials: dependencies.credentials,
                     pats: dependencies.pats,
+                    withUserDeletion: dependencies.withUserDeletion,
                     beforeMembershipDelete: async () => {
                         const state = await active.administrators.get(sub);
                         if (state.enabled) {
