@@ -47,7 +47,7 @@ a demonstration that the current documentation alone teaches the entire source
 format to a new agent.
 
 The private Repository mounts the real filesystem publication, namespace and
-signed source operations. Its source transport validates the admitted schema
+account-authorized source operations. Its source transport validates the admitted schema
 and invokes the feature service. Production Linux process ownership, its full
 Gateway composition, Docker images, hard crashes during a database transaction
 and arbitrary third-party Provider contracts require separate validation.

@@ -71,14 +71,13 @@ Credential commands print only administrator credentials; technical tokens
 remain private.
 
 The CLI consumes released software images; it never builds them. Workspace and
-CI authors build and publish the three official Docker Hub images explicitly:
+CI authors build and publish the two official Docker Hub images explicitly:
 
 ```bash
 bun run images:build --version 0.0.1-beta all
 bun run images:publish --version 0.0.1-beta all
 ulvia upgrade edge --version 0.0.1-beta
 ulvia upgrade provider --version 0.0.1-beta
-ulvia upgrade repository --version 0.0.1-beta
 ```
 
 An upgrade pulls the canonical `docker.io/cyaxis` reference, validates its OCI
