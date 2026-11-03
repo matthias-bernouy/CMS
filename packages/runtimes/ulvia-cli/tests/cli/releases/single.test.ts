@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../../src/cli";
@@ -56,9 +56,13 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
         expect(releases[0]!.release.exports?.texts).toEqual(definition.exports.texts.slice().sort());
         await runCli(["release", source], options);
         expect(output.at(-1)).toStartWith(`= collection ulvia.official/ulvia-official@${definition.version}`);
+        const lockPath = join(data, "repository/.write-lock");
+        const lock = await stat(lockPath, { bigint: true });
         await runCli(["prune"], options);
         expect(await repository.list()).toEqual([]);
-        expect(await readdir(join(data, "repository"))).toEqual([]);
+        expect(await readdir(join(data, "repository"))).toEqual([".write-lock"]);
+        expect((await stat(lockPath, { bigint: true })).ino).toBe(lock.ino);
+        expect((await stat(lockPath)).size).toBe(0);
         expect(await readdir(join(data, "services"))).toContain("mongo");
     } finally {
         await rm(data, { recursive: true, force: true });

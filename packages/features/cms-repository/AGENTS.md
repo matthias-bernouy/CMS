@@ -37,7 +37,12 @@ models and validation for CMS-owned installations and site selections.
   publication and their storage-independent capability service are implemented
   here. The official Repository contract is authored in official-repository;
   runtimes explicitly compose its implementation for the Repository profile. `./repository/filesystem` is the reference local adapter;
-  runtimes choose it or a durable production adapter. The CLI owns commands and
+  runtimes choose it or a durable production adapter. This local adapter uses Bun's
+  bundled SQLite native locking with empty exclusive transactions, not a business
+  database. Never unlink a released lock file or restore PID/mtime stale-lock
+  recovery; contenders must retain one inode and crash recovery must be immediate.
+  Upload cleanup uses a bounded durable queue; do not enumerate retained history
+  on each request. Close upload maintenance during instance disposal. The CLI owns commands and
   environment-derived client credentials. Business
   HTTP execution and gateway routing remain outside this package; runtimes own
   environment access and production adapter selection. `./providers/mongo`

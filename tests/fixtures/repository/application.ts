@@ -61,6 +61,12 @@ export function repositoryApplication(
             const { token, pat } = await pats.create({ sub: accountId, name: "Repository fixture" });
             return { accountId, token, patId: pat.id };
         },
-        close: () => search.close(),
+        close: async () => {
+            try {
+                await search.close();
+            } finally {
+                await uploads.close();
+            }
+        },
     };
 }

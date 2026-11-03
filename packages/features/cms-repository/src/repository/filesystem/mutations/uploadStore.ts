@@ -1,6 +1,6 @@
 import { RepositoryRequestError } from "../../core/errors";
-import { createHash, randomUUID } from "node:crypto";
-import { link, lstat, readFile, readdir, rename, rm, stat } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { link, lstat, readFile, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import type {
     PublicationEnvelope,
@@ -15,12 +15,10 @@ import { acquireFilesystemLease, FilesystemLeaseBusyError } from "../core/lock";
 import { assetFileName } from "../core/assetFiles";
 import { uploadOwner } from "../../publication/ownership";
 
-const SCHEMA = "ulvia.repository-upload.v1";
-const UPLOAD_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+import { isPublicationUploadId, uploadManifestFingerprint, withUploadResume } from "./uploadResume";
+import { UploadMaintenance } from "./uploadMaintenance";
 
-function uploadManifestFingerprint(manifest: OwnedPublicationUploadManifest): string {
-    return createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
-}
+const SCHEMA = "ulvia.repository-upload.v1";
 
 type UploadDocument = Readonly<{
     schema: typeof SCHEMA;
@@ -33,41 +31,48 @@ type UploadDocument = Readonly<{
 export class FilesystemRepositoryPublicationUploadStore implements RepositoryPublicationUploadStore {
     private readonly uploadRoot: string;
     private readonly tombstoneRoot: string;
+    private readonly maintenance: UploadMaintenance;
 
     constructor(private readonly root: string) {
         this.uploadRoot = join(root, ".publication-uploads");
         this.tombstoneRoot = join(root, ".publication-upload-tombstones");
+        this.maintenance = new UploadMaintenance(root, (id) => this.pruneExpiredUpload(id));
     }
 
     async create(supplied: OwnedPublicationUploadManifest, expiresAt: Date): Promise<PublicationUploadReceipt> {
         const manifest = structuredClone(supplied);
         uploadOwner(manifest.owner);
-        await ensureDurableDirectory(this.uploadRoot, this.root);
-        await this.pruneExpired();
-        const resumable = await this.findOpenUpload(manifest);
-        if (resumable) {
-            return resumable;
-        }
-        const uploadId = randomUUID();
-        const directory = this.directory(uploadId);
-        await ensureDurableDirectory(join(directory, "assets"), this.root);
-        const document: UploadDocument = {
-            schema: SCHEMA,
-            uploadId,
-            expiresAt: expiresAt.toISOString(),
-            manifest,
-        };
-        try {
-            await durableWriteFile(join(directory, "upload.json"), JSON.stringify(document), {
-                flag: "wx",
-                mode: 0o600,
+        const expiry = expiresAt.toISOString();
+        await this.recover();
+        const fingerprint = uploadManifestFingerprint(manifest);
+        return withUploadResume(this.root, fingerprint, async (candidate) => {
+            const resumable = candidate ? await this.findOpenUpload(candidate, fingerprint) : null;
+            if (resumable) {
+                return resumable;
+            }
+            const uploadId = randomUUID();
+            return this.maintenance.enroll(uploadId, async () => {
+                const directory = this.directory(uploadId);
+                await ensureDurableDirectory(join(directory, "assets"), this.root);
+                const document: UploadDocument = {
+                    schema: SCHEMA,
+                    uploadId,
+                    expiresAt: expiry,
+                    manifest,
+                };
+                try {
+                    await durableWriteFile(join(directory, "upload.json"), JSON.stringify(document), {
+                        flag: "wx",
+                        mode: 0o600,
+                    });
+                    await syncDirectory(directory);
+                } catch (error) {
+                    await rm(directory, { recursive: true, force: true });
+                    throw error;
+                }
+                return { uploadId, expiresAt: document.expiresAt, uploadedAssetIds: [] };
             });
-            await syncDirectory(directory);
-        } catch (error) {
-            await rm(directory, { recursive: true, force: true });
-            throw error;
-        }
-        return { uploadId, expiresAt: document.expiresAt, uploadedAssetIds: [] };
+        });
     }
 
     async status(uploadId: string): Promise<PublicationUploadReceipt> {
@@ -101,33 +106,39 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
                 "Publication upload asset metadata does not match its declaration",
             );
         }
-        const destination = join(this.directory(uploadId), "assets", assetFileName(assetId));
-        const temporary = `${destination}.${randomUUID()}.tmp`;
+        const lock = await this.acquireCommitLock(uploadId);
         try {
-            const actual = await writeUploadStream(temporary, body, asset.byteLength);
-            if (actual.digest !== asset.digest || actual.byteLength !== asset.byteLength) {
-                throw new RepositoryRequestError(
-                    "REJECTED",
-                    "Publication upload asset bytes do not match their declaration",
-                );
-            }
+            await this.readOpen(uploadId);
+            const destination = join(this.directory(uploadId), "assets", assetFileName(assetId));
+            const temporary = `${destination}.${randomUUID()}.tmp`;
             try {
-                await link(temporary, destination);
-                await syncDirectory(join(this.directory(uploadId), "assets"));
-            } catch (error) {
-                if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
-                    throw error;
-                }
-                const existing = await digestUploadFile(destination);
-                if (existing.digest !== asset.digest || existing.byteLength !== asset.byteLength) {
+                const actual = await writeUploadStream(temporary, body, asset.byteLength);
+                if (actual.digest !== asset.digest || actual.byteLength !== asset.byteLength) {
                     throw new RepositoryRequestError(
                         "REJECTED",
-                        "A staged publication asset already has different content",
+                        "Publication upload asset bytes do not match their declaration",
                     );
                 }
+                try {
+                    await link(temporary, destination);
+                    await syncDirectory(join(this.directory(uploadId), "assets"));
+                } catch (error) {
+                    if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+                        throw error;
+                    }
+                    const existing = await digestUploadFile(destination);
+                    if (existing.digest !== asset.digest || existing.byteLength !== asset.byteLength) {
+                        throw new RepositoryRequestError(
+                            "REJECTED",
+                            "A staged publication asset already has different content",
+                        );
+                    }
+                }
+            } finally {
+                await rm(temporary, { force: true });
             }
         } finally {
-            await rm(temporary, { force: true });
+            await lock.release();
         }
     }
 
@@ -197,21 +208,15 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
         return document;
     }
 
-    private async findOpenUpload(manifest: OwnedPublicationUploadManifest): Promise<PublicationUploadReceipt | null> {
-        const expected = uploadManifestFingerprint(manifest);
-        for (const entry of await readdir(this.uploadRoot, { withFileTypes: true })) {
-            if (!entry.isDirectory() || !UPLOAD_ID.test(entry.name)) {
-                continue;
-            }
-            const document = await this.readDocumentIfPresent(entry.name);
-            if (
-                document &&
-                Date.parse(document.expiresAt) > Date.now() &&
-                uploadManifestFingerprint(document.manifest) === expected &&
-                !(await this.readResult(entry.name))
-            ) {
-                return this.status(entry.name);
-            }
+    private async findOpenUpload(uploadId: string, fingerprint: string): Promise<PublicationUploadReceipt | null> {
+        const document = await this.readDocumentIfPresent(uploadId);
+        if (
+            document &&
+            Date.parse(document.expiresAt) > Date.now() &&
+            uploadManifestFingerprint(document.manifest) === fingerprint &&
+            !(await this.hasResult(uploadId))
+        ) {
+            return this.status(uploadId);
         }
         return null;
     }
@@ -260,46 +265,58 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
     async recover(): Promise<void> {
         await ensureDurableDirectory(this.uploadRoot, this.root);
         await ensureDurableDirectory(this.tombstoneRoot, this.root);
-        await this.removeAbandonedTombstones();
-        await this.pruneExpired();
+        await this.maintenance.run();
     }
 
-    private async pruneExpired(): Promise<void> {
-        let changed = false;
-        for (const entry of await readdir(this.uploadRoot, { withFileTypes: true })) {
-            if (!entry.isDirectory() || !UPLOAD_ID.test(entry.name)) {
-                continue;
+    close(): Promise<void> {
+        return this.maintenance.close();
+    }
+
+    private async hasResult(uploadId: string): Promise<boolean> {
+        try {
+            await lstat(join(this.directory(uploadId), "result.json"));
+            return true;
+        } catch (error) {
+            if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+                return false;
             }
-            const metadata = await lstat(join(this.uploadRoot, entry.name));
-            if (metadata.isSymbolicLink()) {
-                continue;
-            }
-            const document = await this.readDocumentIfPresent(entry.name);
-            if (document && Date.parse(document.expiresAt) <= Date.now()) {
-                const lock = await this.acquirePruneLock(entry.name);
-                if (!lock) {
-                    continue;
-                }
-                let tombstone: string | null = null;
-                try {
-                    const current = await this.readDocumentIfPresent(entry.name);
-                    if (
-                        current &&
-                        Date.parse(current.expiresAt) <= Date.now() &&
-                        !(await this.readResult(entry.name))
-                    ) {
-                        tombstone = await this.moveToTombstone(entry.name);
-                        changed = true;
-                    }
-                } finally {
-                    await lock.release();
-                }
-                await this.removeTombstone(tombstone);
-            }
+            throw error;
         }
-        if (changed) {
+    }
+
+    private async pruneExpiredUpload(uploadId: string): Promise<boolean> {
+        const tombstonePath = join(this.tombstoneRoot, uploadId);
+        await this.removeTombstone(tombstonePath);
+        // Completed receipts leave the queue without loading their result or manifest JSON.
+        if (await this.hasResult(uploadId)) {
+            return false;
+        }
+        const document = await this.readDocumentIfPresent(uploadId);
+        if (!document) {
+            // Enrollment is durable before creation; the same queue lease excludes a live creator.
+            await rm(this.directory(uploadId), { recursive: true, force: true });
+            await this.removeTombstone(tombstonePath);
             await syncDirectory(this.uploadRoot);
+            return false;
         }
+        if (Date.parse(document.expiresAt) > Date.now()) {
+            return true;
+        }
+        const lock = await this.acquirePruneLock(uploadId);
+        if (!lock) {
+            return true;
+        }
+        let tombstone: string | null = null;
+        try {
+            const current = await this.readDocumentIfPresent(uploadId);
+            if (current && Date.parse(current.expiresAt) <= Date.now() && !(await this.hasResult(uploadId))) {
+                tombstone = await this.moveToTombstone(uploadId);
+            }
+        } finally {
+            await lock.release();
+        }
+        await this.removeTombstone(tombstone);
+        return false;
     }
 
     private async acquirePruneLock(uploadId: string) {
@@ -325,7 +342,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
     }
 
     private directory(uploadId: string): string {
-        if (!UPLOAD_ID.test(uploadId)) {
+        if (!isPublicationUploadId(uploadId)) {
             throw new RepositoryRequestError("REJECTED", "Invalid publication upload ID");
         }
         return join(this.uploadRoot, uploadId);
@@ -333,7 +350,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
 
     private async moveToTombstone(uploadId: string): Promise<string> {
         await ensureDurableDirectory(this.tombstoneRoot, this.root);
-        const tombstone = join(this.tombstoneRoot, `${uploadId}.${randomUUID()}`);
+        const tombstone = join(this.tombstoneRoot, uploadId);
         await rename(this.directory(uploadId), tombstone);
         await syncDirectory(this.uploadRoot);
         await syncDirectory(this.tombstoneRoot);
@@ -344,18 +361,14 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
         if (!path) {
             return;
         }
-        await rm(path, { recursive: true, force: true });
-        await syncDirectory(this.tombstoneRoot);
-    }
-
-    private async removeAbandonedTombstones(): Promise<void> {
-        const entries = await readdir(this.tombstoneRoot, { withFileTypes: true });
-        await Promise.all(
-            entries
-                .filter((entry) => entry.isDirectory())
-                .map((entry) => rm(join(this.tombstoneRoot, entry.name), { recursive: true, force: true })),
-        );
-        if (entries.some((entry) => entry.isDirectory())) {
+        const present = await lstat(path).catch((error: NodeJS.ErrnoException) => {
+            if (error.code === "ENOENT") {
+                return null;
+            }
+            throw error;
+        });
+        if (present) {
+            await rm(path, { recursive: true, force: true });
             await syncDirectory(this.tombstoneRoot);
         }
     }

@@ -86,7 +86,9 @@ Ulvia CMS installation runtime.
 - A yank is reversible repository metadata. It removes a release from new
   catalogue resolution without deleting immutable bytes or breaking historical
   exact-coordinate reads.
-- `prune` clears the local repository without touching shared services or instances.
+- `prune` clears local repository data without touching shared services or instances.
+  Retain the shared native lock file's inode so concurrent CLI processes cannot
+  acquire locks on different files while pruning.
 - Do not reintroduce the removed integration repository or Supabase bridge.
 
 - Import collection source assembly directly from

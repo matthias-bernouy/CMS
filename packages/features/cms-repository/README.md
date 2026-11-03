@@ -143,3 +143,16 @@ implemented for trusted CLI sources; third-party JavaScript isolation remains a
 separate concern.
 [AGENTS.md](AGENTS.md) defines the domain
 boundaries and implementation invariants.
+
+The `repository/filesystem` adapter runs on Bun. Its process locks use an empty
+exclusive transaction in Bun's bundled SQLite library, without storing business
+data in SQLite or requiring an external `flock` executable. Lock files remain in
+place on release so contenders always lock the same inode; process death releases
+the native lock immediately. This adapter targets local filesystem storage, not
+shared multi-replica network storage.
+
+Upload creation resumes an identical account/namespace/revision-bound manifest
+through a derived SHA-256 pointer. Expiration cleanup visits at most eight queued
+sessions per invocation and persists its position; committed history is not
+parsed during cleanup. Active asset transfers and commits hold the same upload
+lock. Closing the upload store waits for pending maintenance.

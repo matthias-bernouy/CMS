@@ -2,6 +2,7 @@ import { MemoryVectorStore } from "@bernouy/text-search";
 import { HttpRepositoryDiscovery } from "@bernouy/cms-repository/repository/search/http";
 import { RepositoryDiscovery } from "@bernouy/cms-repository/repository/search";
 import { createInstanceDocumentation } from "./documentation";
+import { closeInstanceComposition } from "./disposal";
 import type { CmsDocumentation } from "@bernouy/cms-documentation";
 import { ProviderDocumentation } from "./ProviderDocumentation";
 import { ProviderPairing } from "../../gateway/providers/connections/ProviderPairing";
@@ -165,9 +166,15 @@ export class ProviderInstanceHost {
 
     async close(): Promise<void> {
         try {
-            await this.#documentation.stop();
-            await this.#instances.close();
-            await this.#documentation.close();
+            try {
+                await this.#documentation.stop();
+            } finally {
+                try {
+                    await this.#instances.close();
+                } finally {
+                    await this.#documentation.close();
+                }
+            }
         } finally {
             this.#registryVectors.clear();
         }
@@ -236,6 +243,7 @@ export class ProviderInstanceHost {
             () => this.#documentation.request(instance, true),
         );
         const storesMs = performance.now() - storesStartedAt;
+        let operations: ProviderOperationExecutor | undefined;
         let operationRecovery: RecoverySupervisor | undefined;
         let documentation: CmsDocumentation | undefined;
         let documentationTimer: ReturnType<typeof setInterval> | undefined;
@@ -282,7 +290,7 @@ export class ProviderInstanceHost {
             const management = managementForProfile(profile);
             const providerOperations = new MongoProviderOperationStore(stores.db);
             await providerOperations.init();
-            const operations = new ProviderOperationExecutor(providerOperations, undefined, {
+            const instanceOperations = new ProviderOperationExecutor(providerOperations, undefined, {
                 contracts: this.contracts,
                 retainResource: lifetime.retain,
                 onFailure: (observation, error) => {
@@ -294,6 +302,7 @@ export class ProviderInstanceHost {
                     }
                 },
             });
+            operations = instanceOperations;
             const dispatcher = new DefaultProviderCapabilityDispatcher();
             const providerConnections = new ProviderConnections(stores.providerConnections);
             registerProviderConnectionCapabilities(dispatcher, providerConnections);
@@ -355,7 +364,7 @@ export class ProviderInstanceHost {
                     accountLifecycle: authentication.accountLifecycle,
                 },
                 gateway,
-                operations,
+                instanceOperations,
                 {
                     ...createProtectedProviderManagement(management, instance, profile),
                     administration: providerAdministration(stores, gateway, management, instance.gatewayUrl),
@@ -378,14 +387,13 @@ export class ProviderInstanceHost {
                 registerRepositoryCapabilities(dispatcher, registry.service, contract, gateway);
             }
             operationRecovery = new RecoverySupervisor(
-                (limit) => operations.recover(limit),
+                (limit) => instanceOperations.recover(limit),
                 undefined,
                 undefined,
                 (error) =>
                     instanceLogger.error("provider.operation.recovery.failed", { instanceId: instance.id }, error),
             );
             await operationRecovery.start(false);
-            const activeRecovery = operationRecovery;
             connectInstanceDiagnostics(diagnostics, stores, gateway, instance.id);
             const composition = {
                 stores,
@@ -394,7 +402,7 @@ export class ProviderInstanceHost {
                 management,
                 managementForProfile,
                 administrators: gateway.administrators,
-                operations,
+                operations: instanceOperations,
                 pairOfficialProvider: async () => {
                     const state = await management.list();
                     const official = state.installations.find(
@@ -415,15 +423,16 @@ export class ProviderInstanceHost {
                 ensureProviderReady: async () => {
                     await gateway.routes.warm(SITE_ID, "ulvia.cms.installations");
                 },
-                close: async () => {
-                    clearInterval(documentationTimer);
-                    await registry?.close();
-                    await instanceDocumentation.close();
-                    await activeRecovery.stop();
-                    await operations.stop();
-                    await diagnostics.collector.close();
-                    await stores.close();
-                },
+                close: () =>
+                    closeInstanceComposition({
+                        documentationTimer,
+                        recovery: operationRecovery,
+                        operations,
+                        registry,
+                        documentation: instanceDocumentation,
+                        diagnostics: diagnostics.collector,
+                        stores,
+                    }),
                 runtime: {
                     siteId: SITE_ID,
                     logger: instanceLogger,
@@ -449,12 +458,19 @@ export class ProviderInstanceHost {
             this.#documentation.request(instance);
             return composition;
         } catch (error) {
-            clearInterval(documentationTimer);
-            await registry?.close();
-            await documentation?.close();
-            await operationRecovery?.stop();
-            await diagnostics.collector.close();
-            await stores.close();
+            try {
+                await closeInstanceComposition({
+                    documentationTimer,
+                    recovery: operationRecovery,
+                    operations,
+                    registry,
+                    documentation,
+                    diagnostics: diagnostics.collector,
+                    stores,
+                });
+            } catch (cleanupError) {
+                throw new AggregateError([error, cleanupError], "Provider instance composition failed");
+            }
             throw error;
         }
     }

@@ -72,7 +72,10 @@ export class ProviderDocumentation {
     }
 
     async close(): Promise<void> {
-        await this.stop();
-        await this.model.close();
+        try {
+            await this.stop();
+        } finally {
+            await this.model.close();
+        }
     }
 }

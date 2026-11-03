@@ -45,7 +45,12 @@ export async function createInstanceRepository(
     const index = new FilesystemRepositoryCatalogueIndex(root);
     const reads = new FilesystemRegistryReads(root, index);
     const uploads = new FilesystemRepositoryPublicationUploadStore(root);
-    await uploads.recover();
+    try {
+        await uploads.recover();
+    } catch (error) {
+        await uploads.close();
+        throw error;
+    }
     const search = new RepositorySearch(new FilesystemRepositorySearchSource(root, index), model, vectors);
     const service = new RepositoryCapabilityService({
         repositoryId: instanceId,
@@ -61,7 +66,13 @@ export async function createInstanceRepository(
     return {
         service,
         namespaces,
-        close: () => search.close(),
+        close: async () => {
+            try {
+                await search.close();
+            } finally {
+                await uploads.close();
+            }
+        },
         async withUserDeletion(sub: string, deletion: () => Promise<void>) {
             try {
                 await namespaces.withoutOwnedNamespaces(sub, deletion);
