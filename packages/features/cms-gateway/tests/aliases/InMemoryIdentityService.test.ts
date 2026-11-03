@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { fileURLToPath } from "node:url";
 import { InMemoryIdentityService } from "@bernouy/cms-gateway/identity";
 import { identityServiceContract } from "./identityService.contract";
 
@@ -9,7 +10,7 @@ describe("root export boundary", () => {
         const packageRoot = new URL("../../", import.meta.url);
         const manifest = await Bun.file(new URL("package.json", packageRoot)).json();
         const build = await Bun.build({
-            entrypoints: [new URL("src/exports/identity/index.ts", packageRoot).pathname],
+            entrypoints: [fileURLToPath(new URL("src/exports/identity/index.ts", packageRoot))],
             target: "browser",
             write: false,
         });

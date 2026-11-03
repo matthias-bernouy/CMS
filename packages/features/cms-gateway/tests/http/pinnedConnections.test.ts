@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { sendPinnedHttpRequest } from "cms-gateway/invocation/node-http/nodeHttpRequest";
+import { pinnedHttpAgent, pinnedHttpsAgent } from "cms-gateway/invocation/node-http/pinnedAgents";
 import { createServer } from "node:http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 
@@ -89,6 +90,19 @@ test("pooled pinned sockets retain fresh DNS and credentials and separate Host a
     }
 });
 
+test("HTTP and HTTPS pool keys separate pinned IPs within the same address family", () => {
+    for (const agent of [pinnedHttpAgent, pinnedHttpsAgent]) {
+        const options = {
+            host: "192.0.2.1",
+            family: 4,
+            port: 443,
+            headers: { host: "same-origin.test:443" },
+            servername: "same-origin.test",
+        };
+        expect(agent.getName(options)).not.toBe(agent.getName({ ...options, host: "192.0.2.2" }));
+    }
+});
+
 test("a changed pinned IP cannot reuse a socket opened for the previous DNS answer", async () => {
     const first = createServer((_request, response) => response.end("first-address"));
     const second = createServer((_request, response) => response.end("second-address"));
@@ -103,11 +117,12 @@ test("a changed pinned IP cannot reuse a socket opened for the previous DNS answ
         if (!address || typeof address === "string") {
             throw new Error("Expected a TCP listener");
         }
-        await listen(second, "127.0.0.2", address.port);
-        const read = async (ip: string) => {
+        // Both loopbacks exist without configuring a privileged IPv4 alias on macOS.
+        await listen(second, "::1", address.port);
+        const read = async (ip: string, family: 4 | 6) => {
             const response = await sendPinnedHttpRequest({
                 url: new URL(`http://same-origin.test:${address.port}/read`),
-                address: { address: ip, family: 4 },
+                address: { address: ip, family },
                 method: "GET",
                 headers: {},
                 signal: AbortSignal.timeout(5000),
@@ -116,8 +131,9 @@ test("a changed pinned IP cannot reuse a socket opened for the previous DNS answ
             await Bun.sleep(1);
             return value;
         };
-        expect(await read("127.0.0.1")).toBe("first-address");
-        expect(await read("127.0.0.2")).toBe("second-address");
+        expect(await read("127.0.0.1", 4)).toBe("first-address");
+        expect(await read("::1", 6)).toBe("second-address");
+        expect(await read("127.0.0.1", 4)).toBe("first-address");
     } finally {
         first.closeAllConnections();
         second.closeAllConnections();
