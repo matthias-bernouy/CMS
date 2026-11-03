@@ -65,11 +65,10 @@ async function signIn(
     await page.getByRole("heading", { name: /^(Welcome back|Bon retour)$/u }).waitFor();
     await page.getByLabel(/^(Email address|Adresse e-mail)$/u).fill(credentials.adminEmail);
     await page.getByLabel(/^(Password|Mot de passe)$/u).fill(credentials.adminPassword);
-    const loginResponse = page.waitForResponse((response) =>
-        response.url().includes("/.cms/mutation/ulvia.cms.access/login-password"),
-    );
-    await page.getByRole("button", { name: /^(Sign in|Se connecter)$/u }).click();
-    const response = await loginResponse;
+    const [response] = await Promise.all([
+        page.waitForResponse((response) => response.url().includes("/.cms/mutation/ulvia.cms.access/login-password")),
+        page.getByRole("button", { name: /^(Sign in|Se connecter)$/u }).click(),
+    ]);
     if (!response.ok()) {
         throw new Error(`login capability returned ${response.status()}`);
     }
