@@ -42,6 +42,9 @@ test.skipIf(!images.edge || !images.provider)(
                 expect(network.hasDefaultRoute).toBe(false);
             }
             for (const signal of ["TERM", "KILL"]) {
+                if (signal === "KILL") {
+                    await holdRegistryWriteLock(f.providerName);
+                }
                 for (const name of [f.repository.name, f.providerName]) {
                     await docker(["kill", `--signal=${signal}`, name]);
                     const exitCode = (await docker(["wait", name])).stdout.trim();
@@ -92,4 +95,61 @@ async function networkRoutes() {
             hasDefaultRoute: rows.some((row) => row.trim().split(/\s+/)[1] === "00000000"),
         }),
     );
+}
+
+/** Prove restart recovery with a genuinely held registry lock, not only an idle process. */
+async function holdRegistryWriteLock(providerName: string): Promise<void> {
+    const ready = "/tmp/ulvia-registry-lock-held";
+    const script = `
+        import { readdir, stat } from "node:fs/promises";
+        import { join } from "node:path";
+        import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem";
+        const directory = "/var/lib/cms/files";
+        const roots = [];
+        for (const item of await readdir(directory, { withFileTypes: true })) {
+            if (item.isDirectory()) {
+                const root = join(directory, item.name, "repository");
+                if (await stat(root).then(value => value.isDirectory(), () => false)) {
+                    roots.push(root);
+                }
+            }
+        }
+        if (roots.length !== 1) {
+            throw new Error("Expected one enabled Repository instance in this fixture");
+        }
+        await withRepositoryWriteLock(roots[0], async () => {
+            await Bun.write(${JSON.stringify(ready)}, "held");
+            setInterval(() => undefined, 1_000);
+            await new Promise(() => {});
+        });
+    `;
+    await docker([
+        "exec",
+        "--detach",
+        "--workdir",
+        "/app/packages/runtimes/ulvia-provider-server",
+        providerName,
+        "bun",
+        "--no-macros",
+        "-e",
+        script,
+    ]);
+    const deadline = Date.now() + 5_000;
+    while (Date.now() < deadline) {
+        const probe = await docker(
+            [
+                "exec",
+                providerName,
+                "bun",
+                "-e",
+                `process.exit(await Bun.file(${JSON.stringify(ready)}).exists() ? 0 : 1)`,
+            ],
+            true,
+        );
+        if (probe.code === 0) {
+            return;
+        }
+        await Bun.sleep(100);
+    }
+    throw new Error("Repository write lock holder did not become ready before SIGKILL");
 }

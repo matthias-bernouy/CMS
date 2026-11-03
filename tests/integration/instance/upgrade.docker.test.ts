@@ -3,8 +3,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../../packages/runtimes/ulvia-cli/src/cli";
-import { mcpContainers } from "./containers";
+import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
+import { mcpContainers, waitForHttp } from "./containers";
 import { connectBrowser } from "./oauth";
+import { repositoryApi } from "./repository/client";
 
 const baselineProvider = process.env.ULVIA_UPGRADE_BASELINE_PROVIDER_IMAGE;
 const candidate = process.env.ULVIA_MCP_PROVIDER_DOCKER_IMAGE;
@@ -12,7 +14,7 @@ const edge = process.env.ULVIA_MCP_EDGE_DOCKER_IMAGE;
 const integration = baselineProvider && candidate && edge ? test : test.skip;
 
 integration(
-    "a baseline instance changes Provider image without losing Pages or its existing MCP grant",
+    "Provider image replacement preserves CMS Pages, Registry ownership and publications, and MCP grants",
     async () => {
         const directory = await mkdtemp(join(tmpdir(), "ulvia-provider-upgrade-"));
         const publish = async (url: string, token: string) => {
@@ -44,9 +46,53 @@ integration(
                     connection!.call("ulvia.cms.content", "pages.get", { id: page.id }),
                 ),
             );
+            const registry = repositoryApi(stack.repositoryUrl);
+            const identity = await (await registry.request("ulvia.repository", "/v1/info")).json();
+            const inventory = () =>
+                registry.request("ulvia.repository", "/v1/namespaces", "GET", undefined, stack!.repository.pat);
+            const beforeInventory = await inventory();
+            expect(beforeInventory.status).toBe(200);
+            const owned = await beforeInventory.json();
+            const publicSource = new HttpProviderRepository("upgrade", stack.repositoryUrl);
+            const published = await publicSource.list("contract");
+            expect(published.length).toBeGreaterThan(0);
+            const bytes = await publicSource.get(published[0]!);
+            const admin = await registry.session(
+                stack.repository.administrator.email,
+                stack.repository.administrator.password,
+            );
+            const registryPages = await (
+                await registry.request("ulvia.cms.content", "/pages/list", "QUERY", { limit: 100 }, admin)
+            ).json();
+            const pageId = registryPages.items.find(({ path }: { path: string }) => path === "/").id;
+            const original = await (
+                await registry.request("ulvia.cms.content", "/pages/get", "QUERY", { id: pageId }, admin)
+            ).json();
+            expect(
+                (
+                    await registry.request(
+                        "ulvia.cms.content",
+                        "/pages/update",
+                        "POST",
+                        { id: pageId, expectedRevision: original.revision, title: "Retained across image replacement" },
+                        admin,
+                    )
+                ).status,
+            ).toBe(200);
             await stack.upgradeProvider(candidate!, "1.3.0");
-            const catalogue = await connection.rpc("tools/list");
-            connection.tools.splice(0, connection.tools.length, ...catalogue.tools);
+            await waitForHttp(`${stack.repositoryUrl}/.cms/call/ulvia.repository/v1/info`);
+            expect(await (await registry.request("ulvia.repository", "/v1/info")).json()).toEqual(identity);
+            const retained = await inventory();
+            expect(retained.status).toBe(200);
+            expect(await retained.json()).toEqual(owned);
+            expect(await publicSource.list("contract")).toEqual(published);
+            expect(await publicSource.get(published[0]!)).toEqual(bytes);
+            expect(
+                await (
+                    await registry.request("ulvia.cms.content", "/pages/get", "QUERY", { id: pageId }, admin)
+                ).json(),
+            ).toMatchObject({ title: "Retained across image replacement", content: original.content });
+            await connection.refreshTools();
             expect(connection.tools).toHaveLength(initialToolCount);
             expect(await connection.call("ulvia.cms.content", "pages.list", { limit: 100 })).toEqual(pages);
             expect(

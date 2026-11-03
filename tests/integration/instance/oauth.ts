@@ -95,18 +95,23 @@ export async function connectBrowser(
             return message.result;
         };
         const tools: { name: string; _meta: Record<string, unknown> }[] = [];
-        let cursor: string | undefined;
-        for (let page = 0; page < 16; page++) {
-            const result = await rpc("tools/list", cursor ? { cursor } : {});
-            tools.push(...result.tools);
-            cursor = result.nextCursor;
-            if (!cursor) {
-                break;
+        const refreshTools = async () => {
+            const refreshed: typeof tools = [];
+            let cursor: string | undefined;
+            for (let page = 0; page < 16; page++) {
+                const result = await rpc("tools/list", cursor ? { cursor } : {});
+                refreshed.push(...result.tools);
+                cursor = result.nextCursor;
+                if (!cursor) {
+                    break;
+                }
             }
-        }
-        if (cursor || new Set(tools.map((tool) => tool.name)).size !== tools.length) {
-            throw new Error("Invalid or excessive MCP tool catalogue");
-        }
+            if (cursor || new Set(refreshed.map((tool) => tool.name)).size !== refreshed.length) {
+                throw new Error("Invalid or excessive MCP tool catalogue");
+            }
+            tools.splice(0, tools.length, ...refreshed);
+        };
+        await refreshTools();
         const catalogue = { tools };
         const call = async (contract: string, capability: string, input: Record<string, unknown> = {}) => {
             const tool = catalogue.tools.find(
@@ -131,6 +136,7 @@ export async function connectBrowser(
             rpc,
             call,
             tools: catalogue.tools,
+            refreshTools,
             async revoke() {
                 await page.goto(`${cmsUrl}/.cms/connections`);
                 await page

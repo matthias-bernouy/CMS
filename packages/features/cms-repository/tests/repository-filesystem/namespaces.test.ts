@@ -89,3 +89,44 @@ test("account deletion refuses before business side effects while namespaces rem
         await f.close();
     }
 });
+
+test("direct capability calls enforce authentication and ownership before private reads or mutations", async () => {
+    const f = await fixture();
+    const { service, namespaces } = f.app;
+    try {
+        const before = await namespaces.claim(f.a.accountId, "community");
+        const input = {
+            namespace: "community",
+            publisherId: "community",
+            namespaceRevision: 1,
+            targetAccountId: f.b.accountId,
+        };
+        const owned = [
+            "namespace-transfer",
+            "namespace-suspend",
+            "source-get",
+            "source-put",
+            "publication-yank",
+            "publication-begin",
+            "publication-status",
+            "publication-asset",
+            "publication-commit",
+            "publication-abort",
+        ];
+        for (const id of ["namespace-list", "namespace-claim", ...owned]) {
+            await expect(service.invoke(id, input)).rejects.toThrow("An authenticated account is required");
+        }
+        for (const id of owned) {
+            await expect(service.invoke(id, input, undefined, { accountId: f.b.accountId })).rejects.toThrow(
+                "Namespace ownership is unavailable or stale",
+            );
+        }
+        expect(await namespaces.get("community")).toEqual(before);
+        expect(await service.invoke("namespace-list", {}, undefined, { accountId: f.b.accountId })).toEqual({
+            namespaces: [],
+        });
+        expect(await service.invoke("catalogue-list", { kind: "contract", limit: 20 })).toEqual({ releases: [] });
+    } finally {
+        await f.close();
+    }
+});

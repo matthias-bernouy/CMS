@@ -120,7 +120,8 @@ function relayScript(host: string, ports: number[]): string {
                 outgoing.on("error", close).on("close", close);
                 incoming.pipe(outgoing).pipe(incoming);
             });
-            server.maxConnections = 64;
+            // Admit the existing 96-request rate-limit burst plus browser keep-alive sockets.
+            server.maxConnections = 128;
             server.listen(port, "0.0.0.0");
         }
     `;

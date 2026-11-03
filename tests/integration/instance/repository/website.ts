@@ -54,6 +54,10 @@ export async function exerciseRepositoryWebsite(
         await page.getByLabel("Namespace", { exact: true }).fill("browser.publisher");
         await page.getByRole("button", { name: "Claim namespace", exact: true }).click();
         await page.getByText("browser.publisher", { exact: true }).waitFor();
+        await page.getByLabel("Namespace", { exact: true }).fill(sample.namespace);
+        await page.getByRole("button", { name: "Claim namespace", exact: true }).click();
+        await page.getByRole("alert").filter({ hasText: "The request could not be completed." }).waitFor();
+        expect(await page.getByText(sample.namespace, { exact: true }).count()).toBe(0);
         await open("/account/publications");
         await page.getByRole("link", { name: "browser.publisher", exact: true }).waitFor();
         await open("/account/tokens");

@@ -1,5 +1,7 @@
 import { expect } from "bun:test";
+import { randomUUID } from "node:crypto";
 import { mongoProfile, internalRequests, internalRequestPaths } from "./profiler";
+import { requestWork, workCount } from "./request-work";
 import type { mcpContainers } from "../containers";
 import type { connectBrowser } from "../oauth";
 type Stack = Awaited<ReturnType<typeof mcpContainers>>;
@@ -88,31 +90,50 @@ export async function exerciseLoad(stack: Stack, connection: Connection) {
     return { requests: success, administrators, pages: paths.length, elapsedMs: performance.now() - started };
 }
 export async function measureCached(stack: Stack, path: string) {
+    await requestWork(stack.providerName, stack.edgeName, [], true);
+    const controlId = randomUUID();
+    const control = await fetch(`${stack.cmsUrl}${path}`, {
+        headers: { "x-request-id": controlId, "cache-control": "no-cache" },
+    });
+    await control.arrayBuffer();
+    expect(control.status).toBe(200);
+    expect(control.headers.get("x-cache")).toBe("BYPASS");
+    expect(control.headers.get("x-request-id")).toBe(controlId);
+    const controlWork = await requestWork(stack.providerName, stack.edgeName, [controlId]);
+    expect(controlWork.requests.http["/delivery/resolve-resource"]).toBe(1);
+    expect(workCount(controlWork.requests.mongo)).toBeGreaterThan(0);
+    expect(workCount(controlWork.requests.log)).toBeGreaterThan(0);
     const warm = await fetch(`${stack.cmsUrl}${path}`);
     await warm.arrayBuffer();
     expect(warm.status).toBe(200);
-    // Flush observations from the miss; hits log only at debug level in this production fixture.
-    await Bun.sleep(1000);
-    await internalRequests(stack.providerName, stack.edgeName, true);
-    await mongoProfile(stack.id, "start");
+    // Request IDs exclude delayed warm-up logs and unrelated periodic recovery without a timing heuristic.
+    await requestWork(stack.providerName, stack.edgeName, [], true);
+    const requestIds: string[] = [];
     const times = [];
     for (let i = 0; i < 20; i++) {
+        const id = randomUUID();
+        requestIds.push(id);
         const began = performance.now();
-        const response = await fetch(`${stack.cmsUrl}${path}`);
+        const response = await fetch(`${stack.cmsUrl}${path}`, { headers: { "x-request-id": id } });
         await response.arrayBuffer();
         times.push(performance.now() - began);
         expect(response.headers.get("x-cache")).toBe("HIT");
         expect(response.status).toBe(200);
+        expect(response.headers.get("x-request-id")).toBe(id);
     }
-    const calls = await internalRequests(stack.providerName, stack.edgeName);
-    expect(calls).toBe(0);
-    const mongo = await mongoProfile(stack.id, "read");
-    expect(mongo.operations).toBe(0);
+    const work = await requestWork(stack.providerName, stack.edgeName, requestIds);
+    const calls = workCount(work.requests.http);
+    const mongo = workCount(work.requests.mongo);
+    expect(calls, `Cached ${path} internal requests: ${JSON.stringify(work.requests.http)}`).toBe(0);
+    expect(mongo, `Cached ${path} Mongo work: ${JSON.stringify(work.requests.mongo)}`).toBe(0);
+    expect(workCount(work.requests.log), "Cache hits must not enqueue deferred telemetry work").toBe(0);
     return {
         requests: 20,
         hitRatio: 1,
         internalCalls: calls,
-        mongoOperations: mongo.operations,
+        mongoOperations: mongo,
+        control: controlWork.requests,
+        otherRequestsAndBackground: work.other,
         p50Ms: times.toSorted((a, b) => a - b)[10],
     };
 }
