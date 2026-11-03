@@ -66,7 +66,7 @@ test("stack details are fetched only for the returned entry and cannot select an
             },
             () => undefined,
         ),
-    ).rejects.toThrow("operator");
+    ).rejects.toThrow("Unknown log service: repository");
 });
 
 test("follow reads subsequent server pages before returning to polling", async () => {

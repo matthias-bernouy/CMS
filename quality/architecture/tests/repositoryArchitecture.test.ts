@@ -52,5 +52,5 @@ test("embedding backends are production dependencies only of runtimes that execu
         expect(reachesBackend(name)).toBe(false);
     }
     expect(reachesBackend("@bernouy/ulvia-provider-server")).toBe(true);
-    expect(reachesBackend("@bernouy/official-repository-server")).toBe(true);
+    expect(manifests.has("@bernouy/official-repository-server")).toBe(false);
 });

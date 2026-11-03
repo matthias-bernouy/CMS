@@ -67,6 +67,7 @@ test("a crashed upload commit lease is recoverable and expired staging is pruned
             kind: "provider-manifest",
             canonicalJson: "{}",
             assets: [],
+            owner: { accountId: "fixture-owner", namespace: "publisher", namespaceRevision: 1 },
         },
         new Date(Date.now() + 60_000),
     );
@@ -84,6 +85,7 @@ test("a crashed upload commit lease is recoverable and expired staging is pruned
             kind: "provider-manifest",
             canonicalJson: "{}",
             assets: [],
+            owner: { accountId: "fixture-owner", namespace: "publisher", namespaceRevision: 1 },
         },
         new Date(Date.now() - 1),
     );
@@ -99,6 +101,7 @@ test("expiry pruning cannot remove staging owned by an in-flight commit", async 
             kind: "provider-manifest",
             canonicalJson: "{}",
             assets: [],
+            owner: { accountId: "fixture-owner", namespace: "publisher", namespaceRevision: 1 },
         },
         new Date(Date.now() + 50),
     );
@@ -138,6 +141,7 @@ test("expiry pruning surfaces corrupt upload metadata instead of silently retain
             kind: "provider-manifest",
             canonicalJson: "{}",
             assets: [],
+            owner: { accountId: "fixture-owner", namespace: "publisher", namespaceRevision: 1 },
         },
         new Date(Date.now() - 1),
     );

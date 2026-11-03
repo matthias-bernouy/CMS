@@ -12,7 +12,7 @@ import {
     type ComposeProject,
 } from "./compose";
 import { localServicesEnvironment } from "./environment";
-import { ensureOfficialImage, pullOfficialImage, type OfficialImageComponent } from "./images";
+import { ensureOfficialImage, pullOfficialImage } from "./images";
 import { loadLocalServicesState, localServicesIdentity, saveLocalServicesState } from "./state";
 import type { LocalServicesState } from "./state";
 
@@ -26,7 +26,6 @@ export async function startLocalServices(
     assertStartVersion(installed, requestedVersion);
     const images = installed?.images ?? (await pullInitialImages(requestedVersion ?? defaultStackVersion(), log));
     await ensureOfficialImage(images.provider);
-    await ensureOfficialImage(images.repository);
     const credentials = await serviceCredentials(paths);
     const identity = { ...localServicesIdentity(paths), images };
     const project: ComposeProject = {
@@ -35,35 +34,30 @@ export async function startLocalServices(
         overlays: installation.tls.mode === "acme" ? ["services-tls"] : [],
         environment: localServicesEnvironment(paths, installation, identity, credentials),
     };
-    log("Starting the local proxy, MongoDB, Repository, and Provider...");
+    log("Starting the local proxy, MongoDB, and Provider...");
     await composeUp(project);
     await saveLocalServicesState(paths, installation, images);
-    log(`Shared services are ready (Provider ${images.provider.version}, Repository ${images.repository.version}).`);
+    log(`Shared services are ready (Provider ${images.provider.version}).`);
 }
 
 async function pullInitialImages(version: string, log: (message: string) => void) {
-    const [provider, repository] = await Promise.all([
-        pullOfficialImage("provider", version, log),
-        pullOfficialImage("repository", version, log),
-    ]);
-    return { provider, repository };
+    return { provider: await pullOfficialImage("provider", version, log) };
 }
 
 export function assertStartVersion(state: LocalServicesState | null, requestedVersion?: string): void {
     if (!state || !requestedVersion) {
         return;
     }
-    const current = new Set([state.images.provider.version, state.images.repository.version]);
+    const current = new Set([state.images.provider.version]);
     if (current.size !== 1 || !current.has(requestedVersion)) {
         throw new Error(
-            "Shared services are already initialized with different versions. Use ulvia upgrade provider and ulvia upgrade repository.",
+            "Shared services are already initialized with a different Provider version. Use ulvia upgrade provider.",
         );
     }
 }
 
-export async function upgradeLocalService(
+export async function upgradeLocalProvider(
     paths: UlviaPaths,
-    component: Exclude<OfficialImageComponent, "edge">,
     version: string,
     log: (message: string) => void,
 ): Promise<void> {
@@ -71,19 +65,17 @@ export async function upgradeLocalService(
     if (!installed) {
         throw new Error("Shared services are not initialized. Run ulvia services start first.");
     }
-    const image = await pullOfficialImage(component, version, log);
-    if (installed.images[component].digest === image.digest) {
-        log(`${serviceName(component)} is already at ${version}.`);
+    const image = await pullOfficialImage("provider", version, log);
+    if (installed.images.provider.digest === image.digest) {
+        log(`Provider is already at ${version}.`);
         return;
     }
     const updated: LocalServicesState = {
         ...installed,
-        images: { ...installed.images, [component]: image },
+        images: { ...installed.images, provider: image },
     };
     const credentials = await serviceCredentials(paths);
-    if (component === "provider") {
-        await checkProviderImageRetention(serviceProject(paths, updated, credentials));
-    }
+    await checkProviderImageRetention(serviceProject(paths, updated, credentials));
     try {
         await composeUp(serviceProject(paths, updated, credentials));
         await saveLocalServicesState(paths, updated.installation, updated.images);
@@ -91,7 +83,7 @@ export async function upgradeLocalService(
         await composeUp(serviceProject(paths, installed, credentials)).catch(() => undefined);
         throw error;
     }
-    log(`${serviceName(component)} upgraded to ${version} (${image.digest.slice(0, 19)}…).`);
+    log(`Provider upgraded to ${version} (${image.digest.slice(0, 19)}…).`);
 }
 
 export async function stopLocalServices(paths: UlviaPaths): Promise<void> {
@@ -152,18 +144,14 @@ async function serviceCredentials(paths: UlviaPaths) {
     };
 }
 
-function serviceName(component: Exclude<OfficialImageComponent, "edge">): string {
-    return component === "provider" ? "Provider" : "Repository";
-}
-
 export async function showServiceDiagnostics(paths: UlviaPaths, args: readonly string[]): Promise<void> {
     const state = await loadLocalServicesState(paths);
     if (!state) {
         throw new Error("Shared services are not initialized");
     }
-    const allowed = new Set(["provider", "repository", "mongo", "proxy", "--follow"]);
+    const allowed = new Set(["provider", "mongo", "proxy", "--follow"]);
     if (args.some((value) => !allowed.has(value))) {
-        throw new Error("Usage: ulvia services logs [provider | repository | mongo | proxy] [--follow]");
+        throw new Error("Usage: ulvia services logs [provider | mongo | proxy] [--follow]");
     }
     await composeLogs(serviceProject(paths, state, await serviceCredentials(paths)), args);
 }

@@ -13,7 +13,7 @@ const profile: OfficialInstanceProfile = {
     version: "1.0.0",
     upgradeFromVersions: [],
     manifest: { providerId: "ulvia.official", version: "0.1.0", digest },
-    collection: { publisherId: "ulvia.official", collectionId: "ulvia-official", version: "1.0.0", digest },
+    collections: [{ publisherId: "ulvia.official", collectionId: "ulvia-official", version: "1.0.0", digest }],
     contracts: [{ contractId: "ulvia.cms.content", version: "1.0.0", digest }],
 };
 const profiles = new OfficialInstanceProfiles([profile]);

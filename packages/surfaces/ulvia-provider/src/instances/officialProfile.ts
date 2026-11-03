@@ -12,13 +12,15 @@ export type OfficialInstanceProfile = Readonly<{
         title: string;
         description: string;
         exampleId: string;
+        collectionId: string;
+        indexing: boolean;
     }>[];
-    collection: Readonly<{
+    collections: readonly Readonly<{
         publisherId: string;
         collectionId: string;
         version: string;
         digest: string;
-    }>;
+    }>[];
 }>;
 
 export class OfficialInstanceProfiles {

@@ -2,7 +2,7 @@ import { requireExecutable, runCommand } from "../../process";
 
 const SUPPORTED_STACK_API = "1";
 
-export type OfficialImageComponent = "edge" | "provider" | "repository";
+export type OfficialImageComponent = "edge" | "provider";
 
 export type OfficialImage = Readonly<{
     component: OfficialImageComponent;
@@ -13,7 +13,6 @@ export type OfficialImage = Readonly<{
 const REPOSITORIES: Record<OfficialImageComponent, string> = {
     edge: "docker.io/cyaxis/ulvia-edge",
     provider: "docker.io/cyaxis/ulvia-provider",
-    repository: "docker.io/cyaxis/ulvia-official-repository",
 };
 
 export async function pullOfficialImage(

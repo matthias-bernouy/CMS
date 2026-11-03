@@ -6,9 +6,8 @@ export interface NamespaceInventoryQuery {
 export interface NamespaceAccess {
     readonly namespace: string;
     readonly repositoryId: string;
-    readonly access: "owned" | "transferred" | "revoked" | "missing";
-    readonly revision: number | null;
-    readonly publicKey: string | null;
+    readonly access: "owned" | "suspended";
+    readonly revision: number;
     readonly checkedAt: string;
 }
 export interface NamespaceInventoryPage {

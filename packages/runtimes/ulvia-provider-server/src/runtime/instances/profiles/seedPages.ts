@@ -12,14 +12,25 @@ export async function seedOfficialPages(
     const { repo, db, collections } = composition.stores;
     const receipts = db.collection<{ _id: string; pageId?: string; completed: boolean }>("cms_initial_page_receipts");
     const snapshot = await collections.snapshot("default");
-    const release = snapshot.collections.find((item) => item.digest === profile.collection.digest)?.release;
-    if (!release) {
-        throw new Error("The exact initial Page collection is not installed");
-    }
+    const releases = new Map(
+        profile.collections.map((pin) => {
+            const installed = snapshot.collections.find(
+                (item) => item.collectionId === pin.collectionId && item.digest === pin.digest,
+            );
+            if (!installed) {
+                throw new Error(`The exact initial Page collection is not installed: ${pin.collectionId}`);
+            }
+            return [pin.collectionId, installed.release];
+        }),
+    );
     const pending: { seed: OfficialInstanceProfile["initialPages"][number]; key: string; pageId: string }[] = [];
     // Reserve all ordinary draft routes before validating links between their documents.
     for (const seed of profile.initialPages) {
         execution.throwIfLeaseLost();
+        const release = releases.get(seed.collectionId);
+        if (!release) {
+            throw new Error(`Initial Page collection is absent from its profile: ${seed.collectionId}`);
+        }
         const key = `${profile.id}:${seed.id}`;
         const receipt = await receipts.findOne({ _id: key });
         if (receipt?.completed) {
@@ -51,6 +62,7 @@ export async function seedOfficialPages(
     }
     for (const { seed, key, pageId } of pending) {
         execution.throwIfLeaseLost();
+        const release = releases.get(seed.collectionId)!;
         const current = await repo.getPageById(pageId);
         if (!current) {
             throw new Error("An initialized Page was removed before provisioning completed");
@@ -66,7 +78,7 @@ export async function seedOfficialPages(
                 id: current.id,
                 content: document.html,
                 description: resolveCollectionTranslation(release, seed.description, release.locale),
-                indexing: { enabled: false },
+                indexing: { enabled: seed.indexing },
             },
             current.revision,
         );

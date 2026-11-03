@@ -1,5 +1,5 @@
 import { readdir } from "node:fs/promises";
-import { loadLocalInstanceConfig } from "../../runtime/instanceConfig";
+import { loadLocalInstanceConfig } from "../../runtime/instances/config";
 import type { UlviaPaths } from "../../runtime/paths";
 import { resolveLocalInstancePaths } from "../../runtime/paths";
 import {
@@ -39,7 +39,6 @@ export async function configureCommand(
         bindAddress: values.get("--bind") ?? current.bindAddress,
         ports: {
             http: numericOption(values, "--http-port", current.ports.http),
-            repository: current.ports.repository,
             provider: current.ports.provider,
         },
         tls,
@@ -47,8 +46,8 @@ export async function configureCommand(
     if (config.tls.mode === "acme" && config.bindAddress !== "0.0.0.0") {
         throw new Error("ACME TLS requires --bind 0.0.0.0");
     }
-    if (tls.mode === "acme" && new Set([...Object.values(config.ports), tls.httpsPort]).size !== 4) {
-        throw new Error("HTTP, HTTPS, Repository, and Provider ports must be distinct");
+    if (tls.mode === "acme" && new Set([...Object.values(config.ports), tls.httpsPort]).size !== 3) {
+        throw new Error("HTTP, HTTPS, and Provider ports must be distinct");
     }
     await saveInstallationConfig(paths, config);
     printConfiguration(config, log);

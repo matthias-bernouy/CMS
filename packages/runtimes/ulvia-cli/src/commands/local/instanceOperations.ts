@@ -1,7 +1,9 @@
+import { selectInstanceProfile } from "../../runtime/instances/profiles";
+import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem";
 import { rm } from "node:fs/promises";
-import { disableLocalInstance } from "../../runtime/instance";
-import { loadLocalInstanceConfig } from "../../runtime/instanceConfig";
-import { loadLocalInstanceConnection } from "../../runtime/instanceConnection";
+import { disableLocalInstance, upgradeLocalInstanceProfile } from "../../runtime/instances/operator";
+import { loadLocalInstanceConfig, saveLocalInstanceProfile } from "../../runtime/instances/config";
+import { loadLocalInstanceConnection } from "../../runtime/instances/connection";
 import {
     assertLocalInstanceName,
     assertLocalInstancePaths,
@@ -37,6 +39,27 @@ export async function runExistingInstanceCommand(
     assertLocalInstanceName(name);
     const instancePaths = resolveLocalInstancePaths(paths, name);
     await assertLocalInstancePaths(instancePaths);
+    if (action === "upgrade-profile") {
+        if (rest.length !== 1) {
+            throw new Error("Usage: ulvia instance upgrade-profile <name> <id@version>");
+        }
+        await withRepositoryWriteLock(instancePaths.root, async () => {
+            const config = await loadLocalInstanceConfig(instancePaths.root);
+            const connection = await loadLocalInstanceConnection(instancePaths.root);
+            if (!config || !connection) {
+                throw new Error(`Unknown local instance: ${name}`);
+            }
+            const operator = await providerOperatorAccess(paths, await assertProviderRunning(paths));
+            const target = await selectInstanceProfile(operator.url, operator.token, rest[0]);
+            if (target.id !== config.profile.id) {
+                throw new Error("An instance profile upgrade must retain its application identity");
+            }
+            await upgradeLocalInstanceProfile(operator.url, operator.token, connection.instanceId, target);
+            await saveLocalInstanceProfile(instancePaths.root, target);
+        });
+        log(`Instance ${name} profile upgraded to ${rest[0]}.`);
+        return;
+    }
     if (action === "logs") {
         const connection = await loadLocalInstanceConnection(instancePaths.root);
         const state = await loadLocalServicesState(paths);
@@ -79,7 +102,9 @@ export async function listInstances(
     for (const name of names) {
         const config = await loadLocalInstanceConfig(resolveLocalInstancePaths(paths, name).root);
         if (config) {
-            log(`${name}\t${instancePublicUrl(config.hostname, activeInstallation)}`);
+            log(
+                `${name}\t${instancePublicUrl(config.hostname, activeInstallation)}\t${config.profile.id}@${config.profile.version}`,
+            );
         }
     }
 }
@@ -113,6 +138,7 @@ async function printInstanceStatus(paths: UlviaPaths, name: string, log: (messag
     log(`Instance ${name}: ${running ? "running" : (edge?.state ?? "stopped")}`);
     log(`Version: ${described.state?.image.version ?? "not started"}`);
     log(`URL: ${described.url}`);
+    log(`Profile: ${described.config.profile.id}@${described.config.profile.version}`);
 }
 
 async function printCredentials(paths: UlviaPaths, name: string, log: (message: string) => void): Promise<void> {

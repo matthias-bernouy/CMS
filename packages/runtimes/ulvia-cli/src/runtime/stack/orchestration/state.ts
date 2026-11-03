@@ -2,10 +2,10 @@ import { createHash } from "node:crypto";
 import { chmod, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { LocalInstancePaths, UlviaPaths } from "../../paths";
-import { loadInstallationConfig, parseInstallationConfig, type InstallationConfig } from "../installation";
+import { parseInstallationConfig, type InstallationConfig } from "../installation";
 import { isOfficialImage, type OfficialImage } from "./images";
 
-const SERVICES_SCHEMA = "ulvia.local-services-stack.v2" as const;
+const SERVICES_SCHEMA = "ulvia.local-services-stack.v3" as const;
 const INSTANCE_SCHEMA = "ulvia.local-edge-stack.v2" as const;
 
 export type LocalServicesState = Readonly<{
@@ -13,7 +13,7 @@ export type LocalServicesState = Readonly<{
     projectName: string;
     privateNetwork: string;
     instanceNetwork: string;
-    images: Readonly<{ provider: OfficialImage; repository: OfficialImage }>;
+    images: Readonly<{ provider: OfficialImage }>;
     installation: InstallationConfig;
 }>;
 
@@ -52,12 +52,7 @@ export async function loadLocalServicesState(paths: UlviaPaths): Promise<LocalSe
     ) {
         throw new Error("Ulvia local services state is invalid");
     }
-    const installation = value.installation
-        ? parseInstallationConfig(value.installation)
-        : await loadInstallationConfig(paths);
-    if (!installation) {
-        throw new Error("Ulvia local services state has no installation configuration");
-    }
+    const installation = parseInstallationConfig(value.installation);
     return {
         schema: SERVICES_SCHEMA,
         projectName: value.projectName as string,
@@ -143,5 +138,5 @@ function validServiceImages(value: unknown): value is LocalServicesState["images
         return false;
     }
     const record = value as Record<string, unknown>;
-    return isOfficialImage(record.provider, "provider") && isOfficialImage(record.repository, "repository");
+    return Object.keys(record).join(",") === "provider" && isOfficialImage(record.provider, "provider");
 }

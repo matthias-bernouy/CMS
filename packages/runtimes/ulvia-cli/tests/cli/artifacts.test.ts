@@ -94,27 +94,37 @@ test("contract and provider releases use explicit kinds and exact local contract
             await importRepositoryArtifact(remote, providerReference, importedContracts, importedProviders);
             expect((await importedContracts.list()).length).toBe(1);
             expect((await importedProviders.list()).length).toBe(1);
-            const contractsIndex = (await (await fetch(`${server.url}/v1/contracts`)).json()) as {
+            const catalogue = (kind: string) =>
+                fetch(`${server.url}/.cms/call/ulvia.repository/v1/catalogue`, {
+                    method: "QUERY",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify({ kind, limit: 256 }),
+                });
+            const contractsIndex = (await (await catalogue("contract")).json()) as {
                 releases: unknown[];
             };
-            const providersIndex = (await (await fetch(`${server.url}/v1/providers`)).json()) as {
+            const providersIndex = (await (await catalogue("provider-manifest")).json()) as {
                 releases: unknown[];
             };
             expect(contractsIndex.releases).toHaveLength(2);
             expect(providersIndex.releases).toHaveLength(1);
             const fixtureResponse = await fetch(
-                `${server.url}/v1/contracts/ulvia.official/communication.receipt/0.1.0/fixtures/receipt.svg`,
+                `${server.url}/.cms/call/ulvia.repository/v1/assets/contract/ulvia.official/communication.receipt/0.1.0/receipt.svg`,
             );
             expect(fixtureResponse.status).toBe(200);
-            expect(fixtureResponse.headers.get("content-type")).toBe("image/svg+xml");
+            expect(fixtureResponse.headers.get("content-type")).toBe("application/octet-stream");
             expect(new Uint8Array(await fixtureResponse.arrayBuffer())).toEqual(
                 new Uint8Array(await readFile(assetFixture)),
             );
             expect(
-                (await fetch(`${server.url}/v1/providers/ulvia.official/ulvia.example/1.0.0`)).headers.get("ETag"),
+                (
+                    await fetch(
+                        `${server.url}/.cms/call/ulvia.repository/v1/releases/provider-manifest/ulvia.official/ulvia.example/1.0.0`,
+                    )
+                ).headers.get("ETag"),
             ).toMatch(/^"sha256:/);
         } finally {
-            server.stop();
+            await server.stop();
         }
         provider.name = "Different manifest at the same version";
         await writeFile(join(providerFolder, "definition.json"), JSON.stringify(provider));

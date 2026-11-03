@@ -12,9 +12,10 @@ export function repositoryBaseUrl(
         url.username ||
         url.password ||
         url.search ||
-        url.hash
+        url.hash ||
+        url.pathname !== "/"
     ) {
         throw new TypeError(`${kind} repository must use HTTPS or explicitly allowed HTTP without URL credentials`);
     }
-    return new URL(`${url.toString().replace(/\/+$/, "")}/`);
+    return new URL(`${url.origin}/.cms/call/ulvia.repository/`);
 }

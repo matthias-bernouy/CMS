@@ -5,7 +5,8 @@ import { dirname, join } from "node:path";
 
 import type { RepositoryArtifactKind } from "cms-repository/repository/publication/types";
 import { durableRename, durableWriteFile, ensureDurableDirectory } from "./core/durable";
-import { repositoryDigest } from "../namespaces/proofs";
+import { sha256Digest } from "@bernouy/binary-media";
+import { canonicalIJsonBytes } from "cms-repository/exports/contracts/protocol";
 
 export type { RepositoryArtifactKind } from "cms-repository/repository/publication/types";
 export type RepositoryYank = Readonly<{ reason: string; yankedAt: string }>;
@@ -52,7 +53,9 @@ export class LocalRepositoryYanks {
         const entries = { ...document.entries };
         const coordinate = key(kind, publisherId, id, version);
         const revision = document.revisions?.[coordinate] ?? (entries[coordinate] ? 1 : 0);
-        const mutation = repositoryDigest({ coordinate, reason, expectedRevision: expectedRevision ?? revision });
+        const mutation = await sha256Digest(
+            canonicalIJsonBytes({ coordinate, reason, expectedRevision: expectedRevision ?? revision }),
+        );
         if (expectedRevision !== undefined && expectedRevision !== revision) {
             if (document.mutations?.[coordinate] === mutation) {
                 return entries[coordinate] ?? null;

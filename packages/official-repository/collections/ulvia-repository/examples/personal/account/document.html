@@ -1,0 +1,23 @@
+<main cms-bloc="ulvia-repository-shell">
+    <section slot="content">
+        <h1 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-repository.account }}</h1>
+        <p>{{ cms.i18n.ulvia-repository.account-help }}</p>
+        <nav>
+            <a href="/account/namespaces">{{ cms.i18n.ulvia-repository.namespaces }}</a> <a href="/account/tokens">{{ cms.i18n.ulvia-repository.tokens }}</a>
+            <a href="/account/publications">{{ cms.i18n.ulvia-repository.publications }}</a>
+        </nav>
+        <form cms-mutation="ulvia.cms.access:logout as logout" cms-mutation-redirect="/login">
+            <button cms-bloc="ulvia-official-action" type="submit"><span>{{ cms.i18n.ulvia-repository.logout }}</span></button>
+            <div cms-match="logout.outcome.kind">
+                <span cms-case='"none"'></span>
+                <div cms-case='"success"'>
+                    <p role="status">{{ cms.i18n.ulvia-repository.success }}</p>
+                </div>
+                <div cms-case='"error"' cms-match="logout.outcome.code">
+                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-repository.failed }}</p>
+                </div>
+                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-repository.failed }}</p>
+            </div>
+        </form>
+    </section>
+</main>

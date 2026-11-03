@@ -3,18 +3,17 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
-import { writeOfficialBootstrapArtifacts } from "../../src/bootstrap/generate";
 import { runCli } from "../../src/cli";
 import { bootstrapOfficialRepository } from "../../src/commands/bootstrap";
 import { aggregateStatus } from "../../src/commands/local/services";
-import { loadOrCreateLocalInstanceConfig } from "../../src/runtime/instanceConfig";
-import { saveLocalInstanceConnection } from "../../src/runtime/instanceConnection";
+import { loadOrCreateLocalInstanceConfig } from "../../src/runtime/instances/config";
+import { saveLocalInstanceConnection } from "../../src/runtime/instances/connection";
 import { ensureLocalInstancePaths, resolveLocalInstancePaths, resolveUlviaPaths } from "../../src/runtime/paths";
 import { resolveServicePorts } from "../../src/runtime/stack/ports";
 import { loadInstallationConfig } from "../../src/runtime/stack/installation";
 
 describe("Ulvia CLI", () => {
-    test("documents local installation and repository lifecycle commands", async () => {
+    test("documents CMS instance deployment and Repository account connections", async () => {
         const output: string[] = [];
         await runCli(["--help"], { log: (line) => output.push(line) });
 
@@ -26,7 +25,7 @@ describe("Ulvia CLI", () => {
         expect(output.join("\n")).toContain("ulvia services");
         expect(output.join("\n")).toContain("ulvia configure network");
         expect(output.join("\n")).toContain("ulvia instance create");
-        expect(output.join("\n")).toContain("ulvia upgrade <edge | provider | repository>");
+        expect(output.join("\n")).toContain("ulvia upgrade <edge | provider>");
         expect(output.join("\n")).not.toContain("ulvia dev");
         expect(output.join("\n")).toContain("ulvia reset --yes");
         expect(output.join("\n")).toContain("ulvia instance delete");
@@ -84,6 +83,7 @@ describe("Ulvia CLI", () => {
                 name: "site",
                 label: "Site",
                 hostname: "example.com",
+                profile: { id: "ulvia.official", version: "1.3.0" },
             });
             await expect(
                 runCli(["configure", "network", "--http-port", "8080"], {
@@ -99,10 +99,9 @@ describe("Ulvia CLI", () => {
     test("accepts isolated local ports and rejects collisions", () => {
         expect(resolveServicePorts({ ULVIA_HTTP_PORT: "5210", ULVIA_PROVIDER_PORT: "5213" })).toEqual({
             http: 5210,
-            repository: 5102,
             provider: 5213,
         });
-        expect(() => resolveServicePorts({ ULVIA_HTTP_PORT: "5200", ULVIA_REPOSITORY_PORT: "5200" })).toThrow(
+        expect(() => resolveServicePorts({ ULVIA_HTTP_PORT: "5200", ULVIA_PROVIDER_PORT: "5200" })).toThrow(
             /ports must be distinct/,
         );
     });
@@ -123,6 +122,7 @@ describe("Ulvia CLI", () => {
                 name: "default",
                 label: "Default Ulvia instance",
                 hostname: "localhost",
+                profile: { id: "ulvia.official", version: "1.3.0" },
             });
             await saveLocalInstanceConnection(instance.root, {
                 instanceId: "instance:00000000-0000-4000-8000-000000000001",
@@ -144,20 +144,17 @@ describe("Ulvia CLI", () => {
 
     test("admits all bundled resources needed by a fresh local stack", async () => {
         const root = await mkdtemp(join(tmpdir(), "ulvia-bootstrap-"));
-        const bundle = await mkdtemp(join(tmpdir(), "ulvia-bootstrap-bundle-"));
         try {
-            await writeOfficialBootstrapArtifacts(bundle);
-            await bootstrapOfficialRepository(root, bundle);
+            await bootstrapOfficialRepository(root);
             const artifacts = new LocalArtifactFiles(root);
             expect((await artifacts.list("contracts")).map(({ id }) => id)).toContain("ulvia.cms.content");
             expect((await artifacts.list("providers")).map(({ id }) => id)).toEqual(["ulvia.official"]);
             expect(
                 (await new LocalCollectionRepository(root).list()).map(({ release }) => release.collectionId),
-            ).toEqual(["ulvia-official"]);
-            await bootstrapOfficialRepository(root, bundle);
+            ).toEqual(["ulvia-official", "ulvia-repository"]);
+            await bootstrapOfficialRepository(root);
         } finally {
             await rm(root, { recursive: true, force: true });
-            await rm(bundle, { recursive: true, force: true });
         }
     }, 15_000);
 

@@ -1,4 +1,4 @@
-import type { NamespaceAccess, NamespaceInventoryQuery, NamespaceInventoryPage } from "./namespaces";
+import type { NamespaceInventoryQuery, NamespaceInventoryPage } from "./namespaces";
 import { readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { RemoteRepositoryClient } from "cms-repository/exports/repository/publication";
@@ -6,16 +6,23 @@ import { RepositorySourceClient } from "../sources/client";
 import { prepareCollectionRelease, CollectionAuthoringValidationError } from "cms-repository/exports/collections/build";
 import type { ContentDiagnostic } from "@bernouy/cms-content/page-document";
 import { prepareRemoteCollection, type AuthoringHost } from "./prepare";
-import type { RepositoryOwnerCredential } from "cms-repository/exports/repository/namespaces";
+import type { RepositoryNamespaceCredential } from "cms-repository/exports/repository/namespaces";
+
+export interface RepositoryConnectionStatus {
+    readonly configured: boolean;
+    readonly repositoryUrl: string;
+    readonly repositoryId: string | null;
+}
 
 export interface CollectionPublisher {
     readonly repositoryUrl: string;
     readonly repositorySourceId: string;
     readonly allowInsecureHttp?: boolean;
-    credential(namespace: string): Promise<RepositoryOwnerCredential>;
-    identity(): Promise<{ publicKey: string }>;
+    credential(namespace: string): Promise<RepositoryNamespaceCredential>;
+    connectionStatus(): Promise<RepositoryConnectionStatus>;
+    configureConnection(token: string): Promise<RepositoryConnectionStatus>;
+    disconnectConnection(): Promise<RepositoryConnectionStatus>;
     listNamespaces(input?: NamespaceInventoryQuery): Promise<NamespaceInventoryPage>;
-    trackNamespace(namespace: string): Promise<NamespaceAccess>;
     claim(namespace: string): Promise<unknown>;
 }
 
@@ -24,17 +31,20 @@ export class CollectionAuthoring {
         private readonly host: AuthoringHost,
         private readonly publisher: CollectionPublisher,
     ) {}
-    identity() {
-        return this.publisher.identity();
+    connectionStatus() {
+        return this.publisher.connectionStatus();
+    }
+    configureConnection(token: string) {
+        return this.publisher.configureConnection(token);
+    }
+    disconnectConnection() {
+        return this.publisher.disconnectConnection();
     }
     claim(namespace: string) {
         return this.publisher.claim(namespace);
     }
     listNamespaces(input: NamespaceInventoryQuery = {}) {
         return this.publisher.listNamespaces(input);
-    }
-    trackNamespace(namespace: string) {
-        return this.publisher.trackNamespace(namespace);
     }
     async prepare(sourceJson: string) {
         try {

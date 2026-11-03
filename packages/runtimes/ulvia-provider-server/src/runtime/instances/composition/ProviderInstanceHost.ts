@@ -1,3 +1,4 @@
+import { MemoryVectorStore } from "@bernouy/text-search";
 import { HttpRepositoryDiscovery } from "@bernouy/cms-repository/repository/search/http";
 import { RepositoryDiscovery } from "@bernouy/cms-repository/repository/search";
 import { createInstanceDocumentation } from "./documentation";
@@ -49,6 +50,8 @@ import type { Logger } from "@bernouy/logging";
 import { correlatedRepositoryFetch } from "../../gateway/repositoryFetch";
 import { createInstanceDiagnostics, connectInstanceDiagnostics } from "./diagnostics";
 import { createInstanceAuth } from "../../authentication/createInstanceAuth";
+import { createInstanceRepository } from "../../stores/repository/registry";
+import { registerRepositoryCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
 import { createCollectionAuthoring } from "../../stores/repository/composition";
 import { McpAuthorization } from "@bernouy/cms-auth/oauth";
@@ -121,6 +124,7 @@ export class ProviderInstanceHost {
     }
 
     readonly #records = new Map<string, ProviderInstanceRecord>();
+    readonly #registryVectors = new MemoryVectorStore(8192);
 
     async runtime(instance: ProviderInstanceRecord): Promise<ResourceLease<UlviaProviderInstanceRuntime>> {
         const startedAt = performance.now();
@@ -160,9 +164,13 @@ export class ProviderInstanceHost {
     }
 
     async close(): Promise<void> {
-        await this.#documentation.stop();
-        await this.#instances.close();
-        await this.#documentation.close();
+        try {
+            await this.#documentation.stop();
+            await this.#instances.close();
+            await this.#documentation.close();
+        } finally {
+            this.#registryVectors.clear();
+        }
     }
 
     startDocumentation(instances: readonly ProviderInstanceRecord[]): void {
@@ -231,8 +239,19 @@ export class ProviderInstanceHost {
         let operationRecovery: RecoverySupervisor | undefined;
         let documentation: CmsDocumentation | undefined;
         let documentationTimer: ReturnType<typeof setInterval> | undefined;
+        let registry: Awaited<ReturnType<typeof createInstanceRepository>> | undefined;
         try {
             const profile = this.requiredProfile(instance.profile.id, instance.profile.version);
+            const registryPin = profile.contracts.find(({ contractId }) => contractId === "ulvia.repository");
+            if (registryPin) {
+                registry = await createInstanceRepository(
+                    stores,
+                    filesDirectory,
+                    instance.id,
+                    this.#documentation.model,
+                    this.#registryVectors,
+                );
+            }
             const readReport = async (endpoint: string, token: string) =>
                 endpoint === this.env.ULVIA_PROVIDER_PUBLIC_URL && token === credentials.invocationSecret
                     ? providerReport(instance, profile)
@@ -306,6 +325,7 @@ export class ProviderInstanceHost {
                 dispatcher,
                 {
                     ...stores,
+                    ...(registry ? { withUserDeletion: registry.withUserDeletion } : {}),
                     documentation: instanceDocumentation,
                     repositoryDiscovery: new RepositoryDiscovery([
                         new HttpRepositoryDiscovery("ulvia-provider-bootstrap", this.env.CMS_REPOSITORY_URL, {
@@ -345,6 +365,18 @@ export class ProviderInstanceHost {
                 fileWorkspace,
                 new Set(profile.contracts.map(({ contractId }) => contractId)),
             );
+            if (registry && registryPin) {
+                const contract = this.contracts.find(
+                    ({ release, digest }) =>
+                        release.contractId === registryPin.contractId &&
+                        release.version === registryPin.version &&
+                        digest === registryPin.digest,
+                );
+                if (!contract) {
+                    throw new Error("Repository profile contract is unavailable");
+                }
+                registerRepositoryCapabilities(dispatcher, registry.service, contract, gateway);
+            }
             operationRecovery = new RecoverySupervisor(
                 (limit) => operations.recover(limit),
                 undefined,
@@ -385,6 +417,7 @@ export class ProviderInstanceHost {
                 },
                 close: async () => {
                     clearInterval(documentationTimer);
+                    await registry?.close();
                     await instanceDocumentation.close();
                     await activeRecovery.stop();
                     await operations.stop();
@@ -417,6 +450,7 @@ export class ProviderInstanceHost {
             return composition;
         } catch (error) {
             clearInterval(documentationTimer);
+            await registry?.close();
             await documentation?.close();
             await operationRecovery?.stop();
             await diagnostics.collector.close();

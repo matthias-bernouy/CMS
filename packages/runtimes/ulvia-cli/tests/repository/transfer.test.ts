@@ -27,6 +27,14 @@ test("CLI push and pull preserve every official artifact kind through a remote r
         ULVIA_DATA_DIR: data,
         ULVIA_REPOSITORY_URL: server.url,
     });
+    const catalogue = async (kind: string) =>
+        (await (
+            await fetch(`${server.url}/.cms/call/ulvia.repository/v1/catalogue`, {
+                method: "QUERY",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ kind, limit: 256 }),
+            })
+        ).json()) as { releases: unknown[] };
     try {
         await server.connect(sourceData);
         for (const contractId of contractIds) {
@@ -65,10 +73,22 @@ test("CLI push and pull preserve every official artifact kind through a remote r
             log: () => undefined,
         });
         expect(
-            ((await (await fetch(`${server.url}/v1/providers`)).json()) as { releases: unknown[] }).releases,
+            (
+                (await (
+                    await fetch(`${server.url}/.cms/call/ulvia.repository/v1/catalogue`, {
+                        method: "QUERY",
+                        headers: { "content-type": "application/json" },
+                        body: JSON.stringify({ kind: "provider-manifest", limit: 256 }),
+                    })
+                ).json()) as { releases: unknown[] }
+            ).releases,
         ).toHaveLength(1);
         expect(
-            (await fetch(`${server.url}/v1/contracts/ulvia.official/ulvia.cms.access/${accessVersion}`)).status,
+            (
+                await fetch(
+                    `${server.url}/.cms/call/ulvia.repository/v1/releases/contract/ulvia.official/ulvia.cms.access/${accessVersion}`,
+                )
+            ).status,
         ).toBe(200);
         await runCli(["restore", "contract", accessCoordinate], {
             environment: environment(sourceData),
@@ -101,18 +121,14 @@ test("CLI push and pull preserve every official artifact kind through a remote r
             environment: environment(sourceData),
             log: () => undefined,
         });
-        expect(
-            ((await (await fetch(`${server.url}/v1/collections`)).json()) as { releases: unknown[] }).releases,
-        ).toEqual([]);
+        expect((await catalogue("collection")).releases).toEqual([]);
         await runCli(["restore", "collection", collectionCoordinate], {
             environment: environment(sourceData),
             log: () => undefined,
         });
-        expect(
-            ((await (await fetch(`${server.url}/v1/collections`)).json()) as { releases: unknown[] }).releases,
-        ).toHaveLength(1);
+        expect((await catalogue("collection")).releases).toHaveLength(1);
     } finally {
-        server.stop();
+        await server.stop();
         await Promise.all(
             [sourceData, targetData, remoteRoot].map((path) => rm(path, { recursive: true, force: true })),
         );

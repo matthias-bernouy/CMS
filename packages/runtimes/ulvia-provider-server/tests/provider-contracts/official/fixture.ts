@@ -13,8 +13,7 @@ export async function repositoryFixture() {
     const index = JSON.parse(await readFile(resolve(ROOT, "index.json"), "utf8")) as {
         contracts: string[];
         provider: string;
-        collection: string;
-        collectionAssets: Array<{ id: string; path: string }>;
+        collections: Array<{ release: string; assets: Array<{ id: string; path: string }> }>;
     };
     const catalogue = new InMemoryReleaseCatalogue();
     const entries: RepositoryArtifactEntry[] = [];
@@ -69,11 +68,19 @@ export async function repositoryFixture() {
             Buffer.from(admitted.canonicalJson),
         );
     }
-    const collectionValue = JSON.parse(await readFile(resolve(ROOT, index.collection), "utf8"));
-    const collectionAssets = await Promise.all(
-        index.collectionAssets.map(async ({ id, path }) => ({ id, bytes: await readFile(resolve(ROOT, path)) })),
+    const admittedCollections = await Promise.all(
+        index.collections.map(async (entry) => {
+            const release = JSON.parse(await readFile(resolve(ROOT, entry.release), "utf8"));
+            const assets = await Promise.all(
+                entry.assets.map(async ({ id, path }) => ({ id, bytes: await readFile(resolve(ROOT, path)) })),
+            );
+            return {
+                admission: await admitCollectionRelease(release, assets, { contracts: catalogue }),
+                release,
+                assets,
+            };
+        }),
     );
-    const collection = await admitCollectionRelease(collectionValue, collectionAssets, { contracts: catalogue });
     const providers: ProviderRepositorySource = {
         id: "official",
         list: async (kind) => entries.filter((entry) => entry.kind === kind),
@@ -90,8 +97,8 @@ export async function repositoryFixture() {
     };
     const collections: CollectionRepositorySource = {
         id: "official",
-        list: async () => [
-            {
+        list: async () =>
+            admittedCollections.map(({ admission: collection }) => ({
                 repositoryId: "official",
                 publisherId: collection.release.publisherId,
                 collectionId: collection.release.collectionId,
@@ -101,13 +108,13 @@ export async function repositoryFixture() {
                 description: collection.release.description,
                 blocCount: collection.release.blocs.length,
                 hasTheme: collection.release.theme !== undefined,
-            },
-        ],
-        getMetadata: async () => collectionValue,
-        get: async () => ({
-            release: collectionValue,
-            assets: collectionAssets,
-        }),
+            })),
+        getMetadata: async (entry) =>
+            admittedCollections.find(({ admission }) => admission.digest === entry.digest)!.release,
+        get: async (entry) => {
+            const { release, assets } = admittedCollections.find(({ admission }) => admission.digest === entry.digest)!;
+            return { release, assets };
+        },
     };
     return {
         providers,
@@ -115,7 +122,9 @@ export async function repositoryFixture() {
         catalogue,
         contracts: admissions,
         manifestDigest: manifest.digest,
-        collectionDigest: collection.digest,
+        collectionDigest: admittedCollections.find(
+            ({ admission }) => admission.release.collectionId === "ulvia-official",
+        )!.admission.digest,
         contractDigests,
     };
 }

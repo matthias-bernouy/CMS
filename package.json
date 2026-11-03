@@ -56,7 +56,6 @@
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
-        "@bernouy/official-repository-server": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/ulvia-cli": "workspace:*",

@@ -47,15 +47,16 @@ connection scopes are also future work.
 
 ## Collection workflow
 
-`ulvia.cms.authoring` exposes `get-identity`, `claim-namespace`,
-`prepare-collection`, `publish-collection`, `get-collection-sources` and
-`discard-preparation`, `list-namespaces` and `track-namespace`. The Provider runtime owns an Ed25519 key in a dedicated
-encrypted secret namespace. Tools return the public key only. Namespace claims
-and publication use signed Repository HTTP requests; lost keys have no operator
-recovery. The first identity creation pins the configured Repository URL and
-persistent identity. A later mismatch fails instead of silently changing signers.
+`ulvia.cms.authoring` exposes `get-connection`, `configure-connection`,
+`disconnect-connection`, `claim-namespace`, `list-namespaces`, `prepare-collection`,
+`publish-collection`, `get-collection-sources` and `discard-preparation`.
+The Provider stores an ordinary Repository account PAT in the contract's encrypted
+secret namespace, pinned to the configured Repository origin and identity. Tools
+never return that saved secret. The publishing account remains separate from the
+CMS administrator authorizing the authoring call.
 
-1. Read the instance identity and claim an available namespace.
+1. Configure the Repository connection with an account PAT, inspect its status,
+   then list or claim a namespace belonging to that account.
 2. Submit a complete snapshot to `prepare-collection` as `sourceJson`:
    `{ "files": [{ "path": "definition.json", "content": "..." }] }`.
    Paths follow the same authored collection conventions as CLI `release`.
@@ -65,14 +66,14 @@ persistent identity. A later mismatch fails instead of silently changing signers
    Compilation failures produce bounded diagnostics. The compiler uses the shared
    `@bernouy/cms-repository/collections/build` API, also used directly by the CLI.
 4. Publish the exact `preparationId` and `expectedDigest`. The host recompiles
-   and compares the preparation before signing. Publication stores the immutable
+   and compares the preparation before account-authorized publication. Publication stores the immutable
    release, then its private source snapshot. A retry can finish snapshot storage
    after a partial publication. Installation is a separate action.
 5. Use collection installation tools to install or upgrade the reviewed release,
    with the current installation revision and any required browser-risk approval.
    Installed Blocs become available to Content tools. Page edits remain CMS data.
 6. Retrieve private sources by exact coordinate to prepare a later version.
-   Source reads require the namespace owner's proof too.
+   Source reads require the connected account's current namespace ownership too.
 
 Preparations are temporary local directories, not persistent editing workspaces.
 They expire after seven days and are capped at 64. Source JSON is limited to
@@ -85,19 +86,19 @@ No client-supplied build scripts or test commands are executed.
 
 ## Namespace inventory
 
-The instance remembers namespace names in `cms_repository_namespaces`, scoped to
-its pinned Repository identity. Claims are recorded before sending the request
-so an uncertain HTTP outcome remains discoverable. Verified use of an existing
-namespace also records it; `track-namespace` imports a known existing namespace
-only after proving this instance's current ownership.
+`list-namespaces` queries the connected account's current Repository inventory,
+which is bounded to 32 namespaces. Its `cursor` / `limit` projection and optional
+exact namespace filter return `owned` or `suspended`, revision and check time.
+Namespaces claimed through the CLI or another connected CMS appear automatically
+when those clients use the same Repository account. Transferred namespaces leave
+the previous owner's inventory. No local tracking database or tracking command
+is required.
 
-`list-namespaces` follows a bounded `cursor` / `limit` protocol. Every page checks
-the Repository identity and live owner records and returns `owned`, `transferred`,
-`revoked` or `missing`, plus revision and check time. The inventory is not a
-global search by public key: names claimed outside the instance must be tracked
-explicitly. It stores no private key and never authorizes a publication; every
-publication still verifies the current owner. An unavailable Repository causes
-an error rather than returning stale ownership as current access.
+Each request verifies the pinned Repository identity before resolving the PAT.
+An unavailable Repository produces an error rather than stale ownership. Every
+publication and private source request checks current ownership and revision;
+the inventory itself does not authorize writes. Disconnecting removes the local
+connection; revoking its PAT is a separate shared Access account operation.
 
 ## Files and context
 
@@ -132,24 +133,23 @@ remain CLI workflows; the new instance authoring tools focus on collections.
 The authored Provider profile is `1.0.0`, pinned to `ulvia.official@1.0.0`:
 Access `1.0.0`, Content `1.0.0`, Files `1.0.0`, Installations `1.0.0` and
 Repository authoring `1.0.0`. Private snapshots require Repository protocol
-`ulvia.repository@1.0.0`. These are source artifacts until explicitly released;
+`ulvia.repository@2.0.0`. These are source artifacts until explicitly released;
 editing them does not upgrade a deployed image or publish a catalogue release.
 This profile currently provisions fresh instances; automatic migration from
 older Provider profiles is not implemented.
 
 Normal `bun run verify` includes domain, HTTP protocol and source-pipeline
 regressions. The opt-in real-image journey uses isolated local Docker containers
-for MongoDB, Repository, Provider and Edge, plus Chromium. The harness lives in
+for MongoDB, Provider and independent CMS/Repository Edges, plus Chromium. The harness lives in
 [`tests/integration/instance`](../../tests/integration/instance/README.md).
 It checks consent, publication, installation, rendering, file bytes, Provider
-connections, log isolation, key rotation, persistence and revocation.
+connections, log isolation, account ownership, persistence and revocation.
 With matching local images already built, run:
 
 ```sh
 ULVIA_MCP_EDGE_DOCKER_IMAGE=docker.io/cyaxis/ulvia-edge:<tag> \
 ULVIA_MCP_PROVIDER_DOCKER_IMAGE=docker.io/cyaxis/ulvia-provider:<tag> \
-ULVIA_REPOSITORY_DOCKER_IMAGE=docker.io/cyaxis/ulvia-official-repository:<tag> \
-bun test ./tests/integration/instance ./tests/images/official-repository
+bun test ./tests/integration/instance ./tests/images/repository
 ```
 
 The journey never uses the public Repository. It removes its own containers,

@@ -64,6 +64,9 @@
         },
         {
             "path": "../../foundation/text-embeddings"
+        },
+        {
+            "path": "../../foundation/text-search"
         }
     ]
 }

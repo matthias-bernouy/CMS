@@ -16,6 +16,7 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
     const instance = readyInstance();
     const creates: unknown[] = [];
     const lifecycle = {
+        describeProfiles: () => ({ defaultProfile: instance.profile, profiles: [instance.profile] }),
         list: async () => [instance],
         get: async (id: string) => (id === instance.id ? instance : null),
         create: async (key: string, input: unknown) => {
@@ -35,6 +36,10 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
     const authorization = { Authorization: `Bearer ${OPERATOR_TOKEN}` };
     try {
         expect((await server.request("GET", "/ulvia/operator/instances")).status).toBe(401);
+        expect((await server.request("GET", "/ulvia/operator/profiles")).status).toBe(401);
+        const profiles = await server.request("GET", "/ulvia/operator/profiles", { headers: authorization });
+        expect(profiles.headers.get("cache-control")).toBe("no-store");
+        expect(await profiles.json()).toEqual({ defaultProfile: instance.profile, profiles: [instance.profile] });
         const listing = await server.request("GET", "/ulvia/operator/instances", { headers: authorization });
         expect((await listing.json()).instances).toHaveLength(1);
 
@@ -90,6 +95,10 @@ test("an idempotency key can only replay the exact instance request", async () =
         administrator: { email: "admin@example.test", password: "long-enough-password" },
     };
 
+    expect(lifecycle.describeProfiles()).toEqual({
+        defaultProfile: { id: "ulvia.official", version: "1.0.0" },
+        profiles: [{ id: "ulvia.official", version: "1.0.0" }],
+    });
     const created = await lifecycle.create("create-one", input);
     expect((await lifecycle.create("create-one", input)).instance.id).toBe(created.instance.id);
     await expect(
@@ -109,12 +118,14 @@ function profiles(): OfficialInstanceProfiles {
             upgradeFromVersions: [],
             manifest: { providerId: "ulvia.official", version: "0.3.0", digest: `sha256:${"a".repeat(64)}` },
             contracts: [],
-            collection: {
-                publisherId: "ulvia.official",
-                collectionId: "ulvia-official",
-                version: "1.0.0",
-                digest: `sha256:${"b".repeat(64)}`,
-            },
+            collections: [
+                {
+                    publisherId: "ulvia.official",
+                    collectionId: "ulvia-official",
+                    version: "1.0.0",
+                    digest: `sha256:${"b".repeat(64)}`,
+                },
+            ],
         },
     ]);
 }

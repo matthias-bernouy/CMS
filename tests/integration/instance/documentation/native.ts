@@ -5,16 +5,17 @@ import { tmpdir } from "node:os";
 import { MongoClient } from "mongodb";
 import { provisionInstance } from "../provision";
 import { waitForHttp } from "../docker";
-import { publishDocumentationBootstrap } from "./publish";
+import { publishBundledReleases } from "../repository/bootstrap";
 import { documentationRepositoryEntrypoint } from "./repository";
+import { repositoryApi } from "../repository/client";
 import { documentationChildren } from "./processes";
 import { documentationPreparations, waitForDocumentationPreparation } from "./cold/preparations";
 
 export async function documentationProcesses() {
     const root = await mkdtemp(join(tmpdir(), "ulvia-documentation-flow-"));
     const workspace = resolve(import.meta.dir, "../../../..");
-    const reservations = Array.from({ length: 4 }, () =>
-        Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(null) }),
+    const reservations = Array.from({ length: 4 }, (_, index) =>
+        Bun.serve({ hostname: "127.0.0.1", port: index === 2 ? 5103 : 0, fetch: () => new Response(null) }),
     );
     const [mongoPort, repositoryPort, providerPort, edgePort] = reservations.map((server) => server.port!);
     reservations.forEach((server) => {
@@ -54,7 +55,8 @@ export async function documentationProcesses() {
             String(repositoryPort),
         ]);
         await waitForHttp(`${repositoryUrl}/readyz`);
-        await publishDocumentationBootstrap(repositoryUrl, providerUrl);
+        const account = await Bun.file(join(root, "repository/fixture-account.json")).json();
+        await publishBundledReleases(repositoryUrl, providerUrl, account.token);
         await mkdir(join(root, "files"));
         if (process.env.ULVIA_DOCUMENTATION_MODEL_CACHE) {
             await cp(process.env.ULVIA_DOCUMENTATION_MODEL_CACHE, join(root, "files/.documentation-models"), {
@@ -74,6 +76,9 @@ export async function documentationProcesses() {
             ULVIA_PROVIDER_HOST: "127.0.0.1",
             ULVIA_PROVIDER_PUBLIC_URL: providerUrl,
             ULVIA_PROVIDER_OPERATOR_TOKEN: operatorToken,
+            ...(process.env.ULVIA_DOCUMENTATION_MODEL_CACHE
+                ? { ULVIA_EMBEDDING_MODEL_DIR: join(root, "files/.documentation-models") }
+                : {}),
         };
         const startProvider = () =>
             start(
@@ -105,6 +110,19 @@ export async function documentationProcesses() {
                 CMS_INSTALLATIONS_PROVIDER_TOKEN: token,
             });
             await waitForHttp(`${url}/readyz`);
+            const api = repositoryApi(url);
+            const admin = await api.session(administrator.email, administrator.password);
+            const connected = await api.request(
+                "ulvia.cms.authoring",
+                "/configure-connection",
+                "POST",
+                { token: account.token },
+                admin,
+            );
+            if (connected.status !== 200) {
+                throw new Error(`Documentation authoring connection failed (${connected.status})`);
+            }
+            await connected.body?.cancel();
         };
         await startEdge("edge", cmsUrl, instance.credentials.instanceAccessToken);
         return {

@@ -2,10 +2,10 @@ import { randomBytes } from "node:crypto";
 import { chmod, readFile, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-const SCHEMA = "ulvia.services.v1" as const;
+export const LOCAL_SERVICES_SCHEMA = "ulvia.services.v1" as const;
 
 export type LocalServicesConfig = Readonly<{
-    schema: typeof SCHEMA;
+    schema: typeof LOCAL_SERVICES_SCHEMA;
     sessionSecret: string;
     kekHex: string;
     mongoUsername: string;
@@ -22,7 +22,7 @@ export async function loadOrCreateLocalServicesConfig(servicesRoot: string): Pro
     }
     await assertNoOrphanedEncryptedState(servicesRoot);
     const config: LocalServicesConfig = {
-        schema: SCHEMA,
+        schema: LOCAL_SERVICES_SCHEMA,
         sessionSecret: randomBytes(48).toString("base64url"),
         kekHex: randomBytes(32).toString("hex"),
         mongoUsername: "ulvia",
@@ -80,7 +80,7 @@ async function readConfig(path: string): Promise<LocalServicesConfig | null> {
     await chmod(path, 0o600);
     const value = JSON.parse(source) as Partial<Omit<LocalServicesConfig, "schema">> & { schema?: unknown };
     if (
-        value.schema !== SCHEMA ||
+        value.schema !== LOCAL_SERVICES_SCHEMA ||
         !secret(value.sessionSecret) ||
         !/^[a-f0-9]{64}$/u.test(value.kekHex ?? "") ||
         value.mongoUsername !== "ulvia" ||

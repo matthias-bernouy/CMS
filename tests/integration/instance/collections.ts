@@ -70,8 +70,8 @@ export function collectionSnapshot(namespace: string, macroMarker?: string) {
 
 export async function exerciseCollections(invoke: Call, namespace: string, providerName: string) {
     const call = observeRepositoryCall(invoke);
-    const identity = await call("ulvia.cms.authoring", "get-identity");
-    expect(identity.publicKey).toBeString();
+    const connection = await call("ulvia.cms.authoring", "get-connection");
+    expect(connection.configured).toBe(true);
     await call("ulvia.cms.authoring", "claim-namespace", { namespace });
     const marker = `/tmp/${namespace}-macro-must-not-run`;
     const rejected = await call("ulvia.cms.authoring", "prepare-collection", {
@@ -111,7 +111,7 @@ export async function exerciseCollections(invoke: Call, namespace: string, provi
         version: "1.0.0",
     });
     expect(sources.releaseDigest).toBe(prepared.digest);
-    return identity.publicKey as string;
+    return connection;
 }
 
 export async function exerciseContent(call: Call, cmsUrl: string) {

@@ -1,24 +1,41 @@
 import { expect, test } from "bun:test";
 import { readdir, readFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
-import { admitRepositoryContract } from "@bernouy/cms-repository/repository/contract";
+import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 
-const source = resolve(import.meta.dir, "../../src/repository/capabilities/contract");
+const source = resolve(import.meta.dir, "../../../../official-repository/contracts/ulvia.repository");
+const compiled = resolve(
+    import.meta.dir,
+    "../../../../runtimes/ulvia-cli/dist/bootstrap/contracts/ulvia.repository/definition.json",
+);
+const publicCapabilities = new Set([
+    "repository-info",
+    "catalogue-list",
+    "catalogue-search",
+    "namespace-get",
+    "release-download",
+    "asset-download",
+    "publication-state",
+]);
 
-test("HTTP-only Repository source snapshots have an explicit new immutable release coordinate", async () => {
-    const artifact = await admitRepositoryContract();
-    expect(artifact.release.version).toBe("1.1.0");
-    expect(artifact.digest).toBe("sha256:e03cd7065076d2ac9f9762727af3e06a03635de5e5531b55ebf8cccecf562185");
-    expect(artifact.release.capabilities).toHaveLength(17);
-    expect(artifact.bindings).toHaveLength(17);
-    expect(
-        artifact.release.capabilities.filter((capability) =>
-            capability.bindings?.some((binding) => binding.transport === "mcp"),
-        ),
-    ).toHaveLength(0);
+test("the official Registry release uses authenticated account operations and has no signing bindings", async () => {
+    const artifact = await admitContractReleaseJson(await readFile(compiled));
+    expect(artifact.release.version).toBe("2.0.0");
+    expect(artifact.release.capabilities).toHaveLength(19);
+    expect(artifact.bindings).toHaveLength(19);
+    for (const capability of artifact.release.capabilities) {
+        expect(capability.access).toBe(publicCapabilities.has(capability.id) ? "public" : "authenticated");
+        expect(capability.bindings.every((binding) => binding.transport === "http")).toBe(true);
+        expect(JSON.stringify(capability.input)).not.toContain('"proof"');
+        expect(JSON.stringify(capability.input)).not.toContain('"publicKey"');
+        expect(JSON.stringify(capability.bindings)).not.toContain("x-repository-proof");
+    }
+    expect(artifact.release.capabilities.some(({ id }) => id === "namespace-rotate" || id === "namespace-revoke")).toBe(
+        false,
+    );
 });
 
-test("static Repository assembly includes each authored fragment exactly once and no inline capabilities", async () => {
+test("Registry fragments live in the official repository and compile exactly once", async () => {
     const metadata = JSON.parse(await readFile(join(source, "definition.json"), "utf8"));
     expect(metadata).not.toHaveProperty("capabilities");
     const entries = await readdir(join(source, "capabilities"), { recursive: true, withFileTypes: true });
@@ -28,7 +45,7 @@ test("static Repository assembly includes each authored fragment exactly once an
             declarations.push(JSON.parse(await readFile(join(entry.parentPath, entry.name), "utf8")));
         }
     }
-    const artifact = await admitRepositoryContract();
+    const artifact = await admitContractReleaseJson(await readFile(compiled));
     expect(new Set(declarations.map((capability) => capability.id)).size).toBe(declarations.length);
     expect(declarations.sort((a, b) => a.id.localeCompare(b.id))).toEqual(
         [...artifact.release.capabilities].sort((a, b) => a.id.localeCompare(b.id)),

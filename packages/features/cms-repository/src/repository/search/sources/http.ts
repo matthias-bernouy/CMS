@@ -4,8 +4,7 @@ import { repositoryBaseUrl } from "cms-repository/repository-http/baseUrl";
 import { getRepositoryBytes } from "cms-repository/repository-http/getBytes";
 import type { RepositoryFetch } from "cms-repository/repository-http/getBytes";
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
-import { parseUlviaSchema, validateSchemaValue } from "cms-repository/exports/contracts/schema";
-import catalogueSearch from "../../capabilities/contract/capabilities/queries/catalogue-search.json";
+import { searchPage } from "../core/page";
 import { resourceReference, searchQuery, text } from "../core/input";
 import type {
     RepositoryDiscoverySource,
@@ -14,7 +13,6 @@ import type {
     RepositorySearchQuery,
 } from "../interfaces";
 
-const outputSchema = parseUlviaSchema(catalogueSearch.output);
 export class HttpRepositoryDiscovery implements RepositoryDiscoverySource {
     private readonly base: URL;
     constructor(
@@ -40,13 +38,7 @@ export class HttpRepositoryDiscovery implements RepositoryDiscoverySource {
             });
             try {
                 const output = parseStrictJson(bytes, 8 * 1024 * 1024, 16);
-                validateSchemaValue(outputSchema, output);
-                const page = output as unknown as RepositorySearchPage;
-                if ((page.mode === "lexical") !== page.degraded) {
-                    throw new Error("Inconsistent search mode");
-                }
-                page.results.forEach((result) => resourceReference(result.reference));
-                return page;
+                return searchPage(output);
             } catch {
                 throw new RepositoryDiscoveryError("RELEASE_MISMATCH");
             }

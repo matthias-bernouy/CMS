@@ -18,10 +18,9 @@ integration(
         const images = {
             edge: process.env.ULVIA_MCP_EDGE_DOCKER_IMAGE,
             provider: process.env.ULVIA_MCP_PROVIDER_DOCKER_IMAGE,
-            repository: process.env.ULVIA_REPOSITORY_DOCKER_IMAGE,
         };
-        if (!images.edge || !images.provider || !images.repository) {
-            throw new Error("Delivery performance requires all three candidate Docker images");
+        if (!images.edge || !images.provider) {
+            throw new Error("Delivery performance requires the candidate Edge and Provider Docker images");
         }
         const instrumentation = await mkdtemp(join(tmpdir(), "ulvia-delivery-probe-"));
         const preload = join(instrumentation, "fetch.ts");

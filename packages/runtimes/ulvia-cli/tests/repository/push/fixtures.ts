@@ -1,12 +1,12 @@
 import { prepareContractSource } from "ulvia-cli/release/authored/contract";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { identityFixture } from "../identities/fixture";
+import { accountFixture } from "../accounts/fixture";
 import { writeAuthoredContractFixture } from "../../authoredContractFixture";
 import { LocalArtifactFiles } from "@bernouy/cms-repository/repository/filesystem";
 
 export async function pushFixture() {
-    const f = await identityFixture();
+    const f = await accountFixture();
     await f.run(["repository", "login", f.server.url.origin]);
     await f.run(["namespace", "claim", "ulvia.official"]);
     const source = join(f.root, "source");

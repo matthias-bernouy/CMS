@@ -10,42 +10,53 @@ import type { InstanceComposition } from "./composition/ProviderInstanceHost";
 
 const SITE_ID = "default";
 
-export async function installOfficialCollection(
+export async function installOfficialCollections(
     composition: InstanceComposition,
     source: CollectionRepositorySource,
     profile: OfficialInstanceProfile,
     execution: ProviderInstanceTransitionExecution,
 ): Promise<void> {
     execution.throwIfLeaseLost();
-    const entry = (await source.list()).find(
-        (candidate) =>
-            candidate.publisherId === profile.collection.publisherId &&
-            candidate.collectionId === profile.collection.collectionId &&
-            candidate.version === profile.collection.version &&
-            candidate.digest === profile.collection.digest,
-    );
-    execution.throwIfLeaseLost();
-    if (!entry) {
-        throw new Error("Exact official administration collection is unavailable");
-    }
-    const bundle = await source.get(entry);
-    execution.throwIfLeaseLost();
-    const imported = await composition.stores.collections.importRelease(bundle.release, bundle.assets);
-    execution.throwIfLeaseLost();
-    if (imported.digest !== profile.collection.digest) {
-        throw new Error("Official administration collection digest mismatch");
-    }
-    const snapshot = await composition.stores.collections.snapshot(SITE_ID);
-    execution.throwIfLeaseLost();
-    const installed = snapshot.collections.find(({ collectionId }) => collectionId === entry.collectionId);
-    if (installed?.digest !== imported.digest) {
-        if (installed) {
-            const targets = [{ digest: imported.digest, repositoryId: source.id }];
-            const plan = await composition.stores.collectionUpgrades.plan(SITE_ID, targets);
-            await composition.stores.collectionUpgrades.apply(SITE_ID, targets, plan.planDigest);
-        } else {
-            await composition.stores.collections.install(SITE_ID, imported.digest, snapshot.revision, source.id);
+    const entries = await source.list();
+    const targets = [];
+    for (const pin of profile.collections) {
+        const entry = entries.find(
+            (candidate) =>
+                candidate.publisherId === pin.publisherId &&
+                candidate.collectionId === pin.collectionId &&
+                candidate.version === pin.version &&
+                candidate.digest === pin.digest,
+        );
+        if (!entry) {
+            throw new Error(`Exact official collection is unavailable: ${pin.collectionId}@${pin.version}`);
         }
+        const bundle = await source.get(entry);
+        execution.throwIfLeaseLost();
+        const imported = await composition.stores.collections.importRelease(bundle.release, bundle.assets);
+        execution.throwIfLeaseLost();
+        if (imported.digest !== pin.digest) {
+            throw new Error(`Official collection digest mismatch: ${pin.collectionId}@${pin.version}`);
+        }
+        targets.push({ collectionId: pin.collectionId, digest: imported.digest, repositoryId: source.id });
+    }
+    let snapshot = await composition.stores.collections.snapshot(SITE_ID);
+    execution.throwIfLeaseLost();
+    const upgrades = targets.filter((target) =>
+        snapshot.collections.some(
+            (installed) => installed.collectionId === target.collectionId && installed.digest !== target.digest,
+        ),
+    );
+    if (upgrades.length) {
+        const plan = await composition.stores.collectionUpgrades.plan(SITE_ID, upgrades);
+        await composition.stores.collectionUpgrades.apply(SITE_ID, upgrades, plan.planDigest);
+        execution.throwIfLeaseLost();
+        snapshot = await composition.stores.collections.snapshot(SITE_ID);
+    }
+    const additions = targets.filter(
+        (target) => !snapshot.collections.some((installed) => installed.collectionId === target.collectionId),
+    );
+    if (additions.length) {
+        await composition.stores.collections.installMany(SITE_ID, additions, snapshot.revision);
         execution.throwIfLeaseLost();
     }
     await seedOfficialPages(composition, profile, execution);

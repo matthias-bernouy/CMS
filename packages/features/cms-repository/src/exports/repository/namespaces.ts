@@ -1,20 +1,9 @@
+export { assertRepositoryNamespace } from "cms-repository/repository/namespaces/validation";
 export type {
-    NamespaceProof,
-    RepositoryNamespace,
-    RepositoryNamespaceStore,
-} from "cms-repository/repository/namespaces/interfaces";
-export { RepositoryNamespaceAuthority } from "cms-repository/repository/namespaces/authority";
-export {
-    assertRepositoryNamespace,
-    namespacePublicKey,
-    parseNamespaceProof,
-    repositoryDigest,
-    signNamespaceProof,
-    verifyNamespaceProof,
-} from "cms-repository/repository/namespaces/proofs";
-export { RepositoryNamespaceEndpoint } from "cms-repository/repository/namespaces/transport/http";
-export { repositoryWriteHeaders } from "cms-repository/repository/namespaces/transport/request";
-export type { RepositoryOwnerCredential } from "cms-repository/repository/namespaces/transport/request";
+    RepositoryConnectionCredential,
+    RepositoryNamespaceCredential,
+} from "cms-repository/repository/publication/transport/credentials";
+export { RepositoryConnection } from "cms-repository/repository/publication/transport/connection";
 export { RepositoryNamespaceClient } from "cms-repository/repository/namespaces/transport/client";
 export { RepositoryNamespaces } from "cms-repository/repository/namespaces/accounts/RepositoryNamespaces";
 export { MAX_ACCOUNT_NAMESPACES } from "cms-repository/repository/namespaces/accounts/validation";

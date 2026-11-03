@@ -46,43 +46,19 @@ export function parsePublicationUpload(bytes: Uint8Array): PublicationUploadMani
     return { kind: value.kind, canonicalJson: value.canonicalJson, assets };
 }
 
-export function parseYank(bytes: Uint8Array): string | null {
-    const value = parseStrictJson(bytes, 2_048, 2) as Record<string, unknown>;
-    if (!plainRecord(value) || Object.keys(value).some((key) => key !== "reason" && key !== "expectedRevision")) {
-        throw new RepositoryRequestError("REJECTED", "Invalid yank request");
-    }
-    if (value.reason === null) {
-        return null;
-    }
-    if (typeof value.reason !== "string" || !value.reason.trim() || value.reason.trim().length > 1_024) {
-        throw new RepositoryRequestError("REJECTED", "Invalid yank reason");
-    }
-    return value.reason.trim();
-}
-
-export function parseYankRevision(bytes: Uint8Array): number | undefined {
-    const value = parseStrictJson(bytes, 2_048, 2) as Record<string, unknown>;
-    if (value.expectedRevision === undefined) {
-        return undefined;
-    }
-    if (!Number.isSafeInteger(value.expectedRevision) || (value.expectedRevision as number) < 0) {
-        throw new RepositoryRequestError("REJECTED", "Invalid publication metadata revision");
-    }
-    return value.expectedRevision as number;
-}
-
-export async function readRepositoryMutationBody(
-    request: Request,
+export async function readPublicationMetadata(
+    body: ReadableStream<Uint8Array> | null,
     maximum = MAX_PUBLICATION_METADATA_BYTES,
+    declared?: number,
 ): Promise<Uint8Array> {
-    const declared = Number(request.headers.get("content-length"));
-    if (Number.isFinite(declared) && declared > maximum) {
+    if (declared !== undefined && (!Number.isSafeInteger(declared) || declared < 0 || declared > maximum)) {
+        await body?.cancel();
         throw new RepositoryRequestError("REJECTED", "Repository mutation body is too large");
     }
-    if (!request.body) {
+    if (!body) {
         return new Uint8Array();
     }
-    const reader = request.body.getReader();
+    const reader = body.getReader();
     const chunks: Uint8Array[] = [];
     let length = 0;
     try {
@@ -99,6 +75,7 @@ export async function readRepositoryMutationBody(
             chunks.push(part.value);
         }
     } finally {
+        await reader.cancel().catch(() => undefined);
         reader.releaseLock();
     }
     const bytes = new Uint8Array(length);
@@ -130,7 +107,7 @@ function parseUploadAsset(value: unknown) {
     };
 }
 
-export function isPublicationAssetId(value: string): boolean {
+function isPublicationAssetId(value: string): boolean {
     return (
         value.length > 0 &&
         value.length <= 512 &&

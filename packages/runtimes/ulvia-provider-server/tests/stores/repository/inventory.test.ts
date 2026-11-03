@@ -1,48 +1,46 @@
 import { expect, test } from "bun:test";
 import { InMemorySecretStore } from "@bernouy/secret-store";
-import { generateKeyPairSync, createPublicKey } from "node:crypto";
-import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
 import { RepositoryPublisher } from "../../../src/runtime/stores/repository/RepositoryPublisher";
-import { authoringFixture } from "../../../../official-repository-server/tests/authoring/fixture";
-import { DatabaseFixture } from "./database";
+import { repositoryPeer } from "./peer";
 
-test("namespace inventory persists claims and imports, paginates and rechecks ownership after rotation and revocation", async () => {
-    const f = await authoringFixture();
+test("account inventory is live, paginated and bounded without local names or per-name requests", async () => {
+    const peer = repositoryPeer();
+    const secrets = new InMemorySecretStore();
+    const publisher = () => new RepositoryPublisher(peer.url, "test", secrets);
     try {
-        const db = new DatabaseFixture();
-        const secrets = new InMemorySecretStore();
-        await secrets.set("REPOSITORY_SIGNING_KEY", await f.credential.resolvePrivateKey());
-        const publisher = () => new RepositoryPublisher(f.base, "local", secrets, db as any);
         const p = publisher();
+        await p.configureConnection(peer.token);
         expect((await p.listNamespaces()).items).toEqual([]);
-        expect((await p.trackNamespace("community")).access).toBe("owned");
-        await p.claim("community.extra");
+        await p.claim("community.z");
+        await p.claim("community.a");
+        peer.state.calls.length = 0;
         const first = await publisher().listNamespaces({ limit: 1 });
-        expect(first.items.map((x) => x.namespace)).toEqual(["community"]);
+        expect(first.items.map((item) => item.namespace)).toEqual(["community.a"]);
+        expect(first.nextCursor).toBe("community.a");
+        expect(peer.state.calls.map((call) => call.path)).toEqual(["v1/info", "v1/namespaces"]);
         const second = await p.listNamespaces({ cursor: first.nextCursor!, limit: 1 });
-        expect(second.items[0]!.namespace).toBe("community.extra");
+        expect(second.items[0]!.namespace).toBe("community.z");
         expect(second.nextCursor).toBeNull();
-        const client = new RepositoryNamespaceClient(f.base);
-        const extra = await p.credential("community.extra");
-        await client.revoke(extra);
-        const pair = generateKeyPairSync("ed25519");
-        const replacement = pair.privateKey.export({ format: "pem", type: "pkcs8" }).toString();
-        await client.rotate(f.credential, {
-            publicKey: createPublicKey(replacement).export({ format: "der", type: "spki" }).toString("base64url"),
-            resolvePrivateKey: async () => replacement,
-        });
-        expect((await p.listNamespaces()).items.map((x) => x.access)).toEqual(["transferred", "revoked"]);
-        await expect(p.credential("community")).rejects.toThrow("does not own");
-        await expect(p.trackNamespace("community.extra")).rejects.toThrow("does not own");
-        await db
-            .collection("cms_repository_namespaces")
-            .updateOne({ _id: "community.pending" }, { $set: { repositoryId: f.credential.repositoryId } });
-        expect((await p.listNamespaces()).items.find((x) => x.namespace === "community.pending")!.access).toBe(
-            "missing",
+        expect((await p.credential("community.a")).revision).toBe(1);
+        peer.state.entries[0]!.state = "suspended";
+        peer.state.entries.splice(1, 1);
+        expect((await p.listNamespaces()).items.map((item) => item.access)).toEqual(["suspended"]);
+        await expect(p.credential("community.a")).rejects.toThrow("does not own");
+        await expect(p.credential("community.z")).rejects.toThrow("does not own");
+        peer.state.calls.length = 0;
+        await expect(p.listNamespaces({ limit: 33 })).rejects.toThrow("Invalid");
+        expect(peer.state.calls.length).toBe(0);
+        expect(JSON.stringify(await p.listNamespaces())).not.toContain(peer.token);
+        peer.state.entries.push(
+            ...Array.from({ length: 32 }, (_, i) => ({
+                namespace: `community.n${i}`,
+                state: "active" as const,
+                revision: 1,
+                updatedAt: new Date().toISOString(),
+            })),
         );
-        await expect(p.credential("community.pending")).rejects.toThrow("does not own");
-        expect(JSON.stringify(await p.listNamespaces())).not.toContain("PRIVATE KEY");
+        await expect(p.listNamespaces()).rejects.toThrow("invalid namespace inventory");
     } finally {
-        await f.close();
+        peer.close();
     }
 });

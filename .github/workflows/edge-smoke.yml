@@ -45,7 +45,6 @@ jobs:
         env:
           ULVIA_MCP_EDGE_DOCKER_IMAGE: docker.io/cyaxis/ulvia-edge:0.1.0-ci
           ULVIA_MCP_PROVIDER_DOCKER_IMAGE: docker.io/cyaxis/ulvia-provider:0.1.0-ci
-          ULVIA_REPOSITORY_DOCKER_IMAGE: docker.io/cyaxis/ulvia-official-repository:0.1.0-ci
         run: bun run test:performance:delivery
 
       - name: Upload delivery evidence

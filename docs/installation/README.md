@@ -1,8 +1,8 @@
 # Install Ulvia
 
-This guide installs the Ulvia CLI and runs a CMS instance or a standalone
-Repository on Ubuntu. For a Repository-only server, follow section 1 and the
-standalone Repository procedure in section 9.
+This guide installs the Ulvia CLI and runs CMS instances on Ubuntu, including
+a Repository application. For a dedicated Repository host, use the same shared
+services and follow section 9.
 It is for operators and site owners; workspace contributors should use the
 [development guide](../development/README.md).
 
@@ -66,10 +66,9 @@ The site is available at `http://my-site.localhost:5100`. The credentials
 command prints the initial administrator email and password. It never prints
 the Provider, Repository, encryption, or instance service secrets.
 
-The Provider uses `https://repo.ulvia.fr` by default for official artifacts,
-collection discovery and instance-owned publications. The shared stack still
-contains a loopback-only Repository service, but the Provider uses it only
-when explicitly configured.
+The Provider uses `https://repo.ulvia.fr` by default for resource discovery
+and connected-account publications. The shared stack contains the proxy, MongoDB and Provider. Repository hosting
+is selected explicitly on a named CMS instance.
 
 When initializing a node, select another Repository by setting
 `CMS_REPOSITORY_URL` on the first configuration or startup command. For an
@@ -80,19 +79,23 @@ CMS_REPOSITORY_URL=http://repository:3000 \
 CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true ulvia services start
 ```
 
+Here `repository:3000` is a Repository CMS Edge address reachable from the
+Provider containers. Initial provisioning uses the bundled application profile
+before the remote catalogue is available.
+
 The selected connection is persisted as `repository.url` and
 `repository.allowInsecureHttp` in
 `~/.local/share/ulvia/services/installation.json`. Later environment changes
 do not replace an existing connection. To change it, update those fields and
-run `ulvia services start`. The target Repository must contain the exact
-official contracts, Provider manifest and collection required by the installed
-Provider image.
+run `ulvia services start`. The Provider bundles admitted resources needed for initial provisioning; it
+does not need to contact this Repository to bootstrap its shipped profiles.
+Remote discovery and publication still require the configured Repository.
 
 Ulvia deliberately separates shared services from sites:
 
 | Command | Responsibility |
 | --- | --- |
-| `ulvia services start` | Starts the proxy, MongoDB, Official Repository, and Provider. |
+| `ulvia services start` | Starts the proxy, MongoDB and Provider. |
 | `ulvia instance create <name>` | Provisions one Provider tenant and starts its Edge. |
 | `ulvia instance start <name>` | Restarts an existing instance without provisioning it again. |
 | `ulvia start` | Starts shared services and every existing instance; it creates nothing. |
@@ -227,194 +230,112 @@ For implementation diagnostics and contributor-only environment overrides, see
 the [development and validation guide](../development/README.md).
 
 
-## 9. Standalone Repository
+## 9. Repository CMS Instance
 
-This is the standard installation on a dedicated Ubuntu server. The CLI owns
-one Repository deployment and its HTTPS proxy. No CMS instance, Provider or
-database is required.
+A Repository uses the normal Edge, official Provider and MongoDB deployment.
+It has its own CMS accounts, namespace ownership, uploads and catalogue. No
+separate Repository image or signing-key configuration is required.
 
-### Prepare The Server
-
-Complete the Docker Engine, Compose and Bun prerequisites in section 1. The
-account running Ulvia must be able to execute `docker version` and
-`docker compose version` without `sudo`.
-
-Before enabling HTTPS:
-
-- Point the domain's DNS A record to the server's public IPv4 address.
-- Make inbound TCP ports 80 and 443 reachable and available on the host.
-- Choose a real email address for certificate registration and renewal notices.
-
-Replace `repository.example.com`, `ops@example.com` and the example namespace
-`acme` below with your own values. Install the published CLI version:
+For a local installation:
 
 ```bash
-bun add --global @cyaxis/ulvia@0.1.0-beta
-ulvia --version
+ulvia services start
+ulvia instance create registry --profile ulvia.repository@1.0.0
+ulvia instance status registry
+ulvia instance credentials registry
 ```
 
-The CLI bundles `0.1.0-beta` as its initial stack version. No deployment name or
-`global`/`community` qualifier is required.
+The Registry API is available below
+`http://registry.localhost:5100/.cms/call/ulvia.repository`. Its public identity
+endpoint is `GET /v1/info` relative to that prefix. Ordinary CMS instances do not
+expose this contract. The profile currently includes the normal CMS Pages;
+dedicated Repository catalogue/account Pages are still being implemented.
 
-### Start Locally And Claim The Publisher
-
-Start the Repository before exposing it publicly:
+For public hosting, configure network exposure and ACME as described in section 6
+before creating instances, then create the application on its public domain:
 
 ```bash
-ulvia repository start
-ulvia repository status
-curl --fail http://127.0.0.1:5010/readyz
+ulvia instance create registry --domain repository.example.com --profile ulvia.repository@1.0.0
 ```
 
-The endpoint initially binds only to `127.0.0.1:5010`. Create a local signing
-identity and claim the publisher namespace while the server is still private:
+Replace the example domain with a domain routed to this host. The same shared
+proxy handles its HTTPS certificate. Provider management remains on loopback.
+
+### Publisher Accounts And Credentials
+
+Registration, password login and PAT management use the normal Access bindings
+under `/.cms/call/ulvia.cms.access`. Registration follows the instance policy.
+An ordinary account can claim and publish; it does not need CMS administrator
+privileges. The protected publisher operations use a shared CMS PAT.
+
+The current API flow is:
+
+1. `POST /signup` with `email` and `password`.
+2. `POST /login-password` with the same credentials; retain its session cookies.
+3. `POST /personal-access-tokens` with the session cookies and a token `name`.
+   An optional `expiresAt` bounds its lifetime. The plaintext token is returned
+   only at creation.
+4. Supply that token to the CLI using bounded stdin or `ULVIA_REPOSITORY_TOKEN`.
+
+Browser/session mutations use the instance's normal Origin and cookie
+protections. Tokens can be listed with `GET /personal-access-tokens` and revoked
+with `DELETE /personal-access-tokens/:id` by their owning account.
 
 ```bash
-ulvia identity create owner
-ulvia repository login http://127.0.0.1:5010 --identity owner
+ulvia repository login https://repository.example.com --token-stdin
 ulvia namespace claim acme
 ulvia namespace status acme
-```
-
-Save a secure backup of the signing identity before continuing. By default its
-private key is `~/.config/ulvia/keys/owner.pem`; preserve the matching client
-configuration too. There is no operator recovery after losing every key copy.
-
-Every namespace follows public first claim, including `ulvia.official`. For an
-official Repository, claim that namespace instead of `acme` before public access.
-There is no reserved-name bootstrap or operator publication token.
-
-### Enable Public HTTPS
-
-Persist the domain and certificate configuration, then apply it:
-
-```bash
-ulvia repository configure \
-  --tls acme \
-  --public-url https://repository.example.com \
-  --acme-email ops@example.com
-
-ulvia repository start
-ulvia repository status
-```
-
-This starts the Repository, a dedicated Nginx proxy and its ACME companion.
-Only the proxy publishes ports 80/443; the Repository's host endpoint stays on
-loopback. Certificates and renewal state persist with the deployment. Issuance
-requires working public DNS and HTTP access to port 80. Container readiness does
-not by itself confirm that the public certificate has been issued.
-
-After issuance, verify public access and save the HTTPS connection:
-
-```bash
-curl --fail https://repository.example.com/readyz
-curl --fail https://repository.example.com/v1/repository
-ulvia repository login https://repository.example.com --identity owner
-ulvia namespace status acme
-```
-
-The Repository identity and namespace ownership must match the local endpoint.
-Public catalogue reads need no credentials; writes require the namespace owner's
-signature. Login saves the endpoint and verifies the Repository identity. It
-does not create a bearer-token session; private keys stay on the signing host.
-
-### Publish Resources
-
-On a signing machine with the owner identity, release an authored resource and
-push its exact coordinate:
-
-```bash
-ulvia release /path/to/authored-resource
-ulvia push contract acme/example.contract@1.0.0
-```
-
-The development CLI adds recursive release, inferred push kinds and `push all`:
-
-```bash
 ulvia release /path/to/resources --recursive
-ulvia push acme/example.contract@1.0.0
 ulvia push all
 ```
 
-Recursive release prepares sources locally. `push all` publishes every
-non-yanked release in the local cache to the saved Repository, respecting local
-dependency order. It verifies all artifacts and namespace owner keys before
-uploading. A failed batch can leave completed publications; rerun it to resume
-idempotently. A type is required only when a coordinate matches several local
-resource kinds. The published `0.1.0-beta` CLI does not yet include these additions.
+Each published resource's `publisherId` must match a namespace owned by the
+account. Contract, Provider manifest and collection dependencies must be present
+before dependent publication; `push all` orders locally available releases.
+Publication never installs a collection on a site.
 
-The resource's `publisherId` must match the owned namespace. Dependencies must
-be released and pushed first. Collections and provider manifests use
-`push collection` and `push provider`. Publishing does not install a collection
-on a CMS site.
+Namespace claims are atomic and limited to 32 owned names per account. Transfer
+uses an explicit target account and expected revision. Suspension retains the
+name; account deletion is refused while it owns namespaces. Startup does not
+reserve or reclaim names, including `ulvia.official`.
 
-Other authors use `repository login` and `namespace claim` with their own local
-identities and namespace names. No environment exports are needed.
-
-### Daily Operations And Upgrades
+### Restart And Updates
 
 ```bash
-ulvia repository status
-ulvia repository stop
-ulvia repository start
+ulvia instance stop registry
+ulvia instance start registry
+ulvia services status
+ulvia instance status registry
+ulvia upgrade provider --version VERSION
+ulvia upgrade edge --version VERSION
 ```
 
-Stopping preserves data, identities and certificates. Starts reuse the installed
-image digest. To upgrade, use `ulvia repository upgrade --version VERSION`,
-replacing `VERSION` with an exact published version. The CLI pulls the tag,
-checks the image labels and pins its immutable digest. A failed activation
-attempts to restart the previous image; it does not reverse data migrations.
-Back up the stopped deployment and signing identities before upgrading.
+Replace `VERSION` with an exact available image version. The CLI pins image
+digests, checks Provider retention before replacing it, and attempts to restore
+the previous image if activation fails. Accounts, ownership, releases, Pages and
+credentials remain in the normal CMS storage.
 
-`identity import NAME --key-file PATH` copies an existing private key into a
-managed local identity. Rotation uses `namespace rotate NAMESPACE
---replacement-identity NAME` and requires both owner and replacement keys.
-Revocation uses `namespace revoke NAMESPACE --yes` and is permanent.
-`repository logout` removes the connection while preserving local keys.
+A profile change is separate from an image replacement:
+`ulvia instance upgrade-profile registry ID@VERSION`. The target must be a
+supported explicit transition shipped by the Provider and retain the
+`ulvia.repository` application ID. The CLI saves the exact new reference only
+after the Provider acknowledges it. Restart never selects a different profile.
 
-### Configuration And Storage
+Back up the Provider database, file storage, matching encryption credentials and
+private instance configuration together, following section 7. The Repository is
+part of this installation: `reset --yes` deletes its data with the other CMS
+instances. Client `repository logout` removes its saved PAT connection without
+revoking the token remotely.
 
-Client configuration lives in `$XDG_CONFIG_HOME/ulvia` or `~/.config/ulvia`,
-overridable with `ULVIA_CONFIG_DIR`. `config.json` contains public keys, private
-key-file references and the active connection; PEM files live in `keys/`.
-Files use mode 0600 and directories 0700. Setting only `ULVIA_DATA_DIR` isolates
-client settings below `<data>/config`.
+### Contributor Verification
 
-Deployment data defaults to `$XDG_DATA_HOME/ulvia/repository-service` or
-`~/.local/share/ulvia/repository-service`, overridable through `ULVIA_DATA_DIR`:
-
-| Path | Content |
-| --- | --- |
-| `config.json` | Desired network configuration |
-| `service.json` | Installed image digest and last applied configuration |
-| `data/` | Repository identity, namespace history, releases and upload/replay state |
-| `proxy/` | Certificates, virtual hosts, HTTP challenges and ACME renewal state |
-
-A complete backup includes the stopped deployment and matching signing
-identities. `reset --yes` affects the CMS installation and local release cache;
-it preserves the independent Repository deployment and client identities.
-
-### Other Network Modes
-
-The standard procedure above uses managed ACME. The CLI also supports:
-
-| Mode | Command | Exposure |
-| --- | --- | --- |
-| Local | `repository configure --tls local --port 5010` | Loopback HTTP only |
-| External proxy | `repository configure --tls external --public-url https://repository.example.com` | Loopback backend; the operator supplies and connects the HTTPS proxy |
-
-Run `repository start` after configuration changes. An external proxy must
-forward to the backend, allow 100 MiB assets plus protocol overhead and preserve
-request bodies. The CLI's external mode does not configure the operator's proxy
-or join its Docker network. The public origin controls resource links; forwarded
-headers do not override it.
-
-Local regression tests validate deployment configuration and publication using
-temporary repositories. They do not issue public certificates or contact the
-official Repository. Contributor-only image builds and Docker regression tests
-are separate from the installation procedure:
+Build Edge and Provider together. The Repository tests create an instance on an
+internal Docker network and use ordinary account PATs; they do not publish
+images or contact the public Repository.
 
 ```bash
-bun run infra/images/build.ts build --version 0.1.0-repository.0 repository
-ULVIA_REPOSITORY_DOCKER_IMAGE=docker.io/cyaxis/ulvia-official-repository:0.1.0-repository.0 bun test ./tests/images/official-repository
+bun run images:build --version 0.1.0-integration all
+ULVIA_MCP_EDGE_DOCKER_IMAGE=docker.io/cyaxis/ulvia-edge:0.1.0-integration \
+ULVIA_MCP_PROVIDER_DOCKER_IMAGE=docker.io/cyaxis/ulvia-provider:0.1.0-integration \
+bun test ./tests/images/repository
 ```

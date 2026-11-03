@@ -92,10 +92,9 @@ Edge receives provider-neutral invocation and a static Page capability analyzer.
 It exposes collection-backed provider and collection administration Pages;
 provider connection approval, credential rotation and exact contract selection
 are application workflows owned by `cms-repository`. Repository publication is
-served independently by `official-repository-server`. See
+implemented in the official Provider for explicitly enabled Repository instances. See
 [repository and gateway flows](../providers/README.md).
-The [community Repository](community-repository.md) adds cryptographic namespace
-ownership and an admitted HTTP Repository capability contract. The reusable
+The [community Repository](community-repository.md) adds account-owned namespaces and an admitted HTTP Repository capability contract. The reusable
 MCP binding is mounted by the CMS instance.
 
 ### Authentication
@@ -138,9 +137,9 @@ there is no aggregate instance-runtime package shared by both processes.
 mount exactly one surface and start one listener. The Edge runtime is
 stateless; the Provider runtime selects every persistent adapter. `ulvia-cli`
 manages the persistent local container stack; it does not supervise application processes.
-`official-repository-server` mounts the public immutable
-repository and its signed publication protocol over one persistent production
-volume; authored official releases remain separate publication inputs. New
+The Repository profile selects admitted Registry capabilities implemented in the
+Provider and exposed by an independent Edge. Account ownership and publications
+use instance-scoped storage; authored releases remain separate publication inputs. New
 environment reads belong in runtimes; a fixed
 set of existing `process.env.MODE` reads elsewhere is recorded in the
 [architecture policy](../../quality/architecture/repository/repositoryPolicy.ts).

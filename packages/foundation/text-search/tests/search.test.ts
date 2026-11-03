@@ -41,6 +41,10 @@ test("bounded vector caches snapshot values and evict entries", async () => {
     expect([...(await cache.get(["one", "two", "three"])).keys()]).toEqual(["two", "three"]);
     await expect(cache.put([{ key: "invalid", vector: [Infinity] }])).rejects.toThrow();
     expect(() => new MemoryVectorStore(0)).toThrow();
+    await expect(cache.put([{ key: "x".repeat(129), vector: [1] }])).rejects.toThrow();
+    await expect(cache.put([{ key: "oversized", vector: Array.from({ length: 4097 }, () => 1) }])).rejects.toThrow();
+    cache.clear();
+    expect((await cache.get(["one", "two", "three"])).size).toBe(0);
 });
 
 test("text vector indexes reuse content under new corpus revisions and distinguish models", async () => {

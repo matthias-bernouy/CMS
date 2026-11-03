@@ -11,7 +11,7 @@ import type {
 import type { ProviderRuntimeEnv } from "../../runtimeEnv";
 import type { InstanceComposition } from "./composition/ProviderInstanceHost";
 import { loadOfficialManifest } from "./profiles/artifacts";
-import { initializeOfficialAdministrator, installOfficialCollection } from "./instanceInitialization";
+import { initializeOfficialAdministrator, installOfficialCollections } from "./instanceInitialization";
 
 const BOOTSTRAP_ACTOR = "system:provider-provisioner";
 
@@ -46,7 +46,7 @@ export function createInstanceProvisioningTarget(options: TargetOptions): Offici
             execution.throwIfLeaseLost();
         },
         installCollection: (profile, execution) =>
-            installOfficialCollection(options.composition, options.collectionSource, profile, execution),
+            installOfficialCollections(options.composition, options.collectionSource, profile, execution),
         initializeAdministrator: (administrator, execution) =>
             initializeOfficialAdministrator(options.composition, administrator, execution),
     };

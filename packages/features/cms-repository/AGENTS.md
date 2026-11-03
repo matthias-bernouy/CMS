@@ -33,29 +33,32 @@ models and validation for CMS-owned installations and site selections.
   `/contracts/catalogue` exposes an adapter-light port and deterministic memory
   implementation; `/contracts/protocol` exposes strict I-JSON parsing,
   canonicalization and freezing primitives.
-- HTTP catalogue sources, bounded immutable downloads, the authenticated signed
-  publication protocol and its storage-independent mutation endpoint are
-  implemented here. `./repository/filesystem` is the reference local adapter;
-  runtimes choose it or a durable production adapter. The CLI owns commands,
-  environment-derived credentials and its loopback listener. Business
+- HTTP catalogue sources, bounded immutable downloads, account-authorized
+  publication and their storage-independent capability service are implemented
+  here. The official Repository contract is authored in official-repository;
+  runtimes explicitly compose its implementation for the Repository profile. `./repository/filesystem` is the reference local adapter;
+  runtimes choose it or a durable production adapter. The CLI owns commands and
+  environment-derived client credentials. Business
   HTTP execution and gateway routing remain outside this package; runtimes own
   environment access and production adapter selection. `./providers/mongo`
   provides durable manifest, installation and selection stores; `./contracts/mongo`
   provides durable release publication. Live transport execution
   remain outside this package. Mongo release publication currently rejects
   bundles with fixture assets until separate byte storage is implemented.
-- Remote publication is staged: sign bounded metadata first, stream each declared
-  asset as a separately signed raw body, then commit through the registry exactly
-  once. Upload stores must verify byte length and SHA-256 before exposing a Blob,
+- Remote publication is staged: open an authenticated bounded upload manifest,
+  stream each declared asset as a raw body, then commit through the registry
+  exactly once. Bind every stage to the authenticated account, namespace and
+  ownership revision; the caller cannot choose the account in input. Upload stores must verify byte length and SHA-256 before exposing a Blob,
   retain an idempotent commit receipt, expire abandoned sessions and keep the
   immutable release invisible until registry publication succeeds. Never restore
   the whole-bundle base64 request.
-- `./repository/namespaces` owns public first-claim Ed25519 namespace authority.
-  Keep private keys in host-owned secret readers. Rotation proves possession of
-  both keys; revocation is terminal and operators have no community recovery path.
-  Preserve repository/action/subject/content/revision proof binding and hold the
-  namespace fence throughout an authorized mutation. `./repository/contract`
-  declares the Repository capability service; transport adapters inject its ports.
+- `./repository/namespaces` owns account-based namespace claims, explicit transfers,
+  suspension and ownership fences. Derive accounts from verified runtime context;
+  hold the namespace fence through protected work and the ownership fence through
+  account deletion. Suspended or orphaned names remain reserved. Its `/mongo`
+  adapter is composed by runtimes. `./repository/capabilities` exposes the domain
+  service; transport adapters inject its ports. Clients pin the Repository origin
+  and identity before resolving ordinary CMS PAT credentials and reject redirects.
 - `src/collections/{interfaces,core}/` owns authored collection release parsing,
   asset verification and resource-level reference validation, exposed through
   `./collections`. `./collections/texts` exposes browser-safe text validation,

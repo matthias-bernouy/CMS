@@ -48,7 +48,7 @@ export async function localCommand(
         log(`Usage: ulvia start [--version <version>]
 
 Start shared services and every existing instance. The exact version only
-selects Provider and Repository images when shared services are uninitialized.`);
+selects the Provider image when shared services are uninitialized.`);
         return;
     }
     const requestedVersion = parseStartVersion(args, "Usage: ulvia start [--version <version>]");

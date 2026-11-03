@@ -34,7 +34,6 @@
         "./collections/http": "./src/exports/collections/http.ts",
         "./repository/namespaces": "./src/exports/repository/namespaces.ts",
         "./repository/namespaces/mongo": "./src/exports/repository/namespaceMongo.ts",
-        "./repository/contract": "./src/exports/repository/contract.ts",
         "./repository/publication": "./src/exports/repository/publication.ts",
         "./repository/filesystem": "./src/exports/repository/filesystem.ts",
         "./repository/sources": "./src/exports/repository/sources.ts",
@@ -44,7 +43,8 @@
         "./contracts/documentation": "./src/exports/contracts/documentation.ts",
         "./repository/search": "./src/exports/repository/search/index.ts",
         "./repository/search/filesystem": "./src/exports/repository/search/filesystem.ts",
-        "./repository/search/http": "./src/exports/repository/search/http.ts"
+        "./repository/search/http": "./src/exports/repository/search/http.ts",
+        "./repository/capabilities": "./src/exports/repository/capabilities.ts"
     },
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",

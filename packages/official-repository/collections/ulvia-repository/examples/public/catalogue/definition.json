@@ -1,0 +1,21 @@
+{
+    "id": "catalogue",
+    "label": "page.catalogue.name",
+    "description": "page.catalogue.description",
+    "requires": [
+        {
+            "contractId": "ulvia.repository",
+            "capabilityId": "catalogue-list",
+            "versionRange": "^2.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

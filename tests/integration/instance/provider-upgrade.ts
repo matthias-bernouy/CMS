@@ -1,5 +1,5 @@
 import { expect } from "bun:test";
-import { docker, mappedPort, waitForHttp } from "./docker";
+import { docker, waitForHttp } from "./docker";
 
 /** Replace the image while keeping the actual database, file volume, secrets and instance identity. */
 export async function upgradeProvider(
@@ -9,6 +9,7 @@ export async function upgradeProvider(
     operatorToken: string,
     instanceId: string,
     cleanupNames: string[],
+    controlUrl: string,
 ) {
     const inspected = JSON.parse((await docker(["inspect", name])).stdout)[0];
     const environment = inspected.Config.Env.flatMap((value: string) => ["--env", value]);
@@ -16,6 +17,13 @@ export async function upgradeProvider(
     await docker([
         "run",
         "--rm",
+        "--read-only",
+        "--tmpfs",
+        "/tmp:rw,nosuid,nodev,noexec,size=256m",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges:true",
         "--network",
         network,
         "--volumes-from",
@@ -37,18 +45,23 @@ export async function upgradeProvider(
         "--init",
         "--name",
         name,
+        "--read-only",
+        "--tmpfs",
+        "/tmp:rw,nosuid,nodev,noexec,size=256m",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges:true",
         "--network",
         network,
         "--network-alias",
         "ulvia-provider",
-        "--publish",
-        "127.0.0.1::5103",
         "--volumes-from",
         previous,
         ...environment,
         image,
     ]);
-    const url = await mappedPort(name, 5103);
+    const url = controlUrl;
     const headers = { Authorization: `Bearer ${operatorToken}`, "Content-Type": "application/json" };
     await waitForHttp(`${url}/ulvia/operator/instances`, headers);
     const response = await fetch(`${url}/ulvia/operator/instances/${encodeURIComponent(instanceId)}/profile`, {

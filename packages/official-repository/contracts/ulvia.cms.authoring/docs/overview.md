@@ -1,26 +1,30 @@
-# Repository authoring
+# CMS authoring
 
-Prepare, validate and publish immutable collection releases using the configured Repository identity.
+Prepare, validate and publish immutable collection releases through a configured Repository. This contract does not host a registry or add contract/provider authoring support.
 
-## Before using this contract
+## Connect an account
 
-Use the exact contract selected on the site. Discover the available tool schemas before calling capabilities; a documentation link does not grant execution rights. Capabilities without an MCP binding are not MCP tools. Inherited capabilities retain their declaring contract and exact parent release.
+Create a personal access token in the target Repository account area. An ordinary Repository account can own namespaces and publish; it does not need CMS administrator privileges. Managing this CMS instance's authoring connection remains an administrator operation.
 
-## Capabilities
+Call `configure-connection` with the PAT. The runtime controls the target origin. It verifies the Repository identity and authenticated namespace inventory before atomically storing the connection in the encrypted authoring secret namespace. A refused configuration preserves the previous connection. The plaintext token is never returned by this contract.
 
-- `claim-namespace`: Claim a namespace using this instance signing identity. Existing ownership is preserved.
-- `discard-preparation`: Discard one local unpublished collection preparation. Published Repository releases are preserved.
-- `prepare-collection`: Validate and build a complete collection source snapshot before publishing. Read ulvia://cms/collection-authoring for the source format.
-- `publish-collection`: Publish the exact prepared collection digest and retain its private sources in the Repository. This does not install the release on the site.
-- `track-namespace`: Remember an existing namespace owned by this instance signing key. No claim or key transfer is performed.
-- `get-collection-sources`: Read the private source snapshot of a collection owned by this instance publication identity.
-- `get-identity`: Read this instance publication public key; private keys remain in the host secret store.
-- `list-namespaces`: List remembered namespaces and verify current ownership live. Follow nextCursor; cached inventory never grants publication rights.
+`get-connection` returns only the configured origin, Repository identity and configuration status. A configured connection may later become invalid if its token expires or is revoked. Every protected remote request checks the pinned identity before resolving its PAT and refuses redirects. A changed Repository identity requires an explicit disconnect before reconnecting.
 
-## Errors and recovery
+`disconnect-connection` removes the local credential. It does not revoke the remote PAT; revoke it through the Repository account area when required.
 
-Branch on the declared error code. `error.output.message` explains a refusal in the language supported by the Provider; never parse translated copy to decide whether a retry is safe. Check the selected schema and retryability. After a revision conflict, reread current state and review changes before retrying. A transport failure may leave a mutation outcome unknown; inspect current state before repeating a non-idempotent command.
+## Namespaces and publication
 
-## Verify the result
+- `list-namespaces` reads the remote account inventory, bounded to 32 names. Follow `nextCursor`. Transferred names disappear from this account's inventory; suspended names remain reserved and cannot publish.
+- `claim-namespace` claims an available name for the authenticated Repository account.
+- `prepare-collection` validates and builds a complete collection source snapshot. Preparation does not require publication credentials.
+- `publish-collection` publishes the exact prepared digest and retains its private sources. It does not install the release on this CMS instance.
+- `get-collection-sources` reads the private source snapshot for a namespace currently owned by the configured Repository account.
+- `discard-preparation` removes an unpublished local preparation; published releases remain intact.
 
-Read back the affected resource using its owning contract, verify the requested state and inspect asynchronous operation details when a handle was returned. Report any checks that could not be performed. Diagnostic journal records help explain failures but are not durable business audit or proof of visual quality.
+The remote Repository checks account ownership and namespace revision for every protected upload stage. Namespace transfer, token expiration or token revocation can prevent an in-progress publication from completing. Reconnecting to another account does not transfer ownership or resume another account's upload.
+
+## Errors and verification
+
+Discover the selected capability schemas before calling tools. Documentation does not grant execution rights. Branch on declared error codes rather than translated messages. A transport failure can leave a mutation outcome unknown; inspect remote state before repeating it.
+
+Read back the published release and its digest. Verify installation separately when the workflow also requires using the release on this site. Report any checks that could not be performed.

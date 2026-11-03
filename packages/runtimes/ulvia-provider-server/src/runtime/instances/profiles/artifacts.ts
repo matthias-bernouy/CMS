@@ -1,5 +1,6 @@
 import { loadDocumentedContract } from "@bernouy/cms-repository/providers/sources";
-import { CURRENT_PROFILE, SUPPORTED_PROFILES, type ProfileDefinition } from "./definitions";
+import { CURRENT_PROFILE, REPOSITORY_PROFILE, SUPPORTED_PROFILES, type ProfileDefinition } from "./definitions";
+import { repositoryPages } from "./repositoryPages";
 import { initialPages } from "./initialPages";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
@@ -23,29 +24,13 @@ export async function loadOfficialArtifacts(
     providers: ProviderRepositorySource,
     collections: CollectionRepositorySource,
 ): Promise<LoadedOfficialArtifacts> {
-    const [manifestEntries, collectionEntries] = await Promise.all([
-        providers.list("provider-manifest"),
-        collections.list(),
-    ]);
-    const available = SUPPORTED_PROFILES.filter(
-        (profile) =>
-            hasEntry(manifestEntries, profile.manifest.providerId, profile.manifest.version) &&
-            collectionEntries.some(
-                (entry) =>
-                    entry.publisherId === profile.collection.publisherId &&
-                    entry.collectionId === profile.collection.collectionId &&
-                    entry.version === profile.collection.version,
-            ),
-    );
-    if (!available.includes(CURRENT_PROFILE)) {
-        throw new Error(
-            `Exact official artifact is unavailable: ${CURRENT_PROFILE.manifest.providerId}@${CURRENT_PROFILE.manifest.version}`,
-        );
-    }
+    const manifestEntries = await providers.list("provider-manifest");
     const loaded = await Promise.all(
-        available.map((profile) => loadOfficialProfile(providers, collections, manifestEntries, profile)),
+        SUPPORTED_PROFILES.map((profile) => loadOfficialProfile(providers, collections, manifestEntries, profile)),
     );
-    const defaultProfile = loaded.find(({ profile }) => profile.version === CURRENT_PROFILE.version)?.profile;
+    const defaultProfile = loaded.find(
+        ({ profile }) => profile.id === CURRENT_PROFILE.id && profile.version === CURRENT_PROFILE.version,
+    )?.profile;
     if (!defaultProfile) {
         throw new Error(`Official default profile is unavailable: ${CURRENT_PROFILE.id}@${CURRENT_PROFILE.version}`);
     }
@@ -89,28 +74,30 @@ async function loadOfficialProfile(
             `Official Provider manifest digest mismatch: ${manifest.manifest.providerId}@${manifest.manifest.version}`,
         );
     }
-    const collectionEntry = (await collections.list()).find(
-        (entry) =>
-            entry.publisherId === definition.collection.publisherId &&
-            entry.collectionId === definition.collection.collectionId &&
-            entry.version === definition.collection.version,
-    );
-    if (!collectionEntry) {
-        throw new Error(
-            `Exact official artifact is unavailable: ${definition.collection.collectionId}@${definition.collection.version}`,
+    const collectionEntries = await collections.list();
+    const collectionPins = [];
+    for (const pin of definition.collections) {
+        const entry = collectionEntries.find(
+            (entry) =>
+                entry.publisherId === pin.publisherId &&
+                entry.collectionId === pin.collectionId &&
+                entry.version === pin.version,
         );
-    }
-    const collectionBundle = await collections.get(collectionEntry);
-    const collection = await admitCollectionRelease(collectionBundle.release, collectionBundle.assets, {
-        contracts: catalogue,
-    });
-    if (collection.digest !== collectionEntry.digest) {
-        throw new Error(
-            `Official collection digest mismatch: ${definition.collection.collectionId}@${definition.collection.version}`,
-        );
+        if (!entry) {
+            throw new Error(`Exact official artifact is unavailable: ${pin.collectionId}@${pin.version}`);
+        }
+        const bundle = await collections.get(entry);
+        const collection = await admitCollectionRelease(bundle.release, bundle.assets, { contracts: catalogue });
+        if (collection.digest !== entry.digest) {
+            throw new Error(`Official collection digest mismatch: ${pin.collectionId}@${pin.version}`);
+        }
+        collectionPins.push(Object.freeze({ ...pin, digest: collection.digest }));
     }
     const profile: OfficialInstanceProfile = Object.freeze({
-        initialPages,
+        initialPages:
+            definition.id === REPOSITORY_PROFILE.id
+                ? [...initialPages.filter(({ id }) => id !== "login"), ...repositoryPages]
+                : initialPages,
         id: definition.id,
         version: definition.version,
         upgradeFromVersions: definition.upgradeFromVersions,
@@ -120,16 +107,16 @@ async function loadOfficialProfile(
             digest: manifest.digest,
         }),
         contracts: Object.freeze(
-            implementationAdmissions.map(({ digest, release }) =>
-                Object.freeze({ contractId: release.contractId, version: release.version, digest }),
-            ),
+            implementationAdmissions
+                .filter(
+                    ({ release }) =>
+                        definition.id === REPOSITORY_PROFILE.id || release.contractId !== "ulvia.repository",
+                )
+                .map(({ digest, release }) =>
+                    Object.freeze({ contractId: release.contractId, version: release.version, digest }),
+                ),
         ),
-        collection: Object.freeze({
-            publisherId: collection.release.publisherId,
-            collectionId: collection.release.collectionId,
-            version: collection.release.version,
-            digest: collection.digest,
-        }),
+        collections: Object.freeze(collectionPins),
     });
     return Object.freeze({
         profile,
@@ -193,11 +180,4 @@ function exactEntry(entries: readonly RepositoryArtifactEntry[], id: string, ver
         throw new Error(`Exact official artifact is unavailable: ${id}@${version}`);
     }
     return entry;
-}
-
-function hasEntry(entries: readonly RepositoryArtifactEntry[], id: string, version: string): boolean {
-    return entries.some(
-        (entry) =>
-            entry.publisherId === CURRENT_PROFILE.manifest.providerId && entry.id === id && entry.version === version,
-    );
 }

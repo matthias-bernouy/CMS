@@ -41,18 +41,22 @@ CMS_REPOSITORY_URL=http://repository:3000 \
 CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true bun run ulvia -- services start --version 0.0.1-beta
 ```
 
+In this example, `repository:3000` is a Repository CMS Edge address reachable
+from the Provider containers. The instance profile bootstraps from bundled
+artifacts before that remote catalogue is available.
+
 The connection is persisted in `services/installation.json` independently of
-network exposure and client signing identities. The Edge smoke supplies this
+network exposure and client PAT connections. The Edge smoke supplies this
 local override itself and never uses the public Repository.
 
 The CLI manages shared services and any number of named Edge instances through
-independent Docker Compose projects. It runs the same Edge, Provider and
-Official Repository images for loopback and public installations, plus Nginx
-and MongoDB, and never
-starts application servers inside the CLI process. Data lives below `$XDG_DATA_HOME/ulvia` or
+independent Docker Compose projects. It runs the same Edge and Provider images
+for loopback and public installations, plus Nginx and MongoDB. A Repository is
+an explicit CMS application profile with its own Edge. The CLI never starts
+application servers inside its process. Data lives below `$XDG_DATA_HOME/ulvia` or
 `~/.local/share/ulvia`; commands work from any directory. `ULVIA_DATA_DIR` is an
-explicit isolation override for tests and CI. `ULVIA_HTTP_PORT`,
-`ULVIA_REPOSITORY_PORT`, and `ULVIA_PROVIDER_PORT` provide initial port defaults
+explicit isolation override for tests and CI. `ULVIA_HTTP_PORT`
+and `ULVIA_PROVIDER_PORT` provide initial port defaults
 for isolated tests. Persistent exposure is managed with
 `ulvia configure network`; loopback HTTP and public HTTPS/ACME use the same
 orchestrator and lifecycle commands. The Provider's internal Docker endpoint remains

@@ -17,7 +17,8 @@ Production runtime for the official Ulvia Provider.
 
 - Run Bun with `--no-macros`; startup must fail without this flag because remote
   authored sources pass through the shared compiler. This is not an OS sandbox.
-- Keep the Repository publisher key in its dedicated encrypted secret namespace,
-  pin its Repository identity and never regenerate a missing persisted key.
+- Keep the Repository publication PAT in the authoring contract's encrypted secret
+  namespace. Pin its origin and Repository identity; never generate credentials
+  implicitly or forward a PAT across origins or redirects.
 
 - Bind observability stores to the authenticated instance during composition. Keep host-wide diagnostics operator-owned, and suppress receiver self-collection. Local direct ingestion must use the same feature service as the contract adapter.

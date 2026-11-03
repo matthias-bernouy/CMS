@@ -21,9 +21,7 @@ test("the Bun runtime, types, CI, and container pins stay aligned", async () => 
     const integrationWorkflow = await readRepositoryFile(".github/workflows/quality-integration-contracts.yml");
     const setupAction = await readRepositoryFile(".github/actions/setup-workspace/action.yml");
     const dockerfiles = await Promise.all(
-        ["edge", "provider", "official-repository"].map((image) =>
-            readRepositoryFile(`infra/images/${image}/Dockerfile`),
-        ),
+        ["edge", "provider"].map((image) => readRepositoryFile(`infra/images/${image}/Dockerfile`)),
     );
 
     expect(Bun.version).toBe(version);

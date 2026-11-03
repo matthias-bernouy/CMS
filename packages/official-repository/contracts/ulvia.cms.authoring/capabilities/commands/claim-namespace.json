@@ -1,6 +1,6 @@
 {
     "id": "claim-namespace",
-    "description": "Claim a namespace using this instance signing identity. Existing ownership is preserved.",
+    "description": "Claim a namespace for the Repository account authenticated by the configured PAT. Existing ownership is preserved.",
     "access": "admin",
     "behavior": {
         "effect": "command",
@@ -30,34 +30,20 @@
                 "type": "integer",
                 "minimum": 1
             },
-            "publicKey": {
+            "state": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 59
-            },
-            "revoked": {
-                "type": "boolean"
+                "maxLength": 16,
+                "enum": ["active", "suspended"]
             },
             "updatedAt": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 64,
                 "format": "date-time"
-            },
-            "action": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 16,
-                "enum": ["claim", "rotate", "revoke"]
-            },
-            "previousDigest": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 71,
-                "nullable": true
             }
         },
-        "required": ["namespace", "revision", "publicKey", "revoked", "updatedAt", "action", "previousDigest"]
+        "required": ["namespace", "revision", "state", "updatedAt"]
     },
     "errors": [
         {
@@ -114,7 +100,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "authoring_claim_namespace",
-                "description": "Claim a namespace using this instance signing identity. Existing ownership is preserved."
+                "description": "Claim a namespace for the Repository account authenticated by the configured PAT. Existing ownership is preserved."
             }
         }
     ],

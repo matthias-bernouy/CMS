@@ -202,9 +202,10 @@ transport rules. See [files and responsive images](../images/README.md).
 
 ## Current Integration Gaps
 
-- Publisher-key namespaces and an MCP repository binding are planned on this
-  branch, not mounted services. Current publication uses the configured shared
-  mutation signing secret.
+- Repository instances use the shared Access account/PAT authentication and
+  account-owned namespaces. The official Provider implements `ulvia.repository`;
+  its independent Edge exposes selected admitted bindings. Ordinary users can
+  publish within their namespaces without administrator privileges.
 - Cookie-authenticated browser commands do not yet have one centralized
   Origin/Fetch Metadata policy. Cookie flags and capability authorization do
   not replace that policy; see [open platform work](../TODO.md).
@@ -215,9 +216,9 @@ transport rules. See [files and responsive images](../images/README.md).
 - Mongo contract publication rejects fixture assets until a byte store exists.
 - Collection releases can be installed and upgraded from configured repository
   sources. Exact remote `push`/`pull` and reversible yanking are implemented;
-  `@bernouy/official-repository-server` provides single-replica production hosting
-  with durable staged uploads and replay claims. Horizontal storage and
-  multi-publisher authorization remain separate work.
+  the Repository CMS profile provides single-replica hosting with durable staged
+  uploads bound to account ownership revisions. Horizontal storage remains
+  outside the implemented deployment.
 - The official Files provider schedules reconstructible image representations in
   process; a durable derivative worker remains future work. Public immutable
   file responses already expose a shared-cache policy.

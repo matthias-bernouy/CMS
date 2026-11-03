@@ -16,7 +16,6 @@ import { exerciseDocumentation } from "./documentation/flow";
 const images = {
     edge: process.env.ULVIA_MCP_EDGE_DOCKER_IMAGE,
     provider: process.env.ULVIA_MCP_PROVIDER_DOCKER_IMAGE,
-    repository: process.env.ULVIA_REPOSITORY_DOCKER_IMAGE,
 };
 const integration = Object.values(images).every(Boolean) ? test : test.skip;
 
@@ -38,7 +37,7 @@ integration(
                 "packages/runtimes/ulvia-provider-server/src/checkRetention.ts",
             ]);
             connection = await connectBrowser(f.cmsUrl, f.administrator);
-            expect(connection.tools).toHaveLength(67);
+            expect(connection.tools).toHaveLength(68);
             await exerciseDocumentation(connection, f.cmsUrl);
             await exercisePageDelivery(connection.page, f.cmsUrl);
             await exerciseBasicPage(connection, f.cmsUrl);
@@ -49,19 +48,17 @@ integration(
             await exerciseRenderingResources(f.providerName, f.id);
             await exerciseProviders(f, connection.page);
             const namespace = f.id.replaceAll("-", "");
-            const publicKey = await exerciseCollections(connection.call, namespace, f.providerName);
+            await connection.call("ulvia.cms.authoring", "configure-connection", { token: f.repository.pat.token });
+            const repositoryConnection = await exerciseCollections(connection.call, namespace, f.providerName);
             const namespaces = await connection.call("ulvia.cms.authoring", "list-namespaces");
             expect(namespaces.items).toContainEqual(expect.objectContaining({ namespace, access: "owned" }));
-            expect((await connection.call("ulvia.cms.authoring", "track-namespace", { namespace })).access).toBe(
-                "owned",
-            );
             await exerciseContent(connection.call, f.cmsUrl);
             await exerciseFiles(connection.call, f.cmsUrl, connection.token.access_token);
             const logId = await exerciseObservability(await f.providerUrl(), f.instanceToken, f.namedToken, f.cmsUrl);
             await exerciseObservabilityMcp(connection, logId);
             await f.restartProvider();
             await verifyObservabilityPersistence(await f.providerUrl(), f.instanceToken, logId);
-            expect((await connection.call("ulvia.cms.authoring", "get-identity")).publicKey).toBe(publicKey);
+            expect(await connection.call("ulvia.cms.authoring", "get-connection")).toEqual(repositoryConnection);
             expect((await connection.call("ulvia.cms.authoring", "list-namespaces")).items).toContainEqual(
                 expect.objectContaining({ namespace, access: "owned" }),
             );

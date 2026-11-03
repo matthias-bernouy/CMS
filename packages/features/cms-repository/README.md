@@ -93,10 +93,11 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/collections/sources` | Exact remote collection-release sources and dependency fetching |
 | `@bernouy/cms-repository/collections/http` | Collection repository HTTP route registration and bounded wire decoding |
 | `@bernouy/cms-repository/collections/mongo` | Mongo collection catalogues and installation stores |
-| `@bernouy/cms-repository/repository/publication` | Signed staged-publication protocol, exact remote client, mutation endpoint, upload-store and replay-store ports |
-| `@bernouy/cms-repository/repository/namespaces` | Ed25519 namespace authority, owner credentials, key lifecycle client and bounded ownership proofs |
-| `@bernouy/cms-repository/repository/contract` | Admitted `ulvia.repository` contract and transport-independent capability service |
-| `@bernouy/cms-repository/repository/filesystem` | Reference immutable registry, streamed upload staging, durable replay claims, local catalogues, yanks and read endpoint |
+| `@bernouy/cms-repository/repository/publication` | Account-bound staged publication, pinned PAT client and registry/upload-store ports |
+| `@bernouy/cms-repository/repository/namespaces` | Account ownership, transfers, suspension, deletion fences and bounded namespace client |
+| `@bernouy/cms-repository/repository/namespaces/mongo` | Durable namespace ownership and account quotas |
+| `@bernouy/cms-repository/repository/capabilities` | Transport-independent registry capability service and injected ports |
+| `@bernouy/cms-repository/repository/filesystem` | Reference immutable registry, streamed upload staging, local catalogues, yanks and download ports |
 
 Use explicit domain subpaths for executable APIs. There are no compatibility
 packages or wrappers under the former package names.
@@ -112,11 +113,12 @@ loaded by admission or the package root. The internal `repository-http/`
 directory holds bounded HTTP reads shared by collection and provider sources;
 catalogue parsing remains in each domain. Mongo contract release publication
 rejects fixture assets until separate byte storage is available.
-The publication endpoint depends on registry, upload-store and replay-store
-ports. A writable composition must inject durable upload staging; the default
-replay store is process-local while the filesystem adapter persists replay
-claims for every process sharing one repository root. Multi-node deployments
-without a shared filesystem still need shared atomic implementations. Publication
+The registry capability service receives verified account context plus namespace,
+registry and upload-store ports. Runtimes compose durable account ownership and
+streamed staging, binding every upload stage to its account, namespace and
+ownership revision. The reference filesystem adapter targets one shared local
+root; multi-node deployments require an explicitly supported storage design.
+Publication
 creates bounded metadata first, streams each asset separately and only exposes
 the immutable release after a final idempotent commit. The Mongo catalogues expose
 revision tokens from publication metadata for selection planning. Gateway freshness

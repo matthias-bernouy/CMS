@@ -7,23 +7,25 @@ import { mcpContainers } from "./containers";
 import { connectBrowser } from "./oauth";
 
 const baselineProvider = process.env.ULVIA_UPGRADE_BASELINE_PROVIDER_IMAGE;
-const baselineRepository = process.env.ULVIA_UPGRADE_BASELINE_REPOSITORY_IMAGE;
 const candidate = process.env.ULVIA_MCP_PROVIDER_DOCKER_IMAGE;
 const edge = process.env.ULVIA_MCP_EDGE_DOCKER_IMAGE;
-const integration = baselineProvider && baselineRepository && candidate && edge ? test : test.skip;
+const integration = baselineProvider && candidate && edge ? test : test.skip;
 
 integration(
     "a baseline instance changes Provider image without losing Pages or its existing MCP grant",
     async () => {
         const directory = await mkdtemp(join(tmpdir(), "ulvia-provider-upgrade-"));
-        const publish = async (url: string) => {
+        const publish = async (url: string, token: string) => {
             const options = {
-                environment: { ULVIA_DATA_DIR: directory, ULVIA_CONFIG_DIR: join(directory, "config") },
+                environment: {
+                    ULVIA_DATA_DIR: directory,
+                    ULVIA_CONFIG_DIR: join(directory, "config"),
+                    ULVIA_REPOSITORY_TOKEN: token,
+                },
                 log: () => undefined,
             };
             const cli = (args: string[]) => runCli(args, options);
-            await cli(["identity", "create", "test-owner"]);
-            await cli(["repository", "login", url, "--identity", "test-owner"]);
+            await cli(["repository", "login", url]);
             await cli(["namespace", "claim", "ulvia.official"]);
             await cli(["release", resolve(import.meta.dir, "../../../packages/official-repository"), "--recursive"]);
             await cli(["push", "all", "--repository", url]);
@@ -31,10 +33,7 @@ integration(
         let stack: Awaited<ReturnType<typeof mcpContainers>> | undefined;
         let connection: Awaited<ReturnType<typeof connectBrowser>> | undefined;
         try {
-            stack = await mcpContainers(
-                { edge: edge!, provider: baselineProvider!, repository: baselineRepository! },
-                publish,
-            );
+            stack = await mcpContainers({ edge: edge!, provider: baselineProvider! }, publish);
             connection = await connectBrowser(stack.cmsUrl, stack.administrator);
             expect(connection.tools.length).toBeGreaterThan(0);
             const initialToolCount = connection.tools.length;
@@ -45,7 +44,7 @@ integration(
                     connection!.call("ulvia.cms.content", "pages.get", { id: page.id }),
                 ),
             );
-            await stack.upgradeProvider(candidate!, "1.0.0");
+            await stack.upgradeProvider(candidate!, "1.3.0");
             const catalogue = await connection.rpc("tools/list");
             connection.tools.splice(0, connection.tools.length, ...catalogue.tools);
             expect(connection.tools).toHaveLength(initialToolCount);

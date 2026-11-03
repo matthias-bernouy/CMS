@@ -1,5 +1,5 @@
 import { RemoteRepositoryClient, type RemoteCoordinate } from "@bernouy/cms-repository/repository/publication";
-import { type RepositoryOwnerCredential } from "@bernouy/cms-repository/repository/namespaces";
+import { type RepositoryNamespaceCredential } from "@bernouy/cms-repository/repository/namespaces";
 import { formatCoordinate, type RemoteSelection } from "./arguments";
 import { loadLocal } from "./storage";
 import { inferLocalCoordinate } from "./selection";
@@ -33,7 +33,7 @@ export async function pushCommand(
     for (const coordinate of coordinates) {
         prepared.push({ coordinate, local: await loadLocal(root, coordinate) });
     }
-    const credentials = new Map<string, RepositoryOwnerCredential>();
+    const credentials = new Map<string, RepositoryNamespaceCredential>();
     for (const namespace of new Set(coordinates.map((coordinate) => coordinate.publisherId))) {
         credentials.set(namespace, await remoteRepositoryCredential(url, namespace, environment));
     }

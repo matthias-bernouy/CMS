@@ -1,17 +1,9 @@
-import { createHash, generateKeyPairSync, randomUUID } from "node:crypto";
-import { FilesystemRepositoryNamespaceStore } from "@bernouy/cms-repository/repository/filesystem";
-import {
-    RepositoryNamespaceAuthority,
-    type RepositoryOwnerCredential,
-    repositoryDigest,
-    repositoryWriteHeaders,
-    signNamespaceProof,
-} from "@bernouy/cms-repository/repository/namespaces";
-import {
-    type PublicationEnvelope,
-    type RemoteCoordinate,
-    type RepositoryPublicationRegistry,
+import type {
+    PublicationEnvelope,
+    RemoteCoordinate,
+    RepositoryPublicationRegistry,
 } from "@bernouy/cms-repository/repository/publication";
+import { repositoryApplication } from "../../../../../tests/fixtures/repository/application";
 
 export class RecordingRegistry implements RepositoryPublicationRegistry {
     readonly publications: PublicationEnvelope[] = [];
@@ -40,70 +32,50 @@ export class RecordingRegistry implements RepositoryPublicationRegistry {
     }
 }
 
-export async function ownerFixture(root: string, namespace = "publisher") {
-    const pair = generateKeyPairSync("ed25519");
-    const privateKey = pair.privateKey.export({ type: "pkcs8", format: "pem" }).toString();
-    const publicKey = pair.publicKey.export({ type: "spki", format: "der" }).toString("base64url");
-    const namespaces = new RepositoryNamespaceAuthority(
-        "test-repository",
-        new FilesystemRepositoryNamespaceStore(root),
-    );
-    await namespaces.claim(
-        namespace,
-        publicKey,
-        signNamespaceProof(
-            {
-                repositoryId: namespaces.repositoryId,
-                namespace,
-                revision: 0,
-                action: "claim",
-                subject: namespace,
-                digest: repositoryDigest({ publicKey }),
-                timestamp: Date.now(),
-                nonce: randomUUID(),
-            },
-            privateKey,
-        ),
-    );
-    const credential: RepositoryOwnerCredential = {
-        repositoryId: namespaces.repositoryId,
+export async function ownerFixture(root: string, namespace = "publisher", registry?: RepositoryPublicationRegistry) {
+    const application = repositoryApplication(root, "test-repository", registry);
+    const owner = await application.account();
+    await application.namespaces.claim(owner.accountId, namespace);
+    const credential = {
+        origin: "https://repository.example",
+        repositoryId: application.repositoryId,
         namespace,
         revision: 1,
-        resolvePrivateKey: async () => privateKey,
+        resolveToken: async () => owner.token,
     };
-    return { namespaces, credential };
+    return { application, owner, credential, namespaces: application.namespaces };
 }
 
-export function signOwnerRequest(method: string, url: URL, body: Uint8Array, credential: RepositoryOwnerCredential) {
-    return signOwnerContentDigest(method, url, createHash("sha256").update(body).digest("hex"), credential);
+export function jsonRequest(path: string, token: string, input: Record<string, unknown>, method = "POST") {
+    if (path === "/v1/uploads") {
+        return new Request(`https://repository.example/.cms/call/ulvia.repository${path}`, {
+            method,
+            body: input.manifest as string,
+            headers: {
+                authorization: `Bearer ${token}`,
+                "content-type": "application/octet-stream",
+                "x-repository-namespace": encodeURIComponent(input.namespace as string),
+                "x-repository-namespace-revision": String(input.namespaceRevision),
+            },
+        });
+    }
+    return new Request(`https://repository.example/.cms/call/ulvia.repository${path}`, {
+        method,
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify(input),
+    });
 }
 
-export function signOwnerContentDigest(
-    method: string,
-    url: URL,
-    digest: string,
-    credential: RepositoryOwnerCredential,
-) {
-    return repositoryWriteHeaders(method, url, digest, credential);
-}
-
-export function signedRequest(url: URL, method: string, body: Uint8Array, headers: Record<string, string>): Request {
-    return new Request(url, { method, body: Buffer.from(body), headers });
-}
-
-export async function emptySignedRequest(
-    url: URL,
-    method: string,
-    credential: RepositoryOwnerCredential,
-): Promise<Request> {
-    const body = new Uint8Array();
-    return signedRequest(url, method, body, await signOwnerRequest(method, url, body, credential));
-}
-
-export async function signedRequestWithoutBody(
-    url: URL,
-    method: string,
-    credential: RepositoryOwnerCredential,
-): Promise<Request> {
-    return new Request(url, { method, headers: await signOwnerRequest(method, url, new Uint8Array(), credential) });
+export function assetRequest(path: string, token: string, namespace: string, bytes: Uint8Array, digest: string) {
+    return new Request(`https://repository.example/.cms/call/ulvia.repository${path}`, {
+        method: "PUT",
+        body: Buffer.from(bytes),
+        headers: {
+            authorization: `Bearer ${token}`,
+            "content-type": "application/octet-stream",
+            "x-repository-namespace": encodeURIComponent(namespace),
+            "x-repository-namespace-revision": "1",
+            "x-repository-content-digest": encodeURIComponent(digest),
+        },
+    });
 }

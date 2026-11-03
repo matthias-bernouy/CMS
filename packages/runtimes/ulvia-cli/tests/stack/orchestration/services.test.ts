@@ -35,7 +35,6 @@ test("service start never changes an initialized stack implicitly", () => {
     const state = {
         images: {
             provider: officialImage("provider", "0.0.1-beta", "a"),
-            repository: officialImage("repository", "0.0.1-beta", "b"),
         },
     } as LocalServicesState;
 
@@ -44,7 +43,7 @@ test("service start never changes an initialized stack implicitly", () => {
     expect(() => assertStartVersion(state)).not.toThrow();
 });
 
-function officialImage(component: "provider" | "repository", version: string, digestCharacter: string) {
+function officialImage(component: "provider", version: string, digestCharacter: string) {
     return {
         component,
         version,

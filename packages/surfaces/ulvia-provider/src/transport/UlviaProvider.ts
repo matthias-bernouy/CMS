@@ -71,7 +71,16 @@ export class UlviaProvider {
                     const runtime = lease.resource;
                     let relay = relays.get(runtime.dispatcher);
                     if (!relay) {
-                        runtime.dispatcher.seal(options.contracts);
+                        runtime.dispatcher.seal(
+                            options.contracts.filter(({ release, digest }) =>
+                                runtime.report.implementations.some(
+                                    (pin) =>
+                                        pin.contractId === release.contractId &&
+                                        pin.version === release.version &&
+                                        pin.digest === digest,
+                                ),
+                            ),
+                        );
                         relay = createProviderContractRelay(
                             routes,
                             runtime.dispatcher,

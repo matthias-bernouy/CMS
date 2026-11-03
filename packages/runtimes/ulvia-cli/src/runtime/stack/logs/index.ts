@@ -13,14 +13,9 @@ export async function showInstanceLogs(
     log: (message: string) => void,
 ): Promise<void> {
     const selection = parseSelection(args, "ulvia instance logs <name>");
-    if (selection.services.length === 1 && selection.services[0] === "repository") {
-        throw new Error("Repository diagnostics belong to the operator. Use ulvia services logs repository.");
-    }
     const service =
         selection.services.length === 1
-            ? { edge: "cms-edge", provider: "ulvia-provider", repository: "official-repository" }[
-                  selection.services[0]!
-              ]
+            ? { edge: "cms-edge", provider: "ulvia-provider" }[selection.services[0]!]
             : undefined;
     const seen = new Set<string>();
     const input: LogQuery = {

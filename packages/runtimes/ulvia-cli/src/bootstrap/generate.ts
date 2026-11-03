@@ -12,8 +12,11 @@ export type OfficialBootstrapArtifacts = Readonly<{
     contractAssets: readonly { contractId: string; id: string; bytes: Uint8Array }[];
     provider: string;
     providerDigest: string;
-    collection: string;
-    collectionAssets: readonly Readonly<{ id: string; bytes: Uint8Array }>[];
+    collections: readonly Readonly<{
+        id: string;
+        canonicalJson: string;
+        assets: readonly Readonly<{ id: string; bytes: Uint8Array }>[];
+    }>[];
 }>;
 
 export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstrapArtifacts> {
@@ -43,26 +46,37 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
         await readFile(join(root, "providers", "ulvia.official", "definition.json"), "utf8"),
         catalogue,
     );
-    const collection = await prepareCollectionRelease(join(root, "collections", "ulvia-official"), catalogue);
+    const collections = [];
+    for (const id of await directories(join(root, "collections"))) {
+        const collection = await prepareCollectionRelease(join(root, "collections", id), catalogue);
+        if (collection.release.collectionId !== id) {
+            throw new Error(`Official collection folder differs from its identity: ${id}`);
+        }
+        collections.push({
+            id,
+            canonicalJson: collection.canonicalJson,
+            assets: await Promise.all(
+                collection.assets.map(async ({ id, bytes }) => ({
+                    id,
+                    bytes: new Uint8Array(await bytes.arrayBuffer()),
+                })),
+            ),
+        });
+    }
     return {
         contracts,
         contractAssets,
         provider: provider.canonicalJson,
         providerDigest: provider.digest,
-        collection: collection.canonicalJson,
-        collectionAssets: await Promise.all(
-            collection.assets.map(async ({ id, bytes }) => ({
-                id,
-                bytes: new Uint8Array(await bytes.arrayBuffer()),
-            })),
-        ),
+        collections,
     };
 }
 
 export async function writeOfficialBootstrapArtifacts(
     root = resolve(import.meta.dir, "../../dist/bootstrap"),
+    artifacts: OfficialBootstrapArtifacts | undefined = undefined,
 ): Promise<void> {
-    const artifacts = await buildOfficialBootstrapArtifacts();
+    artifacts ??= await buildOfficialBootstrapArtifacts();
     await rm(root, { recursive: true, force: true });
     const contractPaths: string[] = [];
     for (const [id, bytes] of Object.entries(artifacts.contracts)) {
@@ -79,19 +93,20 @@ export async function writeOfficialBootstrapArtifacts(
         await writeBytes(root, `${contractRoot}/${asset.id}`, asset.bytes);
     }
     const provider = "providers/ulvia.official/definition.json";
-    const collection = "collections/ulvia-official/release.json";
-    const collectionAssets = artifacts.collectionAssets.map(({ id }) => ({
-        id,
-        path: `collections/ulvia-official/assets/${id}`,
-    }));
     await writeArtifact(root, provider, artifacts.provider);
-    await writeArtifact(root, collection, artifacts.collection);
-    for (const [index, asset] of artifacts.collectionAssets.entries()) {
-        await writeBytes(root, collectionAssets[index]!.path, asset.bytes);
+    const collections = [];
+    for (const collection of artifacts.collections) {
+        const release = `collections/${collection.id}/release.json`;
+        const assets = collection.assets.map(({ id }) => ({ id, path: `collections/${collection.id}/assets/${id}` }));
+        await writeArtifact(root, release, collection.canonicalJson);
+        for (const [index, asset] of collection.assets.entries()) {
+            await writeBytes(root, assets[index]!.path, asset.bytes);
+        }
+        collections.push({ release, assets });
     }
     await writeFile(
         join(root, "index.json"),
-        `${JSON.stringify({ contracts: contractPaths, provider, collection, collectionAssets }, null, 4)}\n`,
+        `${JSON.stringify({ contracts: contractPaths, provider, collections }, null, 4)}\n`,
     );
     await bootstrapOfficialRepository(join(root, "repository"), root);
 }

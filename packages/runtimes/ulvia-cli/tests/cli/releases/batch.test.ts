@@ -41,15 +41,20 @@ test("recursive release prepares the official contracts, provider and collection
     const source = resolve(import.meta.dir, "../../../../../official-repository");
     try {
         await f.run(["release", source, "--recursive"]);
-        expect(await f.files.list("contracts")).toHaveLength(11);
+        expect(await f.files.list("contracts")).toHaveLength(12);
         expect(await f.files.list("providers")).toHaveLength(1);
         const collections = await new LocalCollectionRepository(join(f.data, "repository")).list();
-        expect(collections).toHaveLength(1);
+        expect(collections.map(({ release }) => release.collectionId)).toEqual(["ulvia-official", "ulvia-repository"]);
         expect(collections[0]!.assets).toHaveLength(55);
         expect(collections[0]!.release.examples).toHaveLength(105);
-        expect(f.output[11]).toStartWith("+ provider ulvia.official/ulvia.official@");
-        expect(f.output[12]).toStartWith("+ collection ulvia.official/ulvia-official@");
-        expect(f.output.at(-1)).toBe("Prepared 13 local releases.");
+        expect(collections[1]!.release.dependencies?.map(({ collectionId }) => collectionId)).toEqual([
+            "ulvia-official",
+        ]);
+        expect(collections[1]!.release.examples).toHaveLength(9);
+        expect(f.output[12]).toStartWith("+ provider ulvia.official/ulvia.official@");
+        expect(f.output[13]).toStartWith("+ collection ulvia.official/ulvia-official@");
+        expect(f.output[14]).toStartWith("+ collection ulvia.official/ulvia-repository@");
+        expect(f.output.at(-1)).toBe("Prepared 15 local releases.");
     } finally {
         await f.close();
     }

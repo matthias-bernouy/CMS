@@ -1,15 +1,23 @@
 import { expect, test } from "bun:test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { validatePageDocument } from "@bernouy/cms-content/page-document";
 import { buildOfficialBootstrapArtifacts, writeOfficialBootstrapArtifacts } from "../../src/bootstrap/generate";
-import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
-import { officialContractCatalogue } from "../officialContractCatalogue";
+import { parseCollectionReleaseJson } from "@bernouy/cms-repository/collections";
+
+let compiled: ReturnType<typeof buildOfficialBootstrapArtifacts> | undefined;
+function officialArtifacts() {
+    compiled ??= buildOfficialBootstrapArtifacts();
+    return compiled;
+}
 
 test("the official collection passes its source quality contract", async () => {
-    const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
-    const artifact = await prepareCollectionRelease(source, await officialContractCatalogue());
+    const artifact = {
+        release: parseCollectionReleaseJson(
+            (await officialArtifacts()).collections.find(({ id }) => id === "ulvia-official")!.canonicalJson,
+        ),
+    };
     const visible = artifact.release.blocs.filter((bloc) => bloc.catalogue !== "hidden");
     expect(
         visible.every(
@@ -191,20 +199,36 @@ test("the official collection passes its source quality contract", async () => {
     ).toBeFalse();
 });
 
-test("the generated local bootstrap bundle matches official authored releases", async () => {
-    const artifacts = await buildOfficialBootstrapArtifacts();
+test("the compiled official snapshot retains exact release and asset bytes through filesystem admission", async () => {
+    const artifacts = await officialArtifacts();
     const root = await mkdtemp(join(tmpdir(), "ulvia-bootstrap-build-"));
     try {
-        await writeOfficialBootstrapArtifacts(root);
+        await writeOfficialBootstrapArtifacts(root, artifacts);
         for (const [id, bytes] of Object.entries(artifacts.contracts)) {
             const segments = id.startsWith("ulvia.cms.") ? ["contracts", "cms", id] : ["contracts", id];
             expect((await readFile(join(root, ...segments, "definition.json"), "utf8")).trim()).toBe(bytes);
         }
+        for (const asset of artifacts.contractAssets) {
+            const segments = asset.contractId.startsWith("ulvia.cms.")
+                ? ["contracts", "cms", asset.contractId]
+                : ["contracts", asset.contractId];
+            expect((await readFile(join(root, ...segments, asset.id))).equals(Buffer.from(asset.bytes))).toBe(true);
+        }
+        for (const collection of artifacts.collections) {
+            for (const asset of collection.assets) {
+                expect(
+                    (await readFile(join(root, "collections", collection.id, "assets", asset.id))).equals(
+                        Buffer.from(asset.bytes),
+                    ),
+                ).toBe(true);
+            }
+            expect((await readFile(join(root, "collections", collection.id, "release.json"), "utf8")).trim()).toBe(
+                collection.canonicalJson,
+            );
+        }
+
         expect((await readFile(join(root, "providers", "ulvia.official", "definition.json"), "utf8")).trim()).toBe(
             artifacts.provider,
-        );
-        expect((await readFile(join(root, "collections", "ulvia-official", "release.json"), "utf8")).trim()).toBe(
-            artifacts.collection,
         );
     } finally {
         await rm(root, { recursive: true, force: true });

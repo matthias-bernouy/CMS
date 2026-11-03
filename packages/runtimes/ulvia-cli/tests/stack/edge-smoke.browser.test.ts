@@ -1,3 +1,6 @@
+import { publishSmokeRepository } from "./fixtures/repositoryBootstrap";
+import { resolveUlviaPaths } from "../../src/runtime/paths";
+import { localEdgeProjectName } from "../../src/runtime/stack/orchestration/state";
 import { captureCapabilityFailures } from "./fixtures/browserDiagnostics";
 import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -13,24 +16,23 @@ import { runEdgeSmoke, verifyEdgeStateAfterRestart } from "./edgeSmoke/flows";
 import { verifySecondInstanceIsolation } from "./edgeSmoke/providerAccess";
 
 const smoke = process.env.ULVIA_RUN_EDGE_SMOKE === "1" ? test : test.skip;
-const PORTS = { edge: 15_100, repository: 15_102, provider: 15_103 } as const;
+const PORTS = { edge: 15_100, registryBridge: 15_102, provider: 15_103 } as const;
 const EDGE_URL = `http://localhost:${PORTS.edge}`;
 
 smoke(
     "fresh local installation publishes a Page and preserves Edge state",
     async () => {
         assertPortAvailable(PORTS.edge, "shared proxy");
-        assertPortAvailable(PORTS.repository, "official Repository");
+        assertPortAvailable(PORTS.registryBridge, "test Registry ingress");
         assertPortAvailable(PORTS.provider, "official Provider");
         const data = await mkdtemp(join(tmpdir(), "ulvia-edge-smoke-"));
         const environment = {
             ...process.env,
             ULVIA_DATA_DIR: data,
-            CMS_REPOSITORY_URL: "http://repository:3000",
+            CMS_REPOSITORY_URL: `http://${localEdgeProjectName(resolveUlviaPaths({ ULVIA_DATA_DIR: data }), "registry")}-edge:3000`,
             CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true",
             ULVIA_CONFIG_DIR: join(data, "client"),
             ULVIA_HTTP_PORT: String(PORTS.edge),
-            ULVIA_REPOSITORY_PORT: String(PORTS.repository),
             ULVIA_PROVIDER_PORT: String(PORTS.provider),
         };
         const smokeCollection = resolve(import.meta.dir, "fixtures/smoke-kit");
@@ -51,6 +53,11 @@ smoke(
                 environment,
                 log: (message) => (output += `${message}\n`),
             });
+            await runCli(["instance", "create", "registry", "--profile", "ulvia.repository@1.0.0"], {
+                environment,
+                log: (message) => (output += `${message}\n`),
+            });
+            await publishSmokeRepository(environment, PORTS.registryBridge);
             await runCli(["instance", "create", "default"], {
                 environment,
                 log: (message) => (output += `${message}\n`),
@@ -89,7 +96,7 @@ smoke(
             expect(status).toContain("Shared services: running");
             expect(status).toContain("Instance default: running");
             expect(status).toContain("Ulvia Provider: running / healthy");
-            expect(status).toContain("Repository: running / healthy");
+            expect(status.some((line) => line.startsWith("Repository:"))).toBe(false);
             await runCli(["instance", "stop", "default"], { environment, log: () => undefined });
             await runCli(["services", "stop"], { environment, log: () => undefined });
             const stoppedStatus: string[] = [];

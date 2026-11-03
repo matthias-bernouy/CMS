@@ -10,10 +10,10 @@ test("repository transport rejects redirects and oversized responses", async () 
         port: 0,
         fetch(request) {
             const path = new URL(request.url).pathname;
-            if (path === "/redirect") {
+            if (path.endsWith("/redirect")) {
                 return Response.redirect(new URL("/small", request.url));
             }
-            return new Response(new Uint8Array(path === "/large" ? MAX_REPOSITORY_RESPONSE_BYTES + 1 : 2));
+            return new Response(new Uint8Array(path.endsWith("/large") ? MAX_REPOSITORY_RESPONSE_BYTES + 1 : 2));
         },
     });
     try {
@@ -29,7 +29,7 @@ test("repository transport rejects redirects and oversized responses", async () 
 test("repository base URLs reject credentials and non-HTTPS remote hosts", () => {
     expect(() => repositoryBaseUrl("http://example.com", "Provider")).toThrow("HTTPS or explicitly allowed HTTP");
     expect(repositoryBaseUrl("http://repository:3100", "Provider", { allowInsecureHttp: true }).href).toBe(
-        "http://repository:3100/",
+        "http://repository:3100/.cms/call/ulvia.repository/",
     );
     expect(() => repositoryBaseUrl("https://user:pass@example.com", "Provider")).toThrow("URL credentials");
 });
@@ -47,14 +47,16 @@ test("repository transport accepts runtime-owned outbound request decoration", a
     expect(observed?.get("accept")).toBe("application/json");
 });
 
-test("signed Repository clients retain HTTPS defaults and accept only a host-configured HTTP exception", () => {
+test("PAT Repository clients retain HTTPS defaults and accept only a host-configured HTTP exception", () => {
     expect(() => new RepositoryNamespaceClient("http://repository:3000")).toThrow();
     expect(() => new RemoteRepositoryClient("http://repository:3000")).toThrow();
     expect(() => new RepositoryNamespaceClient("http://repository:3000", { allowInsecureHttp: true })).not.toThrow();
     expect(
         () => new RemoteRepositoryClient("http://repository:3000", undefined, { allowInsecureHttp: true }),
     ).not.toThrow();
-    expect(repositoryUrl("http://repository:3000", { allowInsecureHttp: true }).href).toBe("http://repository:3000/");
+    expect(repositoryUrl("http://repository:3000", { allowInsecureHttp: true }).href).toBe(
+        "http://repository:3000/.cms/call/ulvia.repository/",
+    );
     expect(() => repositoryUrl("http://user:password@repository:3000", { allowInsecureHttp: true })).toThrow();
     expect(() => repositoryUrl("file:///tmp/repository", { allowInsecureHttp: true })).toThrow();
 });

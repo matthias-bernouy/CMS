@@ -7,8 +7,8 @@ export {
 export { LocalCollectionRepository } from "cms-repository/repository/filesystem/artifacts/collections";
 export { FilesystemProviderRepository } from "cms-repository/repository/filesystem/artifacts/providerSource";
 export { FilesystemCollectionRepository } from "cms-repository/repository/filesystem/artifacts/collectionSource";
+export { FilesystemRegistryReads } from "cms-repository/repository/filesystem/artifacts/registryReads";
 export { LocalContractReleases } from "cms-repository/repository/filesystem/contracts";
-export { RepositoryReadEndpoint } from "cms-repository/repository/filesystem/http/readEndpoint";
 export {
     acquireFilesystemLease,
     FilesystemLeaseBusyError,
@@ -24,11 +24,9 @@ export {
     type RepositoryCatalogueType,
 } from "cms-repository/repository/filesystem/catalogueIndex";
 export { FilesystemRepositoryPublicationRegistry } from "cms-repository/repository/filesystem/mutations/publicationRegistry";
-export { FilesystemRepositoryReplayStore } from "cms-repository/repository/filesystem/mutations/replayStore";
 export { FilesystemRepositoryPublicationUploadStore } from "cms-repository/repository/filesystem/mutations/uploadStore";
 export {
     LocalRepositoryYanks,
     type RepositoryArtifactKind,
     type RepositoryYank,
 } from "cms-repository/repository/filesystem/yanks";
-export { FilesystemRepositoryNamespaceStore } from "cms-repository/repository/filesystem/mutations/namespaces";

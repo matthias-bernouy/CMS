@@ -7,7 +7,7 @@ const composeTest = dockerAvailable ? test : test.skip;
 
 composeTest("one Compose model renders loopback HTTP and public ACME exposure", () => {
     const base = render(["services.yml"]);
-    expect(Object.keys(base.services).sort()).toEqual(["mongo", "mongo-provision", "provider", "proxy", "repository"]);
+    expect(Object.keys(base.services).sort()).toEqual(["mongo", "mongo-provision", "provider", "proxy"]);
     expect(base.services.proxy.ports).toEqual([
         { mode: "ingress", host_ip: "127.0.0.1", target: 80, published: "15100", protocol: "tcp" },
     ]);
@@ -22,14 +22,7 @@ composeTest("one Compose model renders loopback HTTP and public ACME exposure", 
     );
 
     const tls = render(["services.yml", "services-tls.yml"]);
-    expect(Object.keys(tls.services).sort()).toEqual([
-        "acme",
-        "mongo",
-        "mongo-provision",
-        "provider",
-        "proxy",
-        "repository",
-    ]);
+    expect(Object.keys(tls.services).sort()).toEqual(["acme", "mongo", "mongo-provision", "provider", "proxy"]);
     expect(tls.services.proxy.ports).toHaveLength(2);
     expect(tls.services.proxy.ports?.[1]).toMatchObject({ host_ip: "127.0.0.1", target: 443, published: "15443" });
     expect(tls.services.acme.environment.DEFAULT_EMAIL).toBe("ops@example.com");
@@ -50,22 +43,6 @@ composeTest("one isolated Edge receives no shared persistence credentials", () =
     }
     expect(edge.read_only).toBe(true);
     expect(edge.cap_drop).toEqual(["ALL"]);
-});
-
-composeTest("standalone Repository uses owner publication and exposes only its TLS proxy publicly", () => {
-    const local = render(["repository.yml"]);
-    expect(Object.keys(local.services)).toEqual(["repository"]);
-    expect(local.services.repository.ports?.[0]).toMatchObject({ host_ip: "127.0.0.1", target: 3000 });
-    expect(local.services.repository.environment.ULVIA_REPOSITORY_TOKEN).toBeUndefined();
-    expect(local.services.repository.environment.REPOSITORY_PUBLIC_URL).toBe("https://repository.example");
-    const tls = render(["repository.yml", "repository-tls.yml"]);
-    expect(Object.keys(tls.services).sort()).toEqual(["acme", "proxy", "repository"]);
-    expect(tls.services.proxy.ports).toEqual([
-        expect.objectContaining({ host_ip: "0.0.0.0", target: 80, published: "80" }),
-        expect.objectContaining({ host_ip: "0.0.0.0", target: 443, published: "443" }),
-    ]);
-    expect(tls.services.repository.environment.LETSENCRYPT_HOST).toBe("repository.example");
-    expect(tls.services.acme.environment.DEFAULT_EMAIL).toBe("ops@example.com");
 });
 
 type RenderedService = {
@@ -104,20 +81,17 @@ function render(files: readonly string[], overrides: Record<string, string> = {}
 function composeEnvironment(): Record<string, string> {
     return {
         PROVIDER_IMAGE: "ulvia-provider:test",
-        OFFICIAL_REPOSITORY_IMAGE: "ulvia-official-repository:test",
         EDGE_IMAGE: "ulvia-edge:test",
         ULVIA_BIND_ADDRESS: "127.0.0.1",
         ULVIA_HTTP_PORT: "15100",
         ULVIA_HTTPS_PORT: "15443",
         ULVIA_PROVIDER_PORT: "15103",
-        ULVIA_REPOSITORY_PORT: "15102",
         ULVIA_UID: "1000",
         ULVIA_GID: "1000",
         ULVIA_PRIVATE_NETWORK: "ulvia-test-private",
         ULVIA_INSTANCE_NETWORK: "ulvia-test-instances",
         ULVIA_MONGO_DIR: "/tmp/ulvia-test/mongo",
         ULVIA_FILES_DIR: "/tmp/ulvia-test/files",
-        ULVIA_REPOSITORY_DIR: "/tmp/ulvia-test/repository",
         ULVIA_LOGS_DIR: "/tmp/ulvia-test/logs",
         ULVIA_PROXY_CERTIFICATES_DIR: "/tmp/ulvia-test/proxy/certificates",
         ULVIA_PROXY_VHOST_DIR: "/tmp/ulvia-test/proxy/vhosts",
@@ -129,9 +103,6 @@ function composeEnvironment(): Record<string, string> {
         ULVIA_MONGO_PROVIDER_PASSWORD: "b".repeat(43),
         ULVIA_PROVIDER_SESSION_SECRET: "c".repeat(43),
         ULVIA_PROVIDER_KEK_HEX: "d".repeat(64),
-        ULVIA_REPOSITORY_PUBLIC_URL: "https://repository.example",
-        ULVIA_REPOSITORY_DOMAIN: "repository.example",
-        ULVIA_REPOSITORY_PROXY_DIR: "/tmp/ulvia-test/repository-proxy",
         ULVIA_PROVIDER_OPERATOR_TOKEN: "f".repeat(43),
         ULVIA_ACME_EMAIL: "ops@example.com",
         ULVIA_INSTANCE_HOSTNAME: "example.com",
@@ -141,7 +112,11 @@ function composeEnvironment(): Record<string, string> {
 }
 
 function minimalEnvironment(): Record<string, string> {
-    return { PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin", HOME: process.env.HOME ?? "/tmp" };
+    return {
+        PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin",
+        HOME: process.env.HOME ?? "/tmp",
+        ...(process.env.DOCKER_CONFIG ? { DOCKER_CONFIG: process.env.DOCKER_CONFIG } : {}),
+    };
 }
 
 function commandSucceeds(command: string[]): boolean {

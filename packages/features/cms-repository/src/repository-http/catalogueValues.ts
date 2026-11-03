@@ -11,3 +11,40 @@ export function isPlainRecord(value: unknown): value is Record<string, unknown> 
     const prototype = Object.getPrototypeOf(value);
     return prototype === Object.prototype || prototype === null;
 }
+
+/** Project a bounded registry wire page into one source's existing metadata codec. */
+export function registryCataloguePage(value: unknown, kind: string, identifier: string): unknown {
+    if (
+        !isPlainRecord(value) ||
+        Object.keys(value).some((key) => !["releases", "nextCursor"].includes(key)) ||
+        !Array.isArray(value.releases) ||
+        value.releases.length > 256
+    ) {
+        throw new TypeError("Invalid registry catalogue page");
+    }
+    return {
+        ...value,
+        releases: value.releases.map((entry) => {
+            if (
+                !isPlainRecord(entry) ||
+                entry.kind !== kind ||
+                !isPlainRecord(entry.metadata) ||
+                Object.keys(entry).some(
+                    (key) => !["kind", "publisherId", "id", "version", "digest", "metadata"].includes(key),
+                ) ||
+                Object.keys(entry.metadata).some((key) =>
+                    ["kind", "publisherId", "id", "version", "digest", identifier].includes(key),
+                )
+            ) {
+                throw new TypeError("Invalid registry catalogue entry");
+            }
+            return {
+                ...entry.metadata,
+                publisherId: entry.publisherId,
+                [identifier]: entry.id,
+                version: entry.version,
+                digest: entry.digest,
+            };
+        }),
+    };
+}

@@ -5,7 +5,6 @@ import { exerciseMutationFreshness } from "./performance/freshness/mutations";
 const images = {
     edge: process.env.ULVIA_MCP_EDGE_DOCKER_IMAGE,
     provider: process.env.ULVIA_MCP_PROVIDER_DOCKER_IMAGE,
-    repository: process.env.ULVIA_REPOSITORY_DOCKER_IMAGE,
 };
 const integration = Object.values(images).every(Boolean) ? test : test.skip;
 integration(

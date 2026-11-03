@@ -1,3 +1,4 @@
+import { repositoryApplication } from "../../../../tests/fixtures/repository/application";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -6,12 +7,7 @@ import { admitContractBundleJson, parseContractReleaseJson } from "@bernouy/cms-
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import {
-    FilesystemRepositoryCatalogueIndex,
-    LocalArtifactFiles,
-    LocalCollectionRepository,
-    RepositoryReadEndpoint,
-} from "@bernouy/cms-repository/repository/filesystem";
+import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import type { RepositoryFetch } from "@bernouy/cms-repository/collections/http";
@@ -104,13 +100,12 @@ export async function repositoryFixture() {
         const store = new CollectionStore(observed, contracts);
         await store.importAdmittedRelease(artifact);
         await store.install("installed", artifact.digest, 0, "official");
-        const index = new FilesystemRepositoryCatalogueIndex(root);
-        await index.refresh();
-        const endpoint = new RepositoryReadEndpoint(root, index);
+        const application = repositoryApplication(root);
+        await application.index.refresh();
         const server = Bun.serve({
             hostname: "127.0.0.1",
             port: 0,
-            fetch: async (request) => (await endpoint.handle(request)) ?? new Response(null, { status: 404 }),
+            fetch: application.handle,
         });
         const network = { requests: 0, bytes: 0 };
         const request: RepositoryFetch = async (url, init) => {
@@ -137,6 +132,7 @@ export async function repositoryFixture() {
             },
             async close() {
                 await server.stop(true);
+                await application.close();
                 await rm(root, { recursive: true, force: true });
             },
         };

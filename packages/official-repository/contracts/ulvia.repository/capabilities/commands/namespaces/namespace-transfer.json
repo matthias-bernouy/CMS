@@ -1,0 +1,141 @@
+{
+    "id": "namespace-transfer",
+    "description": "Transfer an owned namespace to another existing account using the current ownership revision.",
+    "access": "authenticated",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "natural",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "namespaceRevision": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "targetAccountId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "sensitive": true
+            }
+        },
+        "required": ["namespace", "namespaceRevision", "targetAccountId"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "revision": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "state": {
+                "type": "string",
+                "enum": ["active", "suspended"],
+                "maxLength": 9
+            },
+            "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            }
+        },
+        "required": ["namespace", "revision", "state", "updatedAt"]
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "ACTOR_UNAVAILABLE",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/v1/namespace-actions/transfer",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503,
+                    "ACTOR_UNAVAILABLE": 403
+                }
+            }
+        }
+    ],
+    "docs": ["overview.md"]
+}

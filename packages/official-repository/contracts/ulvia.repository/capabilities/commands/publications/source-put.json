@@ -1,0 +1,129 @@
+{
+    "id": "source-put",
+    "description": "Retain private immutable sources for a published collection",
+    "access": "authenticated",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "natural",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "collectionId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "version": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "sourceJson": {
+                "type": "string",
+                "maxLength": 1048576,
+                "sensitive": true
+            },
+            "releaseDigest": {
+                "type": "string",
+                "maxLength": 71
+            },
+            "namespaceRevision": {
+                "type": "integer",
+                "minimum": 1
+            }
+        },
+        "required": ["namespace", "collectionId", "version", "sourceJson", "releaseDigest", "namespaceRevision"]
+    },
+    "output": {
+        "type": "null"
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "ACTOR_UNAVAILABLE",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/v1/source-snapshots/put",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503,
+                    "ACTOR_UNAVAILABLE": 403
+                }
+            }
+        }
+    ],
+    "docs": ["overview.md"]
+}

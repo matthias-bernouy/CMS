@@ -8,8 +8,8 @@ tests remain in `packages/*/tests`; architecture and CI tooling tests remain in
 - [`performance/repository`](performance/repository): catalogue HTTP and admission work budgets.
 - [`images/edge`](images/edge): stateless Edge image boundary checks.
 - [`images/provider`](images/provider): stateful Provider image boundary checks.
-- [`images/official-repository`](images/official-repository): image boundary,
-  real-container restart and owner-authorized CLI publication tests.
+- [`images/repository`](images/repository): image boundary,
+  real CMS-container restart and account-authorized CLI publication tests.
 - [`integration/instance`](integration/instance/README.md): the complete local
   instance journey, including MCP, collections, files, Provider connections,
   observability, rotation and revocation.
@@ -26,7 +26,6 @@ unless their image variables are supplied. With matching local images built:
 ```sh
 ULVIA_MCP_EDGE_DOCKER_IMAGE=docker.io/cyaxis/ulvia-edge:0.1.0-integration \
 ULVIA_MCP_PROVIDER_DOCKER_IMAGE=docker.io/cyaxis/ulvia-provider:0.1.0-integration \
-ULVIA_REPOSITORY_DOCKER_IMAGE=docker.io/cyaxis/ulvia-official-repository:0.1.0-integration \
 bun test ./tests
 ```
 

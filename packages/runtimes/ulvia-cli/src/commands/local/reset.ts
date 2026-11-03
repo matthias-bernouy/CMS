@@ -1,7 +1,8 @@
+import { LOCAL_SERVICES_SCHEMA } from "../../runtime/config";
 import { chmod, lstat, opendir, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { loadLocalInstanceConfig } from "../../runtime/instanceConfig";
-import { loadLocalInstanceConnection } from "../../runtime/instanceConnection";
+import { loadLocalInstanceConfig } from "../../runtime/instances/config";
+import { loadLocalInstanceConnection } from "../../runtime/instances/connection";
 import { ensureUlviaPaths, type UlviaPaths } from "../../runtime/paths";
 import { loadInstallationConfig } from "../../runtime/stack/installation";
 import { destroyLocalEdge, listLocalInstanceNames } from "../../runtime/stack/orchestration/instances";
@@ -42,7 +43,7 @@ async function assertRecognizedData(paths: UlviaPaths): Promise<void> {
     const installation = await loadInstallationConfig(paths);
     if (serviceSchema === null && installation === null) {
         await assertEmptySkeleton(paths.services, new Set(["cms-files", "domains", "mongo", "proxy"]));
-    } else if (serviceSchema !== "ulvia.services.v2" && serviceSchema !== "ulvia.local-services.v1") {
+    } else if (serviceSchema !== LOCAL_SERVICES_SCHEMA) {
         throw new Error(`Refusing to reset unrecognized Ulvia data (shared services) at ${paths.data}`);
     }
     for (const name of await listLocalInstanceNames(paths)) {
@@ -50,7 +51,7 @@ async function assertRecognizedData(paths: UlviaPaths): Promise<void> {
         const schema = await readSchema(join(root, "runtime.json"));
         if (schema === null) {
             await assertEmptySkeleton(root, new Set());
-        } else if (schema !== "ulvia.local-instance-runtime.v1") {
+        } else if (schema !== "ulvia.local-instance-runtime.v2") {
             throw new Error(`Refusing to reset unrecognized Ulvia instance data at ${root}`);
         }
     }

@@ -10,8 +10,7 @@
         }
     },
     "include": [
-        "src/**/*.ts",
-        "src/repository/capabilities/contract/**/*.json"
+        "src/**/*.ts"
     ],
     "references": [
         {

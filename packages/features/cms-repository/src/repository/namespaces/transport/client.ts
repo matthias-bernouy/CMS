@@ -1,117 +1,94 @@
-import { randomUUID } from "node:crypto";
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
-import { boundedResponseBytes, repositoryUrl } from "../../publication/transport";
-import type { RepositoryNamespace } from "../interfaces";
-import { assertRepositoryNamespace, namespacePublicKey, repositoryDigest, signNamespaceProof } from "../proofs";
-import type { RepositoryOwnerCredential } from "./request";
+import { RepositoryRequestError } from "../../core/errors";
+import { RepositoryConnection } from "../../publication/transport/connection";
+import type {
+    RepositoryConnectionCredential,
+    RepositoryNamespaceCredential,
+} from "../../publication/transport/credentials";
+import type { RepositoryNamespaceView } from "../accounts/interfaces";
+import { assertRepositoryNamespace } from "../validation";
 
 export class RepositoryNamespaceClient {
-    private readonly base: URL;
-    constructor(url: string, options: Readonly<{ allowInsecureHttp?: boolean }> = {}) {
-        this.base = repositoryUrl(url, options);
+    private readonly connection: RepositoryConnection;
+    constructor(
+        url: string,
+        options: Readonly<{ allowInsecureHttp?: boolean; credential?: RepositoryConnectionCredential }> = {},
+    ) {
+        this.connection = new RepositoryConnection(url, options.credential, options);
+        this.credential = options.credential;
     }
+    private readonly credential?: RepositoryConnectionCredential;
 
-    async identity(): Promise<string> {
-        const value = (await this.request("v1/repository")) as { repositoryId?: unknown };
-        if (typeof value.repositoryId !== "string" || !/^[A-Za-z0-9._:-]{1,128}$/u.test(value.repositoryId)) {
-            throw new Error("Repository returned an invalid identity");
-        }
-        return value.repositoryId;
+    identity(): Promise<string> {
+        return this.connection.identity();
     }
-
-    async get(namespace: string): Promise<RepositoryNamespace | null> {
+    async get(namespace: string): Promise<RepositoryNamespaceView | null> {
         assertRepositoryNamespace(namespace);
-        const value = await this.request(`v1/namespaces/${namespace}`, undefined, true);
-        if (value === null) {
-            return null;
+        const result = await this.connection.json("v1/namespaces/get", "QUERY", { namespace });
+        return result === null ? null : namespaceView(result, namespace);
+    }
+    async list(): Promise<readonly RepositoryNamespaceView[]> {
+        const value = (await this.connection.json("v1/namespaces", "GET", undefined, true)) as { namespaces?: unknown };
+        if (!Array.isArray(value.namespaces) || value.namespaces.length > 32) {
+            throw new Error("Repository returned an invalid namespace inventory");
         }
-        const owner = value as RepositoryNamespace;
-        if (
-            !owner ||
-            owner.namespace !== namespace ||
-            !Number.isSafeInteger(owner.revision) ||
-            owner.revision < 1 ||
-            typeof owner.revoked !== "boolean" ||
-            typeof owner.publicKey !== "string" ||
-            !["claim", "rotate", "revoke"].includes(owner.action) ||
-            typeof owner.updatedAt !== "string" ||
-            !Number.isFinite(Date.parse(owner.updatedAt)) ||
-            (owner.previousDigest !== null && !/^sha256:[a-f0-9]{64}$/u.test(owner.previousDigest))
-        ) {
-            throw new Error("Repository returned an invalid namespace owner");
-        }
-        namespacePublicKey(owner.publicKey);
-        return owner;
+        return value.namespaces.map((entry) => namespaceView(entry));
     }
-
-    async claim(credential: RepositoryOwnerCredential, publicKey: string): Promise<RepositoryNamespace> {
-        return (await this.request(`v1/namespaces/${credential.namespace}`, {
-            action: "claim",
-            publicKey,
-            proof: await this.proof(credential, "claim", repositoryDigest({ publicKey })),
-        })) as RepositoryNamespace;
-    }
-
-    async rotate(
-        credential: RepositoryOwnerCredential,
-        replacement: { publicKey: string; resolvePrivateKey(): Promise<string> },
-    ): Promise<RepositoryNamespace> {
-        const digest = repositoryDigest({ publicKey: replacement.publicKey });
-        return (await this.request(`v1/namespaces/${credential.namespace}`, {
-            action: "rotate",
-            publicKey: replacement.publicKey,
-            proof: await this.proof(credential, "rotate", digest),
-            replacementProof: await this.proof(
-                { ...credential, resolvePrivateKey: replacement.resolvePrivateKey },
-                "accept-key",
-                digest,
-            ),
-        })) as RepositoryNamespace;
-    }
-
-    async revoke(credential: RepositoryOwnerCredential): Promise<RepositoryNamespace> {
-        return (await this.request(`v1/namespaces/${credential.namespace}`, {
-            action: "revoke",
-            proof: await this.proof(credential, "revoke", repositoryDigest(null)),
-        })) as RepositoryNamespace;
-    }
-
-    private async proof(credential: RepositoryOwnerCredential, action: string, digest: string) {
-        assertRepositoryNamespace(credential.namespace);
-        return signNamespaceProof(
-            {
-                repositoryId: credential.repositoryId,
-                namespace: credential.namespace,
-                revision: credential.revision,
-                action,
-                subject: credential.namespace,
-                digest,
-                timestamp: Date.now(),
-                nonce: randomUUID(),
-            },
-            await credential.resolvePrivateKey(),
+    async claim(namespace: string): Promise<RepositoryNamespaceView> {
+        assertRepositoryNamespace(namespace);
+        return namespaceView(
+            await this.connection.json("v1/namespace-actions/claim", "POST", { namespace }, true),
+            namespace,
         );
     }
-
-    private async request(path: string, value?: unknown, missing = false): Promise<unknown> {
-        const response = await fetch(new URL(path, this.base), {
-            method: value === undefined ? "GET" : "POST",
-            redirect: "error",
-            signal: AbortSignal.timeout(15_000),
-            headers: {
-                Accept: "application/json",
-                ...(value === undefined ? {} : { "Content-Type": "application/json" }),
-            },
-            ...(value === undefined ? {} : { body: JSON.stringify(value) }),
-        });
-        if (missing && response.status === 404) {
-            await response.body?.cancel();
-            return null;
-        }
-        if (!response.ok) {
-            await response.body?.cancel();
-            throw new Error(`Repository namespace request rejected (${response.status})`);
-        }
-        return parseStrictJson(await boundedResponseBytes(response, 16_384), 16_384, 8);
+    async transfer(
+        namespace: string,
+        namespaceRevision: number,
+        targetAccountId: string,
+    ): Promise<RepositoryNamespaceView> {
+        assertRepositoryNamespace(namespace);
+        return namespaceView(
+            await this.connection.json(
+                "v1/namespace-actions/transfer",
+                "POST",
+                { namespace, namespaceRevision, targetAccountId },
+                true,
+            ),
+            namespace,
+        );
     }
+    async suspend(namespace: string, namespaceRevision: number): Promise<RepositoryNamespaceView> {
+        assertRepositoryNamespace(namespace);
+        return namespaceView(
+            await this.connection.json("v1/namespace-actions/suspend", "POST", { namespace, namespaceRevision }, true),
+            namespace,
+        );
+    }
+    async ownedCredential(namespace: string): Promise<RepositoryNamespaceCredential> {
+        assertRepositoryNamespace(namespace);
+        const owned = (await this.list()).find((entry) => entry.namespace === namespace && entry.state === "active");
+        if (!owned || !this.credential) {
+            throw new RepositoryRequestError("REJECTED", "This account does not own an active Repository namespace");
+        }
+        return { ...this.credential, namespace, revision: owned.revision };
+    }
+}
+
+function namespaceView(input: unknown, expected?: string): RepositoryNamespaceView {
+    const value = input as RepositoryNamespaceView;
+    if (
+        !value ||
+        typeof value !== "object" ||
+        Array.isArray(value) ||
+        Object.keys(value).sort().join(",") !== "namespace,revision,state,updatedAt" ||
+        (expected !== undefined && value.namespace !== expected) ||
+        !Number.isSafeInteger(value.revision) ||
+        value.revision < 1 ||
+        !["active", "suspended"].includes(value.state) ||
+        typeof value.updatedAt !== "string" ||
+        !Number.isFinite(Date.parse(value.updatedAt))
+    ) {
+        throw new Error("Repository returned invalid namespace metadata");
+    }
+    assertRepositoryNamespace(value.namespace);
+    return { ...value };
 }

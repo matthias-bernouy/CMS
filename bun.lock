@@ -16,7 +16,6 @@
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
         "@bernouy/logging": "workspace:*",
-        "@bernouy/official-repository-server": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/ulvia-cli": "workspace:*",
@@ -278,18 +277,6 @@
         "typescript": "^7.0.2",
       },
     },
-    "packages/runtimes/official-repository-server": {
-      "name": "@bernouy/official-repository-server",
-      "version": "1.0.0",
-      "dependencies": {
-        "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/http-runner": "workspace:*",
-        "@bernouy/logging": "workspace:*",
-        "@bernouy/text-embeddings": "workspace:*",
-        "@bernouy/text-search": "workspace:*",
-      },
-    },
     "packages/runtimes/ulvia-cli": {
       "name": "@bernouy/ulvia-cli",
       "version": "1.0.0",
@@ -328,6 +315,7 @@
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/text-embeddings": "workspace:*",
+        "@bernouy/text-search": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
         "mongodb": "^7.6.0",
       },
@@ -411,8 +399,6 @@
     "@bernouy/image-processing": ["@bernouy/image-processing@workspace:packages/foundation/image-processing"],
 
     "@bernouy/logging": ["@bernouy/logging@workspace:packages/foundation/logging"],
-
-    "@bernouy/official-repository-server": ["@bernouy/official-repository-server@workspace:packages/runtimes/official-repository-server"],
 
     "@bernouy/rate-limiter": ["@bernouy/rate-limiter@workspace:packages/foundation/rate-limiter"],
 

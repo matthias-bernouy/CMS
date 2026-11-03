@@ -1,0 +1,119 @@
+{
+    "id": "publication-abort",
+    "description": "publication-abort",
+    "access": "authenticated",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "natural",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "uploadId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 36,
+                "format": "uuid"
+            },
+            "namespaceRevision": {
+                "type": "integer",
+                "minimum": 1
+            }
+        },
+        "required": ["namespace", "uploadId", "namespaceRevision"]
+    },
+    "output": {
+        "type": "null"
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "ACTOR_UNAVAILABLE",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/v1/uploads/abort",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [204],
+                "contentTypes": [],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503,
+                    "ACTOR_UNAVAILABLE": 403
+                }
+            }
+        }
+    ],
+    "docs": ["overview.md"]
+}

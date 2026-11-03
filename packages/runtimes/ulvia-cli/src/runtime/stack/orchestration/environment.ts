@@ -1,6 +1,6 @@
 import type { LocalServicesConfig } from "../../config";
-import type { LocalInstanceConfig } from "../../instanceConfig";
-import type { LocalInstanceConnection } from "../../instanceConnection";
+import type { LocalInstanceConfig } from "../../instances/config";
+import type { LocalInstanceConnection } from "../../instances/connection";
 import type { LocalInstancePaths, UlviaPaths } from "../../paths";
 import type { InstallationConfig } from "../installation";
 import { instancePublicUrl } from "../ports";
@@ -22,20 +22,17 @@ export function localServicesEnvironment(
         CMS_REPOSITORY_URL: installation.repository.url,
         CMS_REPOSITORY_ALLOW_INSECURE_HTTP: String(installation.repository.allowInsecureHttp),
         PROVIDER_IMAGE: pinnedOfficialImageReference(state.images.provider),
-        OFFICIAL_REPOSITORY_IMAGE: pinnedOfficialImageReference(state.images.repository),
         ULVIA_BIND_ADDRESS: installation.bindAddress,
         ULVIA_HTTP_PORT: String(installation.ports.http),
         ULVIA_HTTPS_PORT: installation.tls.mode === "acme" ? String(installation.tls.httpsPort) : "443",
         ULVIA_ACME_EMAIL: installation.tls.mode === "acme" ? installation.tls.email : "disabled@example.invalid",
         ULVIA_PROVIDER_PORT: String(installation.ports.provider),
-        ULVIA_REPOSITORY_PORT: String(installation.ports.repository),
         ULVIA_UID: String(process.getuid?.() ?? 1000),
         ULVIA_GID: String(process.getgid?.() ?? 1000),
         ULVIA_PRIVATE_NETWORK: state.privateNetwork,
         ULVIA_INSTANCE_NETWORK: state.instanceNetwork,
         ULVIA_MONGO_DIR: paths.mongo,
         ULVIA_FILES_DIR: paths.cmsFiles,
-        ULVIA_REPOSITORY_DIR: paths.repository,
         ULVIA_PROXY_CERTIFICATES_DIR: paths.proxy.certificates,
         ULVIA_PROXY_VHOST_DIR: paths.proxy.virtualHosts,
         ULVIA_PROXY_CHALLENGE_DIR: paths.proxy.challenge,

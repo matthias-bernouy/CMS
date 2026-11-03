@@ -14,8 +14,10 @@ import {
 type BootstrapIndex = Readonly<{
     contracts: readonly string[];
     provider: string;
-    collection: string;
-    collectionAssets: readonly Readonly<{ id: string; path: string }>[];
+    collections: readonly Readonly<{
+        release: string;
+        assets: readonly Readonly<{ id: string; path: string }>[];
+    }>[];
 }>;
 
 /** Admits pre-built official releases without reading authored source folders at runtime. */
@@ -39,14 +41,21 @@ export async function bootstrapOfficialRepository(
             await contracts.publish(source, assets);
         }
         await new LocalProviderReleases(files, contracts).release(await readFile(join(root, index.provider), "utf8"));
-        const collection = await admitCollectionReleaseJson(
-            await readFile(join(root, index.collection), "utf8"),
-            await Promise.all(
-                index.collectionAssets.map(async ({ id, path }) => ({ id, bytes: await readFile(join(root, path)) })),
-            ),
-            { contracts: await contracts.catalogue() },
-        );
-        await new LocalCollectionRepository(repositoryRoot).store(collection);
+        const catalogue = await contracts.catalogue();
+        const collections = new LocalCollectionRepository(repositoryRoot);
+        for (const entry of index.collections) {
+            const collection = await admitCollectionReleaseJson(
+                await readFile(join(root, entry.release), "utf8"),
+                await Promise.all(
+                    entry.assets.map(async ({ id, path }) => ({ id, bytes: await readFile(join(root, path)) })),
+                ),
+                { contracts: catalogue },
+            );
+            if (entry.release !== `collections/${collection.release.collectionId}/release.json`) {
+                throw new Error("Official collection index differs from its admitted identity");
+            }
+            await collections.store(collection);
+        }
     });
 }
 
@@ -58,11 +67,7 @@ function parseBootstrapIndex(value: unknown): BootstrapIndex {
     const contracts = index.contracts;
     const keys = Object.keys(index).toSorted();
     if (
-        keys.length !== 4 ||
-        keys[0] !== "collection" ||
-        keys[1] !== "collectionAssets" ||
-        keys[2] !== "contracts" ||
-        keys[3] !== "provider" ||
+        keys.join(",") !== "collections,contracts,provider" ||
         !Array.isArray(contracts) ||
         contracts.length === 0 ||
         contracts.length > 128 ||
@@ -71,20 +76,42 @@ function parseBootstrapIndex(value: unknown): BootstrapIndex {
         ) ||
         new Set(contracts).size !== contracts.length ||
         index.provider !== "providers/ulvia.official/definition.json" ||
-        index.collection !== "collections/ulvia-official/release.json" ||
-        !isCollectionAssetIndex(index.collectionAssets)
+        !isCollectionIndex(index.collections)
     ) {
         throw new Error("Official bootstrap index is invalid");
     }
     return {
         contracts,
         provider: index.provider,
-        collection: index.collection,
-        collectionAssets: index.collectionAssets,
+        collections: index.collections,
     } as BootstrapIndex;
 }
 
-function isCollectionAssetIndex(value: unknown): value is BootstrapIndex["collectionAssets"] {
+function isCollectionIndex(value: unknown): value is BootstrapIndex["collections"] {
+    if (!Array.isArray(value) || value.length === 0 || value.length > 32) {
+        return false;
+    }
+    const paths = new Set<string>();
+    for (const entry of value) {
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+            return false;
+        }
+        const record = entry as Record<string, unknown>;
+        if (
+            Object.keys(record).toSorted().join(",") !== "assets,release" ||
+            typeof record.release !== "string" ||
+            !/^collections\/[a-z0-9][a-z0-9-]*\/release\.json$/u.test(record.release) ||
+            paths.has(record.release) ||
+            !isCollectionAssetIndex(record.assets, dirname(record.release))
+        ) {
+            return false;
+        }
+        paths.add(record.release);
+    }
+    return true;
+}
+
+function isCollectionAssetIndex(value: unknown, collectionRoot: string): boolean {
     if (!Array.isArray(value) || value.length > 512) {
         return false;
     }
@@ -102,7 +129,7 @@ function isCollectionAssetIndex(value: unknown): value is BootstrapIndex["collec
             typeof id !== "string" ||
             !/^[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*$/u.test(id) ||
             typeof path !== "string" ||
-            path !== `collections/ulvia-official/assets/${id}` ||
+            path !== `${collectionRoot}/assets/${id}` ||
             ids.has(id) ||
             paths.has(path)
         ) {

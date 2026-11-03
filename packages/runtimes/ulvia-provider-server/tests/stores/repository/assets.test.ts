@@ -1,10 +1,9 @@
 import { expect, test } from "bun:test";
-import { DatabaseFixture } from "./database";
 import { join } from "node:path";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
 import { createCollectionAuthoring } from "../../../src/runtime/stores/repository/composition";
-import { authoringFixture, sourceSnapshot } from "../../../../official-repository-server/tests/authoring/fixture";
+import { authoringFixture, sourceSnapshot } from "./authoring";
 
 test("collection source assets validate their pinned bytes and remain usable after yank", async () => {
     const f = await authoringFixture();
@@ -25,12 +24,12 @@ test("collection source assets validate their pinned bytes and remain usable aft
                 assetId: "logo.svg",
             },
         ];
-        const stores = { releases: f.contracts, db: new DatabaseFixture(), contractSecrets: { repository: {} } };
+        const stores = { releases: f.contracts, contractSecrets: { repository: f.secrets } };
         for (const tamper of ["asset", "release"]) {
             const source = new HttpCollectionRepository("local", f.base, {
                 request: async (url, init) => {
                     const response = await fetch(url, init);
-                    if (tamper === "asset" && url.pathname.endsWith("/assets/logo.svg")) {
+                    if (tamper === "asset" && url.pathname.endsWith("/logo.svg")) {
                         await response.body?.cancel();
                         return new Response(svg.replace('width="1"', 'width="2"'), { headers: response.headers });
                     }

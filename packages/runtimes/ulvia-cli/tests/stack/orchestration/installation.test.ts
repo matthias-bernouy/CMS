@@ -18,16 +18,16 @@ test("installation configuration defaults to loopback HTTP and persists explicit
     await ensureUlviaPaths(paths);
     try {
         expect(defaultInstallationConfig()).toEqual({
-            schema: "ulvia.installation.v1",
+            schema: "ulvia.installation.v2",
             bindAddress: "127.0.0.1",
-            ports: { http: 5100, repository: 5102, provider: 5103 },
+            ports: { http: 5100, provider: 5103 },
             repository: { url: "https://repo.ulvia.fr", allowInsecureHttp: false },
             tls: { mode: "disabled" },
         });
         const publicConfig = parseInstallationConfig({
             ...defaultInstallationConfig(),
             bindAddress: "0.0.0.0",
-            ports: { http: 80, repository: 5102, provider: 5103 },
+            ports: { http: 80, provider: 5103 },
             tls: { mode: "acme", email: "ops@example.com", httpsPort: 443 },
         });
         await saveInstallationConfig(paths, publicConfig);
@@ -52,7 +52,6 @@ test("fresh configuration does not import historical stack ports", async () => {
         );
         expect((await loadOrCreateInstallationConfig(paths)).ports).toEqual({
             http: 5100,
-            repository: 5102,
             provider: 5103,
         });
     } finally {
@@ -70,7 +69,7 @@ test("installation configuration rejects ambiguous exposure", () => {
     expect(() =>
         parseInstallationConfig({
             ...defaultInstallationConfig(),
-            ports: { http: 5100, repository: 5100, provider: 5103 },
+            ports: { http: 5100, provider: 5100 },
         }),
     ).toThrow(/ports must be distinct/);
 });

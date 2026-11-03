@@ -18,7 +18,9 @@ test("local repository lists immutable metadata and serves matching release byte
         const contracts = await officialContractCatalogue();
         const source = new HttpCollectionRepository("local", server.url);
         expect(await source.list()).toEqual([]);
-        const missing = await fetch(`${server.url}/v1/collections/missing/test/1.0.0`);
+        const missing = await fetch(
+            `${server.url}/.cms/call/ulvia.repository/v1/releases/collection/missing/test/1.0.0`,
+        );
         expect(isValidRequestId(missing.headers.get(REQUEST_ID_HEADER) ?? "")).toBe(true);
         const artifact = await prepareCollectionRelease(
             resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official"),
@@ -27,6 +29,7 @@ test("local repository lists immutable metadata and serves matching release byte
         const version = artifact.release.version;
         expect(await repository.store(artifact)).toBe(true);
         expect(await repository.store(artifact)).toBe(false);
+        server.application.index.invalidate();
         const entries = await source.list();
         expect(entries).toHaveLength(1);
         expect(entries[0]).toMatchObject({
@@ -134,13 +137,23 @@ test("local repository lists immutable metadata and serves matching release byte
                 }
             }
         }
-        expect((await fetch(`${server.url}/v1/collections/missing/test/${version}`)).status).toBe(404);
+        expect(
+            (await fetch(`${server.url}/.cms/call/ulvia.repository/v1/releases/collection/missing/test/${version}`))
+                .status,
+        ).toBe(404);
         const assets = artifact.assets.map(({ id, bytes }) => ({ id, bytes }));
         const build = await admitCollectionRelease({ ...artifact.release, version: "1.3.3+build.1" }, assets, {
             contracts,
         });
         await repository.store(build);
-        const firstPage = await fetch(`${server.url}/v1/collections?limit=1`);
+        server.application.index.invalidate();
+        const page = (input: Record<string, unknown>) =>
+            fetch(`${server.url}/.cms/call/ulvia.repository/v1/catalogue`, {
+                method: "QUERY",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ kind: "collection", ...input }),
+            });
+        const firstPage = await page({ limit: 1 });
         expect(firstPage.status).toBe(200);
         expect(firstPage.headers.get("x-request-id")).toMatch(
             /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
@@ -148,13 +161,11 @@ test("local repository lists immutable metadata and serves matching release byte
         const firstPageBody = (await firstPage.json()) as { releases: unknown[]; nextCursor?: string };
         expect(firstPageBody.releases).toHaveLength(1);
         expect(firstPageBody.nextCursor).toBeString();
-        const secondPage = await fetch(
-            `${server.url}/v1/collections?limit=1&cursor=${encodeURIComponent(firstPageBody.nextCursor!)}`,
-        );
+        const secondPage = await page({ limit: 1, cursor: firstPageBody.nextCursor });
         expect(secondPage.status).toBe(200);
         expect(((await secondPage.json()) as { releases: unknown[] }).releases).toHaveLength(1);
-        expect((await fetch(`${server.url}/v1/collections?limit=0`)).status).toBe(400);
-        expect((await fetch(`${server.url}/v1/collections?unknown=true`)).status).toBe(400);
+        expect((await page({ limit: 0 })).status).toBe(400);
+        expect((await page({ unknown: true })).status).toBe(400);
         const buildEntry = (await source.list()).find((entry) => entry.version === "1.3.3+build.1");
         expect(buildEntry).toBeDefined();
         const buildBundle = await source.get(buildEntry!);
@@ -166,10 +177,17 @@ test("local repository lists immutable metadata and serves matching release byte
         await writeFile(join(root, "legacy-packages", "sealed", "package.json"), "{}");
         await chmod(join(root, "legacy-packages", "sealed"), 0o500);
         await repository.prune();
+        server.application.index.invalidate();
         expect(await source.list()).toEqual([]);
-        expect((await fetch(`${server.url}/v1/collections/ulvia.official/ulvia-official/${version}`)).status).toBe(404);
+        expect(
+            (
+                await fetch(
+                    `${server.url}/.cms/call/ulvia.repository/v1/releases/collection/ulvia.official/ulvia-official/${version}`,
+                )
+            ).status,
+        ).toBe(404);
     } finally {
-        server.stop();
+        await server.stop();
         await rm(root, { recursive: true, force: true });
     }
 }, 30_000);
@@ -301,7 +319,7 @@ test("collection source assets keep their verified bytes through the repository 
             expect(bundle.assets).toEqual([{ id: "icons/brand/mark.svg", bytes }]);
             expect((await admitCollectionRelease(bundle.release, bundle.assets)).digest).toBe(artifact.digest);
         } finally {
-            server.stop();
+            await server.stop();
         }
 
         await writeFile(join(sourceRoot, "assets", "icons", "unused.svg"), bytes);

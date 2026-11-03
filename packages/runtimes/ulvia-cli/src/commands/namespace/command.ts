@@ -1,87 +1,76 @@
-import {
-    RepositoryNamespaceClient,
-    type RepositoryOwnerCredential,
-} from "@bernouy/cms-repository/repository/namespaces";
-import { readNamespacePrivateKey } from "../../runtime/repository/keys";
-
+import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
 import { clientConfigDirectory } from "../../runtime/repository/config";
-import { assertSavedRepository } from "../../runtime/repository/connection";
-import { namespacePublicKey as publicKey, selectIdentity } from "../../runtime/repository/identities";
+import { savedRepositoryCredential } from "../../runtime/repository/connection";
 
 const HELP = `Usage:
-  ulvia namespace <claim | status | rotate | revoke> <namespace> [--repository <url>] [--identity <name>] [--replacement-identity <name>] [--yes]
+  ulvia namespace list [--repository <url>]
+  ulvia namespace <claim | status> <namespace> [--repository <url>]
+  ulvia namespace transfer <namespace> --account <target-account-id> [--repository <url>]
+  ulvia namespace suspend <namespace> --yes [--repository <url>]
 
-Mutations use saved local identities; --identity selects a claim owner.
-Rotation requires --replacement-identity <name>.
-The active Repository comes from repository login; --repository overrides it.
-Revoke requires --yes and is permanent. There is no operator key recovery.`;
+Mutations use the account authenticated by repository login.
+Suspension reserves the namespace and prevents publication.
+Credentials are never forwarded to an override with a different origin.`;
 
 export async function namespaceCommand(
     args: readonly string[],
     environment: Record<string, string | undefined>,
     log: (message: string) => void,
 ): Promise<void> {
-    const [action, namespace, ...rest] = args;
+    const [action] = args;
     if (!action || action === "--help" || action === "help") {
         log(HELP);
         return;
     }
-    if (!namespace || !["claim", "status", "rotate", "revoke"].includes(action)) {
+    const list = action === "list";
+    const namespace = list ? undefined : args[1];
+    if (!["list", "claim", "status", "transfer", "suspend"].includes(action) || (!list && !namespace)) {
         throw new Error(HELP);
     }
-    const values = new Map<string, string>();
-    for (let index = 0; index < rest.length; index++) {
-        const key = rest[index]!;
-        if (values.has(key) || !["--repository", "--replacement-identity", "--identity", "--yes"].includes(key)) {
-            throw new Error(HELP);
+    const rest = args.slice(list ? 1 : 2);
+    const yes = action === "suspend" && rest.filter((value) => value === "--yes").length === 1;
+    const values = namespaceOptions(
+        yes ? rest.filter((value) => value !== "--yes") : rest,
+        action === "transfer" ? ["--repository", "--account"] : ["--repository"],
+    );
+    const url = values.get("--repository") ?? environment.ULVIA_REPOSITORY_URL;
+    if (!url || (action === "suspend" && !yes) || (action === "transfer" && !values.has("--account"))) {
+        throw new Error(HELP);
+    }
+    if (action === "status") {
+        log(JSON.stringify(await new RepositoryNamespaceClient(url).get(namespace!)));
+        return;
+    }
+    const credential = await savedRepositoryCredential(clientConfigDirectory(environment), url);
+    const client = new RepositoryNamespaceClient(url, { credential });
+    if (list) {
+        log(JSON.stringify(await client.list()));
+    } else if (action === "claim") {
+        log(JSON.stringify(await client.claim(namespace!)));
+    } else {
+        const current = (await client.list()).find((entry) => entry.namespace === namespace);
+        if (!current) {
+            throw new Error("This account does not own the Repository namespace");
         }
-        const value = key === "--yes" ? "true" : rest[++index];
-        if (!value || value.startsWith("--")) {
-            throw new Error(HELP);
+        log(
+            JSON.stringify(
+                action === "transfer"
+                    ? await client.transfer(namespace!, current.revision, values.get("--account")!)
+                    : await client.suspend(namespace!, current.revision),
+            ),
+        );
+    }
+}
+
+function namespaceOptions(args: readonly string[], allowed: readonly string[]): Map<string, string> {
+    const values = new Map<string, string>();
+    for (let index = 0; index < args.length; index += 2) {
+        const key = args[index]!;
+        const value = args[index + 1];
+        if (!allowed.includes(key) || values.has(key) || !value || value.startsWith("--")) {
+            throw new Error(`Invalid namespace option: ${key}`);
         }
         values.set(key, value);
     }
-    const url = values.get("--repository") ?? environment.ULVIA_REPOSITORY_URL;
-    if (
-        !url ||
-        (action === "revoke" && !values.has("--yes")) ||
-        (values.has("--yes") && action !== "revoke") ||
-        (values.has("--replacement-identity") && action !== "rotate")
-    ) {
-        throw new Error(HELP);
-    }
-    const client = new RepositoryNamespaceClient(url);
-    const repositoryId = await client.identity();
-    const directory = clientConfigDirectory(environment);
-    await assertSavedRepository(directory, url, repositoryId);
-    const state = await client.get(namespace);
-    if (action === "status") {
-        log(JSON.stringify(state));
-        return;
-    }
-    const { keyFile } = await selectIdentity(
-        directory,
-        values.get("--identity"),
-        action === "claim" ? undefined : state?.publicKey,
-    );
-    const credential: RepositoryOwnerCredential = {
-        namespace,
-        repositoryId,
-        revision: action === "claim" ? 0 : (state?.revision ?? 0),
-        resolvePrivateKey: () => readNamespacePrivateKey(keyFile),
-    };
-    if (action === "claim") {
-        await client.claim(credential, publicKey(await credential.resolvePrivateKey()));
-    } else if (action === "rotate") {
-        const name = values.get("--replacement-identity");
-        if (!name) {
-            throw new Error(HELP);
-        }
-        const replacement = await selectIdentity(directory, name);
-        const key = await readNamespacePrivateKey(replacement.keyFile);
-        await client.rotate(credential, { publicKey: publicKey(key), resolvePrivateKey: async () => key });
-    } else {
-        await client.revoke(credential);
-    }
-    log(`Namespace ${namespace}: ${action} completed.`);
+    return values;
 }

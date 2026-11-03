@@ -5,6 +5,7 @@ import {
     resolveUlviaPaths,
     resolveLocalInstancePaths,
 } from "../../../src/runtime/paths";
+import { localInstanceHostname } from "../../../src/runtime/stack/ports";
 import { runCommand } from "../../../src/runtime/process";
 import { loadOrCreateInstallationConfig } from "../../../src/runtime/stack/installation";
 import {
@@ -25,6 +26,8 @@ export async function prepareSmokeRuntimeImages(environment: Record<string, stri
     const prebuilt = environment.ULVIA_SMOKE_IMAGE_VERSION?.trim();
     const version = prebuilt || "0.1.0-edge-smoke";
     assertImageVersion(version);
+    const providerVersion = environment.ULVIA_SMOKE_PROVIDER_IMAGE_VERSION?.trim() || version;
+    assertImageVersion(providerVersion);
     if (!prebuilt) {
         await runCommand([process.execPath, "run", "infra/images/build.ts", "build", "--version", version, "all"], {
             cwd: root,
@@ -32,21 +35,20 @@ export async function prepareSmokeRuntimeImages(environment: Record<string, stri
         });
     }
     const inspect = async (component: OfficialImageComponent) => {
-        const reference = officialImageReference(component, version);
+        const imageVersion = component === "provider" ? providerVersion : version;
+        const reference = officialImageReference(component, imageVersion);
         const metadata = await runCommand(["docker", "image", "inspect", reference]);
-        return parseOfficialImageInspection(metadata.stdout, component, version);
+        return parseOfficialImageInspection(metadata.stdout, component, imageVersion);
     };
-    const [provider, repository, edge] = await Promise.all([
-        inspect("provider"),
-        inspect("repository"),
-        inspect("edge"),
-    ]);
+    const [provider, edge] = await Promise.all([inspect("provider"), inspect("edge")]);
     const paths = resolveUlviaPaths(environment);
     await ensureUlviaPaths(paths);
     const installation = await loadOrCreateInstallationConfig(paths, environment);
-    await saveLocalServicesState(paths, installation, { provider, repository });
-    const instance = resolveLocalInstancePaths(paths, "default");
-    await ensureLocalInstancePaths(instance);
-    await saveLocalEdgeState(instance, localEdgeProjectName(paths, "default"), "localhost", edge);
-    return version;
+    await saveLocalServicesState(paths, installation, { provider });
+    for (const name of ["default", "registry"]) {
+        const instance = resolveLocalInstancePaths(paths, name);
+        await ensureLocalInstancePaths(instance);
+        await saveLocalEdgeState(instance, localEdgeProjectName(paths, name), localInstanceHostname(name), edge);
+    }
+    return providerVersion;
 }

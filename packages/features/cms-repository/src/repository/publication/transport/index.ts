@@ -6,7 +6,8 @@ export function repositoryUrl(value: string, options: Readonly<{ allowInsecureHt
 
 export async function boundedResponseBytes(response: Response, maximum: number): Promise<Uint8Array> {
     const declared = Number(response.headers.get("content-length"));
-    if ((Number.isFinite(declared) && declared > maximum) || maximum < 0) {
+    if ((Number.isFinite(declared) && declared > maximum) || !Number.isSafeInteger(maximum) || maximum < 0) {
+        await response.body?.cancel();
         throw new Error("Repository response exceeds its declared byte limit");
     }
     if (!response.body) {
@@ -29,6 +30,7 @@ export async function boundedResponseBytes(response: Response, maximum: number):
             chunks.push(part.value);
         }
     } finally {
+        await reader.cancel().catch(() => undefined);
         reader.releaseLock();
     }
     const bytes = new Uint8Array(length);

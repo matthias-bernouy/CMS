@@ -3,19 +3,12 @@ export {
     type RepositoryAssetDownloadSink,
 } from "cms-repository/repository/publication/client";
 export {
-    InMemoryRepositoryReplayStore,
-    RepositoryMutationEndpoint,
-    RepositoryMutationError,
-    type RepositoryMutationOptions,
-} from "cms-repository/repository/publication/mutationEndpoint";
-export {
     encodePublicationUpload,
     MAX_PUBLICATION_ASSET_BYTES,
     MAX_PUBLICATION_BUNDLE_BYTES,
     MAX_PUBLICATION_METADATA_BYTES,
     parsePublicationUpload,
-    parseYank,
-    readRepositoryMutationBody,
+    readPublicationMetadata,
 } from "cms-repository/repository/publication/protocol";
 export { boundedResponseBytes, repositoryUrl } from "cms-repository/repository/publication/transport/index";
 export type {
@@ -24,13 +17,16 @@ export type {
     PublicationUploadAsset,
     PublicationUploadManifest,
     PublicationUploadReceipt,
+    OwnedPublicationUploadManifest,
+    RepositoryUploadOwner,
     RemoteCoordinate,
     RepositoryArtifactKind,
     RepositoryDownloadAsset,
     RepositoryPublicationRegistry,
     RepositoryPublicationResult,
     RepositoryPublicationUploadStore,
-    RepositoryReplayStore,
     RepositoryYank,
     RepositoryYankResult,
 } from "cms-repository/repository/publication/types";
+
+export { RepositoryRequestError } from "cms-repository/repository/core/errors";

@@ -18,7 +18,6 @@ test("local service identity is stable for one user data directory", async () =>
     try {
         const saved = await saveLocalServicesState(paths, defaultInstallationConfig(), {
             provider: image("provider"),
-            repository: image("repository"),
         });
         expect(saved.images.provider.version).toBe("1.2.3");
         expect(saved.projectName).toBe(localServicesIdentity(paths).projectName);

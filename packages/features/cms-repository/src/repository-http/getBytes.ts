@@ -8,14 +8,23 @@ export async function getRepositoryBytes(
     base: URL,
     path: string,
     kind: string,
-    options: { maxBytes?: number; accept?: string; request?: RepositoryFetch } = {},
+    options: {
+        maxBytes?: number;
+        accept?: string;
+        request?: RepositoryFetch;
+        query?: Readonly<Record<string, unknown>>;
+    } = {},
 ): Promise<Uint8Array> {
     const maxBytes = options.maxBytes ?? MAX_REPOSITORY_RESPONSE_BYTES;
     const request = options.request ?? defaultRepositoryFetch;
     const response = await request(new URL(path, base), {
         signal: AbortSignal.timeout(10_000),
         redirect: "error",
-        headers: { Accept: options.accept ?? "application/json" },
+        headers: {
+            Accept: options.accept ?? "application/json",
+            ...(options.query ? { "content-type": "application/json" } : {}),
+        },
+        ...(options.query ? { method: "QUERY", body: JSON.stringify(options.query) } : {}),
     });
     if (!response.ok || !response.body) {
         throw new RepositoryHttpError(response.status, await repositoryErrorBody(response));

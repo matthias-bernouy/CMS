@@ -1,0 +1,55 @@
+<main cms-bloc="ulvia-repository-shell">
+    <section slot="content">
+        <h1 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-repository.catalogue }}</h1>
+        <p>{{ cms.i18n.ulvia-repository.welcome }}</p>
+        <p><a href="/search">{{ cms.i18n.ulvia-repository.search }}</a></p>
+        <div>
+            <label
+                >{{ cms.i18n.ulvia-repository.kind
+                }}<select cms-sync="@param:ulvia-repository-kind">
+                    <option value="collection">{{ cms.i18n.ulvia-repository.collection }}</option>
+                    <option value="contract">{{ cms.i18n.ulvia-repository.contract }}</option>
+                    <option value="provider-manifest">{{ cms.i18n.ulvia-repository.provider-manifest }}</option>
+                </select></label
+            >
+        </div>
+        <section
+            cms-query="ulvia.repository:catalogue-list as catalogue"
+            cms-query-listen="@param:ulvia-repository-kind @param:ulvia-repository-catalogue-cursor"
+            cms-query-input='{"kind":{"from":"state","key":"@param:ulvia-repository-kind","fallback":"collection"},"limit":{"from":"literal","value":20},"cursor":{"from":"state","key":"@param:ulvia-repository-catalogue-cursor","optional":true}}'
+        >
+            <div cms-match="catalogue.outcome.kind">
+                <span cms-case='"none"'></span>
+                <div cms-case='"success"'>
+                    <ul>
+                        <li cms-repeat="catalogue.data.releases as release">
+                            <h2>
+                                <a
+                                    href="/resource?ulvia-repository-kind={{ release.kind | urlencode }}&amp;ulvia-repository-publisher={{ release.publisherId | urlencode }}&amp;ulvia-repository-resource={{ release.id | urlencode }}&amp;ulvia-repository-version={{ release.version | urlencode }}"
+                                    >{{
+                                        release.metadata.name
+                                    }}</a
+                                >
+                            </h2>
+                            <p>{{ release.publisherId }} / {{ release.id }} @ {{ release.version }}</p>
+                            <p cms-condition="release.metadata.description !== undefined">{{ release.metadata.description }}</p>
+                        </li>
+                    </ul>
+                    <a
+                        cms-condition="catalogue.data.nextCursor !== undefined"
+                        href="/?ulvia-repository-kind={{ catalogue.input.kind | urlencode }}&amp;ulvia-repository-catalogue-cursor={{ catalogue.data.nextCursor | urlencode }}"
+                        >{{
+                            cms.i18n.ulvia-repository.next
+                        }}</a
+                    >
+                </div>
+                <div cms-case='"error"' cms-match="catalogue.outcome.code">
+                    <p role="alert" cms-case='"REJECTED"'>{{ cms.i18n.ulvia-repository.failed }}</p>
+                    <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-repository.failed }}</p>
+                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-repository.failed }}</p>
+                </div>
+                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-repository.failed }}</p>
+            </div>
+        </section>
+    </section>
+</main>

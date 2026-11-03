@@ -8,7 +8,7 @@ import {
     type InstallationRepository,
 } from "./repositoryConnection";
 
-const SCHEMA = "ulvia.installation.v1" as const;
+const SCHEMA = "ulvia.installation.v2" as const;
 
 type InstallationTls = Readonly<{ mode: "disabled" }> | Readonly<{ mode: "acme"; email: string; httpsPort: number }>;
 
@@ -88,10 +88,12 @@ export function parseInstallationConfig(value: unknown): InstallationConfig {
         throw new Error("Ulvia installation configuration is invalid");
     }
     const record = value as Record<string, unknown>;
+    if (Object.keys(record).sort().join(",") !== "bindAddress,ports,repository,schema,tls") {
+        throw new Error("Ulvia installation configuration is invalid");
+    }
     const ports = parsePorts(record.ports);
     const tls = parseTls(record.tls);
-    const repository =
-        record.repository === undefined ? defaultRepositoryConnection() : parseRepositoryConnection(record.repository);
+    const repository = parseRepositoryConnection(record.repository);
     if (record.schema !== SCHEMA || !validBindAddress(record.bindAddress)) {
         throw new Error("Ulvia installation configuration is invalid");
     }
@@ -103,8 +105,11 @@ function parsePorts(value: unknown): ServicePorts {
         throw new Error("Ulvia installation ports are invalid");
     }
     const record = value as Record<string, unknown>;
-    const ports = { http: port(record.http), repository: port(record.repository), provider: port(record.provider) };
-    if (new Set(Object.values(ports)).size !== 3) {
+    if (Object.keys(record).sort().join(",") !== "http,provider") {
+        throw new Error("Ulvia installation ports are invalid");
+    }
+    const ports = { http: port(record.http), provider: port(record.provider) };
+    if (new Set(Object.values(ports)).size !== 2) {
         throw new Error("Ulvia installation ports must be distinct");
     }
     return Object.freeze(ports);

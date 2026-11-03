@@ -58,9 +58,7 @@ test("official image metadata rejects component, API, version, and digest mismat
 });
 
 test("official references only accept exact semantic versions", () => {
-    expect(officialImageReference("repository", "1.2.3-rc.1")).toBe(
-        "docker.io/cyaxis/ulvia-official-repository:1.2.3-rc.1",
-    );
+    expect(officialImageReference("provider", "1.2.3-rc.1")).toBe("docker.io/cyaxis/ulvia-provider:1.2.3-rc.1");
     expect(() => assertImageVersion("latest")).toThrow(/Invalid Ulvia image version/);
     expect(() => assertImageVersion("1.2")).toThrow(/Invalid Ulvia image version/);
     expect(() => assertImageVersion("1.2.3@sha256:bad")).toThrow(/Invalid Ulvia image version/);

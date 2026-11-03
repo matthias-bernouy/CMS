@@ -41,9 +41,6 @@
             "ulvia-provider-server/*": [
                 "../../../../packages/runtimes/ulvia-provider-server/src/*"
             ],
-            "official-repository-server/*": [
-                "../../../../packages/runtimes/official-repository-server/src/*"
-            ],
             "cms-edge-server/*": [
                 "../../../../packages/runtimes/cms-edge-server/src/*"
             ],

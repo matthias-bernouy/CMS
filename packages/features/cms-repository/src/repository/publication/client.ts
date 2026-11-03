@@ -7,7 +7,7 @@ import { MAX_REPOSITORY_RESPONSE_BYTES } from "cms-repository/repository-http/ge
 import { boundedResponseBytes, repositoryUrl } from "./transport";
 import type { PublicationEnvelope, RemoteCoordinate, RepositoryArtifactKind, RepositoryDownloadAsset } from "./types";
 import { RemoteRepositoryWriter } from "./writer";
-import type { RepositoryOwnerCredential } from "../namespaces/transport/request";
+import type { RepositoryNamespaceCredential } from "./transport/credentials";
 import { boundedStream, verifiedAsset } from "./transport/assets";
 
 export type { RemoteCoordinate } from "./types";
@@ -25,7 +25,7 @@ export class RemoteRepositoryClient {
 
     constructor(
         baseUrl: string,
-        credential?: RepositoryOwnerCredential,
+        credential?: RepositoryNamespaceCredential,
         options: Readonly<{ allowInsecureHttp?: boolean }> = {},
     ) {
         this.base = repositoryUrl(baseUrl, options);
@@ -60,15 +60,14 @@ export class RemoteRepositoryClient {
             coordinate.kind === "collection"
                 ? parseCollectionReleaseJson(canonicalJson).assets
                 : contractAssetDefinitions(parseContractReleaseJson(canonicalJson));
-        const directory = coordinate.kind === "collection" ? "assets" : "fixtures";
+
         const assets = new Array<{ id: string; bytes: Uint8Array | Blob }>(definitions.length);
         let nextIndex = 0;
         const fetchNext = async () => {
             while (nextIndex < definitions.length) {
                 const index = nextIndex++;
                 const definition = definitions[index]!;
-                const doc = coordinate.kind === "contract" && definition.id.startsWith("docs/");
-                const path = `${releasePath(coordinate)}/${doc ? "docs" : directory}/${encodeURIComponent(doc ? definition.id.slice(5) : definition.id)}`;
+                const path = `v1/assets/${coordinate.kind}/${encodeURIComponent(coordinate.publisherId)}/${encodeURIComponent(coordinate.id)}/${encodeURIComponent(coordinate.version)}/${encodeURIComponent(definition.id)}`;
                 const bytes = await this.asset(path, definition, assetSink);
                 assets[index] = { id: definition.id, bytes };
             }
@@ -158,6 +157,5 @@ function readCoordinate(kind: RepositoryArtifactKind, canonicalJson: string): Om
 }
 
 function releasePath(coordinate: RemoteCoordinate): string {
-    const type = coordinate.kind === "provider-manifest" ? "providers" : `${coordinate.kind}s`;
-    return `v1/${type}/${encodeURIComponent(coordinate.publisherId)}/${encodeURIComponent(coordinate.id)}/${encodeURIComponent(coordinate.version)}`;
+    return `v1/releases/${coordinate.kind}/${encodeURIComponent(coordinate.publisherId)}/${encodeURIComponent(coordinate.id)}/${encodeURIComponent(coordinate.version)}`;
 }

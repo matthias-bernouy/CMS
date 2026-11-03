@@ -1,14 +1,10 @@
 import { assertCandidateImage } from "./images";
 import { resolve } from "node:path";
 const root = resolve(import.meta.dir, "../../..");
-const variables = [
-    "ULVIA_MCP_EDGE_DOCKER_IMAGE",
-    "ULVIA_MCP_PROVIDER_DOCKER_IMAGE",
-    "ULVIA_REPOSITORY_DOCKER_IMAGE",
-] as const;
+const variables = ["ULVIA_MCP_EDGE_DOCKER_IMAGE", "ULVIA_MCP_PROVIDER_DOCKER_IMAGE"] as const;
 const supplied = variables.filter((key) => process.env[key]);
-if (supplied.length !== 0 && supplied.length !== 3) {
-    throw new Error("Supply all three delivery performance images, or none to build the candidate locally");
+if (supplied.length !== 0 && supplied.length !== 2) {
+    throw new Error("Supply both delivery performance images, or none to build the candidate locally");
 }
 const env: Record<string, string | undefined> = { ...process.env, ULVIA_RUN_DELIVERY_PERFORMANCE: "1" };
 async function run(args: string[]) {
@@ -22,14 +18,13 @@ if (!supplied.length) {
     await run(["run", "infra/images/build.ts", "build", "--version", version, "all"]);
     env.ULVIA_MCP_EDGE_DOCKER_IMAGE = `docker.io/cyaxis/ulvia-edge:${version}`;
     env.ULVIA_MCP_PROVIDER_DOCKER_IMAGE = `docker.io/cyaxis/ulvia-provider:${version}`;
-    env.ULVIA_REPOSITORY_DOCKER_IMAGE = `docker.io/cyaxis/ulvia-official-repository:${version}`;
 }
 const git = Bun.spawn(["git", "rev-parse", "HEAD"], { cwd: root, stdout: "pipe", stderr: "pipe" });
 const revision = (await new Response(git.stdout).text()).trim();
 if (await git.exited) {
     throw new Error("Cannot identify candidate revision");
 }
-for (const [index, component] of ["edge", "provider", "repository"].entries()) {
+for (const [index, component] of ["edge", "provider"].entries()) {
     const inspect = Bun.spawn(["docker", "image", "inspect", env[variables[index]!]!], {
         stdout: "pipe",
         stderr: "pipe",

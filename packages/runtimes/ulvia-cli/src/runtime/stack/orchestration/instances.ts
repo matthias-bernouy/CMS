@@ -1,9 +1,9 @@
 import { readdir } from "node:fs/promises";
 import { loadOrCreateProviderOperatorToken } from "../../config";
-import type { LocalInstanceConfig } from "../../instanceConfig";
-import { loadLocalInstanceConfig } from "../../instanceConfig";
-import type { LocalInstanceConnection } from "../../instanceConnection";
-import { loadLocalInstanceConnection } from "../../instanceConnection";
+import type { LocalInstanceConfig } from "../../instances/config";
+import { loadLocalInstanceConfig } from "../../instances/config";
+import type { LocalInstanceConnection } from "../../instances/connection";
+import { loadLocalInstanceConnection } from "../../instances/connection";
 import {
     assertLocalInstancePaths,
     resolveLocalInstancePaths,

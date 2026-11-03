@@ -13,12 +13,14 @@ const OFFICIAL_INSTANCE_PROFILE: OfficialInstanceProfile = Object.freeze({
     contracts: Object.freeze([
         Object.freeze({ contractId: "ulvia.cms.content", version: "1.0.0", digest: `sha256:${"b".repeat(64)}` }),
     ]),
-    collection: Object.freeze({
-        publisherId: "ulvia.official",
-        collectionId: "ulvia-official",
-        version: "1.0.0",
-        digest: `sha256:${"c".repeat(64)}`,
-    }),
+    collections: Object.freeze([
+        Object.freeze({
+            publisherId: "ulvia.official",
+            collectionId: "ulvia-official",
+            version: "1.0.0",
+            digest: `sha256:${"c".repeat(64)}`,
+        }),
+    ]),
 });
 
 test("the Provider owns every persistent instance service while remaining independent from Edge", async () => {

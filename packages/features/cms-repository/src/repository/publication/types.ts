@@ -51,6 +51,15 @@ export type PublicationUploadReceipt = Readonly<{
     uploadedAssetIds: readonly string[];
 }>;
 
+export type RepositoryUploadOwner = Readonly<{
+    accountId: string;
+    namespace: string;
+    namespaceRevision: number;
+}>;
+
+/** Server-owned metadata; never accepted as part of the client's upload manifest. */
+export type OwnedPublicationUploadManifest = PublicationUploadManifest & Readonly<{ owner: RepositoryUploadOwner }>;
+
 /** Storage-independent mutation boundary implemented by a repository server adapter. */
 export interface RepositoryPublicationRegistry {
     publish(envelope: PublicationEnvelope): Promise<RepositoryPublicationResult>;
@@ -62,15 +71,10 @@ export interface RepositoryPublicationRegistry {
     getPublicationState?(coordinate: RemoteCoordinate): Promise<{ revision: number; yank: RepositoryYank | null }>;
 }
 
-/** Atomic replay claim. Production multi-node servers should provide a shared durable implementation. */
-export interface RepositoryReplayStore {
-    claim(signature: string, expiresAt: Date): Promise<boolean>;
-}
-
 /** Durable staging boundary. Assets stay invisible until the supplied publication callback succeeds. */
 export interface RepositoryPublicationUploadStore {
-    describe(uploadId: string): Promise<PublicationUploadManifest>;
-    create(manifest: PublicationUploadManifest, expiresAt: Date): Promise<PublicationUploadReceipt>;
+    describe(uploadId: string): Promise<OwnedPublicationUploadManifest>;
+    create(manifest: OwnedPublicationUploadManifest, expiresAt: Date): Promise<PublicationUploadReceipt>;
     status(uploadId: string): Promise<PublicationUploadReceipt>;
     putAsset(
         uploadId: string,

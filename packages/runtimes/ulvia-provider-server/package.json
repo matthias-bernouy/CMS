@@ -28,7 +28,8 @@
         "mongodb": "^7.6.0",
         "@bernouy/cms-observability": "workspace:*",
         "@bernouy/cms-documentation": "workspace:*",
-        "@bernouy/text-embeddings": "workspace:*"
+        "@bernouy/text-embeddings": "workspace:*",
+        "@bernouy/text-search": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

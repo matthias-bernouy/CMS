@@ -6,7 +6,7 @@ Collection preparation validates source. Publication creates an immutable Reposi
 
 For a new collection, start with [the complete source example](collection-source.md). `sourceJson` is one serialized object containing `files: [{path, content}]` and optional `assets`; each file's `content` is a string, including JSON files. The tool's string input schema does not describe this nested format.
 
-Before publishing, read `get-identity` and use `list-namespaces` to inspect this instance's remembered namespaces and live ownership. Claim a new authorized namespace with `claim-namespace`, or track an existing one with `track-namespace` and inspect its returned ownership. A name alone does not prove publication rights. Private signing keys remain on the server.
+Before publishing, read `get-connection`. If necessary, use `configure-connection` with a PAT created by the target Repository account. Use `list-namespaces` to inspect its live inventory, or `claim-namespace` to claim an available name. Only active owned namespaces permit publication. The encrypted PAT remains on the server and is never returned by these tools.
 
 Read `get-collection-sources` before changing a previously published collection. Preserve exact dependency and binary asset references from that snapshot. Collections contain reusable resources and examples; create site Pages separately through Content.
 

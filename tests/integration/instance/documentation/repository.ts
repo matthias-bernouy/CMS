@@ -1,63 +1,27 @@
-import { RepositorySearch } from "@bernouy/cms-repository/repository/search";
-import { FilesystemRepositorySearchSource } from "@bernouy/cms-repository/repository/search/filesystem";
-import {
-    FilesystemRepositoryCatalogueIndex,
-    FilesystemRepositoryNamespaceStore,
-    FilesystemRepositoryPublicationRegistry,
-    FilesystemRepositoryPublicationUploadStore,
-    FilesystemRepositoryReplayStore,
-    RepositoryReadEndpoint,
-} from "@bernouy/cms-repository/repository/filesystem";
-import {
-    RepositoryNamespaceAuthority,
-    RepositoryNamespaceEndpoint,
-} from "@bernouy/cms-repository/repository/namespaces";
-import { RepositoryMutationEndpoint } from "@bernouy/cms-repository/repository/publication";
-import { sourceSnapshots } from "./sources";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { repositoryApplication } from "../../../fixtures/repository/application";
 
 export const documentationRepositoryEntrypoint = import.meta.path;
 
-// An isolated real filesystem Repository HTTP process; production flock requires Linux.
+// Focused protocol peer; the full Repository CMS is exercised in repository/journey.test.ts.
 if (import.meta.main) {
     const [root, rawPort] = process.argv.slice(2);
     if (!root || !rawPort) {
         throw new Error("Repository storage and port are required");
     }
-    const namespaces = new RepositoryNamespaceEndpoint(
-        new RepositoryNamespaceAuthority("documentation-integration", new FilesystemRepositoryNamespaceStore(root)),
-    );
-    const authority = new RepositoryNamespaceAuthority(
-        "documentation-integration",
-        new FilesystemRepositoryNamespaceStore(root),
-    );
-    const index = new FilesystemRepositoryCatalogueIndex(root);
-    const registry = new FilesystemRepositoryPublicationRegistry(root, index);
-    const uploads = new FilesystemRepositoryPublicationUploadStore(root);
-    const mutations = new RepositoryMutationEndpoint(registry, {
-        namespaces: authority,
-        uploads,
-        replays: new FilesystemRepositoryReplayStore(root),
-    });
-    const reads = new RepositoryReadEndpoint(root, index);
-    const search = new RepositorySearch(new FilesystemRepositorySearchSource(root, index));
-    const sources = await sourceSnapshots(root, { namespaces: authority, registry, uploads, search }, reads);
+    await mkdir(root, { recursive: true, mode: 0o700 });
+    const app = repositoryApplication(root, "documentation-integration");
+    const account = await app.account("documentation-publisher");
+    await writeFile(join(root, "fixture-account.json"), JSON.stringify(account), { mode: 0o600, flag: "wx" });
     const server = Bun.serve({
         hostname: "127.0.0.1",
         port: Number(rawPort),
-        async fetch(request) {
-            if (new URL(request.url).pathname === "/readyz") {
-                return new Response("ready");
-            }
-            return (
-                (await sources(request)) ??
-                (await namespaces.handle(request)) ??
-                (await mutations.handle(request)) ??
-                (await reads.handle(request)) ??
-                new Response(null, { status: 404 })
-            );
+        fetch(request) {
+            return new URL(request.url).pathname === "/readyz" ? new Response("ready") : app.handle(request);
         },
     });
     process.on("SIGTERM", () => {
-        void search.close().finally(() => server.stop(true));
+        void app.close().finally(() => server.stop(true));
     });
 }

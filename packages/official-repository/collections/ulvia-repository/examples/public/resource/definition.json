@@ -1,0 +1,26 @@
+{
+    "id": "resource",
+    "label": "page.resource.name",
+    "description": "page.resource.description",
+    "requires": [
+        {
+            "contractId": "ulvia.repository",
+            "capabilityId": "catalogue-list",
+            "versionRange": "^2.0.0"
+        },
+        {
+            "contractId": "ulvia.repository",
+            "capabilityId": "publication-state",
+            "versionRange": "^2.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

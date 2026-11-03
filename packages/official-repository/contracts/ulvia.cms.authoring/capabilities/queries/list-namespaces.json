@@ -1,6 +1,6 @@
 {
     "id": "list-namespaces",
-    "description": "List remembered namespaces and verify current ownership live. Follow nextCursor; cached inventory never grants publication rights.",
+    "description": "Read the configured Repository account namespace inventory live. Follow nextCursor; only active owned namespaces permit publication.",
     "access": "admin",
     "behavior": {
         "effect": "query",
@@ -17,7 +17,12 @@
             "limit": {
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 100
+                "maximum": 32
+            },
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
             }
         },
         "required": []
@@ -27,7 +32,7 @@
         "properties": {
             "items": {
                 "type": "array",
-                "maxItems": 100,
+                "maxItems": 32,
                 "items": {
                     "type": "object",
                     "properties": {
@@ -42,18 +47,12 @@
                         },
                         "access": {
                             "type": "string",
-                            "enum": ["owned", "transferred", "revoked", "missing"],
+                            "enum": ["owned", "suspended"],
                             "maxLength": 16
                         },
                         "revision": {
                             "type": "integer",
-                            "minimum": 1,
-                            "nullable": true
-                        },
-                        "publicKey": {
-                            "type": "string",
-                            "maxLength": 59,
-                            "nullable": true
+                            "minimum": 1
                         },
                         "checkedAt": {
                             "type": "string",
@@ -61,7 +60,7 @@
                             "format": "date-time"
                         }
                     },
-                    "required": ["namespace", "repositoryId", "access", "revision", "publicKey", "checkedAt"]
+                    "required": ["namespace", "repositoryId", "access", "revision", "checkedAt"]
                 }
             },
             "nextCursor": {
@@ -127,7 +126,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "authoring_list_namespaces",
-                "description": "List remembered namespaces and verify current ownership live. Follow nextCursor; cached inventory never grants publication rights."
+                "description": "Read the configured Repository account namespace inventory live. Follow nextCursor; only active owned namespaces permit publication."
             }
         }
     ],

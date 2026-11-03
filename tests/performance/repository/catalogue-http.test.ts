@@ -12,14 +12,18 @@ for (const kind of ["collections", "contracts", "providers"] as const) {
             const server = Bun.serve({
                 hostname: "127.0.0.1",
                 port: 0,
-                fetch(request) {
+                async fetch(request) {
                     const url = new URL(request.url);
                     requests.push(url.pathname);
-                    if (url.pathname !== `/v1/${kind}`) {
+                    if (request.method !== "QUERY" || url.pathname !== "/.cms/call/ulvia.repository/v1/catalogue") {
                         return new Response(null, { status: 500 });
                     }
-                    const start = Number(url.searchParams.get("cursor") ?? 0);
-                    const limit = Number(url.searchParams.get("limit"));
+                    const input = (await request.json()) as { kind: string; cursor?: string; limit: number };
+                    expect(input.kind).toBe(
+                        kind === "collections" ? "collection" : kind === "contracts" ? "contract" : "provider-manifest",
+                    );
+                    const start = Number(input.cursor ?? 0);
+                    const limit = input.limit;
                     const next = start + limit;
                     return Response.json({
                         releases: entries.slice(start, next),
@@ -36,7 +40,7 @@ for (const kind of ["collections", "contracts", "providers"] as const) {
                           );
                 expect(listed).toHaveLength(count);
                 expect(requests).toHaveLength(Math.ceil(count / 256));
-                expect(new Set(requests)).toEqual(new Set([`/v1/${kind}`]));
+                expect(new Set(requests)).toEqual(new Set(["/.cms/call/ulvia.repository/v1/catalogue"]));
             } finally {
                 await server.stop(true);
             }
@@ -92,21 +96,27 @@ test("collection bundle downloads have bounded asset concurrency and no duplicat
 });
 
 function catalogueEntry(kind: "collections" | "contracts" | "providers", index: number) {
-    const base = { publisherId: "example.official", version: `1.0.${index}`, digest, name: "Example" };
-    if (kind !== "collections") {
-        return { ...base, [kind === "contracts" ? "contractId" : "providerId"]: "example.catalogue" };
-    }
     return {
-        ...base,
-        collectionId: "example",
-        description: "Example collection",
-        blocCount: 0,
-        hasTheme: false,
-        browserRisk: "none",
-        browserRiskDigest: digest,
-        javaScriptBlocCount: 0,
-        frameBlocCount: 0,
-        externalFrameOrigins: [],
-        scriptsWithSameOrigin: false,
+        kind: kind === "collections" ? "collection" : kind === "contracts" ? "contract" : "provider-manifest",
+        publisherId: "example.official",
+        id: kind === "collections" ? "example" : "example.catalogue",
+        version: `1.0.${index}`,
+        digest,
+        metadata: {
+            name: "Example",
+            ...(kind === "collections"
+                ? {
+                      description: "Example collection",
+                      blocCount: 0,
+                      hasTheme: false,
+                      browserRisk: "none",
+                      browserRiskDigest: digest,
+                      javaScriptBlocCount: 0,
+                      frameBlocCount: 0,
+                      externalFrameOrigins: [],
+                      scriptsWithSameOrigin: false,
+                  }
+                : {}),
+        },
     };
 }

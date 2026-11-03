@@ -1,18 +1,21 @@
+import { containerCluster } from "./containers/cluster";
+import { repositoryApplication } from "./containers/repository";
+import { publishBundledReleases } from "./repository/bootstrap";
 import { provisionInstance } from "./provision";
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomBytes } from "node:crypto";
 
-import { docker, mappedPort, waitForHttp } from "./docker";
+import { docker, waitForHttp } from "./docker";
 import { upgradeProvider } from "./provider-upgrade";
 export { docker, waitForHttp } from "./docker";
 
 export async function mcpContainers(
-    images: { edge: string; provider: string; repository: string },
-    prepareRepository?: (url: string) => Promise<void>,
+    images: { edge: string; provider: string },
+    prepareRepository?: (url: string, token: string) => Promise<void>,
     fetchPreload?: string,
     initialResponseCache?: boolean,
 ) {
-    const id = `ulvia-mcp-${randomUUID().slice(0, 8)}`;
-    const names: string[] = [];
+    const cluster = await containerCluster(images.edge, fetchPreload);
+    const { id, names, run, close } = cluster;
     const operatorToken = randomBytes(32).toString("base64url");
     const administrator = { email: "mcp-admin@ulvia.local", password: `Mcp-${randomBytes(24).toString("base64url")}!` };
     const reservation = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(null) });
@@ -21,42 +24,6 @@ export async function mcpContainers(
     const cmsUrl = `http://127.0.0.1:${edgePort}`;
     const providerName = `${id}-provider`;
     const edgeName = `${id}-edge`;
-    await docker(["network", "create", id]);
-    const run = async (name: string, alias: string, image: string, options: string[] = [], args: string[] = []) => {
-        names.push(name);
-        await docker([
-            "run",
-            "--detach",
-            "--init",
-            "--name",
-            name,
-            "--network",
-            id,
-            "--network-alias",
-            alias,
-            ...options,
-            ...(fetchPreload ? ["--no-healthcheck"] : []),
-            ...(fetchPreload && (alias === "edge" || alias === "ulvia-provider")
-                ? ["--volume", `${fetchPreload}:/ulvia-test/fetch.ts:ro`]
-                : []),
-            image,
-            ...(fetchPreload && (alias === "edge" || alias === "ulvia-provider")
-                ? [
-                      "bun",
-                      "run",
-                      "--no-macros",
-                      "--preload=/ulvia-test/fetch.ts",
-                      alias === "edge"
-                          ? "packages/runtimes/cms-edge-server/src/index.ts"
-                          : "packages/runtimes/ulvia-provider-server/src/index.ts",
-                  ]
-                : args),
-        ]);
-    };
-    const close = async () => {
-        await docker(["rm", "--force", "--volumes", ...names], true);
-        await docker(["network", "rm", id], true);
-    };
     try {
         const mongo = `${id}-mongo`;
         await run(mongo, "mongo", "mongo:7");
@@ -74,11 +41,6 @@ export async function mcpContainers(
         if (!ready) {
             throw new Error("MongoDB did not become ready");
         }
-        const repositoryName = `${id}-repository`;
-        await run(repositoryName, "repository", images.repository, ["--publish", "127.0.0.1::3000"]);
-        const repositoryUrl = await mappedPort(repositoryName, 3000);
-        await waitForHttp(`${repositoryUrl}/readyz`);
-        await prepareRepository?.(repositoryUrl);
         await run(providerName, "ulvia-provider", images.provider, [
             "--publish",
             "127.0.0.1::5103",
@@ -101,8 +63,15 @@ export async function mcpContainers(
             "--env",
             `ULVIA_PROVIDER_OPERATOR_TOKEN=${operatorToken}`,
         ]);
-        const providerUrl = await mappedPort(providerName, 5103);
+        const providerUrl = await cluster.endpoint(providerName, 5103);
         await waitForHttp(`${providerUrl}/ulvia/operator/instances`, { Authorization: `Bearer ${operatorToken}` });
+        const repository = await repositoryApplication(cluster, images.edge, providerUrl, operatorToken);
+        const repositoryUrl = repository.url;
+        if (prepareRepository) {
+            await prepareRepository(repositoryUrl, repository.pat.token);
+        } else {
+            await publishBundledReleases(repositoryUrl, "http://ulvia-provider:5103", repository.pat.token);
+        }
         const instance = await provisionInstance(
             providerUrl,
             operatorToken,
@@ -137,37 +106,48 @@ export async function mcpContainers(
             id,
             gatewayUrl: "http://edge:3000",
             namedStatus: named.instance.status,
-            providerUrl: () => mappedPort(providerName, 5103),
+            providerUrl: () => cluster.endpoint(providerName, 5103),
+            waitForProvider: () =>
+                waitForHttp(`${providerUrl}/ulvia/operator/instances`, { Authorization: `Bearer ${operatorToken}` }),
             instanceToken: instance.credentials.instanceAccessToken,
             namedToken: named.credentials.instanceAccessToken,
             cmsUrl,
             repositoryUrl,
+            repository,
             administrator,
             providerName,
             instanceId: instance.instance.id,
             upgradeProvider: async (image: string, version: string) => {
-                await upgradeProvider(providerName, image, version, operatorToken, instance.instance.id, names);
+                await upgradeProvider(
+                    providerName,
+                    image,
+                    version,
+                    operatorToken,
+                    instance.instance.id,
+                    names,
+                    await cluster.endpoint(providerName, 5103),
+                );
                 // A changed control contract is negotiated when the stateless Edge starts.
                 await docker(["restart", edgeName]);
                 await waitForHttp(`${cmsUrl}/readyz`);
             },
             edgeName,
             async setResponseCache(enabled: boolean) {
-                await docker(["rm", "--force", edgeName]);
+                await docker(["rm", "--force", `${edgeName}-ingress`, edgeName]);
                 await startEdge(enabled);
                 await waitForHttp(`${cmsUrl}/readyz`);
             },
             close,
             async restartProvider() {
                 await docker(["restart", providerName]);
-                await waitForHttp(`${await mappedPort(providerName, 5103)}/ulvia/operator/instances`, {
+                await waitForHttp(`${await cluster.endpoint(providerName, 5103)}/ulvia/operator/instances`, {
                     Authorization: `Bearer ${operatorToken}`,
                 });
             },
             async diagnostics() {
                 return (
                     await Promise.all(
-                        [providerName, edgeName].map(async (name) => {
+                        [providerName, edgeName, repository.name].map(async (name) => {
                             const result = await docker(["logs", "--tail", "30", name], true);
                             return `${name}\n${result.stdout}${result.stderr}`;
                         }),

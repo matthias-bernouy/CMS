@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { provisionLocalInstance, upgradeLocalInstanceProfile } from "../../src/runtime/instance";
+import { provisionLocalInstance, upgradeLocalInstanceProfile } from "../../src/runtime/instances/operator";
 
 test("local provisioning sends administrator input only to the protected operator endpoint", async () => {
     const originalFetch = globalThis.fetch;
@@ -10,6 +10,7 @@ test("local provisioning sends administrator input only to the protected operato
             instance: {
                 id: "instance:00000000-0000-4000-8000-000000000001",
                 status: "ready",
+                profile: { id: "ulvia.repository", version: "1.0.0" },
             },
             credentials: {
                 instanceAccessToken: "a".repeat(43),
@@ -21,14 +22,16 @@ test("local provisioning sends administrator input only to the protected operato
             "http://127.0.0.1:5103",
             "operator-secret",
             {
-                schema: "ulvia.local-instance-runtime.v1",
+                schema: "ulvia.local-instance-runtime.v2",
                 name: "preview",
                 label: "Preview instance",
                 hostname: "preview.localhost",
+                profile: { id: "ulvia.repository", version: "1.0.0" },
                 adminEmail: "dev@ulvia.local",
                 adminPassword: "long-enough-password",
             },
             "http://preview.localhost:5100",
+            "http://edge.internal:3000",
         );
         expect(connection.instanceId).toStartWith("instance:");
         expect(captured?.url).toBe("http://127.0.0.1:5103/ulvia/operator/instances");
@@ -36,6 +39,8 @@ test("local provisioning sends administrator input only to the protected operato
         expect(captured?.headers.get("idempotency-key")).toBe("ulvia-cli-preview");
         const body = await captured?.json();
         expect(body.administrator.email).toBe("dev@ulvia.local");
+        expect(body.profile).toEqual({ id: "ulvia.repository", version: "1.0.0" });
+        expect(body.gatewayUrl).toBe("http://edge.internal:3000");
         expect(body.cmsUrl).toBe("http://preview.localhost:5100");
     } finally {
         globalThis.fetch = originalFetch;

@@ -2,8 +2,8 @@ import { afterEach, expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { RepositoryReadEndpoint } from "@bernouy/cms-repository/repository/filesystem";
-import { RepositoryMutationEndpoint, parsePublicationUpload } from "@bernouy/cms-repository/repository/publication";
+import { repositoryApplication } from "../../../../../tests/fixtures/repository/application";
+import { parsePublicationUpload } from "@bernouy/cms-repository/repository/publication";
 import { RecordingRegistry } from "./publicationFixtures";
 
 const roots: string[] = [];
@@ -13,12 +13,15 @@ afterEach(async () => {
 
 test("removed evidence publication routes do not read bodies or invoke publication", async () => {
     const registry = new RecordingRegistry();
-    const endpoint = new RepositoryMutationEndpoint(registry);
-    const request = new Request("https://repository.example/v1/conformance-evidence", {
+    const root = await mkdtemp(join(tmpdir(), "repository-retired-route-"));
+    roots.push(root);
+    const app = repositoryApplication(root, "retired-route", registry);
+    const request = new Request("https://repository.example/.cms/call/ulvia.repository/v1/conformance-evidence", {
         method: "POST",
         body: JSON.stringify({ kind: "conformance-evidence" }),
     });
-    expect(await endpoint.handle(request)).toBeNull();
+    expect((await app.handle(request)).status).toBe(404);
+    await app.close();
     expect(request.bodyUsed).toBe(false);
     expect(registry.publications).toEqual([]);
 });
@@ -30,16 +33,20 @@ test("removed evidence downloads remain unavailable even when old files exist", 
     const directory = join(root, "conformance-evidence", "example.provider", "example.contract");
     await mkdir(directory, { recursive: true });
     await writeFile(join(directory, `${id}.json`), JSON.stringify({ private: "old evidence" }));
-    const endpoint = new RepositoryReadEndpoint(root);
+    const app = repositoryApplication(root);
     for (const method of ["GET", "HEAD"]) {
-        const response = await endpoint.handle(
-            new Request(`https://repository.example/v1/conformance-evidence/example.provider/example.contract/${id}`, {
-                method,
-            }),
+        const response = await app.handle(
+            new Request(
+                `https://repository.example/.cms/call/ulvia.repository/v1/conformance-evidence/example.provider/example.contract/${id}`,
+                {
+                    method,
+                },
+            ),
         );
         expect(response?.status).toBe(404);
         expect(await response!.text()).toBe("");
     }
+    await app.close();
 });
 
 test("publication metadata accepts only collection, contract and provider artifacts", () => {

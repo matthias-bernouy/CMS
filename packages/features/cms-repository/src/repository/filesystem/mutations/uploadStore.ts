@@ -4,7 +4,7 @@ import { link, lstat, readFile, readdir, rename, rm, stat } from "node:fs/promis
 import { join } from "node:path";
 import type {
     PublicationEnvelope,
-    PublicationUploadManifest,
+    OwnedPublicationUploadManifest,
     PublicationUploadReceipt,
     RepositoryPublicationResult,
     RepositoryPublicationUploadStore,
@@ -13,11 +13,12 @@ import { digestUploadFile, readUploadResult, writeUploadResult, writeUploadStrea
 import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
 import { acquireFilesystemLease, FilesystemLeaseBusyError } from "../core/lock";
 import { assetFileName } from "../core/assetFiles";
+import { uploadOwner } from "../../publication/ownership";
 
 const SCHEMA = "ulvia.repository-upload.v1";
 const UPLOAD_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 
-function uploadManifestFingerprint(manifest: PublicationUploadManifest): string {
+function uploadManifestFingerprint(manifest: OwnedPublicationUploadManifest): string {
     return createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
 }
 
@@ -25,7 +26,7 @@ type UploadDocument = Readonly<{
     schema: typeof SCHEMA;
     uploadId: string;
     expiresAt: string;
-    manifest: PublicationUploadManifest;
+    manifest: OwnedPublicationUploadManifest;
 }>;
 
 /** Filesystem staging adapter: streamed bytes remain private until registry publication succeeds. */
@@ -38,7 +39,9 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
         this.tombstoneRoot = join(root, ".publication-upload-tombstones");
     }
 
-    async create(manifest: PublicationUploadManifest, expiresAt: Date): Promise<PublicationUploadReceipt> {
+    async create(supplied: OwnedPublicationUploadManifest, expiresAt: Date): Promise<PublicationUploadReceipt> {
+        const manifest = structuredClone(supplied);
+        uploadOwner(manifest.owner);
         await ensureDurableDirectory(this.uploadRoot, this.root);
         await this.pruneExpired();
         const resumable = await this.findOpenUpload(manifest);
@@ -76,7 +79,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
         };
     }
 
-    async describe(uploadId: string): Promise<PublicationUploadManifest> {
+    async describe(uploadId: string): Promise<OwnedPublicationUploadManifest> {
         return (await this.readDocument(uploadId)).manifest;
     }
 
@@ -194,7 +197,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
         return document;
     }
 
-    private async findOpenUpload(manifest: PublicationUploadManifest): Promise<PublicationUploadReceipt | null> {
+    private async findOpenUpload(manifest: OwnedPublicationUploadManifest): Promise<PublicationUploadReceipt | null> {
         const expected = uploadManifestFingerprint(manifest);
         for (const entry of await readdir(this.uploadRoot, { withFileTypes: true })) {
             if (!entry.isDirectory() || !UPLOAD_ID.test(entry.name)) {
@@ -241,6 +244,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
         ) {
             throw new Error("Invalid publication upload metadata");
         }
+        uploadOwner(value.manifest.owner);
         return value;
     }
 

@@ -9,7 +9,7 @@ import { registerCollectionAuthoringCapabilities } from "../../../src/capabiliti
 
 test("invalid collection sources return bounded actionable diagnostics and never request publication authority", async () => {
     const root = await mkdtemp(join(tmpdir(), "authoring-diagnostics-"));
-    let signingRequests = 0;
+    let credentialRequests = 0;
     const authoring = new CollectionAuthoring(
         {
             root,
@@ -22,14 +22,23 @@ test("invalid collection sources return bounded actionable diagnostics and never
             repositoryUrl: "http://127.0.0.1",
             repositorySourceId: "local",
             listNamespaces: async () => ({ items: [], nextCursor: null }),
-            trackNamespace: async () => {
-                throw new Error("Unused namespace tracker");
+            connectionStatus: async () => ({
+                configured: false,
+                repositoryUrl: "http://127.0.0.1",
+                repositoryId: null,
+            }),
+            configureConnection: async () => {
+                throw new Error("Unexpected connection configuration");
             },
-            identity: async () => ({ publicKey: "" }),
+            disconnectConnection: async () => ({
+                configured: false,
+                repositoryUrl: "http://127.0.0.1",
+                repositoryId: null,
+            }),
             claim: async () => undefined,
             credential: async () => {
-                signingRequests += 1;
-                throw new Error("Unexpected signing");
+                credentialRequests += 1;
+                throw new Error("Unexpected credential request");
             },
         },
     );
@@ -50,7 +59,7 @@ test("invalid collection sources return bounded actionable diagnostics and never
         expect(result.valid).toBe(false);
         expect(result.diagnostics[0]!.message).toContain("source path");
         expect(result.diagnostics[0]!.message).not.toContain(root);
-        expect(signingRequests).toBe(0);
+        expect(credentialRequests).toBe(0);
     } finally {
         await rm(root, { recursive: true, force: true });
     }

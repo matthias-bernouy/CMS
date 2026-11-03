@@ -29,6 +29,7 @@ export type CreateProviderInstance = Readonly<{
     cmsUrl: string;
     gatewayUrl?: string;
     administrator: ProviderInstanceAdministrator;
+    profile?: ProviderInstanceProfile;
 }>;
 
 export type CreatedProviderInstance = Readonly<{
@@ -45,9 +46,24 @@ export class ProviderInstanceLifecycle {
         private readonly idempotencySecret: string,
     ) {}
 
+    describeProfiles() {
+        const reference = ({ id, version }: OfficialInstanceProfiles["defaultProfile"]) => ({ id, version });
+        return {
+            defaultProfile: reference(this.profiles.defaultProfile),
+            profiles: this.profiles.profiles.map(reference),
+        };
+    }
+
     async create(idempotencyKey: string, input: CreateProviderInstance): Promise<CreatedProviderInstance> {
         validateCreateInput(idempotencyKey, input);
-        const idempotencyFingerprint = fingerprintCreateInput(input, this.idempotencySecret);
+        const profile = input.profile
+            ? this.profiles.resolve(input.profile.id, input.profile.version)
+            : this.profiles.defaultProfile;
+        if (!profile) {
+            throw new TypeError("Instance profile is unavailable");
+        }
+        const selected = { id: profile.id, version: profile.version };
+        const idempotencyFingerprint = fingerprintCreateInput({ ...input, profile: selected }, this.idempotencySecret);
         let instance = await this.instances.getByIdempotencyKey(idempotencyKey);
         if (!instance) {
             const uuid = randomUUID();
@@ -60,10 +76,7 @@ export class ProviderInstanceLifecycle {
                 gatewayUrl: new URL(input.gatewayUrl ?? input.cmsUrl).origin,
                 label: input.label.trim(),
                 status: "provisioning",
-                profile: {
-                    id: this.profiles.defaultProfile.id,
-                    version: this.profiles.defaultProfile.version,
-                },
+                profile: selected,
             });
         }
         assertMatchingFingerprint(instance.idempotencyFingerprint, idempotencyFingerprint);
@@ -109,6 +122,7 @@ function fingerprintCreateInput(input: CreateProviderInstance, secret: string): 
                 cmsUrl: new URL(input.cmsUrl).toString(),
                 gatewayUrl: new URL(input.gatewayUrl ?? input.cmsUrl).toString(),
                 administrator: input.administrator,
+                profile: input.profile,
             }),
         )
         .digest("base64url");

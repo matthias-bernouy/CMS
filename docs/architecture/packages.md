@@ -13,10 +13,9 @@ the release toolchain bundles it into the public `@cyaxis/ulvia` command-line
 package without workspace dependencies.
 
 Server composition roots are deployment units rather than reusable packages:
-`@bernouy/cms-edge-server`, `@bernouy/ulvia-provider-server` and
-`@bernouy/official-repository-server` are private.
+`@bernouy/cms-edge-server` and `@bernouy/ulvia-provider-server` are private.
 `packages/official-repository` has no package manifest; its authored artifacts
-are admitted and served by the official repository runtime. A package being
+are admitted into the Provider snapshot and explicitly published to CMS Repository instances. A package being
 publishable describes its intended boundary, not evidence that a release has
 already been published to a registry.
 
@@ -70,8 +69,8 @@ The removed `cms-source` transport grammar is not accepted.
 
 `packages/official-repository` contains the authored official contract releases,
 the `ulvia.official` provider manifest and official collections. It has
-no runtime adapters or routes. `@bernouy/official-repository-server` publishes
-and serves admitted copies from a separate persistent volume.
+no runtime adapters or routes. The official Provider implements Registry operations
+for explicitly enabled CMS instances, exposed through their independent Edge.
 
 ## Surfaces And Runtimes
 
@@ -81,8 +80,7 @@ and serves admitted copies from a separate persistent volume.
 | `@bernouy/cms-edge` | Stateless HTTP protocols, request-actor resolution, public resource streaming and final security/cache policy. |
 | `@bernouy/cms-edge-server` | Stateless HTTP composition for one pre-provisioned instance, connected only by Provider URL and opaque instance access token. |
 | `@bernouy/ulvia-provider-server` | Durable instance registry and credentials, instance-scoped persistence/auth/gateway/files, exact profile transitions and recovery, operator API and Ulvia Provider listener. |
-| `@bernouy/official-repository-server` | Production official repository startup with persistent staged publication and immutable reads. |
-| `@bernouy/ulvia-cli` | Persistent local repository/Provider/Edge container stack, including idempotent instance provisioning. |
+| `@bernouy/ulvia-cli` | Persistent local release cache and Provider/Edge container stack, including idempotent instance provisioning. |
 
 See [workspace architecture](README.md) for dependency direction and
 [repository and gateway flows](../providers/README.md) for runtime wiring.

@@ -2,6 +2,7 @@ import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { DEFAULT_COLLECTION_LIMITS } from "cms-repository/collections/core/limits";
 import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
 import { repositoryBaseUrl } from "cms-repository/repository-http/baseUrl";
+import { registryCataloguePage } from "cms-repository/repository-http/catalogueValues";
 import { readCataloguePages } from "cms-repository/repository-http/cataloguePages";
 import {
     getRepositoryBytes,
@@ -41,13 +42,18 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
     async list(): Promise<CollectionRepositoryEntry[]> {
         return readCataloguePages(
             async (cursor) => {
-                const query = cursor
-                    ? `?limit=${CATALOGUE_PAGE_SIZE}&cursor=${encodeURIComponent(cursor)}`
-                    : `?limit=${CATALOGUE_PAGE_SIZE}`;
-                const bytes = await getRepositoryBytes(this.base, `v1/collections${query}`, "Collection", {
+                const bytes = await getRepositoryBytes(this.base, "v1/catalogue", "Collection", {
                     request: this.request,
+                    query: { kind: "collection", limit: CATALOGUE_PAGE_SIZE, ...(cursor ? { cursor } : {}) },
                 });
-                return parseCollectionCataloguePage(parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64), this.id);
+                return parseCollectionCataloguePage(
+                    registryCataloguePage(
+                        parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64),
+                        "collection",
+                        "collectionId",
+                    ),
+                    this.id,
+                );
             },
             (entry) => `${entry.publisherId}\0${entry.collectionId}\0${entry.version}`,
             "collection",
@@ -60,7 +66,7 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
         }
         const bytes = await getRepositoryBytes(
             this.base,
-            `v1/collections/${encodeURIComponent(reference.publisherId)}/${encodeURIComponent(reference.collectionId)}/${encodeURIComponent(reference.version)}`,
+            `v1/releases/collection/${encodeURIComponent(reference.publisherId)}/${encodeURIComponent(reference.collectionId)}/${encodeURIComponent(reference.version)}`,
             "Collection",
             { request: this.request },
         );
@@ -77,7 +83,7 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
                 const asset = release.assets[index]!;
                 const assetBytes = await getRepositoryBytes(
                     this.base,
-                    `v1/collections/${encodeURIComponent(reference.publisherId)}/${encodeURIComponent(reference.collectionId)}/${encodeURIComponent(reference.version)}/assets/${encodeURIComponent(asset.id)}`,
+                    `v1/assets/collection/${encodeURIComponent(reference.publisherId)}/${encodeURIComponent(reference.collectionId)}/${encodeURIComponent(reference.version)}/${encodeURIComponent(asset.id)}`,
                     "Collection asset",
                     {
                         maxBytes: Math.min(asset.byteLength, DEFAULT_COLLECTION_LIMITS.maxAssetBytes),

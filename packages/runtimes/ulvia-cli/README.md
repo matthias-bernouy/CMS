@@ -100,7 +100,7 @@ its dedicated Edge. `instance start` restarts only an already-provisioned
 instance's Edge. All Edges use the shared proxy port: an instance named
 `default` is available at `http://localhost:5100`, while any other instance such
 as `preview` uses `http://preview.localhost:5100`.
-`ULVIA_HTTP_PORT`, `ULVIA_REPOSITORY_PORT`, and `ULVIA_PROVIDER_PORT` provide
+`ULVIA_HTTP_PORT` and `ULVIA_PROVIDER_PORT` provide
 initial isolation defaults for tests and CI. Interactive configuration belongs
 to `ulvia configure network`. The Provider still listens on its canonical port
 5103 inside the private Docker network; only its operator port on the host
@@ -110,29 +110,37 @@ previously created local instance; it never creates an implicit instance.
 
 The lifecycle boundary is deliberate:
 
-Independent Repository deployments use `ulvia repository start`, `status`, `stop`
-and `upgrade --version <exact-version>`. Their default volume and image pin live
-below `<data>/repository-service`. No deployment name or `global`/`community`
-qualifier is required. The command does not start
-shared services or a Edge.
+A Repository is an ordinary named CMS instance with an explicit application
+profile:
 
-`ulvia repository login <url>` verifies and saves the remote identity and creates
-a default local signing identity if none exists. `ulvia identity create`, `import`,
-`use`, `list` and `public-key` manage reusable Ed25519 identities. Namespace
-commands and publication use the saved connection and select an identity matching
-the namespace's current owner. No environment exports are needed. `logout`
-removes only the connection, preserving keys.
+```bash
+ulvia services start
+ulvia instance create registry --profile ulvia.repository@1.0.0
+ulvia instance status registry
+```
+
+The Provider advertises supported profiles through its protected operator API.
+The CLI persists the exact selected profile; restart reuses that selection and
+its instance credentials. `instance upgrade-profile registry ID@VERSION` requests
+an explicit supported transition within the same application ID and saves it
+only after acknowledgement. `upgrade provider --version VERSION` replaces the
+shared Provider image with retention checks and rollback on activation failure.
+The Repository has no separate image, port, service, or deployment lifecycle.
+
+`repository login URL` verifies the Repository identity and saves a shared CMS
+PAT supplied through `ULVIA_REPOSITORY_TOKEN` or `--token-stdin`. Ordinary
+Repository accounts can claim namespaces and publish without CMS administrator
+privileges. Login pins both the origin and Repository identity; writes refuse
+redirects and identity changes. Logout deletes the connection and saved PAT
+without revoking the remote token.
 
 Client configuration lives in `$XDG_CONFIG_HOME/ulvia/config.json` or
-`~/.config/ulvia/config.json`; private keys live in its `keys/` directory. Files
-use mode 0600, directories 0700. `ULVIA_CONFIG_DIR` overrides that location;
-`ULVIA_DATA_DIR` alone isolates client configuration under `<data>/config`.
-Deployment configuration is separate: `<data>/repository-service/config.json`.
-`repository configure` persists local, external HTTPS proxy or managed ACME
-networking. All namespaces, including `ulvia.official`, use public first claim.
-Claim platform-owned names locally before enabling public access. Ownership
-persists across restarts and cannot be reset through deployment configuration.
-See the [installation guide](../../../docs/installation/README.md#9-standalone-repository)
+`~/.config/ulvia/config.json`. Files use mode 0600, directories 0700.
+`ULVIA_CONFIG_DIR` overrides that location; `ULVIA_DATA_DIR` alone isolates
+client configuration under `<data>/config`. Namespaces, accounts, uploads and
+releases belong to their CMS instance's Provider storage. Startup never claims
+or reassigns a namespace. See the
+[installation guide](../../../docs/installation/README.md#9-repository-cms-instance)
 and [Repository architecture](../../../docs/architecture/community-repository.md).
 
 | Command | Provider tenant | Edge container |
@@ -173,15 +181,12 @@ ulvia release packages/official-repository --recursive
 
 Contract fixture assets declared in `definition.json` are read from
 `fixtures/<asset-id>` and verified by digest. Releasing the same coordinate with
-different content fails. The local Repository serves stored resources
-at `/v1/collections`, `/v1/contracts`, and `/v1/providers` on loopback port
-5102, with declared contract fixtures at
-`/v1/contracts/<publisher>/<contract>/<version>/fixtures/<asset-id>`, and sees
-new releases without restarting. The CMS consumes the collection and provider
-repository endpoints. The Provider administration Page imports an exact
-manifest, approves an account connection and replaces the site's exact contract
-selections for Gateway calls. `prune` empties all local repository content
-without deleting service or instance data.
+different content fails. Local release storage is a private CLI cache, not an
+HTTP server. `push` publishes it to the configured CMS Repository; its public
+catalogue and downloads use admitted `ulvia.repository` bindings under
+`/.cms/call/ulvia.repository`. CMS installation and Provider administration
+consume those public sources. `prune` empties the local cache without deleting
+service or instance data.
 
 Contract authors may keep only release metadata in `definition.json` and split
 capabilities recursively below `capabilities/`. Each capability is one JSON
@@ -199,8 +204,8 @@ an explicit kind and downloads and re-admits one exact coordinate locally.
 `push all` publishes every non-yanked release in the local cache, independently
 of the working directory. It orders contract inheritance and requirements,
 then providers and known local collection dependencies. All artifacts and every
-namespace's local owner key are checked before the first upload. No namespace
-is implicitly claimed and releases without an owner key are not silently skipped.
+namespace's account ownership are checked before the first upload. No namespace
+is implicitly claimed and releases without usable account credentials are not silently skipped.
 A remote refusal or transfer failure stops the batch; already completed
 publications remain visible. Repeating the command reconciles identical releases
 and resumes the remainder. The receiving Repository still validates dependency
@@ -213,23 +218,19 @@ ulvia push all
 ```
 
 `repository login` saves the default endpoint; `--repository` and
-`ULVIA_REPOSITORY_URL` remain explicit overrides. Owner signatures bind Repository
-identity, namespace revision, action, content digest, timestamp and nonce.
-The server rejects stale or replayed
-requests, serializes writes across processes, re-runs admission and evolution
-rules, and stages every declared asset as a separately signed raw stream. A final
-idempotent commit makes the immutable artifact visible only after all byte lengths
-and SHA-256 digests pass. Interrupted and rejected sessions never expose a partial
-release. An exact republish is idempotent; different bytes at an existing coordinate
-reject.
+`ULVIA_REPOSITORY_URL` remain explicit overrides. Every protected request uses
+the origin/identity-bound PAT. Uploads bind the account, namespace and ownership
+revision; transfer or revocation prevents unauthorized continuation. Publication
+re-runs admission and evolution rules, streams bounded assets, verifies byte
+lengths and SHA-256 digests, and makes the artifact visible last. Exact retries
+are idempotent; different bytes at an existing coordinate reject.
 
-The protocol, exact-coordinate client and mutation endpoint live in
-`@bernouy/cms-repository/repository/publication`. The CLI uses the publication
-client and local filesystem release storage; `official-repository-server`
-composes the HTTP listener inside its container. The filesystem composition
-persists upload sessions and replay claims below the repository root.
-A production repository can replace those ports without depending on this
-executable package.
+The protocol and exact-coordinate client live in
+`@bernouy/cms-repository/repository/publication`. The CLI and CMS authoring
+implementation share those clients. The official Provider composes the domain
+service and persistence for explicitly enabled Repository instances; Edge
+exposes the selected admitted contract. No standalone mutation endpoint or
+signing-key protocol remains.
 
 `yank` is reversible catalogue metadata: it hides a release from new catalogue
 resolution without deleting its exact historical bytes. `restore` exposes it
@@ -277,11 +278,12 @@ ID, and discovery stops there so `settings/definition.json` is never mistaken
 for a nested Bloc. Intermediate grouping directories contain only directories
 and do not affect release identity.
 
-The Official Repository image contains the admitted CMS contracts, provider
-manifest, and administration collection. It installs that snapshot only into
-absent or empty persistent storage. A non-empty repository is never overlaid on
-image upgrade. The workspace bootstrap command builds the admitted snapshot
-used by the image:
+The Provider image bundles admitted contracts, manifests, collection assets and
+documentation required by its shipped profiles. The local snapshot feeds the
+same provisioning and admission flow as remote sources. An incomplete snapshot
+fails explicitly; bootstrap does not fall back to the network. Restart preserves
+existing accounts, namespace ownership and edited Pages. Generate the snapshot
+from the authoritative authored resources with:
 
 ```bash
 bun run generate:official-bootstrap

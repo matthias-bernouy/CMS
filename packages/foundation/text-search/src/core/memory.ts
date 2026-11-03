@@ -8,6 +8,9 @@ export class MemoryVectorStore implements VectorStore {
             throw new TypeError("Invalid vector cache budget");
         }
     }
+    clear(): void {
+        this.entries.clear();
+    }
     async get(keys: readonly string[]) {
         return new Map(
             keys.flatMap((key) => {

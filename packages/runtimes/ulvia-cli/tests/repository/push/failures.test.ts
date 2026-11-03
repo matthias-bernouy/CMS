@@ -3,7 +3,6 @@ import { LocalArtifactFiles } from "@bernouy/cms-repository/repository/filesyste
 import { writeAuthoredContractFixture } from "../../authoredContractFixture";
 import { expect, test } from "bun:test";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { readClientConfig } from "../../../src/runtime/repository/config";
 import { pushFixture } from "./fixtures";
 
 test("push all validates every namespace credential before the first upload", async () => {
@@ -12,10 +11,8 @@ test("push all validates every namespace credential before the first upload", as
         await f.contract("a.owned");
         await f.contract("z.foreign", { publisher: "foreign" });
         await f.run(["release", f.source, "--recursive"]);
-        await f.run(["identity", "create", "foreign"]);
-        await f.run(["namespace", "claim", "foreign", "--identity", "foreign"]);
-        const config = await readClientConfig(f.config);
-        await rm(config.identities.foreign!.keyFile);
+        const other = await f.application.account("foreign-owner");
+        await f.application.namespaces.claim(other.accountId, "foreign");
         await expect(f.run(["push", "all"])).rejects.toThrow();
         expect(await f.remoteFiles.list("contracts")).toEqual([]);
     } finally {
@@ -41,7 +38,12 @@ test("a partially failed push all can be resumed by repeating the same command",
         port: 0,
         async fetch(request) {
             const url = new URL(request.url);
-            if (request.method === "POST" && url.pathname === "/v1/publication-uploads" && ++creates === 2 && reject) {
+            if (
+                request.method === "POST" &&
+                url.pathname === "/.cms/call/ulvia.repository/v1/uploads" &&
+                ++creates === 2 &&
+                reject
+            ) {
                 return Response.json({ error: { message: "Simulated upload refusal" } }, { status: 503 });
             }
             return fetch(new Request(new URL(url.pathname + url.search, f.server.url), request));
@@ -51,6 +53,7 @@ test("a partially failed push all can be resumed by repeating the same command",
         await f.contract("first.example");
         await f.contract("second.example");
         await f.run(["release", f.source, "--recursive"]);
+        await f.run(["repository", "login", proxy.url.origin]);
         await expect(f.run(["push", "all", "--repository", proxy.url.origin])).rejects.toThrow("1/2 completed");
         expect(await f.remoteFiles.list("contracts")).toHaveLength(1);
         reject = false;

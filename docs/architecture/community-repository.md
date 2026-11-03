@@ -1,141 +1,98 @@
 # Community Repository
 
-## Implemented ownership and deployment
+## CMS instance composition
 
-`@bernouy/cms-repository` owns immutable collection, contract and provider-manifest
-artifacts, namespace authority, revisioned publication metadata and publication
-ports. `publisherId` is the ownership namespace; artifact coordinates remain
-`(kind, publisherId, id, version)`. Collection runtime namespaces and resource IDs
-retain their existing admission rules. Site installations and overrides remain
-CMS-owned state and never become mutable Repository artifacts.
+A Repository is an explicitly enabled `ulvia.repository` CMS application profile.
+Its Edge exposes the website and admitted API; the official Provider implements
+Repository operations and owns persistence. Edge, Provider and MongoDB remain
+independent processes. Ordinary CMS profiles do not expose Registry capabilities.
 
-Namespaces are publicly claimed by the first valid Ed25519 possession proof.
-The filesystem adapter serializes competing claims across local processes.
-All namespaces, including `ulvia.official`, follow the same first-claim rule.
-There is no reserved-name bootstrap, startup owner assignment or operator-token
-publication authority. Claim official names through the loopback endpoint before
-opening a new Repository to the public. The official public origin is
-`https://repo.ulvia.fr`; regression tests use temporary local repositories only.
-Ed25519 owner proofs are the only supported publication credentials.
+`packages/official-repository/contracts/ulvia.repository` contains the authored
+registry contract. Domain implementation and validation belong to
+`@bernouy/cms-repository`; the Provider runtime chooses its adapters. Authored
+resources neither mount routes nor connect to databases.
 
-Each namespace has one active public key. Rotation requires signatures by the
-current and replacement keys at the same expected revision. Revocation is
-terminal. Lost private keys cannot be recovered by the operator. Retain secure
-backups before claiming a namespace or rotating its key.
-
-The server stores canonical Ed25519 SPKI public keys, never private keys. Proofs
-bind the persistent Repository identity, namespace, key revision, action,
-subject, SHA-256 content digest, timestamp and nonce. The clock window is five
-minutes. Signed HTTP owner requests also use durable replay claims. Contract
-commands use natural idempotency, exact subject/content bindings and revision
-fences; an exact retry reconciles an existing result rather than granting a
-second mutation. TLS protects signatures against interception.
-
-Namespace history consists of immutable committed revision records linked by
-their previous digest. A single atomically replaced current record controls
-visibility. Unreferenced revisions left before a failed pointer update are
-invisible and replaceable under the lock. History reads request one exact
-revision. Namespace locks fence the entire authorized operation against key
-rotation and revocation, including during a streamed upload or registry commit.
-
-Publication retains the existing bounded signed manifest, separately streamed
-assets and idempotent commit receipt. Artifact metadata becomes visible after
-verified immutable asset bytes. A failure after artifact publication but before
-the receipt is persisted can be retried against that same immutable artifact.
-Yank and restore mutate catalogue metadata, not release bytes. Owner mutations
-carry an expected publication revision; stale changes fail and exact retries
-return the existing state.
-
-`@bernouy/official-repository-server` remains the compatible runtime/package name
-and `docker.io/cyaxis/ulvia-official-repository` remains the image repository.
-The image can serve an empty community volume or the existing official seed.
-Build/publish tooling remains in `infra/images/build.ts`, outside the installed
-CLI. No image is implicitly built or published by a lifecycle command.
+The Provider image bundles the exact admitted artifacts required by its profiles.
+A local source supplies those artifacts through the normal provisioning flow,
+without a remote Repository. Missing or invalid bundled artifacts fail explicitly.
+Restart preserves instance identity, credentials, namespace ownership and edited
+Pages. The public catalogue is separate from this technical bootstrap: publishing
+resources into it remains an explicit authenticated action.
 
 ```sh
-ulvia repository start --version 0.1.0 --port 5010
-ulvia repository status
-ulvia repository upgrade --version 0.1.1
-ulvia repository stop
+ulvia services start
+ulvia instance create registry --profile ulvia.repository@1.0.0
+ulvia instance status registry
+ulvia instance stop registry
+ulvia instance start registry
 ```
 
-The versions above are illustrative; choose an image tag actually published by
-the operator. The default deployment has its own volume, Compose project and
-pinned image digest under `<data>/repository-service/`. Its persistent network
-configuration supports local HTTP, an external HTTPS proxy or a dedicated ACME
-proxy. The Repository backend always binds to loopback; only the managed proxy
-exposes ports 80/443. Existing
-shared-service and Edge lifecycle commands retain their separate behavior.
-Production supports one active server on one local volume with atomic rename,
-exclusive-create and hard-link semantics. This is not a multi-host database.
-The executable runtime holds a edge `flock` on `.server-lock` for its lifetime
-and rejects a competing server. A child holds the lock while the server owns
-its input pipe; graceful shutdown or a crash releases it without PID checks or
-a stale interval. Loss of that child stops the listener. The local filesystem
-must support `flock`, and the runtime must provide the `flock` executable.
+The CLI discovers supported exact profiles through the protected Provider
+operator endpoint and persists the selected reference. Profile upgrades use
+`ulvia instance upgrade-profile registry ID@VERSION` within the same application
+ID. Provider and Edge image upgrades use the normal `ulvia upgrade` commands.
+The installed image pins and database/files credentials persist across restarts.
+There is no separate Repository runtime, image, Compose service or signing-key
+compatibility protocol. See the [installation guide](../installation/README.md#9-repository-cms-instance).
 
-## Contract and transport clients
+## Authentication and ownership
 
-`@bernouy/cms-repository/repository/contract` exports `admitRepositoryContract`
-and `RepositoryCapabilityService`. The exact admitted `ulvia.repository@1.1.0`
-definition is available at `GET /v1/repository-contract`; its ETag is its release
-digest. This built-in protocol definition is not automatically published into
-the user's mutable catalogue. Consumers explicitly admit and pin it.
+Repository accounts belong to this CMS instance. Access supplies registration,
+login, sessions and own-PAT creation/listing/revocation. PAT verification and
+Gateway actor resolution are shared with other CMS capabilities. An ordinary
+registered account can claim and publish without becoming an administrator.
+PATs inherit account permissions; additional PAT scopes are not implemented.
 
-Its capabilities describe Repository identity, namespace lookup/claim/rotation/
-revocation, paginated catalogue reads, resource discovery, binary release downloads, staged upload
-creation/status/asset/commit/abort, publication metadata reads and revisioned
-yanks. Existing operations declare `REJECTED` and `NOT_FOUND`; discovery declares
-the more specific failures described below. All capabilities have
-public transport access: ownership-sensitive operations verify their exact
-cryptographic proof in the domain service, independently of CMS login methods.
-Transport access does not grant namespace authority.
+Namespaces reference stable account IDs and have a revision and active/suspended
+state. Claims are atomic, ownership is checked server-side, and an account may
+own at most 32 namespaces. Transfer requires the current owner, expected revision
+and an existing target account. Suspension does not release the name. Account
+deletion is refused while it owns namespaces, under the same ownership fence;
+refusals leave account credentials and publications unchanged. Startup never
+claims or reassigns names, including `ulvia.official`.
 
-Admitted namespace mutations use `POST /v1/namespace-actions/claim`,
-`POST /v1/namespace-actions/rotate` and `POST /v1/namespace-actions/revoke`.
-The public client retains `POST /v1/namespaces/:namespace`;
-legal namespace names such as `claim`, `rotate` and `revoke` remain available.
-Technical failures propagate to the Gateway: a dispatched command with an
-uncertain result returns `outcome_unknown` and records `outcome-unknown` in
-the command audit, rather than claiming a declared domain refusal.
+Uploads bind the account, namespace and ownership revision. Every protected stage
+checks the verified actor and ownership. Transferred namespaces cannot finalize
+an upload opened by the previous owner; revoked PATs fail subsequent protected
+requests. Private source snapshots require the same account ownership. Public
+namespace metadata does not expose internal account identifiers.
 
-The runtime pins an explicit process-local contract/manifest/installation and
-dispatches through `CapabilityGateway`, including normal schema, behavior,
-response and command-audit rules. It exposes the admitted HTTP paths directly
-and through `/.cms/call/ulvia.repository`. It does not invent a second MCP
-execution engine. This local installation is runtime wiring, not a persisted
-CMS site selection or proof of a remote deployment’s runtime behavior.
+Publication preserves bounded metadata and streamed assets, SHA-256 verification,
+admission, evolution rules, immutable coordinates, retry receipts and artifact-last
+visibility. Yank/restore changes catalogue metadata rather than immutable bytes.
+The filesystem adapters retain their atomic-write and recovery responsibilities;
+Mongo stores instance-scoped account ownership. This is a single-replica design,
+not distributed storage.
 
-Current CMS read-only sources continue to use their HTTP catalogue adapters.
-The Provider runtime accepts `CMS_REPOSITORY_URL` and its existing explicit
-insecure-development setting. The Edge receives selected capabilities and
-does not choose Repository credentials. A host can use `RemoteRepositoryClient`
-with a `RepositoryOwnerCredential` to publish; its `resolvePrivateKey` callback
-resolves the key through an injected `SecretReader` or isolated CMS Secrets
-namespace. Persist secret references and public ownership metadata only. Resolve
-private material immediately before signing; do not send it to the Repository,
-browser, agent tool arguments or logs. The CLI reads a private regular key file
-with no symlink following, a 4096-byte bound and owner-only permissions.
+## Contract and clients
+
+`ulvia.repository@2.0.0` declares the registry's public and authenticated
+capabilities. Edge mounts selected bindings below `/.cms/call/ulvia.repository`.
+Protected operations use `access: "authenticated"` and domain ownership checks.
+Installing a contract definition alone does not load an implementation.
+The old root `/v1` endpoints and namespace proof headers are not accepted.
+
+`ulvia.cms.authoring@2.0.0` prepares, validates and publishes collections from a
+CMS to its configured Repository. The rename does not add contract or Provider
+manifest authoring. The CLI can release and publish all three resource kinds.
+CMS publishing stores a shared PAT in the authoring contract's encrypted secret
+namespace. Its connection is pinned to the configured origin and Repository ID;
+configuration returns status only and never the token.
 
 ```sh
-ulvia repository login https://repository.example
+# Supply a PAT through ULVIA_REPOSITORY_TOKEN or bounded stdin.
+ulvia repository login https://repository.example --token-stdin
 ulvia namespace claim community
 ulvia push contract community/community.example@1.0.0
 ulvia namespace status community
-ulvia identity create replacement
-ulvia namespace rotate community --replacement-identity replacement
+ulvia repository logout
 ```
 
-Local identities are independent of namespace names and Repository connections.
-The CLI searches saved identities for the current owner public key, so rotations
-remain usable even when another identity is active. Login pins the persistent
-Repository identity and detects an unexpected identity change at the saved URL.
-Login does not create an authenticated bearer session; each write is signed.
-Private keys are never sent to the server. See the
-[installation guide](../installation/README.md#9-standalone-repository) for
-configuration locations, network modes, initial official claims and backup boundaries.
-`namespace revoke` requires `--yes`. Keep authoring and signing environments
-separate when an agent should not possess publication authority.
+Clients share `RepositoryConnection` and `RemoteRepositoryClient`. Each protected
+request verifies the public Repository identity before resolving the token,
+refuses redirects, and bounds response size and duration. CLI credentials use a
+private `ulvia.client.v2` configuration. Logout/replacement invalidates live
+credential resolvers. Logout does not revoke the remote PAT.
 
 ## Explicit capability bindings
 
@@ -213,9 +170,9 @@ and [HTTP transport](https://modelcontextprotocol.io/specification/2025-11-25/ba
 
 ## Limits and next work
 
-The contract bounds manifest strings to 1 MiB, JSON envelopes to the existing
-8 MiB Gateway budget, and raw assets to 100 MiB. The streaming transfer endpoints
-accept a larger bounded manifest envelope. Public catalogue pages contain
+Publication metadata uses a raw binary envelope bounded to 20 MiB, canonical
+releases remain bounded to 8 MiB, and raw assets to 100 MiB. Other JSON
+envelopes retain the existing 8 MiB Gateway budget. Public catalogue pages contain
 at most 256 entries; exact artifact reads survive yanking.
 
 Public first-claim naming needs deployment-specific rate limits, storage quotas,
@@ -225,20 +182,39 @@ commit receipts and audit records. Storage growth, retention and large-catalogue
 indexes need production capacity policy; bounded response pages are not a claim
 of constant work over an unlimited repository.
 
-Remote installation/observation of the Repository as an ordinary selectable
-Provider, CMS administration Pages for namespace keys, multiple delegated keys,
-source workspaces and a distributed storage adapter are not implemented.
-Private immutable source snapshots are implemented through owner-authorized
-`QUERY /v1/source-snapshots` and `POST /v1/source-snapshots/put`. Writes must
-match an existing collection release digest. Snapshots are separate from public
-release downloads and survive as private authored input for later versions.
+The Repository profile installs the `ulvia-repository` collection alongside
+`ulvia-official`. It copies examples once into ordinary Content Pages: `/` for
+the public catalogue, `/search`, `/resource`, `/signup`, `/login`, `/account`,
+`/account/namespaces`, `/account/publications` and `/account/tokens`. Pages reuse
+shared Access cookies, typed queries and mutations; publishing uses the CLI or
+a connected CMS. The personal token Page supports optional expiration and shows
+a new token secret only in the creation result. Public release downloads retain
+their existing API/CLI flow. Namespace/account Pages are not indexed. Collection
+upgrades do not turn those site-owned Pages into managed immutable templates.
+Federation, teams, SSO, additional PAT scopes and multi-replica storage are outside
+this work.
+Private immutable source snapshots use authenticated bindings below
+`/.cms/call/ulvia.repository/v1/source-snapshots`. Writes must match an existing
+collection release digest. They remain separate from public downloads.
 The proposed authoring/test roadmap is in [agent authoring](../development/agent-authoring.md).
 
 ## Resource discovery before installation
 
-`QUERY /v1/search` is the public `catalogue-search` capability. It searches collection, listed Bloc, contract and Provider manifest metadata. `@bernouy/cms-repository/repository/search` owns ranking orchestration and CMS-side federation; `/repository/search/filesystem` and `/repository/search/http` are explicit adapters. Public exact-release GETs remain the source for inspection and survive yanking.
+`QUERY /.cms/call/ulvia.repository/v1/search` is the public `catalogue-search` capability. It searches collection, listed Bloc, contract and Provider manifest metadata. `@bernouy/cms-repository/repository/search` owns ranking orchestration and CMS-side federation; `/repository/search/filesystem` and `/repository/search/http` are explicit adapters. Public exact-release GETs remain the source for inspection and survive yanking.
 
-The Repository runtime composes the pinned local multilingual model from `@bernouy/text-embeddings`. Its image ships verified files in `/opt/ulvia/models` and sets `ULVIA_EMBEDDING_MODEL_DIR` for strictly local loading. Native development without that variable retains `<ULVIA_REPOSITORY_DIR>/.search-models` and downloads on an empty cache; an explicitly configured directory always requires local files. See [model packaging](../../infra/models/README.md) for build caches and offline tests. Preparation runs after listening and on a cold or changed corpus. A query never waits for corpus embedding; a warm query waits at most one second for its embedding and otherwise reports lexical fallback. The runtime closes the index and model on shutdown. Cached vectors are derived in-memory data, bounded to 8,192 entries with at most 4,096 dimensions each; restart rebuilds them from metadata and reuses local model files.
+The Provider host shares its `@bernouy/text-embeddings` multilingual model across
+documentation and enabled Registry instances. Its image ships verified files in
+`/opt/ulvia/models` and sets `ULVIA_EMBEDDING_MODEL_DIR` for strictly local loading.
+Native development without that variable uses the Provider's writable
+`.documentation-models` cache. See [model packaging](../../infra/models/README.md).
+Search does not wait for corpus preparation; unavailable semantic results report
+lexical fallback. The host disposes instance indexes and the shared model during
+shutdown. Registry indexes share one bounded derived-vector cache per Provider host. It
+retains at most 8,192 entries, each with at most 4,096 finite coordinates and a
+128-character key. Keys bind the exact model identity and passage content;
+scoped results and corpus revisions remain instance-owned. Closing an instance
+keeps reusable public vectors; closing the host clears them. Documentation
+vectors retain their existing instance-scoped Mongo storage.
 
 The derived search corpus selects latest non-yanked releases before reading their search metadata and embedding them. This same business corpus is used for preparation and queries; historical exact reads remain available. Identical model/content pairs are embedded once per preparation, including on a cold cache. The search corpus is bounded to 4,096 selected releases, 16,384 rows and 32 MiB of serialized row text. Passage embeddings use the first 4,096 UTF-16 units of each row, while bounded lexical text retains capability identifiers. The index uses exact vector comparisons within this bounded corpus rather than a separate vector database. Eight searches are admitted concurrently per Repository. Metadata indexes rebuild once per changed snapshot and reuse unchanged snapshots after catalogue refresh. Existing filesystem catalogue enumeration still precedes the search release budget; this is not a constant-cost index over unlimited storage.
 

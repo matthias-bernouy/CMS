@@ -8,11 +8,11 @@ import type {
 import { registerObservabilityCapabilities } from "./observability";
 import { registerAccessCapabilities } from "./access";
 import { registerContentCapabilities } from "./content";
-import { registerFileCapabilities } from "./files";
+import { registerFileCapabilities } from "./storage/files";
 import { registerSmtpEmailerCapabilities } from "./emailer";
 import { registerCollectionAuthoringCapabilities } from "./installations/authoring";
 import { registerInstallationCapabilities } from "./installations";
-import { registerSecretCapabilities } from "./secrets";
+import { registerSecretCapabilities } from "./storage/secrets";
 import type { CollectionSources } from "./installations/sources";
 import type { ProviderOperationExecutor } from "../operations/ProviderOperationExecutor";
 import type { CmsFilesService } from "@bernouy/cms-files";
@@ -65,6 +65,7 @@ export {
     registerSecretCapabilities,
 };
 export type { CmsSmtpEmailerDependencies } from "./emailer";
+export { registerRepositoryCapabilities } from "./registry";
 export {
     CollectionSources,
     registerCollectionInstallationCapabilities,

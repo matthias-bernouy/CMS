@@ -29,11 +29,6 @@ test("Compose receives explicit user-owned storage and loopback port configurati
                 version: "1.2.3",
                 digest,
             },
-            repository: {
-                component: "repository" as const,
-                version: "1.2.3",
-                digest,
-            },
         },
     };
     const environment = localServicesEnvironment(paths, defaultInstallationConfig(), identity);
@@ -41,7 +36,9 @@ test("Compose receives explicit user-owned storage and loopback port configurati
     expect(environment.CMS_REPOSITORY_ALLOW_INSECURE_HTTP).toBe("false");
     expect(environment.ULVIA_MONGO_DIR).toBe(paths.mongo);
     expect(environment.ULVIA_FILES_DIR).toBe(paths.cmsFiles);
-    expect(environment.ULVIA_REPOSITORY_DIR).toBe(paths.repository);
+    expect(environment.ULVIA_REPOSITORY_DIR).toBeUndefined();
+    expect(environment.OFFICIAL_REPOSITORY_IMAGE).toBeUndefined();
+    expect(environment.ULVIA_REPOSITORY_PORT).toBeUndefined();
     expect(environment.ULVIA_HTTP_PORT).toBe("5100");
     expect(environment.ULVIA_BIND_ADDRESS).toBe("127.0.0.1");
     expect(environment.ULVIA_INSTANCE_NETWORK).toContain("ulvia-instances-");

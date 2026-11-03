@@ -1,4 +1,8 @@
 export const servicesMessages = {
+    "REJECTED": [
+        "The Repository refused this request. Check namespace ownership, the current revision and the submitted data.",
+        "Le Repository a refusé cette demande. Vérifiez la propriété du namespace, sa révision actuelle et les données envoyées.",
+    ],
     "TOKEN_LIMIT": [
         "This account has reached its personal access token limit. Revoke an unused token before creating another.",
         "Ce compte a atteint sa limite de jetons personnels. Révoquez un jeton inutilisé avant d’en créer un autre.",

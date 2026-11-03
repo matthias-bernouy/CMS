@@ -1,6 +1,7 @@
 import { documentationPath } from "cms-repository/exports/contracts/documentation";
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { repositoryBaseUrl } from "cms-repository/repository-http/baseUrl";
+import { registryCataloguePage } from "cms-repository/repository-http/catalogueValues";
 import { readCataloguePages } from "cms-repository/repository-http/cataloguePages";
 import {
     getRepositoryBytes,
@@ -40,14 +41,16 @@ export class HttpProviderRepository implements ProviderRepositorySource {
     async list(kind: RepositoryArtifactKind): Promise<readonly RepositoryArtifactEntry[]> {
         return readCataloguePages(
             async (cursor) => {
-                const query = cursor
-                    ? `?limit=${CATALOGUE_PAGE_SIZE}&cursor=${encodeURIComponent(cursor)}`
-                    : `?limit=${CATALOGUE_PAGE_SIZE}`;
-                const bytes = await getRepositoryBytes(this.base, `v1/${pathKind(kind)}${query}`, "Provider", {
+                const bytes = await getRepositoryBytes(this.base, "v1/catalogue", "Provider", {
                     request: this.request,
+                    query: { kind, limit: CATALOGUE_PAGE_SIZE, ...(cursor ? { cursor } : {}) },
                 });
                 return parseProviderCataloguePage(
-                    parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64),
+                    registryCataloguePage(
+                        parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64),
+                        kind,
+                        kind === "contract" ? "contractId" : "providerId",
+                    ),
                     this.id,
                     kind,
                 );
@@ -67,7 +70,7 @@ export class HttpProviderRepository implements ProviderRepositorySource {
         }
         return getRepositoryBytes(
             this.base,
-            `v1/contracts/${encodeURIComponent(reference.publisherId)}/${encodeURIComponent(reference.id)}/${encodeURIComponent(reference.version)}/docs/${encodeURIComponent(path)}`,
+            `v1/assets/contract/${encodeURIComponent(reference.publisherId)}/${encodeURIComponent(reference.id)}/${encodeURIComponent(reference.version)}/${encodeURIComponent(`docs/${path}`)}`,
             "Documentation",
             { request: this.request, accept: "text/markdown", maxBytes },
         );
@@ -79,19 +82,9 @@ export class HttpProviderRepository implements ProviderRepositorySource {
         }
         return getRepositoryBytes(
             this.base,
-            `v1/${pathKind(reference.kind)}/${encodeURIComponent(reference.publisherId)}/${encodeURIComponent(reference.id)}/${encodeURIComponent(reference.version)}`,
+            `v1/releases/${reference.kind}/${encodeURIComponent(reference.publisherId)}/${encodeURIComponent(reference.id)}/${encodeURIComponent(reference.version)}`,
             "Provider",
             { request: this.request },
         );
     }
-}
-
-function pathKind(kind: RepositoryArtifactKind): "contracts" | "providers" {
-    if (kind === "contract") {
-        return "contracts";
-    }
-    if (kind === "provider-manifest") {
-        return "providers";
-    }
-    throw new TypeError("Invalid provider repository kind");
 }

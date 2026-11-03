@@ -49,40 +49,6 @@ services:
             start_period: 10s
         stop_grace_period: 30s
 
-    repository:
-        image: ${OFFICIAL_REPOSITORY_IMAGE}
-        restart: unless-stopped
-        init: true
-        user: "${ULVIA_UID}:${ULVIA_GID}"
-        environment:
-            MODE: PROD
-            NODE_ENV: production
-            REPOSITORY_HOST: 0.0.0.0
-            REPOSITORY_PORT: "3000"
-            REPOSITORY_PUBLIC_URL: http://127.0.0.1:${ULVIA_REPOSITORY_PORT}
-            ULVIA_REPOSITORY_DIR: /var/lib/ulvia-repository
-            ULVIA_REPOSITORY_SEED_DIR: /opt/ulvia-repository-seed
-        stop_grace_period: 30s
-        volumes:
-            - type: bind
-              source: ${ULVIA_REPOSITORY_DIR}
-              target: /var/lib/ulvia-repository
-        ports:
-            - "127.0.0.1:${ULVIA_REPOSITORY_PORT}:3000"
-        networks:
-            - private
-        read_only: true
-        tmpfs:
-            - /tmp:rw,nosuid,nodev,noexec,size=64m
-        cap_drop: [ALL]
-        security_opt: [no-new-privileges:true]
-        healthcheck:
-            test: ["CMD", "bun", "-e", "const r=await fetch('http://127.0.0.1:3000/readyz'); if(!r.ok) process.exit(1); await r.body?.cancel()"]
-            interval: 30s
-            timeout: 5s
-            retries: 3
-            start_period: 5s
-
     mongo-provision:
         image: mongo:7.0.37@sha256:d5b3ca8c3f3cdce78d44870dc0871b76d5235e9b2ad4ea6bea5d1fbff8027703
         restart: "no"
@@ -144,8 +110,6 @@ services:
         depends_on:
             mongo-provision:
                 condition: service_completed_successfully
-            repository:
-                condition: service_healthy
         read_only: true
         tmpfs:
             - /tmp:rw,nosuid,nodev,noexec,size=256m

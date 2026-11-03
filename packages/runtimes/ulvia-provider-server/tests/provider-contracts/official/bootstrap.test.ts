@@ -21,7 +21,9 @@ test("loads the complete official profile and documentation from immutable files
         expect(documented.length).toBeGreaterThan(0);
         expect(
             documented.every(({ release }) =>
-                loaded.defaultProfile.contracts.some((pin) => pin.contractId === release.contractId),
+                loaded.profiles.some((profile) =>
+                    profile.contracts.some((pin) => pin.contractId === release.contractId),
+                ),
             ),
         ).toBe(true);
         const [collection] = await sources.collections.list();

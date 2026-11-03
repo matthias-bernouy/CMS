@@ -1,11 +1,8 @@
 import { expect, test } from "bun:test";
-import { docker } from "../official-repository/docker";
+import { docker } from "../../integration/instance/docker";
 import { offlineScriptPath } from "./offline";
 
-const images = [
-    { name: "provider", image: process.env.ULVIA_MODEL_PROVIDER_IMAGE, runtime: "ulvia-provider-server" },
-    { name: "repository", image: process.env.ULVIA_MODEL_REPOSITORY_IMAGE, runtime: "official-repository-server" },
-];
+const images = [{ name: "provider", image: process.env.ULVIA_MODEL_PROVIDER_IMAGE, runtime: "ulvia-provider-server" }];
 for (const { name, image, runtime } of images) {
     test.skipIf(!image)(
         `${name} image embeds and searches offline with fresh data volumes and a read-only root`,

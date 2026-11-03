@@ -1,0 +1,196 @@
+{
+    "kind": "collection",
+    "protocol": "ulvia-collection/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "collectionId": "ulvia-repository",
+    "publisherId": "ulvia.official",
+    "version": "1.0.0",
+    "name": "collection.name",
+    "description": "collection.description",
+    "locale": "en",
+    "exports": {
+        "blocs": ["ulvia-repository-shell"],
+        "themeTokens": [],
+        "texts": [
+            "brand",
+            "catalogue",
+            "search",
+            "account",
+            "login",
+            "signup",
+            "tokens",
+            "namespaces",
+            "email",
+            "password",
+            "logout",
+            "name",
+            "create-token",
+            "token-once",
+            "revoke",
+            "claim",
+            "namespace",
+            "loading",
+            "failed",
+            "next",
+            "query",
+            "kind",
+            "collection",
+            "contract",
+            "provider-manifest",
+            "welcome",
+            "account-help",
+            "empty",
+            "token-help",
+            "namespace-help",
+            "signed-out",
+            "active",
+            "created",
+            "expires",
+            "success",
+            "publisher",
+            "version",
+            "resource",
+            "publications",
+            "resource-help",
+            "publications-help",
+            "digest",
+            "not-found",
+            "revision",
+            "yanked"
+        ],
+        "assets": []
+    },
+    "dependencies": [
+        {
+            "collectionId": "ulvia-official",
+            "publisherId": "ulvia.official",
+            "versionRange": "^1.0.0",
+            "imports": {
+                "blocs": [
+                    {
+                        "id": "ulvia-official-heading"
+                    },
+                    {
+                        "id": "ulvia-official-action"
+                    }
+                ],
+                "themeTokens": [
+                    {
+                        "id": "background-base"
+                    },
+                    {
+                        "id": "text-primary"
+                    },
+                    {
+                        "id": "link"
+                    },
+                    {
+                        "id": "border-default"
+                    },
+                    {
+                        "id": "border-width"
+                    },
+                    {
+                        "id": "spacing-md"
+                    },
+                    {
+                        "id": "spacing-lg"
+                    },
+                    {
+                        "id": "page-gutter"
+                    },
+                    {
+                        "id": "content-width-lg"
+                    },
+                    {
+                        "id": "font-family-main"
+                    },
+                    {
+                        "id": "radius-md"
+                    }
+                ]
+            }
+        }
+    ],
+    "states": [
+        {
+            "id": "kind",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 32,
+                "enum": ["collection", "contract", "provider-manifest"]
+            }
+        },
+        {
+            "id": "query",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 500
+            }
+        },
+        {
+            "id": "account-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "catalogue-cursor",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 1024
+            }
+        },
+        {
+            "id": "search-cursor",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 8192
+            }
+        },
+        {
+            "id": "publisher",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "resource",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "version",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        }
+    ]
+}

@@ -13,10 +13,7 @@ describe("Ulvia local data lifecycle", () => {
         try {
             await ensureUlviaPaths(paths);
             await writeFile(join(root, "keep.txt"), "keep");
-            await writeFile(
-                join(paths.services, "runtime.json"),
-                JSON.stringify({ schema: "ulvia.local-services.v1" }),
-            );
+            await loadOrCreateLocalServicesConfig(paths.services);
             await writeFile(join(paths.repository, "release.json"), "old");
             const immutableObject = join(paths.repository, "objects", "sha256", "digest");
             await mkdir(immutableObject, { recursive: true });
@@ -40,8 +37,15 @@ describe("Ulvia local data lifecycle", () => {
         try {
             await ensureUlviaPaths(paths);
             await resetLocalData(paths);
-            await writeFile(join(paths.services, "runtime.json"), JSON.stringify({ schema: "another-application" }));
-            await expect(resetLocalData(paths)).rejects.toThrow(/unrecognized Ulvia data/);
+            const marker = join(paths.services, "runtime.json");
+            const release = join(paths.repository, "keep.json");
+            await writeFile(release, "unchanged");
+            for (const schema of ["another-application", "ulvia.local-services.v1", "ulvia.services.v2"]) {
+                await writeFile(marker, JSON.stringify({ schema }));
+                await expect(resetLocalData(paths)).rejects.toThrow(/unrecognized Ulvia data/);
+                expect(await readFile(release, "utf8")).toBe("unchanged");
+                expect(JSON.parse(await readFile(marker, "utf8")).schema).toBe(schema);
+            }
         } finally {
             await rm(root, { recursive: true, force: true });
         }

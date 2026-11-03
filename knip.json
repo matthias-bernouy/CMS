@@ -1,7 +1,17 @@
 {
     "$schema": "./node_modules/knip/schema.json",
-    "include": ["files", "dependencies", "devDependencies", "optionalPeerDependencies", "exports", "types"],
-    "entry": ["build.ts", "packages/runtimes/ulvia-cli/src/runtime/stack/orchestration/definitions/mongo/*.js"],
+    "include": [
+        "files",
+        "dependencies",
+        "devDependencies",
+        "optionalPeerDependencies",
+        "exports",
+        "types"
+    ],
+    "entry": [
+        "build.ts",
+        "packages/runtimes/ulvia-cli/src/runtime/stack/orchestration/definitions/mongo/*.js"
+    ],
     "project": [
         "*.ts",
         "infra/**/*.js",
@@ -14,7 +24,6 @@
         "@bernouy/cms-edge",
         "@bernouy/envelope-crypto",
         "@bernouy/image-processing",
-        "@bernouy/official-repository-server",
         "@bernouy/rate-limiter",
         "@bernouy/secret-store",
         "@bernouy/ulvia-cli",
@@ -48,9 +57,22 @@
         "packages/official-repository/**"
     ],
     "ignoreIssues": {
-        "**/tests/**": ["exports", "types"],
-        "infra/**": ["exports", "types"],
-        "quality/**": ["exports", "types"],
-        "packages/official-repository/**": ["files", "exports", "types"]
+        "**/tests/**": [
+            "exports",
+            "types"
+        ],
+        "infra/**": [
+            "exports",
+            "types"
+        ],
+        "quality/**": [
+            "exports",
+            "types"
+        ],
+        "packages/official-repository/**": [
+            "files",
+            "exports",
+            "types"
+        ]
     }
 }

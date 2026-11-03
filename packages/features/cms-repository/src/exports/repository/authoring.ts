@@ -2,6 +2,7 @@ export {
     CollectionAuthoring,
     CollectionPreparationError,
     type CollectionPublisher,
+    type RepositoryConnectionStatus,
 } from "cms-repository/repository/authoring/CollectionAuthoring";
 export { parseSourceSnapshot, type SourceAsset } from "cms-repository/repository/authoring/snapshot";
 

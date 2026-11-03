@@ -8,8 +8,8 @@ export type ComposeServiceState = Readonly<{
 }>;
 
 export type ComposeProject = Readonly<{
-    definition: "services" | "edge" | "repository";
-    overlays?: readonly ("services-tls" | "edge-tls" | "repository-tls")[];
+    definition: "services" | "edge";
+    overlays?: readonly ("services-tls" | "edge-tls")[];
     projectName: string;
     environment: Record<string, string | undefined>;
 }>;

@@ -1,129 +1,91 @@
-import { afterEach, expect, test } from "bun:test";
-import { generateKeyPairSync, randomUUID } from "node:crypto";
+import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { FilesystemRepositoryNamespaceStore } from "@bernouy/cms-repository/repository/filesystem";
-import {
-    RepositoryNamespaceAuthority,
-    repositoryDigest,
-    signNamespaceProof,
-} from "@bernouy/cms-repository/repository/namespaces";
+import { repositoryApplication } from "../../../../../tests/fixtures/repository/application";
 
-const roots: string[] = [];
-afterEach(async () => {
-    await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
-});
-
-function keys() {
-    const pair = generateKeyPairSync("ed25519");
+async function fixture() {
+    const root = await mkdtemp(join(tmpdir(), "account-namespace-"));
+    const app = repositoryApplication(root);
+    const a = await app.account("account-a");
+    const b = await app.account("account-b");
     return {
-        publicKey: pair.publicKey.export({ type: "spki", format: "der" }).toString("base64url"),
-        privateKey: pair.privateKey.export({ type: "pkcs8", format: "pem" }).toString(),
+        app,
+        a,
+        b,
+        close: async () => {
+            await app.close();
+            await rm(root, { recursive: true, force: true });
+        },
     };
 }
 
-function proof(
-    key: ReturnType<typeof keys>,
-    namespace: string,
-    revision: number,
-    action: string,
-    digest: string,
-    subject = namespace,
-) {
-    return signNamespaceProof(
-        {
-            repositoryId: "repository-1",
-            namespace,
-            revision,
-            action,
-            subject,
-            digest,
-            timestamp: Date.now(),
-            nonce: randomUUID(),
-        },
-        key.privateKey,
-    );
-}
-
-async function fixture() {
-    const root = await mkdtemp(join(tmpdir(), "repository-namespace-"));
-    roots.push(root);
-    const store = new FilesystemRepositoryNamespaceStore(root);
-    return { root, store, authority: new RepositoryNamespaceAuthority("repository-1", store) };
-}
-
-test("claims one namespace atomically across independent storage instances", async () => {
-    const { root, authority } = await fixture();
-    const other = new RepositoryNamespaceAuthority("repository-1", new FilesystemRepositoryNamespaceStore(root));
-    const first = keys();
-    const second = keys();
-    const results = await Promise.allSettled(
-        [first, second].map((key, index) =>
-            (index === 0 ? authority : other).claim(
-                "community",
-                key.publicKey,
-                proof(key, "community", 0, "claim", repositoryDigest({ publicKey: key.publicKey })),
-            ),
-        ),
-    );
-    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
-    expect((await authority.get("community"))?.revision).toBe(1);
+test("one account wins a concurrent claim and ownership changes invalidate previous revisions", async () => {
+    const f = await fixture();
+    const { namespaces } = f.app;
+    try {
+        const claimed = await Promise.allSettled(
+            [f.a, f.b].map((account) => namespaces.claim(account.accountId, "community")),
+        );
+        expect(claimed.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+        const owner = claimed[0]!.status === "fulfilled" ? f.a : f.b;
+        const other = owner === f.a ? f.b : f.a;
+        const view = await namespaces.get("community");
+        expect(view?.revision).toBe(1);
+        expect(JSON.stringify(view)).not.toContain(owner.accountId);
+        expect((await namespaces.transfer(owner.accountId, "community", 1, other.accountId)).revision).toBe(2);
+        let called = false;
+        const mutate = async () => {
+            called = true;
+        };
+        await expect(namespaces.execute(owner.accountId, "community", 1, mutate)).rejects.toThrow("stale");
+        await expect(namespaces.execute(other.accountId, "community", 1, mutate)).rejects.toThrow("stale");
+        expect(called).toBe(false);
+        await namespaces.execute(other.accountId, "community", 2, mutate);
+        expect(called).toBe(true);
+    } finally {
+        await f.close();
+    }
 });
 
-test("rotation requires both keys and rejects stale, cross-namespace and cross-repository writes", async () => {
-    const { root, store, authority } = await fixture();
-    const old = keys();
-    const replacement = keys();
-    await authority.claim(
-        "community",
-        old.publicKey,
-        proof(old, "community", 0, "claim", repositoryDigest({ publicKey: old.publicKey })),
-    );
-    const digest = repositoryDigest({ publicKey: replacement.publicKey });
-    await expect(
-        authority.rotate(
-            "community",
-            replacement.publicKey,
-            proof(old, "community", 1, "rotate", digest),
-            proof(old, "community", 1, "accept-key", digest),
-        ),
-    ).rejects.toThrow();
-    const rotated = await authority.rotate(
-        "community",
-        replacement.publicKey,
-        proof(old, "community", 1, "rotate", digest),
-        proof(replacement, "community", 1, "accept-key", digest),
-    );
-    expect(rotated.revision).toBe(2);
-    expect((await store.get("community", 1))?.publicKey).toBe(old.publicKey);
-    const write = proof(old, "community", 1, "publish", repositoryDigest(null));
-    await expect(
-        authority.execute("community", "publish", "community", write.digest, write, async () => true),
-    ).rejects.toThrow();
-    await expect(
-        authority.execute("other", "publish", "community", write.digest, write, async () => true),
-    ).rejects.toThrow();
-    const otherRepository = new RepositoryNamespaceAuthority(
-        "repository-2",
-        new FilesystemRepositoryNamespaceStore(root),
-    );
-    const current = proof(replacement, "community", 2, "publish", write.digest);
-    await expect(
-        otherRepository.execute("community", "publish", "community", current.digest, current, async () => true),
-    ).rejects.toThrow();
+test("suspension and missing owner accounts never implicitly release reserved namespaces", async () => {
+    const f = await fixture();
+    const { namespaces } = f.app;
+    try {
+        await namespaces.claim(f.a.accountId, "community");
+        await namespaces.suspend(f.a.accountId, "community", 1);
+        await expect(namespaces.claim(f.b.accountId, "community")).rejects.toThrow("reserved");
+        const transferred = await namespaces.transfer(f.a.accountId, "community", 2, f.b.accountId);
+        expect(transferred.state).toBe("suspended");
+        expect(transferred.revision).toBe(3);
+        await expect(namespaces.execute(f.b.accountId, "community", 3, async () => undefined)).rejects.toThrow("stale");
+        f.app.accounts.delete(f.b.accountId);
+        await expect(namespaces.claim(f.a.accountId, "community")).rejects.toThrow("reserved");
+        expect((await namespaces.get("community"))?.state).toBe("suspended");
+    } finally {
+        await f.close();
+    }
 });
 
-test("revocation is terminal and cannot be reclaimed", async () => {
-    const { authority } = await fixture();
-    const key = keys();
-    const claim = proof(key, "community", 0, "claim", repositoryDigest({ publicKey: key.publicKey }));
-    await authority.claim("community", key.publicKey, claim);
-    await authority.claim("community", key.publicKey, claim);
-    await authority.revoke("community", proof(key, "community", 1, "revoke", repositoryDigest(null)));
-    await expect(authority.claim("community", key.publicKey, claim)).rejects.toThrow();
-    const write = proof(key, "community", 2, "publish", repositoryDigest(null));
-    await expect(
-        authority.execute("community", "publish", "community", write.digest, write, async () => true),
-    ).rejects.toThrow();
+test("account deletion refuses before business side effects while namespaces remain owned", async () => {
+    const f = await fixture();
+    const { namespaces } = f.app;
+    try {
+        await namespaces.claim(f.a.accountId, "community");
+        let deleted = false;
+        await expect(
+            namespaces.withoutOwnedNamespaces(f.a.accountId, async () => {
+                deleted = true;
+            }),
+        ).rejects.toThrow("Transfer owned");
+        expect(deleted).toBe(false);
+        await namespaces.transfer(f.a.accountId, "community", 1, f.b.accountId);
+        await namespaces.withoutOwnedNamespaces(f.a.accountId, async () => {
+            deleted = true;
+        });
+        expect(deleted).toBe(true);
+        expect((await namespaces.get("community"))?.revision).toBe(2);
+    } finally {
+        await f.close();
+    }
 });

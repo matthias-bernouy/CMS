@@ -1,6 +1,6 @@
 import type { UlviaPaths } from "../../runtime/paths";
 import { assertImageVersion, type OfficialImageComponent } from "../../runtime/stack/orchestration/images";
-import { upgradeLocalService } from "../../runtime/stack/orchestration/services";
+import { upgradeLocalProvider } from "../../runtime/stack/orchestration/services";
 import { upgradeLocalEdges } from "../../runtime/stack/orchestration/upgrades";
 
 export async function upgradeCommand(
@@ -18,16 +18,16 @@ export async function upgradeCommand(
         await upgradeLocalEdges(paths, version, log);
         return;
     }
-    await upgradeLocalService(paths, component, version, log);
+    await upgradeLocalProvider(paths, version, log);
 }
 
 function parseComponent(value: string | undefined): OfficialImageComponent {
-    if (value === "edge" || value === "provider" || value === "repository") {
+    if (value === "edge" || value === "provider") {
         return value;
     }
     throw new Error(usage());
 }
 
 function usage(): string {
-    return "Usage: ulvia upgrade <edge | provider | repository> --version <version>";
+    return "Usage: ulvia upgrade <edge | provider> --version <version>";
 }

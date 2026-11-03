@@ -5,6 +5,7 @@ export async function provisionInstance(
     cmsUrl: string,
     administrator: { email: string; password: string },
     gatewayUrl: string,
+    profile?: { id: string; version: string },
 ) {
     const created = await fetch(`${providerUrl}/ulvia/operator/instances`, {
         method: "POST",
@@ -13,7 +14,13 @@ export async function provisionInstance(
             "Content-Type": "application/json",
             "Idempotency-Key": id,
         },
-        body: JSON.stringify({ label: "Local MCP regression", cmsUrl, gatewayUrl, administrator }),
+        body: JSON.stringify({
+            label: "Local MCP regression",
+            cmsUrl,
+            gatewayUrl,
+            administrator,
+            ...(profile ? { profile } : {}),
+        }),
         signal: AbortSignal.timeout(90_000),
     });
     if (created.status !== 201) {

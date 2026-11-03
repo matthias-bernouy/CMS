@@ -1,3 +1,4 @@
+import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
 import { constants } from "node:fs";
 import { chmod, lstat, mkdir, open, rename, rm, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
@@ -5,12 +6,9 @@ import { homedir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem";
 
-export type ClientIdentity = { keyFile: string; publicKey: string };
 export type ClientConfig = {
-    schema: "ulvia.client.v1";
-    identities: Record<string, ClientIdentity>;
-    activeIdentity?: string;
-    repository?: { url: string; repositoryId: string };
+    schema: "ulvia.client.v2";
+    repository?: { url: string; repositoryId: string; token: string; generation: string };
 };
 
 export function clientConfigDirectory(environment: Record<string, string | undefined>, home = homedir()): string {
@@ -24,7 +22,7 @@ export function clientConfigDirectory(environment: Record<string, string | undef
     return path;
 }
 
-export async function privateDirectory(path: string): Promise<void> {
+async function privateDirectory(path: string): Promise<void> {
     await mkdir(path, { recursive: true, mode: 0o700 });
     const metadata = await lstat(path);
     if (!metadata.isDirectory() || metadata.isSymbolicLink()) {
@@ -43,38 +41,17 @@ export async function readClientConfig(directory: string): Promise<ClientConfig>
         },
     );
     if (!handle) {
-        return { schema: "ulvia.client.v1", identities: {} };
+        return { schema: "ulvia.client.v2" };
     }
     try {
         const metadata = await handle.stat();
         if (!metadata.isFile() || metadata.size > 65_536 || (metadata.mode & 0o077) !== 0) {
             throw new Error("Ulvia client configuration must be a private bounded file");
         }
-        const value = JSON.parse(await handle.readFile("utf8")) as ClientConfig;
-        if (
-            !value ||
-            value.schema !== "ulvia.client.v1" ||
-            !value.identities ||
-            typeof value.identities !== "object" ||
-            Array.isArray(value.identities)
-        ) {
-            throw new Error("Invalid Ulvia client configuration");
-        }
-        for (const [name, identity] of Object.entries(value.identities)) {
-            assertIdentityName(name);
-            if (!identity || !isAbsolute(identity.keyFile) || typeof identity.publicKey !== "string") {
-                throw new Error("Invalid saved identity");
-            }
-        }
-        if (value.activeIdentity && !Object.hasOwn(value.identities, value.activeIdentity)) {
-            throw new Error("Active identity is missing");
-        }
-        if (
-            value.repository &&
-            (typeof value.repository.url !== "string" || typeof value.repository.repositoryId !== "string")
-        ) {
-            throw new Error("Invalid saved Repository connection");
-        }
+        const bytes = Buffer.alloc(65_537);
+        const { bytesRead } = await handle.read(bytes, 0, bytes.byteLength, 0);
+        const value = parseStrictJson(bytes.subarray(0, bytesRead), 65_536, 8) as ClientConfig;
+        validateClientConfig(value);
         return value;
     } finally {
         await handle.close();
@@ -89,6 +66,7 @@ export async function updateClientConfig<T>(
     return withRepositoryWriteLock(directory, async () => {
         const config = await readClientConfig(directory);
         const result = await update(config);
+        validateClientConfig(config);
         const temporary = join(directory, `${randomUUID()}.tmp`);
         try {
             await writeFile(temporary, `${JSON.stringify(config, null, 2)}\n`, { flag: "wx", mode: 0o600 });
@@ -100,8 +78,42 @@ export async function updateClientConfig<T>(
     });
 }
 
-export function assertIdentityName(name: string): void {
-    if (!/^[a-z][a-z0-9-]{0,47}$/u.test(name) || name === "constructor" || name === "prototype") {
-        throw new Error("Identity name must be lowercase kebab-case and at most 48 characters");
+function validateClientConfig(value: ClientConfig): void {
+    if (
+        !value ||
+        typeof value !== "object" ||
+        Array.isArray(value) ||
+        value.schema !== "ulvia.client.v2" ||
+        Object.keys(value).some((key) => !["schema", "repository"].includes(key))
+    ) {
+        throw new Error("Invalid Ulvia client configuration");
+    }
+    const saved = value.repository;
+    if (saved === undefined) {
+        return;
+    }
+    if (
+        !saved ||
+        typeof saved !== "object" ||
+        Array.isArray(saved) ||
+        Object.keys(saved).sort().join(",") !== "generation,repositoryId,token,url" ||
+        typeof saved.url !== "string" ||
+        saved.url.length > 2048 ||
+        typeof saved.repositoryId !== "string" ||
+        !/^[A-Za-z0-9._:-]{1,128}$/u.test(saved.repositoryId) ||
+        typeof saved.token !== "string" ||
+        !/^pat_[A-Za-z0-9_-]{43}$/u.test(saved.token) ||
+        typeof saved.generation !== "string" ||
+        !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/u.test(saved.generation)
+    ) {
+        throw new Error("Invalid saved Repository connection");
+    }
+    const url = new URL(saved.url);
+    if (
+        url.origin !== saved.url ||
+        (url.protocol !== "https:" &&
+            !(url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)))
+    ) {
+        throw new Error("Invalid saved Repository origin");
     }
 }

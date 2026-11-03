@@ -102,7 +102,8 @@ document. The MVP's reviewed first-party release assumption is an operational
 trust policy, not a technical publisher allowlist or a sandbox.
 
 Community publication and installation need separate decisions about execution
-authority. A namespace signature proves ownership and integrity, not safety.
+authority. Account-owned namespace authorization and verified release digests
+provide publishing authority and integrity, rather than browser code isolation.
 Static API checks and scoped CSS provide validation and encapsulation only.
 
 Two designs need explicit evaluation before activation:

@@ -10,6 +10,7 @@ import type { MessageLanguage } from "./locale";
 
 export function isOfficialContract(id: string): boolean {
     return [
+        "ulvia.repository",
         "ulvia.cms.access",
         "ulvia.cms.content",
         "ulvia.cms.emailer",

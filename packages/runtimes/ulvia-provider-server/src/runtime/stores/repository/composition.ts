@@ -40,12 +40,6 @@ export function createCollectionAuthoring(
                 return found.bytes instanceof Blob ? found.bytes : new Blob([new Uint8Array(found.bytes)]);
             },
         },
-        new RepositoryPublisher(
-            repositoryUrl,
-            source.id,
-            stores.contractSecrets.repository,
-            stores.db,
-            allowInsecureHttp,
-        ),
+        new RepositoryPublisher(repositoryUrl, source.id, stores.contractSecrets.repository, allowInsecureHttp),
     );
 }

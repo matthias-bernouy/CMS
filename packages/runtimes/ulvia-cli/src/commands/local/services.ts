@@ -12,7 +12,7 @@ import { DEFAULT_STACK_VERSION } from "../../runtime/stack/version";
 
 const SERVICES_HELP = `Usage: ulvia services <start | stop | status | logs>
 
-Manage the shared proxy, MongoDB, Repository, and Provider.`;
+Manage the shared proxy, MongoDB, and Provider.`;
 
 const START_HELP = `Usage: ulvia services start [--version <version>]
 
@@ -79,10 +79,9 @@ function isHelp(args: readonly string[]): boolean {
 
 async function printServicesStatus(paths: UlviaPaths, log: (message: string) => void): Promise<void> {
     const { state, services } = await describeLocalServices(paths);
-    const expected = ["proxy", "mongo", "provider", "repository"];
+    const expected = ["proxy", "mongo", "provider"];
     log(`Shared services: ${allHealthy(expected, services) ? "running" : aggregateStatus(services)}`);
     log(`Provider version: ${state?.images.provider.version ?? "not initialized"}`);
-    log(`Repository version: ${state?.images.repository.version ?? "not initialized"}`);
     for (const name of expected) {
         const service = services.find((candidate) => candidate.service === name);
         log(`${serviceLabel(name)}: ${serviceStatus(service)}`);
@@ -108,10 +107,7 @@ function serviceStatus(service: ComposeServiceState | undefined): string {
 }
 
 function serviceLabel(service: string): string {
-    return (
-        { proxy: "Local proxy", mongo: "MongoDB", provider: "Ulvia Provider", repository: "Repository" }[service] ??
-        service
-    );
+    return { proxy: "Local proxy", mongo: "MongoDB", provider: "Ulvia Provider" }[service] ?? service;
 }
 
 function expectNone(args: readonly string[], usage: string): void {

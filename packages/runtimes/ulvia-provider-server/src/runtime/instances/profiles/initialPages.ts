@@ -7,6 +7,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/access",
         "title": "page.access.name",
         "description": "page.access.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "access",
     },
     {
@@ -14,6 +16,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/collections/detail",
         "title": "page.collection-details.name",
         "description": "page.collection-details.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "collection-details",
     },
     {
@@ -21,6 +25,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/collections/upgrade",
         "title": "page.collection-upgrade.name",
         "description": "page.collection-upgrade.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "collection-upgrade",
     },
     {
@@ -28,6 +34,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/collections",
         "title": "page.collections.name",
         "description": "page.collections.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "collections",
     },
     {
@@ -35,6 +43,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/providers/upgrade",
         "title": "page.contract-upgrade.name",
         "description": "page.contract-upgrade.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "contract-upgrade",
     },
     {
@@ -42,6 +52,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/diagnostics",
         "title": "page.diagnostics.name",
         "description": "page.diagnostics.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "diagnostics",
     },
     {
@@ -49,6 +61,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/files",
         "title": "page.files.name",
         "description": "page.files.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "files",
     },
     {
@@ -56,6 +70,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/observability/detail",
         "title": "page.log-detail.name",
         "description": "page.log-detail.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "log-detail",
     },
     {
@@ -63,6 +79,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/observability",
         "title": "page.observability.name",
         "description": "page.observability.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "observability",
     },
     {
@@ -70,6 +88,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin",
         "title": "page.overview.name",
         "description": "page.overview.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "overview",
     },
     {
@@ -77,6 +97,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/pages/detail",
         "title": "page.page-details.name",
         "description": "page.page-details.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "page-details",
     },
     {
@@ -84,6 +106,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/pages/edit",
         "title": "page.page-editor.name",
         "description": "page.page-editor.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "page-editor",
     },
     {
@@ -91,6 +115,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/pages",
         "title": "page.pages.name",
         "description": "page.pages.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "pages",
     },
     {
@@ -98,6 +124,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/providers/access",
         "title": "page.provider-access.name",
         "description": "page.provider-access.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "provider-access",
     },
     {
@@ -105,6 +133,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/providers/connect",
         "title": "page.provider-connect.name",
         "description": "page.provider-connect.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "provider-connect",
     },
     {
@@ -112,6 +142,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/providers",
         "title": "page.providers.name",
         "description": "page.providers.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "providers",
     },
     {
@@ -119,6 +151,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/admin/settings",
         "title": "page.settings.name",
         "description": "page.settings.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "settings",
     },
     {
@@ -126,6 +160,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/confirm-email",
         "title": "page.confirm-email.name",
         "description": "page.confirm-email.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "confirm-email",
     },
     {
@@ -133,6 +169,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/login",
         "title": "page.login.name",
         "description": "page.login.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "login",
     },
     {
@@ -140,6 +178,8 @@ export const initialPages: OfficialInstanceProfile["initialPages"] = [
         "path": "/reset-password",
         "title": "page.reset-password.name",
         "description": "page.reset-password.description",
+        "collectionId": "ulvia-official",
+        "indexing": false,
         "exampleId": "reset-password",
     },
 ];

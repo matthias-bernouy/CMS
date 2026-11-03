@@ -1,28 +1,21 @@
-import type { UlviaPaths } from "../../runtime/paths";
-import { assertImageVersion } from "../../runtime/stack/orchestration/images";
-import { repositoryLifecycle } from "../../runtime/stack/repository/lifecycle";
 import { clientConfigDirectory, readClientConfig, updateClientConfig } from "../../runtime/repository/config";
+import { readRepositoryToken } from "../../runtime/repository/token";
 import { loginRepository } from "../../runtime/repository/connection";
-import { repositoryDeploymentCommand, repositoryOptions } from "../namespace/deployment";
 
 const HELP = `Usage:
-  ulvia repository login <url> [--identity <name>]
+  ulvia repository login <url> [--token-stdin]
   ulvia repository logout
-  ulvia repository <start | stop | status>
-  ulvia repository start [--version <version>] [--port <port>]
-  ulvia repository upgrade --version <version>
-  ulvia repository configure [--port <port>] [--tls <local | external | acme>] [--public-url <url>] [--acme-email <email>]
 
-One default Repository deployment, with independent persistent data and image pins.
-Login verifies and saves the Repository identity; writes are signed locally.
-TLS can use an external reverse proxy or a dedicated ACME proxy on ports 80/443.
-No Provider, Edge or database is started. Upgrades require a published version.`;
+Login verifies and saves a PAT pinned to the Repository origin and identity.
+Provide it through ULVIA_REPOSITORY_TOKEN or bounded stdin; never as an argument.
+Deploy a Repository with: ulvia instance create registry --profile ulvia.repository@1.0.0.
+It uses the normal Edge, Provider and Mongo deployment.`;
 
-export async function standaloneRepositoryCommand(
+export async function repositoryConnectionCommand(
     args: readonly string[],
-    paths: UlviaPaths,
     log: (message: string) => void,
     environment: Record<string, string | undefined>,
+    stdin?: ReadableStream<Uint8Array>,
 ): Promise<void> {
     if (!args.length || args.includes("--help") || args[0] === "help") {
         log(HELP);
@@ -31,13 +24,19 @@ export async function standaloneRepositoryCommand(
     const [action, ...rest] = args;
     const directory = clientConfigDirectory(environment);
     if (action === "login") {
-        const values = repositoryOptions(rest.slice(1), ["--identity"]);
-        if (!rest[0]) {
+        if (!rest[0] || rest.length > 2 || (rest.length === 2 && rest[1] !== "--token-stdin")) {
             throw new Error(HELP);
         }
-        const id = await loginRepository(directory, rest[0], values.get("--identity"));
+        const token =
+            rest[1] === "--token-stdin"
+                ? await readRepositoryToken(stdin ?? Bun.stdin.stream())
+                : environment.ULVIA_REPOSITORY_TOKEN?.trim();
+        if (!token) {
+            throw new Error("Provide a Repository PAT through ULVIA_REPOSITORY_TOKEN or --token-stdin");
+        }
+        const id = await loginRepository(directory, rest[0], token);
         log(
-            `Repository connection saved: ${(await readClientConfig(directory)).repository!.url} (${id}). Writes use local owner keys.`,
+            `Repository connection saved: ${(await readClientConfig(directory)).repository!.url} (${id}). Writes use the authenticated Repository account.`,
         );
         return;
     }
@@ -45,31 +44,8 @@ export async function standaloneRepositoryCommand(
         await updateClientConfig(directory, async (config) => {
             delete config.repository;
         });
-        log("Repository connection removed. Local identities retained.");
+        log("Repository connection and stored PAT removed. The remote PAT is not revoked.");
         return;
     }
-    if (action === "configure") {
-        await repositoryDeploymentCommand(rest, paths, log);
-        return;
-    }
-    if (!["start", "stop", "status", "upgrade"].includes(action!)) {
-        throw new Error(HELP);
-    }
-    const values = repositoryOptions(rest, ["--version", "--port"]);
-    const version = values.get("--version");
-    const rawPort = values.get("--port");
-    if (version) {
-        assertImageVersion(version);
-    }
-    const port = rawPort === undefined ? undefined : Number(rawPort);
-    if (port !== undefined && (!/^\d+$/u.test(rawPort!) || !Number.isSafeInteger(port) || port < 1 || port > 65535)) {
-        throw new Error("Repository port must be an integer between 1 and 65535");
-    }
-    if (
-        (action === "upgrade" && (!version || port !== undefined)) ||
-        ((action === "stop" || action === "status") && rest.length)
-    ) {
-        throw new Error(HELP);
-    }
-    await repositoryLifecycle(paths, action as "start" | "stop" | "status" | "upgrade", { version, port }, log);
+    throw new Error(HELP);
 }

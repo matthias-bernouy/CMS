@@ -61,9 +61,6 @@
             "cms-edge-server/*": [
                 "../../packages/runtimes/cms-edge-server/src/*"
             ],
-            "official-repository-server/*": [
-                "../../packages/runtimes/official-repository-server/src/*"
-            ],
             "ulvia-cli/*": [
                 "../../packages/runtimes/ulvia-cli/src/*"
             ],

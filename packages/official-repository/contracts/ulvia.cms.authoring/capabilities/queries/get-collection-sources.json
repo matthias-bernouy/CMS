@@ -1,6 +1,6 @@
 {
     "id": "get-collection-sources",
-    "description": "Read the private source snapshot of a collection owned by this instance publication identity.",
+    "description": "Read the private source snapshot of a collection owned by the configured Repository account.",
     "access": "admin",
     "behavior": {
         "effect": "query",
@@ -96,7 +96,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "authoring_get_collection_sources",
-                "description": "Read the private source snapshot of a collection owned by this instance publication identity."
+                "description": "Read the private source snapshot of a collection owned by the configured Repository account."
             }
         }
     ],

@@ -3,6 +3,7 @@ import {
     NamespaceAccessError,
     type CollectionAuthoring,
 } from "@bernouy/cms-repository/repository/authoring";
+import { RepositoryRequestError } from "@bernouy/cms-repository/repository/publication";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
 
 export function registerCollectionAuthoringCapabilities(
@@ -10,9 +11,10 @@ export function registerCollectionAuthoringCapabilities(
     authoring?: CollectionAuthoring,
 ) {
     for (const id of [
-        "get-identity",
+        "get-connection",
+        "configure-connection",
+        "disconnect-connection",
         "list-namespaces",
-        "track-namespace",
         "claim-namespace",
         "prepare-collection",
         "publish-collection",
@@ -30,11 +32,14 @@ export function registerCollectionAuthoringCapabilities(
                     case "list-namespaces":
                         result = await authoring.listNamespaces(request);
                         break;
-                    case "track-namespace":
-                        result = await authoring.trackNamespace(required(request.namespace));
+                    case "get-connection":
+                        result = await authoring.connectionStatus();
                         break;
-                    case "get-identity":
-                        result = await authoring.identity();
+                    case "configure-connection":
+                        result = await authoring.configureConnection(required(request.token));
+                        break;
+                    case "disconnect-connection":
+                        result = await authoring.disconnectConnection();
                         break;
                     case "claim-namespace":
                         result = await authoring.claim(required(request.namespace));
@@ -76,7 +81,7 @@ export function registerCollectionAuthoringCapabilities(
                 }
                 return result;
             } catch (error) {
-                if (error instanceof NamespaceAccessError) {
+                if (error instanceof NamespaceAccessError || error instanceof RepositoryRequestError) {
                     throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
                 }
                 throw error;

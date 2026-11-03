@@ -15,11 +15,11 @@ Ulvia CMS installation runtime.
 ## Rules
 
 - CLI commands, help text, errors, and tests are written in English.
-- Keep Repository and Provider management endpoints bound to loopback; expose
+- Keep Provider management endpoints bound to loopback; expose
   only the shared proxy according to the persistent installation configuration.
 - Never print session secrets, encryption keys, or infrastructure credentials.
 - Keep external process invocation behind the runtime process abstraction.
-- Lifecycle commands must never start the Edge, Provider, Repository, or MongoDB directly;
+- Lifecycle commands must never start the Edge, Provider, or MongoDB directly;
   it only manages their production-shaped containers.
 - `release` reads an explicit authored resource folder and dispatches by its
   `definition.json` kind: collection, contract, or provider-manifest. It stores
@@ -56,31 +56,33 @@ Ulvia CMS installation runtime.
 - Before storing a collection release, validate namespaced CSS variable
   references against its local tokens, selective dependency imports and
   Bloc-owned custom-property declarations.
-- The local Repository serves only stored releases on loopback; it must never read authored folders.
+- Local release storage contains admitted immutable releases; publishing must never serve authored folders directly.
 - `push` infers one local release kind from its coordinate; an explicit kind
   resolves collisions. `push all` sends every non-yanked local cached release,
   ordered by contract dependencies, then providers and collection dependencies.
-  Validate all local artifacts and namespace keys before the first upload. Stop
+  Validate all local artifacts and account namespace credentials before the first upload. Stop
   on failure; exact retries are idempotent and the batch is not transactional.
   `pull` transfers one explicitly typed exact release.
   Re-admit remote bytes locally and let the receiving repository re-run all
   publication and evolution rules. Never trust a remote digest without
   recomputing it.
-- Repository writes use Ed25519 namespace owner credentials, including official
-  publishers. Persist local identities and the active Repository connection;
-  configuration contains public keys and private file references only. Push
-  metadata first, stream separately signed assets and finish with an idempotent
-  commit. Preserve write serialization, durable replay rejection, abandoned-session
-  cleanup and artifact-last atomic visibility. Ed25519 owner proofs are the only
-  publication authentication; never reintroduce operator-token/HMAC support.
-  Namespace key files are private, bounded regular files, opened without following
-  symlinks. Never expose private keys to the Repository or tool arguments.
-- `repository` lifecycle commands manage one default Repository deployment and
-  pinned published images without a deployment name. Keep their volumes separate
-  from shared services. Do not support historical states or named deployments.
-  Deployment network configuration is independent of local client identities.
-  All namespaces, including official publishers, use public first claim.
-  Never replace ownership or recover revoked/lost keys during startup.
+- Repository writes use ordinary CMS personal access tokens and account-owned
+  namespaces, including official publishers. Persist one private, bounded
+  `ulvia.client.v2` connection pinned to its origin and Repository identity.
+  Login reads a PAT from the environment or bounded stdin, never a command-line
+  argument. Refuse redirects and cross-origin credential forwarding. Re-read the
+  saved generation before each protected request so logout or replacement
+  invalidates active credential resolvers. Never silently generate credentials.
+  Push metadata first, stream separately verified assets and finish with an
+  idempotent commit. Preserve bounded transfers and artifact-last atomic visibility.
+- Deploy Repository as an ordinary named CMS instance with an explicit application
+  profile. `repository` commands manage client PAT connections only. Do not add a
+  standalone runtime, image, Compose service or lifecycle forwarding alias.
+  The Provider advertises supported exact profile references through its protected
+  operator endpoint; the CLI persists the selected reference without duplicating
+  the profile catalogue. A profile update must retain its application ID and only
+  persist after the Provider acknowledges the exact target. Image updates retain
+  Provider data and credentials; never reassign namespace ownership at startup.
 - A yank is reversible repository metadata. It removes a release from new
   catalogue resolution without deleting immutable bytes or breaking historical
   exact-coordinate reads.
@@ -91,7 +93,7 @@ Ulvia CMS installation runtime.
   `@bernouy/cms-repository/collections/build`; do not retain CLI forwarding files
   merely to preserve obsolete internal paths.
 
-- Compile contract `docs/**/*.md` into a generated manifest plus separate signed
+- Compile contract `docs/**/*.md` into a generated manifest plus separate digest-verified
   assets. Require one real H1 per document; paths identify documents. Preserve
   exact bytes through bootstrap, release, push and pull. Reject authored
   manifests, source symlinks and dangling capability or internal document links.

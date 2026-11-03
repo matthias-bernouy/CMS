@@ -1,17 +1,15 @@
 import { join } from "node:path";
 
-type Component = "edge" | "provider" | "repository";
+type Component = "edge" | "provider";
 
 const REPOSITORIES: Record<Component, string> = {
     edge: "docker.io/cyaxis/ulvia-edge",
     provider: "docker.io/cyaxis/ulvia-provider",
-    repository: "docker.io/cyaxis/ulvia-official-repository",
 };
 
 const DOCKERFILES: Record<Component, string> = {
     edge: "infra/images/edge/Dockerfile",
     provider: "infra/images/provider/Dockerfile",
-    repository: "infra/images/official-repository/Dockerfile",
 };
 
 const [action, ...args] = Bun.argv.slice(2);
@@ -66,7 +64,7 @@ function parseOptions(args: readonly string[]): Readonly<{ version: string; comp
     if (
         !version ||
         !/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/u.test(version) ||
-        !["all", "edge", "provider", "repository"].includes(component) ||
+        !["all", "edge", "provider"].includes(component) ||
         positional.length > 1
     ) {
         throw new Error(usage());
@@ -91,5 +89,5 @@ async function command(args: readonly string[], inherit = true): Promise<string>
 }
 
 function usage(): string {
-    return "Usage: bun run infra/images/build.ts <build | publish> --version <version> [edge | provider | repository | all]";
+    return "Usage: bun run infra/images/build.ts <build | publish> --version <version> [edge | provider | all]";
 }

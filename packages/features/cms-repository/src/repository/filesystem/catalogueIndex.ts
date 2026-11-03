@@ -8,7 +8,7 @@ import { LocalArtifactFiles } from "./artifacts/files";
 import { LocalContractReleases } from "./contracts";
 import { LocalProviderReleases } from "./providers";
 import { LocalRepositoryYanks } from "./yanks";
-import { compareCatalogueKeys } from "./core/catalogueOrder";
+import { compareCatalogueKeys } from "./core/catalogue";
 
 export type RepositoryCatalogueType = "collections" | "contracts" | "providers";
 export type RepositoryCatalogueEntry = Readonly<Record<string, unknown>>;

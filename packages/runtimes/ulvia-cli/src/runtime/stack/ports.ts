@@ -1,19 +1,16 @@
 export type ServicePorts = Readonly<{
     http: number;
-    repository: number;
     provider: number;
 }>;
 
 const DEFAULT_PORTS: ServicePorts = Object.freeze({
     http: 5100,
-    repository: 5102,
     provider: 5103,
 });
 
 export function resolveServicePorts(environment: Record<string, string | undefined>): ServicePorts {
     const ports: ServicePorts = {
         http: readPort(environment, "ULVIA_HTTP_PORT", DEFAULT_PORTS.http),
-        repository: readPort(environment, "ULVIA_REPOSITORY_PORT", DEFAULT_PORTS.repository),
         provider: readPort(environment, "ULVIA_PROVIDER_PORT", DEFAULT_PORTS.provider),
     };
     if (new Set(Object.values(ports)).size !== Object.values(ports).length) {

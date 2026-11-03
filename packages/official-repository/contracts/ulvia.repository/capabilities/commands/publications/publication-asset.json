@@ -1,0 +1,153 @@
+{
+    "id": "publication-asset",
+    "description": "publication-asset",
+    "access": "authenticated",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "natural",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "uploadId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 36,
+                "format": "uuid"
+            },
+            "assetId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+            },
+            "bytes": {
+                "type": "binary",
+                "maxBytes": 104857600
+            },
+            "namespaceRevision": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "contentDigest": {
+                "type": "string",
+                "minLength": 71,
+                "maxLength": 71
+            }
+        },
+        "required": ["namespace", "uploadId", "assetId", "bytes", "namespaceRevision", "contentDigest"]
+    },
+    "output": {
+        "type": "null"
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "ACTOR_UNAVAILABLE",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "PUT",
+            "path": "/v1/uploads/{uploadId}/assets/{assetId}",
+            "input": {
+                "path": {
+                    "uploadId": "uploadId",
+                    "assetId": "assetId"
+                },
+                "headers": {
+                    "x-repository-namespace": {
+                        "property": "namespace",
+                        "encoding": "uri-component"
+                    },
+                    "x-repository-namespace-revision": {
+                        "property": "namespaceRevision",
+                        "encoding": "uri-component"
+                    },
+                    "x-repository-content-digest": {
+                        "property": "contentDigest",
+                        "encoding": "uri-component"
+                    }
+                },
+                "body": {
+                    "binaryProperty": "bytes"
+                }
+            },
+            "response": {
+                "successStatuses": [204],
+                "contentTypes": [],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503,
+                    "ACTOR_UNAVAILABLE": 403
+                }
+            }
+        }
+    ],
+    "docs": ["overview.md"]
+}
