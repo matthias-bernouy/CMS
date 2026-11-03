@@ -17,8 +17,7 @@ const BOOTSTRAP = join(import.meta.dir, "../../../../packages/runtimes/ulvia-cli
 type BootstrapIndex = {
     contracts: string[];
     provider: string;
-    collection: string;
-    collectionAssets: { id: string; path: string }[];
+    collections: { release: string; assets: { id: string; path: string }[] }[];
 };
 
 /** Uses the complete generated official release, including browser assets and examples. */
@@ -38,11 +37,19 @@ export async function repositoryFixture() {
         }),
     );
     await publishContractSet(contracts, admissions);
-    const artifact = await admitCollectionReleaseJson(
-        await Bun.file(join(BOOTSTRAP, definition.collection)).text(),
-        definition.collectionAssets.map(({ id, path }) => ({ id, bytes: Bun.file(join(BOOTSTRAP, path)) })),
-        { contracts },
+    const collections = await Promise.all(
+        definition.collections.map(async ({ release, assets }) =>
+            admitCollectionReleaseJson(
+                await Bun.file(join(BOOTSTRAP, release)).text(),
+                assets.map(({ id, path }) => ({ id, bytes: Bun.file(join(BOOTSTRAP, path)) })),
+                { contracts },
+            ),
+        ),
     );
+    const artifact = collections.find(({ release }) => release.collectionId === "ulvia-official");
+    if (!artifact) {
+        throw new Error("Repository performance fixture requires the official collection");
+    }
     const root = await mkdtemp(join(tmpdir(), "ulvia-repository-performance-"));
     try {
         const files = new LocalArtifactFiles(root);
