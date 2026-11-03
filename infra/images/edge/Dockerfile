@@ -1,6 +1,6 @@
 # Ulvia Edge image. Build context: workspace root.
 
-FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS build
+FROM oven/bun:1.4.4-alpine@sha256:4cf82f5686b196504fe119db3fcd9185b191f82ece82c40680e597228ec6070a AS build
 
 WORKDIR /app
 COPY package.json bun.lock tsconfig.base.json tsconfig.json build.ts ./
@@ -12,7 +12,7 @@ RUN bunx tsc --build packages/runtimes/cms-edge-server
 FROM build AS runtime-source
 RUN rm -rf /app/node_modules /app/packages/*/node_modules /app/packages/*/*/node_modules
 
-FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS runtime
+FROM oven/bun:1.4.4-alpine@sha256:4cf82f5686b196504fe119db3fcd9185b191f82ece82c40680e597228ec6070a AS runtime
 
 ARG IMAGE_VERSION=dev
 ARG VCS_REF=unknown

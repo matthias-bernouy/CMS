@@ -17,7 +17,7 @@
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
-        "playwright": "^1.63.0",
+        "playwright": "^1.64.1",
         "@bernouy/cms-observability": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*"
     },

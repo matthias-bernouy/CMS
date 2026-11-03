@@ -1,10 +1,12 @@
-import { DomUtils, parseDocument } from "htmlparser2";
+import { parseDocument } from "htmlparser2";
 
 export type MarkupTree = ReturnType<typeof parseDocument>;
 export type MarkupNode = MarkupTree["children"][number];
 export type MarkupElement = Extract<MarkupNode, { attribs: Record<string, string> }>;
 
-export const isElement = DomUtils.isTag;
+export function isElement(node: MarkupNode): node is MarkupElement {
+    return node.type === "tag" || node.type === "script" || node.type === "style";
+}
 
 /** HTML structure only: this does not compile bindings, CSS, or browser execution. */
 export function markupTree(source: string): MarkupTree {

@@ -52,12 +52,12 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
-        "canonicalize": "^3.0.0",
+        "canonicalize": "^5.1.0",
         "css-tree": "^3.2.1",
-        "htmlparser2": "^10.1.0",
+        "htmlparser2": "^12.0.0",
         "jsonc-parser": "^3.3.1",
-        "linkedom": "^0.18.13",
-        "marked": "^18.1.2",
+        "linkedom": "^0.18.15",
+        "marked": "^18.1.3",
         "@bernouy/text-search": "workspace:*"
     },
     "peerDependencies": {
@@ -65,7 +65,7 @@
         "typescript": "^7.0.2"
     },
     "devDependencies": {
-        "@types/css-tree": "^2.3.10",
+        "@types/css-tree": "^3.2.0",
         "@bernouy/text-embeddings": "workspace:*"
     },
     "scripts": {

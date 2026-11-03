@@ -8,7 +8,8 @@ test("Provider image contains only the stateful Provider runtime", async () => {
     const dockerfile = await readFile(resolve(root, "infra/images/provider/Dockerfile"), "utf8");
 
     expect(dockerfile).toContain('org.opencontainers.image.title="Ulvia Provider"');
-    expect(dockerfile).toContain("oven/bun:1.4.2-debian@sha256:");
+    const bunVersion = (await readFile(resolve(root, ".bun-version"), "utf8")).trim();
+    expect(dockerfile).toContain(`oven/bun:${bunVersion}-debian@sha256:`);
     expect(dockerfile).toContain("libgomp1");
     expect(dockerfile).toContain("--filter=@bernouy/ulvia-provider-server");
     expect(dockerfile).toContain("/var/lib/cms/files");

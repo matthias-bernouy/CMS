@@ -112,7 +112,7 @@ From the workspace:
 
 ```bash
 bun run build:browser
-bunx playwright@1.63.0 install chromium
+bunx playwright@1.64.1 install chromium
 bun run ulvia -- preview /path/to/collection --output /path/to/new-output --locale fr --theme-mode dark --serve
 ```
 

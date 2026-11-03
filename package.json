@@ -2,9 +2,9 @@
     "name": "@bernouy/cms-workspace",
     "private": true,
     "license": "MIT",
-    "packageManager": "bun@1.4.2",
+    "packageManager": "bun@1.4.4",
     "engines": {
-        "bun": "1.4.2"
+        "bun": "1.4.4"
     },
     "workspaces": [
         "packages/foundation/*",
@@ -59,14 +59,14 @@
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/ulvia-cli": "workspace:*",
-        "@biomejs/biome": "2.5.14",
-        "@types/bun": "1.4.2",
+        "@biomejs/biome": "2.6.4",
+        "@types/bun": "1.4.4",
         "@typescript/typescript6": "6.0.2",
-        "bun-types": "1.4.2",
+        "bun-types": "1.4.4",
         "image-size": "^2.0.4",
-        "knip": "^6.40.0",
-        "mongodb": "^7.6.0",
-        "playwright": "^1.63.0",
+        "knip": "^6.44.1",
+        "mongodb": "^7.8.0",
+        "playwright": "^1.64.1",
         "sharp": "^0.35.5",
         "typescript": "^7.0.2"
     }

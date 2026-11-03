@@ -9,6 +9,7 @@ describe("EditorFrame", () => {
             '<section cms-bloc="fixture-section"><h2 cms-bloc="ulvia-official-heading" slot="heading">Authored</h2></section>',
         );
         const iframe = document.createElement("iframe");
+        iframe.srcdoc = "";
         const highlight = document.createElement("span");
         document.body.append(iframe, highlight);
         iframe.contentDocument!.body.innerHTML =
@@ -37,6 +38,7 @@ describe("EditorFrame", () => {
     test("skips generated components with another identity", () => {
         const source = new EditablePageDocument('<article cms-bloc="fixture-card">Card</article>');
         const iframe = document.createElement("iframe");
+        iframe.srcdoc = "";
         const highlight = document.createElement("span");
         document.body.append(iframe, highlight);
         iframe.contentDocument!.body.innerHTML =
@@ -63,6 +65,7 @@ describe("EditorFrame", () => {
     test("selects a component clicked inside the iframe realm", () => {
         const source = new EditablePageDocument('<h2 cms-bloc="ulvia-official-heading">Authored</h2>');
         const iframe = document.createElement("iframe");
+        iframe.srcdoc = "";
         const highlight = document.createElement("span");
         document.body.append(iframe, highlight);
         iframe.contentDocument!.body.innerHTML = '<h2 cms-bloc="ulvia-official-heading">Rendered</h2>';

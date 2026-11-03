@@ -29,7 +29,7 @@ docker compose version
 bun --version
 ```
 
-The current release toolchain targets Bun 1.4.2 or newer. Docker must be running
+The current release toolchain targets Bun 1.4.4 or newer. Docker must be running
 and accessible to the account that executes `ulvia`.
 
 ## 2. Install The CLI

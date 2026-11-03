@@ -28,14 +28,14 @@
     },
     "devDependencies": {
         "@bernouy/cms-gateway": "workspace:*",
-        "@happy-dom/global-registrator": "^20.14.5",
-        "@types/bun": "1.4.2"
+        "@happy-dom/global-registrator": "^21.0.4",
+        "@types/bun": "1.4.4"
     },
     "dependencies": {
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
-        "linkedom": "^0.18.13"
+        "linkedom": "^0.18.15"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

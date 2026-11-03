@@ -1,6 +1,6 @@
 # Development And Validation
 
-Run workspace commands from the repository root. `package.json` pins Bun 1.4.2.
+Run workspace commands from the repository root. `package.json` pins Bun 1.4.4.
 In a fresh checkout or worktree, install the locked dependencies:
 
 ```bash

@@ -8,7 +8,7 @@ export function documentationChildren(root: string, workspace: string) {
         {
             name: string;
             exitCode: number;
-            signal: string | null;
+            signal: ReturnType<typeof Bun.spawn>["signalCode"];
             nativeCrash: boolean;
             diagnostic?: string;
         }
