@@ -9,7 +9,7 @@ export async function collectionJourney(connection: Connection, cmsUrl: string, 
     const namespace = "documentation-exotic";
     const docs = await call("ulvia.cms.installations", "documentation.search", {
         query: "Préparer une collection, corriger les erreurs puis la publier et l'installer",
-        contractId: "ulvia.cms.repository",
+        contractId: "ulvia.cms.authoring",
     });
     const guide = docs.results.find(
         (item: { reference: { path: string } }) => item.reference.path === "collection-authoring.md",
@@ -18,9 +18,9 @@ export async function collectionJourney(connection: Connection, cmsUrl: string, 
     expect(
         (await call("ulvia.cms.installations", "documentation.get", { reference: guide.reference })).content,
     ).toContain("prepare-collection");
-    await call("ulvia.cms.repository", "claim-namespace", { namespace });
+    await call("ulvia.cms.authoring", "claim-namespace", { namespace });
     const source = JSON.parse(collectionSnapshot(namespace));
-    const invalid = await call("ulvia.cms.repository", "prepare-collection", {
+    const invalid = await call("ulvia.cms.authoring", "prepare-collection", {
         sourceJson: JSON.stringify({ files: [...source.files, { path: "../escape.txt", content: "refuse" }] }),
     });
     expect(invalid.valid).toBe(false);
@@ -45,17 +45,17 @@ export async function collectionJourney(connection: Connection, cmsUrl: string, 
         "Created through MCP",
         'Created through MCP <a href="{{ cms.asset.mcp-kit.notice.txt }}">Download notice</a>',
     );
-    const prepared = await call("ulvia.cms.repository", "prepare-collection", { sourceJson: JSON.stringify(source) });
+    const prepared = await call("ulvia.cms.authoring", "prepare-collection", { sourceJson: JSON.stringify(source) });
     expect(prepared.diagnostics).toEqual([]);
     expect(prepared.valid).toBe(true);
     await restart();
     const publication = { preparationId: prepared.preparationId, expectedDigest: prepared.digest };
-    const published = await call("ulvia.cms.repository", "publish-collection", publication);
+    const published = await call("ulvia.cms.authoring", "publish-collection", publication);
     expect(published.digest).toBe(prepared.digest);
     expect(published.added).toBe(true);
-    expect((await call("ulvia.cms.repository", "publish-collection", publication)).added).toBe(false);
+    expect((await call("ulvia.cms.authoring", "publish-collection", publication)).added).toBe(false);
     await exerciseCollectionCatalogue(call, prepared.digest, false);
-    const sources = await call("ulvia.cms.repository", "get-collection-sources", {
+    const sources = await call("ulvia.cms.authoring", "get-collection-sources", {
         namespace,
         collectionId: "mcp-kit",
         version: "1.0.0",
@@ -63,7 +63,7 @@ export async function collectionJourney(connection: Connection, cmsUrl: string, 
     const retained = JSON.parse(sources.sourceJson);
     expect(retained.assets[0].releaseDigest).toBe(prepared.digest);
     expect(retained.assets[0].fileId).toBeUndefined();
-    const reproduced = await call("ulvia.cms.repository", "prepare-collection", { sourceJson: sources.sourceJson });
+    const reproduced = await call("ulvia.cms.authoring", "prepare-collection", { sourceJson: sources.sourceJson });
     expect(reproduced.digest).toBe(prepared.digest);
     const current = await call("ulvia.cms.installations", "list-collection-installations");
     const target = {
@@ -110,6 +110,6 @@ export async function collectionJourney(connection: Connection, cmsUrl: string, 
     await restart();
     expect(await call("ulvia.cms.installations", "list-collection-installations")).toEqual(installed);
     expect((await fetch(`${cmsUrl}/mcp-regression`)).status).toBe(200);
-    await call("ulvia.cms.repository", "discard-preparation", { preparationId: reproduced.preparationId });
-    await call("ulvia.cms.repository", "discard-preparation", { preparationId: prepared.preparationId });
+    await call("ulvia.cms.authoring", "discard-preparation", { preparationId: reproduced.preparationId });
+    await call("ulvia.cms.authoring", "discard-preparation", { preparationId: prepared.preparationId });
 }

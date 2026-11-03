@@ -50,9 +50,9 @@ integration(
             await exerciseProviders(f, connection.page);
             const namespace = f.id.replaceAll("-", "");
             const publicKey = await exerciseCollections(connection.call, namespace, f.providerName);
-            const namespaces = await connection.call("ulvia.cms.repository", "list-namespaces");
+            const namespaces = await connection.call("ulvia.cms.authoring", "list-namespaces");
             expect(namespaces.items).toContainEqual(expect.objectContaining({ namespace, access: "owned" }));
-            expect((await connection.call("ulvia.cms.repository", "track-namespace", { namespace })).access).toBe(
+            expect((await connection.call("ulvia.cms.authoring", "track-namespace", { namespace })).access).toBe(
                 "owned",
             );
             await exerciseContent(connection.call, f.cmsUrl);
@@ -61,8 +61,8 @@ integration(
             await exerciseObservabilityMcp(connection, logId);
             await f.restartProvider();
             await verifyObservabilityPersistence(await f.providerUrl(), f.instanceToken, logId);
-            expect((await connection.call("ulvia.cms.repository", "get-identity")).publicKey).toBe(publicKey);
-            expect((await connection.call("ulvia.cms.repository", "list-namespaces")).items).toContainEqual(
+            expect((await connection.call("ulvia.cms.authoring", "get-identity")).publicKey).toBe(publicKey);
+            expect((await connection.call("ulvia.cms.authoring", "list-namespaces")).items).toContainEqual(
                 expect.objectContaining({ namespace, access: "owned" }),
             );
             await connection.revoke();

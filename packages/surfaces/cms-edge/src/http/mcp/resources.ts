@@ -38,7 +38,7 @@ export function createAuthoringResources(host: CmsMcpHost) {
                 uri === "ulvia://cms/site-files"
                     ? { contractId: "ulvia.cms.files", path: "site-files.md" }
                     : uri === "ulvia://cms/collection-authoring"
-                      ? { contractId: "ulvia.cms.repository", path: "collection-authoring.md" }
+                      ? { contractId: "ulvia.cms.authoring", path: "collection-authoring.md" }
                       : undefined;
             if (document) {
                 if (!host.invoker.resolveContract) {
@@ -93,7 +93,7 @@ export function createAuthoringResources(host: CmsMcpHost) {
             const result = await host.invoker.invoke({
                 ...context,
                 contractId:
-                    uri === "ulvia://cms/repository-namespaces" ? "ulvia.cms.repository" : "ulvia.cms.installations",
+                    uri === "ulvia://cms/repository-namespaces" ? "ulvia.cms.authoring" : "ulvia.cms.installations",
                 capabilityId:
                     uri === "ulvia://cms/repository-namespaces" ? "list-namespaces" : "list-collection-installations",
                 input: {},

@@ -20,7 +20,7 @@ test("source snapshot builds, publishes over signed HTTP, remains private and in
         const published = await f.authoring.publish(prepared.preparationId, prepared.digest);
         const capability = await Bun.file(
             new URL(
-                "../../../../official-repository/contracts/ulvia.cms.repository/capabilities/commands/publish-collection.json",
+                "../../../../official-repository/contracts/ulvia.cms.authoring/capabilities/commands/publish-collection.json",
                 import.meta.url,
             ),
         ).json();

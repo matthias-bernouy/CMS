@@ -5,7 +5,7 @@ import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { capabilityBindings } from "@bernouy/cms-repository/contracts/bindings";
 
 const allowed = new Set([
-    "ulvia.cms.repository",
+    "ulvia.cms.authoring",
     "ulvia.cms.content",
     "ulvia.cms.files",
     "ulvia.cms.installations",

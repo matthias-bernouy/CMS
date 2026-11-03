@@ -1,80 +1,81 @@
 {
-    "id": "list-namespaces",
-    "description": "List remembered namespaces and verify current ownership live. Follow nextCursor; cached inventory never grants publication rights.",
-    "access": "admin",
+    "id": "list-personal-access-tokens",
+    "description": "List the authenticated account's tokens without their secrets.",
+    "access": "authenticated",
     "behavior": {
+        "sensitive": true,
         "effect": "query",
-        "execution": "sync",
-        "sensitive": true
+        "execution": "sync"
     },
     "input": {
         "type": "object",
-        "properties": {
-            "cursor": {
-                "type": "string",
-                "maxLength": 96
-            },
-            "limit": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 100
-            }
-        },
+        "properties": {},
         "required": []
     },
     "output": {
         "type": "object",
         "properties": {
-            "items": {
+            "tokens": {
                 "type": "array",
-                "maxItems": 100,
                 "items": {
                     "type": "object",
                     "properties": {
-                        "namespace": {
+                        "id": {
                             "type": "string",
                             "minLength": 1,
                             "maxLength": 96
                         },
-                        "repositoryId": {
+                        "name": {
                             "type": "string",
-                            "maxLength": 128
+                            "minLength": 1,
+                            "maxLength": 100
                         },
-                        "access": {
+                        "createdAt": {
                             "type": "string",
-                            "enum": ["owned", "transferred", "revoked", "missing"],
-                            "maxLength": 16
+                            "minLength": 1,
+                            "maxLength": 40,
+                            "format": "date-time"
                         },
-                        "revision": {
-                            "type": "integer",
-                            "minimum": 1,
+                        "expiresAt": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 40,
+                            "format": "date-time",
                             "nullable": true
                         },
-                        "publicKey": {
+                        "lastUsedAt": {
                             "type": "string",
-                            "maxLength": 59,
-                            "nullable": true
-                        },
-                        "checkedAt": {
-                            "type": "string",
-                            "maxLength": 64,
+                            "minLength": 1,
+                            "maxLength": 40,
                             "format": "date-time"
                         }
                     },
-                    "required": ["namespace", "repositoryId", "access", "revision", "publicKey", "checkedAt"]
-                }
-            },
-            "nextCursor": {
-                "type": "string",
-                "maxLength": 96,
-                "nullable": true
+                    "required": ["id", "name", "createdAt", "expiresAt"]
+                },
+                "minItems": 0,
+                "maxItems": 32
             }
         },
-        "required": ["items", "nextCursor"]
+        "required": ["tokens"]
     },
     "errors": [
         {
             "code": "INVALID_INPUT",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "ACTOR_UNAVAILABLE",
             "retryable": false,
             "output": {
                 "type": "object",
@@ -108,28 +109,17 @@
         {
             "id": "http",
             "transport": "http",
-            "method": "QUERY",
-            "path": "/list-namespaces",
-            "input": {
-                "body": true
-            },
+            "method": "GET",
+            "path": "/personal-access-tokens",
             "response": {
                 "successStatuses": [200],
                 "contentTypes": ["application/json"],
                 "errorStatuses": {
                     "INVALID_INPUT": 422,
+                    "ACTOR_UNAVAILABLE": 403,
                     "CORE_UNAVAILABLE": 503
                 }
             }
-        },
-        {
-            "id": "mcp",
-            "transport": "mcp",
-            "tool": {
-                "name": "repository_list_namespaces",
-                "description": "List remembered namespaces and verify current ownership live. Follow nextCursor; cached inventory never grants publication rights."
-            }
         }
-    ],
-    "docs": ["overview.md", "collection-authoring.md"]
+    ]
 }

@@ -28,7 +28,7 @@ export function registerOfficialProviderCapabilities(
     fileWorkspace?: CmsFileWorkspace,
     enabledContractIds?: ReadonlySet<string>,
 ): void {
-    if (enabledContractIds?.has("ulvia.cms.repository")) {
+    if (enabledContractIds?.has("ulvia.cms.authoring")) {
         registerCollectionAuthoringCapabilities(dispatcher, dependencies.collectionAuthoring);
     }
     if (dependencies.observability && enabledContractIds?.has("ulvia.cms.observability")) {

@@ -13,9 +13,9 @@ export async function incompatibleUpgrade(connection: Connection, source: Source
         "blocs/mcp-kit-panel/markup.html",
         '<main><a href="/validation-target#destination">{{ cms.i18n.mcp-kit.link }}</a><slot name="body"></slot></main>',
     );
-    const prepared = await call("ulvia.cms.repository", "prepare-collection", { sourceJson: JSON.stringify(next) });
+    const prepared = await call("ulvia.cms.authoring", "prepare-collection", { sourceJson: JSON.stringify(next) });
     expect(prepared.valid).toBe(true);
-    await call("ulvia.cms.repository", "publish-collection", {
+    await call("ulvia.cms.authoring", "publish-collection", {
         preparationId: prepared.preparationId,
         expectedDigest: prepared.digest,
     });
@@ -40,5 +40,5 @@ export async function incompatibleUpgrade(connection: Connection, source: Source
     );
     expect(await call("ulvia.cms.installations", "list-collection-installations")).toEqual(before);
     expect(await call("ulvia.cms.content", "pages.get", { id: pageId })).toEqual(pageBefore);
-    await call("ulvia.cms.repository", "discard-preparation", { preparationId: prepared.preparationId });
+    await call("ulvia.cms.authoring", "discard-preparation", { preparationId: prepared.preparationId });
 }

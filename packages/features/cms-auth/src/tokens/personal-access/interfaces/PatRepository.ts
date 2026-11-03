@@ -31,7 +31,7 @@ export interface PatRepository {
     /** Verify a presented token: hash-match + not expired + not revoked. `null`
      *  otherwise. Bumps `lastUsedAt` on success. */
     verify(token: string): Promise<PatPrincipal | null>;
-    /** A user's tokens (no secrets) — for the "Access tokens" admin panel. */
+    /** All of one account's tokens, bounded by MAX_PERSONAL_ACCESS_TOKENS; never returns secrets. */
     list(sub: string): Promise<Pat[]>;
     /** Revoke one of a user's tokens by record id. `false` when unknown or not owned by `sub`. */
     revoke(sub: string, id: string): Promise<boolean>;

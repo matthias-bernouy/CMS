@@ -173,7 +173,7 @@
             "id": "mcp",
             "transport": "mcp",
             "tool": {
-                "name": "repository_prepare_collection",
+                "name": "authoring_prepare_collection",
                 "description": "Validate and build a complete collection source snapshot before publishing. Read ulvia://cms/collection-authoring for the source format."
             }
         }

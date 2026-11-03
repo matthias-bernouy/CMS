@@ -1,0 +1,161 @@
+{
+    "id": "create-personal-access-token",
+    "description": "Create a personal access token for the authenticated account. The plaintext secret is returned only once.",
+    "access": "authenticated",
+    "behavior": {
+        "sensitive": true,
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "none"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+            },
+            "expiresAt": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40,
+                "format": "date-time",
+                "nullable": true
+            }
+        },
+        "required": ["name"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "token": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 47,
+                "sensitive": true
+            },
+            "metadata": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 96
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40,
+                        "format": "date-time"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40,
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "lastUsedAt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40,
+                        "format": "date-time"
+                    }
+                },
+                "required": ["id", "name", "createdAt", "expiresAt"]
+            }
+        },
+        "required": ["token", "metadata"]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "ACTOR_UNAVAILABLE",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "TOKEN_LIMIT",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/personal-access-tokens",
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "ACTOR_UNAVAILABLE": 403,
+                    "CORE_UNAVAILABLE": 503,
+                    "TOKEN_LIMIT": 409
+                }
+            },
+            "input": {
+                "body": {
+                    "properties": ["name", "expiresAt"]
+                }
+            }
+        }
+    ]
+}

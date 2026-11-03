@@ -70,20 +70,20 @@ export function collectionSnapshot(namespace: string, macroMarker?: string) {
 
 export async function exerciseCollections(invoke: Call, namespace: string, providerName: string) {
     const call = observeRepositoryCall(invoke);
-    const identity = await call("ulvia.cms.repository", "get-identity");
+    const identity = await call("ulvia.cms.authoring", "get-identity");
     expect(identity.publicKey).toBeString();
-    await call("ulvia.cms.repository", "claim-namespace", { namespace });
+    await call("ulvia.cms.authoring", "claim-namespace", { namespace });
     const marker = `/tmp/${namespace}-macro-must-not-run`;
-    const rejected = await call("ulvia.cms.repository", "prepare-collection", {
+    const rejected = await call("ulvia.cms.authoring", "prepare-collection", {
         sourceJson: collectionSnapshot(namespace, marker),
     });
     expect(rejected.valid).toBe(false);
     expect((await docker(["exec", providerName, "test", "-e", marker], true)).code).not.toBe(0);
-    const prepared = await call("ulvia.cms.repository", "prepare-collection", {
+    const prepared = await call("ulvia.cms.authoring", "prepare-collection", {
         sourceJson: collectionSnapshot(namespace),
     });
     expect(prepared.valid).toBe(true);
-    const published = await call("ulvia.cms.repository", "publish-collection", {
+    const published = await call("ulvia.cms.authoring", "publish-collection", {
         preparationId: prepared.preparationId,
         expectedDigest: prepared.digest,
     });
@@ -105,7 +105,7 @@ export async function exerciseCollections(invoke: Call, namespace: string, provi
     });
     expect(installed.items.some((item: { collectionId: string }) => item.collectionId === "mcp-kit")).toBe(true);
     await exerciseCollectionCatalogue(call, published.digest, true);
-    const sources = await call("ulvia.cms.repository", "get-collection-sources", {
+    const sources = await call("ulvia.cms.authoring", "get-collection-sources", {
         namespace,
         collectionId: "mcp-kit",
         version: "1.0.0",

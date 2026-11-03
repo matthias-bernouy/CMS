@@ -6,6 +6,7 @@ import type {
     NewPat,
 } from "cms-auth/tokens/personal-access/interfaces/PatRepository";
 import { mintPatToken, hashPatToken } from "cms-auth/tokens/personal-access/core/patToken";
+import { MAX_PERSONAL_ACCESS_TOKENS, PersonalAccessTokenLimitError } from "cms-auth/tokens/personal-access/core/limits";
 
 /**
  * In-memory `PatRepository` for dev and tests. Stores only the SHA-256 of each
@@ -14,26 +15,31 @@ import { mintPatToken, hashPatToken } from "cms-auth/tokens/personal-access/core
  * column is the unique lookup key).
  */
 export class InMemoryPatRepository implements PatRepository {
-    private _byId = new Map<string, Pat>();
-    private _idByHash = new Map<string, string>();
+    private readonly subjects = new Map<string, Map<string, { pat: Pat; hash: string }>>();
+    private readonly hashes = new Map<string, { pat: Pat; hash: string }>();
 
     async create(input: NewPat): Promise<{ token: string; pat: Pat }> {
+        const records = this.subjects.get(input.sub) ?? new Map<string, { pat: Pat; hash: string }>();
+        if (records.size >= MAX_PERSONAL_ACCESS_TOKENS) {
+            throw new PersonalAccessTokenLimitError();
+        }
         const token = mintPatToken();
         const pat: Pat = {
             id: randomUUIDv7(),
             sub: input.sub,
             name: input.name,
             createdAt: new Date(),
-            expiresAt: input.expiresAt ?? null,
+            expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
         };
-        this._byId.set(pat.id, pat);
-        this._idByHash.set(hashPatToken(token), pat.id);
-        return { token, pat: { ...pat } };
+        const record = { pat, hash: hashPatToken(token) };
+        records.set(pat.id, record);
+        this.subjects.set(input.sub, records);
+        this.hashes.set(record.hash, record);
+        return { token, pat: structuredClone(pat) };
     }
 
     async verify(token: string): Promise<PatPrincipal | null> {
-        const id = this._idByHash.get(hashPatToken(token));
-        const pat = id ? this._byId.get(id) : undefined;
+        const pat = this.hashes.get(hashPatToken(token))?.pat;
         if (!pat) {
             return null;
         }
@@ -45,19 +51,19 @@ export class InMemoryPatRepository implements PatRepository {
     }
 
     async list(sub: string): Promise<Pat[]> {
-        return [...this._byId.values()].filter((p) => p.sub === sub).map((p) => ({ ...p }));
+        return [...(this.subjects.get(sub)?.values() ?? [])].map(({ pat }) => structuredClone(pat));
     }
 
     async revoke(sub: string, id: string): Promise<boolean> {
-        const pat = this._byId.get(id);
-        if (!pat || pat.sub !== sub) {
+        const records = this.subjects.get(sub);
+        const record = records?.get(id);
+        if (!records || !record) {
             return false;
         }
-        this._byId.delete(id);
-        for (const [h, pid] of this._idByHash) {
-            if (pid === id) {
-                this._idByHash.delete(h);
-            }
+        records.delete(id);
+        this.hashes.delete(record.hash);
+        if (!records.size) {
+            this.subjects.delete(sub);
         }
         return true;
     }

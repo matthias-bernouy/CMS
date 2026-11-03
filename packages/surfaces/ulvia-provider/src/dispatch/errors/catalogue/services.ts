@@ -1,4 +1,8 @@
 export const servicesMessages = {
+    "TOKEN_LIMIT": [
+        "This account has reached its personal access token limit. Revoke an unused token before creating another.",
+        "Ce compte a atteint sa limite de jetons personnels. Révoquez un jeton inutilisé avant d’en créer un autre.",
+    ],
     "ALREADY_EXISTS": [
         "A secret with this name already exists in this namespace.",
         "Un secret portant ce nom existe déjà dans cet espace.",

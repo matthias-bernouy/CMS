@@ -46,7 +46,7 @@ Before recreating a site, inspect installed resources, identify recurring patter
 
 Use [the installations overview](overview.md) for installation and upgrade capabilities. Search for these guides in their owning contracts:
 
-- `ulvia.cms.repository`: "Prepare, publish and install a collection" and "Build a minimal collection source snapshot".
+- `ulvia.cms.authoring`: "Prepare, publish and install a collection" and "Build a minimal collection source snapshot".
 - `ulvia.cms.content`: guides for creating and publishing Pages, verifying drafts, revisions and configuring system pages.
 - `ulvia.cms.files`: the site-files guide for uploads and file management.
 

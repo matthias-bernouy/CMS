@@ -1,5 +1,5 @@
 import { randomUUIDv7 } from "bun";
-import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
+import type { Collection, Db } from "mongodb";
 import type {
     PatRepository,
     Pat,
@@ -7,76 +7,90 @@ import type {
     NewPat,
 } from "cms-auth/tokens/personal-access/interfaces/PatRepository";
 import { mintPatToken, hashPatToken } from "cms-auth/tokens/personal-access/core/patToken";
+import { MAX_PERSONAL_ACCESS_TOKENS, PersonalAccessTokenLimitError } from "cms-auth/tokens/personal-access/core/limits";
 
-/**
- * MongoDB `PatRepository`. One collection (`<prefix>pats`), the record id as
- * `_id`, a unique index on the token `hash` so `verify` is a single lookup.
- * Only the SHA-256 of each token is stored (never the plaintext).
- * `collectionPrefix` isolates a tenant (same convention as `MongoContentRepository`).
- * Call `init()` once at boot to create the unique hash index.
- */
 export type MongoPatConfig = { collectionPrefix?: string };
+type StoredPat = Omit<Pat, "sub"> & { hash: string };
+type PatAccount = { _id: string; tokens: StoredPat[] };
 
-type PatDoc = Omit<Pat, "id"> & { _id: string; hash: string };
-
+/** One bounded document per account; the array-length predicate makes creation quotas atomic. */
 export class MongoPatRepository implements PatRepository {
-    private readonly _prefix: string;
-
-    constructor(
-        private readonly db: Db,
-        config: MongoPatConfig = {},
-    ) {
-        this._prefix = config.collectionPrefix ?? "";
+    private readonly collection: Collection<PatAccount>;
+    constructor(db: Db, config: MongoPatConfig = {}) {
+        this.collection = db.collection(`${config.collectionPrefix ?? ""}personal_access_tokens`);
     }
 
     async init(): Promise<void> {
-        await this.col.createIndex({ hash: 1 }, { unique: true });
-    }
-
-    private get col(): Collection<PatDoc> {
-        return this.db.collection<PatDoc>(this._prefix + "pats");
+        await this.collection.createIndex({ "tokens.hash": 1 }, { unique: true, sparse: true });
     }
 
     async create(input: NewPat): Promise<{ token: string; pat: Pat }> {
         const token = mintPatToken();
-        const doc: PatDoc = {
-            _id: randomUUIDv7(),
+        const record: StoredPat = {
+            id: randomUUIDv7(),
             hash: hashPatToken(token),
-            sub: input.sub,
             name: input.name,
             createdAt: new Date(),
             expiresAt: input.expiresAt ?? null,
         };
-        await this.col.insertOne(doc as OptionalUnlessRequiredId<PatDoc>);
-        return { token, pat: fromDoc(doc) };
+        for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+                await this.collection.updateOne(
+                    { _id: input.sub, [`tokens.${MAX_PERSONAL_ACCESS_TOKENS - 1}`]: { $exists: false } },
+                    { $push: { tokens: record } },
+                    { upsert: true },
+                );
+                return { token, pat: project(input.sub, record) };
+            } catch (error) {
+                if (!error || typeof error !== "object" || !("code" in error) || error.code !== 11000) {
+                    throw error;
+                }
+                const full = await this.collection.countDocuments(
+                    { _id: input.sub, [`tokens.${MAX_PERSONAL_ACCESS_TOKENS - 1}`]: { $exists: true } },
+                    { limit: 1 },
+                );
+                if (full) {
+                    throw new PersonalAccessTokenLimitError();
+                }
+                if (attempt === 2) {
+                    throw error;
+                }
+                // Concurrent first creation may race the unique account key; retry the atomic append.
+            }
+        }
+        throw new Error("Token creation did not complete");
     }
 
     async verify(token: string): Promise<PatPrincipal | null> {
-        // Filter expiry IN the query so an expired (or unknown) token never
-        // matches — no `lastUsedAt` write on a failed verification.
+        const hash = hashPatToken(token);
         const now = new Date();
-        const doc = await this.col.findOneAndUpdate(
-            { hash: hashPatToken(token), $or: [{ expiresAt: null }, { expiresAt: { $gt: now } }] },
-            { $set: { lastUsedAt: now } },
+        const account = await this.collection.findOneAndUpdate(
+            { tokens: { $elemMatch: { hash, $or: [{ expiresAt: null }, { expiresAt: { $gt: now } }] } } },
+            { $set: { "tokens.$.lastUsedAt": now } },
             { returnDocument: "after" },
         );
-        if (!doc) {
-            return null;
-        }
-        return { sub: doc.sub };
+        return account ? { sub: account._id } : null;
     }
 
     async list(sub: string): Promise<Pat[]> {
-        return (await this.col.find({ sub }).sort({ createdAt: 1 }).toArray()).map(fromDoc);
+        const account = await this.collection.findOne({ _id: sub });
+        return (account?.tokens ?? []).map((record) => project(sub, record));
     }
 
     async revoke(sub: string, id: string): Promise<boolean> {
-        const r = await this.col.deleteOne({ _id: id, sub });
-        return r.deletedCount === 1;
+        const previous = await this.collection.findOneAndUpdate(
+            { _id: sub, "tokens.id": id },
+            { $pull: { tokens: { id } } },
+            { returnDocument: "before" },
+        );
+        if (previous?.tokens.length === 1) {
+            await this.collection.deleteOne({ _id: sub, tokens: { $size: 0 } });
+        }
+        return Boolean(previous);
     }
 }
 
-function fromDoc(d: PatDoc): Pat {
-    const { _id, hash: _hash, ...rest } = d;
-    return { id: _id, ...rest };
+function project(sub: string, record: StoredPat): Pat {
+    const { hash: _hash, ...metadata } = record;
+    return { ...metadata, sub };
 }

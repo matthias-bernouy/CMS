@@ -4,7 +4,7 @@ import type { Connection } from "./client";
 
 export async function collectionUpgrade(connection: Connection, cmsUrl: string) {
     const { call } = connection;
-    const sources = await call("ulvia.cms.repository", "get-collection-sources", {
+    const sources = await call("ulvia.cms.authoring", "get-collection-sources", {
         namespace: "documentation-exotic",
         collectionId: "mcp-kit",
         version: "1.0.0",
@@ -14,10 +14,10 @@ export async function collectionUpgrade(connection: Connection, cmsUrl: string) 
     definition.content = JSON.stringify({ ...JSON.parse(definition.content), version: "1.1.0" });
     const markup = source.files.find((file: { path: string }) => file.path === "blocs/mcp-kit-panel/markup.html");
     markup.content = '<article><slot name="body"></slot></article>';
-    const prepared = await call("ulvia.cms.repository", "prepare-collection", { sourceJson: JSON.stringify(source) });
+    const prepared = await call("ulvia.cms.authoring", "prepare-collection", { sourceJson: JSON.stringify(source) });
     expect(prepared.valid).toBe(true);
     expect(prepared.diagnostics).toEqual([]);
-    await call("ulvia.cms.repository", "publish-collection", {
+    await call("ulvia.cms.authoring", "publish-collection", {
         preparationId: prepared.preparationId,
         expectedDigest: prepared.digest,
     });
@@ -110,5 +110,5 @@ export async function collectionUpgrade(connection: Connection, cmsUrl: string) 
         "IDEMPOTENCY_CONFLICT",
     );
     expect(await call("ulvia.cms.installations", "list-collection-installations")).toEqual(after);
-    await call("ulvia.cms.repository", "discard-preparation", { preparationId: prepared.preparationId });
+    await call("ulvia.cms.authoring", "discard-preparation", { preparationId: prepared.preparationId });
 }

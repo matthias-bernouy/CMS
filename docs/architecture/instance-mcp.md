@@ -47,7 +47,7 @@ connection scopes are also future work.
 
 ## Collection workflow
 
-`ulvia.cms.repository` exposes `get-identity`, `claim-namespace`,
+`ulvia.cms.authoring` exposes `get-identity`, `claim-namespace`,
 `prepare-collection`, `publish-collection`, `get-collection-sources` and
 `discard-preparation`, `list-namespaces` and `track-namespace`. The Provider runtime owns an Ed25519 key in a dedicated
 encrypted secret namespace. Tools return the public key only. Namespace claims

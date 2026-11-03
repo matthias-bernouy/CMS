@@ -9,7 +9,7 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
     "ulvia.provider.connections": {
         "connections.configure": "neutral",
     },
-    "ulvia.cms.repository": {
+    "ulvia.cms.authoring": {
         "track-namespace": "neutral",
         "prepare-collection": "neutral",
         "claim-namespace": "neutral",

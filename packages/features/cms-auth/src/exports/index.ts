@@ -28,6 +28,8 @@ export {
     type PublicAuthActionsConfig,
 } from "cms-auth/application/core/public-flows/PublicAuthActions";
 export { validatePatName, AuthValidationError } from "cms-auth/application/core/validation";
+export { personalAccessTokenInput } from "cms-auth/tokens/personal-access/core/input";
+export { MAX_PERSONAL_ACCESS_TOKENS, PersonalAccessTokenLimitError } from "cms-auth/tokens/personal-access/core/limits";
 export {
     signupLocalUser,
     requestEmailVerification,

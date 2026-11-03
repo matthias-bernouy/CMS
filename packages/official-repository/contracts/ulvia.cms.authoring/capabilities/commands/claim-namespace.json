@@ -1,26 +1,63 @@
 {
-    "id": "get-identity",
-    "description": "Read this instance publication public key; private keys remain in the host secret store.",
+    "id": "claim-namespace",
+    "description": "Claim a namespace using this instance signing identity. Existing ownership is preserved.",
     "access": "admin",
     "behavior": {
-        "effect": "query",
+        "effect": "command",
         "execution": "sync",
+        "idempotency": "none",
         "sensitive": true
     },
     "input": {
         "type": "object",
-        "properties": {},
-        "required": []
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        "required": ["namespace"]
     },
     "output": {
         "type": "object",
         "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "revision": {
+                "type": "integer",
+                "minimum": 1
+            },
             "publicKey": {
                 "type": "string",
+                "minLength": 1,
                 "maxLength": 59
+            },
+            "revoked": {
+                "type": "boolean"
+            },
+            "updatedAt": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "format": "date-time"
+            },
+            "action": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16,
+                "enum": ["claim", "rotate", "revoke"]
+            },
+            "previousDigest": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 71,
+                "nullable": true
             }
         },
-        "required": ["publicKey"]
+        "required": ["namespace", "revision", "publicKey", "revoked", "updatedAt", "action", "previousDigest"]
     },
     "errors": [
         {
@@ -58,8 +95,11 @@
         {
             "id": "http",
             "transport": "http",
-            "method": "GET",
-            "path": "/get-identity",
+            "method": "POST",
+            "path": "/claim-namespace",
+            "input": {
+                "body": true
+            },
             "response": {
                 "successStatuses": [200],
                 "contentTypes": ["application/json"],
@@ -73,8 +113,8 @@
             "id": "mcp",
             "transport": "mcp",
             "tool": {
-                "name": "repository_get_identity",
-                "description": "Read this instance publication public key; private keys remain in the host secret store."
+                "name": "authoring_claim_namespace",
+                "description": "Claim a namespace using this instance signing identity. Existing ownership is preserved."
             }
         }
     ],

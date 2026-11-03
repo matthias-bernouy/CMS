@@ -1,59 +1,26 @@
 {
-    "id": "publish-collection",
-    "description": "Publish the exact prepared collection digest and retain its private sources in the Repository. This does not install the release on the site.",
+    "id": "get-identity",
+    "description": "Read this instance publication public key; private keys remain in the host secret store.",
     "access": "admin",
     "behavior": {
-        "effect": "command",
+        "effect": "query",
         "execution": "sync",
-        "idempotency": "none",
         "sensitive": true
     },
     "input": {
         "type": "object",
-        "properties": {
-            "preparationId": {
-                "type": "string",
-                "maxLength": 36
-            },
-            "expectedDigest": {
-                "type": "string",
-                "maxLength": 71
-            }
-        },
-        "required": ["preparationId", "expectedDigest"]
+        "properties": {},
+        "required": []
     },
     "output": {
         "type": "object",
         "properties": {
-            "repositoryId": {
+            "publicKey": {
                 "type": "string",
-                "maxLength": 96
-            },
-            "publisherId": {
-                "type": "string",
-                "maxLength": 96
-            },
-            "collectionId": {
-                "type": "string",
-                "maxLength": 96
-            },
-            "version": {
-                "type": "string",
-                "maxLength": 64
-            },
-            "digest": {
-                "type": "string",
-                "maxLength": 71
-            },
-            "kind": {
-                "type": "string",
-                "maxLength": 16
-            },
-            "added": {
-                "type": "boolean"
+                "maxLength": 59
             }
         },
-        "required": ["repositoryId", "publisherId", "collectionId", "version", "digest", "kind", "added"]
+        "required": ["publicKey"]
     },
     "errors": [
         {
@@ -91,11 +58,8 @@
         {
             "id": "http",
             "transport": "http",
-            "method": "POST",
-            "path": "/publish-collection",
-            "input": {
-                "body": true
-            },
+            "method": "GET",
+            "path": "/get-identity",
             "response": {
                 "successStatuses": [200],
                 "contentTypes": ["application/json"],
@@ -109,8 +73,8 @@
             "id": "mcp",
             "transport": "mcp",
             "tool": {
-                "name": "repository_publish_collection",
-                "description": "Publish the exact prepared collection digest and retain its private sources in the Repository. This does not install the release on the site."
+                "name": "authoring_get_identity",
+                "description": "Read this instance publication public key; private keys remain in the host secret store."
             }
         }
     ],

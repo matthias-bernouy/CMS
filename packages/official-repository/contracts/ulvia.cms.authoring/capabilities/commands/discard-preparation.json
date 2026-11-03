@@ -1,58 +1,31 @@
 {
-    "id": "track-namespace",
-    "description": "Remember an existing namespace owned by this instance signing key. No claim or key transfer is performed.",
+    "id": "discard-preparation",
+    "description": "Discard one local unpublished collection preparation. Published Repository releases are preserved.",
     "access": "admin",
     "behavior": {
         "effect": "command",
         "execution": "sync",
-        "idempotency": "natural",
+        "idempotency": "none",
         "sensitive": true
     },
     "input": {
         "type": "object",
         "properties": {
-            "namespace": {
+            "preparationId": {
                 "type": "string",
-                "minLength": 1,
-                "maxLength": 96
+                "maxLength": 36
             }
         },
-        "required": ["namespace"]
+        "required": ["preparationId"]
     },
     "output": {
         "type": "object",
         "properties": {
-            "namespace": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 96
-            },
-            "repositoryId": {
-                "type": "string",
-                "maxLength": 128
-            },
-            "access": {
-                "type": "string",
-                "enum": ["owned", "transferred", "revoked", "missing"],
-                "maxLength": 16
-            },
-            "revision": {
-                "type": "integer",
-                "minimum": 1,
-                "nullable": true
-            },
-            "publicKey": {
-                "type": "string",
-                "maxLength": 59,
-                "nullable": true
-            },
-            "checkedAt": {
-                "type": "string",
-                "maxLength": 64,
-                "format": "date-time"
+            "discarded": {
+                "type": "boolean"
             }
         },
-        "required": ["namespace", "repositoryId", "access", "revision", "publicKey", "checkedAt"]
+        "required": ["discarded"]
     },
     "errors": [
         {
@@ -91,7 +64,7 @@
             "id": "http",
             "transport": "http",
             "method": "POST",
-            "path": "/track-namespace",
+            "path": "/discard-preparation",
             "input": {
                 "body": true
             },
@@ -108,8 +81,8 @@
             "id": "mcp",
             "transport": "mcp",
             "tool": {
-                "name": "repository_track_namespace",
-                "description": "Remember an existing namespace owned by this instance signing key. No claim or key transfer is performed."
+                "name": "authoring_discard_preparation",
+                "description": "Discard one local unpublished collection preparation. Published Repository releases are preserved."
             }
         }
     ],

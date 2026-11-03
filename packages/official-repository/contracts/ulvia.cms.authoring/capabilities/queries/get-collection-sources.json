@@ -95,7 +95,7 @@
             "id": "mcp",
             "transport": "mcp",
             "tool": {
-                "name": "repository_get_collection_sources",
+                "name": "authoring_get_collection_sources",
                 "description": "Read the private source snapshot of a collection owned by this instance publication identity."
             }
         }

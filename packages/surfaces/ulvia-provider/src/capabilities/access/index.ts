@@ -17,12 +17,14 @@ import {
 } from "./support";
 
 import { registerMcpAccessCapabilities } from "./mcp";
+import { registerPersonalAccessCapabilities } from "./pats";
 
 export function registerAccessCapabilities(
     dispatcher: ProviderCapabilityRegistry,
     dependencies: CmsAccessDependencies,
     gateway: UlviaProviderGateway | undefined,
 ): void {
+    registerPersonalAccessCapabilities(dispatcher, dependencies, gateway);
     registerMcpAccessCapabilities(dispatcher, gateway, dependencies.mcpAuthorization);
     dispatcher.register("ulvia.cms.access", "inspect-actor", async (input, context) => {
         if (context.systemServiceId !== "cms-gateway" || context.subjectId || context.sourceInstallationId) {

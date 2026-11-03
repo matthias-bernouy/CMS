@@ -25,7 +25,7 @@ const WRITE_PERMISSIONS = ["secrets.metadata.read", "secrets.resolve", "secrets.
 const DEFINITIONS = {
     repository: {
         bootstrapKey: "CMS_SECRET_NAMESPACE_REPOSITORY",
-        name: "ulvia.cms.repository",
+        name: "ulvia.cms.authoring",
         permissions: WRITE_PERMISSIONS,
     },
     smtpEmailer: {

@@ -37,7 +37,7 @@ test("invalid collection sources return bounded actionable diagnostics and never
     registerCollectionAuthoringCapabilities(dispatcher, authoring);
     try {
         const result = (await dispatcher.invoke(
-            "ulvia.cms.repository",
+            "ulvia.cms.authoring",
             "prepare-collection",
             { sourceJson: JSON.stringify({ files: [{ path: "../escape", content: "unsafe" }] }) },
             {

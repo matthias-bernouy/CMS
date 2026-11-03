@@ -1,6 +1,6 @@
 {
-    "id": "claim-namespace",
-    "description": "Claim a namespace using this instance signing identity. Existing ownership is preserved.",
+    "id": "publish-collection",
+    "description": "Publish the exact prepared collection digest and retain its private sources in the Repository. This does not install the release on the site.",
     "access": "admin",
     "behavior": {
         "effect": "command",
@@ -11,53 +11,49 @@
     "input": {
         "type": "object",
         "properties": {
-            "namespace": {
+            "preparationId": {
                 "type": "string",
-                "maxLength": 96
+                "maxLength": 36
+            },
+            "expectedDigest": {
+                "type": "string",
+                "maxLength": 71
             }
         },
-        "required": ["namespace"]
+        "required": ["preparationId", "expectedDigest"]
     },
     "output": {
         "type": "object",
         "properties": {
-            "namespace": {
+            "repositoryId": {
                 "type": "string",
-                "minLength": 1,
                 "maxLength": 96
             },
-            "revision": {
-                "type": "integer",
-                "minimum": 1
-            },
-            "publicKey": {
+            "publisherId": {
                 "type": "string",
-                "minLength": 1,
-                "maxLength": 59
+                "maxLength": 96
             },
-            "revoked": {
+            "collectionId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "version": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "digest": {
+                "type": "string",
+                "maxLength": 71
+            },
+            "kind": {
+                "type": "string",
+                "maxLength": 16
+            },
+            "added": {
                 "type": "boolean"
-            },
-            "updatedAt": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 64,
-                "format": "date-time"
-            },
-            "action": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 16,
-                "enum": ["claim", "rotate", "revoke"]
-            },
-            "previousDigest": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 71,
-                "nullable": true
             }
         },
-        "required": ["namespace", "revision", "publicKey", "revoked", "updatedAt", "action", "previousDigest"]
+        "required": ["repositoryId", "publisherId", "collectionId", "version", "digest", "kind", "added"]
     },
     "errors": [
         {
@@ -96,7 +92,7 @@
             "id": "http",
             "transport": "http",
             "method": "POST",
-            "path": "/claim-namespace",
+            "path": "/publish-collection",
             "input": {
                 "body": true
             },
@@ -113,8 +109,8 @@
             "id": "mcp",
             "transport": "mcp",
             "tool": {
-                "name": "repository_claim_namespace",
-                "description": "Claim a namespace using this instance signing identity. Existing ownership is preserved."
+                "name": "authoring_publish_collection",
+                "description": "Publish the exact prepared collection digest and retain its private sources in the Repository. This does not install the release on the site."
             }
         }
     ],

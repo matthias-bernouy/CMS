@@ -19,7 +19,7 @@ export function registerCollectionAuthoringCapabilities(
         "get-collection-sources",
         "discard-preparation",
     ]) {
-        dispatcher.register("ulvia.cms.repository", id, async (input) => {
+        dispatcher.register("ulvia.cms.authoring", id, async (input) => {
             if (!authoring) {
                 throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
             }

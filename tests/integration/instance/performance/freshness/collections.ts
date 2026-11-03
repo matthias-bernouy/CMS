@@ -68,13 +68,13 @@ export async function exerciseCollectionFreshness(connection: Connection, cmsUrl
     );
     const page = cachedPage(cmsUrl, "/cache-collection");
     const initial = await page.warm();
-    await connection.call("ulvia.cms.repository", "claim-namespace", { namespace });
+    await connection.call("ulvia.cms.authoring", "claim-namespace", { namespace });
     // Repository authoring itself is neutral for installed rendering state.
-    const prepared = await connection.call("ulvia.cms.repository", "prepare-collection", {
+    const prepared = await connection.call("ulvia.cms.authoring", "prepare-collection", {
         sourceJson: source(namespace),
     });
     expect(prepared.valid, JSON.stringify(prepared)).toBe(true);
-    await connection.call("ulvia.cms.repository", "publish-collection", {
+    await connection.call("ulvia.cms.authoring", "publish-collection", {
         preparationId: prepared.preparationId,
         expectedDigest: prepared.digest,
     });
