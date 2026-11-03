@@ -204,8 +204,8 @@ remain [open work](../TODO.md#backup-and-operational-recovery).
 | Command | Purpose |
 | --- | --- |
 | `bun run check:all` | Architecture, UI contracts, repository shape, style, workspace types, dead code and tooling types. |
-| `bun run verify` | Run static checks, build browser assets, regenerate official bootstrap artifacts and run the Bun test suite. |
-| `bun run verify:full` | Run `verify`, then exercise the complete local Edge browser journey. |
+| `bun run verify` | Run static checks, build browser assets, regenerate official bootstrap artifacts, run the Bun test suite and check performance budgets. |
+| `bun run verify:full` | Run `verify`, then the complete local Edge browser journey and Docker delivery performance budgets. |
 | `bun run check:dead-code` | Report unused declarations, exports, exported types and package dependencies. |
 | `bun run check:logging` | Reject server-side `console` references and unstable logger event names outside approved presentation boundaries. |
 | `bun run check:style` | Read-only Biome check. |
@@ -227,15 +227,15 @@ journey is in scope. Browser/network integration tests require an environment
 that permits Chromium and local listeners.
 
 The fresh-install Edge smoke test additionally requires Docker Compose and
-Chromium. It builds the three runtime images from the current checkout using
+Chromium. It builds the Edge and Provider images from the current checkout using
 the local tag `0.1.0-edge-smoke`, validates their OCI labels and immutable
-repository digests, and prepares those image pins plus the admitted official
-and fixture catalogue in an isolated temporary CLI data directory. All service
-credentials, Provider instances and CMS site data are created by the normal
+repository digests, and prepares the admitted official and fixture catalogue
+in an isolated temporary CLI data directory. Installation state, image pins,
+service credentials, Provider instances and CMS site data are created by the normal
 CLI flow. Nothing is pushed to a registry. Local image manifests must be
 available by digest (for example with Docker's containerd image store).
 
-To reuse an already built matching trio, set
+To reuse an already built matching pair, set
 `ULVIA_SMOKE_IMAGE_VERSION=<local-version>` explicitly. This skips image builds
 but still verifies each component, stack API, version and digest. Without that
 override, `bun run verify:full` builds and tests the candidate source directly.

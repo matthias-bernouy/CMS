@@ -26,8 +26,8 @@ release; a child cannot reinterpret those references.
 The CLI compiler generates `documentation` metadata with path, title, byte
 length and SHA-256 digest. The contract digest includes this manifest and its
 capability links. Text is a separate asset identified by `docs/<path>` in the
-signed publication protocol. Full bundle admission verifies UTF-8, Markdown,
-exact byte sets, sizes, hashes and internal document links before publication.
+account-authorized publication protocol. Full bundle admission verifies UTF-8,
+Markdown, exact byte sets, sizes, hashes and internal document links before publication.
 Internal links stay inside `docs/` and must target included Markdown documents.
 V1 does not package local images or validate heading fragments. External links
 are source text and are never fetched by search or admission.
@@ -125,7 +125,7 @@ cache. An explicitly configured model directory always requires local files.
 See [model packaging](../../infra/models/README.md) for preparation, build caches
 and offline tests. Hybrid retrieval still requires model loading and corpus embedding.
 
-The Provider and Repository images use a pinned Bun Debian base and `libgomp1`
+The Provider image uses a pinned Bun Debian base and `libgomp1`
 for ONNX's native CPU bindings. Edge retains its Alpine image. Docker
 image execution must be checked separately from a successful macOS model run.
 

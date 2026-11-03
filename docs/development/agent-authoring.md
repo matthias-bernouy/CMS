@@ -14,7 +14,7 @@ references. A purely declarative collection is valid; JavaScript is optional.
 files into a temporary directory, restricts imports through its boundary plugin,
 and builds a browser runtime against the declared ABI. Static forbidden-API and
 markup/style policies are admission checks, not an OS sandbox or proof that
-arbitrary JavaScript is harmless. The Repository server never executes an
+arbitrary JavaScript is harmless. Repository publication never executes an
 author's build scripts or arbitrary test commands.
 
 Existing collection tests cover admission, styles, assets, dependency graphs,
@@ -34,7 +34,7 @@ contract does not execute a provider or certify its behavior.
 ## Recommended agent workflow today
 
 1. Give the agent a source-only Git worktree and read-only admitted dependencies.
-   Keep namespace signing keys and production credentials in a separate host.
+   Keep Repository PATs and production credentials in a separate host.
    Start from a declarative collection unless behavior is actually needed.
 2. Author `definition.json`, recursive Bloc folders, translations, texts, themes
    and immutable assets using current collection conventions. Run the explicit
@@ -45,10 +45,10 @@ contract does not execute a provider or certify its behavior.
 4. Review release digest, browser-risk summary, dependency pins, resource usage and
    declared exports. Run normal workspace verification; use the complete Edge
    journey when installation/rendering is affected.
-5. Promote the exact reviewed local artifact. An authorized signer claims or
+5. Promote the exact reviewed local artifact. An authenticated publisher claims or
    uses its namespace and pushes the already admitted metadata/assets. Agents
    without publication authority may prepare the artifact and verification
-   evidence but cannot mint an owner signature.
+   evidence; publication requires an owning account's PAT.
 
 No generic authoring sandbox or collection-authored test DSL is implemented.
 Instance MCP uses fixed collection compilation entrypoints; it does not accept
@@ -59,11 +59,12 @@ arbitrary build commands.
 The shared compiler extraction and bounded source preparation are implemented.
 The [Instance MCP V1](../architecture/instance-mcp.md) guide documents the exact
 tools, OAuth connection, source snapshot format and explicit publication /
-installation workflow. The Repository is HTTP-only. Agents connect to their CMS
-instance; the host retains namespace signing credentials.
+installation workflow. Registry capabilities are HTTP-only. Agents connect to
+their CMS instance; the host retains the Repository PAT in its encrypted
+authoring secrets.
 
 Persistent source workspaces, disposable preview workers, collection-authored
 browser scenarios and packaged skills remain future work. A future preview
-worker should isolate compilation and rendering from signing credentials with
+worker should isolate compilation and rendering from publication credentials with
 bounded CPU, memory, temporary storage, network and deadlines. Current static
 admission and Bun macro disabling do not provide an OS sandbox.

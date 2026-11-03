@@ -247,7 +247,7 @@ before removal is safe.
 Presets remain absent from the public format: unsupported fields reject.
 Static Page capability analysis and access derivation are implemented in
 `cms-gateway`; live invocation authority remains independent of Page documents.
-Remote signed publication is implemented by the CLI and official repository
+Remote publication uses account PATs through the CLI and official Provider
 server. Third-party JavaScript isolation remains open. The current first-party
 trust assumption and the required boundary before third-party collections are
 recorded in the repository

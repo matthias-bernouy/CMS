@@ -64,12 +64,11 @@ CmsCore/
 |   |-- runtimes/
 |   |   |-- ulvia-cli/         @bernouy/ulvia-cli
 |   |   |-- cms-edge-server/ @bernouy/cms-edge-server
-|   |   |-- ulvia-provider-server/
-|   |   `-- official-repository-server/
+|   |   `-- ulvia-provider-server/
 |   `-- official-repository/   Authored official releases
 |
 |-- infra/
-|   `-- images/             Separate Edge, Provider and Repository images
+|   `-- images/             Separate Edge and Provider images
 |
 |-- build.ts
 |-- tsconfig.base.json
@@ -122,7 +121,9 @@ straight to `src/` outside the explicit `cms-content` browser bundles.
 
 ## Deployment
 
-`infra/images/` ships distinct Edge, Provider and Official Repository images.
+`infra/images/` ships distinct Edge and Provider images. A Repository runs as
+an explicit CMS application profile on these same images, with ordinary accounts
+and account-owned namespaces; see the [Repository setup](docs/installation/README.md#9-repository-cms-instance).
 The Ulvia CLI owns one parameterized Compose definition for loopback and public
 installations. The design hosts **many instances on one server**: durable
 instance data and files remain behind the Provider, while each domain routes

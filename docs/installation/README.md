@@ -62,6 +62,11 @@ To bootstrap a different exact prerelease explicitly, use
 `ulvia services start --version 0.0.1-beta`. This option never upgrades an
 existing installation.
 
+First startup reuses locally cached exact-version images after checking their
+component, stack API, version and immutable digest. It downloads missing images.
+With the runtime and infrastructure images already present, initial provisioning
+can run without Internet access. Explicit image upgrades still pull the requested tag.
+
 The site is available at `http://my-site.localhost:5100`. The credentials
 command prints the initial administrator email and password. It never prints
 the Provider, Repository, encryption, or instance service secrets.
@@ -248,8 +253,10 @@ ulvia instance credentials registry
 The Registry API is available below
 `http://registry.localhost:5100/.cms/call/ulvia.repository`. Its public identity
 endpoint is `GET /v1/info` relative to that prefix. Ordinary CMS instances do not
-expose this contract. The profile currently includes the normal CMS Pages;
-dedicated Repository catalogue/account Pages are still being implemented.
+expose this contract. The profile creates ordinary CMS Pages for the public
+catalogue, search, resource details, registration/login and personal namespaces,
+publications and PAT management. These Pages use the `ulvia-repository` collection
+and shared `ulvia-official` resources.
 
 For public hosting, configure network exposure and ACME as described in section 6
 before creating instances, then create the application on its public domain:

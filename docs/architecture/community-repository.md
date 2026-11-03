@@ -141,8 +141,10 @@ The supported HTTP protocol is explicitly `2025-11-25`, using JSON responses,
 no protocol sessions, and no server-initiated streams. It supports initialization,
 ping, tool discovery and calls. It rejects unapproved browser Origins and
 unsupported protocol versions. Only the CMS instance mounts MCP, at `/.cms/mcp`,
-with OAuth consent and trusted context resolution. The Repository mounts no MCP
-endpoint. Model-supplied arguments cannot choose an actor.
+with OAuth consent and trusted context resolution. Registry capabilities are
+HTTP-only; a Repository CMS instance retains its standard administrator MCP
+endpoint, without Repository-specific tools. Model-supplied arguments cannot
+choose an actor.
 
 Inputs use `{ input, idempotencyKey? }`; keyed commands require the explicit
 retry key. Outputs use `{ output }`, and declared errors use
@@ -159,8 +161,9 @@ declared HTTP upload binding between MCP begin and commit. Resource delivery
 policy, retention and authorization belong to the host.
 Tools requiring a binary input resolver or output publisher are omitted when
 the host has not supplied that port. The CMS V1 file workspace uses a separate
-authenticated binary upload bridge. Repository publication streams signed asset
-bytes through its HTTP API; no Repository MCP asset-write tool is exposed.
+authenticated binary upload bridge. Repository publication streams digest-verified
+asset bytes through its PAT-authenticated HTTP API; no Repository MCP asset-write
+tool is exposed.
 
 The newer `2026-07-28` protocol changes initialization/metadata, headers and
 results. It requires a separately tested profile; this implementation does not

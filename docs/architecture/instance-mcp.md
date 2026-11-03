@@ -2,16 +2,17 @@
 
 ## Ownership and connection
 
-The CMS Edge mounts MCP at `/.cms/mcp`. The Repository is HTTP-only;
-`/mcp` is not mounted there. The Edge resolves the instance's selected exact
-contracts and invokes their Provider implementations through the Gateway and
-HTTP. Remote selected capabilities exposed through MCP must also declare an
+The CMS Edge mounts MCP at `/.cms/mcp`, including for the Repository application.
+Registry capabilities are HTTP-only; there is no root `/mcp` route. The Edge
+resolves the instance's selected exact contracts and invokes their Provider
+implementations through the Gateway and HTTP. Remote selected capabilities exposed through MCP must also declare an
 HTTP binding. Tool arguments cannot supply a site identity or trusted actor.
 
-The current official profile exposes 65 tools: 28 Content operations, seven
-Files workspace operations, 19 collection installation/operation and documentation operations,
-eight Repository authoring operations and three administrator observability
-reads (`logs.query`, `logs.get`, `logs.aggregate`). Account administration,
+The current official profile exposes 68 tools: 28 Content operations, seven
+Files workspace operations, 21 installation/operation, documentation and resource
+discovery operations, nine Repository connection/collection authoring operations
+and three administrator observability reads (`logs.query`, `logs.get`,
+`logs.aggregate`). Account administration,
 Provider control, Secrets, Emailer, global file namespaces, log ingestion and
 internal delivery operations are HTTP-only. MCP bindings have specific
 descriptions and behavior annotations; the admitted schemas still govern

@@ -156,9 +156,13 @@ private runtime files. Shared services and every instance have independent
 `stop`, `status`, and `logs` boundaries. Software upgrades are explicit and
 component-scoped through `upgrade <component> --version <exact-version>`.
 Normal starts always reuse the installed digest and never follow a newer tag.
+First startup validates cached exact-version images and downloads only missing
+images. Explicit upgrades still pull their requested tag.
 `reset --yes`
 removes shared Compose projects, instances, shared state and local repository
-releases. It preserves independent Repository deployments and signing identities. It does not inspect or modify the current working directory.
+releases, including accounts hosted by this local Provider. Independently deployed
+Repositories and the CLI's saved Repository connection are preserved. It does not
+inspect or modify the current working directory.
 `release <resource-directory>` reads `definition.json` and routes by `kind`:
 `collection`, `contract`, or `provider-manifest`. It validates and stores one
 immutable release. A provider manifest must reference exact contract releases
@@ -235,8 +239,7 @@ signing-key protocol remains.
 `yank` is reversible catalogue metadata: it hides a release from new catalogue
 resolution without deleting its exact historical bytes. `restore` exposes it
 again. Contract yanks block new dependent publications while previously
-published provider manifests remain readable. The loopback Repository uses the
-same owner-signing protocol. Signing keys stay in local identities.
+published provider manifests remain readable.
 
 A collection keeps immutable administration copy in recursive locale
 directories such as `translations/en/collection.json` and

@@ -14,7 +14,7 @@ build/
 .env.*
 !.env.example
 !**/.env.example
-/infra/images/cms-repository/secrets/
+/infra/images/**/secrets/
 
 # OS / editor cruft
 .DS_Store
