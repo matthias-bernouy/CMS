@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { assertValidJavaScriptArtifact, materializeSourceBundle, resolveSourceEntryPath, runBuild } from "./buildFiles";
@@ -36,7 +36,7 @@ export async function buildCollectionBloc(input: CollectionBlocBuildInput): Prom
     if (validation.errors.length > 0) {
         throw new Error(validation.errors.join("\n"));
     }
-    const tempDir = await mkdtemp(join(tmpdir(), "cms-collection-bloc-"));
+    const tempDir = await mkdtemp(join(await realpath(tmpdir()), "cms-collection-bloc-"));
     try {
         await materializeSourceBundle(tempDir, input.source);
         const viewPath = input.viewSource ? resolveSourceEntryPath(tempDir, input.viewPath ?? "bloc.ts") : undefined;
