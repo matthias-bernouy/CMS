@@ -15,6 +15,22 @@ const REPOSITORIES: Record<OfficialImageComponent, string> = {
     provider: "docker.io/cyaxis/ulvia-provider",
 };
 
+/** First startup reuses verified local images; explicit upgrades still pull their requested tag. */
+export async function obtainOfficialImage(
+    component: OfficialImageComponent,
+    version: string,
+    log: (message: string) => void,
+): Promise<OfficialImage> {
+    assertImageVersion(version);
+    requireExecutable("docker");
+    const reference = officialImageReference(component, version);
+    const inspected = await runCommand(["docker", "image", "inspect", reference], { allowFailure: true });
+    if (inspected.exitCode === 0) {
+        return parseOfficialImageInspection(inspected.stdout, component, version);
+    }
+    return pullOfficialImage(component, version, log);
+}
+
 export async function pullOfficialImage(
     component: OfficialImageComponent,
     version: string,

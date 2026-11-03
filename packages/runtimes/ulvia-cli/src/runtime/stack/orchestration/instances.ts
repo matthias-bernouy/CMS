@@ -13,7 +13,7 @@ import {
 import { instancePublicUrl } from "../ports";
 import { composeDown, composeStop, composeUp, inspectComposeServices, type ComposeProject } from "./compose";
 import { localEdgeEnvironment } from "./environment";
-import { ensureOfficialImage, pullOfficialImage, type OfficialImage } from "./images";
+import { ensureOfficialImage, obtainOfficialImage, type OfficialImage } from "./images";
 import { requireRunningLocalProvider } from "./services";
 import { loadLocalEdgeState, loadLocalServicesState, localEdgeProjectName, saveLocalEdgeState } from "./state";
 import type { LocalServicesState } from "./state";
@@ -23,7 +23,7 @@ export async function startLocalEdge(paths: UlviaPaths, name: string, log: (mess
     const services = await requireServices(paths);
     await requireRunningLocalProvider(paths);
     const installed = await loadLocalEdgeState(runtime.paths);
-    const image = installed?.image ?? (await pullOfficialImage("edge", services.images.provider.version, log));
+    const image = installed?.image ?? (await obtainOfficialImage("edge", services.images.provider.version, log));
     await ensureOfficialImage(image);
     const projectName = installed?.projectName ?? localEdgeProjectName(paths, name);
     await composeUp(edgeProject(runtime.paths, runtime.config, runtime.connection, services, projectName, image));

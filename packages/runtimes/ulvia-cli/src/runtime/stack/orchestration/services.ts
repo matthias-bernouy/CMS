@@ -12,7 +12,7 @@ import {
     type ComposeProject,
 } from "./compose";
 import { localServicesEnvironment } from "./environment";
-import { ensureOfficialImage, pullOfficialImage } from "./images";
+import { ensureOfficialImage, obtainOfficialImage, pullOfficialImage } from "./images";
 import { loadLocalServicesState, localServicesIdentity, saveLocalServicesState } from "./state";
 import type { LocalServicesState } from "./state";
 
@@ -24,7 +24,9 @@ export async function startLocalServices(
 ): Promise<void> {
     const installed = await loadLocalServicesState(paths);
     assertStartVersion(installed, requestedVersion);
-    const images = installed?.images ?? (await pullInitialImages(requestedVersion ?? defaultStackVersion(), log));
+    const images = installed?.images ?? {
+        provider: await obtainOfficialImage("provider", requestedVersion ?? defaultStackVersion(), log),
+    };
     await ensureOfficialImage(images.provider);
     const credentials = await serviceCredentials(paths);
     const identity = { ...localServicesIdentity(paths), images };
@@ -38,10 +40,6 @@ export async function startLocalServices(
     await composeUp(project);
     await saveLocalServicesState(paths, installation, images);
     log(`Shared services are ready (Provider ${images.provider.version}).`);
-}
-
-async function pullInitialImages(version: string, log: (message: string) => void) {
-    return { provider: await pullOfficialImage("provider", version, log) };
 }
 
 export function assertStartVersion(state: LocalServicesState | null, requestedVersion?: string): void {

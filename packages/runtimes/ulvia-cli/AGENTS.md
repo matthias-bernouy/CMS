@@ -83,6 +83,11 @@ Ulvia CMS installation runtime.
   the profile catalogue. A profile update must retain its application ID and only
   persist after the Provider acknowledges the exact target. Image updates retain
   Provider data and credentials; never reassign namespace ownership at startup.
+- First services/Edge startup must reuse cached exact-version images after the
+  normal component, stack API, version and digest checks. Pull only when absent;
+  an invalid cached image must refuse rather than silently replace itself.
+  Explicit image upgrades still pull their requested tag. The fresh Compose
+  smoke test must not pre-seed installation or image-pin state.
 - A yank is reversible repository metadata. It removes a release from new
   catalogue resolution without deleting immutable bytes or breaking historical
   exact-coordinate reads.
