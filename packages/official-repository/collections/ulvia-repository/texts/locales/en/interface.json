@@ -43,5 +43,6 @@
     "digest": "SHA-256 digest",
     "not-found": "No matching public release was found. It may have been removed from the catalogue.",
     "revision": "Publication revision",
-    "yanked": "This release is yanked. Its immutable bytes remain available by exact coordinate."
+    "yanked": "This release is yanked. Its immutable bytes remain available by exact coordinate.",
+    "change-search": "Change search"
 }

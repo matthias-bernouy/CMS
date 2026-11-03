@@ -1,8 +1,12 @@
 <main cms-bloc="ulvia-repository-shell">
-    <section slot="content">
+    <section slot="content" cms-queries="@param:ulvia-repository-search-cursor as searchCursor @param:ulvia-repository-query as selectedQuery">
         <h1 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-repository.search }}</h1>
-        <div>
+        <div cms-condition="searchCursor.hasData === false">
             <label>{{ cms.i18n.ulvia-repository.query }}<input type="search" cms-sync="@param:ulvia-repository-query" maxlength="500" required></label>
+        </div>
+        <div cms-condition="searchCursor.hasData">
+            <p>{{ selectedQuery.data }}</p>
+            <a href="/search">{{ cms.i18n.ulvia-repository.change-search }}</a>
         </div>
         <section
             cms-query="ulvia.repository:catalogue-search as results"
@@ -12,6 +16,7 @@
             <div cms-match="results.outcome.kind">
                 <span cms-case='"none"'></span>
                 <div cms-case='"success"'>
+                    <p cms-condition="results.data.results.length === 0">{{ cms.i18n.ulvia-repository.empty }}</p>
                     <ul>
                         <li cms-repeat="results.data.results as result">
                             <h2>

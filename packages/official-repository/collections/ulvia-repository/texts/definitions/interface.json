@@ -268,5 +268,11 @@
         "label": "text.yanked.label",
         "category": "category.application",
         "group": "group.interface"
+    },
+    {
+        "id": "change-search",
+        "label": "text.change-search.label",
+        "category": "category.application",
+        "group": "group.interface"
     }
 ]

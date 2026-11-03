@@ -3,16 +3,11 @@
         <h1 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-repository.catalogue }}</h1>
         <p>{{ cms.i18n.ulvia-repository.welcome }}</p>
         <p><a href="/search">{{ cms.i18n.ulvia-repository.search }}</a></p>
-        <div>
-            <label
-                >{{ cms.i18n.ulvia-repository.kind
-                }}<select cms-sync="@param:ulvia-repository-kind">
-                    <option value="collection">{{ cms.i18n.ulvia-repository.collection }}</option>
-                    <option value="contract">{{ cms.i18n.ulvia-repository.contract }}</option>
-                    <option value="provider-manifest">{{ cms.i18n.ulvia-repository.provider-manifest }}</option>
-                </select></label
-            >
-        </div>
+        <nav aria-label="{{ cms.i18n.ulvia-repository.kind }}">
+            <a href="/?ulvia-repository-kind=collection">{{ cms.i18n.ulvia-repository.collection }}</a>
+            <a href="/?ulvia-repository-kind=contract">{{ cms.i18n.ulvia-repository.contract }}</a>
+            <a href="/?ulvia-repository-kind=provider-manifest">{{ cms.i18n.ulvia-repository.provider-manifest }}</a>
+        </nav>
         <section
             cms-query="ulvia.repository:catalogue-list as catalogue"
             cms-query-listen="@param:ulvia-repository-kind @param:ulvia-repository-catalogue-cursor"
@@ -21,6 +16,7 @@
             <div cms-match="catalogue.outcome.kind">
                 <span cms-case='"none"'></span>
                 <div cms-case='"success"'>
+                    <p cms-condition="catalogue.data.releases.length === 0">{{ cms.i18n.ulvia-repository.empty }}</p>
                     <ul>
                         <li cms-repeat="catalogue.data.releases as release">
                             <h2>

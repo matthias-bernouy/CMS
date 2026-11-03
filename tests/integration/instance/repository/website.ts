@@ -1,6 +1,7 @@
 import { expect } from "bun:test";
 import { chromium } from "playwright";
 import { join } from "node:path";
+import { exerciseRepositoryPagination } from "./websitePagination";
 import type { sampleContract } from "./publication/resource";
 
 /** Ordinary browser Pages use shared Access cookies and the admitted query/mutation runtime. */
@@ -63,6 +64,7 @@ export async function exerciseRepositoryWebsite(
         expect(secret.length).toBeGreaterThan(32);
         const protectedUrl = `${origin}/.cms/call/ulvia.repository/v1/namespaces`;
         expect((await fetch(protectedUrl, { headers: { authorization: `Bearer ${secret}` } })).status).toBe(200);
+        await exerciseRepositoryPagination(page, origin, secret);
         await open("/account/tokens");
         expect(await page.locator("code").count()).toBe(0);
         await page.getByRole("button", { name: "Revoke", exact: true }).click();

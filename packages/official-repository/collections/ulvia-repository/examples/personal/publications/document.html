@@ -1,5 +1,5 @@
 <main cms-bloc="ulvia-repository-shell">
-    <section slot="content">
+    <section slot="content" cms-queries="@param:ulvia-repository-publisher as selectedPublisher">
         <h1 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-repository.publications }}</h1>
         <p>{{ cms.i18n.ulvia-repository.publications-help }}</p>
         <section cms-query="ulvia.repository:namespace-list as owned">
@@ -21,14 +21,17 @@
                 <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-repository.failed }}</p>
             </div>
         </section>
-        <label
-            >{{ cms.i18n.ulvia-repository.kind
-            }}<select cms-sync="@param:ulvia-repository-kind">
-                <option value="collection">{{ cms.i18n.ulvia-repository.collection }}</option>
-                <option value="contract">{{ cms.i18n.ulvia-repository.contract }}</option>
-                <option value="provider-manifest">{{ cms.i18n.ulvia-repository.provider-manifest }}</option>
-            </select></label
-        >
+        <nav aria-label="{{ cms.i18n.ulvia-repository.kind }}" cms-condition="selectedPublisher.hasData">
+            <a href="/account/publications?ulvia-repository-publisher={{ selectedPublisher.data | urlencode }}&amp;ulvia-repository-kind=collection">{{
+                cms.i18n.ulvia-repository.collection
+            }}</a>
+            <a href="/account/publications?ulvia-repository-publisher={{ selectedPublisher.data | urlencode }}&amp;ulvia-repository-kind=contract">{{
+                cms.i18n.ulvia-repository.contract
+            }}</a>
+            <a href="/account/publications?ulvia-repository-publisher={{ selectedPublisher.data | urlencode }}&amp;ulvia-repository-kind=provider-manifest">{{
+                cms.i18n.ulvia-repository.provider-manifest
+            }}</a>
+        </nav>
         <section
             cms-query="ulvia.repository:catalogue-list as catalogue"
             cms-query-listen="@param:ulvia-repository-kind @param:ulvia-repository-publisher @param:ulvia-repository-catalogue-cursor"
@@ -37,6 +40,7 @@
             <div cms-match="catalogue.outcome.kind">
                 <span cms-case='"none"'></span>
                 <div cms-case='"success"'>
+                    <p cms-condition="catalogue.data.releases.length === 0">{{ cms.i18n.ulvia-repository.empty }}</p>
                     <ul>
                         <li cms-repeat="catalogue.data.releases as release">
                             <h2>

@@ -67,5 +67,6 @@
     "page.resource.name": "Resource details",
     "page.resource.description": "Inspect an exact immutable public release.",
     "page.publications.name": "Publications",
-    "page.publications.description": "Browse releases published in your namespaces."
+    "page.publications.description": "Browse releases published in your namespaces.",
+    "text.change-search.label": "Change search"
 }
