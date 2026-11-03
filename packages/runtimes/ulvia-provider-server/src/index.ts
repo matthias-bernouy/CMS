@@ -1,7 +1,5 @@
 import { assertHostedReleaseRetention, managedReleaseReader } from "./runtime/instances/profiles/retention";
 import { MongoClient } from "mongodb";
-import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
-import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import { ValidatingSecretStore } from "@bernouy/secret-store";
 import { EncryptedMongoSecretStore } from "@bernouy/secret-store/mongo";
 import {
@@ -19,11 +17,11 @@ import { RecoverySupervisor } from "./runtime/recovery/RecoverySupervisor";
 import { MongoProviderInstanceRegistry } from "./runtime/instances/MongoProviderInstanceRegistry";
 import { MongoInstanceTransitionStore } from "./runtime/instances/MongoInstanceTransitionStore";
 import { loadOfficialArtifacts } from "./runtime/instances/profiles/artifacts";
+import { bundledBootstrapSources } from "./runtime/instances/profiles/bootstrap";
 import { mountUlviaProvider } from "./runtime/gateway/mountUlviaProvider";
 import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
 import { readProviderRuntimeEnv } from "./runtimeEnv";
 import { createProviderLogger } from "./runtime/logger";
-import { correlatedRepositoryFetch } from "./runtime/gateway/repositoryFetch";
 
 const logger = createProviderLogger(process.env);
 try {
@@ -57,15 +55,8 @@ try {
     let transitionRecovery: RecoverySupervisor | undefined;
     let operationRecovery: Promise<void> | undefined;
     try {
-        const providerSource = new HttpProviderRepository("ulvia-provider-runtime", env.CMS_REPOSITORY_URL, {
-            request: correlatedRepositoryFetch,
-            allowInsecureHttp: env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
-        });
-        const collectionSource = new HttpCollectionRepository("ulvia-provider-runtime", env.CMS_REPOSITORY_URL, {
-            request: correlatedRepositoryFetch,
-            allowInsecureHttp: env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
-        });
-        const artifacts = await loadOfficialArtifacts(providerSource, collectionSource);
+        const bootstrap = bundledBootstrapSources(env.ULVIA_BOOTSTRAP_DIR);
+        const artifacts = await loadOfficialArtifacts(bootstrap.providers, bootstrap.collections);
         const profiles = new OfficialInstanceProfiles(artifacts.profiles, artifacts.defaultProfile);
         const managedInstances = await instances.list();
         await assertHostedReleaseRetention(
@@ -81,6 +72,7 @@ try {
             logger,
             artifacts.contracts,
             instances,
+            bootstrap,
         );
         host = instanceHost;
         const provisioner = new OfficialInstanceProvisioner(

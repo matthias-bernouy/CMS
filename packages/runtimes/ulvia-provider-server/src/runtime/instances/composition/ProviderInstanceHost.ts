@@ -43,6 +43,7 @@ import { RecoverySupervisor } from "../../recovery/RecoverySupervisor";
 import { createProviderStores, type ProviderStores } from "../../stores/providerStores";
 import { CmsFileWorkspace } from "../../stores/CmsFileWorkspace";
 import { createInstanceProvisioningTarget } from "../instanceProvisioning";
+import type { OfficialBootstrapSources } from "../profiles/bootstrap";
 import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from "../InstanceResourcePool";
 import type { Logger } from "@bernouy/logging";
 import { correlatedRepositoryFetch } from "../../gateway/repositoryFetch";
@@ -88,6 +89,7 @@ export class ProviderInstanceHost {
         private readonly logger: Logger,
         private readonly contracts: readonly ResolvedContract[],
         instances: Pick<ProviderInstanceRegistry, "get">,
+        private readonly bootstrap: OfficialBootstrapSources,
     ) {
         this.#documentation = new ProviderDocumentation(
             {
@@ -150,8 +152,8 @@ export class ProviderInstanceHost {
                 composition: lease.resource,
                 env: this.env,
                 credentials: this.credentials,
-                providerSource: this.#providerSource,
-                collectionSource: this.#collectionSource,
+                providerSource: this.bootstrap.providers,
+                collectionSource: this.bootstrap.collections,
             }),
             release: lease.release,
         };

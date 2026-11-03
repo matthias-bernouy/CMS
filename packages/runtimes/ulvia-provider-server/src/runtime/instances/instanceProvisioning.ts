@@ -1,5 +1,6 @@
-import type { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
-import type { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
+import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
+import { importProviderManifest } from "@bernouy/cms-repository/providers/sources";
+import type { ProviderRepositorySource } from "@bernouy/cms-repository/providers/sources";
 import type {
     OfficialInstanceProfile,
     OfficialInstanceProvisioningTarget,
@@ -19,8 +20,8 @@ type TargetOptions = Readonly<{
     composition: InstanceComposition;
     env: ProviderRuntimeEnv;
     credentials: Pick<ProviderInstanceCredentials, "read">;
-    providerSource: HttpProviderRepository;
-    collectionSource: HttpCollectionRepository;
+    providerSource: ProviderRepositorySource;
+    collectionSource: CollectionRepositorySource;
 }>;
 
 export function createInstanceProvisioningTarget(options: TargetOptions): OfficialInstanceProvisioningTarget {
@@ -29,7 +30,12 @@ export function createInstanceProvisioningTarget(options: TargetOptions): Offici
             execution.throwIfLeaseLost();
             const manifest = await loadOfficialManifest(options.providerSource, profile);
             execution.throwIfLeaseLost();
-            await options.composition.management.importManifest(manifest);
+            await importProviderManifest(
+                manifest,
+                [options.providerSource],
+                options.composition.gateway.releases,
+                options.composition.gateway.manifests,
+            );
             execution.throwIfLeaseLost();
         },
         connectProvider: (profile, execution) => connectProvider(options, profile, execution),

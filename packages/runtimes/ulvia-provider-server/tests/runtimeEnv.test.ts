@@ -41,4 +41,13 @@ describe("Ulvia Provider server environment", () => {
             "ULVIA_EMBEDDING_MODEL_DIR",
         );
     });
+
+    test("accepts only an absolute directory for bundled bootstrap artifacts", () => {
+        expect(
+            readProviderRuntimeEnv({ ...validEnv(), ULVIA_BOOTSTRAP_DIR: "/opt/ulvia/bootstrap" }).ULVIA_BOOTSTRAP_DIR,
+        ).toBe("/opt/ulvia/bootstrap");
+        expect(() => readProviderRuntimeEnv({ ...validEnv(), ULVIA_BOOTSTRAP_DIR: "bootstrap" })).toThrow(
+            "ULVIA_BOOTSTRAP_DIR",
+        );
+    });
 });

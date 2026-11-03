@@ -11,11 +11,13 @@ FROM oven/bun:1.4.2-debian@sha256:4f6e31d1a54d6a3dd312daef655fc998101b5043d52e12
 
 WORKDIR /app
 COPY package.json bun.lock tsconfig.base.json tsconfig.json build.ts ./
+COPY infra/bootstrap.ts ./infra/bootstrap.ts
 COPY packages/ ./packages/
 
 RUN bun install --frozen-lockfile
 RUN bunx tsc --build packages/runtimes/ulvia-provider-server
 RUN cd packages/features/cms-content && bun run build:browser
+RUN bun run generate:official-bootstrap
 
 FROM build AS runtime-source
 RUN rm -rf /app/node_modules /app/packages/*/node_modules /app/packages/*/*/node_modules

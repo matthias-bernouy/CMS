@@ -15,6 +15,7 @@ export type ProviderRuntimeEnv = Readonly<{
     CMS_SESSION_SECRET: string;
     CMS_KEK: RuntimeKekConfig;
     ULVIA_EMBEDDING_MODEL_DIR?: string;
+    ULVIA_BOOTSTRAP_DIR?: string;
 }>;
 
 export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntimeEnv {
@@ -27,6 +28,10 @@ export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntim
     const modelDirectory = source.ULVIA_EMBEDDING_MODEL_DIR?.trim();
     if (modelDirectory && !isAbsolute(modelDirectory)) {
         throw new Error("ULVIA_EMBEDDING_MODEL_DIR must be an absolute path");
+    }
+    const bootstrapDirectory = source.ULVIA_BOOTSTRAP_DIR?.trim();
+    if (bootstrapDirectory && !isAbsolute(bootstrapDirectory)) {
+        throw new Error("ULVIA_BOOTSTRAP_DIR must be an absolute path");
     }
     const token = source.ULVIA_PROVIDER_OPERATOR_TOKEN;
     requiredEnv(source, "ULVIA_PROVIDER_OPERATOR_TOKEN");
@@ -54,6 +59,7 @@ export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntim
         CMS_SESSION_SECRET: requiredEnv(source, "CMS_SESSION_SECRET"),
         CMS_KEK: parseRuntimeKekConfig(source),
         ...(modelDirectory ? { ULVIA_EMBEDDING_MODEL_DIR: modelDirectory } : {}),
+        ...(bootstrapDirectory ? { ULVIA_BOOTSTRAP_DIR: bootstrapDirectory } : {}),
     };
 }
 

@@ -5,6 +5,8 @@ export {
     type StoredArtifact,
 } from "cms-repository/repository/filesystem/artifacts/files";
 export { LocalCollectionRepository } from "cms-repository/repository/filesystem/artifacts/collections";
+export { FilesystemProviderRepository } from "cms-repository/repository/filesystem/artifacts/providerSource";
+export { FilesystemCollectionRepository } from "cms-repository/repository/filesystem/artifacts/collectionSource";
 export { LocalContractReleases } from "cms-repository/repository/filesystem/contracts";
 export { RepositoryReadEndpoint } from "cms-repository/repository/filesystem/http/readEndpoint";
 export {

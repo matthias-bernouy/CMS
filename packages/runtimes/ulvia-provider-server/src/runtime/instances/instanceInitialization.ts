@@ -1,6 +1,6 @@
 import { createLocalUser } from "@bernouy/cms-auth/management";
 import { seedOfficialPages } from "./profiles/seedPages";
-import type { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
+import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
 import type {
     OfficialInstanceProfile,
     ProviderInstanceAdministrator,
@@ -12,7 +12,7 @@ const SITE_ID = "default";
 
 export async function installOfficialCollection(
     composition: InstanceComposition,
-    source: HttpCollectionRepository,
+    source: CollectionRepositorySource,
     profile: OfficialInstanceProfile,
     execution: ProviderInstanceTransitionExecution,
 ): Promise<void> {

@@ -37,7 +37,7 @@
         "test:performance:repository": "bun run build:browser && bun run generate:official-bootstrap && bun x tsc --project quality/performance/collections/repository/tsconfig.json && bun run quality/performance/collections/repository/run.ts",
         "test:performance": "bun run build:browser && bun run generate:official-bootstrap && bun x tsc --project quality/performance/tsconfig.json && bun run quality/performance/run.ts",
         "test:edge-smoke": "bun run generate:official-bootstrap && ULVIA_RUN_EDGE_SMOKE=1 bun test packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts",
-        "generate:official-bootstrap": "bun run --cwd packages/runtimes/ulvia-cli generate:bootstrap",
+        "generate:official-bootstrap": "bun run infra/bootstrap.ts",
         "check:ui-contracts": "bun run quality/ui-contracts/check.ts",
         "test:performance:delivery": "bun run tests/performance/delivery/run.ts",
         "test:documentation:agent": "bun run tests/integration/instance/documentation/evaluation/host.ts",

@@ -5,6 +5,7 @@ import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repos
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
 import { prepareContractSource } from "../release/authored/contract";
 import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
+import { bootstrapOfficialRepository } from "../commands/bootstrap";
 
 export type OfficialBootstrapArtifacts = Readonly<{
     contracts: Readonly<Record<string, string>>;
@@ -92,6 +93,7 @@ export async function writeOfficialBootstrapArtifacts(
         join(root, "index.json"),
         `${JSON.stringify({ contracts: contractPaths, provider, collection, collectionAssets }, null, 4)}\n`,
     );
+    await bootstrapOfficialRepository(join(root, "repository"), root);
 }
 
 async function writeArtifact(root: string, path: string, bytes: string): Promise<void> {
