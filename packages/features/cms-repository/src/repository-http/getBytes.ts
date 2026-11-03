@@ -1,3 +1,4 @@
+import { repositoryErrorBody, RepositoryHttpError, RepositoryResponseTooLargeError } from "./errors";
 export const MAX_REPOSITORY_RESPONSE_BYTES = 8 * 1024 * 1024;
 
 export type RepositoryFetch = (url: URL, init: RequestInit) => Promise<Response>;
@@ -17,7 +18,7 @@ export async function getRepositoryBytes(
         headers: { Accept: options.accept ?? "application/json" },
     });
     if (!response.ok || !response.body) {
-        throw new Error(`${kind} repository request failed (${response.status})`);
+        throw new RepositoryHttpError(response.status, await repositoryErrorBody(response));
     }
     const reader = response.body.getReader();
     const chunks: Uint8Array[] = [];
@@ -31,7 +32,7 @@ export async function getRepositoryBytes(
             length += part.value.byteLength;
             if (length > maxBytes) {
                 await reader.cancel();
-                throw new Error(`${kind} repository response too large`);
+                throw new RepositoryResponseTooLargeError(`${kind} repository response too large`);
             }
             chunks.push(part.value);
         }

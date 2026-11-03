@@ -1,9 +1,9 @@
-import type { DocumentationEmbeddings } from "../../interfaces/Documentation";
-import { normalizedVector } from "../../core/ranking";
+import type { Embeddings } from "@bernouy/text-search";
+import { normalizedVector } from "@bernouy/text-search";
 import { stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
-import { DEFAULT_DOCUMENTATION_MODEL, DEFAULT_DOCUMENTATION_REVISION, modelIdentifier } from "./options";
+import { DEFAULT_EMBEDDING_MODEL, DEFAULT_EMBEDDING_REVISION, modelIdentifier } from "./options";
 import type { EmbeddingModelOptions } from "../../interfaces/EmbeddingWorker";
 type Extractor = {
     (
@@ -14,7 +14,7 @@ type Extractor = {
 };
 
 /** Lazy CPU model shared by the runtime; neither secrets nor a hosted inference account are required. */
-export class TransformersModel implements DocumentationEmbeddings {
+export class TransformersModel implements Embeddings {
     readonly model: string;
     private extractor?: Promise<Extractor>;
     private active = 0;
@@ -29,7 +29,7 @@ export class TransformersModel implements DocumentationEmbeddings {
     async initialize(signal: AbortSignal): Promise<void> {
         signal.throwIfAborted();
         if (this.closed || Date.now() < this.retryAt) {
-            throw new Error("Documentation model unavailable");
+            throw new Error("Embedding model unavailable");
         }
         this.extractor ??= this.load().catch((error) => {
             this.extractor = undefined;
@@ -99,7 +99,7 @@ export class TransformersModel implements DocumentationEmbeddings {
     private async load(): Promise<Extractor> {
         const { pipeline } = await import("@huggingface/transformers");
         const options = {
-            revision: this.options.revision ?? DEFAULT_DOCUMENTATION_REVISION,
+            revision: this.options.revision ?? DEFAULT_EMBEDDING_REVISION,
             cache_dir: this.options.cacheDirectory,
             dtype: "q8" as const,
             device: "cpu" as const,
@@ -107,7 +107,7 @@ export class TransformersModel implements DocumentationEmbeddings {
                 ? { session_options: { intraOpNumThreads: this.options.threads, interOpNumThreads: 1 } }
                 : {}),
         };
-        const model = this.options.model ?? DEFAULT_DOCUMENTATION_MODEL;
+        const model = this.options.model ?? DEFAULT_EMBEDDING_MODEL;
         const directory = resolve(this.options.cacheDirectory, model, options.revision);
         const files = ["config.json", "tokenizer.json", "tokenizer_config.json", "onnx/model_quantized.onnx"];
         const cached = (
@@ -119,7 +119,7 @@ export class TransformersModel implements DocumentationEmbeddings {
             )
         ).every(Boolean);
         if (this.options.localFilesOnly && !cached) {
-            throw new Error("Pinned documentation model files are not cached");
+            throw new Error("Pinned embedding model files are not cached");
         }
         // Transformers v4 tokenizer discovery ignores cache/revision options; a local path avoids that remote probe.
         return (await pipeline("feature-extraction", cached ? directory : model, {

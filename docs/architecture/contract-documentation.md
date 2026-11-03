@@ -3,7 +3,11 @@
 Contract documentation is immutable release data. `cms-repository` admits and
 transfers it; `cms-documentation` retrieves and ranks it; the Provider runtime
 injects instance selection, Mongo storage and a local multilingual embedding
-model. Neither Edge nor the Repository chooses a model.
+model. Generic ranking and vector preparation live in `@bernouy/text-search`;
+runtimes explicitly import the worker backend from `@bernouy/text-embeddings`.
+Selected documentation scope remains in this feature.
+The Repository runtime may use the same adapter for its separate public resource
+index. Edge does not choose a model.
 
 ## Authoring and publication
 
@@ -109,18 +113,20 @@ context; H1s are display titles, not a replacement for useful explanatory text.
 
 The reference runtime uses local CPU `Xenova/multilingual-e5-small`, q8, pinned
 to revision `761b726dd34fb83930e26aab4e9ac3899aa1fa78`, with E5 query/passage
-prefixes. `@bernouy/cms-documentation/transformers` is an explicit runtime
+prefixes. `@bernouy/text-embeddings` is an explicit runtime
 adapter. No hosted inference account is required. The runtime initializes the
 shared model in a background job after mounting HTTP. A dedicated worker owns
 tokenization and ONNX inference, keeping that work off the HTTP event loop.
-The adapter bounds outstanding calls and is disposed by the runtime; its files
-are cached under
-`<CMS_FILES_DIR>/.documentation-models`. Initial use needs outbound model
-download access or a populated cache. Do not promise hybrid retrieval before
-that download and corpus embedding finish.
+The adapter bounds outstanding calls and is disposed by the runtime. Images ship
+the verified model in `/opt/ulvia/models` and configure `ULVIA_EMBEDDING_MODEL_DIR`
+for strictly local loading, outside data volumes. Native development without that
+variable retains `<CMS_FILES_DIR>/.documentation-models` and downloads on an empty
+cache. An explicitly configured model directory always requires local files.
+See [model packaging](../../infra/models/README.md) for preparation, build caches
+and offline tests. Hybrid retrieval still requires model loading and corpus embedding.
 
-The Provider image uses a pinned Bun Debian base and `libgomp1` for ONNX's
-native CPU bindings. Edge and Repository retain their Alpine images. Docker
+The Provider and Repository images use a pinned Bun Debian base and `libgomp1`
+for ONNX's native CPU bindings. Edge retains its Alpine image. Docker
 image execution must be checked separately from a successful macOS model run.
 
 Search returns `mode: "hybrid"` only when both rankings succeed; otherwise

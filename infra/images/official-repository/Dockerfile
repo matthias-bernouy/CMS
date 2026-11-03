@@ -1,4 +1,11 @@
-FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS build
+# Independent of application sources: reuse both the layer and verified download cache.
+FROM oven/bun:1.4.2-debian@sha256:4f6e31d1a54d6a3dd312daef655fc998101b5043d52e12592ac293ef04b9bc73 AS embedding-model
+WORKDIR /model-build
+COPY infra/models/ ./
+RUN --mount=type=cache,id=ulvia-embedding-models,target=/var/cache/ulvia-models,sharing=locked \
+    bun run prepare.ts /opt/ulvia/models /var/cache/ulvia-models
+
+FROM oven/bun:1.4.2-debian@sha256:4f6e31d1a54d6a3dd312daef655fc998101b5043d52e12592ac293ef04b9bc73 AS build
 
 WORKDIR /app
 COPY package.json bun.lock tsconfig.base.json tsconfig.json build.ts ./
@@ -11,7 +18,9 @@ RUN bun -e 'import { bootstrapOfficialRepository } from "./packages/runtimes/ulv
 FROM build AS runtime-source
 RUN rm -rf /app/node_modules /app/packages/*/*/node_modules
 
-FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS runtime
+FROM oven/bun:1.4.2-debian@sha256:4f6e31d1a54d6a3dd312daef655fc998101b5043d52e12592ac293ef04b9bc73 AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm -rf /var/lib/apt/lists/*
 
 ARG IMAGE_VERSION=dev
 ARG VCS_REF=unknown
@@ -24,6 +33,7 @@ LABEL org.opencontainers.image.title="Ulvia Official Repository" \
       io.ulvia.stack-api="1"
 
 WORKDIR /app
+COPY --from=embedding-model /opt/ulvia/models/ /opt/ulvia/models/
 COPY --chown=bun:bun --from=runtime-source /app/package.json /app/bun.lock /app/tsconfig.base.json /app/tsconfig.json ./
 COPY --chown=bun:bun --from=runtime-source /app/packages/ ./packages/
 COPY --chown=bun:bun --from=runtime-source /opt/ulvia-repository-seed/ /opt/ulvia-repository-seed/
@@ -33,6 +43,7 @@ USER bun
 RUN bun install --frozen-lockfile --production --omit=peer --filter=@bernouy/official-repository-server
 
 ENV NODE_ENV=production \
+    ULVIA_EMBEDDING_MODEL_DIR=/opt/ulvia/models \
     REPOSITORY_HOST=0.0.0.0 \
     REPOSITORY_PORT=3000 \
     ULVIA_REPOSITORY_DIR=/var/lib/ulvia-repository/current \

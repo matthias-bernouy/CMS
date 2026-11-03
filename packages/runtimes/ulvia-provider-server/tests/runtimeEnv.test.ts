@@ -31,4 +31,14 @@ describe("Ulvia Provider server environment", () => {
             readProviderRuntimeEnv({ ...validEnv(), ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5999" }),
         ).toThrow("ULVIA_PROVIDER_PUBLIC_URL must identify the configured ULVIA_PROVIDER_PORT root");
     });
+
+    test("accepts only an absolute directory for a packaged local model", () => {
+        expect(
+            readProviderRuntimeEnv({ ...validEnv(), ULVIA_EMBEDDING_MODEL_DIR: "/opt/ulvia/models" })
+                .ULVIA_EMBEDDING_MODEL_DIR,
+        ).toBe("/opt/ulvia/models");
+        expect(() => readProviderRuntimeEnv({ ...validEnv(), ULVIA_EMBEDDING_MODEL_DIR: "models" })).toThrow(
+            "ULVIA_EMBEDDING_MODEL_DIR",
+        );
+    });
 });

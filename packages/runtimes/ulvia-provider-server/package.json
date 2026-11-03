@@ -27,7 +27,8 @@
         "@bernouy/ulvia-provider": "workspace:*",
         "mongodb": "^7.6.0",
         "@bernouy/cms-observability": "workspace:*",
-        "@bernouy/cms-documentation": "workspace:*"
+        "@bernouy/cms-documentation": "workspace:*",
+        "@bernouy/text-embeddings": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

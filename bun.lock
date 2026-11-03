@@ -71,7 +71,10 @@
       "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
-        "@huggingface/transformers": "^4.3.2",
+        "@bernouy/text-search": "workspace:*",
+      },
+      "devDependencies": {
+        "@bernouy/text-embeddings": "workspace:*",
       },
       "peerDependencies": {
         "mongodb": "^7.6.0",
@@ -132,6 +135,7 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
+        "@bernouy/text-search": "workspace:*",
         "canonicalize": "^3.0.0",
         "css-tree": "^3.2.1",
         "htmlparser2": "^10.1.0",
@@ -140,6 +144,7 @@
         "marked": "^18.1.2",
       },
       "devDependencies": {
+        "@bernouy/text-embeddings": "workspace:*",
         "@types/css-tree": "^2.3.10",
       },
       "peerDependencies": {
@@ -236,6 +241,27 @@
         "typescript": "^7.0.2",
       },
     },
+    "packages/foundation/text-embeddings": {
+      "name": "@bernouy/text-embeddings",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/text-search": "workspace:*",
+        "@huggingface/transformers": "^4.3.2",
+      },
+      "peerDependencies": {
+        "typescript": "^7.0.2",
+      },
+    },
+    "packages/foundation/text-search": {
+      "name": "@bernouy/text-search",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/binary-media": "workspace:*",
+      },
+      "peerDependencies": {
+        "typescript": "^7.0.2",
+      },
+    },
     "packages/runtimes/cms-edge-server": {
       "name": "@bernouy/cms-edge-server",
       "version": "1.0.0",
@@ -260,6 +286,8 @@
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
+        "@bernouy/text-embeddings": "workspace:*",
+        "@bernouy/text-search": "workspace:*",
       },
     },
     "packages/runtimes/ulvia-cli": {
@@ -299,6 +327,7 @@
         "@bernouy/logging": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
+        "@bernouy/text-embeddings": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
         "mongodb": "^7.6.0",
       },
@@ -388,6 +417,10 @@
     "@bernouy/rate-limiter": ["@bernouy/rate-limiter@workspace:packages/foundation/rate-limiter"],
 
     "@bernouy/secret-store": ["@bernouy/secret-store@workspace:packages/foundation/secret-store"],
+
+    "@bernouy/text-embeddings": ["@bernouy/text-embeddings@workspace:packages/foundation/text-embeddings"],
+
+    "@bernouy/text-search": ["@bernouy/text-search@workspace:packages/foundation/text-search"],
 
     "@bernouy/ulvia-cli": ["@bernouy/ulvia-cli@workspace:packages/runtimes/ulvia-cli"],
 

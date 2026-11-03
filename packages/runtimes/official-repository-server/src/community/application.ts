@@ -1,3 +1,4 @@
+import { RepositoryDiscoveryError } from "@bernouy/cms-repository/repository/search";
 import { CapabilityGateway } from "@bernouy/cms-gateway";
 import { handleGatewayHttpCall } from "@bernouy/cms-gateway/http/handlers";
 import { matchPathTemplate } from "@bernouy/cms-repository/contracts/bindings";
@@ -39,7 +40,7 @@ export async function createRepositoryCapabilities(root: string, ports: Reposito
                     }
                     return { output };
                 } catch (error) {
-                    if (error instanceof RepositoryCapabilityError) {
+                    if (error instanceof RepositoryCapabilityError || error instanceof RepositoryDiscoveryError) {
                         return { errorCode: error.code };
                     }
                     throw error;

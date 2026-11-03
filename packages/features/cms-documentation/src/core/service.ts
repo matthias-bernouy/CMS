@@ -51,7 +51,7 @@ export class CmsDocumentation {
         signal?.throwIfAborted();
         const scope = await this.source.resolve();
         const chunks = await this.corpus.load(scope);
-        const counts = await this.vectors?.prepare(corpusKey(scope), chunks, signal);
+        const counts = await this.vectors?.prepareDocuments(corpusKey(scope), chunks, signal);
         if (!(await this.source.isCurrent(scope.revision))) {
             throw new DocumentationError("REVISION_CONFLICT");
         }

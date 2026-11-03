@@ -9,6 +9,7 @@ node_modules
 **/.turbo
 **/.next
 **/coverage
+/artifacts
 
 # Stale incremental-build metadata — if these are copied into the image,
 # `tsc --build` reads them, concludes "up to date", and skips emit, but

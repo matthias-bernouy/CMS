@@ -70,7 +70,7 @@ export async function preparedFixture(command = false, settled?: () => void, mac
                 if (path !== (machine ? "/gateway/providers/prepare" : "/gateway/dispatch/prepare")) {
                     throw new Error("Unexpected control request: " + path);
                 }
-                expect(new Headers(init?.headers).get("x-ulvia-contract-version")).toBe("1.0.0");
+                expect(new Headers(init?.headers).get("x-ulvia-contract-version")).toBe(INSTALLATIONS_CONTRACT.version);
                 events.push(machine ? "machine-prepare" : "prepare");
                 preparations.push(input);
                 if (status !== 200) {

@@ -42,7 +42,11 @@ test("the Bun runtime, types, CI, and container pins stay aligned", async () => 
     expect(qualityWorkflow).not.toContain("BUN_VERSION:");
     expect(integrationWorkflow).not.toContain("BUN_VERSION:");
     for (const [index, dockerfile] of dockerfiles.entries()) {
-        const variant = index === 1 ? "debian" : "alpine";
-        expect(dockerfile.match(new RegExp(`oven/bun:${version}-${variant}@sha256:[0-9a-f]{64}`, "g"))).toHaveLength(2);
+        const variant = index === 0 ? "alpine" : "debian";
+        const images = [...dockerfile.matchAll(/^FROM (oven\/bun:\S+)/gmu)].map((match) => match[1]!);
+        expect(images.length).toBeGreaterThan(0);
+        for (const image of images) {
+            expect(image).toMatch(new RegExp(`^oven/bun:${version}-${variant}@sha256:[0-9a-f]{64}$`, "u"));
+        }
     }
 });

@@ -1,17 +1,16 @@
 import { Worker } from "node:worker_threads";
-import type { DocumentationEmbeddings } from "../interfaces/Documentation";
+import type { Embeddings } from "@bernouy/text-search";
 import type {
     EmbeddingModelOptions,
     EmbeddingWorkerReply,
     EmbeddingWorkerCommand,
 } from "../interfaces/EmbeddingWorker";
 import { modelIdentifier } from "./transformers/options";
-export { DEFAULT_DOCUMENTATION_MODEL, DEFAULT_DOCUMENTATION_REVISION } from "./transformers/options";
 
 type Vectors = readonly (readonly number[])[] | undefined;
 
 /** One model worker per runtime keeps tokenization and native inference off the HTTP event loop. */
-export class TransformersDocumentationEmbeddings implements DocumentationEmbeddings {
+export class TransformersEmbeddings implements Embeddings {
     readonly model: string;
     private worker?: Worker;
     private workerExit?: Promise<number>;
@@ -30,7 +29,7 @@ export class TransformersDocumentationEmbeddings implements DocumentationEmbeddi
     async initialize(signal: AbortSignal): Promise<void> {
         signal.throwIfAborted();
         if (this.closed || Date.now() < this.retryAt) {
-            throw new Error("Documentation model unavailable");
+            throw new Error("Embedding model unavailable");
         }
         this.initializing ??= (async () => {
             await this.call({ action: "initialize" });
@@ -59,7 +58,7 @@ export class TransformersDocumentationEmbeddings implements DocumentationEmbeddi
         try {
             await this.initialize(signal);
             if (this.closed) {
-                throw new Error("Documentation model closed");
+                throw new Error("Embedding model closed");
             }
             const result = await this.call({ action: "embed", texts: [...texts], kind });
             signal.throwIfAborted();
@@ -91,7 +90,7 @@ export class TransformersDocumentationEmbeddings implements DocumentationEmbeddi
                     await this.call({ action: "close" });
                 } finally {
                     if ((await exited) !== 0) {
-                        throw new Error("Documentation worker did not exit cleanly");
+                        throw new Error("Embedding worker did not exit cleanly");
                     }
                 }
             } else {
@@ -129,7 +128,7 @@ export class TransformersDocumentationEmbeddings implements DocumentationEmbeddi
                 this.pending.clear();
             };
             worker.on("error", failed);
-            worker.on("exit", (code) => failed(new Error(`Documentation worker exited (${code})`)));
+            worker.on("exit", (code) => failed(new Error(`Embedding worker exited (${code})`)));
         }
         const id = ++this.sequence;
         return new Promise<Vectors>((resolve, reject) => {

@@ -8,12 +8,12 @@ import { messageLanguage } from "../../../src/dispatch/errors/locale";
 import { bootstrap } from "./fixtures";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 
-test("all official baseline errors have complete French and English message outputs in 1.0.0", async () => {
+test("all official errors have complete French and English message outputs in their selected release", async () => {
     const index = await Bun.file(resolve(bootstrap, "index.json")).json();
     const codes = new Set<string>();
     for (const path of index.contracts) {
         const { release } = await admitContractReleaseJson(await Bun.file(resolve(bootstrap, path)).text());
-        expect(release.version).toBe("1.0.0");
+        expect(release.version).toBe(release.contractId === "ulvia.cms.installations" ? "1.1.0" : "1.0.0");
         for (const capability of release.capabilities) {
             for (const error of capability.errors) {
                 codes.add(error.code);

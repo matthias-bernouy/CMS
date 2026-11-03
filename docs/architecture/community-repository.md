@@ -77,15 +77,16 @@ must support `flock`, and the runtime must provide the `flock` executable.
 ## Contract and transport clients
 
 `@bernouy/cms-repository/repository/contract` exports `admitRepositoryContract`
-and `RepositoryCapabilityService`. The exact admitted `ulvia.repository@1.0.0`
+and `RepositoryCapabilityService`. The exact admitted `ulvia.repository@1.1.0`
 definition is available at `GET /v1/repository-contract`; its ETag is its release
 digest. This built-in protocol definition is not automatically published into
 the user's mutable catalogue. Consumers explicitly admit and pin it.
 
 Its capabilities describe Repository identity, namespace lookup/claim/rotation/
-revocation, paginated catalogue reads, binary release downloads, staged upload
+revocation, paginated catalogue reads, resource discovery, binary release downloads, staged upload
 creation/status/asset/commit/abort, publication metadata reads and revisioned
-yanks. Errors are declared as `REJECTED` and `NOT_FOUND`. All capabilities have
+yanks. Existing operations declare `REJECTED` and `NOT_FOUND`; discovery declares
+the more specific failures described below. All capabilities have
 public transport access: ownership-sensitive operations verify their exact
 cryptographic proof in the domain service, independently of CMS login methods.
 Transport access does not grant namespace authority.
@@ -232,3 +233,19 @@ Private immutable source snapshots are implemented through owner-authorized
 match an existing collection release digest. Snapshots are separate from public
 release downloads and survive as private authored input for later versions.
 The proposed authoring/test roadmap is in [agent authoring](../development/agent-authoring.md).
+
+## Resource discovery before installation
+
+`QUERY /v1/search` is the public `catalogue-search` capability. It searches collection, listed Bloc, contract and Provider manifest metadata. `@bernouy/cms-repository/repository/search` owns ranking orchestration and CMS-side federation; `/repository/search/filesystem` and `/repository/search/http` are explicit adapters. Public exact-release GETs remain the source for inspection and survive yanking.
+
+The Repository runtime composes the pinned local multilingual model from `@bernouy/text-embeddings`. Its image ships verified files in `/opt/ulvia/models` and sets `ULVIA_EMBEDDING_MODEL_DIR` for strictly local loading. Native development without that variable retains `<ULVIA_REPOSITORY_DIR>/.search-models` and downloads on an empty cache; an explicitly configured directory always requires local files. See [model packaging](../../infra/models/README.md) for build caches and offline tests. Preparation runs after listening and on a cold or changed corpus. A query never waits for corpus embedding; a warm query waits at most one second for its embedding and otherwise reports lexical fallback. The runtime closes the index and model on shutdown. Cached vectors are derived in-memory data, bounded to 8,192 entries with at most 4,096 dimensions each; restart rebuilds them from metadata and reuses local model files.
+
+The derived search corpus selects latest non-yanked releases before reading their search metadata and embedding them. This same business corpus is used for preparation and queries; historical exact reads remain available. Identical model/content pairs are embedded once per preparation, including on a cold cache. The search corpus is bounded to 4,096 selected releases, 16,384 rows and 32 MiB of serialized row text. Passage embeddings use the first 4,096 UTF-16 units of each row, while bounded lexical text retains capability identifiers. The index uses exact vector comparisons within this bounded corpus rather than a separate vector database. Eight searches are admitted concurrently per Repository. Metadata indexes rebuild once per changed snapshot and reuse unchanged snapshots after catalogue refresh. Existing filesystem catalogue enumeration still precedes the search release budget; this is not a constant-cost index over unlimited storage.
+
+CMS `ulvia.cms.installations/repository.search` exposes up to fifty candidates per configured source, at most eight sources, with four outgoing requests concurrently. Per-source ranks are fused, identical releases are deduplicated, latest discovered versions are grouped, and same-version digest conflicts retain their source identity. Continuation cursors bind to the query and candidate snapshots. Partial sources and lexical fallback are explicit.
+
+`repository.get` verifies a public exact release and returns bounded JSON continuations, optionally selecting a Bloc or example. It never installs resources or executes code. One CMS discovery service admits eight searches/reads concurrently and retains at most eight verified projections, 16 MiB total, with at most eight pending loads. Keys include source, complete immutable reference and resource selector; failed loads are discarded. Authorization belongs to the normal administrator capability path. Selected-contract documentation search and its instance revision checks remain separate.
+
+Run `bun run packages/features/cms-repository/tests/repository-search/evaluation.ts <cached-model-directory>` for an offline lexical/hybrid relevance sample. It measures a small synthetic corpus, not production retrieval quality.
+
+Discovery uses typed domain failures across adapters: invalid input (422), absent exact resource (404), release mismatch or expired cursor (409), corpus/response budgets (422), and infrastructure unavailability (503). Remote error bodies are bounded to 4 KiB and 100 ms, interpreted only for known codes, and never forwarded as diagnostic text. Search may report failed sources as partial results; a 404 during an exact read remains `NOT_FOUND`.

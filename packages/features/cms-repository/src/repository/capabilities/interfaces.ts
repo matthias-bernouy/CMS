@@ -1,3 +1,4 @@
+import type { RepositorySearch } from "../search/core/service";
 import type { RepositorySourceStore } from "../sources/interfaces";
 import type { RepositoryNamespaceAuthority } from "../namespaces/authority";
 import type {
@@ -7,6 +8,7 @@ import type {
 } from "../publication/types";
 
 export interface RepositoryCapabilityPorts {
+    readonly search?: RepositorySearch;
     readonly sources?: RepositorySourceStore;
     readonly namespaces: RepositoryNamespaceAuthority;
     readonly registry: RepositoryPublicationRegistry;

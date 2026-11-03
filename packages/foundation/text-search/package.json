@@ -1,0 +1,16 @@
+{
+    "name": "@bernouy/text-search",
+    "version": "1.0.0",
+    "license": "MIT",
+    "type": "module",
+    "description": "Generic lexical and semantic text ranking, independent of embedding backends.",
+    "exports": {
+        ".": "./src/exports/index.ts"
+    },
+    "dependencies": {
+        "@bernouy/binary-media": "workspace:*"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    }
+}

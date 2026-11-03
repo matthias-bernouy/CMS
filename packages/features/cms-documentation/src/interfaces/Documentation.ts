@@ -14,19 +14,8 @@ export interface DocumentationSource {
     isCurrent(revision: string): Promise<boolean>;
     read(reference: DocumentationReference): Promise<Blob | null>;
 }
-export interface DocumentationEmbeddings {
-    readonly model: string;
-    initialize?(signal: AbortSignal): Promise<void>;
-    embed(
-        texts: readonly string[],
-        kind: "query" | "passage",
-        signal: AbortSignal,
-    ): Promise<readonly (readonly number[])[]>;
-}
-export interface DocumentationVectorStore {
-    get(keys: readonly string[]): Promise<ReadonlyMap<string, readonly number[]>>;
-    put(values: readonly { key: string; vector: readonly number[] }[]): Promise<void>;
-}
+export type { Embeddings as DocumentationEmbeddings } from "@bernouy/text-search";
+export type { VectorStore as DocumentationVectorStore } from "@bernouy/text-search";
 export interface DocumentationChunk {
     readonly reference: DocumentationReference;
     readonly version: string;

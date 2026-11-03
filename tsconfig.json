@@ -72,6 +72,12 @@
         },
         {
             "path": "packages/features/cms-documentation"
+        },
+        {
+            "path": "packages/foundation/text-search"
+        },
+        {
+            "path": "packages/foundation/text-embeddings"
         }
     ]
 }

@@ -4,14 +4,32 @@
         "outDir": "dist",
         "rootDir": "./src",
         "paths": {
-            "official-repository-server/*": ["./src/*"]
+            "official-repository-server/*": [
+                "./src/*"
+            ]
         }
     },
-    "include": ["src/**/*.ts"],
+    "include": [
+        "src/**/*.ts"
+    ],
     "references": [
-        { "path": "../../features/cms-gateway" },
-        { "path": "../../foundation/http-runner" },
-        { "path": "../../foundation/logging" },
-        { "path": "../../features/cms-repository" }
+        {
+            "path": "../../features/cms-gateway"
+        },
+        {
+            "path": "../../foundation/http-runner"
+        },
+        {
+            "path": "../../foundation/logging"
+        },
+        {
+            "path": "../../features/cms-repository"
+        },
+        {
+            "path": "../../foundation/text-search"
+        },
+        {
+            "path": "../../foundation/text-embeddings"
+        }
     ]
 }

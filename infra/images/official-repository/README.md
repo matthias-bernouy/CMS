@@ -18,5 +18,10 @@ in this workspace. It copies that snapshot into an empty persistent repository
 on first start. Later image upgrades never overwrite an existing repository;
 new immutable releases still use the signed publication protocol.
 
+The image includes the pinned embedding model in `/opt/ulvia/models` and sets
+`ULVIA_EMBEDDING_MODEL_DIR` to require local loading. It needs no Internet access
+for model loading or inference. See [model packaging](../../models/README.md)
+for build caches, native preparation and the offline image test.
+
 Image tests live in [`tests/images/official-repository`](../../../tests/images/official-repository).
 Run them from the workspace root with `bun test ./tests/images/official-repository`.

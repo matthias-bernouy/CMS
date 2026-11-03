@@ -6,13 +6,12 @@
     "description": "Release-bound documentation retrieval and bounded hybrid search.",
     "exports": {
         ".": "./src/exports/index.ts",
-        "./transformers": "./src/exports/transformers.ts",
         "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
-        "@huggingface/transformers": "^4.3.2"
+        "@bernouy/text-search": "workspace:*"
     },
     "peerDependencies": {
         "mongodb": "^7.6.0",
@@ -20,5 +19,8 @@
     },
     "scripts": {
         "evaluate": "bun run tests/evaluation.ts"
+    },
+    "devDependencies": {
+        "@bernouy/text-embeddings": "workspace:*"
     }
 }

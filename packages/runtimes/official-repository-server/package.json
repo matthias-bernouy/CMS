@@ -15,6 +15,8 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
-        "@bernouy/logging": "workspace:*"
+        "@bernouy/logging": "workspace:*",
+        "@bernouy/text-search": "workspace:*",
+        "@bernouy/text-embeddings": "workspace:*"
     }
 }

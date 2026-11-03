@@ -1,3 +1,5 @@
+import { HttpRepositoryDiscovery } from "@bernouy/cms-repository/repository/search/http";
+import { RepositoryDiscovery } from "@bernouy/cms-repository/repository/search";
 import { createInstanceDocumentation } from "./documentation";
 import type { CmsDocumentation } from "@bernouy/cms-documentation";
 import { ProviderDocumentation } from "./ProviderDocumentation";
@@ -88,7 +90,10 @@ export class ProviderInstanceHost {
         instances: Pick<ProviderInstanceRegistry, "get">,
     ) {
         this.#documentation = new ProviderDocumentation(
-            join(env.CMS_FILES_DIR, ".documentation-models"),
+            {
+                cacheDirectory: env.ULVIA_EMBEDDING_MODEL_DIR ?? join(env.CMS_FILES_DIR, ".documentation-models"),
+                localFilesOnly: Boolean(env.ULVIA_EMBEDDING_MODEL_DIR),
+            },
             async (instance) => {
                 const current = await instances.get(instance.id);
                 if (!current || (current.status !== "ready" && current.status !== "provisioning")) {
@@ -300,6 +305,12 @@ export class ProviderInstanceHost {
                 {
                     ...stores,
                     documentation: instanceDocumentation,
+                    repositoryDiscovery: new RepositoryDiscovery([
+                        new HttpRepositoryDiscovery("ulvia-provider-bootstrap", this.env.CMS_REPOSITORY_URL, {
+                            request: correlatedRepositoryFetch,
+                            allowInsecureHttp: this.env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
+                        }),
+                    ]),
                     ...createPublicDelivery(stores, gateway, instance.cmsUrl),
                     collectionAuthoring,
                     emailer: stores.emailer,

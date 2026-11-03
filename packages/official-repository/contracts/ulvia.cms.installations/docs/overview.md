@@ -10,6 +10,9 @@ Use the exact contract selected on the site. Discover the available tool schemas
 
 ## Capabilities
 
+- `repository.search`: Discover reusable resources in configured repositories before installation.
+- `repository.get`: Inspect verified public metadata, Blocs and examples from one exact release. See [Repository discovery](repository-discovery.md).
+
 - `documentation.search`: Search selected contracts and their exact ancestors using natural language or capability names; inspect the returned retrieval mode.
 - `documentation.get`: Read an exact document reference from search results or tool metadata, following continuation offsets when present.
 - `gateway.audit.append`: Edge control connection only. Persist one immutable Gateway command audit event.

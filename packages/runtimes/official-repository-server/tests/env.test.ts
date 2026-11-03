@@ -55,4 +55,13 @@ describe("official repository environment", () => {
             );
         }
     });
+
+    test("accepts only an absolute directory for a packaged local model", () => {
+        expect(
+            readOfficialRepositoryEnv({ ...valid, ULVIA_EMBEDDING_MODEL_DIR: "/opt/ulvia/models" }).modelDirectory,
+        ).toBe("/opt/ulvia/models");
+        expect(() => readOfficialRepositoryEnv({ ...valid, ULVIA_EMBEDDING_MODEL_DIR: "models" })).toThrow(
+            "ULVIA_EMBEDDING_MODEL_DIR",
+        );
+    });
 });

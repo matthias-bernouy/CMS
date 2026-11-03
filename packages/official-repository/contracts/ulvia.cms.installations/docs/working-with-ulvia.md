@@ -57,3 +57,5 @@ Follow the selected tool schemas and each guide's prerequisites. Do not assume t
 Run the checks available for the resources you changed, inspect diagnostics, correct the causes and verify again. A successful tool call may still return an unsuccessful domain result, such as collection preparation with `valid: false`. An accepted asynchronous operation is not complete: follow its operation status.
 
 Read back the requested state. For design work, review rendering, interactions, links and applicable light/dark themes with a browser when available. Static validation does not establish visual quality. Report what you verified and any remaining checks; never claim a browser review or publication merely because a guide recommends it.
+
+Before creating reusable resources, use `repository.search` to look for existing collections, Blocs, contracts and Provider manifests. Inspect relevant candidates with `repository.get`, then verify requirements and exports before reusing them. See [Repository discovery](repository-discovery.md).

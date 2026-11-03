@@ -31,6 +31,8 @@ already been published to a registry.
 | `@bernouy/rate-limiter` | Fixed-window rate limiting with memory and Mongo implementations. |
 | `@bernouy/secret-store` | Secret storage, reference resolution and encrypted Mongo persistence. |
 | `@bernouy/image-processing` | Generic image inspection and WebP transforms used by Files provider implementations. |
+| `@bernouy/text-search` | Backend-independent BM25, vector similarity, rank fusion, vector preparation/cache and abstract embedding ports. |
+| `@bernouy/text-embeddings` | Explicit local E5/ONNX worker adapter; owns Transformers.js and its native dependencies. |
 | `@bernouy/logging` | Structured diagnostics, bounded attributes, central redaction, Node sinks and test loggers. |
 
 ## Features

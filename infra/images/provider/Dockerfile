@@ -1,5 +1,12 @@
 # Ulvia Provider image. Build context: workspace root.
 
+# Independent of application sources: reuse both the layer and verified download cache.
+FROM oven/bun:1.4.2-debian@sha256:4f6e31d1a54d6a3dd312daef655fc998101b5043d52e12592ac293ef04b9bc73 AS embedding-model
+WORKDIR /model-build
+COPY infra/models/ ./
+RUN --mount=type=cache,id=ulvia-embedding-models,target=/var/cache/ulvia-models,sharing=locked \
+    bun run prepare.ts /opt/ulvia/models /var/cache/ulvia-models
+
 FROM oven/bun:1.4.2-debian@sha256:4f6e31d1a54d6a3dd312daef655fc998101b5043d52e12592ac293ef04b9bc73 AS build
 
 WORKDIR /app
@@ -29,6 +36,7 @@ LABEL org.opencontainers.image.title="Ulvia Provider" \
       io.ulvia.stack-api="1"
 
 WORKDIR /app
+COPY --from=embedding-model /opt/ulvia/models/ /opt/ulvia/models/
 COPY --chown=bun:bun --from=runtime-source /app/package.json /app/bun.lock /app/tsconfig.base.json /app/tsconfig.json ./
 COPY --chown=bun:bun --from=runtime-source /app/packages/ ./packages/
 
@@ -38,6 +46,7 @@ RUN bun install --frozen-lockfile --production --filter=@bernouy/ulvia-provider-
 
 ENV NODE_ENV=production \
     MODE=PROD \
+    ULVIA_EMBEDDING_MODEL_DIR=/opt/ulvia/models \
     CMS_FILES_DIR=/var/lib/cms/files \
     ULVIA_PROVIDER_HOST=0.0.0.0 \
     ULVIA_PROVIDER_PORT=5103

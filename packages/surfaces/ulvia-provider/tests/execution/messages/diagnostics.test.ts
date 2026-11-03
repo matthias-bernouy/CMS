@@ -71,7 +71,7 @@ test("reason metadata survives localization and async schema projection without 
         "ulvia.cms.installations",
         "apply-collection-upgrade",
         {},
-        { ...context("fr"), idempotencyKey: "reason" },
+        { ...context("fr", contract.release.version), idempotencyKey: "reason" },
     );
     await executor.stop();
     expect(observations).toHaveLength(1);

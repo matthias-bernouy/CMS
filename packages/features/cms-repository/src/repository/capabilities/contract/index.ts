@@ -4,6 +4,7 @@ import namespaceGet from "./capabilities/queries/namespace-get.json";
 import namespaceClaim from "./capabilities/commands/namespaces/namespace-claim.json";
 import namespaceRotate from "./capabilities/commands/namespaces/namespace-rotate.json";
 import namespaceRevoke from "./capabilities/commands/namespaces/namespace-revoke.json";
+import catalogueSearch from "./capabilities/queries/catalogue-search.json";
 import catalogueList from "./capabilities/queries/catalogue-list.json";
 import releaseDownload from "./capabilities/queries/release-download.json";
 import publicationBegin from "./capabilities/commands/publications/publication-begin.json";
@@ -30,6 +31,7 @@ export default {
         namespaceRotate,
         namespaceRevoke,
         catalogueList,
+        catalogueSearch,
         releaseDownload,
         publicationBegin,
         publicationStatus,

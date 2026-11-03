@@ -1,7 +1,7 @@
 import type { EmbeddingModelOptions } from "../../interfaces/EmbeddingWorker";
 
-export const DEFAULT_DOCUMENTATION_MODEL = "Xenova/multilingual-e5-small";
-export const DEFAULT_DOCUMENTATION_REVISION = "761b726dd34fb83930e26aab4e9ac3899aa1fa78";
+export const DEFAULT_EMBEDDING_MODEL = "Xenova/multilingual-e5-small";
+export const DEFAULT_EMBEDDING_REVISION = "761b726dd34fb83930e26aab4e9ac3899aa1fa78";
 
 export function modelIdentifier(options: EmbeddingModelOptions): string {
     if (
@@ -17,5 +17,5 @@ export function modelIdentifier(options: EmbeddingModelOptions): string {
     ) {
         throw new TypeError("Embedding thread budget must be between one and eight");
     }
-    return `${options.model ?? DEFAULT_DOCUMENTATION_MODEL}@${options.revision ?? DEFAULT_DOCUMENTATION_REVISION}:q8:e5-prefix:mean:v1`;
+    return `${options.model ?? DEFAULT_EMBEDDING_MODEL}@${options.revision ?? DEFAULT_EMBEDDING_REVISION}:q8:e5-prefix:mean:v1`;
 }

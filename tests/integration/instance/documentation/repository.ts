@@ -1,4 +1,7 @@
+import { RepositorySearch } from "@bernouy/cms-repository/repository/search";
+import { FilesystemRepositorySearchSource } from "@bernouy/cms-repository/repository/search/filesystem";
 import {
+    FilesystemRepositoryCatalogueIndex,
     FilesystemRepositoryNamespaceStore,
     FilesystemRepositoryPublicationRegistry,
     FilesystemRepositoryPublicationUploadStore,
@@ -27,15 +30,17 @@ if (import.meta.main) {
         "documentation-integration",
         new FilesystemRepositoryNamespaceStore(root),
     );
-    const registry = new FilesystemRepositoryPublicationRegistry(root);
+    const index = new FilesystemRepositoryCatalogueIndex(root);
+    const registry = new FilesystemRepositoryPublicationRegistry(root, index);
     const uploads = new FilesystemRepositoryPublicationUploadStore(root);
     const mutations = new RepositoryMutationEndpoint(registry, {
         namespaces: authority,
         uploads,
         replays: new FilesystemRepositoryReplayStore(root),
     });
-    const reads = new RepositoryReadEndpoint(root);
-    const sources = await sourceSnapshots(root, { namespaces: authority, registry, uploads }, reads);
+    const reads = new RepositoryReadEndpoint(root, index);
+    const search = new RepositorySearch(new FilesystemRepositorySearchSource(root, index));
+    const sources = await sourceSnapshots(root, { namespaces: authority, registry, uploads, search }, reads);
     const server = Bun.serve({
         hostname: "127.0.0.1",
         port: Number(rawPort),
@@ -53,6 +58,6 @@ if (import.meta.main) {
         },
     });
     process.on("SIGTERM", () => {
-        server.stop(true);
+        void search.close().finally(() => server.stop(true));
     });
 }

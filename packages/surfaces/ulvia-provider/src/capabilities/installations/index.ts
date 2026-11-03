@@ -1,3 +1,4 @@
+import { registerRepositoryDiscoveryCapabilities } from "./providers/discovery";
 import { registerDocumentationCapabilities } from "./providers/documentation";
 import { registerCapabilityDescription } from "./providers/describe";
 import { registerContractUpgradeCapabilities } from "./providers/upgrades";
@@ -18,6 +19,7 @@ export function registerInstallationCapabilities(
 ): void {
     registerCapabilityDescription(dispatcher, gateway);
     registerDocumentationCapabilities(dispatcher, dependencies.documentation);
+    registerRepositoryDiscoveryCapabilities(dispatcher, dependencies.repositoryDiscovery);
     registerCollectionInstallationCapabilities(dispatcher, dependencies, operations, sources);
     registerProviderInstallationCapabilities(dispatcher, gateway, management);
     registerContractUpgradeCapabilities(dispatcher, gateway, operations);

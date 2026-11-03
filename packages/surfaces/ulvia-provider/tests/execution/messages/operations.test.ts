@@ -18,13 +18,13 @@ test("async official errors use admitted schemas and retain the original languag
         executions++;
         throw officialFailure("REVISION_CONFLICT", 409);
     });
-    const firstContext = { ...context("fr"), idempotencyKey: "reviewed-upgrade" };
+    const firstContext = { ...context("fr", contract.release.version), idempotencyKey: "reviewed-upgrade" };
     const first = await executor.enqueue("ulvia.cms.installations", "apply-collection-upgrade", {}, firstContext);
     const replay = await executor.enqueue(
         "ulvia.cms.installations",
         "apply-collection-upgrade",
         {},
-        { ...firstContext, ...context("en") },
+        { ...firstContext, ...context("en", contract.release.version) },
     );
     expect(replay).toEqual(first);
     await executor.stop();
@@ -44,13 +44,13 @@ test("async official errors use admitted schemas and retain the original languag
         "ulvia.cms.installations",
         "get-operation",
         first,
-        context("en"),
+        context("en", contract.release.version),
     )) as Response;
     expect(detail.headers.get("content-language")).toBe("fr");
     expect(await detail.json()).toMatchObject({ errorCode: "REVISION_CONFLICT", errorOutput: failed.errorOutput });
     await expect(
         dispatcher.invoke("ulvia.cms.installations", "get-operation", first, {
-            ...context("fr"),
+            ...context("fr", contract.release.version),
             siteId: "other-site",
         }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
@@ -77,7 +77,7 @@ test("async undeclared and technical failures expose only a generic localized me
             "ulvia.cms.installations",
             "apply-collection-upgrade",
             {},
-            { ...context("fr"), idempotencyKey: "one" },
+            { ...context("fr", contract.release.version), idempotencyKey: "one" },
         );
         await executor.stop();
         const record = await store.get("default", operation.operationId);
@@ -105,7 +105,7 @@ test("explicit async messages retain their actual language and schema-projected 
         "ulvia.cms.installations",
         "apply-collection-upgrade",
         {},
-        { ...context("fr"), idempotencyKey: "explicit-language" },
+        { ...context("fr", contract.release.version), idempotencyKey: "explicit-language" },
     );
     await executor.stop();
     const record = await store.get("default", operation.operationId);
@@ -121,7 +121,7 @@ test("explicit async messages retain their actual language and schema-projected 
         "ulvia.cms.installations",
         "get-operation",
         operation,
-        context("en"),
+        context("en", contract.release.version),
     )) as Response;
     expect(response.headers.get("content-language")).toBe("es");
     expect(await response.json()).toMatchObject({ errorOutput: { message: "La selección ha cambiado." } });

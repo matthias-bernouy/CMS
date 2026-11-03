@@ -9,9 +9,9 @@ export async function officialContract(id: string) {
 export async function resolvedContract(id: string) {
     return resolveFixtureContract(await officialContract(id));
 }
-export const context = (language = "en") => ({
+export const context = (language = "en", contractVersion = "1.0.0") => ({
     requestId: crypto.randomUUID(),
-    contractVersion: "1.0.0",
+    contractVersion,
     siteId: "default",
     providerId: "ulvia.official",
     http: { headers: new Headers({ "accept-language": language }) },

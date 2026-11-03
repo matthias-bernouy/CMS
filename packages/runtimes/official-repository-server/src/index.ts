@@ -1,3 +1,5 @@
+import { join } from "node:path";
+import { TransformersEmbeddings } from "@bernouy/text-embeddings";
 import { createOfficialRepositoryApplication } from "./application";
 import { readOfficialRepositoryEnv } from "./env";
 import { startOfficialRepositoryServer } from "./server";
@@ -16,14 +18,35 @@ try {
 async function startRepository(): Promise<void> {
     const env = readOfficialRepositoryEnv(process.env);
     const ownership = await acquireRepositoryOwnership(env.root);
+    const model = new TransformersEmbeddings({
+        cacheDirectory: env.modelDirectory ?? join(env.root, ".search-models"),
+        localFilesOnly: Boolean(env.modelDirectory),
+        threads: 2,
+    });
+    let application: Awaited<ReturnType<typeof createOfficialRepositoryApplication>> | undefined;
     let server: ReturnType<typeof startOfficialRepositoryServer>;
     try {
         await seedOfficialRepository(env.root, env.seedRoot);
-        const application = await createOfficialRepositoryApplication(env.root);
+        application = await createOfficialRepositoryApplication(env.root, model);
         server = startOfficialRepositoryServer(application, env, logger);
+        void application
+            .prepareSearch()
+            .catch((error) => logger.warn("repository.search.preparation.failed", {}, error));
     } catch (error) {
-        await ownership.release();
+        try {
+            await closeSearch();
+        } finally {
+            await ownership.release();
+        }
         throw error;
+    }
+
+    async function closeSearch(): Promise<void> {
+        try {
+            await application?.close();
+        } finally {
+            await model.close();
+        }
     }
 
     let stopping = false;
@@ -34,6 +57,7 @@ async function startRepository(): Promise<void> {
                 logger.fatal("repository.ownership.lost", {});
                 process.exitCode = 1;
                 await server.stopGracefully(0);
+                await closeSearch();
             }
         })
         .catch((error) => {
@@ -49,7 +73,11 @@ async function startRepository(): Promise<void> {
         try {
             await server.stopGracefully(env.shutdownTimeoutMs);
         } finally {
-            await ownership.release();
+            try {
+                await closeSearch();
+            } finally {
+                await ownership.release();
+            }
         }
     }
     const handleSignal = (signal: string): void => {

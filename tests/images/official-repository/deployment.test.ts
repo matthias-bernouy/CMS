@@ -7,10 +7,11 @@ const root = resolve(import.meta.dir, "../../..");
 test("official repository image keeps its production storage and secret boundaries", async () => {
     const dockerfile = await readFile(resolve(root, "infra/images/official-repository/Dockerfile"), "utf8");
 
-    expect(dockerfile).toContain("oven/bun:1.4.2-alpine@sha256:");
+    expect(dockerfile).toContain("oven/bun:1.4.2-debian@sha256:");
     expect(dockerfile).toContain('org.opencontainers.image.title="Ulvia Official Repository"');
     expect(dockerfile).toContain("--filter=@bernouy/official-repository-server");
     expect(dockerfile).toContain("USER bun");
+    expect(dockerfile).toContain("libgomp1");
     expect(dockerfile).toContain("ULVIA_REPOSITORY_DIR=/var/lib/ulvia-repository");
     expect(dockerfile).toContain("ULVIA_REPOSITORY_SEED_DIR=/opt/ulvia-repository-seed");
     expect(dockerfile).toContain("bootstrapOfficialRepository");

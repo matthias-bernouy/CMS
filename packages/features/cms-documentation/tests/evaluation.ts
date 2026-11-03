@@ -1,7 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { CmsDocumentation } from "@bernouy/cms-documentation";
-import { TransformersDocumentationEmbeddings } from "@bernouy/cms-documentation/transformers";
+import { TransformersEmbeddings } from "@bernouy/text-embeddings";
 
 // Explicit opt-in evaluation: downloads the pinned model if it is absent from the supplied cache.
 const root = resolve(Bun.argv[2] ?? "packages/runtimes/ulvia-cli/dist/bootstrap");
@@ -28,7 +28,7 @@ const releases = await Promise.all(
 );
 let reads = 0;
 let embeddings = 0;
-const model = new TransformersDocumentationEmbeddings({ cacheDirectory, threads: 2, localFilesOnly: offline });
+const model = new TransformersEmbeddings({ cacheDirectory, threads: 2, localFilesOnly: offline });
 const service = new CmsDocumentation(
     {
         resolve: async () => ({ revision: "evaluation", releases }),

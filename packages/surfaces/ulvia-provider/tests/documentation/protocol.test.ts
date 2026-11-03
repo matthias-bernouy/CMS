@@ -136,7 +136,7 @@ test("a live authorization refusal cannot read or index documentation", async ()
             requestId,
             instanceId: "instance-a",
             contractId: contract.release.contractId,
-            contractVersion: "1.0.0",
+            contractVersion: contract.release.version,
             capabilityId: "documentation.search",
             issuedAt: 0,
             expiresAt: 9999999999,

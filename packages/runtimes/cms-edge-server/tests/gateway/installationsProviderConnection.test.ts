@@ -59,3 +59,21 @@ async function providerReport() {
         ],
     };
 }
+
+test("the previous exact control pin remains usable without accepting arbitrary patch releases", async () => {
+    const report = await providerReport();
+    report.implementations[0] = {
+        contractId: "ulvia.cms.installations",
+        version: "1.0.0",
+        digest: "sha256:633e76b7944ece8618602ce20d78ebbeb0f517e632bc40556aec91ccd36d6fa1",
+        status: "ready",
+    };
+    const transport = new InstallationsProviderTransport(
+        "https://provider.test",
+        "provider-token-at-least-twenty",
+        (async () => Response.json(report)) as typeof fetch,
+    );
+    expect(await fetchInstallationsProviderReport(transport)).toEqual(report);
+    report.implementations[0]!.version = "1.0.1";
+    await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("compatible control contract");
+});

@@ -50,6 +50,12 @@ export class RepositoryCapabilityService {
         if (id === "namespace-get") {
             return namespaces.get(namespace, input.revision as number | undefined);
         }
+        if (id === "catalogue-search") {
+            if (!this.ports.search) {
+                throw new RepositoryRequestError("NOT_FOUND");
+            }
+            return this.ports.search.search(input);
+        }
         if (id === "catalogue-list") {
             return this.ports.catalogue(input as Parameters<RepositoryCapabilityPorts["catalogue"]>[0]);
         }

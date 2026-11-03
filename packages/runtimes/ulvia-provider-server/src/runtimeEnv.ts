@@ -1,6 +1,7 @@
 import { parseHttpUrl, parseBoolean, parsePort, requiredEnv, type RuntimeEnvSource } from "./runtimeEnvParsing";
 import { parseRuntimeKekConfig, type RuntimeKekConfig } from "./runtimeEnvKek";
 import { assertProviderConnectionToken } from "@bernouy/cms-repository/providers/installations";
+import { isAbsolute } from "node:path";
 
 export type ProviderRuntimeEnv = Readonly<{
     ULVIA_PROVIDER_PORT: number;
@@ -13,6 +14,7 @@ export type ProviderRuntimeEnv = Readonly<{
     CMS_FILES_DIR: string;
     CMS_SESSION_SECRET: string;
     CMS_KEK: RuntimeKekConfig;
+    ULVIA_EMBEDDING_MODEL_DIR?: string;
 }>;
 
 export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntimeEnv {
@@ -22,6 +24,10 @@ export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntim
         "ULVIA_PROVIDER_PUBLIC_URL",
     );
     assertProviderOrigin(ULVIA_PROVIDER_PUBLIC_URL, ULVIA_PROVIDER_PORT);
+    const modelDirectory = source.ULVIA_EMBEDDING_MODEL_DIR?.trim();
+    if (modelDirectory && !isAbsolute(modelDirectory)) {
+        throw new Error("ULVIA_EMBEDDING_MODEL_DIR must be an absolute path");
+    }
     const token = source.ULVIA_PROVIDER_OPERATOR_TOKEN;
     requiredEnv(source, "ULVIA_PROVIDER_OPERATOR_TOKEN");
     try {
@@ -47,6 +53,7 @@ export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntim
         CMS_FILES_DIR: requiredEnv(source, "CMS_FILES_DIR"),
         CMS_SESSION_SECRET: requiredEnv(source, "CMS_SESSION_SECRET"),
         CMS_KEK: parseRuntimeKekConfig(source),
+        ...(modelDirectory ? { ULVIA_EMBEDDING_MODEL_DIR: modelDirectory } : {}),
     };
 }
 

@@ -61,6 +61,9 @@
         },
         {
             "path": "../../features/cms-documentation"
+        },
+        {
+            "path": "../../foundation/text-embeddings"
         }
     ]
 }

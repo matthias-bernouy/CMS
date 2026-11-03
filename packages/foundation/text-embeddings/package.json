@@ -1,0 +1,17 @@
+{
+    "name": "@bernouy/text-embeddings",
+    "version": "1.0.0",
+    "license": "MIT",
+    "type": "module",
+    "description": "Explicit local E5 embeddings adapter using a pinned Transformers.js model.",
+    "exports": {
+        ".": "./src/exports/index.ts"
+    },
+    "dependencies": {
+        "@bernouy/text-search": "workspace:*",
+        "@huggingface/transformers": "^4.3.2"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    }
+}

@@ -4,15 +4,33 @@
         "outDir": "dist",
         "rootDir": "./src",
         "paths": {
-            "cms-repository/*": ["./src/*"]
+            "cms-repository/*": [
+                "./src/*"
+            ]
         }
     },
-    "include": ["src/**/*.ts", "src/repository/capabilities/contract/**/*.json"],
+    "include": [
+        "src/**/*.ts",
+        "src/repository/capabilities/contract/**/*.json"
+    ],
     "references": [
-        { "path": "../../foundation/binary-media" },
-        { "path": "../../foundation/blob-store" },
-        { "path": "../../features/cms-content" },
-        { "path": "../../foundation/http-runner" },
-        { "path": "../../foundation/secret-store" }
+        {
+            "path": "../../foundation/binary-media"
+        },
+        {
+            "path": "../../foundation/blob-store"
+        },
+        {
+            "path": "../../features/cms-content"
+        },
+        {
+            "path": "../../foundation/http-runner"
+        },
+        {
+            "path": "../../foundation/secret-store"
+        },
+        {
+            "path": "../../foundation/text-search"
+        }
     ]
 }

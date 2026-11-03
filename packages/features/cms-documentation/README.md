@@ -5,7 +5,6 @@ roots inject immutable storage, current selection checks, a multilingual model
 and optional derived vector storage. Documentation never grants authority.
 
 - `.` exports `CmsDocumentation`, `DocumentationError` and dependency ports.
-- `/transformers` exports a pinned local multilingual E5 CPU adapter with explicit initialization and disposal.
 - `/mongo` exports rebuildable model/content-keyed vectors with a 30-day TTL.
 
 Search returns exact release references, section excerpts and an explicit
@@ -24,7 +23,7 @@ share that corpus. Search never starts passage inference: an unprepared corpus
 returns explicit lexical fallback immediately and may send a throttled scheduling
 hint through the injected callback. A prepared lookup embeds only its query.
 
-The explicit Transformers adapter performs tokenization and inference in one
+Runtimes import the explicit adapter from `@bernouy/text-embeddings`. It performs tokenization and inference in one
 worker shared by the runtime. Its `localFilesOnly` option refuses missing pinned
 files without initiating a download, including inside that worker.
 

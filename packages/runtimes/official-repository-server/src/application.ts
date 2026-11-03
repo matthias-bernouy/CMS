@@ -1,3 +1,7 @@
+import { FilesystemRepositorySearchSource } from "@bernouy/cms-repository/repository/search/filesystem";
+import type { Embeddings } from "@bernouy/text-search";
+import { MemoryVectorStore } from "@bernouy/text-search";
+import { RepositorySearch } from "@bernouy/cms-repository/repository/search";
 import {
     FilesystemRepositoryPublicationRegistry,
     FilesystemRepositoryPublicationUploadStore,
@@ -16,9 +20,14 @@ import { cataloguePorts } from "./community/catalogue";
 
 export type OfficialRepositoryApplication = Readonly<{
     handle(request: Request): Promise<Response>;
+    close(): Promise<void>;
+    prepareSearch(): Promise<unknown>;
 }>;
 
-export async function createOfficialRepositoryApplication(root: string): Promise<OfficialRepositoryApplication> {
+export async function createOfficialRepositoryApplication(
+    root: string,
+    model?: Embeddings,
+): Promise<OfficialRepositoryApplication> {
     const index = new FilesystemRepositoryCatalogueIndex(root);
     await validateOfficialRepositoryStorage(root, index);
     await recoverRepositoryStorage(root);
@@ -28,7 +37,13 @@ export async function createOfficialRepositoryApplication(root: string): Promise
     const namespaces = await createNamespaceAuthority(root);
     const ownership = new RepositoryNamespaceEndpoint(namespaces);
     const registry = new FilesystemRepositoryPublicationRegistry(root, index);
+    const search = new RepositorySearch(
+        new FilesystemRepositorySearchSource(root, index),
+        model,
+        new MemoryVectorStore(),
+    );
     const capabilities = await createRepositoryCapabilities(root, {
+        search,
         namespaces,
         sources: new FilesystemRepositorySourceStore(root),
         registry,
@@ -41,6 +56,8 @@ export async function createOfficialRepositoryApplication(root: string): Promise
         namespaces,
     });
     return {
+        close: () => search.close(),
+        prepareSearch: () => search.prepare(),
         async handle(request) {
             const url = new URL(request.url);
             if ((request.method === "GET" || request.method === "HEAD") && url.pathname === "/healthz") {

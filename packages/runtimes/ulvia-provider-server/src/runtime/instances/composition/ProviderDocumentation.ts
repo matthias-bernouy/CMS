@@ -1,5 +1,6 @@
 import type { CmsDocumentation } from "@bernouy/cms-documentation";
-import { TransformersDocumentationEmbeddings } from "@bernouy/cms-documentation/transformers";
+import { TransformersEmbeddings } from "@bernouy/text-embeddings";
+import type { EmbeddingModelOptions } from "@bernouy/text-embeddings";
 import type { Logger } from "@bernouy/logging";
 import type { ProviderInstanceRecord } from "@bernouy/ulvia-provider";
 import type { ResourceLease } from "../InstanceResourcePool";
@@ -7,18 +8,18 @@ import { DocumentationPreparationQueue } from "./DocumentationPreparationQueue";
 
 /** Runtime-owned scheduling; queued records do not retain Mongo-backed instance resources. */
 export class ProviderDocumentation {
-    readonly model: TransformersDocumentationEmbeddings;
+    readonly model: TransformersEmbeddings;
     private readonly queue: DocumentationPreparationQueue;
     private startup?: Promise<void>;
     private stopping = false;
     constructor(
-        cacheDirectory: string,
+        modelOptions: EmbeddingModelOptions,
         private readonly open: (
             instance: ProviderInstanceRecord,
         ) => Promise<ResourceLease<{ documentation: CmsDocumentation }>>,
         private readonly logger: Logger,
     ) {
-        this.model = new TransformersDocumentationEmbeddings({ cacheDirectory, threads: 2 });
+        this.model = new TransformersEmbeddings({ ...modelOptions, threads: 2 });
         this.queue = new DocumentationPreparationQueue((preparationKey, error) =>
             logger.warn("provider.documentation.preparation.failed", { preparationKey }, error),
         );

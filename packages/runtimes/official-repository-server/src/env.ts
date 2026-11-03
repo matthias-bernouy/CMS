@@ -7,6 +7,7 @@ export type OfficialRepositoryEnv = Readonly<{
     publicUrl: string;
     root: string;
     seedRoot?: string;
+    modelDirectory?: string;
     shutdownTimeoutMs: number;
 }>;
 
@@ -23,6 +24,10 @@ export function readOfficialRepositoryEnv(source: Record<string, string | undefi
     if (seedRoot && !isAbsolute(seedRoot)) {
         throw new Error("ULVIA_REPOSITORY_SEED_DIR must be an absolute path");
     }
+    const modelDirectory = source.ULVIA_EMBEDDING_MODEL_DIR?.trim();
+    if (modelDirectory && !isAbsolute(modelDirectory)) {
+        throw new Error("ULVIA_EMBEDDING_MODEL_DIR must be an absolute path");
+    }
     const port = integer(source.REPOSITORY_PORT, "REPOSITORY_PORT", 3000, 1, 65_535);
     return {
         host,
@@ -30,6 +35,7 @@ export function readOfficialRepositoryEnv(source: Record<string, string | undefi
         publicUrl: publicOrigin(source.REPOSITORY_PUBLIC_URL ?? `http://127.0.0.1:${port}`),
         root,
         ...(seedRoot ? { seedRoot } : {}),
+        ...(modelDirectory ? { modelDirectory } : {}),
         shutdownTimeoutMs: integer(
             source.REPOSITORY_SHUTDOWN_TIMEOUT_MS,
             "REPOSITORY_SHUTDOWN_TIMEOUT_MS",
