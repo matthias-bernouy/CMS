@@ -17,7 +17,7 @@ standard responses, validators and the compatible Content transition.
 
 ```bash
 bun run ulvia -- configure network
-bun run ulvia -- services start --version 1.0.0
+bun run ulvia -- services start --version 1.0.7
 bun run ulvia -- services status
 bun run ulvia -- instance create preview
 bun run ulvia -- instance credentials preview
@@ -25,7 +25,7 @@ bun run ulvia -- instance stop preview
 bun run ulvia -- services stop
 ```
 
-`1.0.0` is an example exact image version; choose a published version of
+`1.0.7` is an example exact image version; choose a published version of
 all required components. The source CLI reports `development` and has no
 embedded default stack version, so first startup requires `--version`.
 After initialization, `bun run ulvia -- start` reuses the installed digests.
@@ -38,7 +38,7 @@ explicitly before initialization:
 
 ```bash
 CMS_REPOSITORY_URL=http://repository:3000 \
-CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true bun run ulvia -- services start --version 1.0.0
+CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true bun run ulvia -- services start --version 1.0.7
 ```
 
 In this example, `repository:3000` is a Repository CMS Edge address reachable
@@ -74,10 +74,10 @@ The CLI consumes released software images; it never builds them. Workspace and
 CI authors build and publish the two official Docker Hub images explicitly:
 
 ```bash
-bun run images:build --version 1.0.0 all
-bun run images:publish --version 1.0.0 all
-ulvia upgrade edge --version 1.0.0
-ulvia upgrade provider --version 1.0.0
+bun run images:build --version 1.0.7 all
+bun run images:publish --version 1.0.7 all
+ulvia upgrade edge --version 1.0.7
+ulvia upgrade provider --version 1.0.7
 ```
 
 An upgrade pulls the canonical `docker.io/cyaxis` reference, validates its OCI
@@ -89,13 +89,17 @@ upgrades process instances in sequence; a later failure can leave earlier
 instances upgraded. Collection, contract, and provider
 manifest releases remain Repository artifacts and do not become Docker images.
 
+The CLI and runtime images use distribution version `1.0.7`; official contracts,
+collections and instance profiles use the fresh `1.0.0` baseline. Existing npm
+versions and Docker tags are retained rather than reused.
+
 The host CLI is a separate public npm artifact. Its private workspace sources
 are bundled so the published package has no `workspace:*` dependencies:
 
 ```bash
-bun run cli:build --version 1.0.0 --stack-version 1.0.0
-bun run cli:publish --version 1.0.0
-bun add --global @cyaxis/ulvia@1.0.0
+bun run cli:build --version 1.0.7 --stack-version 1.0.7
+bun run cli:publish --version 1.0.7
+bun add --global @cyaxis/ulvia@1.0.7
 ```
 
 The build writes the package archive and a SHA-256 release receipt below

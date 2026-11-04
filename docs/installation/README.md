@@ -44,7 +44,7 @@ ulvia --help
 If `ulvia` is not found, reopen the terminal and check that `~/.bun/bin` is in
 `PATH`, as described by the Bun installation guide.
 
-Use an exact version, for example `@cyaxis/ulvia@1.0.0`, when reproducing an
+Use an exact version, for example `@cyaxis/ulvia@1.0.7`, when reproducing an
 installation. The `next` tag is reserved for explicitly tested prereleases.
 
 ## 3. Create A Local Site
@@ -59,7 +59,7 @@ ulvia instance credentials my-site
 
 The first start uses the exact software version bundled into the installed CLI.
 To select an exact initial version explicitly, use
-`ulvia services start --version 1.0.0`. This option never upgrades an
+`ulvia services start --version 1.0.7`. This option never upgrades an
 existing installation.
 
 First startup reuses locally cached exact-version images after checking their
@@ -147,8 +147,8 @@ ulvia --version
 Upgrade deployable components independently with exact versions:
 
 ```bash
-ulvia upgrade edge --version 1.0.0
-ulvia upgrade provider --version 1.0.0
+ulvia upgrade edge --version 1.0.7
+ulvia upgrade provider --version 1.0.7
 ```
 
 Ulvia resolves each official Docker Hub tag to an immutable digest and reuses

@@ -4,8 +4,8 @@ This image contains only the official multi-instance Provider runtime. Build
 and publish official tags from the workspace root:
 
 ```bash
-bun run images:build --version 1.0.0 provider
-bun run images:publish --version 1.0.0 provider
+bun run images:build --version 1.0.7 provider
+bun run images:publish --version 1.0.7 provider
 ```
 
 The Provider owns database access, instance provisioning and file storage. It
