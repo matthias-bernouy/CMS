@@ -115,8 +115,11 @@ The reference runtime uses local CPU `Xenova/multilingual-e5-small`, q8, pinned
 to revision `761b726dd34fb83930e26aab4e9ac3899aa1fa78`, with E5 query/passage
 prefixes. `@bernouy/text-embeddings` is an explicit runtime
 adapter. No hosted inference account is required. The runtime initializes the
-shared model in a background job after mounting HTTP. A dedicated worker owns
-tokenization and ONNX inference, keeping that work off the HTTP event loop.
+shared model in a background job after mounting HTTP. A dedicated child process
+owns tokenization and ONNX inference, keeping that work off the HTTP event loop.
+Its native environment contains `ORT_DISABLE_TELEMETRY=1` before ONNX loads and
+does not inherit Provider credentials. Thread-local JavaScript environment
+changes do not reliably reach the native library's `getenv`.
 The adapter bounds outstanding calls and is disposed by the runtime. Images ship
 the verified model in `/opt/ulvia/models` and configure `ULVIA_EMBEDDING_MODEL_DIR`
 for strictly local loading, outside data volumes. Native development without that
@@ -163,8 +166,9 @@ or general Provider readiness. Derived-cache index initialization also runs in
 preparation rather than composition. Lookups can request a throttled preparation retry;
 selection revision checks still fence returned results. Shutdown cancels queued
 jobs, drains the active native batch and queries, closes instance services and
-stores, then disposes the shared model and waits for its worker to exit naturally.
-Native calls are not instantly abortable. A worker thread protects HTTP scheduling;
-it does not isolate a fatal native process abort.
+stores, then disposes the shared model and waits for its process to exit naturally.
+Already admitted calls drain before close; new calls are refused. Parent IPC
+disconnection also disposes the model. Unexpected child exits reject pending work
+and remain visible as shutdown failures. Native calls are not instantly abortable.
 Vector quality depends on the model and authored prose; this version does not
 implement cross-encoder reranking or a separate vector database.

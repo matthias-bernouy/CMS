@@ -1,5 +1,9 @@
 # Background documentation preparation
 
+This is a historical validation report for the thread-based model adapter.
+The current adapter uses a separate native process with telemetry disabled at
+startup; see [the architecture guide](../../../../../docs/architecture/contract-documentation.md).
+
 The runtime now initializes one model worker after mounting HTTP and prepares
 selected documentation in a background queue. It retains at most 32 pending
 instance jobs and executes one preparation at a time. Queued records acquire

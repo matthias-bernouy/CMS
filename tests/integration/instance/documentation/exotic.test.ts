@@ -67,6 +67,7 @@ integration(
             }
             await f.close();
             expect(f.processOutcomes().filter((outcome) => outcome.nativeCrash)).toEqual([]);
+            expect(f.processOutcomes().every((outcome) => outcome.exitCode === 0)).toBe(true);
         }
     },
     300_000,

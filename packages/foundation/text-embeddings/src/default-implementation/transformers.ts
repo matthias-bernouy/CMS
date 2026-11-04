@@ -1,18 +1,15 @@
-import { Worker } from "node:worker_threads";
+import type { Subprocess } from "bun";
+import { spawnModelProcess } from "./transformers/process";
 import type { Embeddings } from "@bernouy/text-search";
-import type {
-    EmbeddingModelOptions,
-    EmbeddingWorkerReply,
-    EmbeddingWorkerCommand,
-} from "../interfaces/EmbeddingWorker";
+import type { EmbeddingModelOptions, EmbeddingWorkerCommand } from "../interfaces/EmbeddingWorker";
 import { modelIdentifier } from "./transformers/options";
 
 type Vectors = readonly (readonly number[])[] | undefined;
 
-/** One model worker per runtime keeps tokenization and native inference off the HTTP event loop. */
+/** One model process per runtime keeps tokenization and native inference off the HTTP event loop. */
 export class TransformersEmbeddings implements Embeddings {
     readonly model: string;
-    private worker?: Worker;
+    private worker?: Subprocess<"ignore", "ignore", "inherit">;
     private workerExit?: Promise<number>;
     private initializing?: Promise<void>;
     private closing?: Promise<void>;
@@ -57,9 +54,7 @@ export class TransformersEmbeddings implements Embeddings {
         this.active++;
         try {
             await this.initialize(signal);
-            if (this.closed) {
-                throw new Error("Embedding model closed");
-            }
+            // close() waits for this admitted slot, including initialization and native work.
             const result = await this.call({ action: "embed", texts: [...texts], kind });
             signal.throwIfAborted();
             if (!result || result.length !== texts.length) {
@@ -84,17 +79,15 @@ export class TransformersEmbeddings implements Embeddings {
                 });
             }
             await this.initializing?.catch(() => undefined);
-            if (this.worker) {
-                const exited = this.workerExit;
-                try {
+            try {
+                if (this.worker) {
                     await this.call({ action: "close" });
-                } finally {
-                    if ((await exited) !== 0) {
-                        throw new Error("Embedding worker did not exit cleanly");
-                    }
                 }
-            } else {
-                await this.workerExit;
+            } finally {
+                const code = await this.workerExit;
+                if (code !== undefined && code !== 0) {
+                    throw new Error(`Embedding process did not exit cleanly (${code})`);
+                }
             }
         })();
         return this.closing;
@@ -102,13 +95,7 @@ export class TransformersEmbeddings implements Embeddings {
 
     private call(input: EmbeddingWorkerCommand): Promise<Vectors> {
         if (!this.worker) {
-            const worker = new Worker(new URL("./transformers/worker.ts", import.meta.url), {
-                workerData: this.options,
-                env: {},
-            });
-            this.worker = worker;
-            this.workerExit = new Promise<number>((resolve) => worker.once("exit", resolve));
-            worker.on("message", (reply: EmbeddingWorkerReply) => {
+            const worker = spawnModelProcess((reply) => {
                 const pending = this.pending.get(reply.id);
                 this.pending.delete(reply.id);
                 if (reply.error) {
@@ -117,6 +104,8 @@ export class TransformersEmbeddings implements Embeddings {
                     pending?.resolve(reply.vectors);
                 }
             });
+            this.worker = worker;
+            this.workerExit = worker.exited;
             const failed = (error: Error) => {
                 if (this.worker !== worker) {
                     return;
@@ -127,14 +116,17 @@ export class TransformersEmbeddings implements Embeddings {
                 this.pending.forEach((pending) => pending.reject(error));
                 this.pending.clear();
             };
-            worker.on("error", failed);
-            worker.on("exit", (code) => failed(new Error(`Embedding worker exited (${code})`)));
+            void worker.exited.then((code) => failed(new Error(`Embedding process exited (${code})`)));
         }
         const id = ++this.sequence;
         return new Promise<Vectors>((resolve, reject) => {
             this.pending.set(id, { resolve, reject });
             try {
-                this.worker!.postMessage({ ...input, id });
+                this.worker!.send({
+                    ...input,
+                    id,
+                    ...(input.action === "initialize" ? { options: this.options } : {}),
+                });
             } catch (error) {
                 this.pending.delete(id);
                 reject(error);

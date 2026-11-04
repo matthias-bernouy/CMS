@@ -97,7 +97,6 @@ export class TransformersModel implements Embeddings {
     }
 
     private async load(): Promise<Extractor> {
-        const { pipeline } = await import("@huggingface/transformers");
         const options = {
             revision: this.options.revision ?? DEFAULT_EMBEDDING_REVISION,
             cache_dir: this.options.cacheDirectory,
@@ -121,6 +120,7 @@ export class TransformersModel implements Embeddings {
         if (this.options.localFilesOnly && !cached) {
             throw new Error("Pinned embedding model files are not cached");
         }
+        const { pipeline } = await import("@huggingface/transformers");
         // Transformers v4 tokenizer discovery ignores cache/revision options; a local path avoids that remote probe.
         return (await pipeline("feature-extraction", cached ? directory : model, {
             ...options,
