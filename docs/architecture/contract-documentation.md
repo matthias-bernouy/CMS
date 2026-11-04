@@ -4,10 +4,10 @@ Contract documentation is immutable release data. `cms-repository` admits and
 transfers it; `cms-documentation` retrieves and ranks it; the Provider runtime
 injects instance selection, Mongo storage and a local multilingual embedding
 model. Generic ranking and vector preparation live in `@bernouy/text-search`;
-runtimes explicitly import the worker backend from `@bernouy/text-embeddings`.
+runtimes explicitly import the subprocess backend from `@bernouy/text-embeddings`.
 Selected documentation scope remains in this feature.
-The Repository runtime may use the same adapter for its separate public resource
-index. Edge does not choose a model.
+The explicitly enabled Registry uses the same runtime adapter for its separate
+public resource index. Edge does not choose a model.
 
 ## Authoring and publication
 
@@ -39,9 +39,9 @@ and bounds directory depth and entries. Authored manifests are rejected:
 `documentation` belongs to compiled releases.
 
 Public immutable reads use
-`GET /v1/contracts/{publisherId}/{contractId}/{version}/docs/{encodedPath}`.
-Encode the entire relative document path as one URL component. HEAD returns
-metadata without text. Pull, Provider imports and the local bootstrap transport
+`GET /.cms/call/ulvia.repository/v1/assets/contract/{publisherId}/{contractId}/{version}/{assetId}`.
+Encode `docs/<relative-document-path>` as the single `assetId` URL component.
+HEAD returns metadata without text. Pull, Provider imports and the local bootstrap transport
 and verify these assets. Mongo stores text separately in
 `cms_contract_documentation`, keyed by content digest; normal contract and route
 reads hydrate only metadata. Publication requires actual verified bytes even

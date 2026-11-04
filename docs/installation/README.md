@@ -94,7 +94,10 @@ The selected connection is persisted as `repository.url` and
 do not replace an existing connection. To change it, update those fields and
 run `ulvia services start`. The Provider bundles admitted resources needed for initial provisioning; it
 does not need to contact this Repository to bootstrap its shipped profiles.
-Remote discovery and publication still require the configured Repository.
+Remote discovery and publication still require the configured Repository. An
+origin remains required in configuration even when it is unavailable at bootstrap.
+Creating a Repository instance neither changes that connection nor publishes the
+image-owned bootstrap artifacts into its public catalogue.
 
 Ulvia deliberately separates shared services from sites:
 
@@ -146,7 +149,6 @@ Upgrade deployable components independently with exact versions:
 ```bash
 ulvia upgrade edge --version 0.0.1-beta
 ulvia upgrade provider --version 0.0.1-beta
-ulvia upgrade repository --version 0.0.1-beta
 ```
 
 Ulvia resolves each official Docker Hub tag to an immutable digest and reuses
@@ -154,8 +156,9 @@ that digest on subsequent starts. Registry channels such as `next` or `latest`
 may identify releases for humans, but an installation never persists or
 silently follows those mutable tags.
 
-`upgrade edge` visits every local Edge instance in sequence. Upgrades of
-Provider and Repository affect shared services. A failed activation attempts
+`upgrade edge` visits every local Edge instance in sequence. A Provider
+upgrade affects shared services; Repository instances use those same Provider
+and Edge images. A failed activation attempts
 to restart the previous image, but this does not restore changed database or
 file contents and is not an atomic rollback across all instances.
 Take a complete backup before an upgrade involving persisted data. Internal
@@ -186,8 +189,9 @@ TCP traffic on ports 80 and 443. Review Docker's documented firewall behavior:
 published container ports can bypass some `ufw` and `firewalld` rules unless
 the host policy uses Docker's supported chains.
 
-Repository and Provider management endpoints remain bound to loopback. Only the
-shared proxy is exposed publicly.
+The Provider operator endpoint remains bound to loopback. A Repository is a
+named CMS instance exposed through its Edge and the same shared proxy; it has
+no separate management listener.
 
 ## 7. Backup, Reset, And Removal
 

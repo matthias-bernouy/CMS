@@ -80,9 +80,10 @@ remain separate. See the
 An API endpoint is a canonical origin without a path, credentials, query, or
 fragment. Gateway callback URLs may have a path but no credentials, query, or
 fragment. Parsers accept HTTPS and literal loopback HTTP for development only.
-They do not authorize network access. Future adapters must apply deployment
-network policy, bounded response reads, timeouts, and redirect rules that never
-forward credentials to an unapproved destination.
+They do not authorize network access. Host adapters must apply deployment
+network policy, bounded response reads, timeouts and redirect rules that never
+forward credentials to an unapproved destination. The current Node Gateway
+transport provides these checks; declarations alone do not enforce them.
 
 Installation `configuration` is non-secret and validated against the manifest's
 schema. The parser cannot identify arbitrary secrets hidden in legitimate text

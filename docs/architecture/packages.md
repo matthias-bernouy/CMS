@@ -31,7 +31,7 @@ already been published to a registry.
 | `@bernouy/secret-store` | Secret storage, reference resolution and encrypted Mongo persistence. |
 | `@bernouy/image-processing` | Generic image inspection and WebP transforms used by Files provider implementations. |
 | `@bernouy/text-search` | Backend-independent BM25, vector similarity, rank fusion, vector preparation/cache and abstract embedding ports. |
-| `@bernouy/text-embeddings` | Explicit local E5/ONNX worker adapter; owns Transformers.js and its native dependencies. |
+| `@bernouy/text-embeddings` | Explicit local E5/ONNX subprocess adapter with native telemetry disabled; owns Transformers.js and its native dependencies. |
 | `@bernouy/logging` | Structured diagnostics, bounded attributes, central redaction, Node sinks and test loggers. |
 
 ## Features
@@ -49,10 +49,10 @@ already been published to a registry.
 | `@bernouy/cms-smtp-emailer` | SMTP-specific administration, secret-backed configuration and the official Nodemailer implementation. |
 | `@bernouy/cms-auth` | Provider-owned accounts, local credentials, PATs, signed session tokens, account lifecycle and authentication email composition. It exposes no HTTP routes. |
 
-Collection Pages are admitted resources. The Edge mounts their shared route
-registry, rendering and revisioned execution-plan activation alongside
-site-owned Pages. There is no separate administration Page model, persistence
-model or runtime.
+Collections own reusable examples, not live Pages or routes. Runtime profiles
+may copy selected examples into ordinary Content Pages once during provisioning.
+Content owns their route registry, rendering, access analysis and sitemap; Edge
+forwards native resources. Administration uses the same Page model and runtime.
 Collection Bloc compilation is available only through the explicit
 `@bernouy/cms-repository/collections/build` tooling subpath. Site-owned Bloc
 source serialization remains in `cms-content` because it publishes mutable CMS

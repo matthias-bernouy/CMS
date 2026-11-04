@@ -10,11 +10,11 @@ Prepare a native installation from the workspace root:
 
 ```bash
 bun run infra/models/prepare.ts artifacts/models artifacts/model-downloads
-ULVIA_EMBEDDING_MODEL_DIR="$PWD/artifacts/models" bun run packages/runtimes/ulvia-provider-server/src/index.ts
+ULVIA_EMBEDDING_MODEL_DIR="$PWD/artifacts/models" bun --no-macros run packages/runtimes/ulvia-provider-server/src/index.ts
 ```
 
 Supply the runtime's other required environment variables as usual. The Provider
-accepts the same absolute `ULVIA_EMBEDDING_MODEL_DIR` and then require local files;
+accepts the same absolute `ULVIA_EMBEDDING_MODEL_DIR` and then requires local files;
 an absent model never triggers a remote download. Without this variable, native
 development retains its existing writable model cache and download behavior.
 

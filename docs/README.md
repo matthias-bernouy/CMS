@@ -33,8 +33,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 
 - [Repository and gateway flows](providers/README.md): artifact admission, site
   state, live invocation, identities and remaining integration gaps.
-- [Community Repository](architecture/community-repository.md): cryptographic
-  namespaces, capability contract, MCP, standalone deployments and limitations.
+- [Community Repository](architecture/community-repository.md): CMS-hosted Registry,
+  account-owned namespaces, PAT publication, discovery and deployment limits.
 - [Agent authoring](development/agent-authoring.md): current collection tooling
   and a prioritized proposal for disposable previews and declared tests.
 - [Bloc authoring](blocs/README.md): collection Blocs, site-owned content
@@ -44,8 +44,9 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [Runtime diagnostics](development/README.md#runtime-logs): structured events,
   request correlation, local journals, redaction and CLI inspection.
 
-Use the [repository audit](AUDIT.md), the architecture guides and the referenced
-source code to establish current behavior. An implemented API or passing local
+Use the architecture guides and their referenced source code to establish
+current behavior. The [repository audit](AUDIT.md) records its dated revision;
+its findings are not a substitute for current source inspection. An implemented API or passing local
 suite does not establish a completed browser journey or working CI delivery.
 Remaining activation gates are recorded in [Open platform work](TODO.md).
 

@@ -4,7 +4,7 @@ import { chmod, lstat, mkdir, open, rename, rm, writeFile } from "node:fs/promis
 import { randomUUID } from "node:crypto";
 import { homedir } from "node:os";
 import { isAbsolute, join } from "node:path";
-import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem";
+import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem/lock";
 
 export type ClientConfig = {
     schema: "ulvia.client.v2";

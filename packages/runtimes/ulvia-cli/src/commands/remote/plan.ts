@@ -1,6 +1,6 @@
+import type { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import {
     LocalArtifactFiles,
-    LocalCollectionRepository,
     LocalContractReleases,
     LocalProviderReleases,
     LocalRepositoryYanks,
@@ -8,7 +8,10 @@ import {
 import type { RemoteCoordinate } from "@bernouy/cms-repository/repository/publication";
 import { orderCollections, orderContracts } from "./ordering";
 
-export async function allLocalCoordinates(root: string): Promise<readonly RemoteCoordinate[]> {
+export async function allLocalCoordinates(
+    root: string,
+    collections: LocalCollectionRepository,
+): Promise<readonly RemoteCoordinate[]> {
     const files = new LocalArtifactFiles(root);
     const yanks = new LocalRepositoryYanks(root);
     const contracts = new LocalContractReleases(files, yanks);
@@ -30,7 +33,7 @@ export async function allLocalCoordinates(root: string): Promise<readonly Remote
             });
         }
     }
-    for (const { release } of orderCollections(await new LocalCollectionRepository(root).listMetadata())) {
+    for (const { release } of orderCollections(await collections.listMetadata())) {
         const coordinate: RemoteCoordinate = {
             kind: "collection",
             publisherId: release.publisherId,

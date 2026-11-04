@@ -83,8 +83,9 @@ Each contract has one exact version, digest and installation for a site. The
 planner checks enabled installations, exact approved published manifests,
 implemented releases, capability existence, accepted ranges and dependency
 cycles. It checks both contract requirements and additional manifest requirements.
-All capabilities of a selected contract are in scope; this is not a model of
-partially enabled capabilities.
+The selection planner checks the complete declared dependency graph. Site
+capability grants are separate: invocation and reviewed contract upgrades also
+check explicit denials against runtime consumers.
 
 An absent optional manifest requirement is permitted. If that contract is
 selected, its capability and range must match the optional requirement too.
@@ -121,9 +122,11 @@ serving both payment majors and `commerce@1.1`, which accepts either major.
    every contract pin using that installation. Runtime invocation still rechecks
    current installation state.
 
-Manifest approval and site selection are separate operations, not one atomic
-upgrade transaction. If a new manifest removes a selected release, the existing
-selection becomes unusable; hosts must plan coordinated changes before cutover.
+Manifest approval and site selection are separate operations. The mounted
+Provider retention preflight refuses to drop a release still selected by a site
+or retained by a profile or pending switch. A reviewed coordinated upgrade must
+retain the source release until authoritative usage permits its removal. See
+[release upgrades](../../../../../docs/architecture/release-upgrades.md).
 
 ## Observations, persistence and remaining runtime work
 
@@ -135,6 +138,7 @@ or certify provider behavior. The caller chooses the maximum observation age.
 Memory catalogues and stores are reference adapters. `./providers/mongo` persists
 installation and selection records with revision-checked writes. Production
 composition supplies durable release and manifest catalogues plus a coherent
-dependency-revision source. The Edge mounts authorized management Pages, and the
+dependency-revision source. Content renders ordinary management Pages through
+Edge native resource delivery, and the
 management workflow rotates local credentials. Provider-side credential
 revocation and registration/grants remain separate implementation work.

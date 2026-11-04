@@ -45,10 +45,10 @@ when the selected contract declares it. The current closed effect vocabulary
 contains `session`; Gateway validates it and returns it to Edge as metadata
 instead of forwarding Provider `Set-Cookie` headers.
 
-`./analysis` statically verifies Page requirements and derives Page access from
-the selected capabilities. Live browser authorization depends only on the
-capability's declared access and a trusted actor; Pages, referrers and execution
-pins are not authorities. `./access` exposes optional durable grant adapters,
+`@bernouy/cms-content/public-delivery` statically verifies Page requirements and
+derives Page access from injected selected capability metadata. Gateway owns
+live invocation authorization against trusted actors and current grants; Pages
+and referrers are not authorities. `./access/mongo` exposes durable grant adapters,
 `./identity` owns provider-wide user aliases. `./http` and
 `./http/node` expose the generic binding transport and hardened network adapter.
 

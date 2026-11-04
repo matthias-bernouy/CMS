@@ -1,4 +1,4 @@
-import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
+import { canonicalizeIJson, parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import type {
     AdmittedCollectionRelease,
     CollectionDigest,
@@ -6,7 +6,7 @@ import type {
 } from "../../interfaces/CollectionAdmission";
 import type { CollectionBundleAsset, VerifiedCollectionAsset } from "../../interfaces/CollectionAssets";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
-import { CollectionValidationError } from "../errors";
+import { CollectionValidationError, translateCollectionError } from "../errors";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../limits";
 import { parseCollectionRelease } from "../parsing/parseCollectionRelease";
 import { snapshotCollectionAssets, verifyCollectionAssets } from "./assets";
@@ -36,6 +36,21 @@ export async function verifyStoredCollectionArtifact(
 }
 
 /** Verifies immutable release metadata without loading potentially large asset bytes. */
+export async function verifyStoredCollectionReleaseJson(
+    input: string | Uint8Array,
+    expectedDigest: unknown,
+    options: Readonly<CollectionLimits> = DEFAULT_COLLECTION_LIMITS,
+): Promise<VerifiedCollectionReleaseMetadata> {
+    const limits = normalizeCollectionLimits(options);
+    try {
+        const value = parseStrictJson(input, limits.maxDocumentBytes, limits.maxJsonDepth);
+        return await verifyStoredCollectionRelease(value, expectedDigest, limits);
+    } catch (error) {
+        return translateCollectionError(error);
+    }
+}
+
+/** Verifies one parsed release and its canonical identity. */
 export async function verifyStoredCollectionRelease(
     value: unknown,
     expectedDigest: unknown,

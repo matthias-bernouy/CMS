@@ -1,13 +1,5 @@
-import { clientConfigDirectory, readClientConfig } from "./runtime/repository/config";
-import { localCommand } from "./commands/local";
-import { pruneCommand } from "./commands/prune";
-import { releaseCommand } from "./commands/release";
-import { remoteCommand } from "./commands/remote";
-import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { ensureUlviaPaths, resolveUlviaPaths } from "./runtime/paths";
 import { CLI_VERSION } from "./runtime/stack/version";
-import { repositoryConnectionCommand } from "./commands/local/repository";
-import { namespaceCommand } from "./commands/namespace/command";
 
 const HELP = `Ulvia CMS CLI
 
@@ -95,6 +87,7 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     ) {
         throw new Error(`Unknown command: ${command}`);
     }
+    const { clientConfigDirectory, readClientConfig } = await import("./runtime/repository/config");
     const environment = { ...(options.environment ?? process.env) };
     environment.ULVIA_CONFIG_DIR = clientConfigDirectory(environment, options.home);
     const cwd = options.cwd ?? process.cwd();
@@ -106,14 +99,17 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
             (await readClientConfig(environment.ULVIA_CONFIG_DIR)).repository?.url;
     }
     if (command === "namespace") {
+        const { namespaceCommand } = await import("./commands/namespace/command");
         await namespaceCommand(args.slice(1), environment, log);
         return;
     }
     if (command === "repository") {
+        const { repositoryConnectionCommand } = await import("./commands/local/repository");
         await repositoryConnectionCommand(args.slice(1), log, environment, options.stdin);
         return;
     }
     if (LOCAL_COMMANDS.has(command)) {
+        const { localCommand } = await import("./commands/local");
         await localCommand(command, args.slice(1), paths, log, environment);
         return;
     }
@@ -122,15 +118,19 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
         await previewCommand(args.slice(1), cwd, paths.repository, log);
         return;
     }
-    const repository = new LocalCollectionRepository(paths.repository);
     if (command === "release") {
+        const { releaseCommand } = await import("./commands/release");
         await releaseCommand(args.slice(1), cwd, paths.repository, log);
         return;
     }
     if (command === "push" || command === "pull" || command === "yank" || command === "restore") {
+        const { remoteCommand } = await import("./commands/remote");
         await remoteCommand(command, args.slice(1), paths.repository, environment, log);
         return;
     }
+    const { pruneCommand } = await import("./commands/prune");
+    const { LocalCollectionRepository } = await import("@bernouy/cms-repository/repository/filesystem");
+    const repository = new LocalCollectionRepository(paths.repository);
     await pruneCommand(args.slice(1), repository, log);
 }
 

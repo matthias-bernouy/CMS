@@ -1,8 +1,8 @@
 # Page languages and routes
 
 Page content and route persistence belong to `@bernouy/cms-content`. Provider
-capabilities expose authoring operations; the Edge renders their read-only
-projection. This guide describes that content repository, not the
+capabilities expose authoring operations; Content renders Pages and Edge
+forwards their native resource responses. This guide describes that content repository, not the
 contract/provider `cms-repository` package.
 
 One page record owns its content and stable ID. Its `paths` map stores a local
@@ -16,13 +16,13 @@ The page title and description provide default SEO copy. Optional
 `seo[language].title` and `seo[language].description` values override it per
 language; each omitted value inherits independently. Authoring changes advance
 the corresponding content revisions. Successful logical Content and Installations
-mutations through a Edge invalidate its render-input cache; changes made
-elsewhere depend on its revalidation window. See
-[rendering cache and freshness](edge.md#rendering-cache-and-freshness).
+mutations through an Edge invalidate its response cache. Other changes follow
+the bounded freshness policy described in
+[shared Edge response caching](../architecture/content-delivery.md#shared-edge-response-cache).
 
 The underlying repository supports revision-checked path matrices and localized
 SEO. The former `/api/page/seo` route and its static panel have been removed.
-The current `pages.*` capabilities in `ulvia.cms.content@1.1.0` create a Page,
+The current `pages.*` capabilities in `ulvia.cms.content@1.0.0` create a Page,
 manage its title, description, content, tags, publication, per-language routes
 and localized SEO, and expose the admitted Bloc catalogue used by the Page editor.
 All of those flows use versioned capabilities rather than private `/api/*`

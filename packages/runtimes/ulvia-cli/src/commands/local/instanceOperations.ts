@@ -1,5 +1,5 @@
 import { selectInstanceProfile } from "../../runtime/instances/profiles";
-import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem";
+import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem/lock";
 import { rm } from "node:fs/promises";
 import { disableLocalInstance, upgradeLocalInstanceProfile } from "../../runtime/instances/operator";
 import { loadLocalInstanceConfig, saveLocalInstanceProfile } from "../../runtime/instances/config";

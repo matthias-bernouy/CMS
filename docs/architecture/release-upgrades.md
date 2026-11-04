@@ -1,9 +1,10 @@
 # Reviewed Release Upgrades
 
-The fresh baseline uses Provider/collection protocols v1 and contract, collection
-and instance profile releases 1.0.0. The official Provider manifest is 1.0.0;
-its software build is 1.0.0. Published artifacts remain immutable. This change
-provides no readers or data conversion for earlier development formats.
+Provider and collection protocols remain v1. Artifact versions, software image
+versions and instance profile versions are independent; exact current pins live
+in the authored definitions and Provider profile catalogue. Published artifacts
+remain immutable. Removed development formats have no reader or automatic data
+conversion.
 
 ## Resource Identity
 
@@ -82,7 +83,7 @@ rechecks the plan and performs one revision-checked replacement. Durable intents
 contain exact pins and prepared values, never before/after Page snapshots.
 Uncertain commit outcomes keep maintenance active until an exact-state resume
 can resolve them. Repeating the same completed request is idempotent; changed
-retry targets reject. Routes are synchronized after a collection switch.
+retry targets reject. Collection switches do not claim or synchronize Page routes.
 
 The switch does not rewrite, republish or roll back Page documents. Replacing
 Page-authored Blocs remains a separate future editorial operation. Site changes
@@ -121,10 +122,10 @@ The CLI runs a one-shot `checkRetention.ts` preflight in the candidate Provider
 image before replacing the live image; startup repeats the guard. The public
 Repository does not track sites outside this Provider's administrative scope.
 
-The official development baseline has one `ulvia.official@1.0.0` profile,
-Provider manifest 1.0.0, contracts at 1.0.0 and administration collection 1.0.0.
-It declares no preceding profile to upgrade from. Future profiles retain exact
-releases while instances or transitions reference them. An image update never
+Supported profiles and exact artifact pins are declared in the Provider runtime
+and bundled bootstrap snapshot. The default CMS and explicit Repository
+profiles share the same runtime. Profile transitions retain exact releases
+while instances or pending transitions reference them. An image update never
 silently changes an existing profile pin.
 
 Expired worker leases can be reclaimed for an exact intent. Normal write permits

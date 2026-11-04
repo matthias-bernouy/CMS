@@ -11,15 +11,16 @@ published rendering read models.
   `/page-path` are browser-safe or document-contract entrypoints.
 - `/runtime-abi`, `/runtime-assets` and `/runtime-assets/build` own the generated
   Bloc behavior and binding-core runtime contract, serving and build step.
-- `/http` exposes mountable Content handlers; `/edge` exposes the narrow
-  authoring-side contract needed by Edge composition.
+- `/http` exposes mountable Content handlers; `/public-delivery` owns public
+  path resolution, Page access analysis and final native resource rendering.
 - `/mongo` contains runtime persistence adapters. Collection installation and
-  migration orchestration belong to
+  reviewed release-switch orchestration belong to
   `@bernouy/cms-repository/collections/installations`.
 
 File bytes belong to providers implementing `ulvia.cms.files`; this package
-stores provider-neutral references only. Edge rendering code should consume the
-rendering entrypoint rather than the authoring root.
+stores provider-neutral references only. Provider composition injects Content
+delivery and rendering ports. Edge has no Content repository or rendering
+dependency and forwards the selected contract's native resources.
 
 See the [workspace package map](../../../docs/architecture/packages.md). Licensed
 under the repository [MIT License](../../../LICENSE).

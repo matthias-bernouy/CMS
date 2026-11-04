@@ -1,6 +1,6 @@
 # Atlas starter authored bundle
 
-`atlas.collection.json` defines a shadow-shell panel and a composition-only page.
+`atlas.collection.json` defines a retained Light DOM panel and a composition-only Page assembly.
 The page forwards its `main` substitution slot to the panel's `body` slot.
 Only the panel has settings and styles; the page author fills editable content.
 
@@ -16,8 +16,10 @@ const admitted = await admitCollectionReleaseJson(documentJson, [
 ]);
 ```
 
-`tests/collections/fixture.test.ts` loads these exact files. No provider,
+`packages/features/cms-repository/tests/collections/fixture.test.ts` loads these exact files. No provider,
 credentials, network request, renderer or browser execution is involved.
-The sample deliberately keeps literal English author markup and omits optional
-collection translations and theme tokens. The full admitted collection format
-supports both resources; this small fixture is not its feature inventory.
+The fixture includes administration translations, settings, two examples and
+preview frames. Its example slot content is literal English and it has no theme
+tokens or behavior. This low-level admission fixture is not the recommended
+authoring-policy example; see the [authoring guide](../../../../../../docs/blocs/authoring.md)
+for reusable content, translation and theme practices.

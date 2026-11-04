@@ -1,5 +1,10 @@
 # Repository Audit
 
+This is a historical audit snapshot. Its counts, findings and command results
+apply to the reviewed revision and date, not the current checkout. Consult the
+[architecture](architecture/README.md), [development guide](development/README.md)
+and [open work](TODO.md) for current structure, commands and remaining gates.
+
 Reviewed on 2026-10-25 against `codex/alpha-v0`, commit `0e660a3c4`.
 This is a source-backed engineering assessment. Passing local checks does not
 establish that the complete deployment or every failure mode has been tested.

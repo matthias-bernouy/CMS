@@ -5,6 +5,7 @@ import {
     parseContractReleaseJson,
 } from "@bernouy/cms-repository/contracts";
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
+import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
 import {
     LocalArtifactFiles,
@@ -19,17 +20,18 @@ import {
     type RemoteCoordinate,
 } from "@bernouy/cms-repository/repository/publication";
 
-export async function loadLocal(root: string, coordinate: RemoteCoordinate) {
+export type LocalPushReads = {
+    readonly collections: LocalCollectionRepository;
+    contractCatalogue(): Promise<ReleaseCatalogue>;
+};
+
+export async function loadLocal(root: string, coordinate: RemoteCoordinate, reads: LocalPushReads) {
     const yanks = new LocalRepositoryYanks(root);
     if (await yanks.get(coordinate.kind, coordinate.publisherId, coordinate.id, coordinate.version)) {
         throw new Error("A locally yanked release cannot be pushed");
     }
     if (coordinate.kind === "collection") {
-        const artifact = await new LocalCollectionRepository(root).get(
-            coordinate.publisherId,
-            coordinate.id,
-            coordinate.version,
-        );
+        const artifact = await reads.collections.get(coordinate.publisherId, coordinate.id, coordinate.version);
         if (!artifact) {
             throw new Error("Local collection release not found");
         }
@@ -55,7 +57,7 @@ export async function loadLocal(root: string, coordinate: RemoteCoordinate) {
         const admission = assets.length
             ? await admitContractBundleJson(canonicalJson, assets)
             : await admitContractReleaseJson(canonicalJson);
-        const record = await (await contracts.catalogue()).get(coordinate.id, coordinate.version);
+        const record = await (await reads.contractCatalogue()).get(coordinate.id, coordinate.version);
         assertDigest(admission.digest, record!.admission.digest);
         return {
             digest: admission.digest,

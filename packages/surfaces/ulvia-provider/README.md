@@ -1,6 +1,7 @@
 # @bernouy/ulvia-provider
 
-Provider-facing surface for the official `ulvia.cms.*` contracts. It publishes
+Provider-facing surface for the official `ulvia.cms.*` contracts and explicitly
+enabled `ulvia.repository` capabilities. It publishes
 the authenticated runtime report and serves the exact HTTP bindings declared by
 admitted contract releases.
 

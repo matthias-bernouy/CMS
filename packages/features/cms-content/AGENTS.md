@@ -59,7 +59,7 @@ bindings, validation, and read models.
   validation/error primitives and memory/Mongo repositories. Domain rules stay
   with the domain; do not create a catch-all repository business domain.
 - `exports/` contains all declared public entrypoints.
-- Tests follow domains; aggregate repository tests live in `tests/application/`.
+- Tests follow domains; aggregate repository tests live in `packages/features/cms-content/tests/application/`.
 
 ## Rules
 

@@ -9,7 +9,8 @@ authorization engine or a general-purpose executable package format.
 The fresh `ulvia-collection/v1` format requires translated descriptions,
 nonempty `categories[]` and reusable collection-owned examples. Listed Blocs
 select a `defaultExample` for insertion. Examples support single and multiple
-roots, fixed viewport frames and isolated text fixtures. No historical reader
+roots and fixed viewport frames. They resolve the collection text catalogue;
+per-example text overrides are not part of the format. No historical reader
 accepts `category`, `thumbnail`, `defaultContent` or `default.html`.
 See [collection examples](../../../../../docs/blocs/examples.md).
 
@@ -25,7 +26,7 @@ configuration schemas.
 This slice supports:
 
 - A reusable administration translation catalogue shared by collection, Bloc,
-  setting, text, theme and Page metadata. Every metadata field stores
+  setting, text, theme and example metadata. Every metadata field stores
   a key, every key must exist in the default locale and additional locales may
   be partial. Resolution tries the requested locale, its regional parents and
   finally the collection locale.
@@ -36,8 +37,8 @@ This slice supports:
   exposes validation and fallback resolution; see
   [collection texts](../../../../../docs/blocs/texts.md).
 - Optional theme categories with typed light/dark token defaults.
-- Optional Pages: bounded collection-owned documents carrying a collection
-  default path and capability requirements that determine their access policy.
+- Reusable examples: bounded authored documents, exact Bloc references and
+  viewport frames for preview and insertion; they own no public routes.
 - Assets declared by stable ID, concrete MIME type, byte length and SHA-256.
 - Retained Blocs with required fixed `markup`, optional scoped `style`, behavior and
   declarative setting items. Required translated `description` and `categories`
@@ -48,7 +49,7 @@ This slice supports:
 - Explicit local `uses`, named slots for Blocs, plain text or bounded
   native-content profiles, reusable examples, fixed viewport previews
   and resource-level capability requirements.
-- Selective public Bloc/theme-token/text/asset/Page exports and bounded cross-collection imports.
+- Selective public Bloc/theme-token/text/asset exports and bounded cross-collection imports.
   Imported IDs retain compatible contracts across every accepted release.
 
 Collection and Bloc configuration are distinct. Example initial documents belong to
@@ -71,8 +72,8 @@ are forbidden in all markup; structural classes belong only in component markup
 and bindings only in Light DOM. CSS is parsed and wrapped in a Bloc-owned
 `@scope`; Shadow DOM selectors and APIs reject.
 Composition-only settings, styles and behaviour fields reject.
-Collection Page roots must be collection or explicitly imported Blocs. Page
-documents and initial examples enforce named slot acceptance and cardinality;
+Example roots must be collection or explicitly imported Blocs. Page
+documents and examples enforce named slot acceptance and cardinality;
 native editable content exists only through `plain-text`, `native-content` or
 managed-native contracts. `any-component` excludes compositions. Fixed
 Light DOM remains code-owned native markup, while its nested Bloc placements
@@ -139,18 +140,19 @@ verify every requested resource against its target release's explicit `exports`,
 validate cross-release slot targets and reject collection dependency cycles.
 Upgrades revalidate all installed dependents.
 
-Theme token and Page IDs remain local in release JSON. Tokens are projected as both the
+Theme token and example IDs remain local in release JSON. Tokens are projected as both the
 global token ID and CSS variable name `<collectionId>-<tokenId>`. Text
-expressions use `cms.i18n.<collectionId>.<textId>`, while a Page is identified
-by its collection and Page IDs independently from its route. Assets remain scoped by the immutable release
+expressions use `cms.i18n.<collectionId>.<textId>`. Live Pages have ordinary
+Content identities and routes; they are not collection resources. Assets remain scoped by the immutable release
 digest. Installation and upgrade reject exact Bloc-tag or projected theme-token
 collisions between collections.
 
-Admission does not permit hardcoded user-facing copy in Bloc defaults, fixed
-Light DOM or Page HTML. Visible text and textual accessibility attributes must
-come from a business-data binding or an exact admitted `cms.i18n` reference;
-technical HTML and CMS transport values remain literal. This makes locale
-coverage a publication property instead of a browser convention.
+Collection preparation policy requires reusable example and fixed Light DOM
+copy to come from business-data bindings or exact admitted `cms.i18n` references,
+including textual accessibility attributes. Technical HTML and CMS transport
+values remain literal. Site-owned Pages may contain editable literal copy.
+These authoring-policy checks are separate from low-level immutable admission;
+see [validation](../../../../../docs/blocs/validation.md).
 
 Each requirement names `contractId`, `capabilityId` and a bounded SemVer range.
 Admission requires a supplied `ReleaseCatalogue` whenever requirements exist.
@@ -186,7 +188,7 @@ also verify the exact byte set and capability witnesses, returning a digest,
 canonical JSON and immutable Blob snapshots. Every input buffer is snapshotted
 before the first asynchronous step; caller-owned objects are never frozen.
 
-`CollectionLimits` gives documents, Blocs, assets, texts, Pages,
+`CollectionLimits` gives documents, Blocs, assets, texts,
 dependencies, theme resources, examples, markup, slots, settings and
 requirements independent bounds. Import and export lists use the bound of the
 resource kind they select. `limits.schema` explicitly carries the schema policy
@@ -194,30 +196,26 @@ through configurations. Locale tags normalize using
 `Intl.getCanonicalLocales`; administration copy resolves through the immutable
 catalogue while content text overrides remain separate.
 
-## Collection Pages
+## Collection Examples And Live Pages
 
-The local release command recursively reads
-`pages/**/<page-id>/definition.json` and `page.html`, then places the document
-in the immutable release. Every nonempty Page root must be a declared local or
-explicitly imported Bloc identified by `cms-bloc`; native elements and text are
-admitted only through that Bloc's slot and managed-native contracts. Admission
-derives the exact `uses` set from the HTML. Declarative `cms-query` and `cms-mutation`
-bindings name `contract:capability` and require a matching versioned capability
-requirement; admission verifies those witnesses alongside transitive local Bloc
-requirements. Scripts, executable links, dynamic internal paths,
-inline handlers and inline styles reject. Native anchors may use static internal
-paths declared by the release. Page imports pin the stable resource ID
-and default path, so admission can reject typos before publication. The
-repository projects installed Pages into the generic content read model and the
-Edge renders them through the shared Page document pipeline. Current,
-default and historical paths remain claims of one Page identity and resolve to
-its effective route.
+The local release command reads `examples/**/<example-id>/definition.json` and
+`document.html`. Admission checks root identities, slot contracts, text references
+and declared capability witnesses. Examples are reusable catalogue resources;
+they do not claim paths, get installed as a parallel Page model or contribute
+runtime capability grants on their own.
+
+An instance profile may copy an example into an ordinary Content Page during
+provisioning. That Page then owns its route, publication state, editable content
+and access analysis. Updating the collection never rewrites its stored document.
+See [collection examples](../../../../../docs/blocs/examples.md) and
+[instance initialization](../../../../../docs/architecture/provider-instance-initialization.md).
 
 ## Publication and installation
 
 The local release command discovers files below `assets/`, turns them into immutable size
-and digest metadata, stores exact bytes beside canonical JSON, and serves each
-asset through a bounded immutable HTTP route. CMS import fetches the complete
+and digest metadata and stores exact bytes beside canonical JSON in the private
+CLI cache. Explicit publication sends them to the CMS Repository, which serves
+assets through bounded immutable HTTP routes. CMS import fetches the complete
 bundle, repeats admission with the contract catalogue, stores assets outside the
 Mongo release document. Examples provide authored preview frames; screenshots
 are generated outside immutable release artifacts.
@@ -239,14 +237,15 @@ for inventory scopes, public capabilities, grants and Provider retention.
 
 The store can remove a collection only when no installed collection depends on
 it. This is deliberately not exposed as an administration HTTP action yet: site Pages,
-private Blocs, theme overrides and collection Pages still need affected-resource analysis
+private Blocs and theme overrides still need affected-resource analysis
 before removal is safe.
 
 ## Next slices
 
 Presets remain absent from the public format: unsupported fields reject.
 Static Page capability analysis and access derivation are implemented in
-`cms-gateway`; live invocation authority remains independent of Page documents.
+`@bernouy/cms-content/public-delivery`; live invocation authority remains
+independent of Page documents and belongs to Gateway.
 Remote publication uses account PATs through the CLI and official Provider
 server. Third-party JavaScript isolation remains open. The current first-party
 trust assumption and the required boundary before third-party collections are

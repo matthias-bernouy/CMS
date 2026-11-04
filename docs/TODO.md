@@ -1,9 +1,9 @@
 # Open Platform Work
 
-Status reviewed on 2026-10-25 against `codex/alpha-v0`. This list includes
-confirmed defects and deliberately deferred work. Later implementation updates
-are marked explicitly; remaining completion criteria describe work still to do. See the [audit](AUDIT.md)
-for evidence and priorities.
+Status reviewed on 2026-11-04 against the current source. This list includes
+remaining product and operational work. Historical measurements and audits
+retain their original dates; they do not certify the current checkout. See
+[development](development/README.md) for current commands and verification scope.
 
 The intentionally incompatible redesign of contracts, Provider authority,
 collection examples, Content delivery, SSR and the public Edge is tracked in
@@ -13,35 +13,38 @@ performance review guardrails for agents are tracked in the
 
 ## Delivery And Verification
 
-**Status:** static checks, build, ordinary tests, `verify:full` and the dedicated
-Docker image/instance/upgrade suite pass locally. Evidence is recorded in the
-delivery plan; remote CI, coverage reconciliation and dependency advisories
-remain separate verification work. The removed CI prebuild,
-branch triggers and obsolete performance fixtures are repaired; work budgets
-now run in `verify`, and delivery Docker budgets in `verify:full` and CI.
+**Status:** static checks, build, ordinary tests, `verify:full` and dedicated
+Docker image/instance/upgrade journeys are implemented. Recorded passes belong
+to their tested revisions; they do not certify new source or images. Remote CI,
+coverage reconciliation and dependency advisories remain separate verification
+work. The removed CI prebuild, branch triggers and obsolete performance fixtures
+are repaired; work budgets run in `verify`, with delivery Docker budgets in
+`verify:full` and CI.
 See [guardrails](development/guardrails.md) for implemented controls and limits.
 
 - Reconcile the coverage baseline with current packages and source paths.
-- Update the two high-severity development-tooling dependencies identified by
-  the audit, then rerun the online advisory check.
-- Add real Mongo adapter tests for index uniqueness, concurrent writes,
-  transactions where supported and recovery after interruption.
+- Rerun the online advisory check against the updated dependency lockfile; the
+  October audit does not establish the current advisory status.
+- Extend real Mongo coverage beyond the implemented namespace ownership and
+  PAT quota/concurrency tests: transactions, interruption and restoration still
+  need environment-level evidence.
 
 Exit condition: a clean checkout passes the complete delivery gate and one
 fresh container/proxy journey against the software being reviewed.
 
 ## Rendering Budgets And Content Delivery
 
-**Status:** request coalescing, revision checks, stale revalidation and several
-request/byte budgets exist. Page render inputs still include the complete Bloc
-catalogue, and their per-path cache has no capacity bound.
+**Status:** rendering now belongs to Content behind native resource delivery.
+The Edge response cache has explicit entry, byte and pending-load bounds.
+The removed Edge render-input projection and its per-path cache are no longer
+current architecture; origin-side dependency and cache costs still need review.
 
-- Bound cache entries, retained bytes and concurrent pending loads; handle
-  negative paths without retaining a full snapshot for every arbitrary URL.
+- Keep origin-side dependency reads and retained state bounded, including
+  negative paths; do not reintroduce complete per-path render snapshots.
 - Resolve the Page's transitive Bloc, behavior, text and asset dependencies
   before transfer. Adding unused resources must not increase its payload.
-- Give each Content delivery projection a validated wire schema. String chunks
-  containing JSON do not validate the nested object or its upgrade compatibility.
+- Keep native delivery response validation and byte bounds explicit; Edge must
+  not recover persistence-shaped render-input projections.
 - Test revalidation failures, invalidation races and changes made outside the
   current Edge, and document the chosen freshness guarantees.
 
@@ -71,8 +74,10 @@ of the effective write.
 
 ## Internal Persistence Migrations
 
-**Status:** collection-owned content migrations are implemented. Internal
-MongoDB documents do not share an ordered schema-migration registry.
+**Status:** collection upgrades use reviewed exact release switches and never
+transform Page documents. Removed collection generation/migration formats have
+no compatibility reader. Internal MongoDB documents do not share an ordered
+schema-migration registry.
 
 Add feature-owned, idempotent migrations with a durable applied-version ledger,
 single-writer fencing and restart recovery before changing long-lived internal
@@ -150,7 +155,7 @@ Page history. Dynamic-data authoring remains outside this initial slice.
 ## High Availability
 
 **Status:** one active Edge per instance, one Provider process and one active
-official-repository writer are assumed. Leases protect implemented critical
+Repository writer are assumed. Leases protect implemented critical
 sections; multi-replica failover is not proven. Unconsumed delegation roots live
 in one Provider process, and root liveness/queued closures live in one Edge
 process. Replicas or restarts lose that local context and refuse those calls.
@@ -160,5 +165,5 @@ sites within the supported process topology remain supported.
 
 Treat horizontal replicas as unsupported until migrations, background jobs,
 publication, cache invalidation and recovery have split-brain and
-ownership-loss tests. Community namespaces and the generic MCP binding remain
-planned work; they do not change the current deployment guarantees.
+ownership-loss tests. Account-owned namespaces and the generic MCP binding are
+implemented; they do not establish multi-replica deployment guarantees.

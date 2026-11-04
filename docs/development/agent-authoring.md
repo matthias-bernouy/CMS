@@ -20,7 +20,7 @@ author's build scripts or arbitrary test commands.
 Existing collection tests cover admission, styles, assets, dependency graphs,
 installation evolution and reviewed release upgrades. `quality/official-repository` tests
 exercise authored official controls and Page-editor behavior. The CLI's
-`tests/stack/edgeSmoke` journey exercises installation, provider access,
+`packages/runtimes/ulvia-cli/tests/stack/edgeSmoke/` journey exercises installation, provider access,
 Pages, files and collection upgrades in a production-shaped Docker stack.
 `bun run verify:full` runs the local Edge browser journey after normal verify.
 These tests are repository tests, not a generic collection-authored browser

@@ -3,7 +3,7 @@
 The former integration package workflow has been removed. Validate Bloc work
 against the collection release admission, compiler, and workspace checks. The
 current collection format has local and remote immutable publication plus a
-Edge renderer bridge.
+Content-owned rendering pipeline exposed through native delivery resources.
 
 ## Local loop
 
@@ -35,7 +35,7 @@ CSS custom-property writes. Bundling enforces supported imports and validates
 emitted syntax. Release admission parses every Bloc stylesheet and validates
 custom-property ownership, declared Bloc dependencies, theme-token imports and
 fallbacks for optional values. The collection import path additionally checks
-source bundles, default content and bounded `native-element` slot structure.
+source bundles, example documents and bounded `native-element` slot structure.
 Paint values and their local alias graph must resolve to theme tokens or
 allowed CSS keywords; literal colors and literal fallbacks fail preparation
 and admission. Compiled behavior is rechecked against color-carrying variables.
@@ -48,7 +48,10 @@ When changing compiler behavior, add a focused test beside
 ## Expanded authoring diagnostics
 
 Page writes analyze the expanded document before persistence and expose up to
-16 structured diagnostics through the existing mutations. Errors refuse a write;
+16 structured diagnostics through the existing mutations. Errors take priority
+over warnings; a bounded report includes `analysis.truncated` when findings are
+omitted. Truncation cannot turn a failing analysis into a successful write.
+Errors refuse a write;
 warnings return with the committed revision and are not persisted in Page data.
 The authoring analyzer checks main landmarks, native references, repeated IDs,
 interactive nesting and links supplied by templates as well as Page content.

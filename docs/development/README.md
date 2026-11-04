@@ -120,7 +120,8 @@ are absent.
 
 ## Runtime Logs
 
-Edge, Provider, and Repository operator diagnostics use structured stdout/stderr.
+Edge and Provider operator diagnostics use structured stdout/stderr.
+Repository instances use those same runtimes and their own instance journal.
 Instance diagnostics are collected through the selected Observability contract.
 Inspect the last 200 matching instance records with:
 
@@ -252,8 +253,10 @@ baseline still needs reconciliation with the current package set; remote CI
 and dependency-security checks must not be described as passing based on local
 verification alone.
 
-Many Mongo adapter tests use doubles. Real database concurrency, index behavior,
-interruption and restore need additional environment-level tests. The
+Many Mongo adapter tests use doubles. Namespace ownership and PAT quotas also
+have opt-in real Mongo tests covering concurrent processes, account/instance
+isolation and bounded indexed reads. Wider adapter interruption, transactions
+and full restore still need environment-level coverage. The
 [audit](../AUDIT.md) records successful local checks and confirmed gaps.
 Performance work should gate calls, transferred bytes and retained resources;
 `verify` now runs `test:performance` with machine-dependent timing ceilings,

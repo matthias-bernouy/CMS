@@ -97,6 +97,7 @@ export { verifyCollectionPublicationEvolution } from "cms-repository/collections
 export {
     verifyStoredCollectionArtifact,
     verifyStoredCollectionRelease,
+    verifyStoredCollectionReleaseJson,
 } from "cms-repository/collections/core/admission/collectionArtifact";
 export { collectionAssetRepresentationVersion } from "cms-repository/collections/core/admission/assets";
 export {

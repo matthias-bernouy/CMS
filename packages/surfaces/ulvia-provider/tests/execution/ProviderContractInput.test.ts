@@ -3,7 +3,7 @@ import { admitContractRelease } from "@bernouy/cms-repository/contracts";
 import { compileProviderRoutes } from "../../src/transport/routes";
 import { expect, test } from "bun:test";
 import type { HttpBoundCapability as CapabilityDefinition } from "../../src/transport/routes";
-import { decodeProviderContractInput } from "../../src/transport/input";
+import { decodeProviderContractInput } from "@bernouy/cms-gateway/provider/server";
 
 test("decodes canonical wire names into their declared input properties", async () => {
     const request = new Request("http://provider.test/uploads/file-a?part-offset=7", {

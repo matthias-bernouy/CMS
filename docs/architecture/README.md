@@ -88,8 +88,8 @@ Files providers use generic transforms from `@bernouy/image-processing`.
 
 The production runtime constructs Mongo catalogues and site stores, secret
 resolution, network adapters, identity storage and observation refresh. The
-Edge receives provider-neutral invocation and a static Page capability analyzer.
-It exposes collection-backed provider and collection administration Pages;
+Edge receives provider-neutral invocation and native resource delivery.
+Runtime profiles seed ordinary Content administration Pages from collection examples;
 provider connection approval, credential rotation and exact contract selection
 are application workflows owned by `cms-repository`. Repository publication is
 implemented in the official Provider for explicitly enabled Repository instances. See
@@ -114,8 +114,8 @@ value store remains Foundation infrastructure behind `cms-secrets`.
 
 ## Surface And Runtime Composition
 
-The Edge mounts every Content Page and feature-owned HTTP handlers
-on one supplied `Runner`.
+The Edge mounts HTTP protocols and forwards Content-owned native resources
+through one supplied `Runner`. It never receives a Content repository or renderer.
 SEO metadata, structured data, dynamic indexing and sitemap materialization are
 owned by `cms-content`. The selected Content implementation produces robots and
 sitemap resources through declared delivery capabilities; Edge only mounts
@@ -123,7 +123,8 @@ the injected resource handlers on its public URLs.
 Whether a Page is public, authenticated or administrative is derived by
 statically analyzing its capability requirements; there is no Page surface field or separate
 admin/public route namespace. Ulvia Provider mounts the provider report and the
-declared HTTP bindings of `ulvia.cms.*`. Neither surface chooses production
+declared HTTP bindings of `ulvia.cms.*` and explicitly enabled `ulvia.repository`.
+Neither surface chooses production
 databases or storage roots.
 
 The Ulvia Provider surface also owns the thin cross-domain adapters that register the

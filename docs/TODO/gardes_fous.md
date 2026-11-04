@@ -114,7 +114,7 @@ HTTP boundary — publicResource.ts
 Report: one test (path and name) with a before/after figure, or a short justification, per point.
 ```
 
-Risk areas are declared and tested in `quality/ci/review/riskAreas.ts`:
+Risk areas are declared and tested in `quality/ci/check-all/review.ts`:
 
 | Area | Paths | Questions |
 | --- | --- | --- |

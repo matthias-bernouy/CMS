@@ -1,7 +1,11 @@
 # CmsCore code improvement review
 
 Review date: 2026-10-29. Base commit: `2bd0d3ae71e01cd303a7abd0cf247dfda28dbf1c`.
-Evidence comes from the current working tree, including changes already present when this review started.
+Evidence comes from the working tree on that review date, including changes
+already present then. Findings below are historical and are not revalidated by
+the documentation cleanup of 2026-11-04. Follow current source before acting.
+Source links follow moved files where possible; quoted line numbers belong to
+the original review snapshot.
 
 ## 1. Actual scope and limitations
 
@@ -48,7 +52,7 @@ All eight warrant behavioral fixes and focused tests. No speculative stylistic r
 
 **Priority:** P1. **Confidence:** High; confirmed by inspection. **Effort:** Low.
 
-**Evidence and callers.** [FileCatalog.delete](../packages/features/cms-files/src/core/FileCatalog.ts), lines 141–150, verifies that the key belongs to the supplied `namespaceId`, then loads generations by `fileId` alone. It never compares their `namespaceId` with the authorized namespace. [FileAccess.deleteRecord](../packages/features/cms-files/src/core/FileAccess.ts), lines 135–138, deletes metadata and bytes without another authorization check. Both stores implement generation lookup without a namespace filter. The [Provider adapter](../packages/surfaces/ulvia-provider/src/capabilities/files.ts), lines 155–163, forwards the three caller arguments; the [workspace adapter](../packages/runtimes/ulvia-provider-server/src/runtime/stores/CmsFileWorkspace.ts) supplies its own namespace credentials but accepts a caller-selected file ID.
+**Evidence and callers.** [FileCatalog.delete](../packages/features/cms-files/src/core/FileCatalog.ts), lines 141–150, verifies that the key belongs to the supplied `namespaceId`, then loads generations by `fileId` alone. It never compares their `namespaceId` with the authorized namespace. [FileAccess.deleteRecord](../packages/features/cms-files/src/core/FileAccess.ts), lines 135–138, deletes metadata and bytes without another authorization check. Both stores implement generation lookup without a namespace filter. The [Provider adapter](../packages/surfaces/ulvia-provider/src/capabilities/storage/files.ts), lines 155–163, forwards the three caller arguments; the [workspace adapter](../packages/runtimes/ulvia-provider-server/src/runtime/stores/CmsFileWorkspace.ts) supplies its own namespace credentials but accepts a caller-selected file ID.
 
 **Scenario and consequence.** Create namespaces A and B in one instance, publish a file in B, then call `deleteFile(A.id, A.key, B.fileId)`. Every explicit guard accepts this request and B's generations are deleted. The authored official [Files delete declaration](../packages/official-repository/contracts/ulvia.cms.files/capabilities/commands/delete-file.json) requires `access: "admin"`; this is a namespace authority violation for an otherwise admitted caller, not evidence of unauthenticated or cross-instance access. Actual HTTP exposure depends on the runtime's admitted release and authentication.
 

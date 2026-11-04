@@ -29,14 +29,14 @@ not measured MongoDB operations. No public Repository or production mutation is
 used. The generated JSON report is written to
 `artifacts/performance/repository/report.json`.
 
-The benchmark separates cold index creation, the three catalogue types, bundle
+The benchmark separates cold filesystem catalogue creation, the three catalogue types, bundle
 and asset downloads, installed-state snapshots, graph/example validation, cold
 available collections and warm listings for installed and empty sites. Median,
 p95, request counts, bytes and storage reads are reported. Generous time
 ceilings detect major regressions; they are not production latency objectives.
 The warm-listing work budget requires one catalogue HTTP request, one site
-read, at most one installed release metadata read, and zero asset/bundle reads
-for this one-installed-collection fixture.
+read, one batched installed-summary read and zero full release or asset/bundle
+reads for its one-installed-collection fixture.
 
 The instance Docker journey also lists the newly published `mcp-kit` twice
 before installation and twice afterwards. It checks identical warm results,
@@ -46,7 +46,11 @@ valid collection preparation, publication, installation and private source-read
 timings through the authenticated Edge/Provider flow. Existing authorization and instance-isolation checks
 remain part of that journey.
 
-## Investigation on 2026-10-29
+## Historical Investigation On 2026-10-29
+
+The following measurements and validation results belong to that optimization
+and its reviewed revision. They are not current-image certification. The
+loopback benchmark server is a test fixture, not a separate Repository runtime.
 
 The deployed Edge and Provider were both 1.0.3, revision `4d6cac938`.
 Read-only production probes and retained capability logs showed:

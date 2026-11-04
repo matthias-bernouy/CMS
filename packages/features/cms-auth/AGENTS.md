@@ -41,6 +41,10 @@ the exact same operation.
 - Membership records contain identity and activity metadata only. Authorization
   belongs to CMS policies, capability access and trusted gateway actors; it must
   not be added to authentication subjects.
+- Self-service PAT management belongs to the authenticated account, not only
+  administrators. Keep tokens instance/account scoped. Inject account lifecycle
+  guards for external ownership constraints; authentication must not import the
+  Registry domain to implement namespace deletion rules.
 - Do not add browser components to this package.
 - Keep local password proof in `providers`, signed session tokens in `sessions`,
   and opaque credential resolution in `application`. Provider surfaces receive

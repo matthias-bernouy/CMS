@@ -120,9 +120,8 @@ binding. It fails before network access when none exists. Remote HTTP installati
 selection additionally rejects MCP exposures without an HTTP binding. Optional HTTP response
 metadata is carried through the Gateway without becoming a domain prerequisite.
 
-Historical `binding` declarations remain accepted as HTTP-only. Their canonical
-JSON and digests are preserved, rather than silently rewritten. Authoring both
-`binding` and `bindings` is rejected. Removing or renaming an MCP exposure
+The fresh v1 grammar requires `bindings`; the retired single `binding` field
+is rejected. Readers do not reinterpret the removed development shape. Removing or renaming an MCP exposure
 requires a major release; descriptive tool metadata can evolve in a patch.
 
 ## Reusable MCP binding
@@ -131,8 +130,7 @@ requires a major release; descriptive tool metadata can evolve in a patch.
 `createCapabilityMcpHttpHandler`. Inject exact admitted releases, a normal
 Gateway invoker and trusted per-request actor/site context. Only capabilities
 with an explicit `transport: "mcp"` binding are discoverable and callable.
-HTTP-only and historical single-binding capabilities are never implicitly
-exposed. No Repository identifiers are hard-coded in this adapter. Tool names
+HTTP-only capabilities are never implicitly exposed. No Repository identifiers are hard-coded in this adapter. Tool names
 use the binding's configured name or a deterministic contract/capability/binding
 identity; metadata includes the binding ID and exact release digest.
 Discovery is deterministic and paginated at 64 tools, with 1024 tools maximum.

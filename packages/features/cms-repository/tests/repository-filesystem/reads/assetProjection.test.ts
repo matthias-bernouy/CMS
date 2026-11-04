@@ -75,3 +75,31 @@ test("warm projections still observe changed release bytes and corrupt asset con
         await rm(f.root, { recursive: true, force: true });
     }
 });
+
+test("full reads reuse verified metadata while freezing independent results and rechecking asset bytes", async () => {
+    const f = await fixture();
+    const get = () => f.repository.get("example.official", "example", "1.0.0");
+    try {
+        const first = (await get())!;
+        const second = (await get())!;
+        expect(first).not.toBe(second);
+        expect(Object.isFrozen(first.release)).toBe(true);
+        expect(Object.isFrozen(first.release.assets)).toBe(true);
+        expect(Object.isFrozen(first.assets)).toBe(true);
+        expect(new Uint8Array(await first.assets[0]!.bytes.arrayBuffer())).toEqual(f.bytes);
+        const metadata = (await f.repository.getMetadata("example.official", "example", "1.0.0"))!;
+        (metadata.release as { name: string }).name = "changed-clone";
+        expect((await get())!.release.name).toBe("name");
+        const assetRoot = join(f.root, "assets/collections", f.artifact.digest.slice("sha256:".length));
+        const [file] = await readdir(assetRoot);
+        await writeFile(join(assetRoot, file!), new Uint8Array([3, 2, 1]));
+        await expect(get()).rejects.toThrow("digest mismatch");
+        await writeFile(
+            join(f.root, "releases/example.official/example/1.0.0.json"),
+            '{"kind":"collection","kind":"collection"}',
+        );
+        await expect(get()).rejects.toMatchObject({ code: "duplicate_json_property" });
+    } finally {
+        await rm(f.root, { recursive: true, force: true });
+    }
+});

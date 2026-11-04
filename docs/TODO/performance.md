@@ -416,8 +416,8 @@ release or changes to instance authority:
 - High Availability records the process-owned pending roots and Edge liveness;
   multiple isolated sites are supported, horizontal replicas remain unsupported.
 
-Focused evidence includes `tests/resources/fallback.test.ts`, `hints.test.ts`,
-`tests/gateway/preparation/root-capacity.test.ts`, `machine-errors.test.ts`,
+Focused evidence includes `packages/runtimes/cms-edge-server/tests/resources/fallback.test.ts`, `hints.test.ts`,
+`packages/runtimes/cms-edge-server/tests/gateway/preparation/root-capacity.test.ts`, `machine-errors.test.ts`,
 the description-cache tests, Foundation streaming tests, the actual relay error
 path, force-push scope tests and the real Docker freshness journey. These
 complement the original delivery budgets, authorization/rotation and upgrade

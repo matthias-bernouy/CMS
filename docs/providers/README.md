@@ -13,7 +13,7 @@ entry points.
 | Provider manifest | Immutable provider claims and exact contract references; memory/Mongo catalogue. |
 | Installation | Site-owned configuration, exact approved manifest, administrative lifecycle and runtime observations; revisioned memory/Mongo store. |
 | Selection | Site-owned exact contract/provider choices, validated together as a bounded dependency graph; revisioned memory/Mongo store. |
-| Collection release | Immutable Bloc, Page, theme, text and asset bundle; local repository catalogue and site installation/upgrade. |
+| Collection release | Immutable Bloc, example, theme, text and asset bundle; local repository catalogue and site installation/upgrade. |
 
 Contract admission validates and canonicalizes a release. Provider admission
 validates a manifest against releases. Site preparation and approval establish
@@ -26,7 +26,7 @@ These APIs exist in explicit `cms-repository/contracts`, `/providers` and
 `/collections` subpaths. Mongo adapters use `/contracts/mongo` and
 `/providers/mongo`. The package root exports types only. See the
 [repository package guide](../../packages/features/cms-repository/README.md)
-for the complete export map.
+for the public boundaries; its `package.json` defines the complete export map.
 
 ## Local Releases
 
@@ -34,10 +34,13 @@ for the complete export map.
 `definition.json` and stores a canonical immutable release under the user's
 Ulvia data directory. Contract folders declare `kind: "contract"`; provider
 folders declare `kind: "provider-manifest"`. Release contracts before provider
-manifests that reference their exact version and digest. The loopback local
-repository lists and serves both types at `/v1/contracts` and `/v1/providers`.
-The administration Pages can list and import exact contract and manifest releases from this
-repository. Importing a provider manifest resolves and preflights its exact
+manifests that reference their exact version and digest. This local repository
+is a private CLI filesystem cache, not an HTTP server. Explicit `push` sends
+its artifacts to a configured CMS Repository. That instance exposes catalogues
+through `QUERY /.cms/call/ulvia.repository/v1/catalogue` with `kind` and optional
+coordinate filters. Exact downloads use `/v1/releases/{kind}/{publisherId}/{id}/{version}`
+relative to the same contract prefix. Administration Pages consume those
+catalogues. Importing a provider manifest resolves and preflights its exact
 implemented contract releases from the same configured repository before any
 catalogue publication. Releasing an artifact does not contact a provider or
 approve an installation.
@@ -122,9 +125,10 @@ registry before opening that instance's stores and gateway. The Edge receives
 only its Provider URL and instance token; it does not receive the Provider
 operator secret or select an instance through a caller-supplied site header.
 The current host policy allows public, authenticated or administrator access as
-declared by each capability. Before rendering, the Edge statically verifies
-the requirements of collection-owned and site-owned Pages, including transitive
-Bloc requirements, and derives the Page access level from those capabilities.
+declared by each capability. Before rendering, Content statically verifies
+the requirements of site-owned Pages and installed collection resources,
+including transitive Bloc requirements, and derives the Page access level from
+those capabilities.
 This analysis controls rendering and caching; it is not a live invocation grant.
 Browser calls are authorized from the trusted actor and the selected
 capability's declared access, without a `Referer` or Page execution pin.

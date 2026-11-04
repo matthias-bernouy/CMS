@@ -1,7 +1,14 @@
 import { RemoteRepositoryClient, type RemoteCoordinate } from "@bernouy/cms-repository/repository/publication";
 import { type RepositoryNamespaceCredential } from "@bernouy/cms-repository/repository/namespaces";
 import { formatCoordinate, type RemoteSelection } from "./arguments";
-import { loadLocal } from "./storage";
+import { loadLocal, type LocalPushReads } from "./storage";
+import {
+    LocalArtifactFiles,
+    LocalCollectionRepository,
+    LocalContractReleases,
+    LocalRepositoryYanks,
+} from "@bernouy/cms-repository/repository/filesystem";
+import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { inferLocalCoordinate } from "./selection";
 import { allLocalCoordinates } from "./plan";
 import { remoteRepositoryCredential } from "../namespace/credentials";
@@ -13,9 +20,16 @@ export async function pushCommand(
     environment: Record<string, string | undefined>,
     log: (message: string) => void,
 ): Promise<void> {
+    const contracts = new LocalContractReleases(new LocalArtifactFiles(root), new LocalRepositoryYanks(root));
+    let catalogue: Promise<ReleaseCatalogue> | undefined;
+    // Immutable preflight evidence is scoped to this command, never cached invocation authority.
+    const reads: LocalPushReads = {
+        collections: new LocalCollectionRepository(root),
+        contractCatalogue: () => (catalogue ??= contracts.catalogue()),
+    };
     const coordinates: readonly RemoteCoordinate[] =
         selection.mode === "all"
-            ? await allLocalCoordinates(root)
+            ? await allLocalCoordinates(root, reads.collections)
             : [
                   selection.kind
                       ? {
@@ -24,14 +38,14 @@ export async function pushCommand(
                             id: selection.id,
                             version: selection.version,
                         }
-                      : await inferLocalCoordinate(root, selection),
+                      : await inferLocalCoordinate(root, selection, reads.collections),
               ];
     if (!coordinates.length) {
         throw new Error("No non-yanked local releases to push. Prepare resources with ulvia release first.");
     }
     const prepared: { coordinate: RemoteCoordinate; local: Awaited<ReturnType<typeof loadLocal>> }[] = [];
     for (const coordinate of coordinates) {
-        prepared.push({ coordinate, local: await loadLocal(root, coordinate) });
+        prepared.push({ coordinate, local: await loadLocal(root, coordinate, reads) });
     }
     const credentials = new Map<string, RepositoryNamespaceCredential>();
     for (const namespace of new Set(coordinates.map((coordinate) => coordinate.publisherId))) {

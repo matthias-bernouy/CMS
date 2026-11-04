@@ -7,9 +7,11 @@ run behind Content. General declarative query SSR and hosted network/mTLS
 hardening remain planned. See [public Content delivery](../architecture/content-delivery.md)
 and [Provider delegation](../providers/delegation.md).
 
-The approved fresh baseline retains protocol v1, contracts 1.0.0 and Provider
-1.0.0. “V2” in this document names the architecture plan, not an accepted
-artifact version. No compatibility reader or automatic data migration is added.
+This document preserves the approved architecture design and its original
+implementation steps; future-tense sections below are not a current work
+checklist. “V2” names this plan, not a wire protocol or current artifact version.
+Protocols remain v1; exact release pins evolve independently in the supported
+instance profiles. No compatibility reader or automatic data migration is added.
 
 ## Objective
 

@@ -100,8 +100,10 @@ It combines identity resolution, optional root delegation and token issuance.
 The Edge sends the resulting business request through ordinary pinned HTTP.
 Commands still resolve identity before their start audit. Failed preparation or
 transport closes any issued root ticket; a binary response retains it until
-completion or cancellation. The official `1.0.0` profile uses manifest `1.0.0`.
-The development baseline retains no preceding official profile. After changing the control contract,
+completion or cancellation. The current official profile is
+`ulvia.official@1.3.0`, with manifest `1.2.0`;
+the explicit Registry profile is `ulvia.repository@1.0.0` and shares that manifest.
+Neither declares a preceding profile transition. After changing the control contract,
 restart the stateless Edge so its startup report selects the exact ready pin.
 
 Repository execution metadata can be read through `ProviderExecutionStateReader`.
@@ -258,7 +260,8 @@ The delivery performance journey also measures response caching and sustained
 quota behavior. See [Content delivery](../architecture/content-delivery.md#shared-edge-response-cache)
 for the current cache and invalidation guarantees. Installations 1.0.0 groups
 explicit machine authentication and preparation while delegated calls preserve
-their original actor inspection path. Profile 1.0.0 selects the official baseline contracts.
+their original actor inspection path. Exact selections come from the supported
+[instance profiles](../../packages/runtimes/ulvia-provider-server/src/runtime/instances/profiles/definitions.ts).
 Mongo diagnostic ingestion uses one unordered majority-acknowledged bulkWrite
 per validated batch. The (instanceId, id) unique index rejects conflicting
 fingerprints; concurrent equal upserts are reconciled with one bounded majority

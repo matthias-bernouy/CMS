@@ -17,7 +17,7 @@ Ulvia Provider owns:
 - resolution of an installations control token to the isolated instance context
   used by public contract calls.
 
-One Edge serves one already-provisioned instance. It owns Page rendering,
+One Edge serves one already-provisioned instance. It owns
 public HTTP presentation, provider-neutral Gateway execution and application of
 validated response effects. Content, accounts, session tokens, files, Gateway
 state, installation state and durable release-switch intents remain behind contracts. Edge
@@ -29,8 +29,8 @@ credentials.
 The CLI manages one shared-services Compose project and one Edge project per
 named instance. The same projects support a loopback installation or explicit
 public binding with ACME TLS; there is no separate production mode. Shared
-services must already be running (`ulvia start` on a
-fresh installation, or `ulvia services start`). `ulvia instance create <name>`
+services must already be running (`ulvia services start`; a source CLI needs
+an explicit initial `--version`). `ulvia instance create <name>`
 then performs the following sequence:
 
 1. Verify that the shared Provider is healthy and read its private operator
@@ -67,6 +67,20 @@ later starts reuse the persisted image digests. Restarting or replacing an image
 does not automatically upgrade an instance's exact profile or installed
 collections.
 
+## Bootstrap And Repository Connections
+
+The Provider loads supported exact profiles from its bundled admitted snapshot.
+The default CMS profile installs `ulvia-official`; the explicit
+`ulvia.repository@1.0.0` profile also installs `ulvia-repository` and seeds its
+ordinary website Pages. Neither requires a running remote Repository. Missing
+bundled resources fail startup rather than falling back to the network.
+
+`CMS_REPOSITORY_URL` remains required by the Provider; the CLI supplies
+`https://repo.ulvia.fr` by default and persists an explicitly selected origin.
+Discovery, remote imports and publication use that connection after bootstrap.
+A new Registry has its own account-owned public catalogue: installing its
+bootstrap resources is not publication into that catalogue.
+
 ## Operator API
 
 Every endpoint requires
@@ -89,8 +103,8 @@ server-side and never asks Edge for an instance ID header.
 
 Public installation uses the same CLI flow in two phases:
 
-1. start the repository and Provider, then create the instance through the
-   operator API;
+1. start shared MongoDB, proxy and Provider services, then create the instance
+   through the operator API using the image-owned admitted profile;
 2. start one Edge with the returned access token, canonical domain and the
    Provider's private network URL.
 

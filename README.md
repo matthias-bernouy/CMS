@@ -48,10 +48,14 @@ CmsCore/
 |   |   |-- logging/           @bernouy/logging
 |   |   |-- rate-limiter/      @bernouy/rate-limiter
 |   |   |-- image-processing/  @bernouy/image-processing
-|   |   `-- secret-store/      @bernouy/secret-store
+|   |   |-- secret-store/      @bernouy/secret-store
+|   |   |-- text-search/       @bernouy/text-search
+|   |   `-- text-embeddings/   @bernouy/text-embeddings
 |   |-- features/
 |   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, themes, SEO)
 |   |   |-- cms-auth/          @bernouy/cms-auth
+|   |   |-- cms-documentation/ @bernouy/cms-documentation
+|   |   |-- cms-observability/ @bernouy/cms-observability
 |   |   |-- cms-emailer/       @bernouy/cms-emailer
 |   |   |-- cms-smtp-emailer/  @bernouy/cms-smtp-emailer
 |   |   |-- cms-files/         @bernouy/cms-files
@@ -60,10 +64,10 @@ CmsCore/
 |   |   `-- cms-secrets/       @bernouy/cms-secrets
 |   |-- surfaces/
 |   |   |-- ulvia-provider/    @bernouy/ulvia-provider
-|   |   `-- cms-edge/        @bernouy/cms-edge
+|   |   `-- cms-edge/          @bernouy/cms-edge
 |   |-- runtimes/
 |   |   |-- ulvia-cli/         @bernouy/ulvia-cli
-|   |   |-- cms-edge-server/ @bernouy/cms-edge-server
+|   |   |-- cms-edge-server/   @bernouy/cms-edge-server
 |   |   `-- ulvia-provider-server/
 |   `-- official-repository/   Authored official releases
 |
@@ -89,9 +93,8 @@ CmsCore/
 - Features may define HTTP values (handlers, registrars under `src/http/`)
   but never hold a runner, read env, or pick their own guards — surfaces and
   runtimes decide the composition.
-- Domain errors thrown by features carry a `.status` (e.g.
-  `ContentValidationError` → 400); surfaces never lend their error classes
-  downward.
+- Domain errors remain feature-owned. Surface adapters map them to declared
+  capability failures and HTTP outcomes; features never depend on surface errors.
 
 ## Working in the workspace
 
@@ -108,8 +111,9 @@ use `bun run ulvia -- services start --version <published-stack-version>`, then
 create a named instance. Later starts reuse persisted image digests. Running
 from source does not build or deploy the current workspace's server code.
 
-See the [current audit](docs/AUDIT.md) for verified local checks, known CI
-blockers and the remaining end-to-end product gate.
+See the [development guide](docs/development/README.md) for current checks and
+[open platform work](docs/TODO.md) for remaining product and operational gates.
+The [2026-10-25 audit](docs/AUDIT.md) is a historical snapshot.
 
 `build.ts` first runs `tsc --build`, then builds the generated Bloc behavior and
 binding-core runtimes owned by `@bernouy/cms-content`, and finally refreshes the
@@ -124,6 +128,9 @@ straight to `src/` outside the explicit `cms-content` browser bundles.
 `infra/images/` ships distinct Edge and Provider images. A Repository runs as
 an explicit CMS application profile on these same images, with ordinary accounts
 and account-owned namespaces; see the [Repository setup](docs/installation/README.md#9-repository-cms-instance).
+The Provider boots from exact admitted resources bundled in its image, without
+a running Repository. Remote discovery and publication use the separately
+configured Repository connection; creating a Registry instance does not replace it.
 The Ulvia CLI owns one parameterized Compose definition for loopback and public
 installations. The design hosts **many instances on one server**: durable
 instance data and files remain behind the Provider, while each domain routes

@@ -1,6 +1,6 @@
 import { isCanonicalSemVer, isRepositoryIdentifier } from "@bernouy/cms-repository/contracts/compatibility";
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
-import { boundedResponseBytes } from "@bernouy/cms-repository/repository/publication";
+import { boundedResponseBytes } from "@bernouy/cms-repository/repository/publication/transport";
 
 export type InstanceProfile = Readonly<{ id: string; version: string }>;
 

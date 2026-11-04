@@ -13,7 +13,6 @@ Bloc at `definition.json`; its basename must equal the definition `id`.
 blocs/content/example-card/
 ├── definition.json
 ├── markup.html         # required fixed Light DOM
-├── default.html        # optional initial Page-owned content
 ├── style.css           # optional, compiled into a scoped stylesheet
 ├── bloc.ts             # optional behavior
 ├── settings/definition.json
@@ -70,8 +69,10 @@ are rejected.
 
 All visible content lives in Light DOM. Shadow DOM, `attachShadow`,
 `shadowRoot`, `:host`, `::part` and `::slotted` are not part of the Bloc model.
-`markup.html` owns fixed structural Light DOM; `default.html` supplies
-initial Page-owned children that must satisfy the Bloc slot contract.
+`markup.html` owns fixed structural Light DOM. Reusable initial content is
+authored in collection `examples/**/document.html`; listed Blocs select a
+`defaultExample` for insertion. The resulting slot content belongs to the Page.
+`default.html` is rejected; see [collection examples](examples.md).
 
 `style.css` is parsed during the build and wrapped in a collection-owned native
 scope:
@@ -105,7 +106,7 @@ literal variable name.
 
 ## Browser Frames
 
-An iframe is authored in `markup.html` or `default.html`; behavior cannot create
+An iframe is authored in `markup.html` or an example document; behavior cannot create
 iframe elements or inject iframe markup. Its exact browser authority is part of
 the Bloc definition:
 
@@ -149,7 +150,7 @@ for arbitrary collection JavaScript.
 
 ## SVG Icons
 
-Do not put SVG geometry in `markup.html`, `default.html`, Page HTML or
+Do not put SVG geometry in `markup.html`, example documents, Page HTML or
 behavior code. Store the source below the collection's `assets/` tree and
 reference it from an empty native element:
 
@@ -192,7 +193,7 @@ An empty Page is empty. Every non-empty Page root must carry `cms-bloc` and
 reference an active installed Bloc. Native children are admitted only through
 that Bloc's default or named-slot contract. Slot acceptance, cardinality,
 native attributes, accessibility, bindings, links and transitive Bloc
-references are checked for examples, defaults, Page writes,
+references are checked for examples, Page writes,
 publication and reviewed upgrades.
 
 `any-component` accepts retained Blocs, not compositions. Bounded native text

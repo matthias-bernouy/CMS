@@ -24,8 +24,8 @@ returns explicit lexical fallback immediately and may send a throttled schedulin
 hint through the injected callback. A prepared lookup embeds only its query.
 
 Runtimes import the explicit adapter from `@bernouy/text-embeddings`. It performs tokenization and inference in one
-worker shared by the runtime. Its `localFilesOnly` option refuses missing pinned
-files without initiating a download, including inside that worker.
+child process shared by the runtime. Its `localFilesOnly` option refuses missing pinned
+files without initiating a download, including inside that process.
 
 Call `close()` before closing the instance's stores. It aborts preparation between
 batches and waits for outstanding native work; it does not dispose an injected

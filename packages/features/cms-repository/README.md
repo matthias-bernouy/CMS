@@ -13,57 +13,20 @@ authority to change an approved manifest, gateway permissions or site selections
 
 ## Layout
 
-```text
-cms-repository/
-├── src/
-│   ├── contracts/
-│   │   ├── core/
-│   │   ├── interfaces/
-│   │   ├── default-implementation/
-│   │   └── README.md
-│   ├── providers/
-│   │   ├── manifests/
-│   │   ├── installations/
-│   │   ├── selections/
-│   │   └── README.md
-│   ├── collections/
-│   │   ├── core/
-│   │   ├── interfaces/
-│   │   ├── installations/
-│   │   ├── sources/
-│   │   └── README.md
-│   ├── repository-http/
-│   │   ├── baseUrl.ts
-│   │   └── getBytes.ts
-│   ├── repository/
-│   │   ├── publication/
-│   │   └── filesystem/
-│   └── exports/
-│       ├── index.ts
-│       ├── contracts/
-│       ├── providers/
-│       └── collections/
-├── tests/
-│   ├── architecture/
-│   ├── contracts/
-│   ├── providers/
-│   └── collections/
-├── fixtures/
-│   ├── contracts/
-│   ├── providers/
-│   └── collections/
-├── AGENTS.md
-├── README.md
-├── package.json
-└── tsconfig.json
-```
+The package separates `contracts/`, `providers/`, `collections/`, `repository/`
+and `upgrades/`. `repository/` owns publication, account namespace authority,
+resource discovery and filesystem storage; it is not an executable HTTP server.
+`repository-http/` holds bounded client reads. `exports/` defines the public
+facades. Tests and fixtures follow their owning domains. Consult `package.json`
+for the complete current export map rather than treating this overview as an
+exhaustive directory listing.
 
 Contracts do not depend on providers or installation state. Providers consume
 the contracts export facade. Collections consume that same facade without
 depending on providers. Their authored-bundle admission is not renderer
 compilation, site installation or execution authorization.
 
-## Public entry points
+## Principal Public Entry Points
 
 | Export | Current responsibility |
 | --- | --- |
@@ -86,7 +49,7 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/providers/management` | Provider installation and selection application services |
 | `@bernouy/cms-repository/collections` | Authored release parsing, Light DOM structure, asset and requirement verification, bundle digests |
 | `@bernouy/cms-repository/collections/build` | Bun-based collection Bloc source validation and browser runtime compilation for authoring tools |
-| `@bernouy/cms-repository/collections/installations` | Revisioned site installations, compatibility analysis, resource digests and atomic migration replacement/restoration |
+| `@bernouy/cms-repository/collections/installations` | Revisioned site installations, compatibility analysis and resource digests for reviewed exact release switches |
 | `@bernouy/cms-repository/collections/content` | Projection of installed Blocs, text sources and themes into Content |
 | `@bernouy/cms-repository/collections/assets` | Verified collection asset projection and reads |
 | `@bernouy/cms-repository/collections/texts` | Collection text definition, locale and site-override composition |
@@ -94,10 +57,18 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/collections/http` | Collection repository HTTP route registration and bounded wire decoding |
 | `@bernouy/cms-repository/collections/mongo` | Mongo collection catalogues and installation stores |
 | `@bernouy/cms-repository/repository/publication` | Account-bound staged publication, pinned PAT client and registry/upload-store ports |
+| `@bernouy/cms-repository/repository/publication/transport` | Bounded response reads and Repository URL validation without loading artifact clients |
 | `@bernouy/cms-repository/repository/namespaces` | Account ownership, transfers, suspension, deletion fences and bounded namespace client |
 | `@bernouy/cms-repository/repository/namespaces/mongo` | Durable namespace ownership and account quotas |
 | `@bernouy/cms-repository/repository/capabilities` | Transport-independent registry capability service and injected ports |
+| `@bernouy/cms-repository/contracts/documentation` | Immutable Markdown metadata and verified document assets |
+| `@bernouy/cms-repository/repository/search` | Bounded public resource search, inspection and injected embedding ports |
+| `@bernouy/cms-repository/repository/search/filesystem` | Derived search index over immutable registry metadata |
+| `@bernouy/cms-repository/repository/search/http` | Bounded remote search and inspection client |
+| `@bernouy/cms-repository/upgrades` | Usage inventories, reviewed collection/contract plans, write fences and recovery |
+| `@bernouy/cms-repository/upgrades/mongo` | Durable upgrade plans, intents and write fences |
 | `@bernouy/cms-repository/repository/filesystem` | Reference immutable registry, streamed upload staging, local catalogues, yanks and download ports |
+| `@bernouy/cms-repository/repository/filesystem/lock` | Native filesystem leases without loading artifact parsers or publication services |
 
 Use explicit domain subpaths for executable APIs. There are no compatibility
 packages or wrappers under the former package names.
@@ -133,11 +104,12 @@ and transport profiles and dependency requirements. The
 and the implemented V1 connection protocol. [Provider workflows](src/providers/workflows.md)
 details implemented transitions, upgrade boundaries and remaining runtime work.
 The [collections guide](src/collections/README.md) documents admitted themes,
-texts, Pages, assets and resource requirements. The installed
+texts, examples, assets and resource requirements. The installed
 collection path accepts verified assets and capability requirements. The CLI
-runtime composes the reference filesystem registry and loopback listener, while
-this package owns authenticated remote publication, exact `push`/`pull`, and
-reversible yanking. Static Page capability analysis belongs to `cms-gateway`,
+runtime composes a private filesystem release cache and explicit publication
+clients; the Provider runtime composes the CMS-hosted Registry. This feature
+owns authenticated publication, exact release transfer and reversible yanking.
+Static Page capability analysis belongs to `@bernouy/cms-content/public-delivery`,
 but no provider invocation occurs inside this package. Collection Bloc runtime compilation is
 implemented for trusted CLI sources; third-party JavaScript isolation remains a
 separate concern.

@@ -40,7 +40,6 @@ bun run ulvia -- instance delete preview --yes
 bun run ulvia -- services stop
 bun run ulvia -- upgrade edge --version 0.0.1-beta
 bun run ulvia -- upgrade provider --version 0.0.1-beta
-bun run ulvia -- upgrade repository --version 0.0.1-beta
 bun run ulvia -- reset --yes
 bun run ulvia -- release packages/official-repository/collections/ulvia-official
 bun run ulvia -- release /path/to/contract-directory
@@ -62,7 +61,7 @@ The lifecycle commands manage the same Docker Compose projects for loopback and
 public installations from any directory. Persistent
 data lives below `$XDG_DATA_HOME/ulvia` or `~/.local/share/ulvia`;
 `ULVIA_DATA_DIR` remains an explicit isolation override for tests and CI. The
-CLI stores authored releases in `<data>/repository`. Shared Provider, Repository,
+CLI stores authored releases in `<data>/repository`. Shared Provider,
 MongoDB, proxy, files, secrets and logs live below `<data>/services`; each
 stateless Edge has independent state and logs below `<data>/instances/<name>`.
 The CLI never starts application servers, supervises their PIDs, or builds
@@ -88,9 +87,10 @@ The configuration is persisted under `<data>/services/installation.json` and
 is not a per-start mode. ACME requires `0.0.0.0` and every instance in an ACME
 installation requires an explicit DNS domain. Network configuration is locked
 after the first instance because its canonical Edge URL is part of Provider
-provisioning. Repository and Provider management ports remain loopback-only.
+provisioning. The Provider operator port remains loopback-only; a Repository instance is
+exposed through its own Edge and the shared proxy.
 
-`services start` starts only the shared proxy, MongoDB, Repository and Provider.
+`services start` starts only the shared proxy, MongoDB and Provider.
 On first initialization it uses the exact version embedded by `cli:build`, or
 an explicit `services start --version <version>` override. Later starts reuse
 the persisted digests and reject a conflicting `--version`; component changes
@@ -245,7 +245,7 @@ A collection keeps immutable administration copy in recursive locale
 directories such as `translations/en/collection.json` and
 `translations/en/theme/colors.json`. Every JSON object below
 `translations/<locale>/` contributes to that locale's flat catalogue.
-Collection, Bloc, setting, text, theme and Page metadata stores
+Collection, Bloc, setting, text, theme and example metadata stores
 reusable keys from those catalogues rather than inline labels. A key may occur
 in only one fragment per locale. The collection locale must define every
 referenced key; additional locale directories may be partial and fall back to
@@ -263,7 +263,7 @@ typed `font-face` entries backed by local WOFF2 assets.
 Collection assets are discovered recursively below `assets/`; their lowercase
 relative paths are their stable IDs. They are not declared in the collection
 `definition.json`. An optional root `assets/definition.json` accepts only a
-`generations` object keyed by those paths. The compiler derives media type,
+`deprecations` object keyed by those paths. The compiler derives media type,
 size and digest. Safe presentation-only SVG files receive the `inline-svg`
 profile automatically; other SVGs remain downloadable assets but cannot be
 expanded into authored Page DOM.

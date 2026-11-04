@@ -9,7 +9,10 @@ bun run images:publish --version 0.0.1-beta provider
 ```
 
 The Provider owns database access, instance provisioning and file storage. It
-does not contain the Edge or Official Repository entrypoints.
+does not contain an Edge listener or a separate Repository server.
+Explicit Registry instances run through the same Provider and their own Edge.
+Exact admitted bootstrap resources are bundled with the image, so provisioning
+does not depend on an available remote Repository.
 
 The image includes the pinned embedding model in `/opt/ulvia/models` and sets
 `ULVIA_EMBEDDING_MODEL_DIR` to require local loading. It needs no Internet access

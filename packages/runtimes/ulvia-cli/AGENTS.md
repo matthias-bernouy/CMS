@@ -11,6 +11,12 @@ Ulvia CMS installation runtime.
   must explicitly select their isolated Repository and opt into HTTP; never
   let their default setup contact the public Repository.
 - Expose lifecycle commands for starting, inspecting, and stopping the stack.
+- Shared services are proxy, MongoDB and Provider. A Repository is an explicitly
+  profiled named CMS instance with its own Edge, not another shared server or
+  image. Keep `upgrade` targets limited to Edge and Provider.
+- Source CLI startup requires an explicit initial image version. Bundled profile
+  provisioning must work without remote Repository access, while later discovery
+  and publication still use the persisted Repository connection.
 
 ## Rules
 
@@ -19,6 +25,13 @@ Ulvia CMS installation runtime.
   only the shared proxy according to the persistent installation configuration.
 - Never print session secrets, encryption keys, or infrastructure credentials.
 - Keep external process invocation behind the runtime process abstraction.
+- Load command-specific authoring, preview and publication code only after
+  dispatch. Local instance operations use the narrow filesystem lock and
+  publication transport exports; they must not initialize collection tooling.
+- Reuse immutable catalogue evidence only within one push preflight. Re-read
+  current file bytes and local yanks, verify every asset and let each receiving
+  publication recheck current ownership and admission. Never retain credentials
+  or authorization decisions in this read context.
 - Lifecycle commands must never start the Edge, Provider, or MongoDB directly;
   it only manages their production-shaped containers.
 - `release` reads an explicit authored resource folder and dispatches by its

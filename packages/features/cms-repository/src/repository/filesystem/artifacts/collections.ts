@@ -4,13 +4,12 @@ import { link, readFile, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import {
     isCollectionNamespace,
-    parseCollectionReleaseJson,
     type AdmittedCollectionRelease,
     DEFAULT_COLLECTION_LIMITS,
     verifyCollectionPublicationEvolution,
-    verifyStoredCollectionArtifact,
-    verifyStoredCollectionRelease,
+    verifyStoredCollectionReleaseJson,
 } from "cms-repository/exports/collections/index";
+import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import { snapshotCollectionAssets, verifyCollectionAssets } from "cms-repository/collections/core/admission/assets";
 import type { CollectionAssetDefinition } from "cms-repository/collections/interfaces/CollectionAssets";
 import type { VerifiedCollectionReleaseMetadata } from "cms-repository/collections/interfaces/CollectionAdmission";
@@ -117,7 +116,12 @@ export class LocalCollectionRepository {
             id,
             bytes: Bun.file(join(this.assetDirectory(metadata.canonicalJson), assetFileName(id))),
         }));
-        return verifyStoredCollectionArtifact(metadata.release, assets, metadata.digest);
+        // getMetadata already verified current bytes, grammar, coordinates and canonical identity.
+        // Its independent snapshot stays private until all asset checks have completed.
+        deepFreeze(metadata);
+        const snapshots = snapshotCollectionAssets(metadata.release.assets, assets, DEFAULT_COLLECTION_LIMITS);
+        await verifyCollectionAssets(metadata.release.assets, snapshots);
+        return Object.freeze({ ...metadata, assets: snapshots });
     }
 
     async getMetadata(
@@ -134,8 +138,7 @@ export class LocalCollectionRepository {
         if (cached) {
             return cached;
         }
-        const parsed = parseCollectionReleaseJson(bytes);
-        const artifact = await verifyStoredCollectionRelease(parsed, `sha256:${releaseHash(bytes)}`);
+        const artifact = await verifyStoredCollectionReleaseJson(bytes, `sha256:${releaseHash(bytes)}`);
         if (
             artifact.release.publisherId !== publisherId ||
             artifact.release.collectionId !== collectionId ||
