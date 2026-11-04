@@ -20,9 +20,16 @@ export function managedNativeElementIssue(
 
     const { document } = parseHTML("<!DOCTYPE html><html><body></body></html>");
     document.body.innerHTML = content;
+    const hostsById = new Map<string, Element[]>();
+    for (const host of document.body.querySelectorAll("[cms-bloc]")) {
+        const id = host.getAttribute("cms-bloc")!;
+        const hosts = hostsById.get(id) ?? [];
+        hosts.push(host);
+        hostsById.set(id, hosts);
+    }
 
     for (const contract of contracts) {
-        const hosts = Array.from(document.body.querySelectorAll(`[cms-bloc="${contract.id}"]`));
+        const hosts = hostsById.get(contract.id) ?? [];
         if (options.requireExactlyOneHost && hosts.length !== 1) {
             return `default content for bloc "${contract.id}" must contain exactly one annotated root`;
         }
