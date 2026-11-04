@@ -1,5 +1,5 @@
 import type { UlviaPaths } from "../../runtime/paths";
-import type { InstallationConfig } from "../../runtime/stack/installation";
+import { loadOrCreateInstallationConfig } from "../../runtime/stack/installation";
 import type { ComposeServiceState } from "../../runtime/stack/orchestration/compose";
 import {
     describeLocalServices,
@@ -25,7 +25,7 @@ Bundled initial stack version: ${DEFAULT_STACK_VERSION}`;
 export async function servicesCommand(
     args: readonly string[],
     paths: UlviaPaths,
-    installation: InstallationConfig,
+    environment: Record<string, string | undefined>,
     log: (message: string) => void,
 ): Promise<void> {
     const [action, ...rest] = args;
@@ -38,7 +38,9 @@ export async function servicesCommand(
             log(START_HELP);
             return;
         }
-        await startLocalServices(paths, installation, log, parseStartVersion(rest));
+        const requestedVersion = parseStartVersion(rest);
+        const installation = await loadOrCreateInstallationConfig(paths, environment);
+        await startLocalServices(paths, installation, log, requestedVersion);
         return;
     }
     if (action === "stop") {

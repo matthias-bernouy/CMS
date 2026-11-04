@@ -5,7 +5,7 @@ Production runtime composition root.
 ## Responsibilities
 
 - Read environment variables.
-- Validate the public report and compatible `ulvia.cms.installations` release
+- Validate the public report and exact pinned `ulvia.cms.installations` release
   exposed by the independently running installations Provider.
 - Compose the provider-neutral Gateway locally from remote route, identity,
   audit and invocation-token capabilities.

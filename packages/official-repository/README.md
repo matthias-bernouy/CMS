@@ -8,6 +8,13 @@ The Provider consumes a generated admitted snapshot rather than scanning this
 authored directory at runtime. The release pipeline publishes reviewed exact
 coordinates into account-owned namespaces of a CMS Repository instance.
 
+The current publication baseline is a fresh `1.0.0` release for every official
+contract, Provider manifest, collection and application profile. It requires a
+new catalogue and new instance storage. No reader, migration, signing identity
+or command alias imports state from the previous platform. Future release
+comparison, explicit upgrades and crash recovery remain supported; they do not
+provide compatibility with that previous platform.
+
 The official `ulvia.cms.*` contracts are served by the `@bernouy/ulvia-provider`
 surface after admission. Generic protocol fixtures remain beside the
 `cms-repository` tests and must not be moved here. `catalog.items`,

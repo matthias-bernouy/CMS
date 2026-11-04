@@ -4,7 +4,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { chmod, readFile, writeFile, rename, rm } from "node:fs/promises";
 import { join } from "node:path";
 
-const SCHEMA = "ulvia.local-instance-runtime.v2" as const;
+const SCHEMA = "ulvia.local-instance-runtime.v1" as const;
 
 export type LocalInstanceConfig = Readonly<{
     schema: typeof SCHEMA;

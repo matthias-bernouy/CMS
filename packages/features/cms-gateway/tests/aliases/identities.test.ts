@@ -18,13 +18,18 @@ type IdentityFilter = Partial<Pick<IdentityDoc, "aliasKey" | "subjectAuthorityKe
 identityServiceContract("Mongo", () => createService(new FakeIdentityCollection()));
 
 describe("Mongo identity persistence", () => {
-    test("gateway reuses a numeric provider alias stored before the package move", async () => {
+    test("gateway refuses numeric aliases without rewriting Mongo identity records", async () => {
         const collection = new FakeIdentityCollection();
         await createService(collection).bind("subject-1", { authority: "commerce", kind: "user", value: 184 });
 
         const gatewayIdentities = new ProviderIdentityAliases(createService(collection));
-        expect(await gatewayIdentities.getOrCreate({ providerId: "commerce" }, "subject-1")).toBe("184");
-        expect(await gatewayIdentities.resolve({ providerId: "commerce" }, 184)).toBe("subject-1");
+        await expect(gatewayIdentities.getOrCreate({ providerId: "commerce" }, "subject-1")).rejects.toThrow(
+            "transmissible string",
+        );
+        expect(await gatewayIdentities.resolve({ providerId: "commerce" }, "184")).toBeNull();
+        expect(
+            await createService(collection).resolve({ authority: "cms", kind: "user", value: "subject-1" }, "commerce"),
+        ).toBe(184);
     });
 
     test("creates unique indexes for both sides of a binding", async () => {

@@ -7,7 +7,7 @@ In a fresh checkout or worktree, install the locked dependencies:
 bun install --frozen-lockfile
 ```
 
-Collection authors: see [collection examples](../blocs/examples.md) for v2 metadata,
+Collection authors: see [collection examples](../blocs/examples.md) for v1 metadata,
 reusable insertion examples and locally generated previews.
 
 Provider authors: see [HTTP context and streaming](provider-http.md) for the generic receiver,
@@ -17,7 +17,7 @@ standard responses, validators and the compatible Content transition.
 
 ```bash
 bun run ulvia -- configure network
-bun run ulvia -- services start --version 0.0.1-beta
+bun run ulvia -- services start --version 1.0.0
 bun run ulvia -- services status
 bun run ulvia -- instance create preview
 bun run ulvia -- instance credentials preview
@@ -25,7 +25,7 @@ bun run ulvia -- instance stop preview
 bun run ulvia -- services stop
 ```
 
-`0.0.1-beta` is an example exact image version; choose a published version of
+`1.0.0` is an example exact image version; choose a published version of
 all required components. The source CLI reports `development` and has no
 embedded default stack version, so first startup requires `--version`.
 After initialization, `bun run ulvia -- start` reuses the installed digests.
@@ -38,7 +38,7 @@ explicitly before initialization:
 
 ```bash
 CMS_REPOSITORY_URL=http://repository:3000 \
-CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true bun run ulvia -- services start --version 0.0.1-beta
+CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true bun run ulvia -- services start --version 1.0.0
 ```
 
 In this example, `repository:3000` is a Repository CMS Edge address reachable
@@ -74,10 +74,10 @@ The CLI consumes released software images; it never builds them. Workspace and
 CI authors build and publish the two official Docker Hub images explicitly:
 
 ```bash
-bun run images:build --version 0.0.1-beta all
-bun run images:publish --version 0.0.1-beta all
-ulvia upgrade edge --version 0.0.1-beta
-ulvia upgrade provider --version 0.0.1-beta
+bun run images:build --version 1.0.0 all
+bun run images:publish --version 1.0.0 all
+ulvia upgrade edge --version 1.0.0
+ulvia upgrade provider --version 1.0.0
 ```
 
 An upgrade pulls the canonical `docker.io/cyaxis` reference, validates its OCI
@@ -93,9 +93,9 @@ The host CLI is a separate public npm artifact. Its private workspace sources
 are bundled so the published package has no `workspace:*` dependencies:
 
 ```bash
-bun run cli:build --version 0.0.3 --stack-version 0.0.1-beta
-bun run cli:publish --version 0.0.3
-bun add --global @cyaxis/ulvia@0.0.3
+bun run cli:build --version 1.0.0 --stack-version 1.0.0
+bun run cli:publish --version 1.0.0
+bun add --global @cyaxis/ulvia@1.0.0
 ```
 
 The build writes the package archive and a SHA-256 release receipt below
@@ -165,10 +165,10 @@ diagnostics pass `NOOP_LOGGER` explicitly.
 
 ## Provider Control-Plane KEK Rotation
 
-`CMS_KEK_HEX` remains the backward-compatible key named `legacy`. A versioned
-deployment may additionally set `CMS_KEK_ACTIVE_ID` and a
-`CMS_KEK_RING_JSON` object whose values are 64-character hexadecimal AES-256
-keys. At startup, the Provider control-plane database is checked for persisted
+Provider deployments require `CMS_KEK_ACTIVE_ID` and a `CMS_KEK_RING_JSON`
+object mapping explicit key IDs to 64-character hexadecimal AES-256 keys.
+This is the only key configuration consumed by the runtime; no implicit key ID is assigned.
+At startup, the Provider control-plane database is checked for persisted
 DEKs whose wrapping keys are absent. The envelope helper supports rewrapping
 with an audit ledger; this is not a CLI-managed key-rotation workflow.
 
@@ -178,8 +178,8 @@ There is no implicit key assignment or reader for the pre-versioning storage for
 Instance databases use their own key named `instance`, stored inside encrypted
 Provider credentials. `ProviderInstanceHost` supplies that key with
 `rotateOnStart: false`; changing the control-plane ring does not rotate each
-instance's key. CLI Compose currently passes `CMS_KEK_HEX` and does not expose
-the ring or rotation flag through a lifecycle command.
+instance's key. CLI Compose generates an explicit `control` key in the ring. It does not expose
+operator-selected ring changes or the rotation flag through a lifecycle command.
 
 For a directly configured Provider deployment, control-plane rewrapping is an
 explicit maintenance operation:

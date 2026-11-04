@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { fetchInstallationsProviderReport } from "../../src/runtime/gateway/fetchProviderReport";
 import { InstallationsProviderTransport } from "../../src/runtime/gateway/InstallationsProviderTransport";
 
-test("the public Provider report accepts a compatible installations control contract", async () => {
+test("the public Provider report accepts the exact installations control contract", async () => {
     const requests: Array<{ url: string; init?: RequestInit }> = [];
     const report = await providerReport();
     const endpoint = "http://ulvia-provider:5103";
@@ -21,7 +21,7 @@ test("the public Provider report accepts a compatible installations control cont
     );
 });
 
-test("the public Provider report rejects incompatible installations control contracts", async () => {
+test("the public Provider report rejects unavailable or substituted installations control contracts", async () => {
     const report = await providerReport();
     const endpoint = "http://ulvia-provider:5103";
     const token = "provider-token-at-least-twenty";
@@ -29,10 +29,10 @@ test("the public Provider report rejects incompatible installations control cont
         Response.json(report)) as typeof fetch);
 
     report.implementations[0]!.status = "unavailable";
-    await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("compatible control contract");
+    await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("required control contract");
     report.implementations[0]!.status = "ready";
     report.implementations[0]!.digest = `sha256:${"b".repeat(64)}`;
-    await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("compatible control contract");
+    await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("required control contract");
 });
 
 async function providerReport() {
@@ -60,12 +60,12 @@ async function providerReport() {
     };
 }
 
-test("the control contract refuses previous pins and arbitrary patch releases", async () => {
+test("the control contract refuses a substituted digest and an unselected version", async () => {
     const report = await providerReport();
     report.implementations[0] = {
         contractId: "ulvia.cms.installations",
         version: "1.0.0",
-        digest: "sha256:633e76b7944ece8618602ce20d78ebbeb0f517e632bc40556aec91ccd36d6fa1",
+        digest: `sha256:${"b".repeat(64)}`,
         status: "ready",
     };
     const transport = new InstallationsProviderTransport(
@@ -73,7 +73,7 @@ test("the control contract refuses previous pins and arbitrary patch releases", 
         "provider-token-at-least-twenty",
         (async () => Response.json(report)) as typeof fetch,
     );
-    await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("compatible control contract");
+    await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("required control contract");
     report.implementations[0]!.version = "1.0.1";
-    await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("compatible control contract");
+    await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("required control contract");
 });

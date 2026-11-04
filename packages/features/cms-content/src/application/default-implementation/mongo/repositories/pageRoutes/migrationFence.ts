@@ -1,10 +1,8 @@
+import { readSystemDocument } from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/systemDocument";
 import { randomUUIDv7 } from "bun";
 import type { Collection } from "mongodb";
 import { SYSTEM_ID, type SystemDoc } from "cms-content/application/default-implementation/mongo/repositories/documents";
-import {
-    readSystemDocument,
-    reapExpiredPageWrites,
-} from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/systemFence";
+import { reapExpiredPageWrites } from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/systemFence";
 
 type Systems = Collection<SystemDoc>;
 const LEASE_MS = 30_000;
@@ -18,7 +16,7 @@ const stoppedMigrationTokens = new Set<string>();
 export async function claimRouteMigration(
     systems: Systems,
     revision: number,
-    migration: NonNullable<SystemDoc["routeMigration"]>,
+    migration: Omit<NonNullable<SystemDoc["routeMigration"]>, "expiresAt">,
 ): Promise<boolean> {
     for (let attempt = 0; attempt < WAIT_ATTEMPTS; attempt++) {
         const owned = { ...migration, expiresAt: new Date(Date.now() + LEASE_MS) };
@@ -54,9 +52,7 @@ export async function claimInterruptedRouteMigration(
         }
         if (
             liveMigrationTimers.has(pending.token) ||
-            (!stoppedMigrationTokens.has(pending.token) &&
-                pending.expiresAt &&
-                pending.expiresAt.getTime() > Date.now())
+            (!stoppedMigrationTokens.has(pending.token) && pending.expiresAt.getTime() > Date.now())
         ) {
             await new Promise((resolve) => setTimeout(resolve, WAIT_DELAY_MS));
             continue;
@@ -66,15 +62,13 @@ export async function claimInterruptedRouteMigration(
             {
                 _id: SYSTEM_ID,
                 "routeMigration.token": pending.token,
-                ...(pending.expiresAt
-                    ? { "routeMigration.expiresAt": pending.expiresAt }
-                    : { "routeMigration.expiresAt": { $exists: false } }),
+                "routeMigration.expiresAt": pending.expiresAt,
             },
             { $set: { routeMigration: migration } },
         );
         if (claimed.matchedCount) {
             renewRouteMigration(systems, migration.token);
-            return { migration, revision: current.settingsRevision ?? 0 };
+            return { migration, revision: current.settingsRevision };
         }
     }
     throw new Error("Page route migration did not finish before startup.");

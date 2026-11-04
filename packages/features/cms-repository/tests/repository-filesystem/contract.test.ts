@@ -20,7 +20,7 @@ const publicCapabilities = new Set([
 
 test("the official Registry release uses authenticated account operations and has no signing bindings", async () => {
     const artifact = await admitContractReleaseJson(await readFile(compiled));
-    expect(artifact.release.version).toBe("2.0.0");
+    expect(artifact.release.version).toBe("1.0.0");
     expect(artifact.release.capabilities).toHaveLength(19);
     expect(artifact.bindings).toHaveLength(19);
     for (const capability of artifact.release.capabilities) {

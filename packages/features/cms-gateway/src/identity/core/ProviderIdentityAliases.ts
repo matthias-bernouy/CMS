@@ -4,7 +4,7 @@ import type {
     ProviderIdentityService,
 } from "cms-gateway/identity/interfaces/ProviderIdentityService";
 
-/** Uses the existing authority-to-subject aliases, including bindings made by legacy Sources. */
+/** One string alias per CMS subject and Provider authority. */
 export class ProviderIdentityAliases implements ProviderIdentityService {
     constructor(private readonly identities: IdentityService) {}
 
@@ -15,7 +15,7 @@ export class ProviderIdentityAliases implements ProviderIdentityService {
             providerId,
         );
         if (existing !== null) {
-            return this.outboundAlias(providerId, cmsSubjectId, existing);
+            return outboundAlias(existing);
         }
         const generated = crypto.randomUUID();
         try {
@@ -29,48 +29,19 @@ export class ProviderIdentityAliases implements ProviderIdentityService {
             if (winner === null) {
                 throw error;
             }
-            return this.outboundAlias(providerId, cmsSubjectId, winner);
+            return outboundAlias(winner);
         }
         return generated;
     }
 
-    async resolve(scope: ProviderIdentityScope, providerSubjectId: string | number): Promise<string | null> {
+    async resolve(scope: ProviderIdentityScope, providerSubjectId: string): Promise<string | null> {
         const providerId = providerAuthority(scope);
-        const subject = await this.identities.resolve(
-            { authority: providerId, kind: "user", value: providerSubjectId },
-            "cms",
-        );
-        const numeric = typeof providerSubjectId === "string" ? numericAlias(providerSubjectId) : null;
-        const legacy =
-            numeric === null
-                ? null
-                : await this.identities.resolve({ authority: providerId, kind: "user", value: numeric }, "cms");
-        if (subject !== null && legacy !== null && subject !== legacy) {
-            throw new TypeError("provider identity alias is ambiguous over HTTP");
-        }
-        const resolved = subject ?? legacy;
-        if (resolved === null) {
-            return null;
-        }
-        if (typeof resolved !== "string") {
+        const alias = outboundAlias(providerSubjectId);
+        const subject = await this.identities.resolve({ authority: providerId, kind: "user", value: alias }, "cms");
+        if (subject !== null && typeof subject !== "string") {
             throw new TypeError("CMS identity subject is invalid");
         }
-        return resolved;
-    }
-
-    private async outboundAlias(providerId: string, cmsSubjectId: string, value: IdentityValue): Promise<string> {
-        const alias = outboundAlias(value);
-        const alternate = typeof value === "number" ? alias : numericAlias(alias);
-        if (alternate !== null) {
-            const claimant = await this.identities.resolve(
-                { authority: providerId, kind: "user", value: alternate },
-                "cms",
-            );
-            if (claimant !== null && claimant !== cmsSubjectId) {
-                throw new TypeError("provider identity alias is ambiguous over HTTP");
-            }
-        }
-        return alias;
+        return subject;
     }
 }
 
@@ -87,14 +58,8 @@ function providerAuthority(scope: ProviderIdentityScope): string {
 }
 
 function outboundAlias(value: IdentityValue): string {
-    const alias = String(value);
-    if (!/^[\x20-\x7e]{1,256}$/.test(alias)) {
-        throw new TypeError("provider identity alias cannot be transmitted");
+    if (typeof value !== "string" || !/^[\x20-\x7e]{1,256}$/.test(value)) {
+        throw new TypeError("provider identity alias must be a transmissible string");
     }
-    return alias;
-}
-
-function numericAlias(value: string): number | null {
-    const numeric = Number(value);
-    return Number.isFinite(numeric) && String(numeric) === value ? numeric : null;
+    return value;
 }

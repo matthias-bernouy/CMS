@@ -38,7 +38,7 @@ composeTest("one isolated Edge receives no shared persistence credentials", () =
         CMS_INSTALLATIONS_PROVIDER_URL: "http://ulvia-provider:5103",
         ACME_HOST: "example.com",
     });
-    for (const secret of ["MONGO_URL", "CMS_SESSION_SECRET", "CMS_KEK_HEX", "ULVIA_PROVIDER_OPERATOR_TOKEN"]) {
+    for (const secret of ["MONGO_URL", "CMS_SESSION_SECRET", "CMS_KEK_RING_JSON", "ULVIA_PROVIDER_OPERATOR_TOKEN"]) {
         expect(edge.environment[secret]).toBeUndefined();
     }
     expect(edge.read_only).toBe(true);
@@ -102,7 +102,8 @@ function composeEnvironment(): Record<string, string> {
         ULVIA_MONGO_PROVIDER_USERNAME: "ulvia_provider",
         ULVIA_MONGO_PROVIDER_PASSWORD: "b".repeat(43),
         ULVIA_PROVIDER_SESSION_SECRET: "c".repeat(43),
-        ULVIA_PROVIDER_KEK_HEX: "d".repeat(64),
+        ULVIA_PROVIDER_KEK_ACTIVE_ID: "control",
+        ULVIA_PROVIDER_KEK_RING_JSON: JSON.stringify({ control: "d".repeat(64) }),
         ULVIA_PROVIDER_OPERATOR_TOKEN: "f".repeat(43),
         ULVIA_ACME_EMAIL: "ops@example.com",
         ULVIA_INSTANCE_HOSTNAME: "example.com",

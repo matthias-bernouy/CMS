@@ -1,3 +1,7 @@
+import {
+    readSystemDocument,
+    systemFromDocument,
+} from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/systemDocument";
 import { randomUUIDv7 } from "bun";
 import type { PageLink } from "cms-content/application/interfaces/ContentRepository";
 import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
@@ -31,8 +35,6 @@ import {
     releaseRouteMigration,
 } from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/migrationFence";
 import {
-    readSystemDocument,
-    systemFromDocument,
     withPageDeletionLock,
     withPageRouteWrite,
 } from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/systemFence";
@@ -43,16 +45,17 @@ import {
 } from "cms-content/pages/core/queries/contentReferences";
 import { canUsePageRoute, requirePageScan, samePagePaths } from "cms-content/pages/core/routing/values";
 
-const PAGE_REFERENCE_BACKFILL_BATCH_SIZE = 250;
-
 export class MongoPageRepository extends MongoBlocRepository {
     override async init(): Promise<void> {
         await super.init();
-        await this.pages.updateMany({ revision: { $exists: false } }, { $set: { revision: 1 } });
-        await this.backfillPageContentReferences();
+        for (const field of ["revision", "contentReferences"]) {
+            if (await this.pages.findOne({ [field]: { $exists: false } }, { projection: { _id: 1 } })) {
+                throw new Error(`Stored Page requires ${field}; reset incompatible persisted data.`);
+            }
+        }
         for (let attempt = 0; attempt < 20; attempt++) {
             const stored = await readSystemDocument(this.system);
-            let revision = stored.settingsRevision ?? 0;
+            let revision = stored.settingsRevision;
             let routeChange = stored.routeMigration;
             const reconfigure = routeChange !== undefined;
             if (routeChange) {
@@ -96,7 +99,12 @@ export class MongoPageRepository extends MongoBlocRepository {
                 }
                 const committed = await this.system.replaceOne(
                     { _id: SYSTEM_ID, "routeMigration.token": routeChange.token },
-                    { ...routeChange.target, settingsRevision: revision + 1, activePageWrites: 0 },
+                    {
+                        ...routeChange.target,
+                        settingsRevision: revision + 1,
+                        activePageWrites: 0,
+                        activePageWritePermits: {},
+                    },
                 );
                 if (!committed.matchedCount) {
                     throw new Error("Page route maintenance changed during recovery.");
@@ -468,30 +476,6 @@ export class MongoPageRepository extends MongoBlocRepository {
 
     private async routeSystem() {
         return systemFromDocument(await readSystemDocument(this.system));
-    }
-
-    private async backfillPageContentReferences(): Promise<void> {
-        let cursor: string | undefined;
-        while (true) {
-            const documents = await this.pages
-                .find({
-                    contentReferences: { $exists: false },
-                    ...(cursor === undefined ? {} : { _id: { $gt: cursor } }),
-                })
-                .sort({ _id: 1 })
-                .limit(PAGE_REFERENCE_BACKFILL_BATCH_SIZE)
-                .toArray();
-            for (const document of documents) {
-                await this.pages.updateOne(
-                    { _id: document._id, contentReferences: { $exists: false } },
-                    { $set: { contentReferences: pageContentReferenceKeys(document.content) } },
-                );
-            }
-            if (documents.length < PAGE_REFERENCE_BACKFILL_BATCH_SIZE) {
-                return;
-            }
-            cursor = documents.at(-1)!._id;
-        }
     }
 
     private async recoverPendingPageWrites(system: TSystem): Promise<void> {

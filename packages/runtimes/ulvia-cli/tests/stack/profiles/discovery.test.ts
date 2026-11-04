@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { instanceProfileCoordinate, selectInstanceProfile } from "../../../src/runtime/instances/profiles";
 
-const official = { id: "ulvia.official", version: "1.3.0" };
+const official = { id: "ulvia.official", version: "1.0.0" };
 const registry = { id: "ulvia.repository", version: "1.0.0" };
 
 test("profile discovery selects exact Provider references with one bounded authenticated read", async () => {

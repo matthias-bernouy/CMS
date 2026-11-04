@@ -89,7 +89,7 @@ async function build(releaseVersion: string, defaultStackVersion: string): Promi
     const revision = (await command(["git", "rev-parse", "HEAD"], root, false)).trim();
     await writeFile(
         receipt,
-        `${JSON.stringify({ schema: "ulvia.cli-release.v2", package: PACKAGE_NAME, version: releaseVersion, stackVersion: defaultStackVersion, revision, archive: archiveName, sha256: await sha256(archive) }, null, 4)}\n`,
+        `${JSON.stringify({ schema: "ulvia.cli-release.v1", package: PACKAGE_NAME, version: releaseVersion, stackVersion: defaultStackVersion, revision, archive: archiveName, sha256: await sha256(archive) }, null, 4)}\n`,
     );
     console.log(`Built ${PACKAGE_NAME}@${releaseVersion} (initial stack ${defaultStackVersion}): ${archive}`);
 }
@@ -97,7 +97,7 @@ async function build(releaseVersion: string, defaultStackVersion: string): Promi
 async function publish(releaseVersion: string): Promise<void> {
     const value = JSON.parse(await readFile(receipt, "utf8")) as Record<string, unknown>;
     if (
-        value.schema !== "ulvia.cli-release.v2" ||
+        value.schema !== "ulvia.cli-release.v1" ||
         value.package !== PACKAGE_NAME ||
         value.version !== releaseVersion ||
         typeof value.stackVersion !== "string" ||

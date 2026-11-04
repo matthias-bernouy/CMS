@@ -30,11 +30,24 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
     const normalized = { ...patch } as Partial<TSystem>;
 
     if (patch.site) {
-        if (Object.hasOwn(patch.site, "theme")) {
-            throw new ContentValidationError(
-                "site.theme",
-                "free-form CSS is not supported; use structured theme settings",
-            );
+        const fields = [
+            "name",
+            "favicon",
+            "visible",
+            "host",
+            "language",
+            "additionalLanguages",
+            "activeLanguages",
+            "organization",
+            "notFound",
+            "forbidden",
+            "serverError",
+            "login",
+        ];
+        for (const field of Object.keys(patch.site)) {
+            if (!fields.includes(field)) {
+                throw new ContentValidationError(`site.${field}`, "unknown site settings field");
+            }
         }
         const site = { ...patch.site };
         if (site.host !== undefined) {

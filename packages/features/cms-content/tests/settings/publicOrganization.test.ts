@@ -10,11 +10,11 @@ describe("public site organization", () => {
         expect(JSON.stringify(publicOrganization)).not.toContain("private-api.example.com");
     });
 
-    test("keeps the public projection complete when legacy settings omit organization", () => {
+    test("refuses incomplete organization records rather than projecting compatibility defaults", () => {
         const settings = defaultSystem();
         delete (settings.site as Partial<TSystem["site"]>).organization;
 
-        expect(projectPublicSiteOrganization(settings)).toEqual(defaultSystem().site.organization);
+        expect(() => projectPublicSiteOrganization(settings)).toThrow();
     });
 });
 

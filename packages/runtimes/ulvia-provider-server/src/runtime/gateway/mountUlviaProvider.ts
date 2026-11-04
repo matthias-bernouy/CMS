@@ -45,7 +45,7 @@ export function mountUlviaProvider(options: {
             return { lease: await host.runtime(authentication.instance), claims: authentication.claims };
         },
     });
-    runner.start(env.ULVIA_PROVIDER_PORT);
+    runner.start({ port: env.ULVIA_PROVIDER_PORT });
     return { stop: () => runner.stopGracefully() };
 }
 

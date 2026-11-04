@@ -1,4 +1,4 @@
-import { coercePageRef, readSystemSnapshot } from "@bernouy/cms-content";
+import { validatePageReference, readSystemSnapshot } from "@bernouy/cms-content";
 import type { ContentRepository, TSystem } from "@bernouy/cms-content";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
 import type { CmsContentDependencies } from "../../../ports";
@@ -49,10 +49,10 @@ function projectSite(system: Awaited<ReturnType<CmsContentDependencies["repo"]["
         name: system.site.name,
         host: system.site.host,
         visible: system.site.visible,
-        notFound: system.site.notFound ?? null,
-        forbidden: system.site.forbidden ?? null,
-        serverError: system.site.serverError ?? null,
-        login: system.site.login ?? null,
+        notFound: system.site.notFound,
+        forbidden: system.site.forbidden,
+        serverError: system.site.serverError,
+        login: system.site.login,
     };
 }
 
@@ -66,11 +66,12 @@ async function sitePageSettings(
         if (value === undefined) {
             continue;
         }
-        const reference = typeof value === "object" ? coercePageRef(value) : null;
-        if (value !== null && !reference) {
+        try {
+            pages[field] =
+                value === null ? null : validatePageReference(value as Exclude<SitePageSettings[typeof field], null>);
+        } catch {
             throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
         }
-        pages[field] = reference;
     }
     const pageIds = new Set(Object.values(pages).flatMap((reference) => (reference ? [reference.pageId] : [])));
     for (const pageId of pageIds) {

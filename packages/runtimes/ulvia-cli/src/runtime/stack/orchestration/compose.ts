@@ -14,8 +14,8 @@ export type ComposeProject = Readonly<{
     environment: Record<string, string | undefined>;
 }>;
 
-export async function composeUp(project: ComposeProject, removeOrphans = false): Promise<void> {
-    await compose(project, ["up", "--detach", "--wait", ...(removeOrphans ? ["--remove-orphans"] : [])], true);
+export async function composeUp(project: ComposeProject): Promise<void> {
+    await compose(project, ["up", "--detach", "--wait"], true);
 }
 
 export async function checkProviderImageRetention(project: ComposeProject): Promise<void> {

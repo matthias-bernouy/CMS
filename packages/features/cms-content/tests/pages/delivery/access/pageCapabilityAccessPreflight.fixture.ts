@@ -3,6 +3,7 @@ import type { GatewayHttpInvoker } from "@bernouy/cms-gateway/http";
 import EdgeCms from "../support/ContentHarness";
 import {
     createContentReader,
+    defaultSystem,
     CMS_CACHE_KEYS,
     type ContentRepository,
     type TPage,
@@ -14,8 +15,10 @@ import { compress, InMemoryCache, type Middleware, type RouteHandler, type Runne
 import { NOOP_LOGGER } from "@bernouy/logging";
 
 const system: TSystem = {
+    ...defaultSystem(),
     initializationStep: 1,
     site: {
+        ...defaultSystem().site,
         name: "Site",
         favicon: "",
         visible: true,

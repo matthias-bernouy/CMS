@@ -17,7 +17,7 @@ export function repositoryPeer() {
             const path = new URL(request.url).pathname.replace("/.cms/call/ulvia.repository/", "");
             state.calls.push({ path, authorization: request.headers.get("authorization") });
             if (path === "v1/info") {
-                return Response.json({ repositoryId: state.repositoryId, protocol: "ulvia-repository/v2" });
+                return Response.json({ repositoryId: state.repositoryId, protocol: "ulvia-repository/v1" });
             }
             if (state.redirect) {
                 return Response.redirect(`${server.url}unexpected`, 307);

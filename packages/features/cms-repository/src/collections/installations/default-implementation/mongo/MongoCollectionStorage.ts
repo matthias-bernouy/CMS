@@ -18,7 +18,7 @@ type ReleaseDocument = {
     digest: unknown;
     release: unknown;
     assetManifest?: unknown;
-    state?: "pending" | "ready";
+    state: "pending" | "ready";
 };
 type SiteDocument = { _id: string; revision: unknown; installations: unknown };
 
@@ -78,6 +78,7 @@ export class MongoCollectionStorage implements CollectionStorage {
                 throw error;
             }
         } else {
+            assertStoredDocumentIdentity(existing, verified.digest);
             await verifyStoredCollectionRelease(existing.release, verified.digest, this.limits);
         }
         for (const asset of verified.assets) {
@@ -193,7 +194,8 @@ export class MongoCollectionStorage implements CollectionStorage {
     private async reconcilePendingReleases(): Promise<void> {
         const pending = await this.releases.find({ state: "pending" }).toArray();
         for (const document of pending) {
-            const digest = typeof document.digest === "string" ? document.digest : document._id;
+            const digest = document._id;
+            assertStoredDocumentIdentity(document, digest);
             try {
                 const metadata = await verifyStoredCollectionRelease(document.release, digest, this.limits);
                 const assets: { id: string; bytes: Uint8Array }[] = [];
@@ -230,7 +232,7 @@ function assetManifest(release: CollectionRelease) {
 }
 
 function assertStoredDocumentIdentity(value: ReleaseDocument, digest: string): void {
-    if (value._id !== digest || value.digest !== digest) {
+    if (value._id !== digest || value.digest !== digest || !["pending", "ready"].includes(value.state)) {
         throw new TypeError("Stored collection release identity is inconsistent");
     }
 }

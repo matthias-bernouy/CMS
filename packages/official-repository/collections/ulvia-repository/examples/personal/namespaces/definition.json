@@ -6,12 +6,12 @@
         {
             "contractId": "ulvia.repository",
             "capabilityId": "namespace-claim",
-            "versionRange": "^2.0.0"
+            "versionRange": "^1.0.0"
         },
         {
             "contractId": "ulvia.repository",
             "capabilityId": "namespace-list",
-            "versionRange": "^2.0.0"
+            "versionRange": "^1.0.0"
         }
     ],
     "previews": [

@@ -36,20 +36,38 @@ function captureServeOptions(
 }
 
 describe("BunRunner listen options", () => {
-    test("keeps numeric start backward compatible", () => {
-        const options = captureServeOptions((runner) => runner.start(4123));
+    test("rejects malformed listener options before binding a socket", () => {
+        const serve = spyOn(Bun, "serve");
+        try {
+            for (const options of [4123, null, [], { address: "127.0.0.1" }]) {
+                expect(() => new BunRunner().start(options as never)).toThrow(TypeError);
+            }
+            expect(serve).not.toHaveBeenCalled();
+        } finally {
+            serve.mockRestore();
+        }
+    });
+
+    test("uses an explicit port", () => {
+        const options = captureServeOptions((runner) => runner.start({ port: 4123 }));
 
         expect(options.port).toBe(4123);
     });
 
     test("forwards an explicit idle timeout to Bun", () => {
-        const options = captureServeOptions((runner) => runner.start(4123), new BunRunner({ idleTimeoutSeconds: 255 }));
+        const options = captureServeOptions(
+            (runner) => runner.start({ port: 4123 }),
+            new BunRunner({ idleTimeoutSeconds: 255 }),
+        );
 
         expect(options.idleTimeout).toBe(255);
     });
 
     test("forwards an explicit hostname to Bun", () => {
-        const options = captureServeOptions((runner) => runner.start(4123), new BunRunner({ hostname: "127.0.0.1" }));
+        const options = captureServeOptions(
+            (runner) => runner.start({ port: 4123 }),
+            new BunRunner({ hostname: "127.0.0.1" }),
+        );
 
         expect(options.hostname).toBe("127.0.0.1");
     });
@@ -69,7 +87,7 @@ describe("BunRunner listen options", () => {
             await pending;
             return new Response("done");
         });
-        runner.start(0);
+        runner.start({ port: 0 });
         try {
             const response = fetch(`http://localhost:${runner.port}/pending`);
             await started;

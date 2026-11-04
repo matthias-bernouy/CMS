@@ -4,12 +4,7 @@ import type { LocalInstanceConfig } from "../../instances/config";
 import { loadLocalInstanceConfig } from "../../instances/config";
 import type { LocalInstanceConnection } from "../../instances/connection";
 import { loadLocalInstanceConnection } from "../../instances/connection";
-import {
-    assertLocalInstancePaths,
-    resolveLocalInstancePaths,
-    type LocalInstancePaths,
-    type UlviaPaths,
-} from "../../paths";
+import { assertLocalInstancePaths, resolveLocalInstancePaths, type UlviaPaths } from "../../paths";
 import { instancePublicUrl } from "../ports";
 import { composeDown, composeStop, composeUp, inspectComposeServices, type ComposeProject } from "./compose";
 import { localEdgeEnvironment } from "./environment";
@@ -26,7 +21,7 @@ export async function startLocalEdge(paths: UlviaPaths, name: string, log: (mess
     const image = installed?.image ?? (await obtainOfficialImage("edge", services.images.provider.version, log));
     await ensureOfficialImage(image);
     const projectName = installed?.projectName ?? localEdgeProjectName(paths, name);
-    await composeUp(edgeProject(runtime.paths, runtime.config, runtime.connection, services, projectName, image));
+    await composeUp(edgeProject(runtime.config, runtime.connection, services, projectName, image));
     await saveLocalEdgeState(runtime.paths, projectName, runtime.config.hostname, image);
     const publicUrl = instancePublicUrl(runtime.config.hostname, services.installation);
     await waitForProxyRoute(runtime.config.hostname, services.installation);
@@ -51,7 +46,7 @@ export async function describeLocalEdge(paths: UlviaPaths, name: string) {
         state,
         services: state
             ? await inspectComposeServices(
-                  edgeProject(runtime.paths, runtime.config, runtime.connection, services, projectName, state.image),
+                  edgeProject(runtime.config, runtime.connection, services, projectName, state.image),
               )
             : [],
         url: instancePublicUrl(runtime.config.hostname, services.installation),
@@ -73,7 +68,7 @@ async function projectForExistingInstance(paths: UlviaPaths, name: string): Prom
     if (!state) {
         throw new Error(`Local instance ${name} has not been started`);
     }
-    return edgeProject(runtime.paths, runtime.config, runtime.connection, services, state.projectName, state.image);
+    return edgeProject(runtime.config, runtime.connection, services, state.projectName, state.image);
 }
 
 export function localEdgeComposeProject(
@@ -82,11 +77,10 @@ export function localEdgeComposeProject(
     projectName: string,
     image: OfficialImage,
 ): ComposeProject {
-    return edgeProject(runtime.paths, runtime.config, runtime.connection, services, projectName, image);
+    return edgeProject(runtime.config, runtime.connection, services, projectName, image);
 }
 
 function edgeProject(
-    paths: LocalInstancePaths,
     config: LocalInstanceConfig,
     connection: LocalInstanceConnection,
     services: NonNullable<Awaited<ReturnType<typeof loadLocalServicesState>>>,
@@ -97,7 +91,7 @@ function edgeProject(
         definition: "edge",
         overlays: services.installation.tls.mode === "acme" ? ["edge-tls"] : [],
         projectName,
-        environment: localEdgeEnvironment(paths, config, connection, services, image, projectName),
+        environment: localEdgeEnvironment(config, connection, services, image, projectName),
     };
 }
 

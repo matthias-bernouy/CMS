@@ -23,7 +23,7 @@ export interface TestServer {
  *   srv.stop();
  */
 export function serveForTest(runner: BunRunner): TestServer {
-    runner.start(0);
+    runner.start({ port: 0 });
     const port = runner.port;
     if (port === undefined) {
         throw new Error("serveForTest: runner did not bind a port");

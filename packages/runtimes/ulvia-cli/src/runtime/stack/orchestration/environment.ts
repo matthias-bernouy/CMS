@@ -1,7 +1,7 @@
 import type { LocalServicesConfig } from "../../config";
 import type { LocalInstanceConfig } from "../../instances/config";
 import type { LocalInstanceConnection } from "../../instances/connection";
-import type { LocalInstancePaths, UlviaPaths } from "../../paths";
+import type { UlviaPaths } from "../../paths";
 import type { InstallationConfig } from "../installation";
 import { instancePublicUrl } from "../ports";
 import { pinnedOfficialImageReference, type OfficialImage } from "./images";
@@ -42,13 +42,13 @@ export function localServicesEnvironment(
         ULVIA_MONGO_PROVIDER_USERNAME: credentials?.config.mongoProviderUsername ?? "ulvia_provider",
         ULVIA_MONGO_PROVIDER_PASSWORD: credentials?.config.mongoProviderPassword ?? "b".repeat(43),
         ULVIA_PROVIDER_SESSION_SECRET: credentials?.config.sessionSecret ?? "a".repeat(43),
-        ULVIA_PROVIDER_KEK_HEX: credentials?.config.kekHex ?? "0".repeat(64),
+        ULVIA_PROVIDER_KEK_ACTIVE_ID: "control",
+        ULVIA_PROVIDER_KEK_RING_JSON: JSON.stringify({ control: credentials?.config.kekHex ?? "0".repeat(64) }),
         ULVIA_PROVIDER_OPERATOR_TOKEN: credentials?.operatorToken ?? "a".repeat(43),
     };
 }
 
 export function localEdgeEnvironment(
-    _instance: LocalInstancePaths,
     config: LocalInstanceConfig,
     connection: LocalInstanceConnection,
     services: LocalServicesState,

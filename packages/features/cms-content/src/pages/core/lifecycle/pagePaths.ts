@@ -18,10 +18,7 @@ export function planPagePaths(paths: Record<string, string>, system: TSystem): P
         });
     }
     const available = new Map(
-        [defaultLanguage, ...(system.site.additionalLanguages ?? [])].map((language) => [
-            language.toLowerCase(),
-            language,
-        ]),
+        [defaultLanguage, ...system.site.additionalLanguages].map((language) => [language.toLowerCase(), language]),
     );
     const normalized: Record<string, string> = {};
     const current: PlannedPagePaths["current"] = [];
@@ -75,7 +72,7 @@ export function pagePathsForSystem(
     if (!page.paths) {
         return defaultLanguage ? { [defaultLanguage]: page.path } : {};
     }
-    const configured = new Set([defaultLanguage, ...(system.site.additionalLanguages ?? [])]);
+    const configured = new Set([defaultLanguage, ...system.site.additionalLanguages]);
     const paths = Object.fromEntries(Object.entries(page.paths).filter(([language]) => configured.has(language)));
     if (defaultLanguage && !paths[defaultLanguage]) {
         const formerPrimary = Object.entries(page.paths).find(
@@ -94,7 +91,7 @@ export function languageRoutesChanged(before: TSystem, after: TSystem): boolean 
     if (before.site.language !== after.site.language) {
         return true;
     }
-    const previous = new Set(before.site.additionalLanguages ?? []);
-    const next = new Set(after.site.additionalLanguages ?? []);
+    const previous = new Set(before.site.additionalLanguages);
+    const next = new Set(after.site.additionalLanguages);
     return previous.size !== next.size || [...previous].some((language) => !next.has(language));
 }

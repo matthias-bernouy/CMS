@@ -1,3 +1,7 @@
+import {
+    readSystemDocument,
+    systemFromDocument,
+} from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/systemDocument";
 import type { RenderingResourceReads } from "cms-content/application/core/RenderingResourceReads";
 import { randomUUIDv7 } from "bun";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
@@ -19,10 +23,6 @@ import {
     claimRouteMigration,
     releaseRouteMigration,
 } from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/migrationFence";
-import {
-    readSystemDocument,
-    systemFromDocument,
-} from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/systemFence";
 import { SYSTEM_ID } from "cms-content/application/default-implementation/mongo/repositories/MongoRepositoryStorage";
 
 export class MongoContentRepository extends MongoPageRepository implements ContentRepository {
@@ -111,15 +111,13 @@ export class MongoContentRepository extends MongoPageRepository implements Conte
     async getSystem(reads?: RenderingResourceReads): Promise<TSystem> {
         // Keep both ordered route/settings fences fresh; retain only their revision.
         const document = await readSystemDocument(this.system);
-        reads?.rememberRevision(this, "system", document.settingsRevision ?? 0);
+        reads?.rememberRevision(this, "system", document.settingsRevision);
         return systemFromDocument(document);
     }
 
     async getSystemRevision(reads?: RenderingResourceReads): Promise<number> {
         const revision = reads?.revision(this, "system");
-        return revision === undefined
-            ? ((await readSystemDocument(this.system)).settingsRevision ?? 0)
-            : Number(revision);
+        return revision === undefined ? (await readSystemDocument(this.system)).settingsRevision : Number(revision);
     }
 
     async updateSystem(update: Partial<TSystem>, expectedRevision?: number): Promise<TSystem> {
@@ -131,7 +129,7 @@ export class MongoContentRepository extends MongoPageRepository implements Conte
             const current = systemFromDocument(stored);
             const merged = mergeSystemUpdate(current, update);
             delete merged.pageRoutesUpdating;
-            const revision = stored.settingsRevision ?? 0;
+            const revision = stored.settingsRevision;
             if (expectedRevision !== undefined && revision !== expectedRevision) {
                 throw Object.assign(new Error("system settings revision conflict"), { status: 409 });
             }
@@ -178,7 +176,7 @@ export class MongoContentRepository extends MongoPageRepository implements Conte
                 await this.reconfigurePageRoutes(merged, current.site.language);
                 const committed = await this.system.replaceOne(
                     { _id: SYSTEM_ID, "routeMigration.token": token, settingsRevision: revision },
-                    { ...merged, settingsRevision: revision + 1, activePageWrites: 0 },
+                    { ...merged, settingsRevision: revision + 1, activePageWrites: 0, activePageWritePermits: {} },
                 );
                 if (!committed.matchedCount) {
                     throw new Error("Page route migration changed before completion.");

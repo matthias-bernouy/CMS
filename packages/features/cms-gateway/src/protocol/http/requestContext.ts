@@ -57,7 +57,7 @@ export function requestContext(
         ...(resource ? { resource: { method, ...(request.url.length <= 16_384 ? { url: request.url } : {}) } } : {}),
     });
     // URL is only a convenience view; business path/query remain in admitted input.
-    // Do not shrink the legacy URL/input budget merely to duplicate it in a header.
+    // Do not shrink the URL/input budget merely to duplicate it in a header.
     if (resource && encodeURIComponent(JSON.stringify({ version: 1, ...context })).length > 8192) {
         return snapshotRequestContext({ headers, resource: { method } });
     }

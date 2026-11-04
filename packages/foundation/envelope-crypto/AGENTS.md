@@ -6,7 +6,7 @@ surface/runtime imports.
 ## Boundaries
 
 - Root export `@bernouy/envelope-crypto` exposes crypto contracts, AES-GCM
-  helpers, `EnvelopeSecretCrypto`, `LocalKekProvider`, `loadKek`, and
+  helpers, `EnvelopeSecretCrypto`, `LocalKekRingProvider`, `loadKek`, and
   `FieldCrypto`.
 - `@bernouy/envelope-crypto/mongo` exposes `MongoDekRepository` and
   `createFieldCrypto`. Treat this as a composition-root-only adapter subpath.

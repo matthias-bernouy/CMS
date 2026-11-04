@@ -18,6 +18,12 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         throw new Error("Invalid collection ID");
     }
     const definition = (await Bun.file(join(collectionRoot, "definition.json")).json()) as Record<string, unknown>;
+    const directories = new Set(["blocs", "translations", "assets", "texts", "theme", "examples"]);
+    for (const entry of await readSourceEntries(collectionRoot)) {
+        if (entry.isDirectory() && !directories.has(entry.name)) {
+            throw new Error(`Unknown collection source directory: ${entry.name}`);
+        }
+    }
     const translations = await loadCollectionTranslations(join(collectionRoot, "translations"));
     const blocs = await loadCollectionBlocs(join(collectionRoot, "blocs"));
     const examples = await loadCollectionExamples(join(collectionRoot, "examples"));
@@ -25,16 +31,7 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         throw new Error("Example sources require collection v1");
     }
     const texts = await loadCollectionTexts(join(collectionRoot, "texts"));
-    if (
-        (await readSourceEntries(collectionRoot)).some((entry) => entry.name === "pages") ||
-        Object.hasOwn(definition, "pages")
-    ) {
-        throw new Error("Collection pages are unsupported; author generic examples instead");
-    }
     const theme = await loadCollectionTheme(join(collectionRoot, "theme"));
-    if ((await readSourceEntries(collectionRoot)).some((entry) => entry.name === "migrations")) {
-        throw new Error("Collection migration sources are unsupported");
-    }
     if (Object.hasOwn(definition, "assets")) {
         throw new Error(
             "Collection source assets are discovered from assets/ and must not be declared in definition.json",

@@ -41,7 +41,7 @@ protocols verified here.
 Supply `ULVIA_UPGRADE_BASELINE_PROVIDER_IMAGE` with a compatible baseline image,
 alongside the candidate Provider and Edge variables above. The upgrade case
 publishes current releases into its isolated local Repository, provisions the
-old instance, then replaces its Provider container and requests profile `1.3.0`, then restarts Edge to negotiate the new control contract.
+old instance, then replaces its Provider container and requests profile `1.0.0`, then restarts Edge to negotiate the new control contract.
 It checks exact Page content, the existing MCP authorization, log queries and a
 subsequent restart. No test publishes to or reads from the public Repository.
 

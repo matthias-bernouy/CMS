@@ -18,8 +18,8 @@ export function registerLocalizationCapabilities(
         return {
             revision: snapshot.revision,
             language: selectedLanguage,
-            additionalLanguages: snapshot.system.site.additionalLanguages ?? [],
-            activeLanguages: snapshot.system.site.activeLanguages ?? [],
+            additionalLanguages: snapshot.system.site.additionalLanguages,
+            activeLanguages: snapshot.system.site.activeLanguages,
         };
     });
     dispatcher.register("ulvia.cms.content", "localization.update", async (input) =>
@@ -38,8 +38,8 @@ export function registerLocalizationCapabilities(
             return {
                 revision: expectedRevision + 1,
                 language: system.site.language,
-                additionalLanguages: system.site.additionalLanguages ?? [],
-                activeLanguages: system.site.activeLanguages ?? [],
+                additionalLanguages: system.site.additionalLanguages,
+                activeLanguages: system.site.activeLanguages,
             };
         }),
     );
@@ -58,8 +58,8 @@ export function registerLocalizationCapabilities(
             search: optionalText(input.search),
             siteLocales: [
                 system.system.site.language,
-                ...(system.system.site.additionalLanguages ?? []),
-                ...(system.system.site.activeLanguages ?? []),
+                ...system.system.site.additionalLanguages,
+                ...system.system.site.activeLanguages,
             ],
         });
     });

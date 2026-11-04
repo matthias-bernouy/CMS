@@ -17,7 +17,7 @@ import { verifySecondInstanceIsolation } from "./edgeSmoke/providerAccess";
 
 const smoke = process.env.ULVIA_RUN_EDGE_SMOKE === "1" ? test : test.skip;
 const PORTS = { edge: 15_100, registryBridge: 15_102, provider: 15_103 } as const;
-const EDGE_URL = `http://localhost:${PORTS.edge}`;
+const EDGE_URL = `http://default.localhost:${PORTS.edge}`;
 
 smoke(
     "fresh local installation publishes a Page and preserves Edge state",

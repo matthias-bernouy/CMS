@@ -15,8 +15,6 @@ export interface CollectionLimits {
     readonly maxDependencies: number;
     readonly maxThemeCategories: number;
     readonly maxThemeTokens: number;
-    readonly maxMigrations: number;
-    readonly maxMigrationOperations: number;
     readonly maxAssetBytes: number;
     readonly maxBundleBytes: number;
     readonly maxMarkupLength: number;
@@ -36,8 +34,6 @@ export const DEFAULT_COLLECTION_LIMITS: Readonly<CollectionLimits> = Object.free
     maxDependencies: 128,
     maxThemeCategories: 64,
     maxThemeTokens: 4_096,
-    maxMigrations: 512,
-    maxMigrationOperations: 512,
     maxAssetBytes: 10 * 1024 * 1024,
     maxBundleBytes: 50 * 1024 * 1024,
     maxMarkupLength: 64 * 1024,

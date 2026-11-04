@@ -73,7 +73,7 @@ export function resolvePageRouteTarget(
     }
     const requestedLanguage = route.language || system.site.language;
     const active =
-        requestedLanguage === system.site.language || (system.site.activeLanguages ?? []).includes(requestedLanguage);
+        requestedLanguage === system.site.language || system.site.activeLanguages.includes(requestedLanguage);
     if (!active && route.state === "current") {
         return null;
     }
@@ -93,7 +93,7 @@ function languageConfigurationChanged(before: TSystem, after: TSystem): boolean 
     if (before.site.language !== after.site.language) {
         return true;
     }
-    const previous = before.site.additionalLanguages ?? [];
-    const next = after.site.additionalLanguages ?? [];
+    const previous = before.site.additionalLanguages;
+    const next = after.site.additionalLanguages;
     return previous.length !== next.length || previous.some((language) => !next.includes(language));
 }

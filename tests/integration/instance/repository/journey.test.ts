@@ -18,7 +18,7 @@ test.skipIf(!enabled)(
             const info = await api.request("ulvia.repository", "/v1/info");
             expect(info.status).toBe(200);
             expect(await info.json()).toEqual({
-                protocol: "ulvia-repository/v2",
+                protocol: "ulvia-repository/v1",
                 repositoryId: f.registry.instance.id,
             });
             const a = await api.signup("a@example.test", "Repository-a-long-password");

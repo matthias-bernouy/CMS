@@ -53,7 +53,7 @@ export async function analyzePageLinks(
             ownRoute.state !== "gone" &&
             (ownRoute.state === "redirect" ||
                 ownRoute.language === system.site.language ||
-                (system.site.activeLanguages ?? []).includes(ownRoute.language));
+                system.site.activeLanguages.includes(ownRoute.language));
         if (own.has(link.path!) || selfAlias) {
             if (link.fragment) {
                 diagnostics.push(...localFragmentDiagnostics(link, analysis, missingSeverity));

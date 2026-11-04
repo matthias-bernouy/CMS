@@ -24,7 +24,7 @@ test("an exact application profile persists without replacing instance identity 
         await expect(
             loadOrCreateLocalInstanceConfig(root, {
                 ...input,
-                profile: { id: "ulvia.official", version: "1.3.0" },
+                profile: { id: "ulvia.official", version: "1.0.0" },
             }),
         ).rejects.toThrow("conflicts");
         await saveLocalInstanceProfile(root, { id: "ulvia.repository", version: "1.1.0" });
@@ -36,7 +36,7 @@ test("an exact application profile persists without replacing instance identity 
         expect(await readFile(join(root, "runtime.json"), "utf8")).toBe(bytes);
         await writeFile(
             join(root, "runtime.json"),
-            JSON.stringify({ ...initial, schema: "ulvia.local-instance-runtime.v1" }),
+            JSON.stringify({ ...initial, schema: "ulvia.local-instance-runtime.v2" }),
         );
         await expect(loadLocalInstanceConfig(root)).rejects.toThrow("configuration is invalid");
     } finally {

@@ -47,10 +47,8 @@ export function mergeSystemUpdate(current: TSystem, update: Partial<TSystem>): T
         if (section === "initializationStep") {
             merged.initializationStep = value as number;
         } else if (section === "site" && typeof value === "object" && value !== null) {
-            const { theme: _removedFreeformTheme, ...site } = value as Partial<TSystem["site"]> & {
-                theme?: unknown;
-            };
-            const currentOrganization = current.site.organization ?? emptySiteOrganization();
+            const site = value as Partial<TSystem["site"]>;
+            const currentOrganization = current.site.organization;
             const organization = site.organization;
             merged.site = {
                 ...current.site,
@@ -66,11 +64,11 @@ export function mergeSystemUpdate(current: TSystem, update: Partial<TSystem>): T
                       }
                     : currentOrganization,
             };
-            merged.site.additionalLanguages = (merged.site.additionalLanguages ?? []).filter(
+            merged.site.additionalLanguages = merged.site.additionalLanguages.filter(
                 (language) => language.toLowerCase() !== merged.site.language.toLowerCase(),
             );
             const selected = new Set(merged.site.additionalLanguages.map((language) => language.toLowerCase()));
-            merged.site.activeLanguages = (merged.site.activeLanguages ?? []).filter((language) =>
+            merged.site.activeLanguages = merged.site.activeLanguages.filter((language) =>
                 selected.has(language.toLowerCase()),
             );
         } else if (typeof value === "object" && value !== null) {

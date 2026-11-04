@@ -75,7 +75,7 @@ export async function deleteMongoPage(
 }
 
 function assertRevision(page: PageDoc, expectedRevision?: number): void {
-    const actualRevision = Number.isSafeInteger(page.revision) ? page.revision : 1;
+    const actualRevision = page.revision;
     if (expectedRevision !== undefined && actualRevision !== expectedRevision) {
         throw new PageRevisionConflictError(expectedRevision, actualRevision);
     }

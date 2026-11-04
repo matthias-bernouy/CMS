@@ -76,7 +76,7 @@ export function cmsPageDetails(page: TPage, diagnostics?: readonly ContentDiagno
 }
 
 function cmsPageEditingDetails(page: TPage, system: TSystem): CmsPageEditingDetails {
-    const languages = system.site.language ? [system.site.language, ...(system.site.additionalLanguages ?? [])] : [];
+    const languages = system.site.language ? [system.site.language, ...system.site.additionalLanguages] : [];
     return {
         ...cmsPageDetails(page),
         routes: languages.map((language) => ({

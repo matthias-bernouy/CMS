@@ -73,8 +73,8 @@ export async function updateCmsPageSeo(
     return cmsPageSeoDetails(updated, system);
 }
 
-function configuredLanguage(value: unknown, primary: string, additional: readonly string[] | undefined): string {
-    if (typeof value !== "string" || ![primary, ...(additional ?? [])].includes(value)) {
+function configuredLanguage(value: unknown, primary: string, additional: readonly string[]): string {
+    if (typeof value !== "string" || ![primary, ...additional].includes(value)) {
         throw new ContentValidationError("language", "The Page language is not configured for this site.", {
             code: "language.unconfigured",
             parameters: { language: typeof value === "string" ? value : "" },

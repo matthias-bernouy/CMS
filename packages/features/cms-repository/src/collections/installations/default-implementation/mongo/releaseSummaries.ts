@@ -15,7 +15,7 @@ export async function readReleaseSummaries(db: Db, digests: readonly string[]): 
             {
                 $match: {
                     _id: { $in: [...new Set(digests)] },
-                    state: { $ne: "pending" },
+                    state: "ready",
                     "release.kind": "collection",
                     "release.protocol": "ulvia-collection/v1",
                     "release.schemaDialect": "ulvia-schema/v1",

@@ -33,5 +33,5 @@ export function operationDigest(
         ),
     );
     const value = { input, headers: executionHeaders };
-    return `sha256:${createHash("sha256").update("ulvia-operation-input/v2\0").update(canonicalizeIJson(value)).digest("hex")}`;
+    return `sha256:${createHash("sha256").update("ulvia-operation-input/v1\0").update(canonicalizeIJson(value)).digest("hex")}`;
 }

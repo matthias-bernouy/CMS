@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { ensureUlviaPaths, resolveUlviaPaths } from "../../../src/runtime/paths";
 import { runCli } from "../../../src/cli";
 import { parseStartVersion } from "../../../src/commands/local/services";
 import { assertStartVersion } from "../../../src/runtime/stack/orchestration/services";
@@ -22,10 +23,15 @@ test("service and aggregate start expose help without contacting Docker", async 
             environment: { ULVIA_DATA_DIR: root },
             log: (message: string) => output.push(message),
         };
+        const paths = resolveUlviaPaths(options.environment);
+        await ensureUlviaPaths(paths);
+        const configPath = join(paths.services, "installation.json");
+        await writeFile(configPath, "not-current-state");
         await runCli(["services", "start", "--help"], options);
         await runCli(["start", "--help"], options);
         expect(output.join("\n")).toContain("ulvia services start [--version <version>]");
         expect(output.join("\n")).toContain("ulvia start [--version <version>]");
+        expect(await readFile(configPath, "utf8")).toBe("not-current-state");
     } finally {
         await rm(root, { recursive: true, force: true });
     }

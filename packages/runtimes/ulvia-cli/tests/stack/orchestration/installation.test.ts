@@ -18,7 +18,7 @@ test("installation configuration defaults to loopback HTTP and persists explicit
     await ensureUlviaPaths(paths);
     try {
         expect(defaultInstallationConfig()).toEqual({
-            schema: "ulvia.installation.v2",
+            schema: "ulvia.installation.v1",
             bindAddress: "127.0.0.1",
             ports: { http: 5100, provider: 5103 },
             repository: { url: "https://repo.ulvia.fr", allowInsecureHttp: false },

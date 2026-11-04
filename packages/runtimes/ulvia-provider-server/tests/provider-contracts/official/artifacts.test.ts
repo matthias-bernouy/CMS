@@ -15,7 +15,7 @@ test("builds the official profile from verified repository releases", async () =
         "ulvia-repository",
     ]);
     expect(loaded.defaultProfile.collections).toHaveLength(1);
-    expect(loaded.defaultProfile.version).toBe("1.3.0");
+    expect(loaded.defaultProfile.version).toBe("1.0.0");
     expect(loaded.defaultProfile.manifest.digest).toBe(fixture.manifestDigest);
     expect(loaded.defaultProfile.collections[0]!.digest).toBe(fixture.collectionDigest);
     expect(loaded.defaultProfile.contracts).toEqual(
@@ -61,20 +61,12 @@ test("rejects repository metadata that does not match the official bytes", async
 test("the official baseline contains explicit application profiles and one version of every contract", async () => {
     const fixture = await repositoryFixture();
     const loaded = await loadOfficialArtifacts(fixture.providers, fixture.collections);
-    expect(loaded.profiles.map(({ version }) => version)).toEqual(["1.3.0", "1.0.0"]);
+    expect(loaded.profiles.map(({ version }) => version)).toEqual(["1.0.0", "1.0.0"]);
     expect(loaded.defaultProfile.upgradeFromVersions).toEqual([]);
-    expect(loaded.defaultProfile.manifest.version).toBe("1.2.0");
+    expect(loaded.defaultProfile.manifest.version).toBe("1.0.0");
     expect(loaded.defaultProfile.collections[0]!.version).toBe("1.0.0");
     expect(fixture.contracts).toHaveLength(12);
-    const versions = new Map([
-        ["ulvia.cms.installations", "1.1.1"],
-        ["ulvia.cms.access", "1.1.0"],
-        ["ulvia.cms.authoring", "2.0.0"],
-        ["ulvia.repository", "2.0.0"],
-    ]);
-    expect(
-        fixture.contracts.every(({ release }) => release.version === (versions.get(release.contractId) ?? "1.0.0")),
-    ).toBe(true);
+    expect(fixture.contracts.every(({ release }) => release.version === "1.0.0")).toBe(true);
     const content = loaded.contracts.find(({ release }) => release.contractId === "ulvia.cms.content")!;
     expect(content.capabilities.some(({ definition }) => definition.deprecation)).toBe(false);
     expect(content.capabilities.some(({ definition }) => definition.id === "delivery.resolve-resource")).toBe(true);

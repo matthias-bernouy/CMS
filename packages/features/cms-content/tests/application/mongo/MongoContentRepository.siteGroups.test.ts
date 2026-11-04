@@ -22,10 +22,10 @@ describe("Mongo site groups", () => {
         expect(await db.get("site_bloc_groups").find({}).toArray()).toHaveLength(0);
     });
 
-    test("leaves legacy records intact and retains membership when saving", async () => {
+    test("leaves default-group records intact and retains named membership when saving", async () => {
         const { repository, db } = createMongoContentRepository();
-        const legacy = siteBlocDefinition();
-        await repository.createSiteBloc(legacy);
+        const defaultGroup = siteBlocDefinition();
+        await repository.createSiteBloc(defaultGroup);
         const before = await db.get("blocs").find({}).toArray();
         await repository.getSiteBlocGroups();
         expect(await db.get("blocs").find({}).toArray()).toEqual(before);

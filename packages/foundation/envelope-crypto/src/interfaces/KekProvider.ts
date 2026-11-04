@@ -1,15 +1,11 @@
 /**
  * Abstraction over the master Key Encryption Key (KEK).
  *
- * Two impls in the wild:
- * - `LocalKekProvider`: KEK as a 32-byte buffer in the process — the
- *   provider wraps DEKs locally with AES-GCM. Fast, zero network I/O.
- * - `OvhOkmsKekProvider`: KEK lives inside an OVH OKMS service key
- *   (Customer Managed Key, never reachable by the process). The provider
- *   delegates wrap/unwrap to OVH's REST API over mTLS.
+ * The bundled `LocalKekRingProvider` uses an explicit key ring and wraps
+ * DEKs locally with AES-GCM, without network I/O.
  *
- * The `wrapped` value is an opaque, provider-specific string. Local
- * encodes `<iv-b64>.<ciphertext-b64>`, OVH stores the JWE token directly.
+ * The `wrapped` value is an opaque, provider-specific string. The local
+ * provider encodes `<iv-b64>.<ciphertext-b64>`.
  * Storage layers MUST NOT inspect or split this string — round-trip it
  * untouched through the same provider that produced it.
  */

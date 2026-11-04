@@ -1,7 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import type { Collection } from "mongodb";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
-import { defaultSystem, mergeSystemUpdate } from "cms-content/settings/core/system";
+import { readSystemDocument, systemFromDocument } from "./systemDocument";
 import { SYSTEM_ID, type SystemDoc } from "cms-content/application/default-implementation/mongo/repositories/documents";
 
 type Systems = Collection<SystemDoc>;
@@ -10,55 +10,6 @@ const WRITE_RENEW_MS = 5_000;
 const WAIT_ATTEMPTS = 900;
 const WAIT_DELAY_MS = 50;
 const liveWriteTokens = new Set<string>();
-
-/** Initialize old system records without overwriting a concurrent writer's counter. */
-export async function readSystemDocument(systems: Systems): Promise<SystemDoc> {
-    let document = await systems.findOne({ _id: SYSTEM_ID });
-    if (!document) {
-        try {
-            await systems.insertOne({ _id: SYSTEM_ID, ...defaultSystem(), settingsRevision: 0, activePageWrites: 0 });
-        } catch (error) {
-            if ((error as { code?: unknown } | null)?.code !== 11000) {
-                throw error;
-            }
-        }
-        document = await systems.findOne({ _id: SYSTEM_ID });
-    }
-    if (!document) {
-        throw new Error("System settings are unavailable.");
-    }
-    const needsRevision = document.settingsRevision === undefined;
-    const needsCounter = document.activePageWrites === undefined;
-    if (needsRevision) {
-        await systems.updateOne(
-            { _id: SYSTEM_ID, settingsRevision: { $exists: false } },
-            { $set: { settingsRevision: 0 } },
-        );
-    }
-    if (needsCounter) {
-        await systems.updateOne(
-            { _id: SYSTEM_ID, activePageWrites: { $exists: false } },
-            { $set: { activePageWrites: 0 } },
-        );
-    }
-    return needsRevision || needsCounter ? (await systems.findOne({ _id: SYSTEM_ID }))! : document;
-}
-
-export function systemFromDocument(document: SystemDoc): TSystem {
-    const {
-        _id: _id,
-        routeMigration,
-        settingsRevision: _revision,
-        activePageWrites: _writes,
-        activePageWritePermits: _permits,
-        pageDeletionLock: _deletionLock,
-        ...stored
-    } = document;
-    const rest = stored as Partial<TSystem> & { editor?: unknown };
-    delete rest.editor;
-    const system = mergeSystemUpdate(defaultSystem(), rest);
-    return routeMigration ? { ...system, pageRoutesUpdating: true } : system;
-}
 
 /** Each route writer owns a renewable permit in the same document migration claims atomically. */
 export async function withPageRouteWrite<T>(
@@ -102,15 +53,9 @@ export async function withPageRouteWrite<T>(
 
 export async function reapExpiredPageWrites(systems: Systems): Promise<SystemDoc> {
     const current = await readSystemDocument(systems);
-    const permits = current.activePageWritePermits ?? {};
-    if (current.activePageWrites && !current.activePageWritePermits && liveWriteTokens.size === 0) {
-        await systems.updateOne(
-            { _id: SYSTEM_ID, activePageWritePermits: { $exists: false }, activePageWrites: current.activePageWrites },
-            { $set: { activePageWrites: 0 }, $unset: { pageDeletionLock: "" } },
-        );
-    }
+    const permits = current.activePageWritePermits;
     for (const [token, expiresAt] of Object.entries(permits)) {
-        if (liveWriteTokens.has(token) || new Date(expiresAt).getTime() > Date.now()) {
+        if (liveWriteTokens.has(token) || expiresAt.getTime() > Date.now()) {
             continue;
         }
         const permitPath = `activePageWritePermits.${token}`;

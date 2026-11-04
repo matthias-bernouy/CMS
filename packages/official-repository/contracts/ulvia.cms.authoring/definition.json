@@ -5,7 +5,7 @@
     "contractId": "ulvia.cms.authoring",
     "name": "CMS Authoring",
     "description": "Prepare immutable collection releases and publish through a pinned Repository connection using a personal access token.",
-    "version": "2.0.0",
+    "version": "1.0.0",
     "publisherId": "ulvia.official",
     "catalogue": {
         "icon": "package",

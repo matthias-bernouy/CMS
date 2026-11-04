@@ -11,14 +11,12 @@ export type RuntimeKekConfig = Readonly<{
 }>;
 
 export function parseRuntimeKekConfig(source: RuntimeEnvSource): RuntimeKekConfig {
-    const rawLegacy = source.CMS_KEK_HEX?.trim();
-    const legacyHex = rawLegacy ? parseHexKey(rawLegacy, "CMS_KEK_HEX") : undefined;
-    const activeKeyId = source.CMS_KEK_ACTIVE_ID?.trim() || (legacyHex ? "legacy" : "");
+    const activeKeyId = source.CMS_KEK_ACTIVE_ID?.trim();
     if (!activeKeyId) {
-        throw new Error("CMS_KEK_ACTIVE_ID is required when CMS_KEK_HEX is absent");
+        throw new Error("CMS_KEK_ACTIVE_ID is required");
     }
     assertKeyId(activeKeyId, "CMS_KEK_ACTIVE_ID");
-    const keysHex: Record<string, string> = legacyHex ? { legacy: legacyHex } : {};
+    const keysHex: Record<string, string> = {};
     const rawRing = source.CMS_KEK_RING_JSON?.trim();
     if (rawRing) {
         let decoded: unknown;
@@ -37,11 +35,10 @@ export function parseRuntimeKekConfig(source: RuntimeEnvSource): RuntimeKekConfi
                 throw new Error(`CMS_KEK_RING_JSON key "${keyId}" must be a hexadecimal string`);
             }
             const key = parseHexKey(rawKey, `CMS_KEK_RING_JSON key "${keyId}"`);
-            if (keyId === "legacy" && legacyHex && key !== legacyHex) {
-                throw new Error('CMS_KEK_RING_JSON key "legacy" must match CMS_KEK_HEX');
-            }
             keysHex[keyId] = key;
         }
+    } else {
+        throw new Error("CMS_KEK_RING_JSON is required");
     }
     if (Object.keys(keysHex).length > MAX_KEYS) {
         throw new Error(`The configured KEK ring must contain at most ${MAX_KEYS} keys`);

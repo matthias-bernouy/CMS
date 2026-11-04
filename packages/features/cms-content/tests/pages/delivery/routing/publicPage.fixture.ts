@@ -2,6 +2,7 @@ import { satisfiesVersionRange } from "@bernouy/cms-repository/contracts/compati
 import type { GatewayHttpInvoker } from "@bernouy/cms-gateway/http";
 import {
     createContentReader,
+    defaultSystem,
     CMS_CACHE_KEYS,
     type ContentRepository,
     type ContentReader,
@@ -213,8 +214,10 @@ function cacheEntry(contentType: string): CacheEntry {
 }
 
 const SYSTEM: TSystem = {
+    ...defaultSystem(),
     initializationStep: 1,
     site: {
+        ...defaultSystem().site,
         name: "Public pages",
         favicon: "",
         visible: true,

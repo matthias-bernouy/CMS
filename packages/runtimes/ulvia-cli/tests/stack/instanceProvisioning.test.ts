@@ -22,7 +22,7 @@ test("local provisioning sends administrator input only to the protected operato
             "http://127.0.0.1:5103",
             "operator-secret",
             {
-                schema: "ulvia.local-instance-runtime.v2",
+                schema: "ulvia.local-instance-runtime.v1",
                 name: "preview",
                 label: "Preview instance",
                 hostname: "preview.localhost",

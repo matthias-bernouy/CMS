@@ -55,6 +55,15 @@ access signatures, storage metadata and image representations. Generic secret
 storage and image transforms belong to Foundation. See the
 [package map](docs/architecture/packages.md).
 
+## Fresh Baseline
+
+The current official baseline is `1.0.0`, with Ulvia-owned protocols and local
+state formats starting at `v1`. It requires fresh catalogue and instance state.
+Do not add readers, aliases, implicit defaults or backfills for the previous
+platform. Missing mandatory persisted fields must fail without repairing data.
+Keep future release evolution checks, explicit upgrades, key rotation and crash
+recovery; those are current domain operations, not historical import paths.
+
 ## Imports
 
 - Import workspace packages through their package name or declared subpath:

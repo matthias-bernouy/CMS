@@ -14,7 +14,7 @@ import {
     resolveLocalInstancePaths,
     type UlviaPaths,
 } from "../../runtime/paths";
-import type { InstallationConfig } from "../../runtime/stack/installation";
+import { defaultInstallationConfig, loadInstallationConfig } from "../../runtime/stack/installation";
 import { releaseInstanceDomain, reserveInstanceDomain } from "../../runtime/stack/domains";
 import { instancePublicUrl, localInstanceHostname } from "../../runtime/stack/ports";
 import { providerOperatorAccess, startLocalEdge } from "../../runtime/stack/orchestration/instances";
@@ -23,7 +23,7 @@ import { assertProviderRunning, listInstances, runExistingInstanceCommand } from
 export async function instanceCommand(
     args: readonly string[],
     paths: UlviaPaths,
-    installation: InstallationConfig,
+    environment: Record<string, string | undefined>,
     log: (message: string) => void,
 ): Promise<void> {
     const [action, ...rest] = args;
@@ -35,6 +35,7 @@ export async function instanceCommand(
     }
     if (action === "list") {
         expectCount(rest, 0, "Usage: ulvia instance list");
+        const installation = (await loadInstallationConfig(paths)) ?? defaultInstallationConfig(environment);
         await listInstances(paths, installation, log);
         return;
     }

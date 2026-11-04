@@ -313,7 +313,6 @@ export {
     validatePagePatch,
 } from "cms-content/pages/core/validation/page";
 export { canonicalSiteBaseUrl, validateSettingsPatch } from "cms-content/settings/core/validation";
-export { coercePageRef, pageRefToString } from "cms-content/pages/core/validation/pageRef";
 export {
     PAGE_METADATA_PLATFORM_VARIABLES,
     PAGE_METADATA_RESERVED_NAMESPACES,

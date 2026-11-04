@@ -62,23 +62,6 @@ class Collection {
         };
     }
 
-    async updateOne(
-        filter: { _id: string; siteId: string; revision: number; selectionDigest: { $exists: false } },
-        update: { $set: { selectionDigest: string } },
-    ): Promise<{ matchedCount: number }> {
-        const current = this.documents.get(filter._id);
-        if (
-            !current ||
-            current.siteId !== filter.siteId ||
-            current.revision !== filter.revision ||
-            current.selectionDigest
-        ) {
-            return { matchedCount: 0 };
-        }
-        this.documents.set(filter._id, { ...current, selectionDigest: update.$set.selectionDigest });
-        return { matchedCount: 1 };
-    }
-
     async replaceOne(
         filter: { _id: string; siteId: string; revision: number },
         value: Document,
@@ -128,9 +111,6 @@ test("Mongo installation state survives adapter recreation and fences stale writ
     expect(observed.revision).toBe(2);
     expect(await first.revision(fixture.scope.siteId)).not.toBe(approvedRevision);
     expect(await first.selectionRevision(fixture.scope.siteId)).toBe(approvedSelectionRevision);
-    delete collection.documents.get(fixture.scope.installationId)!.selectionDigest;
-    expect(await first.selectionRevision(fixture.scope.siteId)).toBe(approvedSelectionRevision);
-    expect(collection.documents.get(fixture.scope.installationId)?.selectionDigest).toMatch(/^sha256:[0-9a-f]{64}$/);
     const disabled = await first.setStatus(fixture.scope, 2, "disabled");
     expect(disabled.revision).toBe(3);
     expect((await recreated.get(fixture.scope))?.installation.status).toBe("disabled");
@@ -166,4 +146,26 @@ test("Mongo selection metadata hashes nested installation configuration", async 
         revision: 1,
     });
     expect(document.selectionDigest).toMatch(/^sha256:[0-9a-f]{64}$/);
+});
+
+test("Mongo refuses pre-digest installation records without backfilling or changing business state", async () => {
+    const fixture = await installationWorkflow();
+    const collection = new Collection();
+    const store = new MongoProviderInstallationStore(
+        { collection: () => collection } as unknown as Db,
+        fixture.catalogue,
+        fixture.clock,
+    );
+    await store.approve({
+        candidate: fixture.candidate,
+        report: fixture.report,
+        preparedAt: fixture.clock(),
+        approvedBy: "admin:owner",
+    });
+    delete collection.documents.get(fixture.scope.installationId)!.selectionDigest;
+    const before = structuredClone([...collection.documents]);
+    await expect(store.selectionRevision(fixture.scope.siteId)).rejects.toThrow("invalid selection digest");
+    await expect(store.get(fixture.scope)).rejects.toThrow("valid selection digest");
+    expect([...collection.documents]).toEqual(before);
+    expect(await store.selectionRevision("another-site")).toBeString();
 });

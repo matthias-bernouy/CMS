@@ -83,7 +83,7 @@ describe("Ulvia CLI", () => {
                 name: "site",
                 label: "Site",
                 hostname: "example.com",
-                profile: { id: "ulvia.official", version: "1.3.0" },
+                profile: { id: "ulvia.official", version: "1.0.0" },
             });
             await expect(
                 runCli(["configure", "network", "--http-port", "8080"], {
@@ -122,7 +122,7 @@ describe("Ulvia CLI", () => {
                 name: "default",
                 label: "Default Ulvia instance",
                 hostname: "localhost",
-                profile: { id: "ulvia.official", version: "1.3.0" },
+                profile: { id: "ulvia.official", version: "1.0.0" },
             });
             await saveLocalInstanceConnection(instance.root, {
                 instanceId: "instance:00000000-0000-4000-8000-000000000001",

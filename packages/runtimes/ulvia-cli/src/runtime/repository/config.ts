@@ -7,7 +7,7 @@ import { isAbsolute, join } from "node:path";
 import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem/lock";
 
 export type ClientConfig = {
-    schema: "ulvia.client.v2";
+    schema: "ulvia.client.v1";
     repository?: { url: string; repositoryId: string; token: string; generation: string };
 };
 
@@ -41,7 +41,7 @@ export async function readClientConfig(directory: string): Promise<ClientConfig>
         },
     );
     if (!handle) {
-        return { schema: "ulvia.client.v2" };
+        return { schema: "ulvia.client.v1" };
     }
     try {
         const metadata = await handle.stat();
@@ -83,7 +83,7 @@ function validateClientConfig(value: ClientConfig): void {
         !value ||
         typeof value !== "object" ||
         Array.isArray(value) ||
-        value.schema !== "ulvia.client.v2" ||
+        value.schema !== "ulvia.client.v1" ||
         Object.keys(value).some((key) => !["schema", "repository"].includes(key))
     ) {
         throw new Error("Invalid Ulvia client configuration");

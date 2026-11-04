@@ -10,7 +10,7 @@ export async function profileCliFixture() {
     await mkdir(bin);
     await cp(fakeDockerFixturePath, join(bin, "docker"));
     await chmod(join(bin, "docker"), 0o755);
-    const official = { id: "ulvia.official", version: "1.3.0" };
+    const official = { id: "ulvia.official", version: "1.0.0" };
     const registry = { id: "ulvia.repository", version: "1.0.0" };
     const state = { rejectUpgrade: false, unauthorized: 0, creates: [] as unknown[], upgrades: [] as unknown[] };
     const provider = Bun.serve({

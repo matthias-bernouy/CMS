@@ -6,7 +6,7 @@
         {
             "contractId": "ulvia.repository",
             "capabilityId": "catalogue-list",
-            "versionRange": "^2.0.0"
+            "versionRange": "^1.0.0"
         }
     ],
     "previews": [

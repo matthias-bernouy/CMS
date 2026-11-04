@@ -51,7 +51,7 @@ async function assertRecognizedData(paths: UlviaPaths): Promise<void> {
         const schema = await readSchema(join(root, "runtime.json"));
         if (schema === null) {
             await assertEmptySkeleton(root, new Set());
-        } else if (schema !== "ulvia.local-instance-runtime.v2") {
+        } else if (schema !== "ulvia.local-instance-runtime.v1") {
             throw new Error(`Refusing to reset unrecognized Ulvia instance data at ${root}`);
         }
     }

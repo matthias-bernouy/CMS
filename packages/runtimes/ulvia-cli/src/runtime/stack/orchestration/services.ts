@@ -46,8 +46,7 @@ export function assertStartVersion(state: LocalServicesState | null, requestedVe
     if (!state || !requestedVersion) {
         return;
     }
-    const current = new Set([state.images.provider.version]);
-    if (current.size !== 1 || !current.has(requestedVersion)) {
+    if (state.images.provider.version !== requestedVersion) {
         throw new Error(
             "Shared services are already initialized with a different Provider version. Use ulvia upgrade provider.",
         );

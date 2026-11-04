@@ -42,7 +42,7 @@ export class RepositoryCapabilityService {
         const { namespaces } = this.ports;
         const namespace = input.namespace as string;
         if (id === "repository-info") {
-            return { protocol: "ulvia-repository/v2", repositoryId: this.ports.repositoryId };
+            return { protocol: "ulvia-repository/v1", repositoryId: this.ports.repositoryId };
         }
         if (id === "namespace-get") {
             return namespaces.get(namespace);

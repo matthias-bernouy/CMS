@@ -36,7 +36,7 @@ test("CLI deploys Repository as a named CMS application and preserves data throu
         expect((await run(["instance", "upgrade-profile", "registry", "ulvia.repository@1.1.0"])).exitCode).not.toBe(0);
         expect(await json(join(instancePath, "runtime.json"))).toEqual(initial);
         state.rejectUpgrade = false;
-        expect((await run(["instance", "upgrade-profile", "registry", "ulvia.official@1.3.0"])).stderr).toContain(
+        expect((await run(["instance", "upgrade-profile", "registry", "ulvia.official@1.0.0"])).stderr).toContain(
             "application identity",
         );
         expect(state.upgrades).toHaveLength(1);

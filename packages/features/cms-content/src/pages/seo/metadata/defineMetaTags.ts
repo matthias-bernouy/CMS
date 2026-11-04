@@ -51,7 +51,7 @@ export function defineMetaTags(
     }
 
     if (canonicalUrl && !overrides.robots?.includes("noindex") && page.paths) {
-        const active = new Set([routeLanguages.language, ...(routeLanguages.activeLanguages ?? [])]);
+        const active = new Set([routeLanguages.language, ...routeLanguages.activeLanguages]);
         const variants = Object.entries(page.paths).filter(([language]) => active.has(language));
         if (variants.length > 1) {
             const search = new URL(canonicalUrl).search;

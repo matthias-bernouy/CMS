@@ -4,39 +4,6 @@ import type { KekProvider } from "envelope-crypto/interfaces/KekProvider";
 
 const DEK_BYTES = 32;
 
-/**
- * In-process `KekProvider` — the KEK lives in this process's memory and
- * wraps DEKs locally with AES-GCM. Wrapped form is `<iv-b64>.<ct-b64>`
- * so the storage layer carries a single string field.
- */
-export class LocalKekProvider implements KekProvider {
-    readonly activeKeyId = "legacy";
-    private readonly _ring: LocalKekRingProvider;
-
-    constructor(kek: Buffer) {
-        if (kek.length !== DEK_BYTES) {
-            throw new Error(`LocalKekProvider: KEK must be ${DEK_BYTES} bytes, got ${kek.length}.`);
-        }
-        this._ring = new LocalKekRingProvider(this.activeKeyId, { [this.activeKeyId]: kek });
-    }
-
-    generateDek(): Promise<{ wrapped: string; plaintext: Buffer; keyId: string }> {
-        return this._ring.generateDek();
-    }
-
-    wrap(plaintext: Buffer): Promise<{ wrapped: string; keyId: string }> {
-        return this._ring.wrap(plaintext);
-    }
-
-    unwrap(wrapped: string, keyId = this.activeKeyId): Promise<Buffer> {
-        return this._ring.unwrap(wrapped, keyId);
-    }
-
-    hasKey(keyId: string): boolean {
-        return this._ring.hasKey(keyId);
-    }
-}
-
 /** Local key ring with one active key and retained historical unwrap keys. */
 export class LocalKekRingProvider implements KekProvider {
     readonly activeKeyId: string;
@@ -98,7 +65,7 @@ export function serializeBlob(blob: EncryptedBlob): string {
 export function parseBlob(s: string): EncryptedBlob {
     const idx = s.indexOf(".");
     if (idx === -1) {
-        throw new Error("LocalKekProvider: malformed wrapped DEK (expected '<iv-b64>.<ct-b64>').");
+        throw new Error("LocalKekRingProvider: malformed wrapped DEK (expected '<iv-b64>.<ct-b64>').");
     }
     return {
         iv: Buffer.from(s.slice(0, idx), "base64"),

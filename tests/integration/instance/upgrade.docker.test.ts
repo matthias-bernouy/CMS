@@ -79,7 +79,7 @@ integration(
                     )
                 ).status,
             ).toBe(200);
-            await stack.upgradeProvider(candidate!, "1.3.0");
+            await stack.upgradeProvider(candidate!, "1.0.0");
             await waitForHttp(`${stack.repositoryUrl}/.cms/call/ulvia.repository/v1/info`);
             expect(await (await registry.request("ulvia.repository", "/v1/info")).json()).toEqual(identity);
             const retained = await inventory();

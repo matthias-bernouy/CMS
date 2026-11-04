@@ -1,3 +1,4 @@
+import { isSha256Digest } from "@bernouy/binary-media";
 import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import { parseDateTime } from "cms-repository/providers/manifests/core/parsing/identifiers";
 import { parseProviderInstallation } from "../../core/parsing/parseProviderInstallation";
@@ -9,8 +10,8 @@ import type { StoredProviderInstallation } from "../../interfaces/ProviderInstal
 export interface InstallationDocument extends StoredProviderInstallation {
     readonly _id: string;
     readonly siteId: string;
-    /** Cached digest of approved configuration; older records are backfilled on first use. */
-    readonly selectionDigest?: string;
+    /** Digest persisted with every approved configuration. */
+    readonly selectionDigest: string;
 }
 
 export function readInstallationDocument(
@@ -23,6 +24,9 @@ export function readInstallationDocument(
     }
     if (!Number.isSafeInteger(document.revision) || document.revision < 1) {
         throw new Error("Stored provider installation has invalid revision");
+    }
+    if (!isSha256Digest(document.selectionDigest)) {
+        throw new TypeError("Stored provider installation requires a valid selection digest");
     }
     const observation = document.observation;
     return deepFreeze({

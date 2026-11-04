@@ -5,8 +5,8 @@ import type { DekRepository, DekRecord } from "envelope-crypto/interfaces/DekRep
 /**
  * Mongo doc shape for a per-scope DEK record. `_id` carries the scope
  * identifier (in a multi-tenant setup: a tenantId). `wrapped` is
- * provider-opaque — for `LocalKekProvider` a base64-of-IV+ciphertext
- * blob, for `OvhOkmsKekProvider` the JWE token returned by OVH.
+ * provider-opaque; `LocalKekRingProvider` stores an AES-GCM IV and ciphertext
+ * encoded as two base64 parts.
  */
 export type CmsDekDocument = {
     _id: string;

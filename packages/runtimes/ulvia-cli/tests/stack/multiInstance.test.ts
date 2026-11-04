@@ -38,7 +38,7 @@ test("named instances keep independent identities, credentials, state, and hostn
             name: "default",
             label: "Default instance",
             hostname: localInstanceHostname("default"),
-            profile: { id: "ulvia.official", version: "1.3.0" },
+            profile: { id: "ulvia.official", version: "1.0.0" },
         });
         const previewConfig = await loadOrCreateLocalInstanceConfig(previewInstance.root, {
             name: "preview",
@@ -55,19 +55,12 @@ test("named instances keep independent identities, credentials, state, and hostn
         await saveLocalEdgeState(previewInstance, projectName, previewConfig.hostname, edgeImage);
 
         expect(defaultConfig.adminPassword).not.toBe(previewConfig.adminPassword);
-        expect(instancePublicUrl(defaultConfig.hostname, services.installation)).toBe("http://localhost:5100");
+        expect(instancePublicUrl(defaultConfig.hostname, services.installation)).toBe("http://default.localhost:5100");
         expect(instancePublicUrl(previewConfig.hostname, services.installation)).toBe("http://preview.localhost:5100");
         expect(localEdgeProjectName(paths, "default")).not.toBe(projectName);
         expect((await loadLocalEdgeState(previewInstance))?.projectName).toBe(projectName);
 
-        const environment = localEdgeEnvironment(
-            previewInstance,
-            previewConfig,
-            connection,
-            services,
-            edgeImage,
-            projectName,
-        );
+        const environment = localEdgeEnvironment(previewConfig, connection, services, edgeImage, projectName);
         expect(environment.CMS_INSTALLATIONS_PROVIDER_TOKEN).toBe("a".repeat(43));
         expect(environment.ULVIA_EDGE_NETWORK_ALIAS).toBe(`${projectName}-edge`);
         expect(environment.ULVIA_INSTANCE_HOSTNAME).toBe("preview.localhost");
@@ -110,7 +103,7 @@ test("concurrent instance configuration creation converges on one identity and s
             name: "preview",
             label: "Preview instance",
             hostname: "preview.localhost",
-            profile: { id: "ulvia.official", version: "1.3.0" },
+            profile: { id: "ulvia.official", version: "1.0.0" },
         } as const;
         const [first, second] = await Promise.all([
             loadOrCreateLocalInstanceConfig(root, input),

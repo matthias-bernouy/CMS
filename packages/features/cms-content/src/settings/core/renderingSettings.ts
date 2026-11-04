@@ -10,7 +10,7 @@ export function projectRenderingSettings(system: TSystem): RenderingSettings {
             visible: site.visible,
             host: site.host,
             language: site.language,
-            ...(site.activeLanguages ? { activeLanguages: site.activeLanguages } : {}),
+            activeLanguages: site.activeLanguages,
             organization: site.organization,
             notFound: site.notFound,
             forbidden: site.forbidden,

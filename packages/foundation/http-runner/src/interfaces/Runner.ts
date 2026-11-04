@@ -81,11 +81,11 @@ export interface Runner {
     removeRoutesByPathPrefix(prefix: string): void;
 
     /**
-     * Start serving. `port` defaults to 3000; pass `0` for an OS-assigned
+     * Start serving. `options.port` defaults to 3000; pass `{ port: 0 }` for an OS-assigned
      * ephemeral port (the actual port is exposed by the implementation,
      * e.g. `BunRunner.port`) — useful for isolated tests.
      */
-    start(options?: number | RunnerListenOptions): void;
+    start(options?: RunnerListenOptions): void;
 
     /**
      * Stop serving and release the listening socket. Idempotent; safe to

@@ -20,7 +20,7 @@ export function resolveServicePorts(environment: Record<string, string | undefin
 }
 
 export function localInstanceHostname(name: string): string {
-    return name === "default" ? "localhost" : `${name}.localhost`;
+    return `${name}.localhost`;
 }
 
 export function instancePublicUrl(

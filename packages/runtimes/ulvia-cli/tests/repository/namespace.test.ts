@@ -14,7 +14,7 @@ test("CLI credentials use one private bounded file, refuse old schemas and never
     const root = await mkdtemp(join(tmpdir(), "ulvia-pat-config-"));
     const path = join(root, "config.json");
     try {
-        expect(await readClientConfig(root)).toEqual({ schema: "ulvia.client.v2" });
+        expect(await readClientConfig(root)).toEqual({ schema: "ulvia.client.v1" });
         await updateClientConfig(root, async (config) => {
             config.repository = {
                 url: "https://repository.example",
@@ -30,9 +30,9 @@ test("CLI credentials use one private bounded file, refuse old schemas and never
         await chmod(path, 0o600);
         for (const invalid of [
             "x".repeat(65_537),
-            '{"schema":"ulvia.client.v2","schema":"ulvia.client.v2"}',
-            JSON.stringify({ schema: "ulvia.client.v1", identities: {} }),
+            '{"schema":"ulvia.client.v1","schema":"ulvia.client.v1"}',
             JSON.stringify({ schema: "ulvia.client.v2", identities: {} }),
+            JSON.stringify({ schema: "ulvia.client.v1", identities: {} }),
         ]) {
             await writeFile(path, invalid);
             await expect(readClientConfig(root)).rejects.toThrow();

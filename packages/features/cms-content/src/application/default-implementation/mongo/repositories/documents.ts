@@ -19,7 +19,7 @@ type PagePathUpdateIntent = {
 };
 export type PageDoc = WithMongoId<TPage> & {
     /** Derived reverse-lookup projection. It is never exposed as authored Page data. */
-    contentReferences?: readonly string[];
+    contentReferences: readonly string[];
     deletionIntent?: PageDeletionIntent;
     pathUpdateIntent?: PagePathUpdateIntent;
 };
@@ -30,16 +30,16 @@ export type PageRouteDoc = Omit<PageRoute, "path"> & {
 };
 export type SystemDoc = TSystem & {
     _id: typeof SYSTEM_ID;
-    settingsRevision?: number;
-    activePageWrites?: number;
-    activePageWritePermits?: Record<string, Date>;
+    settingsRevision: number;
+    activePageWrites: number;
+    activePageWritePermits: Record<string, Date>;
     pageDeletionLock?: string;
     routeMigration?: {
         token: string;
         target: TSystem;
         previousDefaultLanguage: string;
         requestedAt: Date;
-        expiresAt?: Date;
+        expiresAt: Date;
     };
 };
 export type SiteBlocPublicationLockDoc = {
@@ -74,6 +74,13 @@ export function fromPageDoc(document: PageDoc | null): TPage | null {
     if (!document) {
         return null;
     }
+    if (
+        !Number.isSafeInteger(document.revision) ||
+        document.revision < 1 ||
+        !Array.isArray(document.contentReferences)
+    ) {
+        throw new TypeError("Stored Page requires a valid revision and contentReferences");
+    }
     const {
         _id,
         contentReferences: _contentReferences,
@@ -84,7 +91,7 @@ export function fromPageDoc(document: PageDoc | null): TPage | null {
     return {
         id: _id,
         ...rest,
-        revision: Number.isSafeInteger(document.revision) ? document.revision : 1,
+        revision: document.revision,
         visible: document.visible === true && !document.deletionIntent,
     };
 }

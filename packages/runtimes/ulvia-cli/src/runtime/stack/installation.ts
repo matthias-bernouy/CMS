@@ -8,7 +8,7 @@ import {
     type InstallationRepository,
 } from "./repositoryConnection";
 
-const SCHEMA = "ulvia.installation.v2" as const;
+const SCHEMA = "ulvia.installation.v1" as const;
 
 type InstallationTls = Readonly<{ mode: "disabled" }> | Readonly<{ mode: "acme"; email: string; httpsPort: number }>;
 

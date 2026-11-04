@@ -20,7 +20,7 @@ export class RepositoryConnection {
     async identity(): Promise<string> {
         const value = (await this.json("v1/info", "GET")) as { repositoryId?: unknown; protocol?: unknown };
         if (
-            value.protocol !== "ulvia-repository/v2" ||
+            value.protocol !== "ulvia-repository/v1" ||
             typeof value.repositoryId !== "string" ||
             !/^[A-Za-z0-9._:-]{1,128}$/u.test(value.repositoryId)
         ) {

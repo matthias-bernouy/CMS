@@ -91,7 +91,7 @@ ulvia repository logout
 Clients share `RepositoryConnection` and `RemoteRepositoryClient`. Each protected
 request verifies the public Repository identity before resolving the token,
 refuses redirects, and bounds response size and duration. CLI credentials use a
-private `ulvia.client.v2` configuration. Logout/replacement invalidates live
+private `ulvia.client.v1` configuration. Logout/replacement invalidates live
 credential resolvers. Logout does not revoke the remote PAT.
 
 ## Explicit capability bindings

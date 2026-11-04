@@ -335,7 +335,7 @@ test("collection source assets keep their verified bytes through the repository 
         await writeFile(join(pageRoot, "definition.json"), JSON.stringify({ id: "overview" }));
         await writeFile(join(pageRoot, "page.html"), "<p>{{ page.title }}</p>");
         await writeFile(join(pageRoot, "unexpected.txt"), "not part of the Page source contract");
-        await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("Collection pages are unsupported");
+        await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("Unknown collection source directory");
     } finally {
         await rm(root, { recursive: true, force: true });
     }

@@ -19,13 +19,12 @@ export async function localCommand(
         await configureCommand(args, paths, environment, log);
         return;
     }
-    const installation = await loadOrCreateInstallationConfig(paths, environment);
     if (command === "services") {
-        await servicesCommand(args, paths, installation, log);
+        await servicesCommand(args, paths, environment, log);
         return;
     }
     if (command === "instance") {
-        await instanceCommand(args, paths, installation, log);
+        await instanceCommand(args, paths, environment, log);
         return;
     }
     if (command === "upgrade") {
@@ -52,6 +51,7 @@ selects the Provider image when shared services are uninitialized.`);
         return;
     }
     const requestedVersion = parseStartVersion(args, "Usage: ulvia start [--version <version>]");
+    const installation = await loadOrCreateInstallationConfig(paths, environment);
     await startLocalServices(paths, installation, log, requestedVersion);
     const instances = await listLocalInstanceNames(paths);
     if (instances.length === 0) {

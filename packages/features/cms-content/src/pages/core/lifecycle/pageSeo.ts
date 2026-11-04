@@ -1,15 +1,14 @@
 import type { TPage } from "cms-content/pages/interfaces/pages";
 
-/** SEO keys are canonical tags, while older site settings may keep their original casing. */
+/** Resolve canonical SEO language keys from the selected BCP-47 tag. */
 export function pageSeoForLanguage(page: TPage, language: string): NonNullable<TPage["seo"]>[string] | undefined {
     if (!page.seo) {
         return undefined;
     }
-    let canonical = language;
     try {
-        canonical = Intl.getCanonicalLocales(language)[0] ?? language;
+        const canonical = Intl.getCanonicalLocales(language)[0];
+        return canonical ? page.seo[canonical] : undefined;
     } catch {
-        // Preserve reads of older records with a noncanonical language key.
+        return undefined;
     }
-    return page.seo[canonical] ?? page.seo[language];
 }

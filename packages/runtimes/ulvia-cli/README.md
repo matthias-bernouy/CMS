@@ -98,7 +98,7 @@ must go through `upgrade`.
 `instance create` provisions one isolated Provider tenant and immediately starts
 its dedicated Edge. `instance start` restarts only an already-provisioned
 instance's Edge. All Edges use the shared proxy port: an instance named
-`default` is available at `http://localhost:5100`, while any other instance such
+`default` is available at `http://default.localhost:5100`, while an instance such
 as `preview` uses `http://preview.localhost:5100`.
 `ULVIA_HTTP_PORT` and `ULVIA_PROVIDER_PORT` provide
 initial isolation defaults for tests and CI. Interactive configuration belongs
@@ -233,8 +233,7 @@ The protocol and exact-coordinate client live in
 `@bernouy/cms-repository/repository/publication`. The CLI and CMS authoring
 implementation share those clients. The official Provider composes the domain
 service and persistence for explicitly enabled Repository instances; Edge
-exposes the selected admitted contract. No standalone mutation endpoint or
-signing-key protocol remains.
+exposes the selected admitted contract. The Repository uses ordinary CMS capabilities and account PATs.
 
 `yank` is reversible catalogue metadata: it hides a release from new catalogue
 resolution without deleting its exact historical bytes. `restore` exposes it
@@ -301,6 +300,12 @@ image replacement remain separate actions.
 `instance create` provisions the named instance through the Provider operator
 API, then starts its Edge. Connection review validates the runtime report and
 exact manifest claims. Provider behavior is covered by implementation-owned tests.
+
+The current baseline uses fresh `1.0.0` official releases and `v1` local state.
+Each named instance uses `<name>.localhost` unless an explicit domain is supplied;
+`default` is an ordinary name. Repository hosting uses a CMS instance with the
+`ulvia.repository@1.0.0` profile. Client PAT connections and local release caches
+are separate from the shared services and instance lifecycle.
 
 ## Collection examples
 

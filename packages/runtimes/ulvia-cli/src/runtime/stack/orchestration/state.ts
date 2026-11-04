@@ -5,8 +5,8 @@ import type { LocalInstancePaths, UlviaPaths } from "../../paths";
 import { parseInstallationConfig, type InstallationConfig } from "../installation";
 import { isOfficialImage, type OfficialImage } from "./images";
 
-const SERVICES_SCHEMA = "ulvia.local-services-stack.v3" as const;
-const INSTANCE_SCHEMA = "ulvia.local-edge-stack.v2" as const;
+const SERVICES_SCHEMA = "ulvia.local-services-stack.v1" as const;
+const INSTANCE_SCHEMA = "ulvia.local-edge-stack.v1" as const;
 
 export type LocalServicesState = Readonly<{
     schema: typeof SERVICES_SCHEMA;

@@ -147,7 +147,7 @@ test("collection sources reject obsolete migration directories", async () => {
     const target = join(root, "smoke-kit");
     await cp(resolve(import.meta.dir, "../stack/fixtures/smoke-kit"), target, { recursive: true });
     await mkdir(join(target, "migrations"));
-    await expect(prepareCollectionRelease(target)).rejects.toThrow("migration sources are unsupported");
+    await expect(prepareCollectionRelease(target)).rejects.toThrow("Unknown collection source directory");
 });
 
 async function writeComposition(root: string, id: string): Promise<void> {

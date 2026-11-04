@@ -12,7 +12,8 @@ function validEnv(): Record<string, string> {
         MONGO_URL: "mongodb://127.0.0.1:27017/cms",
         CMS_FILES_DIR: "/tmp/cms-files",
         CMS_SESSION_SECRET: "session-secret",
-        CMS_KEK_HEX: "00".repeat(32),
+        CMS_KEK_ACTIVE_ID: "control",
+        CMS_KEK_RING_JSON: JSON.stringify({ control: "00".repeat(32) }),
     };
 }
 
@@ -49,5 +50,19 @@ describe("Ulvia Provider server environment", () => {
         expect(() => readProviderRuntimeEnv({ ...validEnv(), ULVIA_BOOTSTRAP_DIR: "bootstrap" })).toThrow(
             "ULVIA_BOOTSTRAP_DIR",
         );
+    });
+    test("requires an explicit key ring and validates its active key", () => {
+        const valid = validEnv();
+        expect(readProviderRuntimeEnv(valid).CMS_KEK.activeKeyId).toBe("control");
+        for (const field of ["CMS_KEK_ACTIVE_ID", "CMS_KEK_RING_JSON"]) {
+            const incomplete = { ...valid };
+            delete incomplete[field];
+            expect(() => readProviderRuntimeEnv(incomplete)).toThrow(`${field} is required`);
+        }
+        expect(() => readProviderRuntimeEnv({ ...valid, CMS_KEK_RING_JSON: "{}" })).toThrow("missing key");
+        expect(() => readProviderRuntimeEnv({ ...valid, CMS_KEK_RING_JSON: "not-json" })).toThrow("JSON object");
+        expect(() =>
+            readProviderRuntimeEnv({ ...valid, CMS_KEK_RING_JSON: JSON.stringify({ control: "invalid" }) }),
+        ).toThrow("64 hexadecimal");
     });
 });

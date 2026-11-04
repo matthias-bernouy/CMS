@@ -23,7 +23,7 @@ export class BunRunner implements Runner {
     constructor(private readonly options: BunRunnerOptions = {}) {}
 
     /** The bound TCP port once `start()` has run (the OS-assigned one when
-     *  started with `0`), or `undefined` before start / after stop. */
+     *  started with `{ port: 0 }`), or `undefined` before start / after stop. */
     get port(): number | undefined {
         return this.server?.port;
     }
@@ -132,11 +132,18 @@ export class BunRunner implements Runner {
         this.defaultEndpoints.push({ method, prefix, handler, middlewares });
     }
 
-    start(options: number | RunnerListenOptions = 3000): void {
+    start(options: RunnerListenOptions = {}): void {
+        if (
+            !options ||
+            typeof options !== "object" ||
+            Array.isArray(options) ||
+            Object.keys(options).some((key) => key !== "port" && key !== "hostname")
+        ) {
+            throw new TypeError("Listener options must contain only port and hostname");
+        }
         const self = this;
-        const listen = typeof options === "number" ? { port: options } : options;
-        const port = listen.port ?? 3000;
-        const hostname = listen.hostname ?? this.options.hostname;
+        const port = options.port ?? 3000;
+        const hostname = options.hostname ?? this.options.hostname;
 
         this.server = Bun.serve({
             port,

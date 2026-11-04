@@ -6,8 +6,8 @@ import type { InstallationsProviderTransport } from "./InstallationsProviderTran
 
 export const INSTALLATIONS_CONTRACT = {
     contractId: "ulvia.cms.installations",
-    version: "1.1.1",
-    digest: "sha256:7363ede14f1acef85be3ab3fea3b5d215263a021b73254b3cdf413790eabf22a",
+    version: "1.0.0",
+    digest: "sha256:d2956ce10319b1ea863d4b8fa0cadaa3f1123ccbeb4c8dc42c1dce1cc0fa7a2d",
 } as const;
 
 export type InstallationsControlContract = Readonly<{ contractId: string; version: string; digest: string }>;
@@ -23,7 +23,7 @@ export function installationsControlContract(report: ProviderRuntimeReport): Ins
     ) {
         return INSTALLATIONS_CONTRACT;
     }
-    throw new Error("Installations Provider does not expose the compatible control contract");
+    throw new Error("Installations Provider does not expose the required control contract");
 }
 
 /** Validates the stable public Provider report before the Edge accepts its control capabilities. */
