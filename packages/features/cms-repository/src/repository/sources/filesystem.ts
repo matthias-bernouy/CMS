@@ -1,4 +1,6 @@
-import { mkdir, readFile, link, writeFile, unlink } from "node:fs/promises";
+import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../filesystem/core/durable";
+import { RepositoryRequestError } from "../core/errors";
+import { readFile, link, rm } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 import {
@@ -26,19 +28,23 @@ export class FilesystemRepositorySourceStore implements RepositorySourceStore {
     async put(namespace: string, collectionId: string, version: string, snapshot: RepositorySourceSnapshot) {
         const path = this.path(namespace, collectionId, version);
         const bytes = canonicalizeIJson(snapshot);
-        await mkdir(dirname(path), { recursive: true, mode: 0o700 });
+        await ensureDurableDirectory(dirname(path), this.root);
         const temporary = `${path}.${randomUUID()}.tmp`;
-        await writeFile(temporary, bytes, { mode: 0o600, flag: "wx" });
         try {
+            await durableWriteFile(temporary, bytes, { mode: 0o600, flag: "wx" });
             try {
                 await link(temporary, path);
             } catch (error) {
-                if ((error as NodeJS.ErrnoException).code !== "EEXIST" || (await readFile(path, "utf8")) !== bytes) {
-                    throw new Error("Source snapshot is immutable");
+                if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+                    throw error;
+                }
+                if ((await readFile(path, "utf8")) !== bytes) {
+                    throw new RepositoryRequestError("REJECTED", "Source snapshot is immutable");
                 }
             }
+            await syncDirectory(dirname(path));
         } finally {
-            await unlink(temporary);
+            await rm(temporary, { force: true });
         }
     }
     private path(namespace: string, collectionId: string, version: string) {

@@ -1,11 +1,14 @@
 import { isResourceId, resourceName } from "cms-repository/exports/contracts/protocol";
 import { mkdir, mkdtemp, writeFile, rm, readdir, stat } from "node:fs/promises";
 import { join, dirname } from "node:path";
+import { writePreparation, sourceDigest } from "./record";
+import type { PublicationPreflight } from "../preflight";
+import type { AdmittedCollectionRelease } from "cms-repository/exports/collections/index";
 import { prepareCollectionRelease } from "cms-repository/exports/collections/build";
-import { parseSourceSnapshot, canonicalSourceSnapshot, type SourceAsset } from "./snapshot";
+import { parseSourceSnapshot, canonicalSourceSnapshot, type SourceAsset } from "../snapshot";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { collectionBrowserRisk, collectionBrowserRiskDigest } from "cms-repository/exports/collections/index";
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 
 export interface AuthoringHost {
     readonly root: string;
@@ -13,7 +16,11 @@ export interface AuthoringHost {
     readonly readAsset: (asset: SourceAsset) => Promise<Blob>;
 }
 
-export async function prepareRemoteCollection(host: AuthoringHost, sourceJson: string) {
+export async function prepareRemoteCollection(
+    host: AuthoringHost,
+    sourceJson: string,
+    inspect: (artifact: AdmittedCollectionRelease) => Promise<PublicationPreflight>,
+) {
     const snapshot = parseSourceSnapshot(sourceJson);
     const definition = JSON.parse(snapshot.files.find((file) => file.path === "definition.json")!.content);
     const collectionId = definition.collectionId;
@@ -42,6 +49,7 @@ export async function prepareRemoteCollection(host: AuthoringHost, sourceJson: s
             await writeFile(path, new Uint8Array(await blob.arrayBuffer()), { flag: "wx", mode: 0o600 });
         }
         const artifact = await prepareCollectionRelease(directory, host.contracts);
+        const preflight = await inspect(artifact);
         const digest = artifact.digest;
         const id = randomUUID();
         const assets = snapshot.assets.map((asset) => ({
@@ -56,17 +64,18 @@ export async function prepareRemoteCollection(host: AuthoringHost, sourceJson: s
         if (Buffer.byteLength(retainedSources) > 1024 * 1024) {
             throw new Error("Retained collection sources exceed 1 MiB");
         }
-        await writeFile(
-            join(work, "prepared.json"),
-            JSON.stringify({
-                id,
-                digest,
-                sourceJson: retainedSources,
-                directory: resourceName(collectionId),
-                canonicalJson: artifact.canonicalJson,
-            }),
-            { mode: 0o600, flag: "wx" },
-        );
+        await writePreparation(work, {
+            schema: "ulvia.collection-preparation.v1",
+            id,
+            digest,
+            sourceJson: retainedSources,
+            sourceDigest: sourceDigest(retainedSources),
+            directory: resourceName(collectionId),
+            canonicalJson: artifact.canonicalJson,
+            expiresAt: Date.now() + 7 * 86400_000,
+            repositoryId: preflight.repositoryId,
+            repositoryOrigin: preflight.origin,
+        });
         const { rename } = await import("node:fs/promises");
         await rename(work, join(host.root, id));
         const browserRisk = collectionBrowserRisk(artifact.release);
@@ -76,10 +85,23 @@ export async function prepareRemoteCollection(host: AuthoringHost, sourceJson: s
             collectionId,
             version: artifact.release.version,
             digest,
-            sourceDigest: `sha256:${createHash("sha256").update(retainedSources).digest("hex")}`,
+            sourceDigest: sourceDigest(retainedSources),
+            preflight: preflight.state,
             approvedBrowserRiskDigest: collectionBrowserRiskDigest(browserRisk),
             browserRisk: browserRisk.level,
-            diagnostics: artifact.diagnostics,
+            diagnostics: [
+                ...artifact.diagnostics.slice(0, preflight.state === "incomplete" ? 15 : 16),
+                ...(preflight.state === "incomplete"
+                    ? [
+                          {
+                              code: "collection.preflight_incomplete",
+                              severity: "warning" as const,
+                              message:
+                                  "Publication history could not be checked completely. Publication will recheck current ownership and evolution; this preparation does not guarantee acceptance.",
+                          },
+                      ]
+                    : []),
+            ],
         };
     } catch (error) {
         await rm(work, { recursive: true, force: true });

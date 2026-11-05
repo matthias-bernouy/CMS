@@ -5,8 +5,8 @@ import { tmpdir } from "node:os";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { CollectionAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { repositoryApplication } from "../../../../../../tests/fixtures/repository/application";
-import { RepositoryPublisher } from "../../../src/runtime/stores/repository/RepositoryPublisher";
+import { repositoryApplication } from "../../../../../../../tests/fixtures/repository/application";
+import { RepositoryPublisher } from "../../../../src/runtime/stores/repository/RepositoryPublisher";
 
 export function sourceSnapshot(version = "1.0.0", publisherId = "community") {
     const identity = `${publisherId}/sample`;
@@ -89,10 +89,12 @@ export async function authoringFixture() {
     return {
         root,
         application,
+        account,
         server,
         secrets,
         contracts,
         authoring,
+        publisher,
         base: server.url.origin,
         credential: await publisher.credential("community"),
         async close() {
@@ -101,4 +103,16 @@ export async function authoringFixture() {
             await rm(root, { recursive: true, force: true });
         },
     };
+}
+
+export function configurationSource(version: string, label = "Example") {
+    const snapshot = JSON.parse(sourceSnapshot(version));
+    const definition = snapshot.files.find((file: { path: string }) => file.path === "definition.json");
+    const value = JSON.parse(definition.content);
+    value.configuration = {
+        schema: { type: "object", properties: { label: { type: "string", maxLength: 16 } }, required: ["label"] },
+        defaults: { label },
+    };
+    definition.content = JSON.stringify(value);
+    return JSON.stringify(snapshot);
 }

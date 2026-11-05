@@ -1,6 +1,6 @@
 import { RepositoryRequestError } from "../core/errors";
 import { ReleaseValidationError } from "cms-repository/exports/contracts/index";
-import { CollectionValidationError } from "cms-repository/exports/collections/index";
+import { CollectionValidationError, CollectionPublicationError } from "cms-repository/exports/collections/index";
 import { ProviderManifestValidationError } from "cms-repository/exports/providers/index";
 import type { RepositoryBinaryInput, RepositoryCapabilityContext, RepositoryCapabilityPorts } from "./interfaces";
 import type { RemoteCoordinate } from "../publication/types";
@@ -22,6 +22,14 @@ export class RepositoryCapabilityService {
         try {
             return await this.dispatch(id, input, binary, context);
         } catch (error) {
+            if (error instanceof CollectionPublicationError) {
+                throw new RepositoryRequestError(
+                    "REJECTED",
+                    error.message,
+                    error.publicationCode,
+                    error.publicationResource,
+                );
+            }
             if (
                 error instanceof ReleaseValidationError ||
                 error instanceof CollectionValidationError ||
@@ -75,6 +83,13 @@ export class RepositoryCapabilityService {
         const accountId = context.accountId;
         const revision = input.namespaceRevision as number;
         switch (id) {
+            case "publication-check-collection":
+                return namespaces.execute(accountId, namespace, revision, async () => {
+                    if (!this.ports.registry.checkCollection) {
+                        throw new RepositoryRequestError("NOT_FOUND");
+                    }
+                    return this.ports.registry.checkCollection(input.canonicalJson as string, namespace);
+                });
             case "namespace-list":
                 return { namespaces: await namespaces.listOwned(accountId) };
             case "namespace-claim":

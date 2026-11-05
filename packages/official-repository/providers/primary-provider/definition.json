@@ -173,7 +173,7 @@
         {
             "contractId": "ulvia/cms.authoring",
             "version": "1.0.0",
-            "digest": "sha256:b2ccdb703bdcf4317adabe2d18f708e67d3b2bb6b748746e3fd1e20dc4d279a1",
+            "digest": "sha256:a147034f2a4d1d80f6ca47b76600c0f416f8ecb4226e03c207d04dacbb9f6bb0",
             "requires": []
         },
         {
@@ -191,7 +191,7 @@
         {
             "contractId": "ulvia/repository",
             "version": "1.0.0",
-            "digest": "sha256:e86ea96a1b6cd4f4b82b4b8fda2d6ebf3bf456e3d1b0db18dc0a64e864dbd155",
+            "digest": "sha256:7ed2f7729e9010ef6cb055ed48580f20c8b19475724f182a80f5cdfb9f35ec0a",
             "requires": []
         }
     ],

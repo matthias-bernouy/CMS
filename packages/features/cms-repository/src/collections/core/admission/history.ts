@@ -1,3 +1,4 @@
+import { CollectionPublicationError } from "../errors";
 import {
     compareSemVer,
     isSemVerPrerelease,
@@ -20,7 +21,7 @@ export async function verifyCollectionPublicationHistory(
         (release) => semVerReleaseTarget(release.version) === semVerReleaseTarget(next.version),
     );
     if (previousTarget && compareSemVer(next.version, previousTarget.version) <= 0) {
-        throw new TypeError("Collection publication version must increase within its release target");
+        throw new CollectionPublicationError("version_order");
     }
     const stable = history.filter((release) => !isSemVerPrerelease(release.version));
     const reference =
@@ -42,14 +43,19 @@ export async function verifyCollectionPublicationHistory(
     for (const release of stable) {
         const [before, after] = compareSemVer(release.version, next.version) < 0 ? [release, next] : [next, release];
         if (collectionRequirementBreaks(before, after).length) {
-            throw new TypeError("Incompatible stable resource requirements require a new resource identity");
+            throw new CollectionPublicationError(
+                "stable_resource",
+                "Incompatible stable resource requirements require a new resource identity",
+            );
         }
         const incompatible = collectionUpgradeBreakingResources(before, after).find(
             (resource) => resource.kind !== "configuration" && retained.has(`${resource.kind}:${resource.id}`),
         );
         if (incompatible) {
-            throw new TypeError(
+            throw new CollectionPublicationError(
+                "stable_resource",
                 `Incompatible stable ${incompatible.kind} ${incompatible.id} requires a new resource identity`,
+                incompatible,
             );
         }
     }

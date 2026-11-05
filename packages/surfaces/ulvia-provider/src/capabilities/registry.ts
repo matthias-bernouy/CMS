@@ -32,7 +32,21 @@ export function registerRepositoryCapabilities(
                 } satisfies ProviderBinaryResult;
             } catch (error) {
                 if (error instanceof RepositoryCapabilityError) {
-                    throw new ProviderCapabilityDispatchError(error.code, error.code === "NOT_FOUND" ? 404 : 409);
+                    throw new ProviderCapabilityDispatchError(
+                        error.code,
+                        error.code === "NOT_FOUND" ? 404 : 409,
+                        error.code,
+                        {},
+                        error.publicationCode
+                            ? {
+                                  message: error.message,
+                                  publicationCode: error.publicationCode,
+                                  ...(error.publicationResource
+                                      ? { publicationResource: error.publicationResource }
+                                      : {}),
+                              }
+                            : undefined,
+                    );
                 }
                 if (error instanceof RepositoryDiscoveryError) {
                     throw new ProviderCapabilityDispatchError(

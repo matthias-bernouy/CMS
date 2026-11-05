@@ -1,6 +1,7 @@
 export {
     CollectionAuthoring,
     CollectionPreparationError,
+    CollectionPublicationRecoveryError,
     type CollectionPublisher,
     type RepositoryConnectionStatus,
 } from "cms-repository/repository/authoring/CollectionAuthoring";

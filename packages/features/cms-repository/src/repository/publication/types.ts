@@ -63,6 +63,7 @@ export type OwnedPublicationUploadManifest = PublicationUploadManifest & Readonl
 /** Storage-independent mutation boundary implemented by a repository server adapter. */
 export interface RepositoryPublicationRegistry {
     publish(envelope: PublicationEnvelope): Promise<RepositoryPublicationResult>;
+    checkCollection?(canonicalJson: string, namespace: string): Promise<{ complete: boolean; digest: string }>;
     setYank(
         coordinate: RemoteCoordinate,
         reason: string | null,

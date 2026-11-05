@@ -47,3 +47,39 @@ For an existing installation, use `plan-collection-upgrade`. Apply only a review
 A site edit can invalidate a reviewed plan. Inspect the failure, make a fresh plan and use a new idempotency key for the changed request. Replaying the same request with its original key retrieves the same operation; reusing that key with different input is a conflict.
 
 Read the installed release back. Then get an example through Content `examples.list` and `examples.get`, copy `document.html` into an ordinary Page draft and verify that draft before publication. Collection upgrades switch reusable resources; they never automatically rewrite the Page's authored HTML.
+
+## Publication Preflight And Recovery
+
+Preparation returns `preflight: "complete"` when the configured Repository has
+checked the candidate against its authoritative publication history, including
+yanked releases. Evolution refusals return `valid: false` with a typed
+`collection.publication.*` diagnostic and version guidance. The check does not
+publish, upload, install or grant execution authority.
+
+`preflight: "incomplete"` includes a warning. This applies when the Repository
+check is unavailable or exceeds its evidence budget: candidate metadata above
+1 MiB, more than 64 historical releases, or more than 32 MiB of historical
+metadata. An incomplete check is not a compatibility guarantee. Publication
+always rechecks current ownership and evolution under the Repository write lock.
+
+An exact publication refused after preparation returns `INVALID_INPUT` with a
+safe `publicationCode` and an optional `publicationResource`. Correct the version
+or resource identity and prepare again. Technical failures remain unavailable;
+they must not be interpreted as version incompatibility.
+
+Publication and private source retention are separate stages. A retryable
+`CORE_UNAVAILABLE` error may return `publicationState: "sources-pending"`, which
+means the immutable release is already published. `publicationState: "unknown"`
+means the publication response was lost or could not be verified. Both return the
+exact `preparationId` and `digest`: retry those same values after restoring access,
+without changing the version or source. A retained local publication receipt lets
+source completion resume without recompiling or uploading the release again.
+Every retry still requires current namespace ownership and Repository identity.
+A source-retention business refusal returns `INVALID_INPUT` with the same
+published-state fields; resolve that refusal before retrying. It does not imply
+that the immutable release was rolled back.
+
+Preparations expire after seven days, including publication retries. Missing,
+altered, foreign-instance and expired preparations refuse before publication.
+After expiration, prepare the original exact sources again; an identical
+published release remains immutable and its exact replay is idempotent.

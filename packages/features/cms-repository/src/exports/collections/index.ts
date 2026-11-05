@@ -63,7 +63,14 @@ export type {
     AdmittedCollectionRelease,
     CollectionDigest,
 } from "cms-repository/collections/interfaces/CollectionAdmission";
-export { CollectionValidationError, type CollectionValidationCode } from "cms-repository/collections/core/errors";
+export {
+    CollectionValidationError,
+    CollectionPublicationError,
+    COLLECTION_PUBLICATION_ISSUES,
+    type CollectionPublicationCode,
+    type CollectionPublicationResource,
+    type CollectionValidationCode,
+} from "cms-repository/collections/core/errors";
 export { DEFAULT_COLLECTION_LIMITS, type CollectionLimits } from "cms-repository/collections/core/limits";
 export {
     collectionBlocTagIssue,

@@ -1,0 +1,138 @@
+{
+    "id": "publication-check-collection",
+    "access": "authenticated",
+    "description": "Check collection publication evolution against authoritative history, including yanked versions. This does not publish or install resources.",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "namespaceRevision": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "canonicalJson": {
+                "type": "string",
+                "maxLength": 1048576,
+                "sensitive": true
+            }
+        },
+        "required": ["namespace", "namespaceRevision", "canonicalJson"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "complete": {
+                "type": "boolean"
+            },
+            "digest": {
+                "type": "string",
+                "maxLength": 71
+            }
+        },
+        "required": ["complete", "digest"]
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    },
+                    "publicationCode": {
+                        "type": "string",
+                        "maxLength": 32,
+                        "enum": [
+                            "immutable_conflict",
+                            "identity_changed",
+                            "version_order",
+                            "stable_resource",
+                            "major_required",
+                            "minor_required"
+                        ]
+                    },
+                    "publicationResource": {
+                        "type": "object",
+                        "properties": {
+                            "kind": {
+                                "type": "string",
+                                "maxLength": 16,
+                                "enum": ["bloc", "theme-token", "configuration", "text", "asset", "state"]
+                            },
+                            "id": {
+                                "type": "string",
+                                "maxLength": 512
+                            }
+                        },
+                        "required": ["kind", "id"]
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/v1/publications/check-collection",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        }
+    ],
+    "docs": ["overview.md"]
+}

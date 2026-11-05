@@ -21,3 +21,20 @@ Stream each declared asset with its exact SHA-256 digest and byte length, then c
 ## Errors
 
 Use declared error codes. `REJECTED` indicates invalid data, unavailable ownership, a stale revision or a quota refusal. Reread current state before retrying. Technical failures use `CORE_UNAVAILABLE`; they do not grant permission to bypass checks. Clients must bind Access PAT credentials to the expected Repository origin and identity and must refuse redirects when sending credentials.
+
+## Collection Publication Preflight
+
+`publication-check-collection` is an authenticated `QUERY` at
+`/v1/publications/check-collection`. Supply the owned namespace, its current
+revision and the canonical collection JSON. The Repository validates the
+candidate identity and checks its publication evolution, including yanked
+historical releases, without opening an upload or writing a release. Evidence is
+limited to one collection, 64 historical metadata documents and 32 MiB; exceeding
+that budget returns `complete: false`. The input string is limited to 1,048,576 UTF-16 code units; CMS authoring also
+caps the candidate UTF-8 payload at 1 MiB.
+The returned digest identifies the checked candidate. Publication still repeats
+authoritative checks because the history may change after preparation.
+
+Collection evolution refusals use `REJECTED` with a safe `publicationCode` and
+optional resource identity. These are business refusals, not infrastructure
+unavailability. Exact immutable reads and publication semantics are unchanged.

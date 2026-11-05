@@ -1,5 +1,6 @@
 import {
     CollectionPreparationError,
+    CollectionPublicationRecoveryError,
     NamespaceAccessError,
     type CollectionAuthoring,
 } from "@bernouy/cms-repository/repository/authoring";
@@ -81,8 +82,37 @@ export function registerCollectionAuthoringCapabilities(
                 }
                 return result;
             } catch (error) {
+                if (error instanceof CollectionPublicationRecoveryError) {
+                    const code = error.retryable ? "CORE_UNAVAILABLE" : "INVALID_INPUT";
+                    throw new ProviderCapabilityDispatchError(
+                        code,
+                        error.retryable ? 503 : 422,
+                        code,
+                        {},
+                        {
+                            message: error.message,
+                            publicationState: error.publicationState,
+                            preparationId: error.preparationId,
+                            digest: error.digest,
+                        },
+                    );
+                }
                 if (error instanceof NamespaceAccessError || error instanceof RepositoryRequestError) {
-                    throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+                    throw new ProviderCapabilityDispatchError(
+                        "INVALID_INPUT",
+                        422,
+                        "INVALID_INPUT",
+                        {},
+                        error instanceof RepositoryRequestError && error.publicationCode
+                            ? {
+                                  message: error.message,
+                                  publicationCode: error.publicationCode,
+                                  ...(error.publicationResource
+                                      ? { publicationResource: error.publicationResource }
+                                      : {}),
+                              }
+                            : undefined,
+                    );
                 }
                 throw error;
             }

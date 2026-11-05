@@ -1,3 +1,8 @@
+import { COLLECTION_PUBLICATION_ISSUES } from "cms-repository/exports/collections/index";
+import type {
+    CollectionPublicationCode,
+    CollectionPublicationResource,
+} from "cms-repository/exports/collections/index";
 import { RepositoryRequestError } from "../../core/errors";
 import { RepositoryHttpError, repositoryErrorBody } from "cms-repository/repository-http/errors";
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
@@ -51,7 +56,47 @@ export class RepositoryConnection {
 
     async readJson(response: Response, maximum = 1024 * 1024): Promise<unknown> {
         if (!response.ok) {
-            await repositoryErrorBody(response);
+            const body = await repositoryErrorBody(response);
+            if (response.status === 409 && body) {
+                try {
+                    const value = parseStrictJson(body, 4096, 8) as {
+                        error?: {
+                            code?: unknown;
+                            output?: { publicationCode?: unknown; publicationResource?: unknown };
+                        };
+                    };
+                    const code = value?.error?.output?.publicationCode;
+                    if (
+                        value?.error?.code === "REJECTED" &&
+                        typeof code === "string" &&
+                        Object.hasOwn(COLLECTION_PUBLICATION_ISSUES, code)
+                    ) {
+                        const publicationCode = code as CollectionPublicationCode;
+                        const candidate = value.error?.output?.publicationResource as
+                            | CollectionPublicationResource
+                            | undefined;
+                        const resource =
+                            candidate &&
+                            ["bloc", "theme-token", "configuration", "text", "asset", "state"].includes(
+                                candidate.kind,
+                            ) &&
+                            typeof candidate.id === "string" &&
+                            /^[a-zA-Z0-9][a-zA-Z0-9._/-]{0,511}$/u.test(candidate.id)
+                                ? { kind: candidate.kind, id: candidate.id }
+                                : undefined;
+                        throw new RepositoryRequestError(
+                            "REJECTED",
+                            `${resource ? `${resource.kind} ${resource.id}: ` : ""}${COLLECTION_PUBLICATION_ISSUES[publicationCode]}`,
+                            publicationCode,
+                            resource,
+                        );
+                    }
+                } catch (error) {
+                    if (error instanceof RepositoryRequestError) {
+                        throw error;
+                    }
+                }
+            }
             if (response.status >= 400 && response.status < 500) {
                 throw new RepositoryRequestError("REJECTED", `Repository request failed (${response.status})`);
             }

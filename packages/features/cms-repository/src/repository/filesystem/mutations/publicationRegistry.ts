@@ -1,5 +1,12 @@
+import { createHash } from "node:crypto";
+import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
+import { checkCollectionHistory } from "../artifacts/collectionHistory";
 import { RepositoryRequestError } from "../../core/errors";
-import { admitCollectionReleaseJson } from "cms-repository/exports/collections/index";
+import {
+    admitCollectionReleaseJson,
+    parseCollectionReleaseJson,
+    CollectionPublicationError,
+} from "cms-repository/exports/collections/index";
 import type {
     PublicationEnvelope,
     RemoteCoordinate,
@@ -49,6 +56,25 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
         });
         this.index?.invalidate();
         return published;
+    }
+
+    async checkCollection(canonicalJson: string, namespace: string) {
+        const release = parseCollectionReleaseJson(canonicalJson);
+        if (canonicalizeIJson(release) !== canonicalJson) {
+            throw new RepositoryRequestError("REJECTED", "Preflight requires canonical collection JSON");
+        }
+        if (release.publisherId !== namespace) {
+            throw new RepositoryRequestError("REJECTED", "Collection is outside the owned namespace");
+        }
+        return withRepositoryWriteLock(this.root, async () => {
+            const repository = new LocalCollectionRepository(this.root);
+            const existing = await repository.getMetadata(namespace, release.collectionId, release.version);
+            if (existing && existing.canonicalJson !== canonicalJson) {
+                throw new CollectionPublicationError("immutable_conflict");
+            }
+            const digest = `sha256:${createHash("sha256").update(canonicalJson).digest("hex")}`;
+            return { complete: existing ? true : await checkCollectionHistory(this.root, release, repository), digest };
+        });
     }
 
     async getPublicationState(coordinate: RemoteCoordinate) {

@@ -3,7 +3,7 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { prepareRemoteCollection } from "cms-repository/repository/authoring/prepare";
+import { prepareRemoteCollection } from "cms-repository/repository/authoring/preparations/prepare";
 
 test("remote preparation reports the Bloc and property and leaves no publishable preparation", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-color-policy-"));
@@ -53,6 +53,9 @@ test("remote preparation reports the Bloc and property and leaves no publishable
                     },
                 },
                 JSON.stringify(source),
+                async () => {
+                    throw new Error("Invalid sources must fail before remote preflight");
+                },
             ),
         ).rejects.toThrow(/atlas-dofficial--atlas--panel.*background-color.*theme token/);
         expect(await readdir(root)).toEqual([]);

@@ -66,6 +66,46 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 2048
+                    },
+                    "publicationCode": {
+                        "type": "string",
+                        "maxLength": 32,
+                        "enum": [
+                            "immutable_conflict",
+                            "identity_changed",
+                            "version_order",
+                            "stable_resource",
+                            "major_required",
+                            "minor_required"
+                        ]
+                    },
+                    "publicationResource": {
+                        "type": "object",
+                        "properties": {
+                            "kind": {
+                                "type": "string",
+                                "maxLength": 16,
+                                "enum": ["bloc", "theme-token", "configuration", "text", "asset", "state"]
+                            },
+                            "id": {
+                                "type": "string",
+                                "maxLength": 512
+                            }
+                        },
+                        "required": ["kind", "id"]
+                    },
+                    "publicationState": {
+                        "type": "string",
+                        "maxLength": 15,
+                        "enum": ["sources-pending", "unknown"]
+                    },
+                    "preparationId": {
+                        "type": "string",
+                        "maxLength": 36
+                    },
+                    "digest": {
+                        "type": "string",
+                        "maxLength": 71
                     }
                 },
                 "required": ["message"]
@@ -81,6 +121,19 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 2048
+                    },
+                    "publicationState": {
+                        "type": "string",
+                        "maxLength": 15,
+                        "enum": ["sources-pending", "unknown"]
+                    },
+                    "preparationId": {
+                        "type": "string",
+                        "maxLength": 36
+                    },
+                    "digest": {
+                        "type": "string",
+                        "maxLength": 71
                     }
                 },
                 "required": ["message"]

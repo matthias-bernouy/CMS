@@ -4,6 +4,7 @@ import { link, readFile, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import {
     isCollectionNamespace,
+    CollectionPublicationError,
     type AdmittedCollectionRelease,
     DEFAULT_COLLECTION_LIMITS,
     verifyCollectionPublicationHistory,
@@ -237,10 +238,7 @@ type CollectionIdentity = Pick<AdmittedCollectionRelease, "digest" | "release">;
 
 function assertSameDigest(existing: CollectionIdentity, candidate: CollectionIdentity): false {
     if (existing.digest !== candidate.digest) {
-        throw new RepositoryRequestError(
-            "REJECTED",
-            `Release ${coordinate(candidate)} already exists with different content`,
-        );
+        throw new CollectionPublicationError("immutable_conflict");
     }
     return false;
 }

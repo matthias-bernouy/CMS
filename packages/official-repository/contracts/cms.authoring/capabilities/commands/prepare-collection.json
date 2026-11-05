@@ -115,6 +115,12 @@
                     },
                     "required": ["code", "severity", "message"]
                 }
+            },
+            "preflight": {
+                "type": "string",
+                "maxLength": 10,
+                "enum": ["complete", "incomplete"],
+                "description": "Whether the authoritative Repository publication-history check completed. Incomplete preparation retains a warning and publication still rechecks current state."
             }
         },
         "required": ["valid", "diagnostics"]

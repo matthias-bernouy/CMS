@@ -1,3 +1,4 @@
+import { CollectionPublicationError } from "../errors";
 import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
 import {
     isVersionRangeSubset,
@@ -20,11 +21,11 @@ export async function verifyCollectionPublicationEvolution(
     next: CollectionRelease,
 ): Promise<void> {
     if (previous.publisherId !== next.publisherId || previous.collectionId !== next.collectionId) {
-        throw new TypeError("Collection publication lineage cannot change identity or publisher");
+        throw new CollectionPublicationError("identity_changed");
     }
     const bump = versionBump(previous.version, next.version);
     if (!bump) {
-        throw new TypeError("Collection publication version must increase");
+        throw new CollectionPublicationError("version_order");
     }
     const previewEvolution =
         isSemVerPrerelease(previous.version) &&
@@ -44,11 +45,18 @@ export async function verifyCollectionPublicationEvolution(
                 ? `${resourceRuntimeNamespace(next.collectionId)}--${resource.id}`
                 : resource.id;
         if (resource.kind !== "configuration" && afterByKey.has(`${resource.kind}:${id}`)) {
-            throw new TypeError(`Incompatible ${resource.kind} ${resource.id} requires a new resource identity`);
+            throw new CollectionPublicationError(
+                "stable_resource",
+                `Incompatible ${resource.kind} ${resource.id} requires a new resource identity`,
+                resource,
+            );
         }
     }
     if (collectionRequirementBreaks(previous, next).length) {
-        throw new TypeError("Incompatible resource requirements require a new resource identity");
+        throw new CollectionPublicationError(
+            "stable_resource",
+            "Incompatible resource requirements require a new resource identity",
+        );
     }
     const removedExports = removedCollectionExports(previous.exports, next.exports);
     const restrictedDependencies = (next.dependencies ?? []).some((dependency) => {
@@ -60,7 +68,7 @@ export async function verifyCollectionPublicationEvolution(
         );
     });
     if (bump !== "major" && (breaking.length || removedExports.length || restrictedDependencies)) {
-        throw new TypeError("Resource removals and incompatible collection configuration require a major publication");
+        throw new CollectionPublicationError("major_required");
     }
     if (bump === "patch") {
         const changed =
@@ -72,7 +80,12 @@ export async function verifyCollectionPublicationEvolution(
             canonicalizeIJson(previous.dependencies ?? []) !== canonicalizeIJson(next.dependencies ?? []) ||
             canonicalizeIJson(previous.exports ?? emptyExports()) !== canonicalizeIJson(next.exports ?? emptyExports());
         if (changed) {
-            throw new TypeError("Patch collection publications may change implementations only");
+            const resource = after.find(
+                (item) =>
+                    item.contractDigest !==
+                    before.find((prior) => prior.kind === item.kind && prior.id === item.id)?.contractDigest,
+            );
+            throw new CollectionPublicationError("minor_required", undefined, resource);
         }
     }
 }

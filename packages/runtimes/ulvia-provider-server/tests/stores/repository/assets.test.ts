@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
 import { createCollectionAuthoring } from "../../../src/runtime/stores/repository/composition";
-import { authoringFixture, sourceSnapshot } from "./authoring";
+import { authoringFixture, sourceSnapshot } from "./authoring/fixture";
 
 test("collection source assets validate their pinned bytes and remain usable after yank", async () => {
     const f = await authoringFixture();

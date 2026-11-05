@@ -60,6 +60,33 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 2048
+                    },
+                    "publicationCode": {
+                        "type": "string",
+                        "maxLength": 32,
+                        "enum": [
+                            "immutable_conflict",
+                            "identity_changed",
+                            "version_order",
+                            "stable_resource",
+                            "major_required",
+                            "minor_required"
+                        ]
+                    },
+                    "publicationResource": {
+                        "type": "object",
+                        "properties": {
+                            "kind": {
+                                "type": "string",
+                                "maxLength": 16,
+                                "enum": ["bloc", "theme-token", "configuration", "text", "asset", "state"]
+                            },
+                            "id": {
+                                "type": "string",
+                                "maxLength": 512
+                            }
+                        },
+                        "required": ["kind", "id"]
                     }
                 },
                 "required": ["message"]

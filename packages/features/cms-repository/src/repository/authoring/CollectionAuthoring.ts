@@ -1,11 +1,15 @@
 import type { NamespaceInventoryQuery, NamespaceInventoryPage } from "./namespaces";
-import { readFile, rm } from "node:fs/promises";
+import { rm } from "node:fs/promises";
 import { join } from "node:path";
-import { RemoteRepositoryClient } from "cms-repository/exports/repository/publication";
 import { RepositorySourceClient } from "../sources/client";
-import { prepareCollectionRelease, CollectionAuthoringValidationError } from "cms-repository/exports/collections/build";
-import type { ContentDiagnostic } from "@bernouy/cms-content/page-document";
-import { prepareRemoteCollection, type AuthoringHost } from "./prepare";
+import { CollectionAuthoringValidationError } from "cms-repository/exports/collections/build";
+import { prepareRemoteCollection, type AuthoringHost } from "./preparations/prepare";
+import { CollectionPreparationError } from "./preparations/errors";
+import { collectionPreflight } from "./preflight";
+import { publishPreparedCollection } from "./publication/publish";
+import { RepositoryRequestError } from "../core/errors";
+import { NamespaceAccessError } from "./namespaces";
+export { CollectionPreparationError, CollectionPublicationRecoveryError } from "./preparations/errors";
 import type { RepositoryNamespaceCredential } from "cms-repository/exports/repository/namespaces";
 
 export interface RepositoryConnectionStatus {
@@ -49,12 +53,21 @@ export class CollectionAuthoring {
     async prepare(sourceJson: string) {
         try {
             return {
-                ...(await prepareRemoteCollection(this.host, sourceJson)),
+                ...(await prepareRemoteCollection(this.host, sourceJson, (artifact) =>
+                    collectionPreflight(this.publisher, artifact),
+                )),
                 repositoryId: this.publisher.repositorySourceId,
             };
         } catch (error) {
             if (
-                ["EACCES", "EPERM", "ENOSPC", "EROFS", "EMFILE", "ENFILE"].includes(
+                error instanceof CollectionPreparationError ||
+                error instanceof NamespaceAccessError ||
+                error instanceof RepositoryRequestError
+            ) {
+                throw error;
+            }
+            if (
+                ["EACCES", "EPERM", "EIO", "ENOSPC", "EROFS", "EMFILE", "ENFILE"].includes(
                     (error as NodeJS.ErrnoException).code ?? "",
                 )
             ) {
@@ -70,53 +83,7 @@ export class CollectionAuthoring {
         }
     }
     async publish(id: string, expectedDigest: string) {
-        const path = this.path(id);
-        const prepared = JSON.parse(await readFile(join(path, "prepared.json"), "utf8")) as {
-            digest: string;
-            sourceJson: string;
-            directory: string;
-            canonicalJson: string;
-        };
-        if (!/^[a-z][a-z0-9-]{0,95}$/u.test(prepared.directory)) {
-            throw new Error("Invalid prepared collection");
-        }
-        const artifact = await prepareCollectionRelease(join(path, prepared.directory), this.host.contracts);
-        if (
-            artifact.digest !== expectedDigest ||
-            artifact.digest !== prepared.digest ||
-            artifact.canonicalJson !== prepared.canonicalJson
-        ) {
-            throw new Error("Prepared collection digest changed");
-        }
-        const credential = await this.publisher.credential(artifact.release.publisherId);
-        const published = await new RemoteRepositoryClient(
-            this.publisher.repositoryUrl,
-            credential,
-            this.publisher,
-        ).push({
-            kind: "collection",
-            canonicalJson: artifact.canonicalJson,
-            assets: artifact.assets,
-        });
-        if (published.digest !== artifact.digest) {
-            throw new Error("Repository publication digest mismatch");
-        }
-        await new RepositorySourceClient(this.publisher.repositoryUrl, credential, this.publisher).put(
-            artifact.release.collectionId,
-            artifact.release.version,
-            {
-                sourceJson: prepared.sourceJson,
-                releaseDigest: artifact.digest,
-            },
-        );
-        return {
-            ...published,
-            kind: "collection" as const,
-            repositoryId: this.publisher.repositorySourceId,
-            publisherId: artifact.release.publisherId,
-            collectionId: artifact.release.collectionId,
-            version: artifact.release.version,
-        };
+        return publishPreparedCollection(this.host, this.publisher, id, expectedDigest);
     }
     async sources(namespace: string, collectionId: string, version: string) {
         return new RepositorySourceClient(
@@ -134,15 +101,5 @@ export class CollectionAuthoring {
             throw new Error("Invalid preparation ID");
         }
         return join(this.host.root, id);
-    }
-}
-
-export class CollectionPreparationError extends Error {
-    constructor(
-        message: string,
-        readonly diagnostics?: readonly ContentDiagnostic[],
-    ) {
-        super(message);
-        this.name = "CollectionPreparationError";
     }
 }

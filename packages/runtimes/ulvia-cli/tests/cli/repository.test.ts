@@ -212,7 +212,7 @@ test("a release coordinate cannot be replaced with different content", async () 
             artifact.assets.map(({ id, bytes }) => ({ id, bytes })),
             { contracts: await officialContractCatalogue() },
         );
-        await expect(repository.store(changed)).rejects.toThrow("already exists with different content");
+        await expect(repository.store(changed)).rejects.toMatchObject({ publicationCode: "immutable_conflict" });
         expect((await repository.get("ulvia", "ulvia/mossa", artifact.release.version))?.digest).toBe(artifact.digest);
     } finally {
         await rm(root, { recursive: true, force: true });

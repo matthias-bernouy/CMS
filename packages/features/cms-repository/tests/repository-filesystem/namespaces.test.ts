@@ -104,6 +104,7 @@ test("direct capability calls enforce authentication and ownership before privat
         const owned = [
             "namespace-transfer",
             "namespace-suspend",
+            "publication-check-collection",
             "source-get",
             "source-put",
             "publication-yank",

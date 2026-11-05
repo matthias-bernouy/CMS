@@ -61,7 +61,17 @@ export function repositoryFixtureHttp(
                             status,
                             error.code,
                             {},
-                            { message: error.message.slice(0, 2048) },
+                            {
+                                message: error.message.slice(0, 2048),
+                                ...(error instanceof RepositoryCapabilityError && error.publicationCode
+                                    ? {
+                                          publicationCode: error.publicationCode,
+                                          ...(error.publicationResource
+                                              ? { publicationResource: error.publicationResource }
+                                              : {}),
+                                      }
+                                    : {}),
+                            },
                         );
                     }
                 }
