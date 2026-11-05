@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
-import { prepareContractSource } from "../release/authored/contract";
+import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
 import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
 import { bootstrapOfficialRepository } from "../commands/bootstrap";
 

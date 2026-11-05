@@ -1,6 +1,6 @@
 import { RepositoryConnection } from "../publication/transport/connection";
 import type { RepositoryNamespaceCredential } from "../publication/transport/credentials";
-import type { RepositorySourceSnapshot } from "./interfaces";
+import type { ArtifactSourceKind, RepositorySourceSnapshot } from "./interfaces";
 
 export class RepositorySourceClient {
     private readonly connection: RepositoryConnection;
@@ -19,6 +19,16 @@ export class RepositorySourceClient {
     }
     put(collectionId: string, version: string, snapshot: RepositorySourceSnapshot) {
         return this.request("v1/source-snapshots/put", "POST", { collectionId, version, ...snapshot });
+    }
+    async getArtifact(kind: ArtifactSourceKind, id: string, version: string): Promise<RepositorySourceSnapshot | null> {
+        return (await this.request("v1/artifact-source-snapshots", "QUERY", {
+            kind,
+            id,
+            version,
+        })) as RepositorySourceSnapshot | null;
+    }
+    putArtifact(kind: ArtifactSourceKind, id: string, version: string, snapshot: RepositorySourceSnapshot) {
+        return this.request("v1/artifact-source-snapshots/put", "POST", { kind, id, version, ...snapshot });
     }
     private request(path: string, method: string, input: Record<string, unknown>) {
         return this.connection.json(

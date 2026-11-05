@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
 import { startTestRepository } from "./fixture";
-import { prepareContractSource } from "../../src/release/authored/contract";
+import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
 
 test("remote publication is account-authorized, immutable, atomic, and reversibly yankable", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-publication-source-"));

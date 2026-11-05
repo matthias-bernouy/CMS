@@ -1,6 +1,6 @@
 import { lstat, readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { readOptionalJsonSourceRecord } from "../../release/authored/jsonFragments";
+import { readOptionalJsonSourceRecord } from "@bernouy/cms-repository/repository/authoring/build";
 
 export type ResourceSource = Readonly<{ directory: string; kind: "contract" | "provider-manifest" | "collection" }>;
 const MAX_RESOURCES = 256;

@@ -11,7 +11,7 @@ import {
     LocalProviderReleases,
     LocalRepositoryYanks,
 } from "@bernouy/cms-repository/repository/filesystem";
-import { prepareContractSource } from "../../release/authored/contract";
+import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
 import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
 import type { ContentDiagnostic } from "@bernouy/cms-content/page-document";
 

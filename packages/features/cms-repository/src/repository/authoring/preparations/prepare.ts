@@ -109,7 +109,7 @@ export async function prepareRemoteCollection(
     }
 }
 
-async function expirePrepared(root: string) {
+export async function expirePrepared(root: string) {
     let retained = 0;
     for (const entry of await readdir(root, { withFileTypes: true })) {
         if (!entry.isDirectory() || !/^(?:prepare-|[a-f0-9-]{36}$)/u.test(entry.name)) {

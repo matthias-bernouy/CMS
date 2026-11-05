@@ -15,3 +15,6 @@ export {
 } from "cms-repository/repository/authoring/namespaces";
 
 export { scanJsonSourceTree, type SourceFile } from "cms-repository/repository/authoring/sourceTree";
+
+export { RepositoryAuthoring } from "cms-repository/repository/authoring/resources/RepositoryAuthoring";
+export { AuthoringDependencyError } from "cms-repository/repository/authoring/resources/dependencies/transport";

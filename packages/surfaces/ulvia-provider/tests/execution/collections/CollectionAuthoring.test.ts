@@ -2,15 +2,15 @@ import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CollectionAuthoring } from "@bernouy/cms-repository/repository/authoring";
+import { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerCollectionAuthoringCapabilities } from "../../../src/capabilities/installations/authoring";
+import { registerAuthoringCapabilities } from "../../../src/capabilities/installations/authoring";
 
 test("invalid collection sources return bounded actionable diagnostics and never request publication authority", async () => {
     const root = await mkdtemp(join(tmpdir(), "authoring-diagnostics-"));
     let credentialRequests = 0;
-    const authoring = new CollectionAuthoring(
+    const authoring = new RepositoryAuthoring(
         {
             root,
             contracts: new InMemoryReleaseCatalogue(),
@@ -43,7 +43,7 @@ test("invalid collection sources return bounded actionable diagnostics and never
         },
     );
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerCollectionAuthoringCapabilities(dispatcher, authoring);
+    registerAuthoringCapabilities(dispatcher, authoring);
     try {
         const result = (await dispatcher.invoke(
             "ulvia/cms.authoring",

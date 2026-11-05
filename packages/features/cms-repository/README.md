@@ -48,6 +48,8 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/providers/mongo` | Mongo manifest catalogue, installation and selection stores with revision-checked writes |
 | `@bernouy/cms-repository/providers/management` | Provider installation and selection application services |
 | `@bernouy/cms-repository/collections` | Authored release parsing, Light DOM structure, asset and requirement verification, bundle digests |
+| `@bernouy/cms-repository/repository/authoring` | Instance-scoped collection, contract and Provider manifest preparations and exact account-authorized publication |
+| `@bernouy/cms-repository/repository/authoring/build` | Shared authored contract, Markdown documentation and mock compiler used by the CMS and CLI |
 | `@bernouy/cms-repository/collections/build` | Bun-based collection Bloc source validation and browser runtime compilation for authoring tools |
 | `@bernouy/cms-repository/collections/installations` | Revisioned site installations, compatibility analysis and resource digests for reviewed exact release switches |
 | `@bernouy/cms-repository/collections/content` | Projection of installed Blocs, text sources and themes into Content |

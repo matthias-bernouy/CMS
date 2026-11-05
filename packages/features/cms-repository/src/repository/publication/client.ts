@@ -1,7 +1,7 @@
 import { contractAssetDefinitions } from "cms-repository/exports/contracts/documentation";
 import { isSha256Digest } from "@bernouy/binary-media";
 import { parseCollectionReleaseJson } from "cms-repository/exports/collections/index";
-import { parseContractReleaseJson } from "cms-repository/exports/contracts/index";
+import { verifyStoredContractReleaseJson, parseContractReleaseJson } from "cms-repository/exports/contracts/index";
 import { parseProviderManifestJson } from "cms-repository/exports/providers/index";
 import { MAX_REPOSITORY_RESPONSE_BYTES } from "cms-repository/repository-http/getBytes";
 import { boundedResponseBytes, repositoryUrl } from "./transport";
@@ -48,6 +48,24 @@ export class RemoteRepositoryClient {
         return this.writer.push(envelope);
     }
 
+    async pullContractAsset(coordinate: RemoteCoordinate, expectedDigest: string, assetId: string) {
+        if (coordinate.kind !== "contract") {
+            throw new Error("Expected a contract asset reference");
+        }
+        const response = await this.get(releasePath(coordinate), MAX_REPOSITORY_RESPONSE_BYTES, "application/json");
+        assertCoordinate(coordinate, new TextDecoder("utf-8", { fatal: true }).decode(response.bytes));
+        const metadata = await verifyStoredContractReleaseJson(response.bytes, expectedDigest);
+        if (metadata.digest !== expectedDigest || response.digest !== expectedDigest) {
+            throw new Error("Contract source asset release digest mismatch");
+        }
+        const definition = contractAssetDefinitions(metadata.release).find((asset) => asset.id === assetId);
+        if (!definition) {
+            throw new Error("Contract source asset is unavailable");
+        }
+        const path = `v1/assets/contract/${encodeURIComponent(coordinate.publisherId)}/${encodeURIComponent(coordinate.id)}/${encodeURIComponent(coordinate.version)}/${encodeURIComponent(assetId)}`;
+        return this.asset(path, definition);
+    }
+
     async yank(coordinate: RemoteCoordinate, reason: string | null): Promise<void> {
         return this.writer.yank(coordinate, reason);
     }
@@ -91,14 +109,17 @@ export class RemoteRepositoryClient {
             signal: AbortSignal.timeout(120_000),
         });
         if (!response.ok || !response.body) {
+            await response.body?.cancel().catch(() => undefined);
             throw new Error(`Repository download failed (${response.status})`);
         }
         const declared = Number(response.headers.get("content-length"));
         if (Number.isFinite(declared) && declared > definition.byteLength) {
+            await response.body.cancel().catch(() => undefined);
             throw new Error("Repository response exceeds its declared byte limit");
         }
         const digestHeader = response.headers.get("etag")?.replace(/^"|"$/gu, "");
         if (digestHeader !== definition.digest) {
+            await response.body.cancel().catch(() => undefined);
             throw new Error("Repository asset digest does not match its declaration");
         }
         const bytes = sink
@@ -117,6 +138,7 @@ export class RemoteRepositoryClient {
             signal: AbortSignal.timeout(30_000),
         });
         if (!response.ok || !response.body) {
+            await response.body?.cancel().catch(() => undefined);
             throw new Error(`Repository download failed (${response.status})`);
         }
         const bytes = await boundedResponseBytes(response, maxBytes);

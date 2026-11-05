@@ -21,8 +21,8 @@ const publicCapabilities = new Set([
 test("the official Registry release uses authenticated account operations and has no signing bindings", async () => {
     const artifact = await admitContractReleaseJson(await readFile(compiled));
     expect(artifact.release.version).toBe("1.0.0");
-    expect(artifact.release.capabilities).toHaveLength(20);
-    expect(artifact.bindings).toHaveLength(20);
+    expect(artifact.release.capabilities).toHaveLength(22);
+    expect(artifact.bindings).toHaveLength(22);
     for (const capability of artifact.release.capabilities) {
         expect(capability.access).toBe(publicCapabilities.has(capability.id) ? "public" : "authenticated");
         expect(capability.bindings.every((binding) => binding.transport === "http")).toBe(true);

@@ -32,8 +32,8 @@ export interface CollectionPublisher {
 
 export class CollectionAuthoring {
     constructor(
-        private readonly host: AuthoringHost,
-        private readonly publisher: CollectionPublisher,
+        protected readonly host: AuthoringHost,
+        protected readonly publisher: CollectionPublisher,
     ) {}
     connectionStatus() {
         return this.publisher.connectionStatus();

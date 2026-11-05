@@ -1,12 +1,13 @@
 import { verifyStoredCollectionArtifact } from "@bernouy/cms-repository/collections";
 import { join } from "node:path";
-import { CollectionAuthoring } from "@bernouy/cms-repository/repository/authoring";
+import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
+import { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import type { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import type { ProviderStores } from "../providerStores";
 import type { CmsFileWorkspace } from "../CmsFileWorkspace";
 import { RepositoryPublisher } from "./RepositoryPublisher";
 
-export function createCollectionAuthoring(
+export function createRepositoryAuthoring(
     stores: ProviderStores,
     filesDirectory: string,
     repositoryUrl: string,
@@ -14,13 +15,28 @@ export function createCollectionAuthoring(
     fileWorkspace: CmsFileWorkspace,
     allowInsecureHttp = false,
 ) {
-    return new CollectionAuthoring(
+    return new RepositoryAuthoring(
         {
             root: join(filesDirectory, "collection-preparations"),
             contracts: stores.releases,
             readAsset: async (asset) => {
                 if (asset.fileId && asset.generation) {
                     return fileWorkspace.readAsset(asset.fileId, asset.generation);
+                }
+                if (asset.contractId) {
+                    const bytes = await new RemoteRepositoryClient(repositoryUrl, undefined, {
+                        allowInsecureHttp,
+                    }).pullContractAsset(
+                        {
+                            kind: "contract",
+                            publisherId: asset.publisherId!,
+                            id: asset.contractId,
+                            version: asset.version!,
+                        },
+                        asset.releaseDigest!,
+                        asset.assetId!,
+                    );
+                    return bytes instanceof Blob ? bytes : new Blob([new Uint8Array(bytes)]);
                 }
                 const bundle = await source.get({
                     publisherId: asset.publisherId!,

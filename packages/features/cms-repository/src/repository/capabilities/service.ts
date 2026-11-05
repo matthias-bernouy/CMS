@@ -100,6 +100,8 @@ export class RepositoryCapabilityService {
                 return namespaces.suspend(accountId, namespace, revision);
             case "source-get":
             case "source-put":
+            case "artifact-source-get":
+            case "artifact-source-put":
                 return namespaces.execute(accountId, namespace, revision, () =>
                     invokeRepositorySource(this.ports, id, input),
                 );

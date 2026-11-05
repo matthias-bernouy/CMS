@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
 import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { startTestRepository } from "./fixture";
-import { prepareContractSource } from "../../src/release/authored/contract";
+import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
 import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 

@@ -6,7 +6,7 @@ import {
     admitContractReleaseJson,
     parseContractReleaseJson,
     type AdmittedContractRelease,
-} from "@bernouy/cms-repository/contracts";
+} from "cms-repository/exports/contracts/index";
 import {
     assertUniqueSourceIds,
     compareOrdinal,

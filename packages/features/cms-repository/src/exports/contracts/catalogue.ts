@@ -17,3 +17,5 @@ export {
 export type { ResolvedContract, ResolvedCapability } from "cms-repository/contracts/interfaces/ResolvedContract";
 
 export { VerifiedArtifactCache } from "cms-repository/contracts/core/catalogue/VerifiedArtifactCache";
+
+export { verifySpecialization } from "cms-repository/contracts/core/compatibility/lineage/verifySpecialization";

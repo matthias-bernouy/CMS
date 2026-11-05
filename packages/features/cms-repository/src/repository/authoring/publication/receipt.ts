@@ -4,8 +4,7 @@ import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { RepositoryRequestError } from "../../core/errors";
 import type { RepositoryNamespaceCredential } from "../../publication/transport/credentials";
 
-export interface PublicationReceipt {
-    readonly schema: "ulvia.collection-publication.v1";
+interface ReceiptFields {
     readonly digest: string;
     readonly origin: string;
     readonly repositoryId: string;
@@ -13,10 +12,16 @@ export interface PublicationReceipt {
     readonly added: boolean;
     readonly sourcesStored: boolean;
 }
+export type PublicationReceipt = ReceiptFields &
+    (
+        | { readonly schema: "ulvia.collection-publication.v1" }
+        | { readonly schema: "ulvia.artifact-publication.v1"; readonly kind: "contract" | "provider-manifest" }
+    );
 export async function readReceipt(
     path: string,
     digest: string,
     credential: RepositoryNamespaceCredential,
+    kind: "collection" | "contract" | "provider-manifest" = "collection",
 ): Promise<PublicationReceipt | null> {
     const file = join(path, "publication.json");
     const info = await stat(file).catch((error: NodeJS.ErrnoException) => {
@@ -33,7 +38,9 @@ export async function readReceipt(
     }
     const value = parseStrictJson(await readFile(file), 4096, 8) as unknown as PublicationReceipt;
     if (
-        value.schema !== "ulvia.collection-publication.v1" ||
+        (kind === "collection"
+            ? value.schema !== "ulvia.collection-publication.v1"
+            : value.schema !== "ulvia.artifact-publication.v1" || value.kind !== kind) ||
         value.digest !== digest ||
         value.origin !== credential.origin ||
         value.repositoryId !== credential.repositoryId ||

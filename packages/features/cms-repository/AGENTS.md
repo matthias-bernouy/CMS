@@ -368,9 +368,13 @@ models and validation for CMS-owned installations and site selections.
 
 - `./collections/build` also owns recursive authored source assembly shared by
   CLI and instance preparation. Keep compiler imports behind this explicit API.
-- `./repository/authoring` owns bounded collection preparations and exact
-  publication; `./repository/sources` owns private immutable owner-authorized
-  source snapshots. Neither grants implicit installation or exposes private keys.
+- `./repository/authoring` owns bounded collection, contract and Provider manifest
+  preparations and exact publication. `./repository/authoring/build` exposes the
+  shared authored contract/docs compiler; the CLI must not own another compiler.
+  `./repository/sources` owns private immutable owner-authorized source snapshots
+  for all three kinds. Preparation dependency evidence is bounded and request-local;
+  it never imports releases into host catalogues, installs resources or deploys code.
+  Neither authoring nor source retention grants implicit installation or exposes private keys.
 
 - Collection v1 owns explicit `examples` documents and fixed preview frames.
   Require translated Bloc descriptions and nonempty unique `categories`.

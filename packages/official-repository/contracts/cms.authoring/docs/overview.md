@@ -1,6 +1,6 @@
 # CMS authoring
 
-Prepare, validate and publish immutable collection releases through a configured Repository. This contract does not host a registry or add contract/provider authoring support.
+Prepare, validate and publish immutable collection, contract and Provider manifest releases through a configured Repository. This contract does not host the registry or deploy Provider implementations.
 
 ## Connect an account
 
@@ -19,7 +19,11 @@ Call `configure-connection` with the PAT. The runtime controls the target origin
 - `prepare-collection` validates and builds a complete collection source snapshot. Preparation does not require publication credentials.
 - `publish-collection` publishes the exact prepared digest and retains its private sources. It does not install the release on this CMS instance.
 - `get-collection-sources` reads the private source snapshot for a namespace currently owned by the configured Repository account.
-- `discard-preparation` removes an unpublished local preparation; published releases remain intact.
+- `prepare-contract`, `publish-contract` and `get-contract-sources` provide the equivalent contract workflow, including versioned Markdown documentation and fixture assets.
+- `prepare-provider-manifest`, `publish-provider-manifest` and `get-provider-manifest-sources` provide manifest authoring against exact contract pins.
+- `discard-preparation` removes an unpublished local preparation of any supported kind; published releases remain intact.
+
+Read [artifact authoring](artifact-authoring.md), [contract sources](contract-source.md) and [Provider manifest sources](provider-manifest-source.md) before these workflows.
 
 The remote Repository checks account ownership and namespace revision for every protected upload stage. Namespace transfer, token expiration or token revocation can prevent an in-progress publication from completing. Reconnecting to another account does not transfer ownership or resume another account's upload.
 

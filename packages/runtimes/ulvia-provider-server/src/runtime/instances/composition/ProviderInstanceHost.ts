@@ -54,7 +54,7 @@ import { createInstanceAuth } from "../../authentication/createInstanceAuth";
 import { createInstanceRepository } from "../../stores/repository/registry";
 import { registerRepositoryCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
-import { createCollectionAuthoring } from "../../stores/repository/composition";
+import { createRepositoryAuthoring } from "../../stores/repository/composition";
 import { McpAuthorization } from "@bernouy/cms-auth/oauth";
 
 const SITE_ID = "default";
@@ -318,7 +318,7 @@ export class ProviderInstanceHost {
                 stores.contractSecrets.files,
                 instance.cmsUrl,
             );
-            const collectionAuthoring = createCollectionAuthoring(
+            const authoring = createRepositoryAuthoring(
                 stores,
                 filesDirectory,
                 this.env.CMS_REPOSITORY_URL,
@@ -343,7 +343,7 @@ export class ProviderInstanceHost {
                         }),
                     ]),
                     ...createPublicDelivery(stores, gateway, instance.cmsUrl),
-                    collectionAuthoring,
+                    authoring,
                     emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
                     sitemapStore: stores.sitemapStore,

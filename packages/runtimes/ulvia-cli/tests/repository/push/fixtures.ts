@@ -1,4 +1,4 @@
-import { prepareContractSource } from "ulvia-cli/release/authored/contract";
+import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { accountFixture } from "../accounts/fixture";

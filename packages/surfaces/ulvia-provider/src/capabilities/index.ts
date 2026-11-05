@@ -10,7 +10,7 @@ import { registerAccessCapabilities } from "./access";
 import { registerContentCapabilities } from "./content";
 import { registerFileCapabilities } from "./storage/files";
 import { registerSmtpEmailerCapabilities } from "./emailer";
-import { registerCollectionAuthoringCapabilities } from "./installations/authoring";
+import { registerAuthoringCapabilities } from "./installations/authoring";
 import { registerInstallationCapabilities } from "./installations";
 import { registerSecretCapabilities } from "./storage/secrets";
 import type { CollectionSources } from "./installations/sources";
@@ -29,7 +29,7 @@ export function registerOfficialProviderCapabilities(
     enabledContractIds?: ReadonlySet<string>,
 ): void {
     if (enabledContractIds?.has("ulvia/cms.authoring")) {
-        registerCollectionAuthoringCapabilities(dispatcher, dependencies.collectionAuthoring);
+        registerAuthoringCapabilities(dispatcher, dependencies.authoring);
     }
     if (dependencies.observability && enabledContractIds?.has("ulvia/cms.observability")) {
         registerObservabilityCapabilities(dispatcher, dependencies.observability);

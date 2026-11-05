@@ -5,8 +5,8 @@ import {
     documentationPath,
     DOCUMENTATION_LIMITS,
     parseDocumentationMarkdown,
-} from "@bernouy/cms-repository/contracts/documentation";
-import type { ContractDocumentationDefinition } from "@bernouy/cms-repository/contracts";
+} from "cms-repository/exports/contracts/documentation";
+import type { ContractDocumentationDefinition } from "cms-repository/exports/contracts/index";
 
 export async function readDocumentationSource(directory: string) {
     const documents: ContractDocumentationDefinition[] = [];

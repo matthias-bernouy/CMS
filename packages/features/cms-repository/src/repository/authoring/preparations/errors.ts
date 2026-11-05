@@ -19,9 +19,10 @@ export class CollectionPublicationRecoveryError extends Error {
         readonly digest: string,
         readonly publicationState: "sources-pending" | "unknown",
         options?: ErrorOptions,
+        kind: "collection" | "contract" | "provider-manifest" = "collection",
     ) {
         super(
-            `${publicationState === "sources-pending" ? "The immutable release is published; private sources are pending." : "The publication outcome is unknown."} Retry publish-collection with the same preparationId ${preparationId} and expectedDigest ${digest} after restoring Repository access. Do not change the version or source.`,
+            `${publicationState === "sources-pending" ? "The immutable release is published; private sources are pending." : "The publication outcome is unknown."} Retry publish-${kind} with the same preparationId ${preparationId} and expectedDigest ${digest} after restoring Repository access. Do not change the version or source.`,
             options,
         );
         this.retryable = !(options?.cause instanceof RepositoryRequestError);

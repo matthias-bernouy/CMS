@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { join } from "node:path";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
-import { createCollectionAuthoring } from "../../../src/runtime/stores/repository/composition";
+import { createRepositoryAuthoring } from "../../../src/runtime/stores/repository/composition";
 import { authoringFixture, sourceSnapshot } from "./authoring/fixture";
 
 test("collection source assets validate their pinned bytes and remain usable after yank", async () => {
@@ -41,11 +41,11 @@ test("collection source assets validate their pinned bytes and remain usable aft
                     return response;
                 },
             });
-            const authoring = createCollectionAuthoring(stores as any, join(f.root, tamper), f.base, source, {} as any);
+            const authoring = createRepositoryAuthoring(stores as any, join(f.root, tamper), f.base, source, {} as any);
             await expect(authoring.prepare(JSON.stringify(next))).rejects.toThrow("digest");
         }
         const source = new HttpCollectionRepository("local", f.base);
-        const authoring = createCollectionAuthoring(stores as any, join(f.root, "valid"), f.base, source, {} as any);
+        const authoring = createRepositoryAuthoring(stores as any, join(f.root, "valid"), f.base, source, {} as any);
         expect((await authoring.prepare(JSON.stringify(next))).digest).toBeString();
         await new RemoteRepositoryClient(f.base, f.credential).yank(
             { kind: "collection", publisherId: "community", id: "community/sample", version: "1.0.0" },

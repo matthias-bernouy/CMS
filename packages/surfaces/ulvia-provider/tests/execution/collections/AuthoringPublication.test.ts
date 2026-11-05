@@ -1,20 +1,20 @@
 import { expect, test } from "bun:test";
 import { CollectionPublicationRecoveryError } from "@bernouy/cms-repository/repository/authoring";
-import type { CollectionAuthoring } from "@bernouy/cms-repository/repository/authoring";
+import type { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import { RepositoryRequestError } from "@bernouy/cms-repository/repository/publication";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerCollectionAuthoringCapabilities } from "../../../src/capabilities/installations/authoring";
+import { registerAuthoringCapabilities } from "../../../src/capabilities/installations/authoring";
 import { resolvedContract, invokeHttp } from "../messages/fixtures";
 
 const id = "c9ddc861-4e76-48cb-8188-7cfa4a94a11d";
 const digest = `sha256:${"a".repeat(64)}`;
 async function rejectedPublication(failure: Error) {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerCollectionAuthoringCapabilities(dispatcher, {
+    registerAuthoringCapabilities(dispatcher, {
         publish: async () => {
             throw failure;
         },
-    } as unknown as CollectionAuthoring);
+    } as unknown as RepositoryAuthoring);
     return invokeHttp(await resolvedContract("ulvia/cms.authoring"), dispatcher, "publish-collection", {
         preparationId: id,
         expectedDigest: digest,

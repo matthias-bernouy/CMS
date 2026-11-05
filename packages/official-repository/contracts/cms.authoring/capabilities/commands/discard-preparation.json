@@ -1,6 +1,6 @@
 {
     "id": "discard-preparation",
-    "description": "Discard one local unpublished collection preparation. Published Repository releases are preserved.",
+    "description": "Discard one local unpublished collection, contract or Provider manifest preparation. Published releases are preserved.",
     "access": "admin",
     "behavior": {
         "effect": "command",
@@ -82,9 +82,9 @@
             "transport": "mcp",
             "tool": {
                 "name": "authoring_discard_preparation",
-                "description": "Discard one local unpublished collection preparation. Published Repository releases are preserved."
+                "description": "Discard one local unpublished collection, contract or Provider manifest preparation. Published releases are preserved."
             }
         }
     ],
-    "docs": ["overview.md", "collection-authoring.md"]
+    "docs": ["overview.md", "collection-authoring.md", "artifact-authoring.md"]
 }

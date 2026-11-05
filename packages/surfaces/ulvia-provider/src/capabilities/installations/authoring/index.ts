@@ -1,16 +1,15 @@
 import {
     CollectionPreparationError,
+    AuthoringDependencyError,
     CollectionPublicationRecoveryError,
     NamespaceAccessError,
-    type CollectionAuthoring,
+    type RepositoryAuthoring,
 } from "@bernouy/cms-repository/repository/authoring";
+import { invokeArtifactAuthoring } from "./artifacts";
 import { RepositoryRequestError } from "@bernouy/cms-repository/repository/publication";
-import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
+import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
 
-export function registerCollectionAuthoringCapabilities(
-    dispatcher: ProviderCapabilityRegistry,
-    authoring?: CollectionAuthoring,
-) {
+export function registerAuthoringCapabilities(dispatcher: ProviderCapabilityRegistry, authoring?: RepositoryAuthoring) {
     for (const id of [
         "get-connection",
         "configure-connection",
@@ -21,6 +20,12 @@ export function registerCollectionAuthoringCapabilities(
         "publish-collection",
         "get-collection-sources",
         "discard-preparation",
+        "prepare-contract",
+        "publish-contract",
+        "get-contract-sources",
+        "prepare-provider-manifest",
+        "publish-provider-manifest",
+        "get-provider-manifest-sources",
     ]) {
         dispatcher.register("ulvia/cms.authoring", id, async (input) => {
             if (!authoring) {
@@ -30,6 +35,14 @@ export function registerCollectionAuthoringCapabilities(
             let result: unknown;
             try {
                 switch (id) {
+                    case "prepare-contract":
+                    case "publish-contract":
+                    case "get-contract-sources":
+                    case "prepare-provider-manifest":
+                    case "publish-provider-manifest":
+                    case "get-provider-manifest-sources":
+                        result = await invokeArtifactAuthoring(authoring, id, request);
+                        break;
                     case "list-namespaces":
                         result = await authoring.listNamespaces(request);
                         break;
@@ -82,6 +95,9 @@ export function registerCollectionAuthoringCapabilities(
                 }
                 return result;
             } catch (error) {
+                if (error instanceof AuthoringDependencyError) {
+                    throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
+                }
                 if (error instanceof CollectionPublicationRecoveryError) {
                     const code = error.retryable ? "CORE_UNAVAILABLE" : "INVALID_INPUT";
                     throw new ProviderCapabilityDispatchError(
