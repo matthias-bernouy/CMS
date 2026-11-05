@@ -35,13 +35,15 @@ test.skipIf(!mongo)(
             expect(plan.executionStats.totalDocsExamined).toBe(MAX_ACCOUNT_NAMESPACES);
             expect(JSON.stringify(plan.queryPlanner.winningPlan)).toContain('"stage":"IXSCAN"');
             f.commands.length = 0;
-            const other = await f.namespaces.claim("account-b", "other-package");
+            const other = await f.namespaces.claim("account-b", "example--other--package");
             expect(f.commands.map(({ commandName }) => commandName)).toEqual(["find", "aggregate", "update"]);
             f.commands.length = 0;
-            await f.namespaces.execute("account-b", "other-package", 1, async () => undefined);
+            await f.namespaces.execute("account-b", "example--other--package", 1, async () => undefined);
             expect(f.commands.map(({ commandName }) => commandName)).toEqual(["find"]);
-            await expect(f.namespaces.transfer("account-b", "other-package", 1, "account-a")).rejects.toThrow("limit");
-            expect(await f.namespaces.get("other-package")).toEqual(other);
+            await expect(f.namespaces.transfer("account-b", "example--other--package", 1, "account-a")).rejects.toThrow(
+                "limit",
+            );
+            expect(await f.namespaces.get("example--other--package")).toEqual(other);
 
             const otherDb = f.client.db(`${f.db.databaseName}-other`);
             try {
@@ -49,7 +51,7 @@ test.skipIf(!mongo)(
                     exclusive: async (_key, operation) => operation(),
                 });
                 await secondInstance.init();
-                expect(await secondInstance.get("other-package")).toBeNull();
+                expect(await secondInstance.get("example--other--package")).toBeNull();
                 expect(await secondInstance.listOwned("account-a")).toEqual([]);
             } finally {
                 await otherDb.dropDatabase();

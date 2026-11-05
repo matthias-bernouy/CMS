@@ -1,0 +1,24 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--frame",
+    "label": "bloc.frame.label",
+    "description": "bloc.frame.description",
+    "order": 120,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["frame-default"],
+    "defaultExample": "frame-default"
+}

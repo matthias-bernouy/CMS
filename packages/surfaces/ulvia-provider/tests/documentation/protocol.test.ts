@@ -1,3 +1,5 @@
+import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
+import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import { CmsDocumentation } from "@bernouy/cms-documentation";
@@ -10,14 +12,16 @@ import { createProviderContractRelay } from "../../src/transport/relay";
 import { officialContract, resolvedContract, invokeHttp, context, bootstrap } from "../execution/messages/fixtures";
 
 test("HTTP and MCP expose exact selected documentation with discoverable lightweight references", async () => {
-    const admission = await officialContract("ulvia.cms.installations");
+    const admission = await officialContract("ulvia/cms.installations");
     let reads = 0;
     const service = new CmsDocumentation({
         resolve: async () => ({ revision: "1", releases: [admission] }),
         isCurrent: async () => true,
         read: async (reference) => {
             reads++;
-            return Bun.file(resolve(bootstrap, "contracts/cms", reference.contractId, "docs", reference.path));
+            return Bun.file(
+                resolve(bootstrap, "contracts/cms", resourceName(reference.contractId), "docs", reference.path),
+            );
         },
     });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
@@ -40,7 +44,16 @@ test("HTTP and MCP expose exact selected documentation with discoverable lightwe
     });
     const actor = { siteId: "default", actor: { kind: "administrator" as const, subjectId: "admin" } };
     const tools = (await binding.list(actor)).tools;
-    const search = tools.find((tool) => tool.name === "installations_documentation_search")!;
+    const search = tools.find(
+        (tool) =>
+            tool.name ===
+            capabilityToolName(
+                "ulvia/cms.installations",
+                "documentation.search",
+                "mcp",
+                "installations_documentation_search",
+            ),
+    )!;
     expect(search.description).toContain("Related documentation");
     expect(search._meta).toMatchObject({
         "io.ulvia/docs": [{ reference: { path: "overview.md" } }, { reference: { path: "documentation.md" } }],
@@ -53,7 +66,11 @@ test("HTTP and MCP expose exact selected documentation with discoverable lightwe
     expect(output.results.length).toBeGreaterThan(0);
     const reference = output.results[0].reference;
     expect(reference.releaseDigest).toBe(admission.digest);
-    const result = await binding.call("installations_documentation_get", { input: { reference } }, actor);
+    const result = await binding.call(
+        capabilityToolName("ulvia/cms.installations", "documentation.get", "mcp", "installations_documentation_get"),
+        { input: { reference } },
+        actor,
+    );
     expect(result.structuredContent).toMatchObject({ output: { reference, content: expect.stringContaining("# ") } });
     const before = reads;
     const invalid = await invokeHttp(contract, dispatcher, "documentation.get", {
@@ -71,7 +88,12 @@ test("HTTP and MCP expose exact selected documentation with discoverable lightwe
     expect([400, 422]).toContain(injected.status);
     expect(reads).toBe(before);
     const onboarding = await binding.call(
-        "installations_documentation_search",
+        capabilityToolName(
+            "ulvia/cms.installations",
+            "documentation.search",
+            "mcp",
+            "installations_documentation_search",
+        ),
         {
             input: { query: "Working with Ulvia", contractId: admission.release.contractId, limit: 10 },
         },
@@ -89,7 +111,7 @@ test("HTTP and MCP expose exact selected documentation with discoverable lightwe
         path: "working-with-ulvia.md",
     });
     const introduction = await binding.call(
-        "installations_documentation_get",
+        capabilityToolName("ulvia/cms.installations", "documentation.get", "mcp", "installations_documentation_get"),
         { input: { reference: guide!.reference } },
         actor,
     );
@@ -114,13 +136,13 @@ test("a live authorization refusal cannot read or index documentation", async ()
     });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     registerDocumentationCapabilities(dispatcher, service);
-    const contract = await resolvedContract("ulvia.cms.installations");
+    const contract = await resolvedContract("ulvia/cms.installations");
     const routes = compileProviderRoutes([contract]);
     const route = routes.find((entry) => entry.capability.id === "documentation.search")!;
     const relay = createProviderContractRelay(
         routes,
         dispatcher,
-        { siteId: "default", providerId: "ulvia.official" },
+        { siteId: "default", providerId: "ulvia/primary-provider" },
         NOOP_LOGGER,
         async () => false,
     );

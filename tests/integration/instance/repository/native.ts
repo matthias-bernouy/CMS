@@ -84,7 +84,7 @@ export async function repositoryProcesses() {
             cmsUrl!,
             admin,
             cmsUrl!,
-            { id: "ulvia.repository", version: "1.0.0" },
+            { id: "repository", version: "1.0.0" },
         );
         const edge = async (name: string, url: string, token: string) => {
             processes.start(

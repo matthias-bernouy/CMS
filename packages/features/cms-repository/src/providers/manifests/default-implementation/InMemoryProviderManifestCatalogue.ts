@@ -1,5 +1,5 @@
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
+import { compareSemVer, semVerReleaseTarget } from "cms-repository/exports/contracts/compatibility";
 import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import type {
     AdmittedProviderManifest,
@@ -51,10 +51,14 @@ export class InMemoryProviderManifestCatalogue implements ProviderManifestCatalo
         publishedAt: string,
     ): Promise<CatalogueProviderManifest> {
         const verified = await verifyStoredProviderManifestJson(canonicalJson, digest, this.#limits);
-        return this.#insert(verified, publishedAt);
+        return this.#insert(verified, publishedAt, true);
     }
 
-    async #insert(admission: AdmittedProviderManifest, publishedAt: string): Promise<CatalogueProviderManifest> {
+    async #insert(
+        admission: AdmittedProviderManifest,
+        publishedAt: string,
+        restoring = false,
+    ): Promise<CatalogueProviderManifest> {
         const verified = admission;
         const historical = this.#existing(verified);
         if (historical) {
@@ -82,6 +86,21 @@ export class InMemoryProviderManifestCatalogue implements ProviderManifestCatalo
                 "manifest digest is already assigned",
                 "$.digest",
             );
+        }
+        if (!restoring) {
+            const target = semVerReleaseTarget(version);
+            const previous = [...this.#byKey.values()].filter(
+                (record) =>
+                    record.admission.manifest.providerId === providerId &&
+                    semVerReleaseTarget(record.admission.manifest.version) === target,
+            );
+            if (previous.some((record) => compareSemVer(version, record.admission.manifest.version) <= 0)) {
+                throw new ProviderManifestValidationError(
+                    "invalid_manifest",
+                    "manifest version must increase within its release target",
+                    "$.version",
+                );
+            }
         }
         const record = Object.freeze({ admission: verified, publishedAt });
         this.#byKey.set(key, record);

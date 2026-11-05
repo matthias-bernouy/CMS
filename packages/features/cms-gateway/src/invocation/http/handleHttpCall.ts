@@ -1,3 +1,4 @@
+import { isResourceId } from "@bernouy/resource-identity";
 import { inputFailureResponse } from "cms-gateway/protocol/http/inputFailure";
 import { RESOURCE_HEADER } from "../resource/metadata";
 import type { GatewayHttpRoute } from "./route/interfaces";
@@ -140,20 +141,16 @@ function parseTarget(request: Request, prefix: string): { contractId: string; bi
         throw new GatewayError("invalid_route", "request is outside the gateway route");
     }
     const suffix = pathname.slice(prefix.length + 1);
-    const separator = suffix.indexOf("/");
+    const separator = suffix.indexOf("/", suffix.indexOf("/") + 1);
     const encodedContractId = separator < 0 ? suffix : suffix.slice(0, separator);
     const bindingPath = separator < 0 ? "/" : suffix.slice(separator);
     let contractId: string;
     try {
-        contractId = decodeURIComponent(encodedContractId);
+        contractId = encodedContractId.split("/").map(decodeURIComponent).join("/");
     } catch {
         throw new GatewayError("invalid_input", "contract identifier is malformed");
     }
-    if (
-        contractId.length > 128 ||
-        !/^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/.test(contractId) ||
-        !bindingPath.startsWith("/")
-    ) {
+    if (!isResourceId(contractId) || !bindingPath.startsWith("/")) {
         throw new GatewayError("invalid_input", "contract route is invalid");
     }
     return { contractId, bindingPath };

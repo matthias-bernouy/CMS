@@ -11,7 +11,7 @@ import { officialContractCatalogue } from "../officialContractCatalogue";
 import { isValidRequestId, REQUEST_ID_HEADER } from "@bernouy/http-runner/observability";
 
 test("local repository lists immutable metadata and serves matching release bytes", async () => {
-    const root = await mkdtemp(join(tmpdir(), "ulvia-repository-"));
+    const root = await mkdtemp(join(tmpdir(), "ulvia--repository--"));
     const repository = new LocalCollectionRepository(root);
     const server = startTestRepository(root);
     try {
@@ -19,11 +19,11 @@ test("local repository lists immutable metadata and serves matching release byte
         const source = new HttpCollectionRepository("local", server.url);
         expect(await source.list()).toEqual([]);
         const missing = await fetch(
-            `${server.url}/.cms/call/ulvia.repository/v1/releases/collection/missing/test/1.0.0`,
+            `${server.url}/.cms/call/ulvia/repository/v1/releases/collection/missing/test/1.0.0`,
         );
         expect(isValidRequestId(missing.headers.get(REQUEST_ID_HEADER) ?? "")).toBe(true);
         const artifact = await prepareCollectionRelease(
-            resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official"),
+            resolve(import.meta.dir, "../../../../official-repository/collections/mossa"),
             contracts,
         );
         const version = artifact.release.version;
@@ -33,8 +33,8 @@ test("local repository lists immutable metadata and serves matching release byte
         const entries = await source.list();
         expect(entries).toHaveLength(1);
         expect(entries[0]).toMatchObject({
-            publisherId: "ulvia.official",
-            collectionId: "ulvia-official",
+            publisherId: "ulvia",
+            collectionId: "ulvia/mossa",
             version,
             hasTheme: true,
         });
@@ -82,24 +82,24 @@ test("local repository lists immutable metadata and serves matching release byte
             weight: "100 900",
         });
         expect(themeEntries.find((entry) => entry.id === "font-family-main")).toMatchObject({
-            defaults: { light: expect.stringContaining('"ulvia-official-inter"') },
+            defaults: { light: expect.stringContaining('"ulvia--mossa--inter"') },
         });
         expect(themeEntries.find((entry) => entry.id === "font-family-secondary")).toMatchObject({
-            defaults: { light: expect.stringContaining('"ulvia-official-source-serif-4"') },
+            defaults: { light: expect.stringContaining('"ulvia--mossa--source-serif-4"') },
         });
         expect(Object.hasOwn(release, "pages")).toBe(false);
         expect(release.examples?.some((example) => example.id === "login")).toBe(true);
-        const action = release.blocs.find((bloc) => bloc.id === "ulvia-official-action");
+        const action = release.blocs.find((bloc) => bloc.id === "ulvia--mossa--action");
         expect(action?.kind).toBe("component");
         if (action?.kind === "component") {
             expect(action.runtime?.viewJS).toBeUndefined();
-            expect(action.runtime?.styleCSS).toContain('@scope ([cms-bloc="ulvia-official-action"])');
+            expect(action.runtime?.styleCSS).toContain('@scope ([cms-bloc="ulvia--mossa--action"])');
             expect(action.root).toEqual({ accepts: ["button", "a"], defaults: { type: "button" } });
             expect(action.markup).toBe("<slot></slot>");
             expect(action.defaultContent).toBeUndefined();
             expect(action.defaultExample).toBe("action-default");
             expect(release.examples?.find((example) => example.id === action.defaultExample)?.document.html).toContain(
-                "{{ cms.i18n.ulvia-official.ui-action-label }}",
+                "{{ cms.i18n.ulvia/mossa.ui-action-label }}",
             );
             expect(action.settings?.map((setting) => setting.id)).toEqual([
                 "variant",
@@ -109,7 +109,7 @@ test("local repository lists immutable metadata and serves matching release byte
                 "icon-only",
             ]);
         }
-        const heading = release.blocs.find((bloc) => bloc.id === "ulvia-official-heading");
+        const heading = release.blocs.find((bloc) => bloc.id === "ulvia--mossa--heading");
         expect(heading?.kind === "component" ? heading.root?.accepts : undefined).toEqual([
             "h1",
             "h2",
@@ -122,7 +122,7 @@ test("local repository lists immutable metadata and serves matching release byte
             accepts: [{ kind: "native-content", profile: "phrasing" }],
             min: 1,
         });
-        const grid = release.blocs.find((bloc) => bloc.id === "ulvia-official-grid");
+        const grid = release.blocs.find((bloc) => bloc.id === "ulvia--mossa--grid");
         expect(grid?.settings?.find((setting) => setting.id === "columns")).toMatchObject({
             type: "integer",
             minimum: 1,
@@ -132,13 +132,13 @@ test("local repository lists immutable metadata and serves matching release byte
         const textIds = new Set(release.texts?.map((entry) => entry.id));
         for (const bloc of release.blocs) {
             for (const html of [bloc.markup, bloc.defaultContent]) {
-                for (const match of html?.matchAll(/cms\.i18n\.ulvia-official\.([a-z0-9-]+)/g) ?? []) {
+                for (const match of html?.matchAll(/cms\.i18n\.ulvia\/mossa\.([a-z0-9-]+)/g) ?? []) {
                     expect(textIds.has(match[1]!)).toBeTrue();
                 }
             }
         }
         expect(
-            (await fetch(`${server.url}/.cms/call/ulvia.repository/v1/releases/collection/missing/test/${version}`))
+            (await fetch(`${server.url}/.cms/call/ulvia/repository/v1/releases/collection/missing/test/${version}`))
                 .status,
         ).toBe(404);
         const assets = artifact.assets.map(({ id, bytes }) => ({ id, bytes }));
@@ -148,7 +148,7 @@ test("local repository lists immutable metadata and serves matching release byte
         await repository.store(build);
         server.application.index.invalidate();
         const page = (input: Record<string, unknown>) =>
-            fetch(`${server.url}/.cms/call/ulvia.repository/v1/catalogue`, {
+            fetch(`${server.url}/.cms/call/ulvia/repository/v1/catalogue`, {
                 method: "QUERY",
                 headers: { "content-type": "application/json" },
                 body: JSON.stringify({ kind: "collection", ...input }),
@@ -182,7 +182,7 @@ test("local repository lists immutable metadata and serves matching release byte
         expect(
             (
                 await fetch(
-                    `${server.url}/.cms/call/ulvia.repository/v1/releases/collection/ulvia.official/ulvia-official/${version}`,
+                    `${server.url}/.cms/call/ulvia/repository/v1/releases/collection/ulvia/ulvia%2Fmossa/${version}`,
                 )
             ).status,
         ).toBe(404);
@@ -193,11 +193,11 @@ test("local repository lists immutable metadata and serves matching release byte
 }, 30_000);
 
 test("a release coordinate cannot be replaced with different content", async () => {
-    const root = await mkdtemp(join(tmpdir(), "ulvia-repository-"));
+    const root = await mkdtemp(join(tmpdir(), "ulvia--repository--"));
     try {
         const repository = new LocalCollectionRepository(root);
         const artifact = await prepareCollectionRelease(
-            resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official"),
+            resolve(import.meta.dir, "../../../../official-repository/collections/mossa"),
             await officialContractCatalogue(),
         );
         await repository.store(artifact);
@@ -213,9 +213,7 @@ test("a release coordinate cannot be replaced with different content", async () 
             { contracts: await officialContractCatalogue() },
         );
         await expect(repository.store(changed)).rejects.toThrow("already exists with different content");
-        expect((await repository.get("ulvia.official", "ulvia-official", artifact.release.version))?.digest).toBe(
-            artifact.digest,
-        );
+        expect((await repository.get("ulvia", "ulvia/mossa", artifact.release.version))?.digest).toBe(artifact.digest);
     } finally {
         await rm(root, { recursive: true, force: true });
     }
@@ -233,8 +231,8 @@ test("collection source assets keep their verified bytes through the repository 
             kind: "collection",
             protocol: "ulvia-collection/v1",
             schemaDialect: "ulvia-schema/v1",
-            collectionId: "asset-example",
-            publisherId: "ulvia.official",
+            collectionId: "ulvia/asset-example",
+            publisherId: "ulvia",
             version: "1.0.0",
             name: "collection.name",
             locale: "en",
@@ -243,21 +241,21 @@ test("collection source assets keep their verified bytes through the repository 
         const definitionPath = join(sourceRoot, "definition.json");
         await writeFile(definitionPath, JSON.stringify(definition));
         for (const [id, catalogue] of [
-            ["asset-example-card", "listed"],
-            ["asset-example-card-frame", "hidden"],
+            ["ulvia--asset-example--card", "listed"],
+            ["ulvia--asset-example--card-frame", "hidden"],
         ] as const) {
             const root = join(sourceRoot, "blocs", id);
             await mkdir(root, { recursive: true });
             await writeFile(
                 join(root, "definition.json"),
                 JSON.stringify({
-                    description: `bloc.${id}.label`,
-                    categories: [`bloc.${id}.label`],
+                    description: `bloc.${id.replaceAll("--", ".")}.label`,
+                    categories: [`bloc.${id.replaceAll("--", ".")}.label`],
 
                     id,
                     kind: "composition",
                     root: { accepts: ["div"] },
-                    label: `bloc.${id}.label`,
+                    label: `bloc.${id.replaceAll("--", ".")}.label`,
                     catalogue,
                     ...(catalogue === "listed" ? { examples: ["card"], defaultExample: "card" } : {}),
                     slots: {},
@@ -270,22 +268,22 @@ test("collection source assets keep their verified bytes through the repository 
             join(sourceRoot, "examples", "card", "definition.json"),
             JSON.stringify({
                 id: "card",
-                label: "bloc.asset-example-card.label",
-                description: "bloc.asset-example-card.label",
+                label: "bloc.ulvia.asset-example.card.label",
+                description: "bloc.ulvia.asset-example.card.label",
                 previews: [{ id: "desktop", frame: { width: 640, height: 240 } }],
             }),
         );
         await writeFile(
             join(sourceRoot, "examples", "card", "document.html"),
-            '<div cms-bloc="asset-example-card"></div>',
+            '<div cms-bloc="ulvia--asset-example--card"></div>',
         );
         await writeFile(
             join(sourceRoot, "translations", "en", "collection.json"),
             JSON.stringify({
                 "collection.name": "Asset example",
                 "asset.retired": "Use a newer illustration",
-                "bloc.asset-example-card.label": "Card",
-                "bloc.asset-example-card-frame.label": "Card frame",
+                "bloc.ulvia.asset-example.card.label": "Card",
+                "bloc.ulvia.asset-example.card-frame.label": "Card frame",
             }),
         );
         await writeFile(join(sourceRoot, "assets", "icons", "brand", "mark.svg"), bytes);
@@ -303,7 +301,7 @@ test("collection source assets keep their verified bytes through the repository 
         });
         expect(artifact.release.assets[0]).not.toHaveProperty("source");
         expect(artifact.release.exports).toEqual({
-            blocs: ["asset-example-card"],
+            blocs: ["ulvia--asset-example--card"],
             themeTokens: [],
             assets: ["icons/brand/mark.svg"],
         });

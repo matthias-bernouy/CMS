@@ -6,7 +6,7 @@ export function contextualMessage(contractId: string, capabilityId: string, code
         return capabilityId === "delete-user" ? "self.delete" : "self.administrator";
     }
     if (code === "REVISION_CONFLICT") {
-        if (contractId === "ulvia.provider.connections") {
+        if (contractId === "ulvia/provider.connections") {
             return "connection.changed";
         }
         if (capabilityId.startsWith("pages.")) {
@@ -20,10 +20,10 @@ export function contextualMessage(contractId: string, capabilityId: string, code
         if (capabilityId.startsWith("examples.")) {
             return "example.request";
         }
-        if (contractId === "ulvia.cms.emailer.smtp" && capabilityId.startsWith("smtp.configuration.")) {
+        if (contractId === "ulvia/cms.emailer.smtp" && capabilityId.startsWith("smtp.configuration.")) {
             return "smtp.invalid";
         }
-        if (contractId === "ulvia.provider.connections") {
+        if (contractId === "ulvia/provider.connections") {
             return "connection.invalid";
         }
     }
@@ -42,10 +42,10 @@ export function contextualMessage(contractId: string, capabilityId: string, code
     if (capabilityId.startsWith("localization.")) {
         return "text.not_found";
     }
-    if (contractId === "ulvia.cms.access") {
+    if (contractId === "ulvia/cms.access") {
         return "user.not_found";
     }
-    if (contractId === "ulvia.cms.observability") {
+    if (contractId === "ulvia/cms.observability") {
         return "log.not_found";
     }
     if (capabilityId.includes("namespace.keys")) {
@@ -63,7 +63,7 @@ export function contextualMessage(contractId: string, capabilityId: string, code
     if (capabilityId.startsWith("representations.")) {
         return "representation.not_found";
     }
-    if (contractId === "ulvia.cms.files") {
+    if (contractId === "ulvia/cms.files") {
         return "file.not_found";
     }
     if (capabilityId.includes("operation")) {

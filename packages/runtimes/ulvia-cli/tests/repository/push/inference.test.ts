@@ -9,12 +9,12 @@ test("push infers a contract kind and uses the saved login connection", async ()
     try {
         const directory = await f.contract("push.example");
         await f.run(["release", directory]);
-        await f.run(["push", "ulvia.official/push.example@1.0.0"]);
+        await f.run(["push", "ulvia/push.example@1.0.0"]);
         expect(await f.remoteFiles.list("contracts")).toHaveLength(1);
-        expect(f.output.at(-1)).toStartWith("+ contract ulvia.official/push.example@1.0.0");
-        await f.run(["push", "ulvia.official/push.example@1.0.0"]);
+        expect(f.output.at(-1)).toStartWith("+ contract ulvia/push.example@1.0.0");
+        await f.run(["push", "ulvia/push.example@1.0.0"]);
         expect(f.output.at(-1)).toStartWith("= contract");
-        await expect(f.run(["push", "ulvia.official/missing@1.0.0"])).rejects.toThrow("Local release not found");
+        await expect(f.run(["push", "ulvia/missing@1.0.0"])).rejects.toThrow("Local release not found");
     } finally {
         await f.close();
     }
@@ -28,7 +28,7 @@ test("a legal contract/provider coordinate collision requires an explicit kind",
         await f.run(["release", directory]);
         const contract = await new LocalContractReleases(
             new LocalArtifactFiles(join(f.data, "repository")),
-        ).getMetadata("ulvia.official", id, "1.0.0");
+        ).getMetadata("ulvia", `ulvia/${id}`, "1.0.0");
         const provider = join(f.root, "providers", id);
         await mkdir(provider, { recursive: true });
         await writeFile(
@@ -38,22 +38,24 @@ test("a legal contract/provider coordinate collision requires an explicit kind",
                 kind: "provider-manifest",
                 protocol: "ulvia-provider/v1",
                 schemaDialect: "ulvia-schema/v1",
-                providerId: id,
+                providerId: `ulvia/${id}`,
                 name: "Collision provider",
                 version: "1.0.0",
-                provenance: { publisherId: "ulvia.official", publishedAt: "2026-10-25T00:00:00Z" },
+                provenance: { publisherId: "ulvia", publishedAt: "2026-10-25T00:00:00Z" },
                 buildVersionRange: ">=1.0.0 <2.0.0",
                 endpoint: { allowedOrigins: ["https://provider.example.com"] },
                 configuration: { type: "object", properties: {}, required: [] },
                 credentialSlots: [],
-                implementations: [{ contractId: id, version: "1.0.0", digest: contract!.digest, requires: [] }],
+                implementations: [
+                    { contractId: `ulvia/${id}`, version: "1.0.0", digest: contract!.digest, requires: [] },
+                ],
             }),
         );
         await f.run(["release", provider]);
-        await expect(f.run(["push", `ulvia.official/${id}@1.0.0`])).rejects.toThrow("Ambiguous local release");
+        await expect(f.run(["push", `ulvia/${id}@1.0.0`])).rejects.toThrow("Ambiguous local release");
         expect(await f.remoteFiles.list("contracts")).toEqual([]);
-        await f.run(["push", "contract", `ulvia.official/${id}@1.0.0`]);
-        await f.run(["push", "provider", `ulvia.official/${id}@1.0.0`]);
+        await f.run(["push", "contract", `ulvia/${id}@1.0.0`]);
+        await f.run(["push", "provider", `ulvia/${id}@1.0.0`]);
         expect(await f.remoteFiles.list("providers")).toHaveLength(1);
     } finally {
         await f.close();
@@ -64,7 +66,7 @@ test("push diagnostics explain login selection and reject malformed flags withou
     const f = await pushFixture();
     try {
         await f.run(["repository", "logout"]);
-        await expect(f.run(["push", "ulvia.official/example@1.0.0"])).rejects.toThrow("repository login");
+        await expect(f.run(["push", "ulvia/example@1.0.0"])).rejects.toThrow("repository login");
         await expect(f.run(["push", "all", "--reason", "invalid"])).rejects.toThrow("Usage");
         await expect(
             f.run(["push", "all", "--repository", f.server.url.origin, "--repository", f.server.url.origin]),

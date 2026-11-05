@@ -26,7 +26,7 @@ test("a published Page is analyzed statically and invokes its public capability 
         root: { accepts: ["div"] },
         kind: "component" as const,
         markupHTML:
-            '<section cms-query="shop:list-products as products" cms-query-input=\'{"category":{"from":"literal","value":"shoes"}}\'></section>',
+            '<section cms-query="ulvia/shop:list-products as products" cms-query-input=\'{"category":{"from":"literal","value":"shoes"}}\'></section>',
         ownership: { kind: "code-managed" },
         slots: {},
     });
@@ -34,7 +34,7 @@ test("a published Page is analyzed statically and invokes its public capability 
     const draft = await repository.getPage("/products");
     await repository.updatePage({ id: draft!.id, visible: true }, draft!.revision);
     repository.getPageRequirements = async () => [
-        { contractId: "shop", capabilityId: "list-products", versionRange: "=2.3.0" },
+        { contractId: "ulvia/shop", capabilityId: "list-products", versionRange: "=2.3.0" },
     ];
 
     const invocations: GatewayInvocation[] = [];
@@ -42,7 +42,9 @@ test("a published Page is analyzed statically and invokes its public capability 
     const pageCapabilities = new PageCapabilityAnalyzer({
         satisfiesVersionRange,
         resolveCapability: async (contractId, capabilityId) =>
-            contractId === "shop" && capabilityId === "list-products" ? { access: "public", version: "2.3.0" } : null,
+            contractId === "ulvia/shop" && capabilityId === "list-products"
+                ? { access: "public", version: "2.3.0" }
+                : null,
     });
     const runner = new CaptureRunner();
     const content = createContentReader(repository);
@@ -64,14 +66,14 @@ test("a published Page is analyzed statically and invokes its public capability 
     const html = await pageResponse.text();
     expect(pageResponse.status).toBe(200);
     expect(html).toContain('cms-bloc="catalog-products"');
-    expect(html).toContain("shop:list-products as products");
+    expect(html).toContain("ulvia/shop:list-products as products");
     expect(html).toContain("/_content/assets/bloc-runtime.js?v=");
 
     const callResponse = await runner.defaultHandler(
         "QUERY",
         "/.cms/query",
     )(
-        new Request("https://site.test/.cms/query/shop/list-products", {
+        new Request("https://site.test/.cms/query/ulvia/shop/list-products", {
             method: "QUERY",
             headers: { "content-type": "application/json" },
             body: '{"category":"shoes"}',
@@ -82,7 +84,7 @@ test("a published Page is analyzed statically and invokes its public capability 
     expect(invocations).toEqual([
         {
             siteId: "site-a",
-            contractId: "shop",
+            contractId: "ulvia/shop",
             capabilityId: "list-products",
             input: { category: "shoes" },
             bindingId: "http",

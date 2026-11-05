@@ -1,0 +1,44 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--site-composition-manager",
+    "label": "bloc.site-composition-manager.label",
+    "description": "bloc.site-composition-manager.description",
+    "order": 670,
+    "catalogue": "listed",
+    "uses": [
+        "ulvia--mossa--action",
+        "ulvia--mossa--badge",
+        "ulvia--mossa--data-table",
+        "ulvia--mossa--data-table-cell",
+        "ulvia--mossa--data-table-column-header",
+        "ulvia--mossa--data-table-row",
+        "ulvia--mossa--data-table-row-header",
+        "ulvia--mossa--heading",
+        "ulvia--mossa--stack",
+        "ulvia--mossa--surface"
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "site-blocs.list",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "site-blocs.archive",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "site-blocs.restore",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.administration"],
+    "examples": ["ulvia--mossa--site-composition-manager-default"],
+    "defaultExample": "ulvia--mossa--site-composition-manager-default"
+}

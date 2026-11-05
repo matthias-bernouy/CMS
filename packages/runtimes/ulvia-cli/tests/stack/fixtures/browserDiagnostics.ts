@@ -11,7 +11,7 @@ export function captureCapabilityFailures(page: Page): () => string {
     };
     page.on("response", async (response) => {
         const path = new URL(response.url()).pathname;
-        if (response.status() < 400 || !path.startsWith("/.cms/")) {
+        if (response.status() < 400 || (!path.startsWith("/.cms/") && !path.startsWith("/_content/"))) {
             return;
         }
         const value = (await response.json().catch(() => null)) as { error?: { code?: unknown } } | null;
@@ -20,7 +20,7 @@ export function captureCapabilityFailures(page: Page): () => string {
     });
     page.on("requestfailed", (request) => {
         const path = new URL(request.url()).pathname;
-        if (path.startsWith("/.cms/")) {
+        if (path.startsWith("/.cms/") || path.startsWith("/_content/")) {
             record(`${request.method()} ${path}: transport failure`);
         }
     });

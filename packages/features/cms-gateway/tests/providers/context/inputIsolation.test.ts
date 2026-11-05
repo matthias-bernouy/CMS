@@ -24,7 +24,7 @@ function options(command: boolean) {
 }
 const invocation = {
     siteId: "site-a",
-    contractId: "catalog",
+    contractId: "ulvia/catalog",
     capabilityId: "item.list",
     actor: { kind: "anonymous" as const },
 };
@@ -32,7 +32,7 @@ const invocation = {
 test.each([false, true])("metadata cannot populate an omitted input (command=%s)", async (command) => {
     const f = await fixture(false, options(command));
     let changed = false;
-    f.dispatcher.register("catalog", "item.list", async (input, context) => {
+    f.dispatcher.register("ulvia/catalog", "item.list", async (input, context) => {
         expect(input).toEqual({});
         expect(context.http.headers.get("range")).toBe("metadata-only");
         changed = input.term !== undefined;
@@ -49,7 +49,7 @@ test("validated bound inputs still reach the handler, while invalid or denied co
     for (const granted of [true, false]) {
         const f = await fixture(false, options(true), granted);
         let state = "initial";
-        f.dispatcher.register("catalog", "item.list", async (input) => {
+        f.dispatcher.register("ulvia/catalog", "item.list", async (input) => {
             state = String(input.term);
             return { items: [] };
         });

@@ -89,7 +89,7 @@ export function createEdgeGateway(
         contracts: async (context: McpInvocationContext) => {
             const result = await gateway.invoke({
                 ...context,
-                contractId: "ulvia.cms.installations",
+                contractId: "ulvia/cms.installations",
                 capabilityId: "list-provider-installations",
                 input: {},
             });
@@ -158,7 +158,7 @@ async function resolveActor(gateway: CapabilityGateway, request: Request): Promi
     }
     const result = await gateway.invoke({
         siteId: "default",
-        contractId: "ulvia.cms.access",
+        contractId: "ulvia/cms.access",
         capabilityId: "resolve-actor",
         input: {},
         actor: { kind: "anonymous" },

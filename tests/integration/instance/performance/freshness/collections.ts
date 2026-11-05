@@ -1,6 +1,9 @@
 import { expect } from "bun:test";
+import { resourceRuntimeNamespace } from "@bernouy/cms-repository/contracts/protocol";
 import { cachedPage, publishPage, type Connection } from "./context";
 function source(namespace: string): string {
+    const collectionId = `${namespace}/cache-kit`;
+    const blocId = `${resourceRuntimeNamespace(collectionId)}--media-host`;
     const files = [
         {
             path: "definition.json",
@@ -9,7 +12,7 @@ function source(namespace: string): string {
                 protocol: "ulvia-collection/v1",
                 schemaDialect: "ulvia-schema/v1",
                 publisherId: namespace,
-                collectionId: "cache-kit",
+                collectionId,
                 version: "1.0.0",
                 name: "name",
                 locale: "en",
@@ -25,10 +28,10 @@ function source(namespace: string): string {
         },
         { path: "translations/en/base.json", content: JSON.stringify({ name: "Cache kit", host: "Media host" }) },
         {
-            path: "blocs/cache-kit-media-host/definition.json",
+            path: `blocs/${blocId}/definition.json`,
             content: JSON.stringify({
                 kind: "component",
-                id: "cache-kit-media-host",
+                id: blocId,
                 label: "host",
                 description: "host",
                 categories: ["host"],
@@ -37,10 +40,10 @@ function source(namespace: string): string {
                 root: { accepts: ["div"] },
                 slots: { "": { accepts: [{ kind: "native-element", accepts: ["img"] }] } },
                 uses: [],
-                requires: [{ contractId: "ulvia.cms.files", capabilityId: "files.read", versionRange: "^1.0.0" }],
+                requires: [{ contractId: "ulvia/cms.files", capabilityId: "files.read", versionRange: "^1.0.0" }],
             }),
         },
-        { path: "blocs/cache-kit-media-host/markup.html", content: "<slot></slot>" },
+        { path: `blocs/${blocId}/markup.html`, content: "<slot></slot>" },
         {
             path: "examples/media/definition.json",
             content: JSON.stringify({
@@ -52,29 +55,29 @@ function source(namespace: string): string {
         },
         {
             path: "examples/media/document.html",
-            content:
-                '<div cms-bloc="cache-kit-media-host"><img src="/.cms/call/ulvia.cms.files/files/example/generation" alt="Media example"></div>',
+            content: `<div cms-bloc="${blocId}"><img src="/.cms/call/ulvia/cms.files/files/example/generation" alt="Media example"></div>`,
         },
     ];
     return JSON.stringify({ files });
 }
 export async function exerciseCollectionFreshness(connection: Connection, cmsUrl: string, namespace: string) {
+    const collectionId = `${namespace}/cache-kit`;
     const call = (capability: string, input: Record<string, unknown> = {}) =>
-        connection.call("ulvia.cms.installations", capability, input);
+        connection.call("ulvia/cms.installations", capability, input);
     await publishPage(
         connection,
         "/cache-collection",
-        '<h1 cms-bloc="ulvia-official-heading" size="lg" text-align="start">Collections</h1>',
+        '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Collections</h1>',
     );
     const page = cachedPage(cmsUrl, "/cache-collection");
     const initial = await page.warm();
-    await connection.call("ulvia.cms.authoring", "claim-namespace", { namespace });
+    await connection.call("ulvia/cms.authoring", "claim-namespace", { namespace });
     // Repository authoring itself is neutral for installed rendering state.
-    const prepared = await connection.call("ulvia.cms.authoring", "prepare-collection", {
+    const prepared = await connection.call("ulvia/cms.authoring", "prepare-collection", {
         sourceJson: source(namespace),
     });
     expect(prepared.valid, JSON.stringify(prepared)).toBe(true);
-    await connection.call("ulvia.cms.authoring", "publish-collection", {
+    await connection.call("ulvia/cms.authoring", "publish-collection", {
         preparationId: prepared.preparationId,
         expectedDigest: prepared.digest,
     });
@@ -86,7 +89,7 @@ export async function exerciseCollectionFreshness(connection: Connection, cmsUrl
             {
                 repositoryId: prepared.repositoryId,
                 publisherId: namespace,
-                collectionId: "cache-kit",
+                collectionId,
                 version: prepared.version,
                 digest: prepared.digest,
                 approvedBrowserRiskDigest: prepared.approvedBrowserRiskDigest,
@@ -98,23 +101,23 @@ export async function exerciseCollectionFreshness(connection: Connection, cmsUrl
     expect(after.text).not.toBe(initial.text);
     await page.read("HIT");
     await call("update-collection-configuration", {
-        collectionId: "cache-kit",
+        collectionId,
         expectedRevision: installed.revision,
         configurationJson: JSON.stringify({ label: "Changed" }),
     });
     const configured = await page.read("MISS");
     expect(configured.status).toBe(200);
     expect(configured.text).not.toBe(after.text);
-    const state = await call("get-collection-installation", { collectionId: "cache-kit" });
+    const state = await call("get-collection-installation", { collectionId });
     expect(JSON.parse(state.configurationJson)).toEqual({ label: "Changed" });
     await expect(
         call("update-collection-configuration", {
-            collectionId: "cache-kit",
+            collectionId,
             expectedRevision: state.revision,
             configurationJson: '{"label":42}',
         }),
     ).rejects.toThrow();
-    const unchanged = await call("get-collection-installation", { collectionId: "cache-kit" });
+    const unchanged = await call("get-collection-installation", { collectionId });
     expect(unchanged.configurationJson).toBe(state.configurationJson);
     expect(unchanged.revision).toBe(state.revision);
     return { installImmediate: true, configurationImmediate: true, invalidConfigurationUnchanged: true };

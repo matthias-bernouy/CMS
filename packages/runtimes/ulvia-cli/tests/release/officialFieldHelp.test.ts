@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { mount } from "../../../../official-repository/collections/ulvia-official/blocs/forms/structure/field/ulvia-official-field-help/bloc";
+import { mount } from "../../../../official-repository/collections/mossa/blocs/forms/structure/field/ulvia--mossa--field-help/bloc";
 
 afterEach(() => {
     document.body.replaceChildren();
@@ -7,12 +7,12 @@ afterEach(() => {
 
 test("official field help owns and controls its accessible tooltip", () => {
     document.body.innerHTML = `
-        <div cms-bloc="ulvia-official-field-help">
+        <div cms-bloc="ulvia--mossa--field-help">
             <button type="button" data-field-help-trigger aria-expanded="false">Email help</button>
             <span data-field-help-panel hidden>We only use this address to reply.</span>
         </div>
     `;
-    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia-official-field-help"]');
+    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia--mossa--field-help"]');
     if (!root) {
         throw new Error("Missing field help fixture");
     }
@@ -46,18 +46,18 @@ test("official field help owns and controls its accessible tooltip", () => {
 
 test("official field help keeps its tooltip inside the viewport", () => {
     document.body.innerHTML = `
-        <div cms-bloc="ulvia-official-field-help">
+        <div cms-bloc="ulvia--mossa--field-help">
             <button type="button" data-field-help-trigger>Email help</button>
             <span data-field-help-panel hidden>Helpful content.</span>
         </div>
     `;
-    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia-official-field-help"]')!;
+    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia--mossa--field-help"]')!;
     const panel = root.querySelector<HTMLElement>("[data-field-help-panel]")!;
     panel.getBoundingClientRect = () => ({ left: -8, right: 280 }) as DOMRect;
 
     const cleanup = mount(root);
     root.querySelector<HTMLButtonElement>("[data-field-help-trigger]")?.click();
 
-    expect(panel.style.getPropertyValue("--ulvia-official-field-help-shift-x")).toBe("24px");
+    expect(panel.style.getPropertyValue("--ulvia--mossa--field-help-shift-x")).toBe("24px");
     cleanup?.();
 });

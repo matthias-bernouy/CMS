@@ -1,3 +1,4 @@
+import { isResourceId, resourcePublisher, resourceName } from "cms-repository/exports/contracts/protocol";
 import { documentationPath } from "cms-repository/exports/contracts/documentation";
 import { RepositoryRequestError } from "../../core/errors";
 import { createHash } from "node:crypto";
@@ -35,7 +36,7 @@ export class LocalArtifactFiles {
         if (existing) {
             return sameBytes(existing, canonicalJson, type, id, version);
         }
-        const directory = join(this.root, type, publisherId, id);
+        const directory = join(this.root, type, publisherId, resourceName(id));
         await ensureDurableDirectory(directory, this.root);
         if (fixtures.length) {
             const fixtureRoot = join(this.root, "assets", "contracts", releaseHash(canonicalJson));
@@ -76,7 +77,12 @@ export class LocalArtifactFiles {
     }
 
     async get(type: ArtifactType, publisherId: string, id: string, version: string): Promise<Buffer | null> {
-        if (!isRepositoryIdentifier(publisherId) || !isRepositoryIdentifier(id) || !VERSION.test(version)) {
+        if (
+            !isRepositoryIdentifier(publisherId) ||
+            !isResourceId(id) ||
+            resourcePublisher(id) !== publisherId ||
+            !VERSION.test(version)
+        ) {
             return null;
         }
         return readFile(this.path(type, publisherId, id, version)).catch((error: NodeJS.ErrnoException) => {
@@ -90,8 +96,9 @@ export class LocalArtifactFiles {
     async list(type: ArtifactType): Promise<StoredArtifact[]> {
         const artifacts: StoredArtifact[] = [];
         for (const publisherId of await listDirectories(join(this.root, type))) {
-            for (const id of await listDirectories(join(this.root, type, publisherId))) {
-                const folder = join(this.root, type, publisherId, id);
+            for (const name of await listDirectories(join(this.root, type, publisherId))) {
+                const id = `${publisherId}/${name}`;
+                const folder = join(this.root, type, publisherId, name);
                 for (const file of await readdir(folder, { withFileTypes: true })) {
                     if (!file.isFile() || !file.name.endsWith(".json")) {
                         continue;
@@ -110,7 +117,10 @@ export class LocalArtifactFiles {
     }
 
     private path(type: ArtifactType, publisherId: string, id: string, version: string): string {
-        return join(this.root, type, publisherId, id, `${version}.json`);
+        if (resourcePublisher(id) !== publisherId || !isRepositoryIdentifier(publisherId) || !VERSION.test(version)) {
+            throw new RepositoryRequestError("REJECTED", "Invalid resource coordinate");
+        }
+        return join(this.root, type, publisherId, resourceName(id), `${version}.json`);
     }
 }
 

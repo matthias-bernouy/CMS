@@ -1,0 +1,14 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia/cms.access",
+    "name": "CMS Access",
+    "description": "Authenticate actors and manage CMS membership and administrator grants.",
+    "version": "1.0.0",
+    "publisherId": "ulvia",
+    "catalogue": {
+        "icon": "users",
+        "categories": ["administration", "access"]
+    }
+}

@@ -45,7 +45,7 @@ test("Mongo operations persist actual error language and deny foreign reads or s
     const record: ProviderOperationRecord = {
         id: "operation-a",
         siteId: "site-a",
-        contractId: "ulvia.cms.installations",
+        contractId: "ulvia/cms.installations",
         capabilityId: "apply-collection-upgrade",
         input: {},
         inputDigest: "digest",
@@ -56,7 +56,7 @@ test("Mongo operations persist actual error language and deny foreign reads or s
         updatedAt: "2026-11-01T00:00:00Z",
         context: {
             siteId: "site-a",
-            providerId: "ulvia.official",
+            providerId: "ulvia/primary-provider",
             requestId: crypto.randomUUID(),
             contractVersion: "1.0.0",
         },

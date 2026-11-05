@@ -1,0 +1,37 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--field-help",
+    "label": "bloc.field-help.label",
+    "description": "bloc.field-help.description",
+    "order": 115,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "label": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        },
+        "content": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["field-help-default"],
+    "defaultExample": "field-help-default"
+}

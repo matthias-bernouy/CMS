@@ -47,13 +47,15 @@ smoke(
             await runCli(["release", smokeCollection], { environment, log: () => undefined });
             const compatibleUpgrade = await prepareSmokeCollectionRelease(smokeCollection, data, "1.1.0");
             const majorUpgrade = await prepareSmokeCollectionRelease(smokeCollection, data, "2.0.0");
+            const beta = await prepareSmokeCollectionRelease(smokeCollection, data, "2.1.0-beta.1");
             await runCli(["release", compatibleUpgrade], { environment, log: () => undefined });
             await runCli(["release", majorUpgrade], { environment, log: () => undefined });
+            await runCli(["release", beta], { environment, log: () => undefined });
             await runCli(["services", "start", "--version", version], {
                 environment,
                 log: (message) => (output += `${message}\n`),
             });
-            await runCli(["instance", "create", "registry", "--profile", "ulvia.repository@1.0.0"], {
+            await runCli(["instance", "create", "registry", "--profile", "repository@1.0.0"], {
                 environment,
                 log: (message) => (output += `${message}\n`),
             });

@@ -1,0 +1,792 @@
+{
+    "kind": "collection",
+    "protocol": "ulvia-collection/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "collectionId": "ulvia/mossa",
+    "publisherId": "ulvia",
+    "version": "1.0.0",
+    "name": "collection.name",
+    "description": "collection.description",
+    "locale": "en",
+    "exports": {
+        "blocs": [
+            "ulvia--mossa--action",
+            "ulvia--mossa--admin-workspace",
+            "ulvia--mossa--app-shell",
+            "ulvia--mossa--auth-shell",
+            "ulvia--mossa--badge",
+            "ulvia--mossa--card",
+            "ulvia--mossa--center",
+            "ulvia--mossa--checkbox",
+            "ulvia--mossa--choice-field",
+            "ulvia--mossa--choice-group",
+            "ulvia--mossa--cluster",
+            "ulvia--mossa--collection-manager",
+            "ulvia--mossa--collection-navigation",
+            "ulvia--mossa--collection-texts",
+            "ulvia--mossa--collection-theme",
+            "ulvia--mossa--color-input",
+            "ulvia--mossa--color-presets",
+            "ulvia--mossa--container",
+            "ulvia--mossa--control-group",
+            "ulvia--mossa--cover",
+            "ulvia--mossa--data-table",
+            "ulvia--mossa--detail-layout",
+            "ulvia--mossa--dialog",
+            "ulvia--mossa--error-summary",
+            "ulvia--mossa--faq",
+            "ulvia--mossa--faq-item",
+            "ulvia--mossa--features",
+            "ulvia--mossa--field",
+            "ulvia--mossa--field-help",
+            "ulvia--mossa--file-input",
+            "ulvia--mossa--file-manager",
+            "ulvia--mossa--footer",
+            "ulvia--mossa--form-actions",
+            "ulvia--mossa--form-section",
+            "ulvia--mossa--form-status",
+            "ulvia--mossa--frame",
+            "ulvia--mossa--grid",
+            "ulvia--mossa--heading",
+            "ulvia--mossa--hero",
+            "ulvia--mossa--image",
+            "ulvia--mossa--input",
+            "ulvia--mossa--link",
+            "ulvia--mossa--list",
+            "ulvia--mossa--list-item",
+            "ulvia--mossa--lookup",
+            "ulvia--mossa--media-figure",
+            "ulvia--mossa--media-placeholder",
+            "ulvia--mossa--multi-select",
+            "ulvia--mossa--navigation",
+            "ulvia--mossa--navigation-group",
+            "ulvia--mossa--navigation-item",
+            "ulvia--mossa--navigation-menu",
+            "ulvia--mossa--navigation-section",
+            "ulvia--mossa--page-editor",
+            "ulvia--mossa--page-shell",
+            "ulvia--mossa--panel",
+            "ulvia--mossa--pricing",
+            "ulvia--mossa--pricing-plan",
+            "ulvia--mossa--prose",
+            "ulvia--mossa--provider-manager",
+            "ulvia--mossa--radio",
+            "ulvia--mossa--range",
+            "ulvia--mossa--range-control",
+            "ulvia--mossa--reel",
+            "ulvia--mossa--route-tab",
+            "ulvia--mossa--route-tabs",
+            "ulvia--mossa--scroll-area",
+            "ulvia--mossa--search-input",
+            "ulvia--mossa--section",
+            "ulvia--mossa--segment",
+            "ulvia--mossa--segmented-control",
+            "ulvia--mossa--select",
+            "ulvia--mossa--settings-manager",
+            "ulvia--mossa--sidebar",
+            "ulvia--mossa--site-composition-manager",
+            "ulvia--mossa--split",
+            "ulvia--mossa--stack",
+            "ulvia--mossa--stat",
+            "ulvia--mossa--sticky-region",
+            "ulvia--mossa--surface",
+            "ulvia--mossa--tag-input",
+            "ulvia--mossa--testimonial",
+            "ulvia--mossa--textarea",
+            "ulvia--mossa--time-input",
+            "ulvia--mossa--toggle"
+        ],
+        "themeTokens": [
+            "background-base",
+            "background-inverse",
+            "background-raised",
+            "background-subtle",
+            "background-surface",
+            "border-default",
+            "border-strong",
+            "border-subtle",
+            "border-width",
+            "border-width-strong",
+            "content-width-lg",
+            "content-width-md",
+            "content-width-sm",
+            "content-width-xl",
+            "control-height-lg",
+            "control-height-md",
+            "control-height-sm",
+            "danger",
+            "danger-active",
+            "danger-border",
+            "danger-hover",
+            "danger-subtle",
+            "duration-fast",
+            "duration-normal",
+            "duration-slow",
+            "easing-emphasized",
+            "easing-standard",
+            "focus-ring",
+            "font-family-main",
+            "font-family-monospace",
+            "font-family-secondary",
+            "font-size-2xl",
+            "font-size-3xl",
+            "font-size-4xl",
+            "font-size-5xl",
+            "font-size-lg",
+            "font-size-md",
+            "font-size-sm",
+            "font-size-xl",
+            "font-size-xs",
+            "font-weight-bold",
+            "font-weight-medium",
+            "font-weight-regular",
+            "font-weight-semibold",
+            "info",
+            "info-active",
+            "info-border",
+            "info-hover",
+            "info-subtle",
+            "letter-spacing-normal",
+            "letter-spacing-tight",
+            "letter-spacing-wide",
+            "line-height-normal",
+            "line-height-relaxed",
+            "line-height-snug",
+            "line-height-tight",
+            "link",
+            "link-hover",
+            "on-danger",
+            "on-danger-subtle",
+            "on-info",
+            "on-info-subtle",
+            "on-primary",
+            "on-primary-subtle",
+            "on-secondary",
+            "on-secondary-subtle",
+            "on-success",
+            "on-success-subtle",
+            "on-warning",
+            "on-warning-subtle",
+            "page-gutter",
+            "page-gutter-wide",
+            "primary",
+            "primary-active",
+            "primary-hover",
+            "primary-subtle",
+            "radius-2xl",
+            "radius-full",
+            "radius-lg",
+            "radius-md",
+            "radius-none",
+            "radius-sm",
+            "radius-xl",
+            "secondary",
+            "secondary-active",
+            "secondary-hover",
+            "secondary-subtle",
+            "section-spacing",
+            "shadow-lg",
+            "shadow-md",
+            "shadow-none",
+            "shadow-sm",
+            "shadow-xl",
+            "spacing-2xl",
+            "spacing-2xs",
+            "spacing-3xl",
+            "spacing-3xs",
+            "spacing-4xl",
+            "spacing-lg",
+            "spacing-md",
+            "spacing-none",
+            "spacing-sm",
+            "spacing-xl",
+            "spacing-xs",
+            "success",
+            "success-active",
+            "success-border",
+            "success-hover",
+            "success-subtle",
+            "text-disabled",
+            "text-inverse",
+            "text-muted",
+            "text-primary",
+            "text-secondary",
+            "warning",
+            "warning-active",
+            "warning-border",
+            "warning-hover",
+            "warning-subtle",
+            "shadow-color",
+            "overlay-backdrop",
+            "overlay-media",
+            "on-overlay",
+            "overlay-border"
+        ],
+        "texts": [
+            "callout-body",
+            "callout-title",
+            "description",
+            "empty-message",
+            "faq-answer",
+            "faq-question",
+            "faq-title",
+            "feature-card-note",
+            "feature-one-body",
+            "feature-one-title",
+            "feature-three-body",
+            "feature-three-title",
+            "feature-two-body",
+            "feature-two-title",
+            "footer-copy",
+            "hero-action",
+            "navigation-home",
+            "quote",
+            "quote-attribution",
+            "stat-one-label",
+            "stat-one-value",
+            "stat-two-label",
+            "stat-two-value",
+            "title",
+            "ui-release-channel",
+            "ui-release-stable",
+            "ui-release-beta",
+            "ui-release-all"
+        ],
+        "assets": "*"
+    },
+    "states": [
+        {
+            "id": "access-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "auth-token",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 4096
+            }
+        },
+        {
+            "id": "browser-risk",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 80
+            }
+        },
+        {
+            "id": "collection",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "collection-catalogue-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "collection-configuration-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "collection-texts-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "site-composition-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "digest",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 80
+            }
+        },
+        {
+            "id": "files-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "group",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "locale",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 64
+            }
+        },
+        {
+            "id": "page-detail-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "page-id",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "pages-cursor",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 256
+            }
+        },
+        {
+            "id": "pages-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "pages-query",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 120
+            }
+        },
+        {
+            "id": "pages-visibility",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 9,
+                "enum": ["all", "published", "draft"]
+            }
+        },
+        {
+            "id": "providers-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "publisher",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "repository",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "search",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 512
+            }
+        },
+        {
+            "id": "settings-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "theme-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "theme-mode",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "theme-profile",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "theme-search",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 512
+            }
+        },
+        {
+            "id": "theme-token",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "version",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "contract",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "installation",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "upgrade-configuration",
+            "scope": "page",
+            "schema": {
+                "type": "string",
+                "maxLength": 8192
+            }
+        },
+        {
+            "id": "log-service",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "log-event",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "log-request",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "log-from",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 32
+            }
+        },
+        {
+            "id": "log-to",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 32
+            }
+        },
+        {
+            "id": "log-level",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 5
+            }
+        },
+        {
+            "id": "log-cursor",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 1600
+            }
+        },
+        {
+            "id": "log-id",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 36
+            }
+        },
+        {
+            "id": "provider-preview",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "data": {
+                                "$capabilityOutput": {
+                                    "contractId": "ulvia/cms.installations",
+                                    "version": "1.0.0",
+                                    "digest": "sha256:3fe9ec3a39901418a8817742d2aebadf731f87c7de4b8c70e5e13c60d1f2d4af",
+                                    "capabilityId": "preview-provider-connection"
+                                }
+                            }
+                        },
+                        "required": ["data"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "provider-access-id",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "example-locale",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 64
+            }
+        },
+        {
+            "id": "example-cursor",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 16
+            }
+        },
+        {
+            "id": "collection-channel",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 6,
+                "enum": ["stable", "beta", "all"]
+            }
+        }
+    ]
+}

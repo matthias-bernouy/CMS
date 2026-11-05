@@ -1,7 +1,13 @@
 import { mkdir, readFile, link, writeFile, unlink } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { randomUUID } from "node:crypto";
-import { canonicalizeIJson, parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import {
+    canonicalizeIJson,
+    parseStrictJson,
+    isResourceId,
+    resourcePublisher,
+    resourceName,
+} from "cms-repository/exports/contracts/protocol";
 import type { RepositorySourceSnapshot, RepositorySourceStore } from "./interfaces";
 
 export class FilesystemRepositorySourceStore implements RepositorySourceStore {
@@ -37,12 +43,14 @@ export class FilesystemRepositorySourceStore implements RepositorySourceStore {
     }
     private path(namespace: string, collectionId: string, version: string) {
         if (
-            ![namespace, collectionId, version].every(
+            !isResourceId(collectionId) ||
+            resourcePublisher(collectionId) !== namespace ||
+            ![namespace, version].every(
                 (value) => /^[a-zA-Z0-9][a-zA-Z0-9.+-]{0,95}$/u.test(value) && value !== "." && value !== "..",
             )
         ) {
             throw new Error("Invalid source coordinate");
         }
-        return join(this.root, "source-snapshots", namespace, collectionId, `${version}.json`);
+        return join(this.root, "source-snapshots", namespace, resourceName(collectionId), `${version}.json`);
     }
 }

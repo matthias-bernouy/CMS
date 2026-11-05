@@ -41,16 +41,16 @@ export async function cmsMcpFixture() {
                     },
                 };
             }
-            if (call.contractId === "test.cms") {
+            if (call.contractId === "test/test.cms") {
                 if (call.actor.kind !== "administrator") {
                     throw new Error("Untrusted actor");
                 }
                 return { kind: "success", requestId: "echo", output: { ok: true } };
             }
-            if (call.contractId === "ulvia.cms.files" && call.capabilityId === "upload.write") {
+            if (call.contractId === "ulvia/cms.files" && call.capabilityId === "upload.write") {
                 return { kind: "success", requestId: "upload", output: {} };
             }
-            if (call.contractId === "ulvia.cms.installations") {
+            if (call.contractId === "ulvia/cms.installations") {
                 return { kind: "success", requestId: "collections", output: { revision: 1, items: [] } };
             }
             const input = JSON.parse((call.input as { requestJson: string }).requestJson);

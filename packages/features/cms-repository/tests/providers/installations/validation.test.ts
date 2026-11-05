@@ -7,7 +7,7 @@ describe("approved provider installation validation", () => {
         const { admission, installation } = await admittedInstallation();
         expect(validateProviderInstallation(installation, admission)).toEqual(installation);
         for (const patch of [
-            { providerId: "another.provider" },
+            { providerId: "another.publisher/another.provider" },
             { endpoint: "https://other.example.com" },
             { approval: { ...installation.approval, manifestVersion: "2.0.0" } },
             { approval: { ...installation.approval, manifestDigest: `sha256:${"b".repeat(64)}` } },

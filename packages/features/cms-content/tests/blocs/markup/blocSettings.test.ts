@@ -4,7 +4,7 @@ import type { PageDocumentBlocContract } from "@bernouy/cms-content/page-documen
 
 const configured: readonly PageDocumentBlocContract[] = [
     {
-        id: "example-counter",
+        id: "example--test--counter",
         kind: "component",
         slots: {},
         root: { accepts: ["div"] },
@@ -40,35 +40,41 @@ const configured: readonly PageDocumentBlocContract[] = [
 
 test("collection number attributes use strict JSON syntax before schema validation", () => {
     expect(() =>
-        validatePageDocument('<div cms-bloc=\"example-counter\" count="3" ratio="5e-1" compact></div>', configured),
+        validatePageDocument(
+            '<div cms-bloc="example--test--counter" count="3" ratio="5e-1" compact></div>',
+            configured,
+        ),
     ).not.toThrow();
 
     for (const value of ["", "01", "0x2", "NaN", "Infinity", " 3 "]) {
         expect(() =>
-            validatePageDocument(`<div cms-bloc=\"example-counter\" count="${value}" ratio="0.5"></div>`, configured),
+            validatePageDocument(
+                `<div cms-bloc=\"example--test--counter\" count="${value}" ratio="0.5"></div>`,
+                configured,
+            ),
         ).toThrow("must use JSON number syntax");
     }
 });
 
 test("collection number attributes enforce explicit values and accept absent attributes through defaults", () => {
     expect(() =>
-        validatePageDocument('<div cms-bloc=\"example-counter\" count="1.5" ratio="0.5"></div>', configured),
+        validatePageDocument('<div cms-bloc="example--test--counter" count="1.5" ratio="0.5"></div>', configured),
     ).toThrow("safe integer");
     expect(() =>
-        validatePageDocument('<div cms-bloc=\"example-counter\" count="7" ratio="0.5"></div>', configured),
+        validatePageDocument('<div cms-bloc="example--test--counter" count="7" ratio="0.5"></div>', configured),
     ).toThrow("at most 6");
     expect(() =>
-        validatePageDocument('<div cms-bloc=\"example-counter\" count="3" ratio="2"></div>', configured),
+        validatePageDocument('<div cms-bloc="example--test--counter" count="3" ratio="2"></div>', configured),
     ).toThrow("at most 1");
     expect(() =>
-        validatePageDocument('<div cms-bloc=\"example-counter\" ratio="0.5"></div>', configured),
+        validatePageDocument('<div cms-bloc="example--test--counter" ratio="0.5"></div>', configured),
     ).not.toThrow();
 });
 
 test("collection settings reject undeclared host attributes", () => {
     expect(() =>
         validatePageDocument(
-            '<div cms-bloc=\"example-counter\" count="3" ratio="0.5" mystery="value"></div>',
+            '<div cms-bloc="example--test--counter" count="3" ratio="0.5" mystery="value"></div>',
             configured,
         ),
     ).toThrow("neither a declared setting nor a native root attribute");

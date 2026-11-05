@@ -1,3 +1,4 @@
+import { isResourceId } from "@bernouy/resource-identity";
 import { logicalHttpBinding } from "../route/bindings";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { GatewayActor } from "cms-gateway/invocation/interfaces/Invocation";
@@ -38,7 +39,7 @@ export function createCapabilityQueryHandler(config: CapabilityQueryHandlerConfi
                 ...(await logicalHttpBinding(config.invoker, { siteId: config.siteId, contractId, capabilityId })),
                 input,
                 actor,
-                ...(contractId === "ulvia.cms.access" && capabilityId === "resolve-actor"
+                ...(contractId === "ulvia/cms.access" && capabilityId === "resolve-actor"
                     ? { actorCredential: actorCredentialFromRequest(request) }
                     : {}),
             });
@@ -166,10 +167,14 @@ function logicalIdentifiers(
         throw new GatewayError("invalid_input", "capability identifiers are malformed");
     }
     const controlled = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
-    if (identifiers.length !== 2 || identifiers.some((value) => !controlled.test(value))) {
+    if (
+        identifiers.length !== 3 ||
+        !isResourceId(`${identifiers[0]}/${identifiers[1]}`) ||
+        !controlled.test(identifiers[2]!)
+    ) {
         throw new GatewayError("invalid_input", "capability identifiers are invalid");
     }
-    return { contractId: identifiers[0]!, capabilityId: identifiers[1]! };
+    return { contractId: `${identifiers[0]}/${identifiers[1]}`, capabilityId: identifiers[2]! };
 }
 
 function mutationIdempotencyKey(request: Request, mode: "none" | "natural" | "keyed" | undefined): string | undefined {

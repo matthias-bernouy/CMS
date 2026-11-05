@@ -5,12 +5,12 @@ import type { Connection } from "./client";
 export async function discoveryJourney(connection: Connection) {
     const { call } = connection;
     const questions = [
-        ["Comment éviter d'écraser les changements d'un autre auteur ?", "ulvia.cms.content", "pages/revisions.md"],
-        ["¿Cómo subir un archivo local?", "ulvia.cms.files", "site-files.md"],
-        ["如何在发布前检查页面？", "ulvia.cms.content", "pages/verify.md"],
+        ["Comment éviter d'écraser les changements d'un autre auteur ?", "ulvia/cms.content", "pages/revisions.md"],
+        ["¿Cómo subir un archivo local?", "ulvia/cms.files", "site-files.md"],
+        ["如何在发布前检查页面？", "ulvia/cms.content", "pages/verify.md"],
     ];
     for (const [query, contractId, path] of questions) {
-        const search = await call("ulvia.cms.installations", "documentation.search", { query, contractId, limit: 3 });
+        const search = await call("ulvia/cms.installations", "documentation.search", { query, contractId, limit: 3 });
         expect(search.mode).toBe("hybrid");
         expect(search.results.some((item: { reference: { path: string } }) => item.reference.path === path)).toBe(true);
         expect(
@@ -19,9 +19,9 @@ export async function discoveryJourney(connection: Connection) {
             ),
         ).toBe(true);
     }
-    const empty = await call("ulvia.cms.installations", "documentation.search", {
+    const empty = await call("ulvia/cms.installations", "documentation.search", {
         query: "publication",
-        contractId: "unknown.contract",
+        contractId: "ulvia/unknown.contract",
     });
     expect(empty.results).toEqual([]);
     const linked = connection.tools.find((entry) => entry._meta["io.ulvia/capability"] === "pages.create")!;
@@ -29,13 +29,13 @@ export async function discoveryJourney(connection: Connection) {
         reference: { contractId: string; releaseDigest: string; path: string };
     }[];
     const reference = links[0]!.reference;
-    const doc = await call("ulvia.cms.installations", "documentation.get", { reference });
+    const doc = await call("ulvia/cms.installations", "documentation.get", { reference });
     expect(doc.content.startsWith("# ")).toBe(true);
     expect(
-        (await call("ulvia.cms.installations", "documentation.get", { reference, offset: doc.content.length })).content,
+        (await call("ulvia/cms.installations", "documentation.get", { reference, offset: doc.content.length })).content,
     ).toBe("");
     refusal(
-        await invoke(connection, "ulvia.cms.installations", "documentation.get", {
+        await invoke(connection, "ulvia/cms.installations", "documentation.get", {
             reference,
             offset: doc.content.length + 1,
         }),
@@ -43,14 +43,14 @@ export async function discoveryJourney(connection: Connection) {
     );
     for (const path of ["../secrets.md", "%2e%2e/secrets.md", "/etc/passwd"]) {
         refusal(
-            await invoke(connection, "ulvia.cms.installations", "documentation.get", {
+            await invoke(connection, "ulvia/cms.installations", "documentation.get", {
                 reference: { ...reference, path },
             }),
             "INVALID_INPUT",
         );
     }
     refusal(
-        await invoke(connection, "ulvia.cms.installations", "documentation.get", {
+        await invoke(connection, "ulvia/cms.installations", "documentation.get", {
             reference: { ...reference, path: "missing.md" },
         }),
         "NOT_FOUND",

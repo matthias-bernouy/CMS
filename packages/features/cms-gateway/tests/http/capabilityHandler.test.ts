@@ -18,7 +18,7 @@ test("authenticates provider machine calls independently from users", async () =
         resolveActor: async () => ({ kind: "anonymous" }),
     });
     const response = await handler(
-        new Request("http://site/.cms/call/catalog/v1/items", {
+        new Request("http://site/.cms/call/ulvia/catalog/v1/items", {
             method: "POST",
             headers: {
                 authorization: "Bearer provider-secret-token",
@@ -54,7 +54,7 @@ test("projects gateway authorization failures", async () => {
         onFailure: (failure) => failures.push(failure),
     });
     const denied = await handler(
-        new Request("http://site/.cms/call/catalog/v1/items", {
+        new Request("http://site/.cms/call/ulvia/catalog/v1/items", {
             method: "POST",
             headers: { authorization: "Bearer provider-token", "content-type": "application/json" },
             body: "{}",
@@ -89,7 +89,7 @@ test("serves a public binary capability without a Page referer", async () => {
         },
     });
 
-    const response = await handler(new Request("http://site/.cms/call/catalog/files/photo-1"));
+    const response = await handler(new Request("http://site/.cms/call/ulvia/catalog/files/photo-1"));
 
     expect(response.status).toBe(200);
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
@@ -125,7 +125,7 @@ test("logical Page queries use GET without input and QUERY with structured input
     expect(
         (
             await handler(
-                new Request("http://site/.cms/query/catalog/item.list", {
+                new Request("http://site/.cms/query/ulvia/catalog/item.list", {
                     headers: { referer: "http://site/catalog" },
                 }),
             )
@@ -134,7 +134,7 @@ test("logical Page queries use GET without input and QUERY with structured input
     expect(
         (
             await handler(
-                new Request("http://site/.cms/query/catalog/item.list", {
+                new Request("http://site/.cms/query/ulvia/catalog/item.list", {
                     method: "QUERY",
                     headers: { "content-type": "application/json", referer: "http://site/catalog" },
                     body: '{"term":"one"}',
@@ -164,14 +164,14 @@ test("logical Page queries reject commands, binary results and mutation transpor
         resolveCapability: async () => descriptor,
     });
 
-    expect((await handler(new Request("http://site/.cms/query/catalog/item.list"))).status).toBe(404);
+    expect((await handler(new Request("http://site/.cms/query/ulvia/catalog/item.list"))).status).toBe(404);
     descriptor = { access: "public", effect: "query", outputType: "binary" };
-    expect((await handler(new Request("http://site/.cms/query/catalog/item.list"))).status).toBe(404);
+    expect((await handler(new Request("http://site/.cms/query/ulvia/catalog/item.list"))).status).toBe(404);
     descriptor = { access: "public", effect: "query", outputType: "object" };
     expect(
         (
             await handler(
-                new Request("http://site/.cms/query/catalog/item.list", {
+                new Request("http://site/.cms/query/ulvia/catalog/item.list", {
                     method: "POST",
                     body: "{}",
                 }),
@@ -199,7 +199,7 @@ test("logical Page mutations invoke structured commands by capability identity",
     });
 
     const response = await handler(
-        new Request("http://site/.cms/mutation/catalog/item.create", {
+        new Request("http://site/.cms/mutation/ulvia/catalog/item.create", {
             method: "POST",
             headers: {
                 "content-type": "application/json",
@@ -213,12 +213,12 @@ test("logical Page mutations invoke structured commands by capability identity",
     expect(calls).toEqual([
         expect.objectContaining({
             actor: { kind: "administrator", subjectId: "subject-a" },
-            contractId: "catalog",
+            contractId: "ulvia/catalog",
             capabilityId: "item.create",
             input: { title: "One" },
         }),
     ]);
-    expect(successes).toEqual([{ contractId: "catalog", capabilityId: "item.create" }]);
+    expect(successes).toEqual([{ contractId: "ulvia/catalog", capabilityId: "item.create" }]);
 });
 
 test("logical keyed mutations require and forward their automatic idempotency key", async () => {
@@ -237,14 +237,14 @@ test("logical keyed mutations require and forward their automatic idempotency ke
     });
 
     const missing = await handler(
-        new Request("http://site/.cms/mutation/catalog/item.create", {
+        new Request("http://site/.cms/mutation/ulvia/catalog/item.create", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: "{}",
         }),
     );
     const accepted = await handler(
-        new Request("http://site/.cms/mutation/catalog/item.create", {
+        new Request("http://site/.cms/mutation/ulvia/catalog/item.create", {
             method: "POST",
             headers: {
                 "content-type": "application/json",
@@ -284,7 +284,7 @@ test("explicit Provider authority never forwards a rejected return credential to
     });
     for (const authority of ["provider", "delegated", "unsupported"]) {
         const result = await handler(
-            new Request("http://site/.cms/call/catalog/v1/items", {
+            new Request("http://site/.cms/call/ulvia/catalog/v1/items", {
                 method: "POST",
                 headers: {
                     authorization: "Bearer expired-provider-key",

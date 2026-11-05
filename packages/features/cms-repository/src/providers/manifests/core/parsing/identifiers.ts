@@ -1,3 +1,4 @@
+import { isResourceId, isResourceNamespace } from "cms-repository/exports/contracts/protocol";
 import { ProviderManifestValidationError } from "../protocol/errors";
 import { expectString } from "../protocol/values";
 
@@ -37,4 +38,27 @@ function isCalendarDate(year: number, month: number, day: number): boolean {
     const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
     const days = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     return day <= days[month - 1]!;
+}
+
+export function parseResourceIdentifier(value: unknown, path: string): string {
+    if (!isResourceId(value)) {
+        throw new ProviderManifestValidationError(
+            "invalid_manifest",
+            "must be a namespace/name resource identity",
+            path,
+        );
+    }
+    return value;
+}
+
+export function parsePublisherIdentifier(value: unknown, path: string): string {
+    const publisher = expectString(value, path, 96);
+    if (!isResourceNamespace(publisher)) {
+        throw new ProviderManifestValidationError(
+            "invalid_manifest",
+            "must be a bounded lowercase publisher namespace",
+            path,
+        );
+    }
+    return publisher;
 }

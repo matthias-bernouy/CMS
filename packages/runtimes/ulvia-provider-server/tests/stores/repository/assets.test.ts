@@ -18,7 +18,7 @@ test("collection source assets validate their pinned bytes and remain usable aft
             {
                 path: "assets/logo.svg",
                 publisherId: "community",
-                collectionId: "sample",
+                collectionId: "community/sample",
                 version: "1.0.0",
                 releaseDigest: published.digest,
                 assetId: "logo.svg",
@@ -48,7 +48,7 @@ test("collection source assets validate their pinned bytes and remain usable aft
         const authoring = createCollectionAuthoring(stores as any, join(f.root, "valid"), f.base, source, {} as any);
         expect((await authoring.prepare(JSON.stringify(next))).digest).toBeString();
         await new RemoteRepositoryClient(f.base, f.credential).yank(
-            { kind: "collection", publisherId: "community", id: "sample", version: "1.0.0" },
+            { kind: "collection", publisherId: "community", id: "community/sample", version: "1.0.0" },
             "superseded",
         );
         expect(await source.list()).toEqual([]);

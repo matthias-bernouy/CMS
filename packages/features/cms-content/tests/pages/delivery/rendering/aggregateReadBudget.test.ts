@@ -34,8 +34,10 @@ test("each HTTP Page request consumes one aggregate snapshot and no legacy paylo
 test("each request rechecks current capability access even when its Page snapshot is unchanged", async () => {
     const calls = new Map<string, number>();
     const count = (operation: string) => calls.set(operation, (calls.get(operation) ?? 0) + 1);
-    const page = pageRecord('<section cms-query="catalog:list as items"></section>');
-    const inputs = pageRenderInputs(page, [{ contractId: "catalog", capabilityId: "list", versionRange: "=1.0.0" }]);
+    const page = pageRecord('<section cms-query="ulvia/catalog:list as items"></section>');
+    const inputs = pageRenderInputs(page, [
+        { contractId: "ulvia/catalog", capabilityId: "list", versionRange: "=1.0.0" },
+    ]);
     const mounted = mountPublicPages({
         repository: contentReader(page, inputs, count),
         pageCapabilities: {

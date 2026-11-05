@@ -16,11 +16,11 @@ import { graphFixture, installationFor, siteId } from "./fixtures";
 
 describe("selection installation limits", () => {
     test("propagates configured installation limits through parsing, manifest validation and persistence", async () => {
-        const releases = await releaseCatalogue(contractDocument("payment", "pay"));
-        const release = (await releases.get("payment", "1.0.0"))!.admission;
+        const releases = await releaseCatalogue(contractDocument("ulvia/payment", "pay"));
+        const release = (await releases.get("ulvia/payment", "1.0.0"))!.admission;
         const manifests = new InMemoryProviderManifestCatalogue(releases);
         const admission = await admitProviderManifest(
-            manifestDocument([implementation("payment", "1.0.0", release.digest)], {
+            manifestDocument([implementation("ulvia/payment", "1.0.0", release.digest)], {
                 configuration: {
                     type: "object",
                     properties: { value: { type: "array", maxItems: 100, items: { type: "string", maxLength: 8000 } } },
@@ -42,7 +42,7 @@ describe("selection installation limits", () => {
         const selected = [
             {
                 siteId,
-                contractId: "payment",
+                contractId: "ulvia/payment",
                 version: "1.0.0",
                 digest: release.digest,
                 installationId: installation.id,
@@ -69,7 +69,10 @@ describe("selection installation limits", () => {
             }),
         ).rejects.toThrow(TypeError);
         const installationLimits = { ...DEFAULT_PROVIDER_INSTALLATION_LIMITS };
-        const pending = planContractSelections(siteId, [await select("payment")], { ...context, installationLimits });
+        const pending = planContractSelections(siteId, [await select("ulvia/payment")], {
+            ...context,
+            installationLimits,
+        });
         installationLimits.maxDocumentBytes = 1;
         expect((await pending).structurallyValid).toBe(true);
     });
@@ -93,7 +96,7 @@ describe("selection dependency depth", () => {
 });
 
 async function linearDependencyGraph(length: number) {
-    const contractIds = Array.from({ length }, (_, index) => `node-${String.fromCharCode(97 + index)}`);
+    const contractIds = Array.from({ length }, (_, index) => `ulvia/node-${String.fromCharCode(97 + index)}`);
     const releases = await releaseCatalogue(...contractIds.map((id) => contractDocument(id, "run")));
     const manifests = new InMemoryProviderManifestCatalogue(releases);
     const selections: ContractSelection[] = [];
@@ -105,7 +108,7 @@ async function linearDependencyGraph(length: number) {
             releases,
             manifests,
             [implementation(contractId, "1.0.0", record.digest, target ? [requirement(target, "run")] : [])],
-            `ulvia.${contractId}`,
+            `ulvia/provider-${contractId.split("/")[1]}`,
         );
         installations.push(installation);
         selections.push({

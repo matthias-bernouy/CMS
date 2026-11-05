@@ -1,7 +1,7 @@
 {
     "id": "installation:SHOP_42",
     "siteId": "site:STORE_1",
-    "providerId": "ulvia.example",
+    "providerId": "ulvia/ulvia.example",
     "accountId": "account:SHOP_42.prod",
     "endpoint": "https://provider.example.com",
     "status": "enabled",

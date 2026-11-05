@@ -15,7 +15,7 @@ for (const kind of ["collections", "contracts", "providers"] as const) {
                 async fetch(request) {
                     const url = new URL(request.url);
                     requests.push(url.pathname);
-                    if (request.method !== "QUERY" || url.pathname !== "/.cms/call/ulvia.repository/v1/catalogue") {
+                    if (request.method !== "QUERY" || url.pathname !== "/.cms/call/ulvia/repository/v1/catalogue") {
                         return new Response(null, { status: 500 });
                     }
                     const input = (await request.json()) as { kind: string; cursor?: string; limit: number };
@@ -40,7 +40,7 @@ for (const kind of ["collections", "contracts", "providers"] as const) {
                           );
                 expect(listed).toHaveLength(count);
                 expect(requests).toHaveLength(Math.ceil(count / 256));
-                expect(new Set(requests)).toEqual(new Set(["/.cms/call/ulvia.repository/v1/catalogue"]));
+                expect(new Set(requests)).toEqual(new Set(["/.cms/call/ulvia/repository/v1/catalogue"]));
             } finally {
                 await server.stop(true);
             }
@@ -67,7 +67,7 @@ test("collection bundle downloads have bounded asset concurrency and no duplicat
                     protocol: "ulvia-collection/v1",
                     schemaDialect: "ulvia-schema/v1",
                     publisherId: "example.official",
-                    collectionId: "example",
+                    collectionId: "example.official/example",
                     version: "1.0.0",
                     name: "name",
                     locale: "en",
@@ -85,7 +85,7 @@ test("collection bundle downloads have bounded asset concurrency and no duplicat
     });
     const bundle = await source.get({
         publisherId: "example.official",
-        collectionId: "example",
+        collectionId: "example.official/example",
         version: "1.0.0",
         digest,
     });
@@ -99,7 +99,7 @@ function catalogueEntry(kind: "collections" | "contracts" | "providers", index: 
     return {
         kind: kind === "collections" ? "collection" : kind === "contracts" ? "contract" : "provider-manifest",
         publisherId: "example.official",
-        id: kind === "collections" ? "example" : "example.catalogue",
+        id: kind === "collections" ? "example.official/example" : "example.official/example.catalogue",
         version: `1.0.${index}`,
         digest,
         metadata: {

@@ -4,14 +4,14 @@ import { getCmsEditorCatalogue } from "@bernouy/cms-content";
 test("editor catalogue projects deterministic authoring contracts", async () => {
     const getBlocsList = async () => [
         {
-            id: "sample-table",
+            id: "ulvia--sample--table",
             name: "Table",
             group: "Administration",
             description: "",
             ownership: { kind: "code-managed" as const },
         },
         {
-            id: "sample-card",
+            id: "ulvia--sample--card",
             name: "Card",
             group: "Content",
             catalogueOrder: 20,
@@ -30,7 +30,7 @@ test("editor catalogue projects deterministic authoring contracts", async () => 
             ownership: { kind: "code-managed" as const },
         },
         {
-            id: "sample-hero",
+            id: "ulvia--sample--hero",
             name: "Hero",
             group: "Content",
             catalogueOrder: 10,
@@ -43,7 +43,11 @@ test("editor catalogue projects deterministic authoring contracts", async () => 
 
     const result = await getCmsEditorCatalogue({ getBlocsList } as never);
 
-    expect(result.items.map(({ id }) => id)).toEqual(["sample-table", "sample-hero", "sample-card"]);
+    expect(result.items.map(({ id }) => id)).toEqual([
+        "ulvia--sample--table",
+        "ulvia--sample--hero",
+        "ulvia--sample--card",
+    ]);
     expect(result.items[1]).toMatchObject({
         kind: "composition",
         ownership: "site-builder",

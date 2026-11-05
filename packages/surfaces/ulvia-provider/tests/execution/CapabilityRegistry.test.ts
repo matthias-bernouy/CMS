@@ -6,39 +6,39 @@ const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
     contractVersion: "1.0.0",
     siteId: "site-a",
-    providerId: "ulvia.official",
+    providerId: "ulvia/primary-provider",
 };
 
 test("the provider dispatcher seals an exact capability matrix", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    dispatcher.register("ulvia.cms.settings", "get", async (input) => ({ siteId: input.siteId }));
-    dispatcher.seal([contract("ulvia.cms.settings", ["get"])]);
+    dispatcher.register("ulvia/cms.settings", "get", async (input) => ({ siteId: input.siteId }));
+    dispatcher.seal([contract("ulvia/cms.settings", ["get"])]);
 
-    await expect(dispatcher.invoke("ulvia.cms.settings", "get", { siteId: "site-a" }, context)).resolves.toEqual({
+    await expect(dispatcher.invoke("ulvia/cms.settings", "get", { siteId: "site-a" }, context)).resolves.toEqual({
         siteId: "site-a",
     });
-    await expect(dispatcher.invoke("ulvia.cms.settings", "missing", {}, context)).rejects.toEqual(
+    await expect(dispatcher.invoke("ulvia/cms.settings", "missing", {}, context)).rejects.toEqual(
         expect.objectContaining({
             code: "CAPABILITY_NOT_FOUND",
             status: 404,
         }),
     );
-    expect(() => dispatcher.register("ulvia.cms.settings", "set", async () => ({}))).toThrow("already sealed");
+    expect(() => dispatcher.register("ulvia/cms.settings", "set", async () => ({}))).toThrow("already sealed");
 });
 
 test("the provider dispatcher rejects missing, unexpected and duplicate handlers", () => {
     const missing = new DefaultProviderCapabilityDispatcher();
-    expect(() => missing.seal([contract("ulvia.cms.settings", ["get"])])).toThrow("missing: ulvia.cms.settings/get");
+    expect(() => missing.seal([contract("ulvia/cms.settings", ["get"])])).toThrow("missing: ulvia/cms.settings/get");
 
     const unexpected = new DefaultProviderCapabilityDispatcher();
-    unexpected.register("ulvia.cms.settings", "set", async () => ({}));
-    expect(() => unexpected.seal([contract("ulvia.cms.settings", ["get"])])).toThrow(
-        "unexpected: ulvia.cms.settings/set",
+    unexpected.register("ulvia/cms.settings", "set", async () => ({}));
+    expect(() => unexpected.seal([contract("ulvia/cms.settings", ["get"])])).toThrow(
+        "unexpected: ulvia/cms.settings/set",
     );
 
     const duplicate = new DefaultProviderCapabilityDispatcher();
-    duplicate.register("ulvia.cms.settings", "get", async () => ({}));
-    expect(() => duplicate.register("ulvia.cms.settings", "get", async () => ({}))).toThrow("already registered");
+    duplicate.register("ulvia/cms.settings", "get", async () => ({}));
+    expect(() => duplicate.register("ulvia/cms.settings", "get", async () => ({}))).toThrow("already registered");
 });
 
 function contract(contractId: string, capabilityIds: readonly string[]): ResolvedContract {

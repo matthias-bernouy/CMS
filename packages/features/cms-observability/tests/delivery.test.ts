@@ -134,7 +134,7 @@ test("Gateway invocation observations cannot recursively collect their own journ
     const invoke = () =>
         gateway.invoke({
             siteId: "site-a",
-            contractId: "catalog",
+            contractId: "ulvia/catalog",
             capabilityId: "item.list",
             input: {},
             actor: { kind: "anonymous" },

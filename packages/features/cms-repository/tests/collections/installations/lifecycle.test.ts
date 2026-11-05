@@ -37,18 +37,18 @@ test("installs an exact dependency graph atomically in any request order", async
     const store = new CollectionStore(new MemoryCollectionStorage());
     const foundation = {
         ...release("foundation"),
-        exports: { blocs: ["foundation-block"], themeTokens: [] },
+        exports: { blocs: ["atlas-dofficial--foundation--block"], themeTokens: [] },
     };
     const consumer = release("consumer");
-    consumer.blocs[0]!.markup = '<div cms-bloc="foundation-block"></div>';
-    consumer.blocs[0]!.uses = ["foundation-block"];
+    consumer.blocs[0]!.markup = '<div cms-bloc="atlas-dofficial--foundation--block"></div>';
+    consumer.blocs[0]!.uses = ["atlas-dofficial--foundation--block"];
     Object.assign(consumer, {
         dependencies: [
             {
-                collectionId: "foundation",
+                collectionId: "atlas.official/foundation",
                 publisherId: "atlas.official",
                 versionRange: "^1.0.0",
-                imports: { blocs: [{ id: "foundation-block" }], themeTokens: [] },
+                imports: { blocs: [{ id: "atlas-dofficial--foundation--block" }], themeTokens: [] },
             },
         ],
     });
@@ -65,15 +65,18 @@ test("installs an exact dependency graph atomically in any request order", async
     );
 
     expect(installed.revision).toBe(1);
-    expect(installed.collections.map(({ collectionId }) => collectionId).sort()).toEqual(["consumer", "foundation"]);
+    expect(installed.collections.map(({ collectionId }) => collectionId).sort()).toEqual([
+        "atlas.official/consumer",
+        "atlas.official/foundation",
+    ]);
     await expect(store.installMany("invalid", [{ digest: consumerArtifact.digest }], 0)).rejects.toThrow(
-        "requires foundation",
+        "requires atlas.official/foundation",
     );
     expect(await store.snapshot("invalid")).toMatchObject({ revision: 0, collections: [] });
 
-    await expect(store.uninstall("site", "foundation", 1)).rejects.toThrow("required by");
-    await store.uninstall("site", "consumer", 1);
-    const empty = await store.uninstall("site", "foundation", 2);
+    await expect(store.uninstall("site", "atlas.official/foundation", 1)).rejects.toThrow("required by");
+    await store.uninstall("site", "atlas.official/consumer", 1);
+    const empty = await store.uninstall("site", "atlas.official/foundation", 2);
     expect(empty).toMatchObject({ revision: 3, collections: [] });
 });
 
@@ -92,8 +95,8 @@ test("validates mutable configuration and preserves it through compatible upgrad
     };
     const first = await store.importRelease(collectionFixture(initial));
     await store.install("site", first.digest, 0, "local");
-    await store.saveConfiguration("site", "configurable", 1, { title: "Custom" });
-    await expect(store.saveConfiguration("site", "configurable", 2, { title: 42 })).rejects.toThrow(
+    await store.saveConfiguration("site", "atlas.official/configurable", 1, { title: "Custom" });
+    await expect(store.saveConfiguration("site", "atlas.official/configurable", 2, { title: 42 })).rejects.toThrow(
         "Invalid collection configuration",
     );
     expect((await store.snapshot("site")).revision).toBe(2);

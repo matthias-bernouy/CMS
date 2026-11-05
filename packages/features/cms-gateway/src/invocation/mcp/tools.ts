@@ -3,11 +3,17 @@ import type { CapabilityBinding } from "@bernouy/cms-repository/contracts/bindin
 import type { CapabilityDefinition, ContractDocumentationDefinition } from "@bernouy/cms-repository/contracts";
 import { closedObject, mcpSchema } from "./schema";
 
-export function capabilityToolName(contractId: string, capabilityId: string, bindingId = "mcp"): string {
-    return `cap_${createHash("sha256")
-        .update(`${contractId}\0${capabilityId}${bindingId === "mcp" ? "" : `\0${bindingId}`}`)
+export function capabilityToolName(
+    contractId: string,
+    capabilityId: string,
+    bindingId = "mcp",
+    authoredName?: string,
+): string {
+    const identity = createHash("sha256")
+        .update(`${contractId}\0${capabilityId}\0${bindingId}`)
         .digest("hex")
-        .slice(0, 32)}`;
+        .slice(0, 32);
+    return `${authoredName?.slice(0, 27) ?? "cap"}_${identity}`;
 }
 
 export function capabilityTool(
@@ -47,7 +53,7 @@ export function capabilityTool(
         }),
     );
     return {
-        name: binding.tool?.name ?? capabilityToolName(contractId, capability.id, binding.id),
+        name: capabilityToolName(contractId, capability.id, binding.id, binding.tool?.name),
         ...(binding.tool?.title ? { title: binding.tool.title } : {}),
         description: description + help,
         inputSchema: closedObject({

@@ -43,7 +43,7 @@ async function fixture() {
         invocation: {
             requestId: crypto.randomUUID(),
             installationId: "origin-install",
-            contractId: "origin",
+            contractId: "ulvia/origin",
             contractVersion: "1.0.0",
             capabilityId: "item.list",
         },
@@ -132,7 +132,7 @@ test("the shared proof cannot authorize a resource alias belonging to another CM
 test("a grant revoked during secret loading fails the shared final fence", async () => {
     const f = await fixture();
     f.beforeSecret(() => {
-        f.state.current.grants.denied.push({ contractId: "origin", capabilityId: "item.list" });
+        f.state.current.grants.denied.push({ contractId: "ulvia/origin", capabilityId: "item.list" });
     });
     await expect(f.prepare(f.input)).rejects.toMatchObject({ code: "not_authorized" });
     expect(f.state.inspections).toBe(1);

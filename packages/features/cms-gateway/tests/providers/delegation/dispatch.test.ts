@@ -27,7 +27,7 @@ test("dispatch fence rereads mutable authorization without resolving the catalog
             f.state.actor = { kind: "user", subjectId: "changed", authorizationRevision: 2 };
         }
         if (change === "grants") {
-            f.state.current.grants.denied.push({ contractId: "destination", capabilityId: "item.list" });
+            f.state.current.grants.denied.push({ contractId: "ulvia/destination", capabilityId: "item.list" });
         }
         if (change === "route") {
             f.routes.isCurrent = async () => false;
@@ -98,7 +98,7 @@ test("a brokered child resolves its actor once and never mints a recursive ticke
         (
             await gateway.invoke({
                 siteId: "site-a",
-                contractId: "destination",
+                contractId: "ulvia/destination",
                 capabilityId: "item.list",
                 input: {},
                 actor: {

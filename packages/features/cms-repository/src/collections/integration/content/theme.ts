@@ -1,3 +1,4 @@
+import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
 import {
     collectionThemeSourceId,
     collectionThemeTokenId,
@@ -25,8 +26,8 @@ export function collectionThemeSource(release: CollectionRelease, locale?: strin
                 entry.type === "font-face"
                     ? [
                           {
-                              id: `${release.collectionId}-${entry.id}`,
-                              family: `${release.collectionId}-${entry.family}`,
+                              id: `${resourceRuntimeNamespace(release.collectionId)}--${entry.id}`,
+                              family: `${resourceRuntimeNamespace(release.collectionId)}--${entry.family}`,
                               source: `{{ cms.asset.${release.collectionId}.${entry.asset} }}`,
                               style: entry.style,
                               weight: entry.weight,

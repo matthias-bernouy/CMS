@@ -1,3 +1,5 @@
+import { isResourceId } from "@bernouy/resource-identity";
+import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { publicAssetCacheControl, sendCompressed, type Cache } from "@bernouy/http-runner";
 import type { ContentReader } from "cms-content/application/interfaces/ContentReader";
 import {
@@ -5,8 +7,6 @@ import {
     generateBlocStyleGroupEntry,
 } from "cms-content/blocs/core/assets/generateBlocStyleGroupEntry";
 
-const COLLECTION_ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
-const BLOC_TAG = /^[a-z][a-z0-9]{0,62}-[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u;
 const CONTENT_REVISION = /^sha256:[0-9a-f]{64}$/u;
 const CONTENT_VERSION = /^[0-9a-f]{10}$/u;
 const MAX_TAGS = 128;
@@ -28,7 +28,7 @@ export async function serveBlocStyles(
     const version = url.searchParams.get("v");
     if (
         !collectionId ||
-        !COLLECTION_ID.test(collectionId) ||
+        !isResourceId(collectionId) ||
         !tagsParam ||
         tagsParam.length > MAX_TAGS_LENGTH ||
         !revision ||
@@ -43,7 +43,7 @@ export async function serveBlocStyles(
     if (
         tags.length === 0 ||
         tags.length > MAX_TAGS ||
-        tags.some((tag) => !BLOC_TAG.test(tag)) ||
+        tags.some((tag) => !isValidCustomElementTag(tag)) ||
         tagsParam !== canonicalTags.join(",")
     ) {
         return new Response(null, { status: 400 });

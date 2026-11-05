@@ -29,7 +29,7 @@ export function initialPagesFixture() {
         },
     };
     const release = {
-        collectionId: "demo",
+        collectionId: "example/demo",
         locale: "en",
         blocs: [],
         texts: [],
@@ -41,16 +41,16 @@ export function initialPagesFixture() {
             repo,
             db: { collection: () => receipts },
             collections: {
-                snapshot: async () => ({ collections: [{ collectionId: "demo", digest: "exact", release }] }),
+                snapshot: async () => ({ collections: [{ collectionId: "example/demo", digest: "exact", release }] }),
             },
         },
     };
     const profile = {
         id: "test",
-        collections: [{ collectionId: "demo", digest: "exact" }],
+        collections: [{ collectionId: "example/demo", digest: "exact" }],
         initialPages: [
             {
-                collectionId: "demo",
+                collectionId: "example/demo",
                 indexing: false,
                 id: "login",
                 path: "/login",

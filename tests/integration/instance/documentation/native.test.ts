@@ -17,26 +17,26 @@ integration(
             });
             expect(connection.tools).toHaveLength(68);
             await f.waitForDocumentation();
-            const found = await connection.call("ulvia.cms.installations", "repository.search", {
-                query: "ulvia.cms.content",
+            const found = await connection.call("ulvia/cms.installations", "repository.search", {
+                query: "ulvia/cms.content",
                 kinds: ["contract"],
             });
             expect(found.partial).toBe(false);
-            expect(found.results[0]?.reference.id).toBe("ulvia.cms.content");
-            const inspected = await connection.call("ulvia.cms.installations", "repository.get", {
+            expect(found.results[0]?.reference.id).toBe("ulvia/cms.content");
+            const inspected = await connection.call("ulvia/cms.installations", "repository.get", {
                 repositoryId: found.results[0].repositoryId,
                 reference: found.results[0].reference,
             });
             expect(inspected.reference).toEqual(found.results[0].reference);
             expect(inspected.content).toContain('"kind": "contract"');
-            const blocs = await connection.call("ulvia.cms.installations", "repository.search", {
-                query: "ulvia-official",
+            const blocs = await connection.call("ulvia/cms.installations", "repository.search", {
+                query: "ulvia/mossa",
                 kinds: ["bloc"],
                 limit: 1,
             });
             expect(blocs.partial).toBe(false);
             expect(blocs.results[0]?.blocId).toBeString();
-            const bloc = await connection.call("ulvia.cms.installations", "repository.get", {
+            const bloc = await connection.call("ulvia/cms.installations", "repository.get", {
                 repositoryId: blocs.results[0].repositoryId,
                 reference: blocs.results[0].reference,
                 blocId: blocs.results[0].blocId,
@@ -46,13 +46,13 @@ integration(
             await exerciseFiles(connection.call, f.cmsUrl, connection.token.access_token);
             await f.restartProvider();
             await f.waitForDocumentation();
-            const document = await connection.call("ulvia.cms.installations", "documentation.get", {
+            const document = await connection.call("ulvia/cms.installations", "documentation.get", {
                 reference: result.reference,
             });
             expect(document.content).toBe(result.content);
-            const search = await connection.call("ulvia.cms.installations", "documentation.search", {
+            const search = await connection.call("ulvia/cms.installations", "documentation.search", {
                 query: "How do I verify a page before publication?",
-                contractId: "ulvia.cms.content",
+                contractId: "ulvia/cms.content",
             });
             expect(
                 search.results.some(
@@ -60,7 +60,7 @@ integration(
                 ),
             ).toBe(true);
             console.log("Documentation retrieval after Provider restart:", search.mode);
-            expect((await connection.call("ulvia.cms.content", "pages.get", { id: result.pageId })).title).toBe(
+            expect((await connection.call("ulvia/cms.content", "pages.get", { id: result.pageId })).title).toBe(
                 "Verified documentation review",
             );
             await connection.revoke();

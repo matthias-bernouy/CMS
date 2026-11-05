@@ -35,8 +35,8 @@ export async function delegationFixture(
         binary: options.sourceBinary,
         resource: options.sourceResource,
         access: options.sourceAccess,
-        contractId: "origin",
-        providerId: "origin.provider",
+        contractId: "ulvia/origin",
+        providerId: "ulvia/origin.provider",
         installationId: "origin-install",
         behavior: behavior(options.sourceEffect),
         delegation: options.policy ?? {
@@ -47,8 +47,8 @@ export async function delegationFixture(
     source.installation.installation.gatewayTokenRef = "${SOURCE_RETURN}";
     const target = await gatewayRoute({
         endpoint: options.targetEndpoint,
-        contractId: "destination",
-        providerId: "destination.provider",
+        contractId: "ulvia/destination",
+        providerId: "ulvia/destination.provider",
         installationId: "target-install",
         delegation: options.targetPolicy,
         behavior: behavior(options.targetEffect, options.sensitive),
@@ -86,7 +86,13 @@ export async function delegationFixture(
     };
     const routes = {
         resolve: async (site: string, contract: string) =>
-            site !== "site-a" ? null : contract === "origin" ? source : contract === "destination" ? target : null,
+            site !== "site-a"
+                ? null
+                : contract === "ulvia/origin"
+                  ? source
+                  : contract === "ulvia/destination"
+                    ? target
+                    : null,
         isCurrent: async () => true,
     };
     const selections = { get: async () => state.current };
@@ -107,7 +113,7 @@ export async function delegationFixture(
         siteId: "site-a",
         requestId: crypto.randomUUID(),
         installationId: source.selection.installationId,
-        contractId: "origin",
+        contractId: "ulvia/origin",
         version: source.selection.version,
         digest: source.selection.digest,
         capabilityId: "item.list",
@@ -119,7 +125,7 @@ export async function delegationFixture(
         ticket,
         sourceInstallationId: source.selection.installationId,
         sourceCredentialFingerprint: state.credential,
-        contractId: "destination",
+        contractId: "ulvia/destination",
         capabilityId: "item.list",
     });
     return { authority, store, state, source, target, routes, selections, root, child, context };

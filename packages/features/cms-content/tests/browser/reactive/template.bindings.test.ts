@@ -60,10 +60,12 @@ class ValueControl extends HTMLElement {
         this.received.push(value);
     }
 }
-customElements.define("test-value-control", ValueControl);
+customElements.define("example--test--value-control", ValueControl);
 
 test("custom form controls use ordinary value interpolation and preserve mounted elements", () => {
-    const { host, region } = mount('<test-value-control value="{{ name }}"></test-value-control>', { name: "Initial" });
+    const { host, region } = mount('<example--test--value-control value="{{ name }}"></test-value-control>', {
+        name: "Initial",
+    });
     const control = host.firstElementChild as ValueControl;
     expect(control.value).toBe("Initial");
     control.value = "Local draft";
@@ -76,11 +78,11 @@ test("custom form controls use ordinary value interpolation and preserve mounted
 
 test("exact expressions preserve booleans while string destinations serialize them", () => {
     const { host, region } = mount(
-        '<button disabled="{{ state === \'pending\' }}" aria-expanded="{{ open }}">Save</button><test-value-control expanded="{{ open }}" state="{{ open | string }}"></test-value-control>',
+        '<button disabled="{{ state === \'pending\' }}" aria-expanded="{{ open }}">Save</button><example--test--value-control expanded="{{ open }}" state="{{ open | string }}"></test-value-control>',
         { state: "idle", open: false },
     );
     const button = host.querySelector("button")!;
-    const control = host.querySelector("test-value-control")!;
+    const control = host.querySelector("example--test--value-control")!;
     expect(button.disabled).toBe(false);
     expect(button.getAttribute("aria-expanded")).toBe("false");
     expect(control.hasAttribute("expanded")).toBe(false);
@@ -105,11 +107,13 @@ test("repeated native controls resolve boolean attributes from each item scope",
 });
 
 test("disposing an ordinary attribute binding cancels its queued control update", async () => {
-    const { region } = mount('<test-late-control value="{{ name }}"></test-late-control>', { name: "Initial" });
+    const { region } = mount('<example--test--late-control value="{{ name }}"></test-late-control>', {
+        name: "Initial",
+    });
     region.unmount();
     const received: string[] = [];
     customElements.define(
-        "test-late-control",
+        "example--test--late-control",
         class extends HTMLElement {
             static formAssociated = true;
             get value(): string {
@@ -126,10 +130,10 @@ test("disposing an ordinary attribute binding cancels its queued control update"
 
 test("native elements are not arbitrary property receivers and nested queries own their contents", () => {
     const { host } = mount(
-        '<div value="{{ name }}"></div><section cms-query="catalog:other as other"><test-value-control value="{{ name }}"></test-value-control></section>',
+        '<div value="{{ name }}"></div><section cms-query="ulvia/catalog:other as other"><example--test--value-control value="{{ name }}"></test-value-control></section>',
         { name: "Initial" },
     );
-    expect((host.querySelector("test-value-control") as ValueControl).received).toEqual([]);
+    expect((host.querySelector("example--test--value-control") as ValueControl).received).toEqual([]);
     expect("value" in host.querySelector("div")!).toBe(false);
 });
 

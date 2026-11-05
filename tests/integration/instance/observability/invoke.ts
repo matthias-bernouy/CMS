@@ -14,7 +14,7 @@ async function control(connection: InstanceConnection, capabilityId: string, pat
             })
         ).json();
         connection.controlVersion = report.implementations.find(
-            (item: { contractId: string }) => item.contractId === "ulvia.cms.installations",
+            (item: { contractId: string }) => item.contractId === "ulvia/cms.installations",
         ).version;
     }
     const response = await fetch(`${connection.providerUrl}${path}`, {
@@ -22,7 +22,7 @@ async function control(connection: InstanceConnection, capabilityId: string, pat
         headers: {
             authorization: `Bearer ${connection.token}`,
             "content-type": "application/json",
-            "x-ulvia-contract-id": "ulvia.cms.installations",
+            "x-ulvia-contract-id": "ulvia/cms.installations",
             "x-ulvia-contract-version": connection.controlVersion!,
             "x-ulvia-capability-id": capabilityId,
             "x-ulvia-request-id": crypto.randomUUID(),
@@ -35,14 +35,14 @@ async function control(connection: InstanceConnection, capabilityId: string, pat
 
 export async function invoke(connection: InstanceConnection, capabilityId: string, input: unknown) {
     const { route: serialized } = await control(connection, "gateway.route.get", "/gateway/route", {
-        contractId: "ulvia.cms.observability",
+        contractId: "ulvia/cms.observability",
     });
     const route = JSON.parse(serialized);
     const requestId = crypto.randomUUID();
     const issued = await control(connection, "gateway.invocation.issue", "/gateway/invocations", {
         requestId,
         installationId: route.selection.installationId,
-        contractId: "ulvia.cms.observability",
+        contractId: "ulvia/cms.observability",
         contractVersion: route.selection.version,
         capabilityId,
         ...(capabilityId === "logs.append" ? { systemServiceId: "cms-edge" } : {}),

@@ -1,6 +1,7 @@
+import { resourceName } from "cms-repository/exports/contracts/protocol";
 import { materializeStateSchemas } from "./stateSchemas";
 import { basename, join, resolve } from "node:path";
-import { admitCollectionRelease, isCollectionNamespace } from "@bernouy/cms-repository/collections";
+import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { loadCollectionExamples } from "../examples/source";
 import { loadCollectionBlocs } from "./blocSources";
@@ -14,7 +15,7 @@ import { collectionAuthoringDiagnostics } from "./exampleDiagnostics";
 export async function prepareCollectionRelease(directory: string, contracts?: ReleaseCatalogue) {
     const collectionRoot = resolve(directory);
     const collectionId = basename(collectionRoot);
-    if (!isCollectionNamespace(collectionId)) {
+    if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(collectionId)) {
         throw new Error("Invalid collection ID");
     }
     const definition = (await Bun.file(join(collectionRoot, "definition.json")).json()) as Record<string, unknown>;
@@ -61,7 +62,7 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         ...(theme === undefined ? {} : { theme }),
     };
     const artifact = await admitCollectionRelease(candidate, assets.bundle, { contracts });
-    if (artifact.release.collectionId !== collectionId) {
+    if (resourceName(artifact.release.collectionId) !== collectionId) {
         throw new Error(`Collection folder ${collectionId} does not match its definition`);
     }
     const diagnostics = collectionAuthoringDiagnostics(artifact.release);

@@ -8,7 +8,7 @@ describe("provider catalogue history", () => {
         const { catalogue, admission } = await manifestCatalogueFixture();
         const initial = await catalogue.publish(admission);
         const reason = { reason: "Publisher requested withdrawal" };
-        const yanked = await catalogue.setYank("ulvia.example", "1.0.0", reason);
+        const yanked = await catalogue.setYank("ulvia/ulvia.example", "1.0.0", reason);
         reason.reason = "Caller mutation";
         expect(initial.yank).toBeUndefined();
         expect(yanked.yank?.reason).toBe("Publisher requested withdrawal");
@@ -16,11 +16,11 @@ describe("provider catalogue history", () => {
         expect(Object.isFrozen(yanked.yank)).toBe(true);
         expect(yanked.admission).toBe(initial.admission);
         expect(yanked.publishedAt).toBe(initial.publishedAt);
-        expect(await catalogue.get("ulvia.example", "1.0.0")).toBe(yanked);
+        expect(await catalogue.get("ulvia/ulvia.example", "1.0.0")).toBe(yanked);
         expect(await catalogue.findByDigest(admission.digest)).toBe(yanked);
         expect(await catalogue.list()).toEqual([yanked]);
         expect(await catalogue.publish(admission)).toBe(yanked);
-        expect((await catalogue.setYank("ulvia.example", "1.0.0", null)).yank).toBeUndefined();
+        expect((await catalogue.setYank("ulvia/ulvia.example", "1.0.0", null)).yank).toBeUndefined();
         expect(yanked.yank?.reason).toBe("Publisher requested withdrawal");
     });
 
@@ -28,7 +28,7 @@ describe("provider catalogue history", () => {
         const { catalogue, admission, contracts, document } = await manifestCatalogueFixture();
         const initial = await catalogue.publish(admission);
         const later = await admitProviderManifest({ ...document, version: "1.0.1" }, contracts);
-        await contracts.setYank("forms.submission", "1.0.0", { reason: "Withdrawn contract" });
+        await contracts.setYank("ulvia/forms.submission", "1.0.0", { reason: "Withdrawn contract" });
         expect(await catalogue.publish(admission)).toBe(initial);
         expect(await catalogue.findByDigest(admission.digest)).toBe(initial);
         await expect(catalogue.publish(later)).rejects.toThrow("yanked contract");
@@ -44,9 +44,11 @@ describe("provider catalogue history", () => {
             { reason: "Known", unknown: true },
             { reason: "\ud800" },
         ]) {
-            await expect(catalogue.setYank("ulvia.example", "1.0.0", value as ProviderManifestYank)).rejects.toThrow();
+            await expect(
+                catalogue.setYank("ulvia/ulvia.example", "1.0.0", value as ProviderManifestYank),
+            ).rejects.toThrow();
         }
         await expect(catalogue.setYank("missing", "1.0.0", null)).rejects.toThrow("not published");
-        expect((await catalogue.get("ulvia.example", "1.0.0"))?.yank).toBeUndefined();
+        expect((await catalogue.get("ulvia/ulvia.example", "1.0.0"))?.yank).toBeUndefined();
     });
 });

@@ -4,7 +4,7 @@ import { fixture } from "./context/fixture";
 
 test("an independent provider receives normal headers and returns validated JSON response headers", async () => {
     const f = await fixture(false);
-    f.dispatcher.register("catalog", "item.list", async (_input, context) =>
+    f.dispatcher.register("ulvia/catalog", "item.list", async (_input, context) =>
         Response.json(
             { items: [context.http.headers.get("accept-language")] },
             { headers: { etag: '"v1"', link: '</next>; rel="next"', "content-language": "fr" } },
@@ -13,7 +13,7 @@ test("an independent provider receives normal headers and returns validated JSON
     f.mount();
     const result = await f.gateway.invoke({
         siteId: "site-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         capabilityId: "item.list",
         input: {},
         actor: { kind: "anonymous" },
@@ -28,7 +28,7 @@ test("an independent provider receives normal headers and returns validated JSON
 test("native Response streams arrive before production completes and cancellation reaches the provider", async () => {
     const f = await fixture(true);
     let cancelled = false;
-    f.dispatcher.register("catalog", "item.list", async (_input, context) => {
+    f.dispatcher.register("ulvia/catalog", "item.list", async (_input, context) => {
         expect(context.http.headers.get("range")).toBe("bytes=0-1");
         expect(context.http.transportRequest?.headers.get("range")).toBeNull();
         return new Response(
@@ -50,7 +50,7 @@ test("native Response streams arrive before production completes and cancellatio
     f.mount();
     const result = await f.gateway.invoke({
         siteId: "site-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         capabilityId: "item.list",
         input: { fileId: "one" },
         actor: { kind: "anonymous" },
@@ -73,7 +73,7 @@ test("native Response streams arrive before production completes and cancellatio
 test("a public HEAD strips a native Response body even when its technical binding uses GET", async () => {
     const f = await fixture(true);
     let cancelled = false;
-    f.dispatcher.register("catalog", "item.list", async (_input, context) => {
+    f.dispatcher.register("ulvia/catalog", "item.list", async (_input, context) => {
         expect(context.http.transportRequest?.method).toBe("GET");
         expect(context.http.resource?.method).toBe("HEAD");
         return new Response(
@@ -88,7 +88,7 @@ test("a public HEAD strips a native Response body even when its technical bindin
     f.mount();
     const result = await f.gateway.invoke({
         siteId: "site-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         capabilityId: "item.list",
         input: { fileId: "one" },
         actor: { kind: "anonymous" },

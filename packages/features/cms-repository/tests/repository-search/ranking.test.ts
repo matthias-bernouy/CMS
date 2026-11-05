@@ -48,7 +48,7 @@ test("hybrid paraphrases reuse unchanged vectors across corpus updates and expli
     corpus.replace([row("shop"), row("gallery", "Photo gallery"), row("news", "News article")]);
     await service.prepare();
     expect(passages).toHaveLength(3);
-    expect((await service.search({ query: "carte", contractId: "missing" })).results).toEqual([]);
+    expect((await service.search({ query: "carte", contractId: "ulvia/missing" })).results).toEqual([]);
     await service.close();
     const lexical = new RepositorySearch(corpus);
     expect(await lexical.search({ query: "Product" })).toMatchObject({ mode: "lexical", degraded: true });

@@ -8,7 +8,7 @@ import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/bu
 test("the complete collection snapshot printed in the contract guide builds without hidden fixture files", async () => {
     const path = resolve(
         import.meta.dir,
-        "../../../../packages/official-repository/contracts/ulvia.cms.authoring/docs/collection-source.md",
+        "../../../../packages/official-repository/contracts/cms.authoring/docs/collection-source.md",
     );
     const guide = await Bun.file(path).text();
     const example = guide.match(/```json\n([\s\S]*?)\n```/u)?.[1];
@@ -24,7 +24,7 @@ test("the complete collection snapshot printed in the contract guide builds with
         }
         const artifact = await prepareCollectionRelease(directory);
         expect(artifact.digest).toMatch(/^sha256:[a-f0-9]{64}$/u);
-        expect(artifact.release.collectionId).toBe("guide-kit");
+        expect(artifact.release.collectionId).toBe("your-namespace/guide-kit");
         expect(artifact.release.blocs).toHaveLength(1);
         expect(artifact.release.examples?.map((item) => item.id)).toEqual(["panel"]);
         expect(artifact.release.assets).toEqual([]);

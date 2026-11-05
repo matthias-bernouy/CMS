@@ -9,7 +9,7 @@ describe("BindingRuntime — lifecycle", () => {
     test("discovers a declarative query", async () => {
         globalThis.fetch = (async () => new Response(JSON.stringify(["password"]))) as typeof fetch;
         const root = el(
-            `<div><section cms-query="ulvia.cms.access:resolve-actor as methods"><p>{{ methods.data[0] }}</p></section></div>`,
+            `<div><section cms-query="ulvia/cms.access:resolve-actor as methods"><p>{{ methods.data[0] }}</p></section></div>`,
         );
         document.body.appendChild(root);
         const runtime = new BindingRuntime(root);
@@ -29,8 +29,8 @@ describe("BindingRuntime — lifecycle", () => {
             return new Response("{}");
         }) as typeof fetch;
         const root = el(`<div>
-            <section cms-mutation="test.items:save as ignored"></section>
-            <form cms-mutation="test.items:save as saved"><button>Save</button></form>
+            <section cms-mutation="ulvia/test.items:save as ignored"></section>
+            <form cms-mutation="ulvia/test.items:save as saved"><button>Save</button></form>
         </div>`);
         document.body.appendChild(root);
         const runtime = new BindingRuntime(root);
@@ -40,16 +40,17 @@ describe("BindingRuntime — lifecycle", () => {
         expect(requests).toEqual([]);
         root.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
         await waitFor(() => requests.length === 1);
-        expect(requests).toEqual(["http://localhost/.cms/mutation/test.items/save"]);
+        expect(requests).toEqual(["http://localhost/.cms/mutation/ulvia/test.items/save"]);
         runtime.stop();
     });
 
     test("discovers a query-import-only rendering boundary", () => {
-        const pages = { scope: "page", key: "test-shared-pages" } as const;
-        const user = { scope: "page", key: "test-shared-user" } as const;
+        const pages = { scope: "page", key: "example--test--shared-pages" } as const;
+        const user = { scope: "page", key: "example--test--shared-user" } as const;
         writeSyncValue(pages, { count: 2 });
         writeSyncValue(user, { name: "Ada" });
-        const root = el(`<div><section cms-queries="@page:test-shared-pages as pages @page:test-shared-user as user">
+        const root =
+            el(`<div><section cms-queries="@page:example--test--shared-pages as pages @page:example--test--shared-user as user">
             <p>{{ user.data.name }}: {{ pages.data.count }}</p>
         </section></div>`);
         document.body.appendChild(root);
@@ -65,16 +66,16 @@ describe("BindingRuntime — lifecycle", () => {
     });
 
     test("preserves a nested HTTP query inside a query-import boundary", async () => {
-        const filter = { scope: "page", key: "test-pages-filter" } as const;
+        const filter = { scope: "page", key: "example--test--pages-filter" } as const;
         writeSyncValue(filter, "all");
         const requests: AbortSignal[] = [];
         globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
             requests.push(init?.signal as AbortSignal);
             return Response.json({ items: [] });
         }) as typeof fetch;
-        const root = el(`<div><section cms-queries="@page:test-pages-filter as filter">
+        const root = el(`<div><section cms-queries="@page:example--test--pages-filter as filter">
             <span>{{ filter.data }}</span>
-            <div cms-query="ulvia.cms.content:pages.list as pages">
+            <div cms-query="ulvia/cms.content:pages.list as pages">
                 <p>{{ pages.data.items.length }}</p>
             </div>
         </section></div>`);

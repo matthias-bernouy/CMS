@@ -16,7 +16,7 @@ export async function accessCall(
 ) {
     const result = await host.invoker.invoke({
         siteId: "default",
-        contractId: "ulvia.cms.access",
+        contractId: "ulvia/cms.access",
         capabilityId,
         input: { requestJson: JSON.stringify(input) },
         actor,

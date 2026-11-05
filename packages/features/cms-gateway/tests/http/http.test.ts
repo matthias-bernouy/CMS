@@ -13,7 +13,7 @@ test("gateway call URLs use the admitted binding path", async () => {
         return Response.json({ items: ["one"] });
     });
     const response = await handleGatewayHttpCall(
-        new Request("https://site.example/.cms/call/catalog/v1/items?term=one"),
+        new Request("https://site.example/.cms/call/ulvia/catalog/v1/items?term=one"),
         options(gateway),
     );
     expect(response.status).toBe(200);
@@ -34,7 +34,7 @@ test("commands map JSON bodies through their admitted binding", async () => {
         return Response.json({ items: ["saved"] });
     });
     const response = await handleGatewayHttpCall(
-        new Request("https://site.example/.cms/call/catalog/v1/items", {
+        new Request("https://site.example/.cms/call/ulvia/catalog/v1/items", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: '{"term":"saved"}',
@@ -59,7 +59,7 @@ test("keyed commands use the standard idempotency header", async () => {
         return Response.json({ items: ["saved"] });
     });
     const response = await handleGatewayHttpCall(
-        new Request("https://site.example/.cms/call/catalog/v1/items", {
+        new Request("https://site.example/.cms/call/ulvia/catalog/v1/items", {
             method: "POST",
             headers: {
                 "content-type": "application/json",
@@ -84,7 +84,7 @@ test("automatic idempotency candidates are ignored outside keyed commands", asyn
         return Response.json({ items: ["saved"] });
     });
     const response = await handleGatewayHttpCall(
-        new Request("https://site.example/.cms/call/catalog/v1/items", {
+        new Request("https://site.example/.cms/call/ulvia/catalog/v1/items", {
             method: "POST",
             headers: {
                 "content-type": "application/json",
@@ -109,7 +109,7 @@ test("keyed commands promote browser idempotency candidates", async () => {
         return Response.json({ items: ["saved"] });
     });
     const response = await handleGatewayHttpCall(
-        new Request("https://site.example/.cms/call/catalog/v1/items", {
+        new Request("https://site.example/.cms/call/ulvia/catalog/v1/items", {
             method: "POST",
             headers: {
                 "content-type": "application/json",
@@ -148,10 +148,13 @@ test("binary provider responses stay streamed and retain safe resource headers",
                 },
             ),
     );
-    const response = await handleGatewayHttpCall(new Request("https://site.example/.cms/call/catalog/v1/files/one"), {
-        ...options(gateway),
-        actor: { kind: "anonymous" },
-    });
+    const response = await handleGatewayHttpCall(
+        new Request("https://site.example/.cms/call/ulvia/catalog/v1/files/one"),
+        {
+            ...options(gateway),
+            actor: { kind: "anonymous" },
+        },
+    );
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("image/avif");
     expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
@@ -176,7 +179,7 @@ test("plain HTTP field bindings preserve standard range syntax end to end", asyn
         });
     });
     const response = await handleGatewayHttpCall(
-        new Request("https://site.example/.cms/call/catalog/v1/files/one", {
+        new Request("https://site.example/.cms/call/ulvia/catalog/v1/files/one", {
             headers: { range: "bytes=0-1", "if-range": '"immutable"' },
         }),
         options(gateway),
@@ -204,7 +207,7 @@ test("HEAD is derived from binary GET and never emits a response body", async ()
         });
     });
     const response = await handleGatewayHttpCall(
-        new Request("https://site.example/.cms/call/catalog/v1/files/one", { method: "HEAD" }),
+        new Request("https://site.example/.cms/call/ulvia/catalog/v1/files/one", { method: "HEAD" }),
         options(gateway),
     );
     expect(response.status).toBe(200);
@@ -217,7 +220,7 @@ test("HEAD is derived from binary GET and never emits a response body", async ()
 test("HEAD routing errors use headers and never serialize JSON", async () => {
     const route = await gatewayRoute({ binary: true });
     const response = await handleGatewayHttpCall(
-        new Request("https://site.example/.cms/call/catalog/v1/missing", { method: "HEAD" }),
+        new Request("https://site.example/.cms/call/ulvia/catalog/v1/missing", { method: "HEAD" }),
         options(gatewayFor(route, async () => new Response(null))),
     );
     expect(response.status).toBe(404);
@@ -233,7 +236,7 @@ test("binary request bodies are forwarded without buffering", async () => {
         return new Response(null, { status: 204 });
     });
     const response = await handleGatewayHttpCall(
-        new Request("https://site.example/.cms/call/catalog/v1/uploads/upload-1", {
+        new Request("https://site.example/.cms/call/ulvia/catalog/v1/uploads/upload-1", {
             method: "PUT",
             headers: { "content-type": "application/octet-stream", "content-length": "5" },
             body: "hello",
@@ -312,7 +315,7 @@ test("JSON response metadata survives while authenticated callers remain private
         ),
     );
     for (const mode of ["system", "anonymous", "bearer", "broker"] as const) {
-        const request = new Request("https://site.example/.cms/call/catalog/v1/items", {
+        const request = new Request("https://site.example/.cms/call/ulvia/catalog/v1/items", {
             headers: mode === "bearer" ? { authorization: "Bearer opaque" } : {},
         });
         const response = await handleGatewayHttpCall(request, {

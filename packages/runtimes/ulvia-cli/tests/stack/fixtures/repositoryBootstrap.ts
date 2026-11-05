@@ -36,7 +36,7 @@ export async function publishSmokeRepository(environment: Record<string, string 
         const pat = await api.pat(account.cookie);
         const options = { environment: { ...environment, ULVIA_REPOSITORY_TOKEN: pat.token }, log: () => undefined };
         await runCli(["repository", "login", bridge.url.origin], options);
-        await runCli(["namespace", "claim", "ulvia.official"], options);
+        await runCli(["namespace", "claim", "ulvia"], options);
         await runCli(["namespace", "claim", "ulvia.test"], options);
         await runCli(["push", "all"], options);
         await runCli(["repository", "logout"], options);

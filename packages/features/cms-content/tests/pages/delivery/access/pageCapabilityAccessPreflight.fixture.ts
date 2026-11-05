@@ -112,7 +112,7 @@ export async function mountPage(options: {
     const pageCapabilities = new PageCapabilityAnalyzer({
         satisfiesVersionRange,
         resolveCapability: async (contractId, capabilityId) => {
-            if (contractId !== "shop") {
+            if (contractId !== "ulvia/shop") {
                 return null;
             }
             if (capabilityId === "restricted") {

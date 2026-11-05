@@ -138,7 +138,7 @@ describe("CompiledTemplate — cms-repeat", () => {
     test("nested query attributes bind inside repeated clones while query content stays inert", () => {
         const { host, region } = mount(
             `<section cms-repeat="items as item">
-                <div cms-query="catalog:item as detail" data-endpoint="{{ item.endpoint }}" data-id="{{ item.id }}"><p>{{ label }}</p></div>
+                <div cms-query="ulvia/catalog:item as detail" data-endpoint="{{ item.endpoint }}" data-id="{{ item.id }}"><p>{{ label }}</p></div>
             </section>`,
             { items: [{ id: "a", endpoint: "/a" }] },
         );

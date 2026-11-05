@@ -1,3 +1,4 @@
+import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
 import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 import type { UsageContributor, UsageInventory, UsageReference } from "./interfaces";
 import type { ContentRepository } from "@bernouy/cms-content";
@@ -112,13 +113,13 @@ export function inventoryFromSnapshot(
             for (const key of Object.keys(values)) {
                 const owner = [...referenceReleases]
                     .sort((a, b) => b.collectionId.length - a.collectionId.length)
-                    .find(({ collectionId }) => key.startsWith(`${collectionId}-`));
+                    .find(({ collectionId }) => key.startsWith(`${resourceRuntimeNamespace(collectionId)}--`));
                 if (owner) {
                     references.push({
                         type: "resource",
                         kind: "theme-token",
                         collectionId: owner.collectionId,
-                        id: key.slice(owner.collectionId.length + 1),
+                        id: key.slice(resourceRuntimeNamespace(owner.collectionId).length + 2),
                         location: `site/system/theme/${theme.id}/${mode}/${key}`,
                         scope: "runtime",
                     });

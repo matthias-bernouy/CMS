@@ -1,8 +1,11 @@
 {
     "protocol": "ulvia-provider/v1",
-    "providerId": "ulvia.example",
+    "providerId": "ulvia/ulvia.example",
     "instanceId": "instance:SHOP_42.prod",
-    "account": { "id": "account:SHOP_42.prod", "label": "Main shop" },
+    "account": {
+        "id": "account:SHOP_42.prod",
+        "label": "Main shop"
+    },
     "buildVersion": "1.4.2",
     "manifest": {
         "version": "1.0.0",
@@ -10,13 +13,13 @@
     },
     "implementations": [
         {
-            "contractId": "payment",
+            "contractId": "ulvia/payment",
             "version": "1.0.0",
             "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
             "status": "ready"
         },
         {
-            "contractId": "payment",
+            "contractId": "ulvia/payment",
             "version": "2.0.0",
             "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
             "status": "setup-required"

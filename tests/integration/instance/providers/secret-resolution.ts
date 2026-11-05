@@ -85,7 +85,7 @@ export async function exerciseNamedSecretResolution(providerName: string, stackI
             await metadata.delete(stored.id, stored.version);
             assert.equal(await read(replacement.namespaceKey), null);
             await assert.rejects(new CmsSecrets(metadata, values, {
-                resolutionReader: new MongoCmsSecretResolutionReader(db, "other-scope", crypto),
+                resolutionReader: new MongoCmsSecretResolutionReader(db, "example--other--scope", crypto),
             }).resolveByName(b.namespaceId, b.namespaceKey, "TOKEN"));
             console.log(JSON.stringify({ commandsPerResolution: 1, plaintextCached: false, namespacesIsolated: true, revokedKeysDenied: true }));
         } finally { await db.dropDatabase(); await client.close(); }

@@ -1,3 +1,4 @@
+import { isResourceId } from "@bernouy/resource-identity";
 import type { PageIndexingConfiguration } from "cms-content/pages/interfaces/pages";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { validateLabel } from "cms-content/application/core/validation/fields";
@@ -136,7 +137,7 @@ function validateIndexingDiscovery(
 
 function indexingIdentifier(value: unknown, field: string): string {
     const text = requiredIndexingText(value, field);
-    if (text.length > 128 || !CAPABILITY_ID.test(text)) {
+    if (field.endsWith(".contractId") ? !isResourceId(text) : text.length > 128 || !CAPABILITY_ID.test(text)) {
         throw new ContentValidationError(field, "invalid capability identifier");
     }
     return text;

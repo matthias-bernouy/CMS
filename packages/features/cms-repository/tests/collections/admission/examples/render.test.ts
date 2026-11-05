@@ -27,7 +27,7 @@ test("one immutable example renders collection texts in different contexts while
     const before = artifact.canonicalJson;
     const dark = await renderCollectionExamples(artifact, [], undefined, { locale: "fr", themeMode: "dark" });
     const light = await renderCollectionExamples(artifact);
-    const frame = dark.frames.find((frame) => frame.path === "atlas-panel-default--mobile.html")!;
+    const frame = dark.frames.find((frame) => frame.path === "atlas-dofficial--atlas--panel-default--mobile.html")!;
     expect(frame).toMatchObject({ width: 390, height: 640, locale: "fr", themeMode: "dark" });
     expect(dark.frames).toHaveLength(4);
     expect(dark.frames.map(({ width, height }) => [width, height])).toEqual(
@@ -37,11 +37,11 @@ test("one immutable example renders collection texts in different contexts while
     expect(html).toContain("Bonjour");
     expect(html).toContain('data-theme-mode="dark"');
     expect(html).not.toContain("<slot");
-    expect(await dark.files.get("atlas-panel-default--mobile.css")!.text()).toContain("@scope");
+    expect(await dark.files.get("atlas-dofficial--atlas--panel-default--mobile.css")!.text()).toContain("@scope");
     expect(await light.files.get(frame.path)!.text()).toContain("Hello &lt;copy&gt;");
     expect(light.frames[0]).toMatchObject({ locale: "en-US", themeMode: "light" });
-    expect(await dark.files.get("atlas-panel-default--mobile.css")!.text()).toContain("#101010");
-    expect(await light.files.get("atlas-panel-default--mobile.css")!.text()).toContain("#ffffff");
+    expect(await dark.files.get("atlas-dofficial--atlas--panel-default--mobile.css")!.text()).toContain("#101010");
+    expect(await light.files.get("atlas-dofficial--atlas--panel-default--mobile.css")!.text()).toContain("#ffffff");
     expect(artifact.canonicalJson).toBe(before);
     expect(dark.files.has("bloc-runtime.js")).toBeTrue();
 });

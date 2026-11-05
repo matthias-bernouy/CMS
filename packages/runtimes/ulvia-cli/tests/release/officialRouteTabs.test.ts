@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { mount } from "../../../../official-repository/collections/ulvia-official/blocs/navigation/tabs/ulvia-official-route-tabs/bloc";
+import { mount } from "../../../../official-repository/collections/mossa/blocs/navigation/tabs/ulvia--mossa--route-tabs/bloc";
 
 afterEach(() => {
     document.body.replaceChildren();
@@ -8,12 +8,12 @@ afterEach(() => {
 
 test("official route tabs control only declared tabpanels inside their workspace Bloc", async () => {
     document.body.innerHTML = `
-        <div cms-bloc="test-workspace">
-            <div cms-bloc="ulvia-official-route-tabs">
+        <div cms-bloc="example--test--workspace">
+            <div cms-bloc="ulvia--mossa--route-tabs">
                 <div part="tabs">
-                    <a cms-bloc="ulvia-official-route-tab" href="#inside"><span>Inside</span></a>
-                    <a cms-bloc="ulvia-official-route-tab" href="#outside"><span>Outside</span></a>
-                    <a cms-bloc="ulvia-official-route-tab" href="#not-a-panel"><span>Not a panel</span></a>
+                    <a cms-bloc="ulvia--mossa--route-tab" href="#inside"><span>Inside</span></a>
+                    <a cms-bloc="ulvia--mossa--route-tab" href="#outside"><span>Outside</span></a>
+                    <a cms-bloc="ulvia--mossa--route-tab" href="#not-a-panel"><span>Not a panel</span></a>
                 </div>
             </div>
             <section id="inside" role="tabpanel"></section>
@@ -21,7 +21,7 @@ test("official route tabs control only declared tabpanels inside their workspace
         </div>
         <section id="outside" role="tabpanel"></section>
     `;
-    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia-official-route-tabs"]');
+    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia--mossa--route-tabs"]');
     if (!root) {
         throw new Error("Missing route tabs fixture");
     }
@@ -35,25 +35,25 @@ test("official route tabs control only declared tabpanels inside their workspace
     expect(document.querySelector<HTMLElement>("#inside")?.hidden).toBe(false);
     expect(document.querySelector<HTMLElement>("#outside")?.hidden).toBe(false);
     expect(document.querySelector<HTMLElement>("#not-a-panel")?.hidden).toBe(false);
-    expect(links[0]?.closest('[cms-bloc="ulvia-official-route-tab"]')?.hasAttribute("hidden")).toBe(false);
-    expect(links[1]?.closest('[cms-bloc="ulvia-official-route-tab"]')?.hasAttribute("hidden")).toBe(true);
-    expect(links[2]?.closest('[cms-bloc="ulvia-official-route-tab"]')?.hasAttribute("hidden")).toBe(true);
+    expect(links[0]?.closest('[cms-bloc="ulvia--mossa--route-tab"]')?.hasAttribute("hidden")).toBe(false);
+    expect(links[1]?.closest('[cms-bloc="ulvia--mossa--route-tab"]')?.hasAttribute("hidden")).toBe(true);
+    expect(links[2]?.closest('[cms-bloc="ulvia--mossa--route-tab"]')?.hasAttribute("hidden")).toBe(true);
 
     cleanup?.();
 });
 
 test("official route tabs remain native navigation when links target other pages", async () => {
     document.body.innerHTML = `
-        <div cms-bloc="test-workspace">
-            <div cms-bloc="ulvia-official-route-tabs">
+        <div cms-bloc="example--test--workspace">
+            <div cms-bloc="ulvia--mossa--route-tabs">
                 <div part="tabs">
-                    <a cms-bloc="ulvia-official-route-tab" href="/overview">Overview</a>
-                    <a cms-bloc="ulvia-official-route-tab" href="/settings">Settings</a>
+                    <a cms-bloc="ulvia--mossa--route-tab" href="/overview">Overview</a>
+                    <a cms-bloc="ulvia--mossa--route-tab" href="/settings">Settings</a>
                 </div>
             </div>
         </div>
     `;
-    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia-official-route-tabs"]');
+    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia--mossa--route-tabs"]');
     if (!root) {
         throw new Error("Missing route tabs fixture");
     }

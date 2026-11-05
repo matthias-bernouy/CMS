@@ -5,10 +5,10 @@ export function queryContract() {
         kind: "contract",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
-        contractId: "shop",
+        contractId: "ulvia/shop",
         version: "2.3.0",
         name: "Shop",
-        publisherId: "ulvia.official",
+        publisherId: "ulvia",
         capabilities: [
             {
                 id: "list-products",

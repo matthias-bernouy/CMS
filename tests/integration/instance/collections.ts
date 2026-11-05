@@ -13,7 +13,7 @@ export function collectionSnapshot(namespace: string, macroMarker?: string) {
                 protocol: "ulvia-collection/v1",
                 schemaDialect: "ulvia-schema/v1",
                 publisherId: namespace,
-                collectionId: "mcp-kit",
+                collectionId: "ulvia/mcp-kit",
                 version: "1.0.0",
                 name: "collection.name",
                 locale: "en",
@@ -27,7 +27,7 @@ export function collectionSnapshot(namespace: string, macroMarker?: string) {
             path: "blocs/mcp-kit-panel/definition.json",
             content: JSON.stringify({
                 kind: "component",
-                id: "mcp-kit-panel",
+                id: "ulvia--mcp-kit--panel",
                 label: "bloc.label",
                 description: "bloc.label",
                 categories: ["bloc.label"],
@@ -50,7 +50,7 @@ export function collectionSnapshot(namespace: string, macroMarker?: string) {
         },
         {
             path: "examples/panel/document.html",
-            content: '<div cms-bloc="mcp-kit-panel"><p slot="body">Created through MCP</p></div>',
+            content: '<div cms-bloc="ulvia--mcp-kit--panel"><p slot="body">Created through MCP</p></div>',
         },
         { path: "blocs/mcp-kit-panel/markup.html", content: '<section><slot name="body"></slot></section>' },
     ];
@@ -70,27 +70,27 @@ export function collectionSnapshot(namespace: string, macroMarker?: string) {
 
 export async function exerciseCollections(invoke: Call, namespace: string, providerName: string) {
     const call = observeRepositoryCall(invoke);
-    const connection = await call("ulvia.cms.authoring", "get-connection");
+    const connection = await call("ulvia/cms.authoring", "get-connection");
     expect(connection.configured).toBe(true);
-    await call("ulvia.cms.authoring", "claim-namespace", { namespace });
+    await call("ulvia/cms.authoring", "claim-namespace", { namespace });
     const marker = `/tmp/${namespace}-macro-must-not-run`;
-    const rejected = await call("ulvia.cms.authoring", "prepare-collection", {
+    const rejected = await call("ulvia/cms.authoring", "prepare-collection", {
         sourceJson: collectionSnapshot(namespace, marker),
     });
     expect(rejected.valid).toBe(false);
     expect((await docker(["exec", providerName, "test", "-e", marker], true)).code).not.toBe(0);
-    const prepared = await call("ulvia.cms.authoring", "prepare-collection", {
+    const prepared = await call("ulvia/cms.authoring", "prepare-collection", {
         sourceJson: collectionSnapshot(namespace),
     });
     expect(prepared.valid).toBe(true);
-    const published = await call("ulvia.cms.authoring", "publish-collection", {
+    const published = await call("ulvia/cms.authoring", "publish-collection", {
         preparationId: prepared.preparationId,
         expectedDigest: prepared.digest,
     });
     expect(published.digest).toBe(prepared.digest);
     await exerciseCollectionCatalogue(call, published.digest, false);
-    const current = await call("ulvia.cms.installations", "list-collection-installations");
-    const installed = await call("ulvia.cms.installations", "install-collection", {
+    const current = await call("ulvia/cms.installations", "list-collection-installations");
+    const installed = await call("ulvia/cms.installations", "install-collection", {
         expectedRevision: current.revision,
         targets: [
             {
@@ -103,11 +103,11 @@ export async function exerciseCollections(invoke: Call, namespace: string, provi
             },
         ],
     });
-    expect(installed.items.some((item: { collectionId: string }) => item.collectionId === "mcp-kit")).toBe(true);
+    expect(installed.items.some((item: { collectionId: string }) => item.collectionId === "ulvia/mcp-kit")).toBe(true);
     await exerciseCollectionCatalogue(call, published.digest, true);
-    const sources = await call("ulvia.cms.authoring", "get-collection-sources", {
+    const sources = await call("ulvia/cms.authoring", "get-collection-sources", {
         namespace,
-        collectionId: "mcp-kit",
+        collectionId: "ulvia/mcp-kit",
         version: "1.0.0",
     });
     expect(sources.releaseDigest).toBe(prepared.digest);
@@ -115,30 +115,30 @@ export async function exerciseCollections(invoke: Call, namespace: string, provi
 }
 
 export async function exerciseContent(call: Call, cmsUrl: string) {
-    const examples = await call("ulvia.cms.content", "examples.list", {
-        collectionId: "mcp-kit",
+    const examples = await call("ulvia/cms.content", "examples.list", {
+        collectionId: "ulvia/mcp-kit",
         locale: "en",
         limit: 1,
     });
     expect(examples.items[0]?.id).toBe("panel");
-    const example = await call("ulvia.cms.content", "examples.get", {
-        collectionId: "mcp-kit",
+    const example = await call("ulvia/cms.content", "examples.get", {
+        collectionId: "ulvia/mcp-kit",
         exampleId: "panel",
     });
-    const page = await call("ulvia.cms.content", "pages.create", {
+    const page = await call("ulvia/cms.content", "pages.create", {
         content: example.document.html,
         path: "/mcp-regression",
         title: "MCP regression",
     });
     expect(page.content).toContain("Created through MCP");
-    const replaced = await call("ulvia.cms.content", "pages.update", {
+    const replaced = await call("ulvia/cms.content", "pages.update", {
         id: page.id,
         expectedRevision: page.revision,
         content: example.document.html,
     });
     expect(replaced.id).toBe(page.id);
     expect(replaced.path).toBe("/mcp-regression");
-    await call("ulvia.cms.content", "pages.publish", {
+    await call("ulvia/cms.content", "pages.publish", {
         id: page.id,
         expectedRevision: replaced.revision,
         visible: true,
@@ -150,7 +150,7 @@ export async function exerciseContent(call: Call, cmsUrl: string) {
 
 export async function exerciseFiles(call: Call, cmsUrl: string, accessToken: string) {
     const bytes = new TextEncoder().encode("Local MCP file upload");
-    const upload = await call("ulvia.cms.files", "workspace.upload.create", {
+    const upload = await call("ulvia/cms.files", "workspace.upload.create", {
         filename: "mcp.txt",
         size: bytes.byteLength,
         contentType: "text/plain",
@@ -166,11 +166,11 @@ export async function exerciseFiles(call: Call, cmsUrl: string, accessToken: str
             })
         ).status,
     ).toBe(204);
-    await call("ulvia.cms.files", "workspace.upload.complete", { uploadId: upload.uploadId });
-    const workspace = await call("ulvia.cms.files", "workspace.get");
+    await call("ulvia/cms.files", "workspace.upload.complete", { uploadId: upload.uploadId });
+    const workspace = await call("ulvia/cms.files", "workspace.get");
     const file = workspace.items.find((item: { name: string }) => item.name === "mcp.txt");
     expect(file).toBeDefined();
-    const signed = await call("ulvia.cms.files", "workspace.files.sign", {
+    const signed = await call("ulvia/cms.files", "workspace.files.sign", {
         fileId: file.fileId,
         generation: file.generation,
         expiresIn: 60,

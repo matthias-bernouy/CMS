@@ -26,7 +26,7 @@ describe("provider manifest change reports", () => {
         const other = await admitProviderManifest(
             {
                 ...document,
-                providerId: "another.provider",
+                providerId: "another.publisher/another.provider",
                 provenance: { publisherId: "another.publisher", publishedAt: "2026-09-24T00:00:00Z" },
             },
             contracts,
@@ -91,24 +91,24 @@ describe("provider manifest change reports", () => {
     test("keeps requirement ranges and optionality scoped to each exact implementation", async () => {
         const { document, contracts } = await manifestCatalogueFixture();
         await contracts.publish(
-            await admitContractRelease(contractDocument("communication.email", "email.message.send")),
+            await admitContractRelease(contractDocument("ulvia/communication.email", "email.message.send")),
         );
         await contracts.publish(
-            await admitContractRelease(contractDocument("communication.email", "email.message.send", "1.1.0")),
+            await admitContractRelease(contractDocument("ulvia/communication.email", "email.message.send", "1.1.0")),
         );
         await contracts.publish(
-            await admitContractRelease(contractDocument("forms.submission", "form.submission.create", "1.1.0")),
+            await admitContractRelease(contractDocument("ulvia/forms.submission", "form.submission.create", "1.1.0")),
         );
-        const first = (await contracts.get("forms.submission", "1.0.0"))!.admission;
-        const second = (await contracts.get("forms.submission", "1.1.0"))!.admission;
+        const first = (await contracts.get("ulvia/forms.submission", "1.0.0"))!.admission;
+        const second = (await contracts.get("ulvia/forms.submission", "1.1.0"))!.admission;
         const previous = await admitProviderManifest(
             {
                 ...document,
                 implementations: [
-                    implementation("forms.submission", "1.0.0", first.digest, [
-                        requirement("communication.email", "email.message.send", "^1.0.0"),
+                    implementation("ulvia/forms.submission", "1.0.0", first.digest, [
+                        requirement("ulvia/communication.email", "email.message.send", "^1.0.0"),
                     ]),
-                    implementation("forms.submission", "1.1.0", second.digest),
+                    implementation("ulvia/forms.submission", "1.1.0", second.digest),
                 ],
             },
             contracts,
@@ -117,8 +117,8 @@ describe("provider manifest change reports", () => {
             {
                 ...document,
                 implementations: [
-                    implementation("forms.submission", "1.0.0", first.digest, [
-                        { ...requirement("communication.email", "email.message.send", "^1.1.0"), optional: true },
+                    implementation("ulvia/forms.submission", "1.0.0", first.digest, [
+                        { ...requirement("ulvia/communication.email", "email.message.send", "^1.1.0"), optional: true },
                     ]),
                 ],
             },
@@ -128,8 +128,8 @@ describe("provider manifest change reports", () => {
         expect(
             report.changes.filter((change) => change.category === "requirement").map((change) => change.path),
         ).toEqual([
-            '$.implementations["forms.submission@1.0.0"].requires["communication.email/email.message.send"]["optional"]',
-            '$.implementations["forms.submission@1.0.0"].requires["communication.email/email.message.send"]["versionRange"]',
+            '$.implementations["ulvia/forms.submission@1.0.0"].requires["ulvia/communication.email/email.message.send"]["optional"]',
+            '$.implementations["ulvia/forms.submission@1.0.0"].requires["ulvia/communication.email/email.message.send"]["versionRange"]',
         ]);
         expect(report.changes.find((change) => change.category === "implementation")?.kind).toBe("removed");
         const reverse = await compareProviderManifests(next, previous);

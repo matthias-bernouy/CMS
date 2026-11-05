@@ -25,12 +25,12 @@ describe("repository provider imports", () => {
 
         expect(result).toEqual({
             kind: "provider-manifest",
-            id: "ulvia.example",
+            id: "ulvia/ulvia.example",
             version: "1.0.0",
             digest: fixture.reference.digest,
         });
-        expect((await contracts.get("catalog.items", "1.0.0"))?.admission.digest).toBe(fixture.contractDigest);
-        expect((await manifests.get("ulvia.example", "1.0.0"))?.admission.digest).toBe(fixture.reference.digest);
+        expect((await contracts.get("ulvia/catalog.items", "1.0.0"))?.admission.digest).toBe(fixture.contractDigest);
+        expect((await manifests.get("ulvia/ulvia.example", "1.0.0"))?.admission.digest).toBe(fixture.reference.digest);
     });
 
     test("rejects an unlisted implemented contract before publishing anything", async () => {
@@ -48,11 +48,11 @@ describe("repository provider imports", () => {
     test("preflights manifest conflicts before publishing loaded contracts", async () => {
         const fixture = await providerFixture(true);
         const contracts = new InMemoryReleaseCatalogue();
-        const otherContract = await admitContractRelease(contractDocument("other.items", "list"));
+        const otherContract = await admitContractRelease(contractDocument("ulvia/other.items", "list"));
         await contracts.publish(otherContract);
         const manifests = new InMemoryProviderManifestCatalogue(contracts);
         const conflicting = await admitProviderManifest(
-            manifestDocument([implementation("other.items", "1.0.0", otherContract.digest)]),
+            manifestDocument([implementation("ulvia/other.items", "1.0.0", otherContract.digest)]),
             contracts,
         );
         await manifests.publish(conflicting);
@@ -60,7 +60,7 @@ describe("repository provider imports", () => {
         await expect(importRepositoryArtifact(fixture.source, fixture.reference, contracts, manifests)).rejects.toThrow(
             "already published",
         );
-        expect(await contracts.get("catalog.items", "1.0.0")).toBeNull();
+        expect(await contracts.get("ulvia/catalog.items", "1.0.0")).toBeNull();
         expect(await contracts.list()).toHaveLength(1);
     });
 
@@ -78,27 +78,27 @@ describe("repository provider imports", () => {
 
         expect(result).toMatchObject({
             kind: "provider-manifest",
-            id: "ulvia.example",
-            publisherId: "ulvia.official",
+            id: "ulvia/ulvia.example",
+            publisherId: "ulvia",
             version: "1.0.0",
         });
-        expect((await contracts.get("catalog.items", "1.0.0"))?.admission.digest).toBe(fixture.contractDigest);
-        expect((await manifests.get("ulvia.example", "1.0.0"))?.admission.digest).toBe(fixture.provider.digest);
+        expect((await contracts.get("ulvia/catalog.items", "1.0.0"))?.admission.digest).toBe(fixture.contractDigest);
+        expect((await manifests.get("ulvia/ulvia.example", "1.0.0"))?.admission.digest).toBe(fixture.provider.digest);
     });
 });
 
 async function providerFixture(includeContract: boolean) {
-    const contract = await admitContractRelease(contractDocument("catalog.items", "list"));
+    const contract = await admitContractRelease(contractDocument("ulvia/catalog.items", "list"));
     const sourceContracts = new InMemoryReleaseCatalogue();
     await sourceContracts.publish(contract);
     const provider = await admitProviderManifest(
-        manifestDocument([implementation("catalog.items", "1.0.0", contract.digest)]),
+        manifestDocument([implementation("ulvia/catalog.items", "1.0.0", contract.digest)]),
         sourceContracts,
     );
-    const contractEntry = entry("contract", "catalog.items", "1.0.0", contract.digest, "Catalog items");
+    const contractEntry = entry("contract", "ulvia/catalog.items", "1.0.0", contract.digest, "Catalog items");
     const providerEntry = entry(
         "provider-manifest",
-        "ulvia.example",
+        "ulvia/ulvia.example",
         "1.0.0",
         provider.digest,
         "Ulvia Example Provider",
@@ -144,7 +144,7 @@ function entry(
     digest: string,
     name: string,
 ): RepositoryArtifactEntry {
-    return { repositoryId: "local", kind, publisherId: "ulvia.official", id, version, digest, name };
+    return { repositoryId: "local", kind, publisherId: "ulvia", id, version, digest, name };
 }
 
 function reference(entryValue: RepositoryArtifactEntry): RepositoryArtifactReference {

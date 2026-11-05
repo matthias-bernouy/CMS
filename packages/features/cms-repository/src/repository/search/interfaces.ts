@@ -3,6 +3,7 @@ import type { VectorStore } from "@bernouy/text-search";
 type RepositoryResourceKind = "collection" | "bloc" | "contract" | "provider-manifest";
 export interface RepositorySearchQuery {
     readonly query: string;
+    readonly channel?: "stable" | "beta" | "all";
     readonly kinds?: readonly RepositoryResourceKind[];
     readonly publisherId?: string;
     readonly contractId?: string;

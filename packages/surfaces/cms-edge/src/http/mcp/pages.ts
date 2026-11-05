@@ -42,7 +42,7 @@ export async function authorizationPage(request: Request, host: CmsMcpHost): Pro
     if (actor.kind === "anonymous") {
         const login = await host.invoker.invoke({
             siteId: "default",
-            contractId: "ulvia.cms.access",
+            contractId: "ulvia/cms.access",
             capabilityId: "login-password",
             input: { email: input.get("email"), password: input.get("password") },
             actor,

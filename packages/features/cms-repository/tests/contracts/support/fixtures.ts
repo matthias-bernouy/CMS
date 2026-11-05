@@ -58,10 +58,10 @@ export function contractDocument(overrides: Record<string, unknown> = {}): Recor
         kind: "contract",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
-        contractId: "communication.email",
+        contractId: "ulvia/communication.email",
         name: "Email",
         version: "0.1.0",
-        publisherId: "ulvia.official",
+        publisherId: "ulvia",
         capabilities: [capabilityDocument()],
         ...overrides,
     };

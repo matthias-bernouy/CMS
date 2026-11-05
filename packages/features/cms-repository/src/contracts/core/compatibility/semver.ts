@@ -1,4 +1,10 @@
 export type VersionBump = "major" | "minor" | "patch";
+export type ReleaseChannel = "stable" | "beta";
+
+/** Beta discovery includes every explicitly versioned prerelease, including alpha and rc. */
+export function releaseChannel(version: string): ReleaseChannel {
+    return isSemVerPrerelease(version) ? "beta" : "stable";
+}
 
 interface ParsedSemVer {
     major: string;

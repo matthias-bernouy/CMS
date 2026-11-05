@@ -51,7 +51,7 @@ test("message languages honor weighted regional preferences and exclusions with 
 
 test("unknown reasons, missing parameters and diagnostics use a bounded safe fallback", () => {
     const render = (reason: Parameters<typeof errorMessage>[4]) =>
-        errorMessage("ulvia.cms.content", "pages.create", "INVALID_PAGE", "fr", reason);
+        errorMessage("ulvia/cms.content", "pages.create", "INVALID_PAGE", "fr", reason);
     expect(render({ code: "unknown-secret", parameters: { diagnostic: "password=secret" } })).toBe(
         "La page contient des informations invalides.",
     );

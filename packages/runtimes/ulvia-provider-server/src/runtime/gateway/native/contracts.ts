@@ -12,7 +12,7 @@ export async function prepareNativeContracts(report: ProviderRuntimeReport, rele
     const contracts = new Map<string, ResolvedContract>();
     const capabilities = new Set<string>();
     for (const pin of report.implementations) {
-        if (pin.status !== "ready" || pin.contractId === "ulvia.provider.connections") {
+        if (pin.status !== "ready" || pin.contractId === "ulvia/provider.connections") {
             continue;
         }
         const record = await releases.get(pin.contractId, pin.version);

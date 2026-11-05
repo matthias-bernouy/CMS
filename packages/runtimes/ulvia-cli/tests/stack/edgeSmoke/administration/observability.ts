@@ -6,7 +6,7 @@ export async function inspectObservability(page: Page, origin: string): Promise<
     await page.getByRole("heading", { name: /^(Observability|Observabilité)$/u, exact: true }).waitFor();
     const entries = page.locator('a[href^="/admin/observability/detail?"]');
     await entries.first().waitFor({ timeout: 30_000 });
-    const summaries = await page.request.fetch(`${origin}/.cms/query/ulvia.cms.observability/logs.query`, {
+    const summaries = await page.request.fetch(`${origin}/.cms/query/ulvia/cms.observability/logs.query`, {
         method: "QUERY",
         data: { service: "cms-edge", limit: 10 },
     });
@@ -24,7 +24,7 @@ export async function inspectObservability(page: Page, origin: string): Promise<
         .locator("h3")
         .filter({ hasText: /^(Attributes|Attributs)$/u })
         .waitFor();
-    const forbidden = await page.request.post(`${origin}/.cms/mutation/ulvia.cms.observability/logs.append`, {
+    const forbidden = await page.request.post(`${origin}/.cms/mutation/ulvia/cms.observability/logs.append`, {
         data: {
             entries: [
                 {

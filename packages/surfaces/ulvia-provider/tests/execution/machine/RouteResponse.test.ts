@@ -36,7 +36,7 @@ test("a route-compression rejection is caught and journaled by the capability re
     const capability = source.capabilities[0]!;
     const admission = await admitContractRelease({
         ...source,
-        contractId: "ulvia.cms.installations",
+        contractId: "ulvia/cms.installations",
         capabilities: [
             {
                 ...capability,
@@ -64,7 +64,7 @@ test("a route-compression rejection is caught and journaled by the capability re
         {
             invoke: async () => ({ route: "{}" }),
         },
-        { siteId: "default", providerId: "ulvia.official" },
+        { siteId: "default", providerId: "ulvia/primary-provider" },
         {
             ...NOOP_LOGGER,
             error: (event) => {
@@ -75,7 +75,7 @@ test("a route-compression rejection is caught and journaled by the capability re
     const requestId = crypto.randomUUID();
     const request = new Request("https://provider.test/gateway/route", {
         method: "QUERY",
-        body: JSON.stringify({ contractId: "catalog" }),
+        body: JSON.stringify({ contractId: "ulvia/catalog" }),
         headers: {
             "content-type": "application/json",
             "accept-encoding": "gzip",
@@ -93,7 +93,7 @@ test("a route-compression rejection is caught and journaled by the capability re
                 version: 1,
                 requestId,
                 instanceId: "instance:a",
-                contractId: "ulvia.cms.installations",
+                contractId: "ulvia/cms.installations",
                 contractVersion: "1.0.0",
                 capabilityId: "gateway.route.get",
                 issuedAt: now,

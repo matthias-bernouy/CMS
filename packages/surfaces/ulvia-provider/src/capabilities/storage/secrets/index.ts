@@ -5,14 +5,14 @@ import { registerSecretNamespaceCapabilities } from "./namespaces";
 
 export function registerSecretCapabilities(dispatcher: ProviderCapabilityRegistry, secrets: CmsSecrets): void {
     registerSecretNamespaceCapabilities(dispatcher, secrets);
-    dispatcher.register("ulvia.cms.secrets", "secrets.create", async (input) => {
+    dispatcher.register("ulvia/cms.secrets", "secrets.create", async (input) => {
         const namespace = namespaceInput(input);
         return secretCall(
             () => secrets.create(namespace.id, namespace.key, text(input.name), text(input.value)),
             "ALREADY_EXISTS",
         );
     });
-    dispatcher.register("ulvia.cms.secrets", "secrets.rotate", async (input) => {
+    dispatcher.register("ulvia/cms.secrets", "secrets.rotate", async (input) => {
         const namespace = namespaceInput(input);
         return secretCall(() =>
             secrets.rotate(
@@ -24,7 +24,7 @@ export function registerSecretCapabilities(dispatcher: ProviderCapabilityRegistr
             ),
         );
     });
-    dispatcher.register("ulvia.cms.secrets", "secrets.delete", async (input) => {
+    dispatcher.register("ulvia/cms.secrets", "secrets.delete", async (input) => {
         const namespace = namespaceInput(input);
         return secretCall(async () => ({
             deleted: await secrets.delete(
@@ -35,15 +35,15 @@ export function registerSecretCapabilities(dispatcher: ProviderCapabilityRegistr
             ),
         }));
     });
-    dispatcher.register("ulvia.cms.secrets", "secrets.get-metadata", async (input) => {
+    dispatcher.register("ulvia/cms.secrets", "secrets.get-metadata", async (input) => {
         const namespace = namespaceInput(input);
         return secretCall(() => secrets.get(namespace.id, namespace.key, text(input.secretId)));
     });
-    dispatcher.register("ulvia.cms.secrets", "secrets.get-metadata-by-name", async (input) => {
+    dispatcher.register("ulvia/cms.secrets", "secrets.get-metadata-by-name", async (input) => {
         const namespace = namespaceInput(input);
         return secretCall(() => secrets.getByName(namespace.id, namespace.key, text(input.name)));
     });
-    dispatcher.register("ulvia.cms.secrets", "secrets.list", async (input) => {
+    dispatcher.register("ulvia/cms.secrets", "secrets.list", async (input) => {
         const namespace = namespaceInput(input);
         return secretCall(async () => ({
             items: await secrets.list(
@@ -53,7 +53,7 @@ export function registerSecretCapabilities(dispatcher: ProviderCapabilityRegistr
             ),
         }));
     });
-    dispatcher.register("ulvia.cms.secrets", "secrets.resolve", async (input) => {
+    dispatcher.register("ulvia/cms.secrets", "secrets.resolve", async (input) => {
         const namespace = namespaceInput(input);
         return secretCall(() => secrets.resolve(namespace.id, namespace.key, text(input.secretId)));
     });

@@ -40,12 +40,12 @@ describe("cms-svg authored grammar", () => {
 
     test("requires an empty, accessible, immutable reference", () => {
         expect(() =>
-            validate('<svg cms-svg="{{ cms.asset.atlas.icons/check.svg }}" aria-hidden="true"></svg>'),
+            validate('<svg cms-svg="{{ cms.asset.atlas.official/atlas.icons/check.svg }}" aria-hidden="true"></svg>'),
         ).not.toThrow();
         expect(() => validate('<svg aria-hidden="true"></svg>')).toThrow("requires cms-svg");
         expect(() =>
             validate(
-                '<svg cms-svg="{{ cms.asset.atlas.icons/check.svg }}" aria-hidden="true"><path d="M0 0"></path></svg>',
+                '<svg cms-svg="{{ cms.asset.atlas.official/atlas.icons/check.svg }}" aria-hidden="true"><path d="M0 0"></path></svg>',
             ),
         ).toThrow("must be empty");
         expect(() => validate('<svg cms-svg="https://example.com/icon.svg" aria-hidden="true"></svg>')).toThrow(
@@ -54,10 +54,10 @@ describe("cms-svg authored grammar", () => {
         expect(() => validate('<svg cms-svg="/.cms/call/%2e%2e/icon" aria-hidden="true"></svg>')).toThrow(
             "ambiguous path segments",
         );
-        expect(() => validate('<svg cms-svg="/.cms/call/media/%69con" aria-hidden="true"></svg>')).toThrow(
+        expect(() => validate('<svg cms-svg="/.cms/call/ulvia/media/%69con" aria-hidden="true"></svg>')).toThrow(
             "ambiguous path segments",
         );
-        expect(() => validate('<svg cms-svg="/.cms/call/media/%5cicon" aria-hidden="true"></svg>')).toThrow(
+        expect(() => validate('<svg cms-svg="/.cms/call/ulvia/media/%5cicon" aria-hidden="true"></svg>')).toThrow(
             "ambiguous path segments",
         );
         expect(() => validate('<svg cms-svg="/prefix/.cms/call/" aria-hidden="true"></svg>')).toThrow(
@@ -67,7 +67,9 @@ describe("cms-svg authored grammar", () => {
             validate('<svg cms-svg="/prefix/.cms/call/media/icon/check" aria-hidden="true"></svg>'),
         ).not.toThrow();
         expect(() =>
-            validate('<svg cms-svg="{{ cms.asset.atlas.icons/check.svg }}" fill="red" aria-hidden="true"></svg>'),
+            validate(
+                '<svg cms-svg="{{ cms.asset.atlas.official/atlas.icons/check.svg }}" fill="red" aria-hidden="true"></svg>',
+            ),
         ).toThrow('attribute "fill" is not allowed');
     });
 });

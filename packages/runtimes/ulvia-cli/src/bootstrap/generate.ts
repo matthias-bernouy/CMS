@@ -1,3 +1,4 @@
+import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
@@ -43,17 +44,17 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
         contracts[admission.release.contractId] = admission.canonicalJson;
     }
     const provider = await admitProviderManifestJson(
-        await readFile(join(root, "providers", "ulvia.official", "definition.json"), "utf8"),
+        await readFile(join(root, "providers", "primary-provider", "definition.json"), "utf8"),
         catalogue,
     );
     const collections = [];
     for (const id of await directories(join(root, "collections"))) {
         const collection = await prepareCollectionRelease(join(root, "collections", id), catalogue);
-        if (collection.release.collectionId !== id) {
+        if (resourceName(collection.release.collectionId) !== id) {
             throw new Error(`Official collection folder differs from its identity: ${id}`);
         }
         collections.push({
-            id,
+            id: collection.release.collectionId,
             canonicalJson: collection.canonicalJson,
             assets: await Promise.all(
                 collection.assets.map(async ({ id, bytes }) => ({
@@ -80,24 +81,27 @@ export async function writeOfficialBootstrapArtifacts(
     await rm(root, { recursive: true, force: true });
     const contractPaths: string[] = [];
     for (const [id, bytes] of Object.entries(artifacts.contracts)) {
-        const path = id.startsWith("ulvia.cms.")
-            ? `contracts/cms/${id}/definition.json`
-            : `contracts/${id}/definition.json`;
+        const path = id.startsWith("ulvia/cms.")
+            ? `contracts/cms/${resourceName(id)}/definition.json`
+            : `contracts/${resourceName(id)}/definition.json`;
         contractPaths.push(path);
         await writeArtifact(root, path, bytes);
     }
     for (const asset of artifacts.contractAssets) {
-        const contractRoot = asset.contractId.startsWith("ulvia.cms.")
-            ? `contracts/cms/${asset.contractId}`
-            : `contracts/${asset.contractId}`;
+        const contractRoot = asset.contractId.startsWith("ulvia/cms.")
+            ? `contracts/cms/${resourceName(asset.contractId)}`
+            : `contracts/${resourceName(asset.contractId)}`;
         await writeBytes(root, `${contractRoot}/${asset.id}`, asset.bytes);
     }
-    const provider = "providers/ulvia.official/definition.json";
+    const provider = "providers/primary-provider/definition.json";
     await writeArtifact(root, provider, artifacts.provider);
     const collections = [];
     for (const collection of artifacts.collections) {
-        const release = `collections/${collection.id}/release.json`;
-        const assets = collection.assets.map(({ id }) => ({ id, path: `collections/${collection.id}/assets/${id}` }));
+        const release = `collections/${resourceName(collection.id)}/release.json`;
+        const assets = collection.assets.map(({ id }) => ({
+            id,
+            path: `collections/${resourceName(collection.id)}/assets/${id}`,
+        }));
         await writeArtifact(root, release, collection.canonicalJson);
         for (const [index, asset] of collection.assets.entries()) {
             await writeBytes(root, assets[index]!.path, asset.bytes);

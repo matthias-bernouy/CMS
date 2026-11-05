@@ -1,19 +1,19 @@
 import { describe, expect, test } from "bun:test";
-import { EditablePageDocument } from "../../../packages/official-repository/collections/ulvia-official/blocs/admin/pages/ulvia-official-page-editor/runtime/document";
-import { EditorFrame } from "../../../packages/official-repository/collections/ulvia-official/blocs/admin/pages/ulvia-official-page-editor/runtime/frame";
+import { EditablePageDocument } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/document";
+import { EditorFrame } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/frame";
 import { heading } from "./fixtures";
 
 describe("EditorFrame", () => {
     test("maps authored components onto the retained public Page roots", () => {
         const source = new EditablePageDocument(
-            '<section cms-bloc="fixture-section"><h2 cms-bloc="ulvia-official-heading" slot="heading">Authored</h2></section>',
+            '<section cms-bloc="fixture-section"><h2 cms-bloc="ulvia--mossa--heading" slot="heading">Authored</h2></section>',
         );
         const iframe = document.createElement("iframe");
         iframe.srcdoc = "";
         const highlight = document.createElement("span");
         document.body.append(iframe, highlight);
         iframe.contentDocument!.body.innerHTML =
-            '<div cms-bloc="fixture-section"><h2 cms-bloc="ulvia-official-heading" part="heading">Expanded</h2></div>';
+            '<div cms-bloc="fixture-section"><h2 cms-bloc="ulvia--mossa--heading" part="heading">Expanded</h2></div>';
         const section = {
             ...heading,
             id: "fixture-section",
@@ -42,7 +42,7 @@ describe("EditorFrame", () => {
         const highlight = document.createElement("span");
         document.body.append(iframe, highlight);
         iframe.contentDocument!.body.innerHTML =
-            '<h2 cms-bloc="ulvia-official-heading">Generated</h2><article cms-bloc="fixture-card">Expanded card</article>';
+            '<h2 cms-bloc="ulvia--mossa--heading">Generated</h2><article cms-bloc="fixture-card">Expanded card</article>';
         const card = {
             ...heading,
             id: "fixture-card",
@@ -63,12 +63,12 @@ describe("EditorFrame", () => {
     });
 
     test("selects a component clicked inside the iframe realm", () => {
-        const source = new EditablePageDocument('<h2 cms-bloc="ulvia-official-heading">Authored</h2>');
+        const source = new EditablePageDocument('<h2 cms-bloc="ulvia--mossa--heading">Authored</h2>');
         const iframe = document.createElement("iframe");
         iframe.srcdoc = "";
         const highlight = document.createElement("span");
         document.body.append(iframe, highlight);
-        iframe.contentDocument!.body.innerHTML = '<h2 cms-bloc="ulvia-official-heading">Rendered</h2>';
+        iframe.contentDocument!.body.innerHTML = '<h2 cms-bloc="ulvia--mossa--heading">Rendered</h2>';
         let selected: HTMLElement | null = null;
         const frame = new EditorFrame(
             iframe,

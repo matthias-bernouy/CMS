@@ -1,0 +1,25 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--dialog",
+    "label": "bloc.dialog.label",
+    "description": "bloc.dialog.description",
+    "order": 105,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["dialog"]
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["dialog-default"],
+    "defaultExample": "dialog-default"
+}

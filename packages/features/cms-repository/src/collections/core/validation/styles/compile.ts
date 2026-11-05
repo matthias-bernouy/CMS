@@ -3,7 +3,7 @@ import { ident, parse, walk } from "css-tree";
 const FORBIDDEN = /:host\b|::slotted\b|:global\b/u;
 const NESTED_BLOC_SELECTOR = /\[cms-bloc\b/u;
 const COLLECTION_ASSET_URL =
-    /^\{\{\s*cms\.asset\.[a-z][a-z0-9-]*\.[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*\s*\}\}$/u;
+    /^\{\{\s*cms\.asset\.[a-z][a-z0-9.-]{0,95}\/[a-z][a-z0-9-]{0,95}\.[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*\s*\}\}$/u;
 
 /** Validate authored CSS and close it around one Light DOM Bloc boundary. */
 export function compileBlocStyle(id: string, source: string): string {

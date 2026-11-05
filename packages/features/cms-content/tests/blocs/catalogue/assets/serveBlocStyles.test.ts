@@ -6,27 +6,27 @@ const revision = `sha256:${"a".repeat(64)}`;
 const content = {
     getRenderableBlocs: async () => [
         {
-            id: "fixture-card",
+            id: "example--fixture--card",
             root: { accepts: ["div"] as const },
-            styleCSS: '@scope ([cms-bloc="fixture-card"]) { :scope { color: red; } }',
-            styleCollectionId: "fixture",
+            styleCSS: '@scope ([cms-bloc="example--fixture--card"]) { :scope { color: red; } }',
+            styleCollectionId: "example/fixture",
             hasBehavior: false,
         },
         {
-            id: "admin-panel",
+            id: "other--admin--panel",
             root: { accepts: ["div"] as const },
-            styleCSS: '@scope ([cms-bloc="admin-panel"]) { :scope { color: blue; } }',
-            styleCollectionId: "admin",
+            styleCSS: '@scope ([cms-bloc="other--admin--panel"]) { :scope { color: blue; } }',
+            styleCollectionId: "other/admin",
             hasBehavior: false,
         },
     ],
 };
 
 test("serves only requested immutable CSS fragments from their owning collection", async () => {
-    const css = '@scope ([cms-bloc="fixture-card"]) { :scope { color: red; } }';
+    const css = '@scope ([cms-bloc="example--fixture--card"]) { :scope { color: red; } }';
     const version = compress(css, "text/css").hash;
     const request = new Request(
-        `http://localhost/_content/blocstyles?collection=fixture&tags=fixture-card&r=${revision}&v=${version}`,
+        `http://localhost/_content/blocstyles?collection=example%2Ffixture&tags=example--fixture--card&r=${revision}&v=${version}`,
     );
     const response = await serveBlocStyles(request, {
         content,
@@ -35,7 +35,7 @@ test("serves only requested immutable CSS fragments from their owning collection
     });
 
     expect(response.status).toBe(200);
-    expect(await response.text()).toContain("fixture-card");
+    expect(await response.text()).toContain("example--fixture--card");
 });
 
 test("rejects invalid or cross-collection CSS bundle requests", async () => {
@@ -49,7 +49,7 @@ test("rejects invalid or cross-collection CSS bundle requests", async () => {
         (
             await serveBlocStyles(
                 new Request(
-                    `http://localhost/_content/blocstyles?collection=fixture&tags=admin-panel&r=${revision}&v=0000000000`,
+                    `http://localhost/_content/blocstyles?collection=example%2Ffixture&tags=other--admin--panel&r=${revision}&v=0000000000`,
                 ),
                 options,
             )
@@ -59,7 +59,7 @@ test("rejects invalid or cross-collection CSS bundle requests", async () => {
         (
             await serveBlocStyles(
                 new Request(
-                    `http://localhost/_content/blocstyles?collection=fixture&tags=fixture-card,fixture-card&r=${revision}&v=0000000000`,
+                    `http://localhost/_content/blocstyles?collection=example%2Ffixture&tags=example--fixture--card,example--fixture--card&r=${revision}&v=0000000000`,
                 ),
                 options,
             )

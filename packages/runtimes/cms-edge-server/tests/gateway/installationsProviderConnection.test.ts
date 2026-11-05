@@ -37,21 +37,21 @@ test("the public Provider report rejects unavailable or substituted installation
 
 async function providerReport() {
     const manifest = await Bun.file(
-        new URL("../../../../official-repository/providers/ulvia.official/definition.json", import.meta.url),
+        new URL("../../../../official-repository/providers/primary-provider/definition.json", import.meta.url),
     ).json();
     const current = manifest.implementations.find(
-        (item: { contractId: string }) => item.contractId === "ulvia.cms.installations",
+        (item: { contractId: string }) => item.contractId === "ulvia/cms.installations",
     );
     return {
         protocol: "ulvia-provider/v1",
-        providerId: "ulvia.example",
+        providerId: "ulvia/ulvia.example",
         instanceId: "instance:account-a",
         account: { id: "account-a", label: "Account A" },
         buildVersion: "1.0.0",
         manifest: { version: "1.0.0", digest: `sha256:${"a".repeat(64)}` },
         implementations: [
             {
-                contractId: "ulvia.cms.installations",
+                contractId: "ulvia/cms.installations",
                 version: current.version,
                 digest: current.digest,
                 status: "ready",
@@ -63,7 +63,7 @@ async function providerReport() {
 test("the control contract refuses a substituted digest and an unselected version", async () => {
     const report = await providerReport();
     report.implementations[0] = {
-        contractId: "ulvia.cms.installations",
+        contractId: "ulvia/cms.installations",
         version: "1.0.0",
         digest: `sha256:${"b".repeat(64)}`,
         status: "ready",

@@ -19,7 +19,7 @@ export function registerProviderAdministration(
         }
         return context.subjectId;
     };
-    dispatcher.register("ulvia.cms.installations", "list-available-providers", async (_input, context) => {
+    dispatcher.register("ulvia/cms.installations", "list-available-providers", async (_input, context) => {
         actor(context);
         const entries = await service().catalogue();
         return {
@@ -33,7 +33,7 @@ export function registerProviderAdministration(
             })),
         };
     });
-    dispatcher.register("ulvia.cms.installations", "import-provider-manifest", (input, context) =>
+    dispatcher.register("ulvia/cms.installations", "import-provider-manifest", (input, context) =>
         administrationCommand(async () => {
             actor(context);
             const value = (await service().importReference(input as never)) as {
@@ -44,19 +44,19 @@ export function registerProviderAdministration(
             return { id: value.id, version: value.version, digest: value.digest };
         }),
     );
-    dispatcher.register("ulvia.cms.installations", "preview-provider-connection", (input, context) =>
+    dispatcher.register("ulvia/cms.installations", "preview-provider-connection", (input, context) =>
         administrationCommand(() => service().preview(input as never, actor(context))),
     );
-    dispatcher.register("ulvia.cms.installations", "approve-provider-connection", (input, context) =>
+    dispatcher.register("ulvia/cms.installations", "approve-provider-connection", (input, context) =>
         administrationCommand(() => service().approve(requiredText(input.ticket), actor(context))),
     );
-    dispatcher.register("ulvia.cms.installations", "get-provider-access", (input, context) =>
+    dispatcher.register("ulvia/cms.installations", "get-provider-access", (input, context) =>
         administrationCommand(() => {
             actor(context);
             return service().access(requiredText(input.installationId));
         }),
     );
-    dispatcher.register("ulvia.cms.installations", "pair-provider-connection", (input, context) =>
+    dispatcher.register("ulvia/cms.installations", "pair-provider-connection", (input, context) =>
         administrationCommand(() =>
             service().pair(
                 {

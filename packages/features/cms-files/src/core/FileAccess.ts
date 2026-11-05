@@ -139,7 +139,7 @@ export class FileAccess {
     }
 
     private fileUrl(file: FileRecord): string {
-        return `${this.publicBaseUrl}/.cms/call/ulvia.cms.files/files/${encodeURIComponent(file.id)}/${encodeURIComponent(file.generation)}`;
+        return `${this.publicBaseUrl}/.cms/call/ulvia/cms.files/files/${encodeURIComponent(file.id)}/${encodeURIComponent(file.generation)}`;
     }
 
     private filePath(file: FileRecord): string {

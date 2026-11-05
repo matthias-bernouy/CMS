@@ -17,11 +17,15 @@ import { collectionDocument } from "./fixtures";
 
 describe("collection release parsing", () => {
     test("reserves one HTML and CSS safe namespace for every collection", () => {
-        expect(isCollectionNamespace("atlas")).toBe(true);
-        expect(isCollectionNamespace("atlas-widgets")).toBe(true);
-        expect(collectionThemeSourceId("atlas-widgets")).toBe("contribution-atlas-widgets");
-        expect(collectionThemeTokenId("atlas-widgets", "accent")).toBe("atlas-widgets-accent");
-        expect(() => collectionThemeTokenId("atlas-widgets", "accent--strong")).toThrow("Invalid local");
+        expect(isCollectionNamespace("atlas.official/atlas")).toBe(true);
+        expect(isCollectionNamespace("atlas.official/atlas-widgets")).toBe(true);
+        expect(collectionThemeSourceId("atlas.official/atlas-widgets")).toBe(
+            "contribution-atlas-dofficial--atlas-widgets",
+        );
+        expect(collectionThemeTokenId("atlas.official/atlas-widgets", "accent")).toBe(
+            "atlas-dofficial--atlas-widgets--accent",
+        );
+        expect(() => collectionThemeTokenId("atlas.official/atlas-widgets", "accent--strong")).toThrow("Invalid local");
 
         for (const collectionId of [
             "atlas.widgets",
@@ -39,7 +43,7 @@ describe("collection release parsing", () => {
             );
         }
         expect(() =>
-            parseCollectionReleaseJson(JSON.stringify({ ...collectionDocument(), collectionId: "cms-tools" })),
+            parseCollectionReleaseJson(JSON.stringify({ ...collectionDocument(), collectionId: "ulvia/cms-tools" })),
         ).toThrow(/namespace/i);
     });
 
@@ -78,7 +82,10 @@ describe("collection release parsing", () => {
         source.locale = "en-us";
         const parsed = parseCollectionRelease(collectionFixture(source));
         expect(parsed.locale).toBe("en-US");
-        expect(parsed.blocs.map((bloc) => bloc.id)).toEqual(["atlas-page", "atlas-panel"]);
+        expect(parsed.blocs.map((bloc) => bloc.id)).toEqual([
+            "atlas-dofficial--atlas--page",
+            "atlas-dofficial--atlas--panel",
+        ]);
         expect(Object.isFrozen(source.blocs)).toBe(false);
         expect(Object.isFrozen(parsed.blocs)).toBe(true);
         (source.blocs as Record<string, unknown>[])[0]!.markup = "Changed";
@@ -88,7 +95,7 @@ describe("collection release parsing", () => {
 
     test("rejects unsupported fields and malformed identity or version metadata", () => {
         for (const patch of [
-            { providerId: "provider" },
+            { providerId: "ulvia/provider" },
             { imports: [] },
             { pages: null },
             { locale: "en_US" },
@@ -188,7 +195,9 @@ describe("collection release parsing", () => {
             },
         };
         expect(
-            parseCollectionRelease(collectionFixture(source)).blocs.find(({ id }) => id === "atlas-panel")?.browser,
+            parseCollectionRelease(collectionFixture(source)).blocs.find(
+                ({ id }) => id === "atlas-dofficial--atlas--panel",
+            )?.browser,
         ).toEqual(component.browser);
 
         delete component.browser;
@@ -221,7 +230,7 @@ describe("collection release parsing", () => {
         expect(plainReport.level).toBe("none");
         expect(riskyReport).toMatchObject({
             level: "high",
-            javaScriptBlocs: ["atlas-panel"],
+            javaScriptBlocs: ["atlas-dofficial--atlas--panel"],
             externalFrameOrigins: ["https://maps.example.test"],
             scriptsWithSameOrigin: true,
         });
@@ -229,7 +238,11 @@ describe("collection release parsing", () => {
         component.markup = '<section><slot name="body"></slot></section>';
         delete component.browser;
         const scriptOnly = collectionBrowserRisk(parseCollectionRelease(collectionFixture(source)));
-        expect(scriptOnly).toMatchObject({ level: "high", javaScriptBlocs: ["atlas-panel"], frameBlocs: [] });
+        expect(scriptOnly).toMatchObject({
+            level: "high",
+            javaScriptBlocs: ["atlas-dofficial--atlas--panel"],
+            frameBlocs: [],
+        });
     });
 
     test("rechecks compiled Bloc behavior at collection admission", () => {
@@ -345,7 +358,7 @@ describe("collection release parsing", () => {
         expect(resolveCollectionTranslation(parsed, parsed.theme!.label)).toBe("Atlas theme");
         expect(parsed.theme?.categories[0]?.entries[0]?.id).toBe("accent");
         expect(collectionThemeTokenId(parsed.collectionId, parsed.theme!.categories[0]!.entries[0]!.id)).toBe(
-            "atlas-accent",
+            "atlas-dofficial--atlas--accent",
         );
     });
 
@@ -370,12 +383,17 @@ describe("collection release parsing", () => {
         });
 
         expect(() =>
-            parseCollectionRelease(collectionFixture(themed([token("first", "color", "var(--atlas-missing)")]))),
+            parseCollectionRelease(
+                collectionFixture(themed([token("first", "color", "var(--atlas-dofficial--atlas--missing)")])),
+            ),
         ).toThrow("unknown or unimported");
         expect(() =>
             parseCollectionRelease(
                 collectionFixture(
-                    themed([token("first", "color", "var(--atlas-second)"), token("second", "length", "1rem")]),
+                    themed([
+                        token("first", "color", "var(--atlas-dofficial--atlas--second)"),
+                        token("second", "length", "1rem"),
+                    ]),
                 ),
             ),
         ).toThrow("cannot use length");
@@ -383,8 +401,8 @@ describe("collection release parsing", () => {
             parseCollectionRelease(
                 collectionFixture(
                     themed([
-                        token("first", "color", "var(--atlas-second)"),
-                        token("second", "color", "var(--atlas-first)"),
+                        token("first", "color", "var(--atlas-dofficial--atlas--second)"),
+                        token("second", "color", "var(--atlas-dofficial--atlas--first)"),
                     ]),
                 ),
             ),
@@ -425,7 +443,7 @@ describe("collection release parsing", () => {
                             id: "body",
                             label: "theme.token.body.label",
                             type: "font-family",
-                            defaults: { light: '"atlas-interface", sans-serif' },
+                            defaults: { light: '"atlas-dofficial--atlas--interface", sans-serif' },
                         },
                     ],
                 },
@@ -476,19 +494,22 @@ describe("collection release parsing", () => {
         const panel = (source.blocs as Record<string, unknown>[])[0]!;
 
         panel.style = ":scope { --random-color: red; }";
-        expect(() => parseCollectionRelease(collectionFixture(source))).toThrow(/must belong to Bloc atlas-panel/);
+        expect(() => parseCollectionRelease(collectionFixture(source))).toThrow(
+            /must belong to Bloc atlas-dofficial--atlas--panel/,
+        );
 
-        panel.style = ":scope { color: var(--atlas-missing, red); }";
+        panel.style = ":scope { color: var(--atlas-dofficial--atlas--missing, red); }";
         expect(() => parseCollectionRelease(collectionFixture(source))).toThrow(
             /must belong to this Bloc, a Bloc declared in uses, or the theme/,
         );
 
-        panel.style = ":scope { color: var(--atlas-panel-color); }";
+        panel.style = ":scope { color: var(--atlas-dofficial--atlas--panel-color); }";
         expect(() => parseCollectionRelease(collectionFixture(source))).toThrow(
             /neither declared nor provided with a fallback/,
         );
 
-        panel.style = ":scope { --atlas-panel-color: var(--atlas-accent); color: var(--atlas-panel-color); }";
+        panel.style =
+            ":scope { --atlas-dofficial--atlas--panel-color: var(--atlas-dofficial--atlas--accent); color: var(--atlas-dofficial--atlas--panel-color); }";
         expect(parseCollectionRelease(collectionFixture(source)).blocs).toHaveLength(2);
     });
 
@@ -500,7 +521,7 @@ describe("collection release parsing", () => {
             categories: ["bloc.panel.label"],
 
             kind: "component",
-            id: "atlas-action",
+            id: "atlas-dofficial--atlas--action",
             label: "bloc.panel.label",
             markup: '<section><slot name="body"></slot></section>',
             root: { accepts: ["div"] },
@@ -509,10 +530,11 @@ describe("collection release parsing", () => {
             requires: [],
         };
         (source.blocs as Record<string, unknown>[]).push(child);
-        panel.style = ":scope { --atlas-action-color: currentColor; color: var(--atlas-action-color); }";
+        panel.style =
+            ":scope { --atlas-dofficial--atlas--action-color: currentColor; color: var(--atlas-dofficial--atlas--action-color); }";
         expect(() => parseCollectionRelease(collectionFixture(source))).toThrow(/declared in uses/);
 
-        panel.uses = ["atlas-action"];
+        panel.uses = ["atlas-dofficial--atlas--action"];
         expect(parseCollectionRelease(collectionFixture(source)).blocs).toHaveLength(3);
     });
 
@@ -580,18 +602,18 @@ describe("collection release parsing", () => {
             },
         ];
         source.exports = {
-            blocs: ["atlas-panel"],
+            blocs: ["atlas-dofficial--atlas--panel"],
             themeTokens: ["accent"],
 
             states: ["filters"],
         };
         source.dependencies = [
             {
-                collectionId: "ulvia-official",
-                publisherId: "ulvia.official",
+                collectionId: "ulvia/mossa",
+                publisherId: "ulvia",
                 versionRange: "^1.0.0",
                 imports: {
-                    blocs: [{ id: "ulvia-official-button" }],
+                    blocs: [{ id: "ulvia--mossa--button" }],
                     themeTokens: [{ id: "primary" }],
 
                     states: [{ id: "selection" }],
@@ -600,15 +622,18 @@ describe("collection release parsing", () => {
         ];
         (((source.blocs as Record<string, unknown>[])[0]!.slots as Record<string, any>).body.accepts as any[]).push({
             kind: "component",
-            tag: "ulvia-official-button",
+            tag: "ulvia--mossa--button",
         });
-        (source.blocs as Record<string, unknown>[])[1]!.uses = ["atlas-panel", "ulvia-official-button"];
+        (source.blocs as Record<string, unknown>[])[1]!.uses = [
+            "atlas-dofficial--atlas--panel",
+            "ulvia--mossa--button",
+        ];
         (source.blocs as Record<string, unknown>[])[1]!.markup =
-            '<div cms-bloc=\"atlas-panel\"><slot name="main" slot="body"></slot><div cms-bloc=\"ulvia-official-button\" slot="body"></div></div>';
+            '<div cms-bloc="atlas-dofficial--atlas--panel"><slot name="main" slot="body"></slot><div cms-bloc="ulvia--mossa--button" slot="body"></div></div>';
 
         const parsed = parseCollectionRelease(collectionFixture(source));
         expect(parsed.exports).toEqual({
-            blocs: ["atlas-panel"],
+            blocs: ["atlas-dofficial--atlas--panel"],
             themeTokens: ["accent"],
 
             states: ["filters"],
@@ -626,11 +651,11 @@ describe("collection release parsing", () => {
             },
         ]);
         expect(parsed.dependencies?.[0]).toEqual({
-            collectionId: "ulvia-official",
-            publisherId: "ulvia.official",
+            collectionId: "ulvia/mossa",
+            publisherId: "ulvia",
             versionRange: "^1.0.0",
             imports: {
-                blocs: [{ id: "ulvia-official-button" }],
+                blocs: [{ id: "ulvia--mossa--button" }],
                 themeTokens: [{ id: "primary" }],
 
                 states: [{ id: "selection" }],
@@ -639,7 +664,10 @@ describe("collection release parsing", () => {
 
         expect(() =>
             parseCollectionRelease(
-                collectionFixture({ ...source, exports: { blocs: ["atlas-missing"], themeTokens: [] } }),
+                collectionFixture({
+                    ...source,
+                    exports: { blocs: ["atlas-dofficial--atlas--missing"], themeTokens: [] },
+                }),
             ),
         ).toThrow("unknown exported bloc");
         expect(() =>
@@ -660,7 +688,7 @@ describe("collection release parsing", () => {
                     dependencies: (source.dependencies as Record<string, unknown>[]).map((dependency) => ({
                         ...dependency,
                         imports: {
-                            blocs: ["ulvia-official-button"],
+                            blocs: ["ulvia--mossa--button"],
                             themeTokens: [{ id: "primary" }],
                         },
                     })),
@@ -674,7 +702,7 @@ describe("collection release parsing", () => {
                     dependencies: (source.dependencies as Record<string, unknown>[]).map((dependency) => ({
                         ...dependency,
                         imports: {
-                            blocs: [{ id: "ulvia-official-button" }],
+                            blocs: [{ id: "ulvia--mossa--button" }],
                             themeTokens: [{ id: "primary" }],
                         },
                     })),
@@ -700,22 +728,12 @@ describe("collection release parsing", () => {
         }
     });
 
-    test("rejects collection-owned state keys above the browser binding limit", () => {
-        expect(() =>
-            parseCollectionRelease(
-                collectionFixture({
-                    ...collectionDocument(),
-                    collectionId: `atlas-${"a".repeat(90)}`,
-                    states: [
-                        {
-                            id: "selection-that-cannot-fit-the-runtime-key-limit",
-                            scope: "page",
-                            schema: { type: "string", maxLength: 64 },
-                        },
-                    ],
-                }),
-            ),
-        ).toThrow("at most 128 characters");
+    test("accepts bounded local states and rejects oversized state identities", () => {
+        const source = collectionDocument();
+        source.states = [{ id: "a".repeat(96), scope: "page", schema: { type: "string", maxLength: 64 } }];
+        expect(() => parseCollectionRelease(source)).not.toThrow();
+        source.states[0]!.id += "a";
+        expect(() => parseCollectionRelease(source)).toThrow();
     });
 
     test("validates collection ownership for declarative state bindings", () => {
@@ -728,29 +746,29 @@ describe("collection release parsing", () => {
             },
         ];
         (source.blocs as Record<string, unknown>[])[1]!.markup =
-            '<div cms-bloc=\"atlas-panel\" cms-query="@page:atlas-products as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></div>';
+            '<div cms-bloc="atlas-dofficial--atlas--panel" cms-query="@page:atlas-dofficial--atlas--products as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></div>';
         expect(parseCollectionRelease(collectionFixture(source)).states?.[0]?.id).toBe("products");
 
         (source.blocs as Record<string, unknown>[])[1]!.markup =
-            '<div cms-bloc=\"atlas-panel\" cms-queries="@page:atlas-products as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></div>';
+            '<div cms-bloc="atlas-dofficial--atlas--panel" cms-queries="@page:atlas-dofficial--atlas--products as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></div>';
         expect(parseCollectionRelease(collectionFixture(source)).states?.[0]?.id).toBe("products");
 
         (source.blocs as Record<string, unknown>[])[1]!.markup =
-            '<div cms-bloc=\"atlas-panel\" cms-queries="@page:atlas-undeclared as products"><slot name="main" slot="body"></slot></div>';
+            '<div cms-bloc="atlas-dofficial--atlas--panel" cms-queries="@page:atlas-dofficial--atlas--undeclared as products"><slot name="main" slot="body"></slot></div>';
         expect(() => parseCollectionRelease(collectionFixture(source))).toThrow(
             "declared locally or explicitly imported",
         );
 
         (source.blocs as Record<string, unknown>[])[1]!.markup =
-            '<div cms-bloc=\"atlas-panel\" cms-query="@page:atlas-undeclared as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></div>';
+            '<div cms-bloc="atlas-dofficial--atlas--panel" cms-query="@page:atlas-dofficial--atlas--undeclared as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></div>';
         expect(() => parseCollectionRelease(collectionFixture(source))).toThrow(
             "declared locally or explicitly imported",
         );
 
         (source.blocs as Record<string, unknown>[])[1]!.markup =
-            '<div cms-bloc=\"atlas-panel\" cms-query="catalog:items.list as products" cms-query-listen="@page:atlas-undeclared"><slot name="main" slot="body"></slot></div>';
+            '<div cms-bloc="atlas-dofficial--atlas--panel" cms-query="ulvia/catalog:items.list as products" cms-query-listen="@page:atlas-dofficial--atlas--undeclared"><slot name="main" slot="body"></slot></div>';
         (source.blocs as Record<string, unknown>[])[1]!.requires = [
-            { contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" },
+            { contractId: "ulvia/catalog", capabilityId: "items.list", versionRange: "^1.0.0" },
         ];
         expect(() => parseCollectionRelease(collectionFixture(source))).toThrow(
             "declared locally or explicitly imported",
@@ -778,16 +796,16 @@ describe("collection release parsing", () => {
             },
         ];
         const consumer = (source.blocs as Record<string, unknown>[])[1]!;
-        consumer.requires = [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }];
-        consumer.markup = `<div cms-bloc=\"atlas-panel\"
-            cms-query="catalog:items.list as items"
-            cms-query-listen="@page:atlas-save/lastSuccess/requestId"
+        consumer.requires = [{ contractId: "ulvia/catalog", capabilityId: "items.list", versionRange: "^1.0.0" }];
+        consumer.markup = `<div cms-bloc="atlas-dofficial--atlas--panel"
+            cms-query="ulvia/catalog:items.list as items"
+            cms-query-listen="@page:atlas-dofficial--atlas--save/lastSuccess/requestId"
         ><slot name="main" slot="body"></slot></div>`;
         expect(() => parseCollectionRelease(collectionFixture(source))).not.toThrow();
 
-        consumer.markup = `<div cms-bloc=\"atlas-panel\"
-            cms-query="catalog:items.list as items"
-            cms-query-listen="@page:atlas-save/lastSuccess/missing"
+        consumer.markup = `<div cms-bloc="atlas-dofficial--atlas--panel"
+            cms-query="ulvia/catalog:items.list as items"
+            cms-query-listen="@page:atlas-dofficial--atlas--save/lastSuccess/missing"
         ><slot name="main" slot="body"></slot></div>`;
         expect(() => parseCollectionRelease(collectionFixture(source))).toThrow("unknown state property");
     });
@@ -803,19 +821,26 @@ describe("collection release parsing", () => {
             producer.uses = [];
             producer.requires =
                 markup.includes("cms-query") || markup.includes("cms-mutation")
-                    ? [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }]
+                    ? [{ contractId: "ulvia/catalog", capabilityId: "items.list", versionRange: "^1.0.0" }]
                     : [];
             return source;
         };
 
         expect(() =>
             parseCollectionRelease(
-                collectionFixture(state({ type: "string", maxLength: 64 }, '<input cms-sync="@page:atlas-shared">')),
+                collectionFixture(
+                    state({ type: "string", maxLength: 64 }, '<input cms-sync="@page:atlas-dofficial--atlas--shared">'),
+                ),
             ),
         ).not.toThrow();
         expect(() =>
             parseCollectionRelease(
-                collectionFixture(state({ type: "boolean" }, '<input type="checkbox" cms-sync="@page:atlas-shared">')),
+                collectionFixture(
+                    state(
+                        { type: "boolean" },
+                        '<input type="checkbox" cms-sync="@page:atlas-dofficial--atlas--shared">',
+                    ),
+                ),
             ),
         ).not.toThrow();
         expect(() =>
@@ -823,7 +848,7 @@ describe("collection release parsing", () => {
                 collectionFixture(
                     state(
                         { type: "object", properties: {}, required: [] },
-                        '<section cms-query="catalog:items.list as items" cms-sync="@page:atlas-shared"></section>',
+                        '<section cms-query="ulvia/catalog:items.list as items" cms-sync="@page:atlas-dofficial--atlas--shared"></section>',
                     ),
                 ),
             ),
@@ -831,7 +856,9 @@ describe("collection release parsing", () => {
 
         expect(() =>
             parseCollectionRelease(
-                collectionFixture(state({ type: "boolean" }, '<input cms-sync="@page:atlas-shared">')),
+                collectionFixture(
+                    state({ type: "boolean" }, '<input cms-sync="@page:atlas-dofficial--atlas--shared">'),
+                ),
             ),
         ).toThrow("requires a nonnullable string state");
         expect(() =>
@@ -839,7 +866,7 @@ describe("collection release parsing", () => {
                 collectionFixture(
                     state(
                         { type: "array", items: { type: "string", maxLength: 64 }, maxItems: 10 },
-                        '<form cms-mutation="catalog:items.list as items" cms-sync="@page:atlas-shared"></form>',
+                        '<form cms-mutation="ulvia/catalog:items.list as items" cms-sync="@page:atlas-dofficial--atlas--shared"></form>',
                     ),
                 ),
             ),
@@ -863,20 +890,20 @@ describe("collection release parsing", () => {
             },
         ];
         const consumer = (source.blocs as Record<string, unknown>[])[1]!;
-        consumer.requires = [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }];
-        consumer.markup = `<div cms-bloc=\"atlas-panel\"
-            cms-query="catalog:items.list as items"
-            cms-query-input='{"page":{"from":"state","key":"@page:atlas-filters","path":["page"],"cast":"integer","fallback":"1"}}'
+        consumer.requires = [{ contractId: "ulvia/catalog", capabilityId: "items.list", versionRange: "^1.0.0" }];
+        consumer.markup = `<div cms-bloc="atlas-dofficial--atlas--panel"
+            cms-query="ulvia/catalog:items.list as items"
+            cms-query-input='{"page":{"from":"state","key":"@page:atlas-dofficial--atlas--filters","path":["page"],"cast":"integer","fallback":"1"}}'
         ><slot name="main" slot="body"><p>{{ items.data }}</p></slot></div>`;
         expect(() => parseCollectionRelease(collectionFixture(source))).not.toThrow();
 
         for (const input of [
-            '{"page":{"from":"state","key":"@page:atlas-filters","path":["missing"]}}',
-            '{"page":{"from":"state","key":"@page:atlas-filters","path":["tags","first"]}}',
-            '{"page":{"from":"state","key":"@page:atlas-filters","cast":"string"}}',
-            '{"page":{"from":"state","key":"@page:atlas-filters","path":["page"],"fallback":12}}',
+            '{"page":{"from":"state","key":"@page:atlas-dofficial--atlas--filters","path":["missing"]}}',
+            '{"page":{"from":"state","key":"@page:atlas-dofficial--atlas--filters","path":["tags","first"]}}',
+            '{"page":{"from":"state","key":"@page:atlas-dofficial--atlas--filters","cast":"string"}}',
+            '{"page":{"from":"state","key":"@page:atlas-dofficial--atlas--filters","path":["page"],"fallback":12}}',
         ]) {
-            consumer.markup = `<div cms-bloc=\"atlas-panel\" cms-query="catalog:items.list as items" cms-query-input='${input}'><slot name="main" slot="body"></slot></div>`;
+            consumer.markup = `<div cms-bloc=\"atlas-dofficial--atlas--panel\" cms-query="ulvia/catalog:items.list as items" cms-query-input='${input}'><slot name="main" slot="body"></slot></div>`;
             expect(() => parseCollectionRelease(collectionFixture(source))).toThrow(/state input/);
         }
     });
@@ -889,19 +916,19 @@ describe("collection release parsing", () => {
             schema: { type: "object", properties: {}, required: [] },
         }));
         const producer = (source.blocs as Record<string, unknown>[])[1]!;
-        producer.requires = [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }];
+        producer.requires = [{ contractId: "ulvia/catalog", capabilityId: "items.list", versionRange: "^1.0.0" }];
         producer.slots = {};
         producer.uses = [];
         producer.markup = `<section>
-            <div cms-query="catalog:items.list as left" cms-query-input='{"right":{"from":"state","key":"@page:atlas-right"}}' cms-query-listen="@page:atlas-right" cms-sync="@page:atlas-left"></div>
-            <div cms-query="catalog:items.list as right" cms-query-input='{"left":{"from":"state","key":"@page:atlas-left"}}' cms-query-listen="@page:atlas-left" cms-sync="@page:atlas-right"></div>
+            <div cms-query="ulvia/catalog:items.list as left" cms-query-input='{"right":{"from":"state","key":"@page:atlas-dofficial--atlas--right"}}' cms-query-listen="@page:atlas-dofficial--atlas--right" cms-sync="@page:atlas-dofficial--atlas--left"></div>
+            <div cms-query="ulvia/catalog:items.list as right" cms-query-input='{"left":{"from":"state","key":"@page:atlas-dofficial--atlas--left"}}' cms-query-listen="@page:atlas-dofficial--atlas--left" cms-sync="@page:atlas-dofficial--atlas--right"></div>
         </section>`;
         delete producer.defaultContent;
         expect(() => parseCollectionRelease(collectionFixture(source))).toThrow(/automatic state query cycle/);
 
         producer.markup = `<section>
-            <div cms-query="catalog:items.list as first" cms-sync="@page:atlas-left"></div>
-            <div cms-query="catalog:items.list as second" cms-sync="@page:atlas-left"></div>
+            <div cms-query="ulvia/catalog:items.list as first" cms-sync="@page:atlas-dofficial--atlas--left"></div>
+            <div cms-query="ulvia/catalog:items.list as second" cms-sync="@page:atlas-dofficial--atlas--left"></div>
         </section>`;
         expect(() => parseCollectionRelease(collectionFixture(source))).toThrow(/multiple automatic query producers/);
     });
@@ -957,9 +984,11 @@ describe("collection release parsing", () => {
         (nextSource.blocs as Record<string, unknown>[])[0]!.style = ":scope { display: grid; }";
         const next = parseCollectionRelease(collectionFixture({ ...nextSource, version: "1.0.1" }));
         const previousPanel = (await describeCollectionResources(previous)).find(
-            (resource) => resource.id === "atlas-panel",
+            (resource) => resource.id === "atlas-dofficial--atlas--panel",
         )!;
-        const nextPanel = (await describeCollectionResources(next)).find((resource) => resource.id === "atlas-panel")!;
+        const nextPanel = (await describeCollectionResources(next)).find(
+            (resource) => resource.id === "atlas-dofficial--atlas--panel",
+        )!;
         expect(previous).not.toHaveProperty("dataGeneration");
         expect(previous).not.toHaveProperty("migrations");
         expect(previousPanel).not.toHaveProperty("generation");
@@ -970,14 +999,14 @@ describe("collection release parsing", () => {
         translatedSource.translations.en!["bloc.panel.label"] = "Translated panel";
         const translatedPanel = (
             await describeCollectionResources(parseCollectionRelease(collectionFixture(translatedSource)))
-        ).find((resource) => resource.id === "atlas-panel")!;
+        ).find((resource) => resource.id === "atlas-dofficial--atlas--panel")!;
         expect(translatedPanel.contractDigest).toBe(previousPanel.contractDigest);
         expect(translatedPanel.implementationDigest).not.toBe(previousPanel.implementationDigest);
 
         const unrelatedSource = collectionDocument({ "unused.label": "Unrelated" });
         const unrelatedPanel = (
             await describeCollectionResources(parseCollectionRelease(collectionFixture(unrelatedSource)))
-        ).find((resource) => resource.id === "atlas-panel")!;
+        ).find((resource) => resource.id === "atlas-dofficial--atlas--panel")!;
         expect(unrelatedPanel.implementationDigest).toBe(previousPanel.implementationDigest);
     });
 

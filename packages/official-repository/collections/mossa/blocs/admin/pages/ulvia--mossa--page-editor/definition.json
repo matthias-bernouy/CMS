@@ -1,0 +1,69 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--page-editor",
+    "label": "bloc.page-editor.label",
+    "description": "bloc.page-editor.description",
+    "order": 510,
+    "catalogue": "listed",
+    "browser": {
+        "frames": {
+            "origins": ["self"],
+            "sandbox": [
+                "allow-downloads",
+                "allow-forms",
+                "allow-modals",
+                "allow-popups",
+                "allow-same-origin",
+                "allow-scripts"
+            ]
+        }
+    },
+    "uses": [
+        "ulvia--mossa--action",
+        "ulvia--mossa--file-picker",
+        "ulvia--mossa--heading",
+        "ulvia--mossa--input",
+        "ulvia--mossa--select",
+        "ulvia--mossa--textarea",
+        "ulvia--mossa--toggle"
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "pages.get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "pages.update",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "pages.editor-catalogue",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.files",
+            "capabilityId": "workspace.get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "site-blocs.create",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "site-blocs.publish",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.administration"],
+    "examples": ["page-editor"],
+    "defaultExample": "page-editor"
+}

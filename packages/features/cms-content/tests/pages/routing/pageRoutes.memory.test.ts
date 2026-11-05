@@ -19,7 +19,7 @@ test("Page links resolve using Content's native routes and stable site IDs", asy
     expect(await reader.resolvePath("/about")).toEqual({ path: "/company" });
     expect(await reader.get({ pageId: page.id })).toEqual({ path: "/company" });
     await expect(
-        reader.get({ kind: "contribution", sourceId: "old", contributionId: "old", pageId: page.id } as never),
+        reader.get({ kind: "contribution", sourceId: "old", contributionId: "ulvia/old", pageId: page.id } as never),
     ).rejects.toThrow();
 });
 

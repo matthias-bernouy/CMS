@@ -26,7 +26,7 @@ export function registerAccessCapabilities(
 ): void {
     registerPersonalAccessCapabilities(dispatcher, dependencies, gateway);
     registerMcpAccessCapabilities(dispatcher, gateway, dependencies.mcpAuthorization);
-    dispatcher.register("ulvia.cms.access", "inspect-actor", async (input, context) => {
+    dispatcher.register("ulvia/cms.access", "inspect-actor", async (input, context) => {
         if (context.systemServiceId !== "cms-gateway" || context.subjectId || context.sourceInstallationId) {
             throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
         }
@@ -42,7 +42,7 @@ export function registerAccessCapabilities(
             authorizationRevision: administrator.revision,
         };
     });
-    dispatcher.register("ulvia.cms.access", "resolve-actor", async (_input, context) => {
+    dispatcher.register("ulvia/cms.access", "resolve-actor", async (_input, context) => {
         const subject = await dependencies.authentication.resolveCredential(context.actorCredential);
         if (!subject) {
             return { state: "anonymous" };
@@ -55,7 +55,7 @@ export function registerAccessCapabilities(
             authorizationRevision: administrator.revision,
         };
     });
-    dispatcher.register("ulvia.cms.access", "login-password", async (input) => {
+    dispatcher.register("ulvia/cms.access", "login-password", async (input) => {
         const result = await dependencies.authentication.authenticate(
             typeof input.email === "string" ? input.email : undefined,
             typeof input.password === "string" ? input.password : undefined,
@@ -80,10 +80,10 @@ export function registerAccessCapabilities(
             },
         );
     });
-    dispatcher.register("ulvia.cms.access", "logout", async () =>
+    dispatcher.register("ulvia/cms.access", "logout", async () =>
         capabilityResponse({ cleared: true }, { type: "session", operation: "clear" }),
     );
-    dispatcher.register("ulvia.cms.access", "signup", async (input) =>
+    dispatcher.register("ulvia/cms.access", "signup", async (input) =>
         accountAction(async () => {
             await dependencies.accountLifecycle.signup({
                 email: requiredText(input.email),
@@ -92,21 +92,21 @@ export function registerAccessCapabilities(
             return { accepted: true };
         }),
     );
-    dispatcher.register("ulvia.cms.access", "request-email-verification", async (input) =>
+    dispatcher.register("ulvia/cms.access", "request-email-verification", async (input) =>
         accountAction(() =>
             dependencies.accountLifecycle.requestEmailVerification({ email: requiredText(input.email) }),
         ),
     );
-    dispatcher.register("ulvia.cms.access", "confirm-email-verification", async (input) =>
+    dispatcher.register("ulvia/cms.access", "confirm-email-verification", async (input) =>
         accountAction(async () => {
             await dependencies.accountLifecycle.confirmEmailVerification({ token: requiredText(input.token) });
             return { confirmed: true };
         }),
     );
-    dispatcher.register("ulvia.cms.access", "request-password-reset", async (input) =>
+    dispatcher.register("ulvia/cms.access", "request-password-reset", async (input) =>
         accountAction(() => dependencies.accountLifecycle.requestPasswordReset({ email: requiredText(input.email) })),
     );
-    dispatcher.register("ulvia.cms.access", "confirm-password-reset", async (input) =>
+    dispatcher.register("ulvia/cms.access", "confirm-password-reset", async (input) =>
         accountAction(async () => {
             await dependencies.accountLifecycle.confirmPasswordReset({
                 token: requiredText(input.token),
@@ -115,7 +115,7 @@ export function registerAccessCapabilities(
             return { confirmed: true };
         }),
     );
-    dispatcher.register("ulvia.cms.access", "list-users", async (input) => {
+    dispatcher.register("ulvia/cms.access", "list-users", async (input) => {
         const page = await dependencies.users.list({
             ...(typeof input.search === "string" ? { search: input.search } : {}),
             pagination: {
@@ -126,7 +126,7 @@ export function registerAccessCapabilities(
         const administrators = await Promise.all(page.users.map((user) => administratorState(gateway, user.sub)));
         return { ...page, users: page.users.map((user, index) => projectUser(user, administrators[index]!)) };
     });
-    dispatcher.register("ulvia.cms.access", "get-user", async (input) => {
+    dispatcher.register("ulvia/cms.access", "get-user", async (input) => {
         const sub = requiredText(input.sub);
         const user = await dependencies.users.getBySub(sub);
         if (!user) {
@@ -134,7 +134,7 @@ export function registerAccessCapabilities(
         }
         return projectUser(user, await administratorState(gateway, sub));
     });
-    dispatcher.register("ulvia.cms.access", "set-administrator", async (input, context) =>
+    dispatcher.register("ulvia/cms.access", "set-administrator", async (input, context) =>
         accessCommand(async () => {
             const active = requiredGateway(gateway);
             const sub = requiredText(input.sub);
@@ -154,7 +154,7 @@ export function registerAccessCapabilities(
             };
         }),
     );
-    dispatcher.register("ulvia.cms.access", "delete-user", async (input, context) =>
+    dispatcher.register("ulvia/cms.access", "delete-user", async (input, context) =>
         accessCommand(async () => {
             const active = requiredGateway(gateway);
             const sub = requiredText(input.sub);

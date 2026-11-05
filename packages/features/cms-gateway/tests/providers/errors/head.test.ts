@@ -7,7 +7,7 @@ import { message, details } from "./fixture";
 
 test("HEAD errors preserve their code and language without requiring a JSON body at the Gateway", async () => {
     const f = await fixture(true, { errorOutput: message });
-    f.dispatcher.register("catalog", "item.list", async () => {
+    f.dispatcher.register("ulvia/catalog", "item.list", async () => {
         throw new ProviderCapabilityDispatchError(
             "NOT_FOUND",
             404,
@@ -19,7 +19,7 @@ test("HEAD errors preserve their code and language without requiring a JSON body
     f.mount();
     const result = await f.gateway.invoke({
         siteId: "site-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         capabilityId: "item.list",
         input: { fileId: "one" },
         actor: { kind: "anonymous" },

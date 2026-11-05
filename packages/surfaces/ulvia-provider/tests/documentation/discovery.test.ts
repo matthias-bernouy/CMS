@@ -1,3 +1,4 @@
+import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { expect, test } from "bun:test";
 import { CapabilityMcpBinding } from "@bernouy/cms-gateway/mcp";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
@@ -9,7 +10,7 @@ import { createProviderContractRelay } from "../../src/transport/relay";
 import { officialContract, resolvedContract, invokeHttp, context } from "../execution/messages/fixtures";
 
 test("MCP discovers repository tools and reads a verified uninstalled contract through its HTTP bindings", async () => {
-    const admission = await officialContract("ulvia.cms.installations");
+    const admission = await officialContract("ulvia/cms.installations");
     const reference = {
         kind: "contract" as const,
         publisherId: admission.release.publisherId,
@@ -57,9 +58,30 @@ test("MCP discovers repository tools and reads a verified uninstalled contract t
     });
     const actor = { siteId: "default", actor: { kind: "administrator" as const, subjectId: "admin" } };
     const tools = (await binding.list(actor)).tools;
-    expect(tools.some((tool) => tool.name === "installations_repository_search")).toBe(true);
-    expect(tools.some((tool) => tool.name === "installations_repository_get")).toBe(true);
-    const search = await binding.call("installations_repository_search", { input: { query: "installations" } }, actor);
+    expect(
+        tools.some(
+            (tool) =>
+                tool.name ===
+                capabilityToolName(
+                    "ulvia/cms.installations",
+                    "repository.search",
+                    "mcp",
+                    "installations_repository_search",
+                ),
+        ),
+    ).toBe(true);
+    expect(
+        tools.some(
+            (tool) =>
+                tool.name ===
+                capabilityToolName("ulvia/cms.installations", "repository.get", "mcp", "installations_repository_get"),
+        ),
+    ).toBe(true);
+    const search = await binding.call(
+        capabilityToolName("ulvia/cms.installations", "repository.search", "mcp", "installations_repository_search"),
+        { input: { query: "installations" } },
+        actor,
+    );
     expect(search.structuredContent).toMatchObject({
         output: { partial: false, results: [{ repositoryId: "configured", reference }] },
     });
@@ -99,12 +121,12 @@ test("live authorization refuses repository discovery before any source access",
     ]);
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     registerRepositoryDiscoveryCapabilities(dispatcher, discovery);
-    const contract = await resolvedContract("ulvia.cms.installations");
+    const contract = await resolvedContract("ulvia/cms.installations");
     const routes = compileProviderRoutes([contract]);
     const relay = createProviderContractRelay(
         routes,
         dispatcher,
-        { siteId: "default", providerId: "ulvia.official" },
+        { siteId: "default", providerId: "ulvia/primary-provider" },
         NOOP_LOGGER,
         async () => false,
     );

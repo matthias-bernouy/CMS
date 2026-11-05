@@ -24,10 +24,10 @@ export function assertInvocationScope(input: ProviderInvocationIssue): void {
         input.systemServiceId !== undefined &&
         !(
             (["cms-edge", "ulvia-provider"].includes(input.systemServiceId) &&
-                input.contractId === "ulvia.cms.observability" &&
+                input.contractId === "ulvia/cms.observability" &&
                 input.capabilityId === "logs.append") ||
             (input.systemServiceId === "cms-gateway" &&
-                input.contractId === "ulvia.cms.access" &&
+                input.contractId === "ulvia/cms.access" &&
                 input.capabilityId === "inspect-actor")
         )
     ) {

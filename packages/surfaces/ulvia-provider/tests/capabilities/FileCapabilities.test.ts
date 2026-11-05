@@ -9,7 +9,7 @@ const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
     contractVersion: "1.0.0",
     siteId: "site-a",
-    providerId: "ulvia.official",
+    providerId: "ulvia/primary-provider",
 };
 
 test("file capabilities expose the namespace, upload and immutable file lifecycle", async () => {
@@ -200,7 +200,7 @@ async function invoke<T = unknown>(
     input: Record<string, unknown>,
     invocationContext: ProviderCapabilityInvocationContext = context,
 ): Promise<T> {
-    return dispatcher.invoke("ulvia.cms.files", capabilityId, input, invocationContext) as Promise<T>;
+    return dispatcher.invoke("ulvia/cms.files", capabilityId, input, invocationContext) as Promise<T>;
 }
 
 function stream(value: string): ReadableStream<Uint8Array> {

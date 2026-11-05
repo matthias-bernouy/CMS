@@ -11,7 +11,7 @@ const digest = `sha256:${"0".repeat(64)}`;
 function providerEntry() {
     return {
         publisherId: "acme.official",
-        providerId: "commerce.stripe",
+        providerId: "acme.official/commerce.stripe",
         version: "1.0.0",
         digest,
         name: "Stripe",
@@ -21,7 +21,7 @@ function providerEntry() {
 function collectionEntry() {
     return {
         publisherId: "acme.official",
-        collectionId: "storefront",
+        collectionId: "acme.official/storefront",
         version: "1.0.0",
         digest,
         name: "Storefront",
@@ -44,7 +44,7 @@ describe("repository catalogue boundaries", () => {
         ).toHaveLength(1);
         for (const patch of [
             { publisherId: "acme.2" },
-            { providerId: "commerce.2" },
+            { providerId: "ulvia/commerce.2" },
             { version: "01.0.0" },
             { name: "" },
             { extra: true },
@@ -68,7 +68,7 @@ describe("repository catalogue boundaries", () => {
             { publisherId: "acme.2" },
             { version: "01.0.0" },
             { name: "" },
-            { collectionId: "cms-tools" },
+            { collectionId: "ulvia/cms-tools" },
             { extra: true },
         ]) {
             expect(() =>

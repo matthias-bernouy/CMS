@@ -6,7 +6,7 @@ export async function createMcpTestContract() {
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
         publisherId: "test",
-        contractId: "test.cms",
+        contractId: "test/test.cms",
         name: "Test CMS",
         version: "1.0.0",
         capabilities: [

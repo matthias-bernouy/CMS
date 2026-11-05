@@ -39,7 +39,7 @@ export class GatewayProviderClient {
                     const response = await network.exchange({
                         ...request,
                         origin: this.origin,
-                        pathAndQuery: `/.cms/call/${encodeURIComponent(request.authentication.kind === "capability" ? request.authentication.contractId : "")}${request.pathAndQuery}`,
+                        pathAndQuery: `/.cms/call/${(request.authentication.kind === "capability" ? request.authentication.contractId : "").split("/").map(encodeURIComponent).join("/")}${request.pathAndQuery}`,
                     });
                     if ([401, 403, 429].includes(response.status)) {
                         await response.body?.cancel();

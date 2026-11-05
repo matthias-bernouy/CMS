@@ -6,9 +6,9 @@ export function compileProviderRoutes(releases: readonly ResolvedContract[]) {
         !releases.length ||
         releases.some(
             ({ release }) =>
-                !release.contractId.startsWith("ulvia.cms.") &&
-                release.contractId !== "ulvia.provider.connections" &&
-                release.contractId !== "ulvia.repository",
+                !release.contractId.startsWith("ulvia/cms.") &&
+                release.contractId !== "ulvia/provider.connections" &&
+                release.contractId !== "ulvia/repository",
         )
     ) {
         throw new TypeError("Ulvia Provider only accepts official CMS, Repository and Provider connection contracts.");

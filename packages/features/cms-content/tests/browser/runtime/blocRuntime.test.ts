@@ -25,13 +25,13 @@ describe("Light DOM Bloc runtime", () => {
 
     test("keeps behavior queries inside their owning Bloc", () => {
         document.body.innerHTML = `
-            <section cms-bloc="test-parent">
+            <section cms-bloc="example--test--parent">
                 <span data-target="owned"></span>
-                <div cms-bloc="test-child" data-target="child-root">
+                <div cms-bloc="example--test--child" data-target="child-root">
                     <span data-target="child-internal"></span>
                 </div>
             </section>`;
-        const root = document.querySelector<HTMLElement>('[cms-bloc="test-parent"]');
+        const root = document.querySelector<HTMLElement>('[cms-bloc="example--test--parent"]');
         if (!root) {
             throw new Error("Expected parent Bloc root");
         }
@@ -40,7 +40,7 @@ describe("Light DOM Bloc runtime", () => {
         result = {
             target: scope.querySelector<HTMLElement>("[data-target]")?.dataset.target,
             count: scope.querySelectorAll("[data-target]").length,
-            child: scope.queryBlocRoot("test-child")?.getAttribute("data-target") ?? null,
+            child: scope.queryBlocRoot("example--test--child")?.getAttribute("data-target") ?? null,
         };
 
         expect(result).toEqual({ target: "owned", count: 1, child: "child-root" });
@@ -48,13 +48,13 @@ describe("Light DOM Bloc runtime", () => {
 
     test("connects a field to an explicitly exposed child Bloc control", () => {
         document.body.innerHTML = `
-            <div cms-bloc="test-field">
+            <div cms-bloc="example--test--field">
                 <label part="field-label">Email</label>
                 <div part="field-description">Used to sign in</div>
-                <div cms-bloc="test-input"><input type="email"></div>
+                <div cms-bloc="example--test--input"><input type="email"></div>
             </div>`;
         registerBloc(
-            "test-field",
+            "example--test--field",
             {
                 mount: (root) => {
                     const scope = createBlocScope(root);
@@ -72,10 +72,10 @@ describe("Light DOM Bloc runtime", () => {
             },
             CMS_BROWSER_RUNTIME_ABI,
         );
-        registerBloc("test-input", {}, CMS_BROWSER_RUNTIME_ABI);
+        registerBloc("example--test--input", {}, CMS_BROWSER_RUNTIME_ABI);
 
-        const field = document.querySelector<HTMLElement>('[cms-bloc="test-field"]')!;
-        const inputRoot = document.querySelector<HTMLElement>('[cms-bloc="test-input"]')!;
+        const field = document.querySelector<HTMLElement>('[cms-bloc="example--test--field"]')!;
+        const inputRoot = document.querySelector<HTMLElement>('[cms-bloc="example--test--input"]')!;
         const input = inputRoot.querySelector<HTMLInputElement>("input")!;
         expect(input.id).toMatch(/^ulvia-form-control-/u);
         expect(field.querySelector("label")?.htmlFor).toBe(input.id);
@@ -99,10 +99,10 @@ describe("Light DOM Bloc runtime", () => {
     });
 
     test("mounts existing roots once", () => {
-        document.body.innerHTML = '<section cms-bloc="test-runtime-existing"></section>';
+        document.body.innerHTML = '<section cms-bloc="example--test--runtime-existing"></section>';
         let mounts = 0;
         registerBloc(
-            "test-runtime-existing",
+            "example--test--runtime-existing",
             {
                 mount: () => {
                     mounts += 1;
@@ -111,7 +111,7 @@ describe("Light DOM Bloc runtime", () => {
             CMS_BROWSER_RUNTIME_ABI,
         );
         registerBloc(
-            "test-runtime-existing",
+            "example--test--runtime-existing",
             {
                 mount: () => {
                     mounts += 1;
@@ -127,7 +127,7 @@ describe("Light DOM Bloc runtime", () => {
         let mounts = 0;
         let cleanups = 0;
         registerBloc(
-            "test-runtime-dynamic",
+            "example--test--runtime-dynamic",
             {
                 mount: () => {
                     mounts += 1;
@@ -140,7 +140,7 @@ describe("Light DOM Bloc runtime", () => {
         );
 
         const parent = document.createElement("div");
-        parent.innerHTML = '<section cms-bloc="test-runtime-dynamic"></section>';
+        parent.innerHTML = '<section cms-bloc="example--test--runtime-dynamic"></section>';
         document.body.append(parent);
         await waitFor(() => mounts === 1);
         parent.remove();
@@ -150,7 +150,7 @@ describe("Light DOM Bloc runtime", () => {
     });
 
     test("rejects a Bloc built for another browser ABI", () => {
-        expect(() => registerBloc("test-incompatible", {}, "v2" as never)).toThrow(
+        expect(() => registerBloc("example--test--incompatible", {}, "v2" as never)).toThrow(
             "requires browser runtime ABI v2; this runtime provides v1",
         );
     });

@@ -106,7 +106,7 @@ test("invalid browser metadata is refused before Delivery resolution or invocati
 test("a selected contract without the resource capability is refused before provider invocation", async () => {
     let calls = 0;
     const handler = createPublicResourceHandler({
-        resolveContract: async () => ({ release: { contractId: "ulvia.cms.content", capabilities: [] } }) as never,
+        resolveContract: async () => ({ release: { contractId: "ulvia/cms.content", capabilities: [] } }) as never,
         invoke: async () => {
             calls++;
             throw new Error("Unexpected invocation");

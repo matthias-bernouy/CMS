@@ -45,13 +45,13 @@ test("Mongo selections survive adapter recreation and reject stale revisions", a
         isCurrent: async (_site: string, revision: string) => revision === "dependencies:1",
     };
     const first = new MongoContractSelectionStore(db, dependencies);
-    const payment = await graph.select("payment");
+    const payment = await graph.select("ulvia/payment");
     const stored = await first.replace(siteId, [payment], 0);
     const recreated = new MongoContractSelectionStore(db, dependencies);
     expect(await recreated.get(siteId)).toEqual(stored);
     expect((await recreated.get(siteId))?.plan.selections).toEqual([payment]);
     expect(collection.projections.at(-1)).toEqual({ revision: 1 });
-    await expect(recreated.replace(siteId, [await graph.select("commerce")], 1)).rejects.toMatchObject({
+    await expect(recreated.replace(siteId, [await graph.select("ulvia/commerce")], 1)).rejects.toMatchObject({
         code: "missing_dependency",
     });
     const cleared = await first.replace(siteId, [], 1);

@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { SignedCookieCodec } from "@bernouy/cms-auth";
 
-const key = new TextEncoder().encode("test-secret-key-at-least-16-bytes");
+const key = new TextEncoder().encode("example--test--secret-key-at-least-16-bytes");
 const codec = () => new SignedCookieCodec(key);
 
 describe("SignedCookieCodec", () => {

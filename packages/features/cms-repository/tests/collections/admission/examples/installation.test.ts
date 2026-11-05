@@ -10,12 +10,12 @@ test("installed examples expose one catalogue item with multiple categories and 
     await store.install("site", artifact.digest, 0);
     const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site");
     const catalogue = await getCmsEditorCatalogue(repository);
-    const panel = catalogue.items.find((item) => item.id === "atlas-panel")!;
+    const panel = catalogue.items.find((item) => item.id === "atlas-dofficial--atlas--panel")!;
     const authoring = JSON.parse(panel.authoringJson);
-    expect(catalogue.items.filter((item) => item.id === "atlas-panel")).toHaveLength(1);
+    expect(catalogue.items.filter((item) => item.id === "atlas-dofficial--atlas--panel")).toHaveLength(1);
     expect(authoring.categories).toEqual(["Layout", "Content"]);
     expect(authoring.initialDocument.html).toContain('tone="accent"');
-    expect(authoring.initialDocument.html).toContain("{{ cms.i18n.atlas.greeting }}");
+    expect(authoring.initialDocument.html).toContain("{{ cms.i18n.atlas.official/atlas.greeting }}");
     expect((await store.snapshot("site")).collections[0]!.textOverrides).toEqual({});
     expect(await repository.getAllPages()).toHaveLength(0);
 });

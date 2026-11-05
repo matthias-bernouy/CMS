@@ -33,7 +33,7 @@ export class RecordingRegistry implements RepositoryPublicationRegistry {
 }
 
 export async function ownerFixture(root: string, namespace = "publisher", registry?: RepositoryPublicationRegistry) {
-    const application = repositoryApplication(root, "test-repository", registry);
+    const application = repositoryApplication(root, "example--test--repository", registry);
     const owner = await application.account();
     await application.namespaces.claim(owner.accountId, namespace);
     const credential = {
@@ -48,7 +48,7 @@ export async function ownerFixture(root: string, namespace = "publisher", regist
 
 export function jsonRequest(path: string, token: string, input: Record<string, unknown>, method = "POST") {
     if (path === "/v1/uploads") {
-        return new Request(`https://repository.example/.cms/call/ulvia.repository${path}`, {
+        return new Request(`https://repository.example/.cms/call/ulvia/repository${path}`, {
             method,
             body: input.manifest as string,
             headers: {
@@ -59,7 +59,7 @@ export function jsonRequest(path: string, token: string, input: Record<string, u
             },
         });
     }
-    return new Request(`https://repository.example/.cms/call/ulvia.repository${path}`, {
+    return new Request(`https://repository.example/.cms/call/ulvia/repository${path}`, {
         method,
         headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
         body: JSON.stringify(input),
@@ -67,7 +67,7 @@ export function jsonRequest(path: string, token: string, input: Record<string, u
 }
 
 export function assetRequest(path: string, token: string, namespace: string, bytes: Uint8Array, digest: string) {
-    return new Request(`https://repository.example/.cms/call/ulvia.repository${path}`, {
+    return new Request(`https://repository.example/.cms/call/ulvia/repository${path}`, {
         method: "PUT",
         body: Buffer.from(bytes),
         headers: {

@@ -37,7 +37,7 @@ describe("generated site Bloc source", () => {
                     kind: "bloc",
                     tag: "basic-container",
                     attributes: {
-                        "cms-query": "catalog:items as items",
+                        "cms-query": "ulvia/catalog:items as items",
                         "cms-query-input": '{"query":{"from":"state","key":"@param:site-query"}}',
                     },
                     children: [
@@ -47,7 +47,7 @@ describe("generated site Bloc source", () => {
                 },
             ],
         });
-        expect(bound["markup.html"]).toContain('cms-query="catalog:items as items"');
+        expect(bound["markup.html"]).toContain('cms-query="ulvia/catalog:items as items"');
 
         for (const attributes of [{ "cms-query": "https://example.com/items" }, { "cms-ready": "" }]) {
             expect(() =>
@@ -206,9 +206,9 @@ describe("generated site Bloc source", () => {
 
         const source = generateSiteBlocSourceBundle(base, {
             ...base.draft,
-            defaultContent: `<form cms-bloc="site-contact-form" cms-mutation="forms:contact as contact"
+            defaultContent: `<form cms-bloc="site-contact-form" cms-mutation="ulvia/forms:contact as contact"
                 cms-mutation-reset="true"></form>`,
         });
-        expect(source["default.html"]).toContain('cms-mutation="forms:contact as contact"');
+        expect(source["default.html"]).toContain('cms-mutation="ulvia/forms:contact as contact"');
     });
 });

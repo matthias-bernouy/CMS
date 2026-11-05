@@ -38,20 +38,20 @@ test("warm execution pins avoid catalogue reads while installation, grant and me
             },
         },
     } as unknown as CatalogueGatewayRouteResolverOptions);
-    const original = await resolver.resolve("site-a", "catalog");
-    await resolver.resolve("site-a", "catalog");
+    const original = await resolver.resolve("site-a", "ulvia/catalog");
+    await resolver.resolve("site-a", "ulvia/catalog");
     expect(releaseReads).toBe(1);
     expect(manifestReads).toBe(1);
     expect(selectionReads).toBe(4);
     expect(installationReads).toBe(4);
     // Yank is a catalogue discovery signal; it does not revoke an already approved installation.
     release = { ...release, yank: { reason: "Withdrawn from discovery" } };
-    expect((await resolver.describe("site-a", "catalog"))?.yank?.reason).toBe("Withdrawn from discovery");
+    expect((await resolver.describe("site-a", "ulvia/catalog"))?.yank?.reason).toBe("Withdrawn from discovery");
     expect(releaseReads).toBe(2);
     installation = { ...installation, installation: { ...installation.installation, status: "disabled" } };
     expect(await resolver.isCurrent(original!)).toBe(false);
     current = { revision: 2, plan: { selections: [] } };
-    expect(await resolver.resolve("site-a", "catalog")).toBeNull();
+    expect(await resolver.resolve("site-a", "ulvia/catalog")).toBeNull();
     expect(releaseReads).toBe(2);
 });
 
@@ -71,7 +71,7 @@ test("pinned artifacts are isolated by catalogue owner, reject wrong identities 
     available = true;
     await Promise.all([cache.contract(f.selection), cache.contract(f.selection)]);
     expect(reads).toBe(2);
-    await expect(cache.contract({ ...f.selection, contractId: "other-contract" })).rejects.toMatchObject({
+    await expect(cache.contract({ ...f.selection, contractId: "ulvia/other-contract" })).rejects.toMatchObject({
         code: "invalid_route",
     });
     const foreign = new GatewayPinnedArtifacts({ get: async () => null } as never, manifests);
@@ -105,11 +105,11 @@ test("a selection and approval change loads the new exact artifacts instead of f
             },
         },
     } as unknown as CatalogueGatewayRouteResolverOptions);
-    const old = await resolver.resolve("site-a", "catalog");
+    const old = await resolver.resolve("site-a", "ulvia/catalog");
     active = second;
     revision++;
     expect(await resolver.isCurrent(old!)).toBe(false);
-    const updated = await resolver.resolve("site-a", "catalog");
+    const updated = await resolver.resolve("site-a", "ulvia/catalog");
     expect(updated?.release.admission.digest).toBe(second.release.admission.digest);
     expect(updated?.manifest.admission.digest).toBe(second.manifest.admission.digest);
     expect(contracts).toBe(2);

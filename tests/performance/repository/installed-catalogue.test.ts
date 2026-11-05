@@ -11,7 +11,7 @@ const digest = `sha256:${"a".repeat(64)}`;
 const summary = {
     digest,
     publisherId: "example.official",
-    collectionId: "example",
+    collectionId: "example.official/example",
     version: "1.0.0",
     blocCount: 2,
     exampleCount: 3,
@@ -24,7 +24,7 @@ const summary = {
 test("installed catalogue reads only current site state and one summary batch; no assets or examples", async () => {
     let state: CollectionSiteState = {
         revision: 1,
-        installations: [{ collectionId: "example", digest, configuration: {}, textOverrides: {} }],
+        installations: [{ collectionId: "example.official/example", digest, configuration: {}, textOverrides: {} }],
     };
     let siteReads = 0;
     let summaryReads = 0;
@@ -59,9 +59,9 @@ test("installed catalogue reads only current site state and one summary batch; n
 test("missing or mismatched installed summaries fail closed", async () => {
     const state = {
         revision: 1,
-        installations: [{ collectionId: "example", digest, configuration: {}, textOverrides: {} }],
+        installations: [{ collectionId: "example.official/example", digest, configuration: {}, textOverrides: {} }],
     };
-    for (const summaries of [[], [{ ...summary, collectionId: "other" }]]) {
+    for (const summaries of [[], [{ ...summary, collectionId: "example/other" }]]) {
         const store = new CollectionStore({
             readSite: async () => state,
             getReleaseSummaries: async () => summaries,

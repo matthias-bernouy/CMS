@@ -1,0 +1,27 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--search-input",
+    "label": "bloc.search-input.label",
+    "description": "bloc.search-input.description",
+    "order": 15,
+    "uses": ["ulvia--mossa--input"],
+    "requires": [],
+    "slots": {
+        "control": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--input"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["search-input-default"],
+    "defaultExample": "search-input-default"
+}

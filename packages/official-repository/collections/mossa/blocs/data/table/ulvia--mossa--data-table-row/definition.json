@@ -1,0 +1,22 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--data-table-row",
+    "label": "bloc.data-table-row.label",
+    "description": "bloc.data-table-row.description",
+    "catalogue": "hidden",
+    "uses": ["ulvia--mossa--data-table-cell", "ulvia--mossa--data-table-row-header"],
+    "requires": [],
+    "slots": {
+        "cells": {
+            "accepts": [
+                { "kind": "component", "tag": "ulvia--mossa--data-table-cell" },
+                { "kind": "component", "tag": "ulvia--mossa--data-table-row-header" }
+            ],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["tr"]
+    },
+    "categories": ["bloc.category.data"]
+}

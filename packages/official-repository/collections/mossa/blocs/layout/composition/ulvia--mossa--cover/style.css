@@ -1,0 +1,38 @@
+:scope {
+    --ulvia--mossa--cover-height: var(--ulvia--mossa--cover-inherited-height, 50svh);
+    --ulvia--mossa--cover-spacing: var(--ulvia--mossa--spacing-lg, 1.5rem);
+    display: block;
+    text-align: inherit;
+}
+
+[part~="cover"] {
+    display: flex;
+    min-height: var(--ulvia--mossa--cover-height);
+    box-sizing: border-box;
+    flex-direction: column;
+    padding: var(--ulvia--mossa--cover-spacing);
+}
+
+[part~="content"] {
+    display: grid;
+    flex: 1;
+    align-items: center;
+}
+:scope[height="content"] {
+    --ulvia--mossa--cover-height: auto;
+}
+:scope[height="viewport"] {
+    --ulvia--mossa--cover-height: 100svh;
+}
+:scope[content-align="start"] [part~="content"] {
+    align-items: start;
+}
+:scope[content-align="end"] [part~="content"] {
+    align-items: end;
+}
+:scope[spacing="sm"] {
+    --ulvia--mossa--cover-spacing: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}
+:scope[spacing="md"] {
+    --ulvia--mossa--cover-spacing: var(--ulvia--mossa--spacing-md, 1rem);
+}

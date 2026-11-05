@@ -19,6 +19,7 @@ export interface RepositoryCapabilityPorts {
         limit: number;
         cursor?: string;
         publisherId?: string;
+        channel?: "stable" | "beta" | "all";
         id?: string;
         version?: string;
     }) => Promise<{

@@ -17,7 +17,7 @@ test.each([
         source.blocs = [source.blocs[0]];
         const previous = await collections.importRelease(collectionFixture(source));
         await collections.install("site", previous.digest, 0);
-        await repository.insertPage("/source", "Source", '<div cms-bloc="atlas-panel"></div>');
+        await repository.insertPage("/source", "Source", '<div cms-bloc="atlas-dofficial--atlas--panel"></div>');
         const page = (await repository.getPage("/source"))!;
         await repository.updatePage({ id: page.id, visible: true }, page.revision);
         const before = await repository.getPageById(page.id);

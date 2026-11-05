@@ -4,7 +4,7 @@ import {
     collectionBrowserRiskDigest,
     resolveCollectionTranslation,
 } from "@bernouy/cms-repository/collections";
-import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
+import { compareSemVer, releaseChannel } from "@bernouy/cms-repository/contracts/compatibility";
 import type { CmsCollectionDependencies } from "../../../ports";
 
 export function verifiedCatalogueEntry(
@@ -18,6 +18,7 @@ export function verifiedCatalogueEntry(
         publisherId: release.publisherId,
         collectionId: release.collectionId,
         version: release.version,
+        channel: releaseChannel(release.version),
         digest,
         name: resolveCollectionTranslation(release, release.name),
         description: release.description ? resolveCollectionTranslation(release, release.description) : "",

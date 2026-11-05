@@ -22,7 +22,7 @@ test("discovery follows browser helpers but excludes server-only code, tests and
         );
         await file(
             `${pkg}/src/core/admin/auth/templates/example.html`,
-            '<form cms-mutation="catalog:save as saved"></form>',
+            '<form cms-mutation="ulvia/catalog:save as saved"></form>',
         );
         await file(`${pkg}/tests/example.test.ts`, 'fetch("/api/test");');
         await file(`${pkg}/src/browser/admin-runtime.js`, 'fetch("/compiled");');
@@ -47,7 +47,10 @@ test("discovery audits authored official collection blocs and their browser help
     try {
         const bloc = "packages/official-repository/collections/official/blocs/admin/example";
         await file(`${bloc}/bloc.ts`, 'import { load } from "./runtime/client"; load();');
-        await file(`${bloc}/runtime/client.ts`, 'export const load = () => fetch("/.cms/call/example/list");');
+        await file(
+            `${bloc}/runtime/client.ts`,
+            'export const load = () => fetch("/.cms/call/example.official/example/list");',
+        );
         await file(`${bloc}/markup.html`, "<section></section>");
 
         const sources = await discoverUiSources(root);

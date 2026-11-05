@@ -11,7 +11,7 @@ const record = (hash = "hash", siteId = "site-a"): DelegationRecord => ({
         siteId,
         requestId: hash,
         installationId: "origin-install",
-        contractId: "origin",
+        contractId: "ulvia/origin",
         version: "1.0.0",
         digest: "sha256:x",
         capabilityId: "item.list",

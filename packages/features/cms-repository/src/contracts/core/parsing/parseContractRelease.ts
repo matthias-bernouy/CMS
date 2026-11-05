@@ -1,3 +1,4 @@
+import { resourcePublisher } from "./resources";
 import { parseDocumentation } from "../../documentation/manifest";
 import { assertIJson, canonicalIJsonBytes } from "../protocol/canonical";
 import { ReleaseValidationError } from "../protocol/errors";
@@ -14,7 +15,7 @@ import {
 import type { ContractRelease } from "../../interfaces/ContractRelease";
 import { createSchemaState } from "../schema/context";
 import { parseCapability } from "./parseCapability";
-import { parseIdentifier, parseSemVer } from "./identifiers";
+import { parsePublisherIdentifier, parseResourceIdentifier, parseSemVer } from "./identifiers";
 import { parseFixtureAssets } from "./parseFixtureAssets";
 
 export function parseContractRelease(
@@ -80,7 +81,7 @@ export function parseContractRelease(
     }
     const description = optionalString(record.description, "$.description", "invalid_contract", 4096);
     const catalogue = parseCatalogueMetadata(record.catalogue);
-    const contractId = parseIdentifier(record.contractId, "$.contractId", 96);
+    const contractId = parseResourceIdentifier(record.contractId, "$.contractId");
     const parent = parseParentReference(record.extends, contractId);
     // Parent capabilities are available only when the exact lineage is resolved.
     validateDeprecationReferences(capabilities, Boolean(parent));
@@ -93,12 +94,19 @@ export function parseContractRelease(
         ...(description ? { description } : {}),
         ...(parent ? { extends: parent } : {}),
         version: parseSemVer(record.version, "$.version"),
-        publisherId: parseIdentifier(record.publisherId, "$.publisherId", 96),
+        publisherId: parsePublisherIdentifier(record.publisherId, "$.publisherId"),
         ...(catalogue ? { catalogue } : {}),
         capabilities,
         ...(documentation === undefined ? {} : { documentation }),
         ...(fixtureAssets === undefined ? {} : { fixtureAssets }),
     };
+    if (resourcePublisher(contractId) !== release.publisherId) {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            "resource namespace must match publisherId",
+            "$.publisherId",
+        );
+    }
     validateResponseEffectAuthority(release);
     if (canonicalIJsonBytes(release, limits.maxJsonDepth).byteLength > limits.maxDocumentBytes) {
         throw new ReleaseValidationError(
@@ -116,7 +124,7 @@ function parseParentReference(value: unknown, contractId: string): ContractRelea
     }
     const record = expectRecord(value, "$.extends", "invalid_contract");
     rejectUnknownKeys(record, ["contractId", "version", "digest"], "$.extends", "invalid_contract");
-    const parentContractId = parseIdentifier(record.contractId, "$.extends.contractId", 96);
+    const parentContractId = parseResourceIdentifier(record.contractId, "$.extends.contractId");
     if (parentContractId === contractId) {
         throw new ReleaseValidationError("invalid_contract", "a contract cannot extend itself", "$.extends.contractId");
     }
@@ -137,10 +145,10 @@ function validateResponseEffectAuthority(release: ContractRelease): void {
             continue;
         }
         const path = `$.capabilities[${index}].responseEffects`;
-        if (release.contractId !== "ulvia.cms.access") {
+        if (release.contractId !== "ulvia/cms.access") {
             throw new ReleaseValidationError(
                 "invalid_contract",
-                "session response effects are reserved to ulvia.cms.access",
+                "session response effects are reserved to ulvia/cms.access",
                 path,
             );
         }

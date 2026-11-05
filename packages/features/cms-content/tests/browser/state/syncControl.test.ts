@@ -3,7 +3,7 @@ import type { CmsSyncTarget } from "@bernouy/cms-content/bindings";
 import { SyncControl } from "../../../src/browser/binding/state/SyncControl";
 import { readSyncValue, writeSyncValue } from "../../../src/browser/binding/state/SyncState";
 
-const target = { scope: "page", key: "ulvia-official-filter" } satisfies CmsSyncTarget;
+const target = { scope: "page", key: "ulvia--mossa--filter" } satisfies CmsSyncTarget;
 
 afterEach(() => {
     writeSyncValue(target, undefined);
@@ -13,7 +13,7 @@ afterEach(() => {
 describe("cms-sync controls", () => {
     test("publishes control changes and reflects external state", () => {
         const input = document.createElement("input");
-        input.setAttribute("cms-sync", "@page:ulvia-official-filter");
+        input.setAttribute("cms-sync", "@page:ulvia--mossa--filter");
         document.body.append(input);
         const sync = new SyncControl(input);
         sync.start();
@@ -30,7 +30,7 @@ describe("cms-sync controls", () => {
     test("keeps checkboxes typed as booleans", () => {
         const input = document.createElement("input");
         input.type = "checkbox";
-        input.setAttribute("cms-sync", "@page:ulvia-official-filter");
+        input.setAttribute("cms-sync", "@page:ulvia--mossa--filter");
         document.body.append(input);
         const sync = new SyncControl(input);
         sync.start();
@@ -47,7 +47,7 @@ describe("cms-sync controls", () => {
     test("preserves the authored default until synchronized state exists", () => {
         const input = document.createElement("input");
         input.value = "authored";
-        input.setAttribute("cms-sync", "@page:ulvia-official-filter");
+        input.setAttribute("cms-sync", "@page:ulvia--mossa--filter");
         document.body.append(input);
         const sync = new SyncControl(input);
 
@@ -60,7 +60,7 @@ describe("cms-sync controls", () => {
     test("reflects a select after its options are populated", async () => {
         writeSyncValue(target, "news");
         const select = document.createElement("select");
-        select.setAttribute("cms-sync", "@page:ulvia-official-filter");
+        select.setAttribute("cms-sync", "@page:ulvia--mossa--filter");
         document.body.append(select);
         const sync = new SyncControl(select);
         sync.start();
@@ -75,7 +75,7 @@ describe("cms-sync controls", () => {
     test("waits for a custom control definition before reflecting state", async () => {
         const tag = `sync-control-${crypto.randomUUID()}`;
         const control = document.createElement(tag) as HTMLElement & { value: string };
-        control.setAttribute("cms-sync", "@page:ulvia-official-filter");
+        control.setAttribute("cms-sync", "@page:ulvia--mossa--filter");
         document.body.append(control);
         writeSyncValue(target, "ready");
         const sync = new SyncControl(control);

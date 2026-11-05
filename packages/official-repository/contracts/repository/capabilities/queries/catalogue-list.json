@@ -1,0 +1,266 @@
+{
+    "id": "catalogue-list",
+    "description": "List public releases with bounded pagination and optional exact publisher, resource and version filters.",
+    "access": "public",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync",
+        "sensitive": false
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "kind": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 32,
+                "enum": ["collection", "contract", "provider-manifest"]
+            },
+            "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 256
+            },
+            "cursor": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+            },
+            "publisherId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 193
+            },
+            "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "channel": {
+                "type": "string",
+                "enum": ["stable", "beta", "all"],
+                "maxLength": 6
+            }
+        },
+        "required": ["kind", "limit"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "releases": {
+                "type": "array",
+                "maxItems": 256,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 32,
+                            "enum": ["collection", "contract", "provider-manifest"]
+                        },
+                        "publisherId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 96
+                        },
+                        "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 193
+                        },
+                        "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128
+                        },
+                        "digest": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 71
+                        },
+                        "metadata": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "maxLength": 128,
+                                    "minLength": 1
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "maxLength": 4096
+                                },
+                                "icon": {
+                                    "type": "string",
+                                    "maxLength": 32,
+                                    "minLength": 1
+                                },
+                                "categories": {
+                                    "type": "array",
+                                    "maxItems": 6,
+                                    "items": {
+                                        "type": "string",
+                                        "maxLength": 32,
+                                        "minLength": 1
+                                    }
+                                },
+                                "publishedAt": {
+                                    "type": "string",
+                                    "maxLength": 64,
+                                    "minLength": 1,
+                                    "format": "date-time"
+                                },
+                                "links": {
+                                    "type": "object",
+                                    "properties": {
+                                        "website": {
+                                            "type": "string",
+                                            "maxLength": 2048,
+                                            "minLength": 1
+                                        },
+                                        "setup": {
+                                            "type": "string",
+                                            "maxLength": 2048,
+                                            "minLength": 1
+                                        },
+                                        "documentation": {
+                                            "type": "string",
+                                            "maxLength": 2048,
+                                            "minLength": 1
+                                        },
+                                        "support": {
+                                            "type": "string",
+                                            "maxLength": 2048,
+                                            "minLength": 1
+                                        }
+                                    },
+                                    "required": []
+                                },
+                                "blocCount": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "hasTheme": {
+                                    "type": "boolean"
+                                },
+                                "browserRisk": {
+                                    "type": "string",
+                                    "maxLength": 6,
+                                    "minLength": 1,
+                                    "enum": ["none", "review", "high"]
+                                },
+                                "browserRiskDigest": {
+                                    "type": "string",
+                                    "maxLength": 71,
+                                    "minLength": 1
+                                },
+                                "javaScriptBlocCount": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "frameBlocCount": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "externalFrameOrigins": {
+                                    "type": "array",
+                                    "maxItems": 32,
+                                    "items": {
+                                        "type": "string",
+                                        "maxLength": 2048,
+                                        "minLength": 1
+                                    }
+                                },
+                                "scriptsWithSameOrigin": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": ["name"]
+                        }
+                    },
+                    "required": ["kind", "publisherId", "id", "version", "digest", "metadata"]
+                }
+            },
+            "nextCursor": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+            }
+        },
+        "required": ["releases"]
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/v1/catalogue",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        }
+    ],
+    "docs": ["overview.md"]
+}

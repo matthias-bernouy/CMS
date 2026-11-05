@@ -81,7 +81,7 @@ test("a third-party Provider delegates through CMS to another Provider with a sc
         });
         const result = await gateway.invoke({
             siteId: "site-a",
-            contractId: "origin",
+            contractId: "ulvia/origin",
             capabilityId: "item.list",
             input: {},
             actor: f.state.actor,

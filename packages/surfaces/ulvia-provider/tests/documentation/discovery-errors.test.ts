@@ -6,7 +6,7 @@ import { registerRepositoryDiscoveryCapabilities } from "../../src/capabilities/
 import { resolvedContract, invokeHttp } from "../execution/messages/fixtures";
 
 test("repository HTTP refusals keep absence, integrity, input and infrastructure errors distinct", async () => {
-    const contract = await resolvedContract("ulvia.cms.installations");
+    const contract = await resolvedContract("ulvia/cms.installations");
     const reference = {
         kind: "contract" as const,
         publisherId: contract.release.publisherId,

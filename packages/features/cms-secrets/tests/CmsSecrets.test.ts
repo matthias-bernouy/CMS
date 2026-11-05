@@ -76,12 +76,12 @@ describe("CmsSecrets", () => {
             scoped.keyId,
         );
 
-        await expect(secrets.resolve(namespace.namespaceId, scoped.namespaceKey, "missing")).rejects.toBeInstanceOf(
-            CmsSecretNotAuthorized,
-        );
+        await expect(
+            secrets.resolve(namespace.namespaceId, scoped.namespaceKey, "ulvia/missing"),
+        ).rejects.toBeInstanceOf(CmsSecretNotAuthorized);
         await secrets.revokeNamespaceKey(namespace.namespaceId, namespace.namespaceKey, replacement.keyId);
         await expect(
-            secrets.resolve(namespace.namespaceId, replacement.namespaceKey, "missing"),
+            secrets.resolve(namespace.namespaceId, replacement.namespaceKey, "ulvia/missing"),
         ).rejects.toBeInstanceOf(CmsSecretNotAuthorized);
     });
 

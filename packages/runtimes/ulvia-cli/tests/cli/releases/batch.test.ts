@@ -44,16 +44,14 @@ test("recursive release prepares the official contracts, provider and collection
         expect(await f.files.list("contracts")).toHaveLength(12);
         expect(await f.files.list("providers")).toHaveLength(1);
         const collections = await new LocalCollectionRepository(join(f.data, "repository")).list();
-        expect(collections.map(({ release }) => release.collectionId)).toEqual(["ulvia-official", "ulvia-repository"]);
+        expect(collections.map(({ release }) => release.collectionId)).toEqual(["ulvia/mossa", "ulvia/repository"]);
         expect(collections[0]!.assets).toHaveLength(55);
         expect(collections[0]!.release.examples).toHaveLength(105);
-        expect(collections[1]!.release.dependencies?.map(({ collectionId }) => collectionId)).toEqual([
-            "ulvia-official",
-        ]);
+        expect(collections[1]!.release.dependencies?.map(({ collectionId }) => collectionId)).toEqual(["ulvia/mossa"]);
         expect(collections[1]!.release.examples).toHaveLength(9);
-        expect(f.output[12]).toStartWith("+ provider ulvia.official/ulvia.official@");
-        expect(f.output[13]).toStartWith("+ collection ulvia.official/ulvia-official@");
-        expect(f.output[14]).toStartWith("+ collection ulvia.official/ulvia-repository@");
+        expect(f.output[12]).toStartWith("+ provider ulvia/primary-provider@");
+        expect(f.output[13]).toStartWith("+ collection ulvia/mossa@");
+        expect(f.output[14]).toStartWith("+ collection ulvia/repository@");
         expect(f.output.at(-1)).toBe("Prepared 15 local releases.");
     } finally {
         await f.close();
@@ -73,7 +71,7 @@ test("recursive release preserves verified contract fixture bytes", async () => 
         await mkdir(join(directory, "fixtures"));
         await writeFile(join(directory, "fixtures/receipt.svg"), asset);
         await f.run(["release", f.source, "--recursive"]);
-        const stored = await f.files.get("contracts", "ulvia.official", "communication.receipt", "0.1.0");
+        const stored = await f.files.get("contracts", "ulvia", "ulvia/communication.receipt", "0.1.0");
         expect(stored).not.toBeNull();
         expect(await f.files.fixture(stored!.toString("utf8"), "receipt.svg")).toEqual(asset);
     } finally {

@@ -24,7 +24,7 @@ async function fixture() {
 
 test("applies an exact reviewed switch once without changing Page bytes or revisions", async () => {
     const f = await fixture();
-    await f.repo.insertPage("/page", "Page", '<div cms-bloc="atlas-panel"></div>');
+    await f.repo.insertPage("/page", "Page", '<div cms-bloc="atlas-dofficial--atlas--panel"></div>');
     const before = await f.repo.getAllPages();
     const plan = await f.service.plan("site", f.targets);
     const results = await Promise.all([
@@ -40,7 +40,7 @@ test("applies an exact reviewed switch once without changing Page bytes or revis
 test("a Page write after review invalidates the plan", async () => {
     const f = await fixture();
     const plan = await f.service.plan("site", f.targets);
-    await f.repo.insertPage("/new", "New", '<div cms-bloc="atlas-panel"></div>');
+    await f.repo.insertPage("/new", "New", '<div cms-bloc="atlas-dofficial--atlas--panel"></div>');
     await expect(f.service.apply("site", f.targets, plan.planDigest)).rejects.toThrow("stale");
     expect(await f.collections.revision("site")).toBe(1);
 });

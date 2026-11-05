@@ -1,4 +1,4 @@
-/** Explicit public, actor-independent assets of ulvia.cms.content/v1. Never classify Pages or Files. */
+/** Explicit public, actor-independent assets of ulvia/cms.content/v1. Never classify Pages or Files. */
 export function isPublicContentAsset(request: Request): boolean {
     if (request.method !== "GET" && request.method !== "HEAD") {
         return false;

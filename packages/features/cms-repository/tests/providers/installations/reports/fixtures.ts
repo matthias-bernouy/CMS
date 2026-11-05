@@ -7,25 +7,25 @@ export const digest = `sha256:${"a".repeat(64)}`;
 export function reportDocument() {
     return {
         protocol: "ulvia-provider/v1",
-        providerId: "ulvia.example",
+        providerId: "ulvia/ulvia.example",
         instanceId: "instance:SHOP_42.prod",
         account: { id: "account:SHOP_42.prod", label: "Main shop — production" },
         buildVersion: "1.4.2",
         manifest: { version: "1.0.0", digest },
-        implementations: [{ contractId: "payment", version: "1.0.0", digest, status: "ready" }],
+        implementations: [{ contractId: "ulvia/payment", version: "1.0.0", digest, status: "ready" }],
     };
 }
 
 export async function admittedReport() {
     const catalogue = await releaseCatalogue(
-        contractDocument("payment", "create-link"),
-        contractDocument("payment", "create-link", "2.0.0"),
+        contractDocument("ulvia/payment", "create-link"),
+        contractDocument("ulvia/payment", "create-link", "2.0.0"),
     );
-    const releases = await catalogue.list("payment");
+    const releases = await catalogue.list("ulvia/payment");
     const admission = await admitProviderManifest(
         manifestDocument(
             releases.map(({ admission: release }) =>
-                implementation("payment", release.release.version, release.digest),
+                implementation("ulvia/payment", release.release.version, release.digest),
             ),
         ),
         catalogue,

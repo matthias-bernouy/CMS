@@ -16,7 +16,7 @@ test("remote preparation reports the Bloc and property and leaves no publishable
                     protocol: "ulvia-collection/v1",
                     schemaDialect: "ulvia-schema/v1",
                     publisherId: "atlas.official",
-                    collectionId: "atlas",
+                    collectionId: "atlas.official/atlas",
                     version: "1.0.0",
                     name: "label",
                     locale: "en",
@@ -24,10 +24,10 @@ test("remote preparation reports the Bloc and property and leaves no publishable
             },
             { path: "translations/en/base.json", content: '{"label":"Panel"}' },
             {
-                path: "blocs/atlas-panel/definition.json",
+                path: "blocs/atlas-dofficial--atlas--panel/definition.json",
                 content: JSON.stringify({
                     kind: "component",
-                    id: "atlas-panel",
+                    id: "atlas-dofficial--atlas--panel",
                     label: "label",
                     description: "label",
                     categories: ["label"],
@@ -38,8 +38,8 @@ test("remote preparation reports the Bloc and property and leaves no publishable
                     requires: [],
                 }),
             },
-            { path: "blocs/atlas-panel/markup.html", content: "<div></div>" },
-            { path: "blocs/atlas-panel/style.css", content: ":scope { background-color: #fff; }" },
+            { path: "blocs/atlas-dofficial--atlas--panel/markup.html", content: "<div></div>" },
+            { path: "blocs/atlas-dofficial--atlas--panel/style.css", content: ":scope { background-color: #fff; }" },
         ],
     };
     try {
@@ -54,7 +54,7 @@ test("remote preparation reports the Bloc and property and leaves no publishable
                 },
                 JSON.stringify(source),
             ),
-        ).rejects.toThrow(/atlas-panel.*background-color.*theme token/);
+        ).rejects.toThrow(/atlas-dofficial--atlas--panel.*background-color.*theme token/);
         expect(await readdir(root)).toEqual([]);
     } finally {
         await rm(root, { recursive: true, force: true });

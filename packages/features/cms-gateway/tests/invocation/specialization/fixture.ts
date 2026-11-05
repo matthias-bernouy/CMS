@@ -10,7 +10,7 @@ export async function specializedRoute(now = new Date().toISOString()) {
     await releases.publish(parentRoute.release.admission);
     const child = await admitContractRelease({
         ...parentRoute.release.admission.release,
-        contractId: "catalog.sql",
+        contractId: "ulvia/catalog.sql",
         version: "2.0.0",
         name: "SQL Catalog",
         capabilities: [
@@ -27,7 +27,7 @@ export async function specializedRoute(now = new Date().toISOString()) {
             },
         ],
         extends: {
-            contractId: "catalog",
+            contractId: "ulvia/catalog",
             version: "1.0.0",
             digest: parentRoute.release.admission.digest,
         },
@@ -36,7 +36,9 @@ export async function specializedRoute(now = new Date().toISOString()) {
     const manifestAdmission = await admitProviderManifest(
         {
             ...parentRoute.manifest.admission.manifest,
-            implementations: [{ contractId: "catalog.sql", version: "2.0.0", digest: child.digest, requires: [] }],
+            implementations: [
+                { contractId: "ulvia/catalog.sql", version: "2.0.0", digest: child.digest, requires: [] },
+            ],
         },
         releases,
     );
@@ -44,7 +46,7 @@ export async function specializedRoute(now = new Date().toISOString()) {
     const selection = {
         ...parentRoute.selection,
         version: "2.0.0",
-        contractId: "catalog.sql",
+        contractId: "ulvia/catalog.sql",
         digest: child.digest,
     };
     const installation = {
@@ -62,7 +64,12 @@ export async function specializedRoute(now = new Date().toISOString()) {
                 ...parentRoute.installation.observation!.report,
                 manifest: { version: "1.0.0", digest: manifestAdmission.digest },
                 implementations: [
-                    { contractId: "catalog.sql", version: "2.0.0", digest: child.digest, status: "ready" as const },
+                    {
+                        contractId: "ulvia/catalog.sql",
+                        version: "2.0.0",
+                        digest: child.digest,
+                        status: "ready" as const,
+                    },
                 ],
             },
         },

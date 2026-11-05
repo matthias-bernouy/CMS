@@ -27,17 +27,17 @@ describe("provider runtime report parsing", () => {
         const document = reportDocument();
         const entry = document.implementations[0]!;
         document.implementations = [
-            { ...entry, contractId: "hotel" },
-            { ...entry, contractId: "delta" },
-            { ...entry, contractId: "chess", version: "2.0.0" },
-            { ...entry, contractId: "chess", version: "1.0.0" },
+            { ...entry, contractId: "ulvia/hotel" },
+            { ...entry, contractId: "ulvia/delta" },
+            { ...entry, contractId: "ulvia/chess", version: "2.0.0" },
+            { ...entry, contractId: "ulvia/chess", version: "1.0.0" },
         ];
         expect(
             parseProviderRuntimeReport(document).implementations.map(
                 ({ contractId, version }) => `${contractId}@${version}`,
             ),
-        ).toEqual(["chess@1.0.0", "chess@2.0.0", "delta@1.0.0", "hotel@1.0.0"]);
-        expect(document.implementations[0]?.contractId).toBe("hotel");
+        ).toEqual(["ulvia/chess@1.0.0", "ulvia/chess@2.0.0", "ulvia/delta@1.0.0", "ulvia/hotel@1.0.0"]);
+        expect(document.implementations[0]?.contractId).toBe("ulvia/hotel");
     });
 
     test("rejects duplicate release tuples even when their statuses differ", () => {

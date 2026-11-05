@@ -11,12 +11,12 @@ afterEach(resetDom);
 
 test("a Provider query with input uses the logical QUERY transport", () => {
     const query = el(`<section
-        cms-query="ulvia.cms.content:pages.list as pages"
+        cms-query="ulvia/cms.content:pages.list as pages"
         cms-query-input='{"limit":{"from":"literal","value":20}}'
     ></section>`);
 
     expect(queryRequest(query)).toEqual({
-        url: "/.cms/query/ulvia.cms.content/pages.list",
+        url: "/.cms/query/ulvia/cms.content/pages.list",
         init: {
             method: "QUERY",
             headers: { "content-type": "application/json" },
@@ -27,26 +27,26 @@ test("a Provider query with input uses the logical QUERY transport", () => {
 });
 
 test("a Provider query input builds nested objects and arrays from typed paths", () => {
-    location.href = "http://localhost/?site-repository=official&site-collection=ulvia&site-version=2.0.0";
+    location.href = "http://localhost/?site-repository=official&site-collection=ulvia%2Fmossa&site-version=2.0.0";
     const query = el(`<section
-        cms-query="ulvia.cms.installations:plan-collection-migration as plan"
+        cms-query="ulvia/cms.installations:plan-collection-migration as plan"
         cms-query-input='{
             "targets[0][repositoryId]":{"from":"state","key":"@param:site-repository"},
             "targets[0][collectionId]":{"from":"state","key":"@param:site-collection"},
             "targets[0][version]":{"from":"state","key":"@param:site-version"},
-            "targets[0][publisherId]":{"from":"literal","value":"ulvia.official"}
+            "targets[0][publisherId]":{"from":"literal","value":"ulvia"}
         }'
     ></section>`);
 
     expect(queryRequest(query).init.body).toBe(
-        '{"targets":[{"repositoryId":"official","collectionId":"ulvia","version":"2.0.0","publisherId":"ulvia.official"}]}',
+        '{"targets":[{"repositoryId":"official","collectionId":"ulvia/mossa","version":"2.0.0","publisherId":"ulvia"}]}',
     );
 });
 
 test("a Provider query omits absent optional query parameters", () => {
-    location.href = "http://localhost/?site-collection=ulvia&site-theme-mode=";
+    location.href = "http://localhost/?site-collection=ulvia%2Fmossa&site-theme-mode=";
     const query = el(`<section
-        cms-query="ulvia.cms.content:theme.get as theme"
+        cms-query="ulvia/cms.content:theme.get as theme"
         cms-query-input='{
             "collectionId":{"from":"state","key":"@param:site-collection"},
             "profileId":{"from":"state","key":"@param:site-theme-profile","optional":true},
@@ -54,16 +54,16 @@ test("a Provider query omits absent optional query parameters", () => {
         }'
     ></section>`);
 
-    expect(queryRequest(query).init.body).toBe('{"collectionId":"ulvia","mode":""}');
+    expect(queryRequest(query).init.body).toBe('{"collectionId":"ulvia/mossa","mode":""}');
 });
 
 test("a Provider query selects and strictly casts synchronized state", () => {
-    const target = { scope: "page", key: "ulvia-official-selection" } as const;
+    const target = { scope: "page", key: "ulvia--mossa--selection" } as const;
     writeSyncValue(target, { data: { product: { id: "42" } } });
     const query = el(`<section
-        cms-query="catalog.items:get as product"
+        cms-query="ulvia/catalog.items:get as product"
         cms-query-input='{
-            "id":{"from":"state","key":"@page:ulvia-official-selection","path":["data","product","id"],"cast":"integer"},
+            "id":{"from":"state","key":"@page:ulvia--mossa--selection","path":["data","product","id"],"cast":"integer"},
             "locale":{"from":"state","key":"@param:site-locale","fallback":"en"}
         }'
     ></section>`);
@@ -73,11 +73,11 @@ test("a Provider query selects and strictly casts synchronized state", () => {
 });
 
 test("a Provider query waits for required synchronized input", async () => {
-    const target = { scope: "page", key: "ulvia-official-required-filter" } as const;
+    const target = { scope: "page", key: "ulvia--mossa--required-filter" } as const;
     const host = el(`<section
-        cms-query="catalog.items:list as products"
-        cms-query-input='{"status":{"from":"state","key":"@page:ulvia-official-required-filter"}}'
-        cms-query-listen="@page:ulvia-official-required-filter"
+        cms-query="ulvia/catalog.items:list as products"
+        cms-query-input='{"status":{"from":"state","key":"@page:ulvia--mossa--required-filter"}}'
+        cms-query-listen="@page:ulvia--mossa--required-filter"
     ><p cms-condition="products.activity === 'waiting'">Waiting</p></section>`);
     document.body.appendChild(host);
     const inputs: unknown[] = [];
@@ -103,24 +103,24 @@ test("a Provider query waits for required synchronized input", async () => {
 });
 
 test("a Provider query without input uses the cache-compatible logical GET transport", () => {
-    const query = el('<section cms-query="ulvia.cms.content:pages.list as pages"></section>');
+    const query = el('<section cms-query="ulvia/cms.content:pages.list as pages"></section>');
 
     expect(queryRequest(query)).toEqual({
-        url: "/.cms/query/ulvia.cms.content/pages.list",
+        url: "/.cms/query/ulvia/cms.content/pages.list",
         init: { method: "GET" },
     });
 });
 
 test("queries always use the canonical capability transport", () => {
-    const account = el('<section cms-query="ulvia.cms.access:resolve-actor as account"></section>');
+    const account = el('<section cms-query="ulvia/cms.access:resolve-actor as account"></section>');
     expect(queryRequest(account)).toEqual({
-        url: "/.cms/query/ulvia.cms.access/resolve-actor",
+        url: "/.cms/query/ulvia/cms.access/resolve-actor",
         init: { method: "GET" },
     });
 });
 
 test("the alias owns the complete query state and data", async () => {
-    const host = el(`<section cms-query="catalog.items:list as products">
+    const host = el(`<section cms-query="ulvia/catalog.items:list as products">
         <p cms-condition="products.activity === 'fetching'">Loading</p>
         <ul cms-condition="products.hasData">
             <li cms-repeat="products.data as product">{{ product.name }}</li>
@@ -153,9 +153,9 @@ test("the alias owns the complete query state and data", async () => {
 test("a nested mutation preserves parent query boolean attributes", async () => {
     globalThis.fetch = (async () =>
         Response.json({ installations: [{ id: "provider-1", selectionCount: 8 }] })) as typeof fetch;
-    const host = el(`<section cms-query="providers:list as providers">
+    const host = el(`<section cms-query="ulvia/providers:list as providers">
         <article cms-repeat="providers.data.installations as installation">
-            <form cms-mutation="providers:set-status as mutation">
+            <form cms-mutation="ulvia/providers:set-status as mutation">
                 <button disabled="{{ installation.selectionCount > 0 }}">Disable</button>
             </form>
         </article>
@@ -178,9 +178,9 @@ test("a repeated mutation submits parent query values and literal form values", 
         }
         return Response.json({ files: [{ fileId: "file-1", visibility: "private" }] });
     }) as typeof fetch;
-    const host = el(`<section cms-query="files:list as files">
+    const host = el(`<section cms-query="ulvia/files:list as files">
         <article cms-repeat="files.data.files as file">
-            <form cms-condition="file.visibility === 'private'" cms-mutation="files:set-visibility as mutation">
+            <form cms-condition="file.visibility === 'private'" cms-mutation="ulvia/files:set-visibility as mutation">
                 <input type="hidden" name="fileId" value="{{ file.fileId }}">
                 <input type="hidden" name="visibility" value="public">
             </form>
@@ -201,11 +201,11 @@ test("a repeated mutation submits parent query values and literal form values", 
 });
 
 test("a remote query publishes its lifecycle and resolved input", async () => {
-    const target = { scope: "page", key: "ulvia-official-products" } as const;
+    const target = { scope: "page", key: "ulvia--mossa--products" } as const;
     const host = el(`<section
-        cms-query="catalog.items:list as products"
+        cms-query="ulvia/catalog.items:list as products"
         cms-query-input='{"limit":{"from":"literal","value":20}}'
-        cms-sync="@page:ulvia-official-products"
+        cms-sync="@page:ulvia--mossa--products"
     ><p>{{ products.data[0].name }}</p></section>`);
     document.body.appendChild(host);
     const query = new Query(host, {}, { request: async () => ({ kind: "success", data: [{ name: "Racket" }] }) });
@@ -225,11 +225,11 @@ test("a remote query publishes its lifecycle and resolved input", async () => {
 });
 
 test("a remote query publishes multiple selected branches", async () => {
-    const target = { scope: "page", key: "ulvia-official-product-selection" } as const;
+    const target = { scope: "page", key: "ulvia--mossa--product-selection" } as const;
     const host = el(`<section
-        cms-query="catalog.items:list as products"
+        cms-query="ulvia/catalog.items:list as products"
         cms-query-input='{"limit":{"from":"literal","value":20}}'
-        cms-sync="@page:ulvia-official-product-selection"
+        cms-sync="@page:ulvia--mossa--product-selection"
         cms-sync-select="data input.limit outcome.kind"
     ></section>`);
     document.body.appendChild(host);
@@ -250,13 +250,13 @@ test("a remote query publishes multiple selected branches", async () => {
 });
 
 test("a remote query refreshes only when one of its synchronized inputs changes", async () => {
-    const target = { scope: "page", key: "ulvia-official-filter" } as const;
-    const unrelated = { scope: "page", key: "ulvia-official-unrelated" } as const;
+    const target = { scope: "page", key: "ulvia--mossa--filter" } as const;
+    const unrelated = { scope: "page", key: "ulvia--mossa--unrelated" } as const;
     writeSyncValue(target, "draft");
     const host = el(`<section
-        cms-query="catalog.items:list as products"
-        cms-query-input='{"status":{"from":"state","key":"@page:ulvia-official-filter"}}'
-        cms-query-listen="@page:ulvia-official-filter"
+        cms-query="ulvia/catalog.items:list as products"
+        cms-query-input='{"status":{"from":"state","key":"@page:ulvia--mossa--filter"}}'
+        cms-query-listen="@page:ulvia--mossa--filter"
     ></section>`);
     document.body.appendChild(host);
     const inputs: unknown[] = [];
@@ -286,12 +286,12 @@ test("a remote query refreshes only when one of its synchronized inputs changes"
 });
 
 test("an explicit listener invalidates a remote query even when its selected input path is unchanged", async () => {
-    const target = { scope: "page", key: "ulvia-official-selection-snapshot" } as const;
+    const target = { scope: "page", key: "ulvia--mossa--selection-snapshot" } as const;
     writeSyncValue(target, { data: { id: "one" }, refreshing: false });
     const host = el(`<section
-        cms-query="catalog.items:get as product"
-        cms-query-input='{"id":{"from":"state","key":"@page:ulvia-official-selection-snapshot","path":["data","id"]}}'
-        cms-query-listen="@page:ulvia-official-selection-snapshot"
+        cms-query="ulvia/catalog.items:get as product"
+        cms-query-input='{"id":{"from":"state","key":"@page:ulvia--mossa--selection-snapshot","path":["data","id"]}}'
+        cms-query-listen="@page:ulvia--mossa--selection-snapshot"
     ></section>`);
     document.body.appendChild(host);
     const inputs: unknown[] = [];
@@ -318,11 +318,11 @@ test("an explicit listener invalidates a remote query even when its selected inp
 });
 
 test("a projected listener reloads only when its selected JSON branch changes", async () => {
-    const target = { scope: "page", key: "ulvia-official-save" } as const;
+    const target = { scope: "page", key: "ulvia--mossa--save" } as const;
     writeSyncValue(target, { activity: "idle", lastSuccess: null });
     const host = el(`<section
-        cms-query="catalog.items:list as products"
-        cms-query-listen="@page:ulvia-official-save/lastSuccess"
+        cms-query="ulvia/catalog.items:list as products"
+        cms-query-listen="@page:ulvia--mossa--save/lastSuccess"
     ></section>`);
     document.body.appendChild(host);
     let requests = 0;
@@ -356,12 +356,12 @@ test("a projected listener reloads only when its selected JSON branch changes", 
 });
 
 test("a remote query restarts after its input changes away and back while in flight", async () => {
-    const target = { scope: "page", key: "ulvia-official-fast-filter" } as const;
+    const target = { scope: "page", key: "ulvia--mossa--fast-filter" } as const;
     writeSyncValue(target, "draft");
     const host = el(`<section
-        cms-query="catalog.items:list as products"
-        cms-query-input='{"status":{"from":"state","key":"@page:ulvia-official-fast-filter"}}'
-        cms-query-listen="@page:ulvia-official-fast-filter"
+        cms-query="ulvia/catalog.items:list as products"
+        cms-query-input='{"status":{"from":"state","key":"@page:ulvia--mossa--fast-filter"}}'
+        cms-query-listen="@page:ulvia--mossa--fast-filter"
     ></section>`);
     document.body.appendChild(host);
     const inputs: unknown[] = [];
@@ -395,11 +395,11 @@ test("a remote query restarts after its input changes away and back while in fli
 });
 
 test("a remote query treats synchronized inputs as snapshots without an explicit listener", async () => {
-    const target = { scope: "page", key: "ulvia-official-snapshot-filter" } as const;
+    const target = { scope: "page", key: "ulvia--mossa--snapshot-filter" } as const;
     writeSyncValue(target, "draft");
     const host = el(`<section
-        cms-query="catalog.items:list as products"
-        cms-query-input='{"status":{"from":"state","key":"@page:ulvia-official-snapshot-filter"}}'
+        cms-query="ulvia/catalog.items:list as products"
+        cms-query-input='{"status":{"from":"state","key":"@page:ulvia--mossa--snapshot-filter"}}'
     ></section>`);
     document.body.appendChild(host);
     const inputs: unknown[] = [];
@@ -425,8 +425,8 @@ test("a remote query treats synchronized inputs as snapshots without an explicit
 });
 
 test("a synchronized-state query consumes the producer snapshot without HTTP", () => {
-    const target = { scope: "page", key: "ulvia-official-shared-products" } as const;
-    const host = el(`<section cms-query="@page:ulvia-official-shared-products as products">
+    const target = { scope: "page", key: "ulvia--mossa--shared-products" } as const;
+    const host = el(`<section cms-query="@page:ulvia--mossa--shared-products as products">
         <p cms-condition="products.hasData">{{ products.data.name }}</p>
     </section>`);
     document.body.appendChild(host);
@@ -446,12 +446,12 @@ test("a synchronized-state query consumes the producer snapshot without HTTP", (
 });
 
 test("query imports compose several synchronized query states without HTTP", () => {
-    const pages = { scope: "page", key: "ulvia-official-shared-pages" } as const;
-    const user = { scope: "session", key: "ulvia-official-shared-user" } as const;
+    const pages = { scope: "page", key: "ulvia--mossa--shared-pages" } as const;
+    const user = { scope: "session", key: "ulvia--mossa--shared-user" } as const;
     writeSyncValue(pages, { total: 2 });
     writeSyncValue(user, { name: "Ada" });
     const host =
-        el(`<section cms-queries="@page:ulvia-official-shared-pages as pages @session:ulvia-official-shared-user as user">
+        el(`<section cms-queries="@page:ulvia--mossa--shared-pages as pages @session:ulvia--mossa--shared-user as user">
         <p>{{ user.data.name }}: {{ pages.data.total }}</p>
     </section>`);
     document.body.appendChild(host);
@@ -479,11 +479,11 @@ test("query imports compose several synchronized query states without HTTP", () 
 });
 
 test("a primary query renders with imported synchronized query states", async () => {
-    const user = { scope: "page", key: "ulvia-official-query-user" } as const;
+    const user = { scope: "page", key: "ulvia--mossa--query-user" } as const;
     writeSyncValue(user, { name: "Ada" });
     const host = el(`<section
-        cms-query="catalog.items:list as products"
-        cms-queries="@page:ulvia-official-query-user as user"
+        cms-query="ulvia/catalog.items:list as products"
+        cms-queries="@page:ulvia--mossa--query-user as user"
     ><p>{{ user.data.name }}: {{ products.data.length }}</p></section>`);
     document.body.appendChild(host);
     const query = new Query(host, {}, { request: async () => ({ kind: "success", data: ["one", "two"] }) });
@@ -496,7 +496,7 @@ test("a primary query renders with imported synchronized query states", async ()
 });
 
 test("a refresh failure retains the previous data and exposes its outcome", async () => {
-    const host = el(`<section cms-query="catalog.items:list as products">
+    const host = el(`<section cms-query="ulvia/catalog.items:list as products">
         <p>{{ products.data.name }}</p>
         <span cms-condition="products.outcome.kind === 'failure'">Refresh failed</span>
     </section>`);
@@ -524,7 +524,7 @@ test("a refresh failure retains the previous data and exposes its outcome", asyn
 });
 
 test("a reload queued during an active query waits for a fresh result", async () => {
-    const host = el('<section cms-query="catalog.items:list as products"></section>');
+    const host = el('<section cms-query="ulvia/catalog.items:list as products"></section>');
     document.body.appendChild(host);
     const releases: Array<() => void> = [];
     let calls = 0;
@@ -551,10 +551,10 @@ test("a reload queued during an active query waits for a fresh result", async ()
 });
 
 test("an acknowledged query refresh reapplies unchanged server values to that form", async () => {
-    const target = { scope: "page", key: "test-profile-mutation" } as const;
+    const target = { scope: "page", key: "example--test--profile-mutation" } as const;
     const host = el(`<section
-        cms-query="profile:get as profile"
-        cms-query-listen="@page:test-profile-mutation/lastSuccess/requestId"
+        cms-query="ulvia/profile:get as profile"
+        cms-query-listen="@page:example--test--profile-mutation/lastSuccess/requestId"
     >
         <form>
             <input name="name" value="{{ profile.data.name }}">

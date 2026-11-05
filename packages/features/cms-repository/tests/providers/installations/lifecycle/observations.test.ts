@@ -45,7 +45,7 @@ describe("CMS-owned runtime observations", () => {
         await approve();
         for (const patch of [
             { observedAt: "2099-01-01T00:00:00Z" },
-            { providerId: "other.provider" },
+            { providerId: "ulvia/other.provider" },
             { account: { ...report.account, id: "account:other" } },
             { manifest: { ...report.manifest, version: "2.0.0" } },
             { implementations: [{ ...report.implementations[0], version: "2.0.0" }] },

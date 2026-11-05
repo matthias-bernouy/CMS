@@ -1,0 +1,14 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia/cms.secrets",
+    "name": "CMS Secrets",
+    "description": "Manage credential-owned secret namespaces and encrypted CMS secret values.",
+    "version": "1.0.0",
+    "publisherId": "ulvia",
+    "catalogue": {
+        "icon": "key",
+        "categories": ["administration", "infrastructure"]
+    }
+}

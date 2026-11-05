@@ -13,14 +13,14 @@ import { collectionDocument } from "../../fixtures";
 
 test("demonstrations and catalogue resources alone do not request runtime execution grants", () => {
     const release = parseCollectionRelease(collectionDocument());
-    const requirement = { contractId: "catalog", capabilityId: "list", versionRange: "^1.0.0" };
+    const requirement = { contractId: "ulvia/catalog", capabilityId: "list", versionRange: "^1.0.0" };
     const references = collectionUsageInventory([
         {
             ...release,
-            exports: { blocs: ["atlas-panel"], themeTokens: [] },
+            exports: { blocs: ["atlas-dofficial--atlas--panel"], themeTokens: [] },
             blocs: release.blocs.map((bloc) => ({ ...bloc, requires: [requirement] })),
             examples: [
-                { ...release.examples![0]!, document: { html: '<div cms-query="catalog:list as items"></div>' } },
+                { ...release.examples![0]!, document: { html: '<div cms-query="ulvia/catalog:list as items"></div>' } },
             ],
         },
     ]);
@@ -31,7 +31,10 @@ test("demonstrations and catalogue resources alone do not request runtime execut
             .every((reference) => reference.scope === "catalogue"),
     ).toBe(true);
     expect(references).toContainEqual(
-        expect.objectContaining({ location: "collection:atlas/exports/blocs/atlas-panel", scope: "catalogue" }),
+        expect.objectContaining({
+            location: "collection:atlas.official/atlas/exports/blocs/atlas-dofficial--atlas--panel",
+            scope: "catalogue",
+        }),
     );
 });
 
@@ -40,13 +43,13 @@ test("token ownership and state references use exact identities with overlapping
     const releases = [
         {
             ...base,
-            collectionId: "atlas",
+            collectionId: "atlas.official/atlas",
             states: [{ id: "menu", scope: "page" as const, schema: { type: "boolean" as const } }],
         },
-        { ...base, collectionId: "atlas-ui", states: [] },
+        { ...base, collectionId: "ulvia/atlas-ui", states: [] },
     ];
     const references = documentReferences(
-        "var(--atlas-ui-accent) @page:atlas-menu-open",
+        "var(--ulvia--atlas-ui--accent) @page:atlas-dofficial--atlas--menu-open",
         "page:one",
         "runtime",
         releases,
@@ -54,7 +57,7 @@ test("token ownership and state references use exact identities with overlapping
     expect(references).toContainEqual({
         type: "resource",
         kind: "theme-token",
-        collectionId: "atlas-ui",
+        collectionId: "ulvia/atlas-ui",
         id: "accent",
         location: "page:one",
         scope: "runtime",
@@ -117,7 +120,7 @@ test("ordinary configuration keys are not misclassified as theme-token overrides
                 },
                 required: ["counts"],
             },
-            defaults: { counts: { "atlas-order": 2 } },
+            defaults: { counts: { "atlas-dofficial--atlas--order": 2 } },
         },
     };
     const artifact = await collections.importRelease(source);

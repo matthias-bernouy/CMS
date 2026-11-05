@@ -3,7 +3,7 @@ import type { ProviderOperationExecutor } from "../../operations/ProviderOperati
 import type { ProviderOperationRecord } from "../../operations/types";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
 
-const CONTRACT_ID = "ulvia.cms.installations";
+const CONTRACT_ID = "ulvia/cms.installations";
 
 export function registerCollectionOperationCapabilities(
     dispatcher: ProviderCapabilityRegistry,

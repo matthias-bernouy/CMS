@@ -7,9 +7,9 @@ afterEach(resetDom);
 
 describe("BindingRuntime — query render reconciliation", () => {
     test("disposes detached synchronized controls without observer delivery", async () => {
-        const paramTarget = { scope: "param", key: "test-detached-param" } as const;
-        const pageTarget = { scope: "page", key: "test-detached-state" } as const;
-        const refreshTarget = { scope: "page", key: "test-query-refresh" } as const;
+        const paramTarget = { scope: "param", key: "example--test--detached-param" } as const;
+        const pageTarget = { scope: "page", key: "example--test--detached-state" } as const;
+        const refreshTarget = { scope: "page", key: "example--test--query-refresh" } as const;
         writeSyncValue(paramTarget, undefined);
         writeSyncValue(pageTarget, undefined);
         writeSyncValue(refreshTarget, undefined);
@@ -17,10 +17,10 @@ describe("BindingRuntime — query render reconciliation", () => {
         globalThis.fetch = (async () => res(200, JSON.stringify({ items: [++outerCalls] }))) as unknown as typeof fetch;
         const root = el(`
             <div>
-                <div cms-query="ulvia.cms.access:resolve-actor as outer" cms-query-listen="@page:test-query-refresh">
+                <div cms-query="ulvia/cms.access:resolve-actor as outer" cms-query-listen="@page:example--test--query-refresh">
                     <section cms-repeat="outer.data.items as item">
-                        <input class="param" cms-sync="@param:test-detached-param" value="{{ item }}">
-                        <input class="state" cms-sync="@page:test-detached-state" value="{{ item }}">
+                        <input class="param" cms-sync="@param:example--test--detached-param" value="{{ item }}">
+                        <input class="state" cms-sync="@page:example--test--detached-state" value="{{ item }}">
                     </section>
                 </div>
             </div>

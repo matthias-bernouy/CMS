@@ -1,0 +1,235 @@
+<section
+    cms-query="ulvia/cms.content:theme.get as collectionTheme"
+    cms-query-input='{"collectionId":{"from":"state","key":"@param:ulvia--mossa--collection"},"profileId":{"from":"state","key":"@param:ulvia--mossa--theme-profile","optional":true},"mode":{"from":"state","key":"@param:ulvia--mossa--theme-mode","optional":true},"tokenId":{"from":"state","key":"@param:ulvia--mossa--theme-token","optional":true},"search":{"from":"state","key":"@param:ulvia--mossa--theme-search","optional":true}}'
+    cms-query-listen="@param:ulvia--mossa--collection @param:ulvia--mossa--theme-profile @param:ulvia--mossa--theme-mode @param:ulvia--mossa--theme-token @param:ulvia--mossa--theme-search @page:ulvia--mossa--theme-mutation/lastSuccess/requestId"
+>
+    <p role="status" aria-live="polite" cms-condition="collectionTheme.activity === 'fetching'">
+        {{ cms.i18n.ulvia/mossa.ui-working }}
+    </p>
+    <div cms-match="collectionTheme.outcome.kind">
+        <span cms-case='"none"' hidden></span>
+        <div cms-case='"error"' cms-match="collectionTheme.outcome.code">
+            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+            </p>
+        </div>
+        <div cms-bloc="ulvia--mossa--stack" gap="lg" cms-case='"success"'>
+            <header slot="items">
+                <h3 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-collection-theme-editor }}</h3>
+                <p>{{ cms.i18n.ulvia/mossa.ui-edit-collection-theme-help }}</p>
+            </header>
+            <div cms-bloc="ulvia--mossa--surface" padding="lg" appearance="subtle" slot="items">
+                <div cms-bloc="ulvia--mossa--grid" gap="md" items-align="end" columns="3" slot="content">
+                    <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
+                        <span slot="label">
+                            {{ cms.i18n.ulvia/mossa.ui-theme-profile }}
+                        </span>
+                        <div cms-bloc="ulvia--mossa--select" slot="control">
+                            <select id="collection-theme-profile" cms-sync="@param:ulvia--mossa--theme-profile">
+                                <option
+                                    cms-repeat="collectionTheme.data.profiles as profile"
+                                    value="{{ profile.id }}"
+                                    selected="{{ profile.id === collectionTheme.data.profileId }}"
+                                >
+                                    {{ profile.name }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
+                        <span slot="label">
+                            {{ cms.i18n.ulvia/mossa.ui-theme-mode }}
+                        </span>
+                        <div cms-bloc="ulvia--mossa--select" slot="control">
+                            <select id="collection-theme-mode" cms-sync="@param:ulvia--mossa--theme-mode">
+                                <option value="light" selected="{{ collectionTheme.data.mode === 'light' }}">
+                                    {{ cms.i18n.ulvia/mossa.ui-light }}
+                                </option>
+                                <option value="dark" cms-condition="collectionTheme.data.supportsModes" selected="{{ collectionTheme.data.mode === 'dark' }}">
+                                    {{ cms.i18n.ulvia/mossa.ui-dark }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
+                        <span slot="label">
+                            {{ cms.i18n.ulvia/mossa.ui-search-tokens }}
+                        </span>
+                        <div cms-bloc="ulvia--mossa--input" slot="control">
+                            <input
+                                id="collection-theme-search"
+                                type="search"
+                                cms-sync="@param:ulvia--mossa--theme-search"
+                                value="{{ collectionTheme.data.search }}"
+                                placeholder="{{ cms.i18n.ulvia/mossa.ui-search-theme-tokens }}"
+                            >
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div cms-bloc="ulvia--mossa--cluster" justify="between" items-align="center" slot="items">
+                <div cms-bloc="ulvia--mossa--badge" cms-condition="collectionTheme.data.profileActive" tone="success" slot="items">
+                    <span slot="label">{{ cms.i18n.ulvia/mossa.ui-active-theme }}</span>
+                </div>
+                <div cms-bloc="ulvia--mossa--badge" cms-condition="collectionTheme.data.profileActive === false" tone="neutral" slot="items">
+                    <span slot="label">{{ cms.i18n.ulvia/mossa.ui-draft-theme }}</span>
+                </div>
+                <form
+                    slot="items"
+                    cms-condition="collectionTheme.data.profileActive === false"
+                    cms-mutation="ulvia/cms.content:theme.activate as activatedTheme"
+                    cms-sync="@page:ulvia--mossa--theme-mutation"
+                    cms-sync-select="lastSuccess.requestId"
+                >
+                    <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
+                    <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
+                    <button cms-bloc="ulvia--mossa--action" tone="secondary" variant="outline" type="submit">
+                        <span>{{ cms.i18n.ulvia/mossa.ui-activate-theme }}</span>
+                    </button>
+                    <p role="alert" cms-condition="(activatedTheme.outcome.kind === 'error' || activatedTheme.outcome.kind === 'failure')">
+                        {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                    </p>
+
+                    <div cms-match="activatedTheme.outcome.kind">
+                        <span cms-case='"none"' hidden></span>
+                        <span cms-case='"success"' hidden></span>
+                        <div cms-case='"error"' cms-match="activatedTheme.outcome.code">
+                            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                        </div>
+                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                    </div>
+                </form>
+            </div>
+            <p slot="items" cms-condition="collectionTheme.data.sourceFound === false">
+                {{ cms.i18n.ulvia/mossa.ui-this-collection-publishes-no-theme-catalogue }}
+            </p>
+            <p slot="items" cms-condition="collectionTheme.data.sourceFound && collectionTheme.data.tokens.length === 0">
+                {{ cms.i18n.ulvia/mossa.ui-no-theme-token-matches-current-search }}
+            </p>
+            <div cms-bloc="ulvia--mossa--surface" cms-condition="collectionTheme.data.hasToken" radius="sm" padding="md" appearance="outlined" slot="items">
+                <div cms-bloc="ulvia--mossa--stack" gap="md" slot="content">
+                    <header slot="items">
+                        <p>{{ collectionTheme.data.token.categoryLabel }}</p>
+                        <h4 cms-bloc="ulvia--mossa--heading">{{ collectionTheme.data.token.label }}</h4>
+                        <p>{{ collectionTheme.data.token.description }}</p>
+                        <code>{{ collectionTheme.data.token.variable }}</code>
+                    </header>
+                    <form
+                        slot="items"
+                        cms-mutation="ulvia/cms.content:theme.token.save as savedThemeToken"
+                        cms-sync="@page:ulvia--mossa--theme-mutation"
+                        cms-sync-select="lastSuccess.requestId"
+                        cms-mutation-reset="false"
+                    >
+                        <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
+                        <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
+                        <input type="hidden" name="mode" value="{{ collectionTheme.data.mode }}">
+                        <input type="hidden" name="tokenId" value="{{ collectionTheme.data.token.id }}">
+                        <div cms-bloc="ulvia--mossa--stack" gap="md">
+                            <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
+                                <span slot="label">
+                                    {{ cms.i18n.ulvia/mossa.ui-token-value }}
+                                </span>
+                                <div cms-bloc="ulvia--mossa--input" slot="control">
+                                    <input
+                                        id="collection-theme-token-value"
+                                        type="text"
+                                        name="value"
+                                        value="{{ collectionTheme.data.token.value }}"
+                                        maxlength="4096"
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            <div cms-bloc="ulvia--mossa--form-actions" actions-align="end" slot="items">
+                                <p slot="actions" role="status" aria-live="polite" cms-condition="savedThemeToken.outcome.kind === 'success'">
+                                    {{ cms.i18n.ulvia/mossa.ui-theme-value-saved }}
+                                </p>
+                                <p
+                                    slot="actions"
+                                    role="alert"
+                                    cms-condition="(savedThemeToken.outcome.kind === 'error' || savedThemeToken.outcome.kind === 'failure')"
+                                >
+                                    {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                                </p>
+                                <button cms-bloc="ulvia--mossa--action" tone="primary" variant="filled" slot="actions" type="submit">
+                                    <span>{{ cms.i18n.ulvia/mossa.ui-save-value }}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div cms-match="savedThemeToken.outcome.kind">
+                            <span cms-case='"none"' hidden></span>
+                            <span cms-case='"success"' hidden></span>
+                            <div cms-case='"error"' cms-match="savedThemeToken.outcome.code">
+                                <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            </div>
+                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                        </div>
+                    </form>
+                    <form
+                        slot="items"
+                        cms-condition="collectionTheme.data.token.overridden"
+                        cms-mutation="ulvia/cms.content:theme.token.reset as resetThemeToken"
+                        cms-sync="@page:ulvia--mossa--theme-mutation"
+                        cms-sync-select="lastSuccess.requestId"
+                    >
+                        <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
+                        <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
+                        <input type="hidden" name="mode" value="{{ collectionTheme.data.mode }}">
+                        <input type="hidden" name="tokenId" value="{{ collectionTheme.data.token.id }}">
+                        <button cms-bloc="ulvia--mossa--action" tone="secondary" variant="outline" type="submit">
+                            <span>{{ cms.i18n.ulvia/mossa.ui-reset-to-collection-value }}</span>
+                        </button>
+                        <p role="alert" cms-condition="(resetThemeToken.outcome.kind === 'error' || resetThemeToken.outcome.kind === 'failure')">
+                            {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                        </p>
+
+                        <div cms-match="resetThemeToken.outcome.kind">
+                            <span cms-case='"none"' hidden></span>
+                            <span cms-case='"success"' hidden></span>
+                            <div cms-case='"error"' cms-match="resetThemeToken.outcome.code">
+                                <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            </div>
+                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div cms-bloc="ulvia--mossa--list" cms-condition="collectionTheme.data.tokens.length" slot="items">
+                <div cms-bloc="ulvia--mossa--list-item" density="compact" cms-repeat="collectionTheme.data.tokens as token" slot="items">
+                    <strong slot="title">{{ token.label }}</strong>
+                    <span slot="meta">{{ token.categoryLabel }}</span>
+                    <code slot="description">{{ token.variable }}</code>
+                    <div cms-bloc="ulvia--mossa--cluster" gap="sm" items-align="center" slot="body">
+                        <code slot="items">{{ token.value }}</code>
+                        <div cms-bloc="ulvia--mossa--badge" cms-condition="token.overridden" tone="info" slot="items">
+                            <span slot="label">{{ cms.i18n.ulvia/mossa.ui-overridden }}</span>
+                        </div>
+                    </div>
+                    <a
+                        cms-bloc="ulvia--mossa--action"
+                        size="sm"
+                        tone="secondary"
+                        variant="ghost"
+                        slot="actions"
+                        href="/admin/collections/detail?ulvia--mossa--collection={{ collectionTheme.data.collectionId | urlencode }}&ulvia--mossa--theme-profile={{ collectionTheme.data.profileId | urlencode }}&ulvia--mossa--theme-mode={{ collectionTheme.data.mode | urlencode }}&ulvia--mossa--theme-token={{ token.id | urlencode }}#collection-theme"
+                        ><span>{{ cms.i18n.ulvia/mossa.ui-edit-token }}</span></a
+                    >
+                </div>
+            </div>
+        </div>
+        <p role="alert" cms-case='"failure"'>
+            {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+        </p>
+    </div>
+</section>

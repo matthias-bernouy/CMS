@@ -10,18 +10,18 @@ import { officialFailure } from "../../../src/dispatch/errors/failure";
 import { context, resolvedContract } from "./fixtures";
 
 test("async official errors use admitted schemas and retain the original language on replay and detail reads", async () => {
-    const contract = await resolvedContract("ulvia.cms.installations");
+    const contract = await resolvedContract("ulvia/cms.installations");
     const store = new MemoryProviderOperationStore();
     const executor = new ProviderOperationExecutor(store, undefined, { contracts: [contract] });
     let executions = 0;
-    executor.register("ulvia.cms.installations", "apply-collection-upgrade", async () => {
+    executor.register("ulvia/cms.installations", "apply-collection-upgrade", async () => {
         executions++;
         throw officialFailure("REVISION_CONFLICT", 409);
     });
     const firstContext = { ...context("fr", contract.release.version), idempotencyKey: "reviewed-upgrade" };
-    const first = await executor.enqueue("ulvia.cms.installations", "apply-collection-upgrade", {}, firstContext);
+    const first = await executor.enqueue("ulvia/cms.installations", "apply-collection-upgrade", {}, firstContext);
     const replay = await executor.enqueue(
-        "ulvia.cms.installations",
+        "ulvia/cms.installations",
         "apply-collection-upgrade",
         {},
         { ...firstContext, ...context("en", contract.release.version) },
@@ -29,7 +29,7 @@ test("async official errors use admitted schemas and retain the original languag
     expect(replay).toEqual(first);
     await executor.stop();
     expect(executions).toBe(1);
-    expect(await store.get("other-site", first.operationId)).toBeNull();
+    expect(await store.get("example--other--site", first.operationId)).toBeNull();
     const failed = (await store.get("default", first.operationId))!;
     expect(failed).toMatchObject({
         status: "failed",
@@ -41,7 +41,7 @@ test("async official errors use admitted schemas and retain the original languag
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     registerCollectionOperationCapabilities(dispatcher, executor);
     const detail = (await dispatcher.invoke(
-        "ulvia.cms.installations",
+        "ulvia/cms.installations",
         "get-operation",
         first,
         context("en", contract.release.version),
@@ -49,15 +49,15 @@ test("async official errors use admitted schemas and retain the original languag
     expect(detail.headers.get("content-language")).toBe("fr");
     expect(await detail.json()).toMatchObject({ errorCode: "REVISION_CONFLICT", errorOutput: failed.errorOutput });
     await expect(
-        dispatcher.invoke("ulvia.cms.installations", "get-operation", first, {
+        dispatcher.invoke("ulvia/cms.installations", "get-operation", first, {
             ...context("fr", contract.release.version),
-            siteId: "other-site",
+            siteId: "example--other--site",
         }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
 });
 
 test("async undeclared and technical failures expose only a generic localized message", async () => {
-    const contract = await resolvedContract("ulvia.cms.installations");
+    const contract = await resolvedContract("ulvia/cms.installations");
     for (const error of [
         new TypeError("secret endpoint"),
         new ProviderCapabilityDispatchError("UNDECLARED", 422, "secret endpoint", {}, { message: "secret endpoint" }),
@@ -70,11 +70,11 @@ test("async undeclared and technical failures expose only a generic localized me
                 failures.push(args);
             },
         });
-        executor.register("ulvia.cms.installations", "apply-collection-upgrade", async () => {
+        executor.register("ulvia/cms.installations", "apply-collection-upgrade", async () => {
             throw error;
         });
         const operation = await executor.enqueue(
-            "ulvia.cms.installations",
+            "ulvia/cms.installations",
             "apply-collection-upgrade",
             {},
             { ...context("fr", contract.release.version), idempotencyKey: "one" },
@@ -89,10 +89,10 @@ test("async undeclared and technical failures expose only a generic localized me
 });
 
 test("explicit async messages retain their actual language and schema-projected details", async () => {
-    const contract = await resolvedContract("ulvia.cms.installations");
+    const contract = await resolvedContract("ulvia/cms.installations");
     const store = new MemoryProviderOperationStore();
     const executor = new ProviderOperationExecutor(store, undefined, { contracts: [contract] });
-    executor.register("ulvia.cms.installations", "apply-collection-upgrade", async () => {
+    executor.register("ulvia/cms.installations", "apply-collection-upgrade", async () => {
         throw new ProviderCapabilityDispatchError(
             "REVISION_CONFLICT",
             409,
@@ -102,7 +102,7 @@ test("explicit async messages retain their actual language and schema-projected 
         );
     });
     const operation = await executor.enqueue(
-        "ulvia.cms.installations",
+        "ulvia/cms.installations",
         "apply-collection-upgrade",
         {},
         { ...context("fr", contract.release.version), idempotencyKey: "explicit-language" },
@@ -118,12 +118,12 @@ test("explicit async messages retain their actual language and schema-projected 
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     registerCollectionOperationCapabilities(dispatcher, executor);
     const response = (await dispatcher.invoke(
-        "ulvia.cms.installations",
+        "ulvia/cms.installations",
         "get-operation",
         operation,
         context("en", contract.release.version),
     )) as Response;
     expect(response.headers.get("content-language")).toBe("es");
     expect(await response.json()).toMatchObject({ errorOutput: { message: "La selección ha cambiado." } });
-    expect(await store.get("other-site", operation.operationId)).toBeNull();
+    expect(await store.get("example--other--site", operation.operationId)).toBeNull();
 });

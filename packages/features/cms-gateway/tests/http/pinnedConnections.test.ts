@@ -50,7 +50,7 @@ test("pooled pinned sockets retain fresh DNS and credentials and separate Host a
             authentication: {
                 kind: "capability",
                 instanceId,
-                contractId: "catalog",
+                contractId: "ulvia/catalog",
                 contractVersion: "1.0.0",
                 capabilityId: "read",
             },

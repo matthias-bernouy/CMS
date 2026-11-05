@@ -93,8 +93,8 @@ describe("S3BlobStore", () => {
     test("rejects invalid keys before contacting object storage", async () => {
         const store = new S3BlobStore({
             bucket: "files",
-            accessKeyId: "test-access-key",
-            secretAccessKey: "test-secret-key",
+            accessKeyId: "example--test--access-key",
+            secretAccessKey: "example--test--secret-key",
             endpoint: "https://s3.example.test",
             prefix: "tenant/",
         });

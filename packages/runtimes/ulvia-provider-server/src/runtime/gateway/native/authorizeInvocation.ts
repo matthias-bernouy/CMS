@@ -34,7 +34,7 @@ export function createNativeInvocationAuthorizer(options: {
         if (claims.instanceId !== report.instanceId || !providerInvocationIsCurrent(claims, now())) {
             return false;
         }
-        if (claims.contractId === "ulvia.provider.connections") {
+        if (claims.contractId === "ulvia/provider.connections") {
             return Boolean(
                 claims.connectionId &&
                     !claims.subjectId &&
@@ -48,7 +48,7 @@ export function createNativeInvocationAuthorizer(options: {
                     ),
             );
         }
-        const control = controlAuthority && claims.contractId === "ulvia.cms.installations";
+        const control = controlAuthority && claims.contractId === "ulvia/cms.installations";
         if (!control && !claims.connectionId) {
             return false;
         }

@@ -1,4 +1,4 @@
-import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
+import { compareSemVer, releaseChannel } from "cms-repository/exports/contracts/compatibility";
 import type { RepositoryResourceReference, RepositorySearchSnapshot, RepositorySearchSource } from "../interfaces";
 
 /** Select complete latest releases, retaining every row belonging to each selected release. */
@@ -7,7 +7,7 @@ export function latestReleaseRows<T extends { readonly reference: RepositoryReso
 ): T[] {
     const versions = new Map<string, string>();
     const key = (reference: RepositoryResourceReference) =>
-        `${reference.kind}\0${reference.publisherId}\0${reference.id}`;
+        `${reference.kind}\0${reference.id}\0${releaseChannel(reference.version)}`;
     for (const { reference } of rows) {
         const previous = versions.get(key(reference));
         if (!previous || compareSemVer(reference.version, previous) > 0) {

@@ -5,8 +5,8 @@ import { DefaultProviderCapabilityDispatcher, ProviderCapabilityDispatchError } 
 import { resolveFixtureContract } from "../../ulviaProviderFixture";
 import { officialContract, invokeHttp } from "./fixtures";
 
-async function detailedContract(contractId = "ulvia.cms.content") {
-    const { release } = await officialContract("ulvia.cms.content");
+async function detailedContract(contractId = "ulvia/cms.content") {
+    const { release } = await officialContract("ulvia/cms.content");
     const draft = { ...structuredClone(release), contractId };
     const failure = draft.capabilities
         .find(({ id }) => id === "pages.create")!
@@ -27,7 +27,7 @@ async function detailedContract(contractId = "ulvia.cms.content") {
 test("explicit error outputs and their chosen language survive official localization and release projection", async () => {
     const { contract, schema } = await detailedContract();
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    dispatcher.register("ulvia.cms.content", "pages.create", async () => {
+    dispatcher.register("ulvia/cms.content", "pages.create", async () => {
         throw new ProviderCapabilityDispatchError(
             "INVALID_PAGE",
             422,
@@ -48,7 +48,7 @@ test("explicit error outputs and their chosen language survive official localiza
     expect(() => validateSchemaValue(schema, error.output)).not.toThrow();
 });
 
-test.each(["ulvia.cms.content", "ulvia.cms.custom"])(
+test.each(["ulvia/cms.content", "ulvia/cms.custom"])(
     "%s native errors keep validated fields without an explicit language header",
     async (contractId) => {
         const { contract, schema } = await detailedContract(contractId);
@@ -70,7 +70,7 @@ test.each(["ulvia.cms.content", "ulvia.cms.custom"])(
 test("an incomplete explicit error output stays invalid instead of being replaced with invented details", async () => {
     const { contract } = await detailedContract();
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    dispatcher.register("ulvia.cms.content", "pages.create", async () => {
+    dispatcher.register("ulvia/cms.content", "pages.create", async () => {
         throw new ProviderCapabilityDispatchError(
             "INVALID_PAGE",
             422,

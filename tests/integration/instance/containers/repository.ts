@@ -27,7 +27,7 @@ export async function repositoryApplication(
         url,
         administrator,
         "http://repository:3000",
-        { id: "ulvia.repository", version: "1.0.0" },
+        { id: "repository", version: "1.0.0" },
     );
     await cluster.run(name, "repository", edgeImage, [
         "--publish",

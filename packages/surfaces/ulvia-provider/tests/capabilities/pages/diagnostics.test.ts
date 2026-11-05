@@ -8,7 +8,7 @@ test("HTTP Page writes carry advisory diagnostics and declared publication failu
     const inner = new InMemoryContentRepository();
     const repo = new ValidatingContentRepository(inner);
     await inner.createBloc({
-        id: "test-shell",
+        id: "example--test--shell",
         name: "Shell",
         group: "Test",
         description: "Test",
@@ -20,11 +20,11 @@ test("HTTP Page writes carry advisory diagnostics and declared publication failu
     });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     registerContentCapabilities(dispatcher, { repo } as never);
-    const contract = await resolvedContract("ulvia.cms.content");
+    const contract = await resolvedContract("ulvia/cms.content");
     const created = await invokeHttp(contract, dispatcher, "pages.create", {
         path: "/draft",
         title: "Draft",
-        content: '<div cms-bloc="test-shell"></div>',
+        content: '<div cms-bloc="example--test--shell"></div>',
     });
     expect(created.status).toBe(201);
     const page = await created.json();
@@ -50,7 +50,7 @@ test("HTTP Page writes carry advisory diagnostics and declared publication failu
 test("publication preserves the expanded HTML error code and its Bloc location", async () => {
     const inner = new InMemoryContentRepository();
     await inner.createBloc({
-        id: "test-shell",
+        id: "example--test--shell",
         name: "Shell",
         group: "Test",
         description: "Test",
@@ -60,11 +60,11 @@ test("publication preserves the expanded HTML error code and its Bloc location",
         markupHTML: "<main>Nested main</main>",
         ownership: { kind: "code-managed" },
     });
-    await inner.insertPage("/draft", "Draft", '<main cms-bloc="test-shell"></main>');
+    await inner.insertPage("/draft", "Draft", '<main cms-bloc="example--test--shell"></main>');
     const page = (await inner.getPage("/draft"))!;
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     registerContentCapabilities(dispatcher, { repo: new ValidatingContentRepository(inner) } as never);
-    const response = await invokeHttp(await resolvedContract("ulvia.cms.content"), dispatcher, "pages.publish", {
+    const response = await invokeHttp(await resolvedContract("ulvia/cms.content"), dispatcher, "pages.publish", {
         id: page.id,
         expectedRevision: page.revision,
         visible: true,
@@ -75,7 +75,7 @@ test("publication preserves the expanded HTML error code and its Bloc location",
     expect(body.error.output.diagnostics).toContainEqual(
         expect.objectContaining({
             code: "page.main_nested",
-            location: expect.objectContaining({ blocId: "test-shell" }),
+            location: expect.objectContaining({ blocId: "example--test--shell" }),
         }),
     );
 });
@@ -83,7 +83,7 @@ test("publication preserves the expanded HTML error code and its Bloc location",
 test("the effective-link budget returns a corrective diagnostic without creating a Page", async () => {
     const inner = new InMemoryContentRepository();
     await inner.createBloc({
-        id: "test-link-budget",
+        id: "example--test--link-budget",
         name: "Link budget",
         group: "Test",
         description: "Test",
@@ -95,10 +95,10 @@ test("the effective-link budget returns a corrective diagnostic without creating
     });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     registerContentCapabilities(dispatcher, { repo: new ValidatingContentRepository(inner) } as never);
-    const response = await invokeHttp(await resolvedContract("ulvia.cms.content"), dispatcher, "pages.create", {
+    const response = await invokeHttp(await resolvedContract("ulvia/cms.content"), dispatcher, "pages.create", {
         path: "/link-budget",
         title: "Link budget",
-        content: '<div cms-bloc="test-link-budget"></div>',
+        content: '<div cms-bloc="example--test--link-budget"></div>',
     });
     expect(response.status).toBe(422);
     expect(await response.json()).toMatchObject({

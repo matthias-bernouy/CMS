@@ -1,0 +1,31 @@
+{
+    "id": "tokens",
+    "label": "page.tokens.name",
+    "description": "page.tokens.description",
+    "requires": [
+        {
+            "contractId": "ulvia/cms.access",
+            "capabilityId": "create-personal-access-token",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.access",
+            "capabilityId": "revoke-personal-access-token",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.access",
+            "capabilityId": "list-personal-access-tokens",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

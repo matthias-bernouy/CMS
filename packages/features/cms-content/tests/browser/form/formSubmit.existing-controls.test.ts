@@ -20,12 +20,14 @@ class ExistingToggleControl extends ExistingValueControl {
     checked = false;
 }
 
-customElements.define("test-existing-value-control", ExistingValueControl);
-customElements.define("test-existing-toggle-control", ExistingToggleControl);
+customElements.define("example--test--existing-value-control", ExistingValueControl);
+customElements.define("example--test--existing-toggle-control", ExistingToggleControl);
 afterEach(resetDom);
 
 test("custom controls retain their value contract when bound and submitted", () => {
-    const target = form('<form><test-existing-value-control name="tags"></test-existing-value-control></form>');
+    const target = form(
+        '<form><example--test--existing-value-control name="tags"></test-existing-value-control></form>',
+    );
     const control = target.firstElementChild as ExistingValueControl;
     applyControlAttribute(control, "value", ["tennis", "padel"]);
     expect(control.value).toBe("tennis,padel");
@@ -39,7 +41,7 @@ test("custom controls retain their value contract when bound and submitted", () 
 
 test("switches use checked without replacing their submission value", () => {
     const target = form(
-        '<form><test-existing-toggle-control name="enabled" value="published"></test-existing-toggle-control></form>',
+        '<form><example--test--existing-toggle-control name="enabled" value="published"></test-existing-toggle-control></form>',
     );
     const control = target.firstElementChild as ExistingToggleControl;
     applyControlAttribute(control, "checked", true);
@@ -71,7 +73,7 @@ test("native multiple selections remain arrays and ordinary commas remain text",
 
 test("associated controls outside the form are read through their existing properties", () => {
     const target = form(
-        '<form id="existing-control-form"></form><test-existing-value-control form="existing-control-form" name="tags" value="padel"></test-existing-value-control>',
+        '<form id="existing-control-form"></form><example--test--existing-value-control form="existing-control-form" name="tags" value="padel"></test-existing-value-control>',
     );
     expect(serializeTypedForm(target)).toEqual({ tags: "padel" });
 });

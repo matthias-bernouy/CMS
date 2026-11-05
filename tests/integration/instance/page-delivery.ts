@@ -43,12 +43,12 @@ export async function exercisePageDelivery(page: Page, cmsUrl: string) {
 
 /** Warmed rendering must still observe publication changes on the next anonymous request. */
 export async function exerciseBasicPage(connection: Awaited<ReturnType<typeof connectBrowser>>, cmsUrl: string) {
-    const created = await connection.call("ulvia.cms.content", "pages.create", {
+    const created = await connection.call("ulvia/cms.content", "pages.create", {
         path: "/basic-delivery-regression",
         title: "Basic delivery regression",
-        content: '<h1 cms-bloc="ulvia-official-heading" size="lg" text-align="start">Fresh publication regression</h1>',
+        content: '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Fresh publication regression</h1>',
     });
-    const published = await connection.call("ulvia.cms.content", "pages.publish", {
+    const published = await connection.call("ulvia/cms.content", "pages.publish", {
         id: created.id,
         expectedRevision: created.revision,
         visible: true,
@@ -64,7 +64,7 @@ export async function exerciseBasicPage(connection: Awaited<ReturnType<typeof co
     const authenticated = await connection.page.request.get(`${cmsUrl}/basic-delivery-regression`);
     expect(authenticated.status()).toBe(200);
     expect(authenticated.headers()["cache-control"]).toBe("private, no-store");
-    await connection.call("ulvia.cms.content", "pages.publish", {
+    await connection.call("ulvia/cms.content", "pages.publish", {
         id: published.id,
         expectedRevision: published.revision,
         visible: false,

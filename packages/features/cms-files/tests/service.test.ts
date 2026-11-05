@@ -32,8 +32,8 @@ test("namespace credentials authorize a streamed immutable public file", async (
     const reference = await files.completeUpload(namespace.namespaceId, namespace.namespaceKey, upload.uploadId);
 
     expect(reference.generation).toMatch(/^[0-9a-f]{64}$/);
-    expect(reference.url).toContain("/.cms/call/ulvia.cms.files/files/");
-    expect(reference.path).toStartWith("/site/.cms/call/ulvia.cms.files/files/");
+    expect(reference.url).toContain("/.cms/call/ulvia/cms.files/files/");
+    expect(reference.path).toStartWith("/site/.cms/call/ulvia/cms.files/files/");
     const read = await files.readFile({
         fileId: reference.fileId,
         generation: reference.generation,

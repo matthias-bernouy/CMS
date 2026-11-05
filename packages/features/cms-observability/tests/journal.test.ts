@@ -49,7 +49,7 @@ test("filters, summaries, detail and aggregation share the retained instance win
     const { a } = fixture();
     const failed = entry({
         component: "pages",
-        contractId: "ulvia.cms.content",
+        contractId: "ulvia/cms.content",
         capabilityId: "pages.get",
         requestId: "request-a",
         durationMs: 15,
@@ -70,7 +70,7 @@ test("filters, summaries, detail and aggregation share the retained instance win
         service: "cms-edge",
         component: "pages",
         eventPrefix: "page.",
-        contractId: "ulvia.cms.content",
+        contractId: "ulvia/cms.content",
         requestId: "request-a",
     });
     expect(result.items.map(({ id }) => id)).toEqual([failed.id]);

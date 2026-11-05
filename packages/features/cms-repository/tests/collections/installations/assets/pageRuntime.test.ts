@@ -17,8 +17,8 @@ test("resolves collection asset expressions inside immutable Bloc CSS bundles", 
             kind: "collection",
             protocol: "ulvia-collection/v1",
             schemaDialect: "ulvia-schema/v1",
-            collectionId: "design-system",
-            publisherId: "ulvia.official",
+            collectionId: "ulvia/design-system",
+            publisherId: "ulvia",
             version: "1.0.0",
             name: "collection.name",
             locale: "en",
@@ -30,7 +30,7 @@ test("resolves collection asset expressions inside immutable Bloc CSS bundles", 
     );
     await store.install("site", artifact.digest, 0);
     const content = repositoryWith(
-        '@scope (.card) { background-image: url("{{ cms.asset.design-system.mark.svg }}"); }',
+        '@scope (.card) { background-image: url("{{ cms.asset.ulvia/design-system.mark.svg }}"); }',
     );
     const runtime = runtimeWith(content, { siteId: "site", store });
 
@@ -50,9 +50,9 @@ test("resolves collection asset expressions inside immutable Bloc CSS bundles", 
     const css = new TextDecoder().decode(entry!.raw);
 
     expect(assets.blocStyleUrls[0]).toContain(`r=${revision}`);
-    expect(css).toContain("/_content/collections/design-system/assets/mark.svg?v=");
+    expect(css).toContain("/_content/collections/ulvia%2Fdesign-system/assets/mark.svg?v=");
     expect(css).toContain("background-image");
-    expect(css).not.toContain("cms.asset.design-system.mark.svg");
+    expect(css).not.toContain("cms.asset.ulvia/design-system.mark.svg");
 });
 
 function runtimeWith(content: ContentReader, collectionAssets: Parameters<typeof resolveInstalledCollectionAssets>[1]) {

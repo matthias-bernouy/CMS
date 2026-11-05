@@ -37,7 +37,7 @@ test("an invalid provider prevents otherwise valid contracts from being written"
             join(provider, "definition.json"),
             JSON.stringify({
                 kind: "provider-manifest",
-                providerId: "batch.provider",
+                providerId: "ulvia/batch.provider",
                 version: "1.0.0",
             }),
         );

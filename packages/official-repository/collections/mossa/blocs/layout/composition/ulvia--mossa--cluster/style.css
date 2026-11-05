@@ -1,0 +1,41 @@
+:scope {
+    --ulvia--mossa--cluster-gap: var(--ulvia--mossa--spacing-md, 1rem);
+    display: block;
+    text-align: inherit;
+}
+
+[part~="cluster"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia--mossa--cluster-gap);
+    align-items: center;
+    justify-content: flex-start;
+}
+
+:scope[gap="none"] {
+    --ulvia--mossa--cluster-gap: 0rem;
+}
+:scope[gap="sm"] {
+    --ulvia--mossa--cluster-gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}
+:scope[gap="lg"] {
+    --ulvia--mossa--cluster-gap: var(--ulvia--mossa--spacing-lg, 1.5rem);
+}
+:scope[items-align="start"] [part~="cluster"] {
+    align-items: flex-start;
+}
+:scope[items-align="end"] [part~="cluster"] {
+    align-items: flex-end;
+}
+:scope[items-align="stretch"] [part~="cluster"] {
+    align-items: stretch;
+}
+:scope[justify="center"] [part~="cluster"] {
+    justify-content: center;
+}
+:scope[justify="end"] [part~="cluster"] {
+    justify-content: flex-end;
+}
+:scope[justify="between"] [part~="cluster"] {
+    justify-content: space-between;
+}

@@ -1,3 +1,4 @@
+import { releaseChannel } from "@bernouy/cms-repository/contracts/compatibility";
 import type {
     CollectionRepositoryEntry,
     CollectionRepositorySource,
@@ -41,7 +42,7 @@ export class CollectionSources {
         }
     }
 
-    async catalogue(siteId: string) {
+    async catalogue(siteId: string, channel: "stable" | "beta" | "all" = "stable") {
         const [snapshot, listedReleases] = await Promise.all([
             this.store.listInstalled(siteId),
             Promise.all([...this.byId.values()].map((source) => source.list())).then((items) => items.flat()),
@@ -51,6 +52,9 @@ export class CollectionSources {
         }
         const releases: CatalogueEntry[] = [];
         for (const listed of listedReleases) {
+            if (channel !== "all" && releaseChannel(listed.version) !== channel) {
+                continue;
+            }
             const source = this.byId.get(listed.repositoryId);
             if (!source) {
                 throw new ProviderCapabilityDispatchError("RELEASE_MISMATCH", 409);

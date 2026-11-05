@@ -1,0 +1,27 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--prose",
+    "label": "bloc.prose.label",
+    "description": "bloc.prose.description",
+    "order": 20,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.content"],
+    "examples": ["prose-default"],
+    "defaultExample": "prose-default"
+}

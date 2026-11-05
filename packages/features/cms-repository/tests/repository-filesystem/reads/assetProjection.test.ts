@@ -13,7 +13,7 @@ async function fixture() {
             protocol: "ulvia-collection/v1",
             schemaDialect: "ulvia-schema/v1",
             publisherId: "example.official",
-            collectionId: "example",
+            collectionId: "example.official/example",
             version: "1.0.0",
             name: "name",
             locale: "en",
@@ -33,13 +33,13 @@ async function fixture() {
     const root = await mkdtemp(join(tmpdir(), "collection-assets-"));
     const repository = new LocalCollectionRepository(root);
     await repository.store(artifact);
-    await repository.getMetadata("example.official", "example", "1.0.0");
+    await repository.getMetadata("example.official", "example.official/example", "1.0.0");
     return {
         root,
         repository,
         artifact,
         bytes,
-        get: () => repository.getAsset("example.official", "example", "1.0.0", "sample.bin"),
+        get: () => repository.getAsset("example.official", "example.official/example", "1.0.0", "sample.bin"),
     };
 }
 
@@ -52,7 +52,9 @@ test("warm asset reads project one definition instead of materializing the entir
         const asset = await f.get();
         expect(new Uint8Array(await asset!.bytes.arrayBuffer())).toEqual(f.bytes);
         expect(fullRead).not.toHaveBeenCalled();
-        expect(await f.repository.getAsset("example.official", "example", "1.0.0", "missing.bin")).toBeNull();
+        expect(
+            await f.repository.getAsset("example.official", "example.official/example", "1.0.0", "missing.bin"),
+        ).toBeNull();
     } finally {
         fullRead.mockRestore();
         await rm(f.root, { recursive: true, force: true });
@@ -78,7 +80,7 @@ test("warm projections still observe changed release bytes and corrupt asset con
 
 test("full reads reuse verified metadata while freezing independent results and rechecking asset bytes", async () => {
     const f = await fixture();
-    const get = () => f.repository.get("example.official", "example", "1.0.0");
+    const get = () => f.repository.get("example.official", "example.official/example", "1.0.0");
     try {
         const first = (await get())!;
         const second = (await get())!;
@@ -87,7 +89,7 @@ test("full reads reuse verified metadata while freezing independent results and 
         expect(Object.isFrozen(first.release.assets)).toBe(true);
         expect(Object.isFrozen(first.assets)).toBe(true);
         expect(new Uint8Array(await first.assets[0]!.bytes.arrayBuffer())).toEqual(f.bytes);
-        const metadata = (await f.repository.getMetadata("example.official", "example", "1.0.0"))!;
+        const metadata = (await f.repository.getMetadata("example.official", "example.official/example", "1.0.0"))!;
         (metadata.release as { name: string }).name = "changed-clone";
         expect((await get())!.release.name).toBe("name");
         const assetRoot = join(f.root, "assets/collections", f.artifact.digest.slice("sha256:".length));

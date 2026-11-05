@@ -9,10 +9,7 @@ test.each(["1.0.0", "1.1.0", "1.2.0"])(
         let controlVersion = version;
         const admission = await admitContractReleaseJson(
             await Bun.file(
-                resolve(
-                    import.meta.dir,
-                    "../../../dist/bootstrap/contracts/cms/ulvia.cms.observability/definition.json",
-                ),
+                resolve(import.meta.dir, "../../../dist/bootstrap/contracts/cms/cms.observability/definition.json"),
             ).text(),
         );
         const instanceId = "instance:operator-test";
@@ -26,14 +23,14 @@ test.each(["1.0.0", "1.1.0", "1.2.0"])(
                 if (path === "/ulvia/report") {
                     return Response.json({
                         protocol: "ulvia-provider/v1",
-                        providerId: "ulvia.official",
+                        providerId: "ulvia/primary-provider",
                         instanceId,
                         account: { id: "operator", label: "Operator fixture" },
                         buildVersion: "1.0.0",
                         manifest: { version: "0.3.0", digest: `sha256:${"a".repeat(64)}` },
                         implementations: [
                             {
-                                contractId: "ulvia.cms.installations",
+                                contractId: "ulvia/cms.installations",
                                 version: controlVersion,
                                 digest: `sha256:${"b".repeat(64)}`,
                                 status: "ready",
@@ -49,7 +46,7 @@ test.each(["1.0.0", "1.1.0", "1.2.0"])(
                         route: JSON.stringify({
                             selection: {
                                 siteId: "default",
-                                contractId: "ulvia.cms.observability",
+                                contractId: "ulvia/cms.observability",
                                 digest: admission.digest,
                                 installationId: "native",
                                 version: admission.release.version,
@@ -69,7 +66,7 @@ test.each(["1.0.0", "1.1.0", "1.2.0"])(
                     const input = (await request.json()) as { capabilityId: string; systemServiceId?: string };
                     expect(input.capabilityId).toBe("logs.query");
                     expect(input.systemServiceId).toBeUndefined();
-                    return Response.json({ token: "scoped-operator-invocation", instanceId });
+                    return Response.json({ token: "example--scoped--operator-invocation", instanceId });
                 }
                 expect(path).toBe("/observability/logs/query");
                 return Response.json({
@@ -87,7 +84,7 @@ test.each(["1.0.0", "1.1.0", "1.2.0"])(
                 { path: "/ulvia/report", authorization: "Bearer private-control-bearer" },
                 { path: "/gateway/route", authorization: "Bearer private-control-bearer" },
                 { path: "/gateway/invocations", authorization: "Bearer private-control-bearer" },
-                { path: "/observability/logs/query", authorization: "Bearer scoped-operator-invocation" },
+                { path: "/observability/logs/query", authorization: "Bearer example--scoped--operator-invocation" },
             ]);
             const foreign = new OperatorObservabilityClient(
                 server.url.origin,

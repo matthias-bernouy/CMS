@@ -63,11 +63,11 @@ integration(
                 requests: after,
             });
             const listing = await connection.page.request.get(
-                `${f.cmsUrl}/.cms/query/ulvia.cms.installations/list-provider-installations`,
+                `${f.cmsUrl}/.cms/query/ulvia/cms.installations/list-provider-installations`,
             );
             expect(listing.status()).toBe(200);
             const providers = await listing.json();
-            const plan = await connection.call("ulvia.cms.installations", "plan-contract-upgrade", {
+            const plan = await connection.call("ulvia/cms.installations", "plan-contract-upgrade", {
                 selections: providers.selections,
             });
             if (plan.status !== "applicable") {
@@ -76,7 +76,7 @@ integration(
             const beforeCommit = (await f.documentationPreparations()).length;
             const reply = await invoke(
                 connection,
-                "ulvia.cms.installations",
+                "ulvia/cms.installations",
                 "apply-contract-upgrade",
                 {
                     selections: plan.selections,

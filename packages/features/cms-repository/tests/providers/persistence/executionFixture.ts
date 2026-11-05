@@ -7,7 +7,7 @@ import { graphFixture, siteId } from "../selections/fixtures";
 
 export async function executionFixture() {
     const graph = await graphFixture();
-    const plan = await planContractSelections(siteId, [await graph.select("payment")], graph.context);
+    const plan = await planContractSelections(siteId, [await graph.select("ulvia/payment")], graph.context);
     const model = {
         selection: deepFreeze({
             siteId,

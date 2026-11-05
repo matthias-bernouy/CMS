@@ -8,5 +8,5 @@ export function edgeSystemMayInvoke(actor: GatewayActor, contractId: string, cap
     if (actor.serviceId !== "cms-edge") {
         return false;
     }
-    return contractId === "ulvia.cms.observability" && capabilityId === "logs.append";
+    return contractId === "ulvia/cms.observability" && capabilityId === "logs.append";
 }

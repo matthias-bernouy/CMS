@@ -12,7 +12,10 @@ export async function findPagesReferencingText(
     reader: Pick<ContentRepository, "scanPagesByContentReference">,
     ref: string,
 ): Promise<TPage[]> {
-    const match = /^(?:\{\{\s*)?cms\.i18n\.([a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9-]{0,95})(?:\s*\}\})?$/.exec(ref);
+    const match =
+        /^(?:\{\{\s*)?cms\.i18n\.([a-z][a-z0-9.-]{0,95}\/[a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9-]{0,95})(?:\s*\}\})?$/.exec(
+            ref,
+        );
     if (!match) {
         return [];
     }

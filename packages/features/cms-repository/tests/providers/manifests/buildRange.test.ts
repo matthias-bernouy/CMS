@@ -11,9 +11,11 @@ import { validateProviderRuntimeReport } from "@bernouy/cms-repository/providers
 import { contractDocument, implementation, manifestDocument, releaseCatalogue } from "../support/fixtures";
 
 async function manifestWithBuildRange(buildVersionRange: string) {
-    const catalogue = await releaseCatalogue(contractDocument("payment", "create-link"));
+    const catalogue = await releaseCatalogue(contractDocument("ulvia/payment", "create-link"));
     const release = (await catalogue.list())[0]!.admission;
-    const document = manifestDocument([implementation("payment", "1.0.0", release.digest)], { buildVersionRange });
+    const document = manifestDocument([implementation("ulvia/payment", "1.0.0", release.digest)], {
+        buildVersionRange,
+    });
     return { catalogue, document };
 }
 

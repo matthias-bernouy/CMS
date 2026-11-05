@@ -1,3 +1,4 @@
+import { resourcePublisher } from "@bernouy/cms-repository/contracts/protocol";
 import { loadDocumentedContract } from "@bernouy/cms-repository/providers/sources";
 import { CURRENT_PROFILE, REPOSITORY_PROFILE, SUPPORTED_PROFILES, type ProfileDefinition } from "./definitions";
 import { repositoryPages } from "./repositoryPages";
@@ -110,7 +111,7 @@ async function loadOfficialProfile(
             implementationAdmissions
                 .filter(
                     ({ release }) =>
-                        definition.id === REPOSITORY_PROFILE.id || release.contractId !== "ulvia.repository",
+                        definition.id === REPOSITORY_PROFILE.id || release.contractId !== "ulvia/repository",
                 )
                 .map(({ digest, release }) =>
                     Object.freeze({ contractId: release.contractId, version: release.version, digest }),
@@ -172,9 +173,7 @@ export async function loadOfficialManifest(
 function exactEntry(entries: readonly RepositoryArtifactEntry[], id: string, version: string): RepositoryArtifactEntry {
     const entry = entries.find(
         (candidate) =>
-            candidate.publisherId === CURRENT_PROFILE.manifest.providerId &&
-            candidate.id === id &&
-            candidate.version === version,
+            candidate.publisherId === resourcePublisher(id) && candidate.id === id && candidate.version === version,
     );
     if (!entry) {
         throw new Error(`Exact official artifact is unavailable: ${id}@${version}`);

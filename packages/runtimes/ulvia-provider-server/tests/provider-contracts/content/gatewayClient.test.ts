@@ -56,7 +56,7 @@ test("Content calls the CMS HTTP binding and reloads rotated credentials without
         const invoke = (f: Awaited<ReturnType<typeof fixture>>) =>
             f.client.invoke(f.release, "item.list", { term: "navigation" }, { authority: "provider" });
         expect((await invoke(a)).output).toEqual({ items: ["through-edge"] });
-        expect(new URL(a.requests[0]!.url).pathname).toBe("/.cms/call/catalog/v1/items");
+        expect(new URL(a.requests[0]!.url).pathname).toBe("/.cms/call/ulvia/catalog/v1/items");
         expect(new URL(a.requests[0]!.url).searchParams.get("term")).toBe("navigation");
         expect(a.requests[0]!.headers.get("authorization")).toBe(`Bearer ${a.token}`);
         expect(a.requests[0]!.headers.get("x-ulvia-provider-authority")).toBe("provider");

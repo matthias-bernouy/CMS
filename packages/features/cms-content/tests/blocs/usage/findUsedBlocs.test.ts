@@ -34,16 +34,18 @@ describe("findUsedBlocTags", () => {
     });
 
     test("returns every registered tag that appears", () => {
-        const used = findUsedBlocTags('<div cms-bloc="my-card"></div><div cms-bloc="other-bloc"></div>', [
+        const used = findUsedBlocTags('<div cms-bloc="my-card"></div><div cms-bloc="example--other--bloc"></div>', [
             { id: "my-card" },
-            { id: "other-bloc" },
+            { id: "example--other--bloc" },
             { id: "unused" },
         ]);
-        expect(used.sort()).toEqual(["my-card", "other-bloc"]);
+        expect(used.sort()).toEqual(["example--other--bloc", "my-card"]);
     });
 });
 
-const compositionBlocs = ["root-card", "child-card", "side-card", "leaf-badge", "missing-card"].map((id) => ({ id }));
+const compositionBlocs = ["root-card", "child-card", "side-card", "leaf-badge", "missing-card"].map((id) => ({
+    id,
+}));
 
 function compositionResolver(views: Record<string, string | null>, onRead: (tag: string) => void = () => undefined) {
     const repository = {

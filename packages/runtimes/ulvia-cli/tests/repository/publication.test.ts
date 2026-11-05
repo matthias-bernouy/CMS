@@ -1,3 +1,4 @@
+import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
 import { expect, test } from "bun:test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -11,7 +12,7 @@ test("remote publication is account-authorized, immutable, atomic, and reversibl
     const data = await mkdtemp(join(tmpdir(), "ulvia-publication-source-"));
     const remoteRoot = await mkdtemp(join(tmpdir(), "ulvia-publication-target-"));
     const server = startTestRepository(remoteRoot);
-    const source = resolve(import.meta.dir, "../../../../official-repository/contracts/ulvia.cms.installations");
+    const source = resolve(import.meta.dir, "../../../../official-repository/contracts/cms.installations");
     try {
         await runCli(["release", source], { environment: { ULVIA_DATA_DIR: data }, log: () => undefined });
         const definition = JSON.parse(await readFile(join(source, "definition.json"), "utf8")) as {
@@ -24,7 +25,7 @@ test("remote publication is account-authorized, immutable, atomic, and reversibl
             "repository",
             "contracts",
             definition.publisherId,
-            definition.contractId,
+            resourceName(definition.contractId),
             `${definition.version}.json`,
         );
         const canonicalJson = await readFile(path, "utf8");
@@ -37,7 +38,7 @@ test("remote publication is account-authorized, immutable, atomic, and reversibl
         expect(await client.push(envelope)).toMatchObject({ added: true });
         expect(await client.push(envelope)).toMatchObject({ added: false });
 
-        const catalogueUrl = `${server.url}/.cms/call/ulvia.repository/v1/catalogue`;
+        const catalogueUrl = `${server.url}/.cms/call/ulvia/repository/v1/catalogue`;
         const catalogue = () =>
             fetch(catalogueUrl, {
                 method: "QUERY",
@@ -45,7 +46,7 @@ test("remote publication is account-authorized, immutable, atomic, and reversibl
                 body: JSON.stringify({ kind: "contract", limit: 256 }),
             });
         expect(((await (await catalogue()).json()) as { releases: unknown[] }).releases).toHaveLength(1);
-        const coordinate = `${definition.publisherId}/${definition.contractId}/${definition.version}`;
+        const coordinate = `${definition.publisherId}/${encodeURIComponent(definition.contractId)}/${definition.version}`;
         const remoteCoordinate = {
             kind: "contract" as const,
             publisherId: definition.publisherId,
@@ -55,7 +56,7 @@ test("remote publication is account-authorized, immutable, atomic, and reversibl
         await client.yank(remoteCoordinate, "Known protocol defect");
         expect(((await (await catalogue()).json()) as { releases: unknown[] }).releases).toEqual([]);
         expect(
-            (await fetch(`${server.url}/.cms/call/ulvia.repository/v1/releases/contract/${coordinate}`)).status,
+            (await fetch(`${server.url}/.cms/call/ulvia/repository/v1/releases/contract/${coordinate}`)).status,
         ).toBe(200);
 
         await client.yank(remoteCoordinate, null);
@@ -73,7 +74,7 @@ test("remote publication is account-authorized, immutable, atomic, and reversibl
                     remoteRoot,
                     "contracts",
                     definition.publisherId,
-                    definition.contractId,
+                    resourceName(definition.contractId),
                     `${definition.version}.json`,
                 ),
             ).text(),

@@ -67,13 +67,13 @@ export async function upgradeProvider(
     const response = await fetch(`${url}/ulvia/operator/instances/${encodeURIComponent(instanceId)}/profile`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ id: "ulvia.official", version }),
+        body: JSON.stringify({ id: "ulvia", version }),
         signal: AbortSignal.timeout(120_000),
     });
     const result = await response.json();
     expect(result, "real Provider profile transition").toMatchObject({
         status: "ready",
-        profile: { id: "ulvia.official", version },
+        profile: { id: "ulvia", version },
     });
     expect(response.status).toBe(200);
 }

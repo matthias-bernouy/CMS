@@ -14,8 +14,8 @@ export async function publishBundledReleases(url: string, providerUrl: string, t
             resolveToken: async () => token,
         },
     });
-    await namespace.claim("ulvia.official");
-    const client = new RemoteRepositoryClient(url, await namespace.ownedCredential("ulvia.official"));
+    await namespace.claim("ulvia");
+    const client = new RemoteRepositoryClient(url, await namespace.ownedCredential("ulvia"));
     for (const path of index.contracts as string[]) {
         const canonicalJson = await Bun.file(resolve(root, path)).text();
         const release = parseContractReleaseJson(canonicalJson);

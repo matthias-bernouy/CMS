@@ -1,3 +1,4 @@
+import { isResourceId, resourcePublisher } from "cms-repository/exports/contracts/protocol";
 import { isSha256Digest } from "@bernouy/binary-media";
 import type { RepositoryArtifactEntry, RepositoryArtifactKind, RepositoryArtifactReference } from "./interfaces";
 import { isCanonicalSemVer, isRepositoryIdentifier } from "cms-repository/exports/contracts/compatibility";
@@ -18,7 +19,8 @@ export function validProviderRepositoryId(id: string): boolean {
 export function validProviderReference(reference: RepositoryArtifactReference): boolean {
     return (
         isRepositoryIdentifier(reference.publisherId) &&
-        isRepositoryIdentifier(reference.id) &&
+        isResourceId(reference.id) &&
+        resourcePublisher(reference.id) === reference.publisherId &&
         isCanonicalSemVer(reference.version) &&
         isSha256Digest(reference.digest)
     );
@@ -63,7 +65,8 @@ export function parseProviderCataloguePage(
             typeof item.publisherId !== "string" ||
             !isRepositoryIdentifier(item.publisherId) ||
             typeof id !== "string" ||
-            !isRepositoryIdentifier(id) ||
+            !isResourceId(id) ||
+            resourcePublisher(id) !== item.publisherId ||
             typeof item.version !== "string" ||
             !isCanonicalSemVer(item.version) ||
             typeof item.digest !== "string" ||

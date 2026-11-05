@@ -13,10 +13,10 @@ export function registerCollectionInstallationCapabilities(
     sources?: CollectionSources,
 ): void {
     registerCollectionOperationCapabilities(dispatcher, operations);
-    dispatcher.register("ulvia.cms.installations", "list-collection-installations", async (_input, context) => {
+    dispatcher.register("ulvia/cms.installations", "list-collection-installations", async (_input, context) => {
         return dependencies.collections.listInstalled(context.siteId);
     });
-    dispatcher.register("ulvia.cms.installations", "list-site-usage", async (input, context) =>
+    dispatcher.register("ulvia/cms.installations", "list-site-usage", async (input, context) =>
         collectionCommand(async () => {
             const inventory = await dependencies.collectionUpgrades.inventory(context.siteId);
             const cursor = input.cursor === undefined ? "" : requiredText(input.cursor);
@@ -47,7 +47,7 @@ export function registerCollectionInstallationCapabilities(
             };
         }),
     );
-    dispatcher.register("ulvia.cms.installations", "get-collection-installation", async (input, context) => {
+    dispatcher.register("ulvia/cms.installations", "get-collection-installation", async (input, context) => {
         const installed = await dependencies.collections.readInstalled(
             context.siteId,
             requiredText(input.collectionId),
@@ -57,7 +57,7 @@ export function registerCollectionInstallationCapabilities(
         }
         return projectInstalled(installed.collection, installed.revision, true);
     });
-    dispatcher.register("ulvia.cms.installations", "list-available-collections", async (_input, context) => {
+    dispatcher.register("ulvia/cms.installations", "list-available-collections", async (input, context) => {
         if (!sources) {
             return {
                 revision: await dependencies.collections.revision(context.siteId),
@@ -66,9 +66,13 @@ export function registerCollectionInstallationCapabilities(
                 installed: [],
             };
         }
-        return sources.catalogue(context.siteId);
+        const channel = input.channel ?? "stable";
+        if (channel !== "stable" && channel !== "beta" && channel !== "all") {
+            throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+        }
+        return sources.catalogue(context.siteId, channel);
     });
-    dispatcher.register("ulvia.cms.installations", "install-collection", async (input, context) =>
+    dispatcher.register("ulvia/cms.installations", "install-collection", async (input, context) =>
         collectionCommand(async () => {
             const expectedRevision = integer(input.expectedRevision);
             const before = await dependencies.collections.listInstalled(context.siteId);
@@ -85,7 +89,7 @@ export function registerCollectionInstallationCapabilities(
             return projectSnapshot(snapshot);
         }),
     );
-    dispatcher.register("ulvia.cms.installations", "update-collection-configuration", async (input, context) =>
+    dispatcher.register("ulvia/cms.installations", "update-collection-configuration", async (input, context) =>
         collectionCommand(async () => {
             const snapshot = await dependencies.collections.saveConfiguration(
                 context.siteId,
@@ -96,7 +100,7 @@ export function registerCollectionInstallationCapabilities(
             return projectSnapshot(snapshot);
         }),
     );
-    dispatcher.register("ulvia.cms.installations", "plan-collection-upgrade", async (input, context) =>
+    dispatcher.register("ulvia/cms.installations", "plan-collection-upgrade", async (input, context) =>
         collectionCommand(async () => {
             const prepared = await sources?.prepare(input.targets);
             const staged = await collectionTargets(
@@ -114,7 +118,7 @@ export function registerCollectionInstallationCapabilities(
             );
         }),
     );
-    dispatcher.register("ulvia.cms.installations", "get-site-upgrade-status", async (_input, context) => {
+    dispatcher.register("ulvia/cms.installations", "get-site-upgrade-status", async (_input, context) => {
         const active = await dependencies.collectionUpgrades.storage.getActive(context.siteId);
         return {
             maintenance: active !== null,
@@ -130,7 +134,7 @@ export function registerCollectionInstallationCapabilities(
                 : {}),
         };
     });
-    dispatcher.register("ulvia.cms.installations", "get-collection-upgrade", async (input, context) => {
+    dispatcher.register("ulvia/cms.installations", "get-collection-upgrade", async (input, context) => {
         const intent = await dependencies.collectionUpgrades.storage.get(
             context.siteId,
             requiredText(input.upgradeId),
@@ -201,8 +205,8 @@ function registerUpgradeOperation(
     if (!operations) {
         return;
     }
-    operations.register("ulvia.cms.installations", capabilityId, handler);
-    dispatcher.register("ulvia.cms.installations", capabilityId, (input, context) =>
-        operations.enqueue("ulvia.cms.installations", capabilityId, input, context),
+    operations.register("ulvia/cms.installations", capabilityId, handler);
+    dispatcher.register("ulvia/cms.installations", capabilityId, (input, context) =>
+        operations.enqueue("ulvia/cms.installations", capabilityId, input, context),
     );
 }

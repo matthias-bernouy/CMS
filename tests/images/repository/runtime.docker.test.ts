@@ -20,7 +20,7 @@ test.skipIf(!images.edge || !images.provider)(
             expect(
                 (
                     await api.request(
-                        "ulvia.repository",
+                        "ulvia/repository",
                         "/v1/namespace-actions/claim",
                         "POST",
                         { namespace: "journey.a" },
@@ -29,7 +29,7 @@ test.skipIf(!images.edge || !images.provider)(
                 ).status,
             ).toBe(200);
             const publication = await exercisePublication(api, f.repositoryUrl, token, b);
-            const identity = await (await api.request("ulvia.repository", "/v1/info")).json();
+            const identity = await (await api.request("ulvia/repository", "/v1/info")).json();
             for (const path of ["/v1/info", "/v1/namespaces/claim", "/v1/releases/contract/a/b/1.0.0"]) {
                 const response = await fetch(`${f.repositoryUrl}${path}`);
                 expect(response.status).toBe(404);
@@ -59,11 +59,11 @@ test.skipIf(!images.edge || !images.provider)(
                 await f.waitForProvider();
                 await docker(["start", f.repository.name]);
                 await waitForHttp(`${f.repositoryUrl}/readyz`);
-                expect(await (await api.request("ulvia.repository", "/v1/info")).json()).toEqual(identity);
+                expect(await (await api.request("ulvia/repository", "/v1/info")).json()).toEqual(identity);
                 const account = await api.session("b@example.test", "Repository-b-long-password");
                 expect(account.accountId).toBe(b.accountId);
                 const inventory = await api.request(
-                    "ulvia.repository",
+                    "ulvia/repository",
                     "/v1/namespaces",
                     "GET",
                     undefined,

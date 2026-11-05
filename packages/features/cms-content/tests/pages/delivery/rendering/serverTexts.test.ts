@@ -11,7 +11,7 @@ const ctx: RenderContext = {
         getRenderableBlocs: async () => [],
         getContentTexts: async () => [
             {
-                namespace: "test",
+                namespace: "example/test",
                 resolve: (locale: string) => ({ title: locale === "fr" ? "Commande" : "Order" }),
             },
         ],
@@ -25,7 +25,7 @@ const ctx: RenderContext = {
         scriptUrls: [],
     }),
     resolveContributedAssets: async (input) =>
-        input.replace("{{ cms.asset.test.hero.svg }}", "/_content/collections/test/assets/hero.svg?v=digest"),
+        input.replace("{{ cms.asset.example/test.hero.svg }}", "/_content/collections/test/assets/hero.svg?v=digest"),
     faviconUrl: "/favicon.ico",
 };
 const page = {
@@ -34,7 +34,8 @@ const page = {
     description: "",
     tags: [],
     visible: true,
-    content: '<h2>{{ cms.i18n.test.title }}</h2><img src="{{ cms.asset.test.hero.svg }}"><p>{{ order.total }}</p>',
+    content:
+        '<h2>{{ cms.i18n.example/test.title }}</h2><img src="{{ cms.asset.example/test.hero.svg }}"><p>{{ order.total }}</p>',
 } as unknown as TPage;
 
 test("Content sends translated HTML for the route language before any browser code runs", async () => {

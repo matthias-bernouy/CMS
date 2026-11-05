@@ -20,7 +20,7 @@ describe("buildCollectionBloc output", () => {
 
     test("minifies the browser view bundle", async () => {
         const artifact = await buildCollectionBloc({
-            tag: "demo-minified",
+            tag: "example--demo--minified",
             viewSource: [
                 "// VIEW_COMMENT_TO_REMOVE",
                 'export function mount(root) { root.toggleAttribute("mounted", true); }',
@@ -39,7 +39,7 @@ describe("buildCollectionBloc output", () => {
 
     test("materializes bundled source files used by view imports", async () => {
         const artifact = await buildCollectionBloc({
-            tag: "demo-separated",
+            tag: "example--demo--separated",
             viewSource: [
                 `import fragment from "./fragment.html" with { type: "text" };`,
                 `import css from "./style.css" with { type: "text" };`,
@@ -57,7 +57,7 @@ describe("buildCollectionBloc output", () => {
 
     test("resolves imports from a nested declared view path", async () => {
         const artifact = await buildCollectionBloc({
-            tag: "demo-nested",
+            tag: "example--demo--nested",
             viewSource: [
                 `import { label } from "../label";`,
                 `export function mount(root) { root.dataset.label = label; }`,
@@ -72,7 +72,7 @@ describe("buildCollectionBloc output", () => {
     test("rejects source paths escaping the temporary bundle", async () => {
         await expect(
             buildCollectionBloc({
-                tag: "demo-card",
+                tag: "example--demo--card",
                 viewSource: "export function mount() {}",
                 source: { "../outside.js": Buffer.from("unsafe").toString("base64") },
             }),
@@ -86,7 +86,7 @@ describe("buildCollectionBloc output", () => {
         try {
             await expect(
                 buildCollectionBloc({
-                    tag: "demo-outside",
+                    tag: "example--demo--outside",
                     viewSource: [
                         `import { marker } from ${JSON.stringify(outsidePath)};`,
                         "export function mount() { return marker; }",
@@ -101,7 +101,7 @@ describe("buildCollectionBloc output", () => {
     test("rejects undeclared host package imports", async () => {
         await expect(
             buildCollectionBloc({
-                tag: "demo-unsafe-package",
+                tag: "example--demo--unsafe-package",
                 viewSource: `import { readFile } from "node:fs/promises"; export function mount() { return readFile; }`,
             }),
         ).rejects.toThrow("Bloc imports may only use bundled relative sources or approved host APIs");
@@ -110,7 +110,7 @@ describe("buildCollectionBloc output", () => {
     test("applies behavior guards to bundled runtime modules", async () => {
         await expect(
             buildCollectionBloc({
-                tag: "demo-runtime-guard",
+                tag: "example--demo--runtime-guard",
                 viewSource: [
                     'import { forbidden } from "./runtime/behavior";',
                     "export function mount(root) { forbidden(root); }",
@@ -126,11 +126,11 @@ describe("buildCollectionBloc output", () => {
 
     test("registers an exported Light DOM mount function", async () => {
         const artifact = await buildCollectionBloc({
-            tag: "demo-component",
+            tag: "example--demo--component",
             viewSource: `export function mount(root) { root.toggleAttribute("mounted", true); }`,
         });
         expect(artifact.viewJS).toContain("window.cmsRuntime.registerBloc");
-        expect(artifact.viewJS).toContain("demo-component");
+        expect(artifact.viewJS).toContain("example--demo--component");
         expect(artifact.browserAbi).toBe("v1");
 
         const definitions = new Map<string, { mount?: (root: HTMLElement) => void }>();
@@ -145,7 +145,7 @@ describe("buildCollectionBloc output", () => {
         const root = {
             toggleAttribute: (name: string, force: boolean) => (force ? attributes.add(name) : attributes.delete(name)),
         } as unknown as HTMLElement;
-        definitions.get("demo-component")?.mount?.(root);
+        definitions.get("example--demo--component")?.mount?.(root);
         expect(attributes.has("mounted")).toBe(true);
     });
 
@@ -161,13 +161,13 @@ describe("buildCollectionBloc output", () => {
     test("reports Bun build failures and missing outputs", async () => {
         await expect(
             buildCollectionBloc({
-                tag: "demo-card",
+                tag: "example--demo--card",
                 viewSource: "import './missing.js'; export function mount() {}",
             }),
-        ).rejects.toThrow(/Build failed \(view bundle for demo-card\):/);
+        ).rejects.toThrow(/Build failed \(view bundle for example--demo--card\):/);
         const build = async () => ({ success: true, outputs: [], logs: [] }) as unknown as Bun.BuildOutput;
-        await expect(runBuild({ entrypoints: ["demo-card.js"] }, "view bundle for demo-card", build)).rejects.toThrow(
-            /Build failed \(view bundle for demo-card\):\n  \(no details from Bun.build\)/,
-        );
+        await expect(
+            runBuild({ entrypoints: ["example--demo--card.js"] }, "view bundle for example--demo--card", build),
+        ).rejects.toThrow(/Build failed \(view bundle for example--demo--card\):\n  \(no details from Bun.build\)/);
     });
 });

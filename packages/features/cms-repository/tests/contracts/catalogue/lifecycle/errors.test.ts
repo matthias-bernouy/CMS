@@ -88,7 +88,7 @@ test.each(["memory", "mongo", "batch"])(
                 }),
             ),
         ).rejects.toThrow();
-        expect(await catalogue.get("communication.email", "1.2.2")).toBeNull();
+        expect(await catalogue.get("ulvia/communication.email", "1.2.2")).toBeNull();
     },
 );
 
@@ -107,7 +107,7 @@ test.each(["memory", "mongo"])("%s refuses removed or incompatible error details
     for (const candidate of mutations) {
         expect(compareContractReleases(original.release, candidate.release).requiredBump).toBe("major");
         await expect(catalogue.publish(candidate)).rejects.toThrow("new capability");
-        expect(await catalogue.get("communication.email", "2.0.0")).toBeNull();
+        expect(await catalogue.get("ulvia/communication.email", "2.0.0")).toBeNull();
     }
     expect(await catalogue.list()).toHaveLength(1);
     if (adapter === "mongo") {
@@ -136,7 +136,7 @@ test.each(["memory", "mongo"])(
         await expect(
             catalogue.publish(await release("1.2.0", objectSchema({ message: stringSchema(20) }, ["message"]))),
         ).rejects.toThrow("stable");
-        expect(await catalogue.get("communication.email", "1.2.0")).toBeNull();
+        expect(await catalogue.get("ulvia/communication.email", "1.2.0")).toBeNull();
         expect(await catalogue.list()).toHaveLength(3);
     },
 );

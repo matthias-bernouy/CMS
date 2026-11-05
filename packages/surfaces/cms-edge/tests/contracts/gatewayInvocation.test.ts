@@ -26,7 +26,7 @@ test("Edge mounts every gateway binding method and supplies trusted actor state"
         "POST",
         "/.cms/call",
     )(
-        new Request("http://site/.cms/call/catalog/v1/items", {
+        new Request("http://site/.cms/call/ulvia/catalog/v1/items", {
             method: "POST",
             headers: { authorization: "Bearer provider-token", "content-type": "application/json" },
             body: '{"term":"one"}',
@@ -35,7 +35,7 @@ test("Edge mounts every gateway binding method and supplies trusted actor state"
     expect(response.status).toBe(200);
     expect(calls[0]).toMatchObject({
         siteId: "site-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         capabilityId: "item.create",
         actor: { kind: "provider", installationId: "install-caller" },
         input: { term: "one" },
@@ -44,7 +44,7 @@ test("Edge mounts every gateway binding method and supplies trusted actor state"
         "QUERY",
         "/.cms/call",
     )(
-        new Request("http://site/.cms/call/catalog/v1/items", {
+        new Request("http://site/.cms/call/ulvia/catalog/v1/items", {
             method: "QUERY",
             headers: { authorization: "Bearer provider-token", "content-type": "application/json" },
             body: '{"term":"two"}',

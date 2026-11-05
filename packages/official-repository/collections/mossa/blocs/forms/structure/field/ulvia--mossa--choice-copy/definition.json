@@ -1,0 +1,33 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--choice-copy",
+    "label": "bloc.choice-copy.label",
+    "description": "bloc.choice-copy.description",
+    "catalogue": "hidden",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "label": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        },
+        "help": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.forms"]
+}

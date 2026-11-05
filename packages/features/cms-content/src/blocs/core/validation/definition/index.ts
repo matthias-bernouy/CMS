@@ -1,3 +1,4 @@
+import { isResourceId } from "@bernouy/resource-identity";
 import { forbiddenBlocBehaviorIssues } from "./behavior";
 export { forbiddenBlocBehaviorIssues } from "./behavior";
 import { isBlocOwnership, normalizeBlocWrite } from "cms-content/blocs/core/catalogue/records";
@@ -94,7 +95,7 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     if (bloc.styleCSS !== undefined && !bloc.styleCSS.trim()) {
         throw new ContentValidationError("styleCSS", "non-empty scoped CSS expected");
     }
-    if (bloc.styleCollectionId !== undefined && !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(bloc.styleCollectionId)) {
+    if (bloc.styleCollectionId !== undefined && !isResourceId(bloc.styleCollectionId)) {
         throw new ContentValidationError("styleCollectionId", "valid lower-case collection identifier expected");
     }
     if (bloc.kind === "composition" && bloc.styleCSS !== undefined) {

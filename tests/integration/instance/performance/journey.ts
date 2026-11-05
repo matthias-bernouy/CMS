@@ -42,21 +42,18 @@ export async function measureResource(stack: Stack, path: string, requestCount =
 }
 export async function publishPerformancePages(connection: Connection) {
     for (const [path, content] of [
-        ["/performance-literal", '<h1 cms-bloc="ulvia-official-heading" size="lg" text-align="start">Performance</h1>'],
+        ["/performance-literal", '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Performance</h1>'],
         ...["/performance-image", "/performance-image-two", "/performance-image-three"].map(
             (path) =>
-                [
-                    path,
-                    '<div cms-bloc="ulvia-official-navigation"><span slot="brand">Performance</span></div>',
-                ] as const,
+                [path, '<div cms-bloc="ulvia--mossa--navigation"><span slot="brand">Performance</span></div>'] as const,
         ),
     ]) {
-        const page = await connection.call("ulvia.cms.content", "pages.create", {
+        const page = await connection.call("ulvia/cms.content", "pages.create", {
             path,
             title: "Performance",
             content,
         });
-        await connection.call("ulvia.cms.content", "pages.publish", {
+        await connection.call("ulvia/cms.content", "pages.publish", {
             id: page.id,
             expectedRevision: page.revision,
             visible: true,

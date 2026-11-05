@@ -51,6 +51,6 @@ function queryMarkup(count: number): string {
     return Array.from(
         { length: count },
         (_, index) =>
-            `<section cms-query="performance:item-${index} as query${index}"><p>{{ query${index}.data }}</p></section>`,
+            `<section cms-query="ulvia.performance/performance:item-${index} as query${index}"><p>{{ query${index}.data }}</p></section>`,
     ).join("");
 }

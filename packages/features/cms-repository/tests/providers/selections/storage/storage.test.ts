@@ -22,7 +22,7 @@ describe("atomic contract selection storage", () => {
     test("replaces the complete site with optimistic revisions and independent immutable reads", async () => {
         const { store, select } = await fixture();
         expect(await store.get(siteId)).toBeNull();
-        const first = await store.replace(siteId, [await select("payment")], 0);
+        const first = await store.replace(siteId, [await select("ulvia/payment")], 0);
         expect(first.revision).toBe(1);
         const read = await store.get(siteId);
         expect(read).toEqual(first);
@@ -37,8 +37,8 @@ describe("atomic contract selection storage", () => {
 
     test("only one concurrent replacement of the same revision succeeds", async () => {
         const { store, select } = await fixture();
-        const first = await select("payment");
-        const second = await select("payment", "2.0.0");
+        const first = await select("ulvia/payment");
+        const second = await select("ulvia/payment", "2.0.0");
         const results = await Promise.allSettled([
             store.replace(siteId, [first], 0),
             store.replace(siteId, [second], 0),
@@ -49,11 +49,11 @@ describe("atomic contract selection storage", () => {
 
     test("failure is atomic, does not poison the queue and cannot accept a fabricated plan", async () => {
         const { store, select, context } = await fixture();
-        const payment = await select("payment");
+        const payment = await select("ulvia/payment");
         const initial = await store.replace(siteId, [payment], 0);
         const plan = await planContractSelections(siteId, [payment], context);
         await expect(store.replace(siteId, { ...plan, structurallyValid: true }, 1)).rejects.toThrow();
-        await expect(store.replace(siteId, [await select("commerce")], 1)).rejects.toMatchObject({
+        await expect(store.replace(siteId, [await select("ulvia/commerce")], 1)).rejects.toMatchObject({
             code: "missing_dependency",
         });
         expect(await store.get(siteId)).toEqual(initial);
@@ -62,9 +62,9 @@ describe("atomic contract selection storage", () => {
 
     test("recomputes current dependencies and retains historical snapshots after yanks", async () => {
         const { store, select, releases, changeDependencies } = await fixture();
-        const payment = await select("payment");
+        const payment = await select("ulvia/payment");
         const stored = await store.replace(siteId, [payment], 0);
-        await releases.setYank("payment", "1.0.0", { reason: "withdrawn" });
+        await releases.setYank("ulvia/payment", "1.0.0", { reason: "withdrawn" });
         changeDependencies();
         expect(await store.get(siteId)).toEqual(stored);
         await expect(store.replace(siteId, stored.plan.selections, 1)).rejects.toMatchObject({
@@ -83,7 +83,7 @@ describe("atomic contract selection storage", () => {
                 return captured === revision;
             },
         });
-        await expect(store.replace(siteId, [await select("payment")], 0)).rejects.toMatchObject({
+        await expect(store.replace(siteId, [await select("ulvia/payment")], 0)).rejects.toMatchObject({
             code: "stale_dependencies",
         });
         expect(await store.get(siteId)).toBeNull();
@@ -91,7 +91,7 @@ describe("atomic contract selection storage", () => {
 
     test("captures proposed pins before waiting for an earlier replacement", async () => {
         const { store, select } = await fixture();
-        const payment = { ...(await select("payment")) };
+        const payment = { ...(await select("ulvia/payment")) };
         const first = store.replace(siteId, [], 0);
         const second = store.replace(siteId, [payment], 1);
         payment.version = "99.0.0";

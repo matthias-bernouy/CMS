@@ -46,7 +46,7 @@ describe("collection markup admission", () => {
 
     test("validates Page-owned native content separately from the Bloc root", () => {
         const input = component({
-            id: "demo-checkbox",
+            id: "example--demo--checkbox",
             markup: '<label><slot></slot><span part="label"></span></label>',
             slots: {
                 default: {
@@ -66,16 +66,16 @@ describe("collection markup admission", () => {
             exampleContent: '<input type="checkbox">',
         });
         const page = composition({
-            uses: ["demo-checkbox"],
-            markup: '<div cms-bloc=\"demo-checkbox\"><input type="checkbox"></div>',
+            uses: ["example--demo--checkbox"],
+            markup: '<div cms-bloc="example--demo--checkbox"><input type="checkbox"></div>',
             slots: {},
         });
         expect(() => check([input, page])).not.toThrow();
         expect(() => check([{ ...input, exampleContent: "<input>" }])).toThrow('requires native attribute "type"');
         expect(() =>
-            check([input, { ...page, markup: '<div cms-bloc=\"demo-checkbox\"><input type="radio"></div>' }]),
+            check([input, { ...page, markup: '<div cms-bloc="example--demo--checkbox"><input type="radio"></div>' }]),
         ).toThrow('native attribute "type" must be one of "checkbox"');
-        expect(() => check([input, { ...page, markup: '<div cms-bloc=\"demo-checkbox\"></div>' }])).toThrow(
+        expect(() => check([input, { ...page, markup: '<div cms-bloc="example--demo--checkbox"></div>' }])).toThrow(
             "requires at least 1 item",
         );
     });
@@ -88,20 +88,20 @@ describe("collection markup admission", () => {
             exampleContent: "<span>Action</span>",
         });
         const page = composition({
-            uses: ["demo-card"],
-            markup: '<a cms-bloc=\"demo-card\" href="/about"><span>About</span></a>',
+            uses: ["example--demo--card"],
+            markup: '<a cms-bloc="example--demo--card" href="/about"><span>About</span></a>',
             slots: {},
         });
         expect(() => check([action, page])).not.toThrow();
-        expect(() => check([action, { ...page, markup: '<a cms-bloc=\"demo-card\"><span>About</span></a>' }])).toThrow(
-            "declare href",
-        );
+        expect(() =>
+            check([action, { ...page, markup: '<a cms-bloc="example--demo--card"><span>About</span></a>' }]),
+        ).toThrow("declare href");
         expect(() =>
             check([
                 action,
                 {
                     ...page,
-                    markup: '<a cms-bloc=\"demo-card\" href="/about"><span>About</span><button>Nested</button></a>',
+                    markup: '<a cms-bloc="example--demo--card" href="/about"><span>About</span><button>Nested</button></a>',
                 },
             ]),
         ).toThrow("cannot nest interactive content");
@@ -113,8 +113,8 @@ describe("collection markup admission", () => {
             slots: { heading: { accepts: [{ kind: "native-content", profile: "inline" }] } },
         });
         const page = composition({
-            uses: ["demo-card"],
-            markup: '<div cms-bloc=\"demo-card\"><p slot="heading">Title</p></div>',
+            uses: ["example--demo--card"],
+            markup: '<div cms-bloc="example--demo--card"><p slot="heading">Title</p></div>',
             slots: {},
         });
         expect(() => check([card, page])).not.toThrow();
@@ -122,7 +122,7 @@ describe("collection markup admission", () => {
             "direct parent",
         );
         expect(() =>
-            check([card, { ...page, markup: '<div cms-bloc=\"demo-card\"><p slot="missing">Lost</p></div>' }]),
+            check([card, { ...page, markup: '<div cms-bloc="example--demo--card"><p slot="missing">Lost</p></div>' }]),
         ).toThrow("direct parent");
     });
 
@@ -131,13 +131,16 @@ describe("collection markup admission", () => {
             check([
                 composition({
                     slots: {},
-                    uses: ["demo-missing"],
-                    markup: '<div cms-bloc=\"demo-missing\"></div>',
+                    uses: ["example--demo--missing"],
+                    markup: '<div cms-bloc="example--demo--missing"></div>',
                 }),
             ]),
         ).toThrow("neither local nor imported");
         expect(() =>
-            check([component(), composition({ slots: {}, uses: [], markup: '<div cms-bloc=\"demo-card\"></div>' })]),
+            check([
+                component(),
+                composition({ slots: {}, uses: [], markup: '<div cms-bloc="example--demo--card"></div>' }),
+            ]),
         ).toThrow("declared in uses");
     });
 
@@ -163,7 +166,7 @@ describe("collection markup admission", () => {
     });
 
     test("requires nested Blocs in markup to be declared", () => {
-        const nested = component({ markup: '<div cms-bloc=\"demo-page\"></div>', slots: {}, uses: [] });
+        const nested = component({ markup: '<div cms-bloc="example--demo--page"></div>', slots: {}, uses: [] });
         expect(() => check([nested, composition()])).toThrow("declared in uses");
     });
 
@@ -171,14 +174,14 @@ describe("collection markup admission", () => {
         expect(() =>
             check([
                 component({ slots: { body: { accepts: [{ kind: "any-component" }] } } }),
-                composition({ id: "demo-nested", slots: {}, uses: [], markup: "<div></div>" }),
+                composition({ id: "example--demo--nested", slots: {}, uses: [], markup: "<div></div>" }),
                 composition({
                     slots: {},
-                    uses: ["demo-card", "demo-nested"],
-                    markup: '<div cms-bloc=\"demo-card\"><div cms-bloc=\"demo-nested\" slot="body"></div></div>',
+                    uses: ["example--demo--card", "example--demo--nested"],
+                    markup: '<div cms-bloc="example--demo--card"><div cms-bloc="example--demo--nested" slot="body"></div></div>',
                 }),
             ]),
-        ).toThrow("does not accept Bloc demo-nested");
+        ).toThrow("does not accept Bloc example--demo--nested");
     });
 
     test("allows structural classes only in component markup", () => {
@@ -196,17 +199,17 @@ describe("collection markup admission", () => {
         source.texts = [textDefinition("title", { "en-US": "Title" })];
         const composed = (source.blocs as Record<string, unknown>[])[1]!;
         composed.markup =
-            '<div cms-bloc=\"atlas-panel\"><slot name="main" slot="body"><p>{{ cms.i18n.atlas.title }}</p></slot></div>';
+            '<div cms-bloc="atlas-dofficial--atlas--panel"><slot name="main" slot="body"><p>{{ cms.i18n.atlas.official/atlas.title }}</p></slot></div>';
         expect(() => parseCollectionRelease(collectionFixture(source))).not.toThrow();
         composed.markup =
-            '<div cms-bloc=\"atlas-panel\"><slot name="main" slot="body"><p>{{ cms.i18n.atlas.missing }}</p></slot></div>';
+            '<div cms-bloc="atlas-dofficial--atlas--panel"><slot name="main" slot="body"><p>{{ cms.i18n.atlas.official/atlas.missing }}</p></slot></div>';
         expect(() => parseCollectionRelease(collectionFixture(source))).toThrow("unknown collection text missing");
     });
 
     test("allows editable example copy and rejects removed collection Pages", () => {
         const source = collectionDocument({ "page.demo.name": "Demo" });
         (source.examples as any[])[0].document.html =
-            '<div cms-bloc="atlas-panel"><p slot="body">Editable copy</p></div>';
+            '<div cms-bloc="atlas-dofficial--atlas--panel"><p slot="body">Editable copy</p></div>';
         expect(() => parseCollectionRelease(collectionFixture(source))).not.toThrow();
         source.pages = [
             {
@@ -214,7 +217,7 @@ describe("collection markup admission", () => {
                 defaultPath: "/demo",
                 name: "page.demo.name",
                 document: {
-                    html: '<div cms-bloc=\"atlas-panel\"><p slot="body">Hardcoded copy</p></div>',
+                    html: '<div cms-bloc="atlas-dofficial--atlas--panel"><p slot="body">Hardcoded copy</p></div>',
                 },
             },
         ];

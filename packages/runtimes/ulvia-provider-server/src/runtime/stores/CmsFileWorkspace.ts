@@ -106,7 +106,7 @@ export class CmsFileWorkspace implements CmsFileWorkspacePort {
         const created = await this.files.createNamespace({
             name: "Site files",
             defaultVisibility: "private",
-            createdBy: { kind: "system", id: "ulvia.cms.files.workspace" },
+            createdBy: { kind: "system", id: "ulvia/cms.files.workspace" },
         });
         const credentials = { namespaceId: created.namespaceId, namespaceKey: created.namespaceKey };
         await this.secrets.set(CREDENTIALS_KEY, JSON.stringify(credentials));

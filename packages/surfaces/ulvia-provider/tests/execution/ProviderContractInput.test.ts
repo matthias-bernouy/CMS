@@ -90,8 +90,8 @@ test("provider aliases decode the selected binding rather than the first HTTP bi
         kind: "contract",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
-        contractId: "ulvia.cms.example",
-        publisherId: "ulvia.official",
+        contractId: "ulvia/cms.example",
+        publisherId: "ulvia",
         name: "Alias fixture",
         version: "1.0.0",
         capabilities: [

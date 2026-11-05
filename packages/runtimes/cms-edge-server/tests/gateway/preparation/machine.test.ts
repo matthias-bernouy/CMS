@@ -4,7 +4,7 @@ import { createCapabilityHttpHandler } from "@bernouy/cms-gateway/http/handlers"
 const token = "opaque-provider-credential-" + "a".repeat(32);
 const invocation = {
     siteId: "default",
-    contractId: "catalog",
+    contractId: "ulvia/catalog",
     capabilityId: "item.list",
     input: { term: "test" },
     actor: { kind: "anonymous" as const },
@@ -18,7 +18,7 @@ test("machine authentication, authorization and signing use one control call bef
             output: { items: ["authorized"] },
         });
         expect(f.events).toEqual(["machine-prepare", "business"]);
-        expect(f.preparations[0]).toMatchObject({ token, invocation: { contractId: "catalog", bodyBytes: 15 } });
+        expect(f.preparations[0]).toMatchObject({ token, invocation: { contractId: "ulvia/catalog", bodyBytes: 15 } });
         expect(f.preparations[0]).not.toHaveProperty("actor");
         expect(f.preparations[0]!.invocation).not.toHaveProperty("sourceInstallationId");
         expect(f.preparations[0]!.invocation.trace.spanId).toBe(f.preparations[0]!.invocation.requestId);
@@ -42,7 +42,7 @@ test("the machine HTTP adapter uses the combined broker and never resolves a cla
             },
         });
         const response = await handler(
-            new Request("https://site.test/.cms/call/catalog/v1/items?term=test", {
+            new Request("https://site.test/.cms/call/ulvia/catalog/v1/items?term=test", {
                 headers: { authorization: `Bearer ${token}`, "x-ulvia-provider-authority": "provider" },
             }),
         );

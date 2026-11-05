@@ -27,12 +27,13 @@ export function exampleCollection(): any {
         document: { html },
         previews: [{ id: "desktop", frame: { width: 640, height: 240 } }],
     });
-    const panel = '<div cms-bloc="atlas-panel" tone="accent"><p slot="body">{{ cms.i18n.atlas.greeting }}</p></div>';
+    const panel =
+        '<div cms-bloc="atlas-dofficial--atlas--panel" tone="accent"><p slot="body">{{ cms.i18n.atlas.official/atlas.greeting }}</p></div>';
     release.examples = [
-        sample("atlas-panel-default", panel),
+        sample("atlas-dofficial--atlas--panel-default", panel),
         sample(
-            "atlas-page-default",
-            '<div cms-bloc="atlas-page"><p slot="main">{{ cms.i18n.atlas.greeting }}</p></div>',
+            "atlas-dofficial--atlas--page-default",
+            '<div cms-bloc="atlas-dofficial--atlas--page"><p slot="main">{{ cms.i18n.atlas.official/atlas.greeting }}</p></div>',
         ),
         sample("assembled", panel + panel),
     ];

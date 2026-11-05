@@ -14,8 +14,8 @@ import {
 describe("multi-release provider implementations", () => {
     test("serves several exact releases with deterministic order and separate digest checks", async () => {
         const catalogue = await releaseCatalogue(
-            contractDocument("payment", "pay", "1.0.0"),
-            contractDocument("payment", "pay", "2.0.0"),
+            contractDocument("ulvia/payment", "pay", "1.0.0"),
+            contractDocument("ulvia/payment", "pay", "2.0.0"),
         );
         const entries = (await catalogue.list()).map(({ admission }) =>
             implementation(admission.release.contractId, admission.release.version, admission.digest),
@@ -35,13 +35,13 @@ describe("multi-release provider implementations", () => {
 
     test("does not invent a cycle through an incompatible implemented release", async () => {
         const catalogue = await releaseCatalogue(
-            contractDocument("first", "run", "1.0.0"),
-            contractDocument("first", "run", "2.0.0"),
-            contractDocument("second", "run"),
+            contractDocument("ulvia/first", "run", "1.0.0"),
+            contractDocument("ulvia/first", "run", "2.0.0"),
+            contractDocument("ulvia/second", "run"),
         );
-        const first1 = (await catalogue.get("first", "1.0.0"))!.admission;
-        const first2 = (await catalogue.get("first", "2.0.0"))!.admission;
-        const second = (await catalogue.get("second", "1.0.0"))!.admission;
+        const first1 = (await catalogue.get("ulvia/first", "1.0.0"))!.admission;
+        const first2 = (await catalogue.get("ulvia/first", "2.0.0"))!.admission;
+        const second = (await catalogue.get("ulvia/second", "1.0.0"))!.admission;
         const entries = [
             implementation("first", "1.0.0", first1.digest, [requirement("second", "run")]),
             implementation("first", "2.0.0", first2.digest),
@@ -58,13 +58,13 @@ describe("multi-release provider implementations", () => {
 
     test("does not connect releases missing the required capability", async () => {
         const catalogue = await releaseCatalogue(
-            contractDocument("first", "old", "1.0.0"),
+            contractDocument("ulvia/first", "old", "1.0.0"),
             ...capabilityTransition("first", "old", "new"),
-            contractDocument("second", "run"),
+            contractDocument("ulvia/second", "run"),
         );
-        const first1 = (await catalogue.get("first", "1.0.0"))!.admission;
-        const first2 = (await catalogue.get("first", "2.0.0"))!.admission;
-        const second = (await catalogue.get("second", "1.0.0"))!.admission;
+        const first1 = (await catalogue.get("ulvia/first", "1.0.0"))!.admission;
+        const first2 = (await catalogue.get("ulvia/first", "2.0.0"))!.admission;
+        const second = (await catalogue.get("ulvia/second", "1.0.0"))!.admission;
         await expect(
             admitProviderManifest(
                 manifestDocument([
@@ -79,11 +79,11 @@ describe("multi-release provider implementations", () => {
 
     test("does not redundantly claim a specialization and its parent", async () => {
         const catalogue = new InMemoryReleaseCatalogue();
-        const parent = await admitContractRelease(contractDocument("emailer", "send"));
+        const parent = await admitContractRelease(contractDocument("ulvia/emailer", "send"));
         await catalogue.publish(parent);
-        const childDocument = contractDocument("emailer.smtp", "send");
+        const childDocument = contractDocument("ulvia/emailer.smtp", "send");
         childDocument.extends = {
-            contractId: "emailer",
+            contractId: "ulvia/emailer",
             version: "1.0.0",
             digest: parent.digest,
         };
@@ -94,14 +94,17 @@ describe("multi-release provider implementations", () => {
         await expect(
             admitProviderManifest(
                 manifestDocument([
-                    implementation("emailer", "1.0.0", parent.digest),
-                    implementation("emailer.smtp", "1.0.0", child.digest),
+                    implementation("ulvia/emailer", "1.0.0", parent.digest),
+                    implementation("ulvia/emailer.smtp", "1.0.0", child.digest),
                 ]),
                 catalogue,
             ),
-        ).rejects.toThrow("both implement emailer");
+        ).rejects.toThrow("both implement ulvia/emailer");
         await expect(
-            admitProviderManifest(manifestDocument([implementation("emailer.smtp", "1.0.0", child.digest)]), catalogue),
+            admitProviderManifest(
+                manifestDocument([implementation("ulvia/emailer.smtp", "1.0.0", child.digest)]),
+                catalogue,
+            ),
         ).resolves.toMatchObject({ kind: "admitted-provider-manifest" });
     });
 });

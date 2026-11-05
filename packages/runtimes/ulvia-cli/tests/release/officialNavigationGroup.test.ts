@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { mount } from "../../../../official-repository/collections/ulvia-official/blocs/navigation/menu/ulvia-official-navigation-group/bloc";
+import { mount } from "../../../../official-repository/collections/mossa/blocs/navigation/menu/ulvia--mossa--navigation-group/bloc";
 
 afterEach(() => {
     document.body.replaceChildren();
@@ -7,12 +7,12 @@ afterEach(() => {
 
 test("official navigation groups remain synchronized after their label changes", async () => {
     document.body.innerHTML = `
-        <div cms-bloc="ulvia-official-navigation-group">
+        <div cms-bloc="ulvia--mossa--navigation-group">
             <button type="button">Pages</button>
             <div part="region"></div>
         </div>
     `;
-    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia-official-navigation-group"]');
+    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia--mossa--navigation-group"]');
     const button = root?.querySelector("button");
     if (!root || !button) {
         throw new Error("Missing navigation group fixture");

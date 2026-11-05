@@ -12,7 +12,7 @@ const REPLACEMENT_IMAGE = Buffer.from(
 
 export async function mutateFiles(page: Page): Promise<void> {
     await filePageLink(page).click();
-    await page.locator('#file-library [cms-bloc="ulvia-official-cluster"]').first().waitFor();
+    await page.locator('#file-library [cms-bloc="ulvia--mossa--cluster"]').first().waitFor();
     const uploadDialog = page.locator("#upload-file-dialog");
     if (await uploadDialog.evaluate((dialog: HTMLDialogElement) => dialog.open)) {
         throw new Error("The upload dialog must be closed on initial render");
@@ -86,7 +86,7 @@ async function upload(page: Page, name: string, contents: Buffer): Promise<void>
         page.waitForResponse((candidate) => candidate.url().includes("workspace.upload.complete")).catch(() => null),
         page.waitForResponse(isWorkspaceResponse),
     ]);
-    await page.locator('[cms-bloc="ulvia-official-file-upload"]:not([file-id]) input[name="file"]').setInputFiles({
+    await page.locator('[cms-bloc="ulvia--mossa--file-upload"]:not([file-id]) input[name="file"]').setInputFiles({
         name,
         mimeType: "image/png",
         buffer: contents,
@@ -108,7 +108,7 @@ async function replace(page: Page, card: Locator, name: string, contents: Buffer
         page.waitForResponse((candidate) => candidate.url().includes("workspace.upload.complete")).catch(() => null),
         page.waitForResponse(isWorkspaceResponse),
     ]);
-    await card.locator('[cms-bloc="ulvia-official-file-upload"][file-id] input[type="file"]').setInputFiles({
+    await card.locator('[cms-bloc="ulvia--mossa--file-upload"][file-id] input[type="file"]').setInputFiles({
         name,
         mimeType: "image/png",
         buffer: contents,
@@ -134,18 +134,18 @@ async function submit(page: Page, capabilityId: string, trigger: Locator) {
 
 async function expectOpenImage(page: Page, card: ReturnType<typeof fileCard>, expectedWidth: number): Promise<void> {
     const responsePromise = page.waitForResponse((candidate) =>
-        candidate.url().includes("/.cms/call/ulvia.cms.files/files/"),
+        candidate.url().includes("/.cms/call/ulvia/cms.files/files/"),
     );
-    await card.locator('[cms-bloc="ulvia-official-file-link"][file-id] > button').click();
+    await card.locator('[cms-bloc="ulvia--mossa--file-link"][file-id] > button').click();
     const response = await responsePromise;
     expect(response.ok()).toBe(true);
-    expect(response.url()).toMatch(/\/\.cms\/call\/ulvia\.cms\.files\/files\//u);
+    expect(response.url()).toMatch(/\/\.cms\/call\/ulvia\/cms\.files\/files\//u);
     expect(new URL(response.url()).searchParams.has("access")).toBe(true);
     const image = page.locator("img");
     await image.waitFor();
     expect(await image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBe(expectedWidth);
     await page.goBack();
-    await page.locator('#file-library [cms-bloc="ulvia-official-cluster"]').first().waitFor();
+    await page.locator('#file-library [cms-bloc="ulvia--mossa--cluster"]').first().waitFor();
 }
 
 function fileCard(page: Page, name: string) {
@@ -192,12 +192,12 @@ async function expectResponse(
 }
 
 function isRawUploadResponse(response: Awaited<ReturnType<Page["waitForResponse"]>>): boolean {
-    return response.request().method() === "PUT" && response.url().includes("/ulvia.cms.files/uploads/");
+    return response.request().method() === "PUT" && response.url().includes("/ulvia/cms.files/uploads/");
 }
 
 function isWorkspaceResponse(response: Awaited<ReturnType<Page["waitForResponse"]>>): boolean {
     return (
         ["GET", "QUERY"].includes(response.request().method()) &&
-        response.url().includes("ulvia.cms.files/workspace.get")
+        response.url().includes("ulvia/cms.files/workspace.get")
     );
 }

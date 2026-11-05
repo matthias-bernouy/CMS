@@ -7,7 +7,7 @@ import {
 
 const context = {
     siteId: "site-a",
-    providerId: "example",
+    providerId: "example.official/example",
     contractVersion: "1.0.0",
     requestId: crypto.randomUUID(),
     idempotencyKey: "one",

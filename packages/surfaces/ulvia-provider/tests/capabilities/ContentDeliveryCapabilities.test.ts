@@ -5,7 +5,7 @@ const context: ProviderCapabilityInvocationContext = {
     requestId: crypto.randomUUID(),
     contractVersion: "1.0.0",
     siteId: "default",
-    providerId: "ulvia.official",
+    providerId: "ulvia/primary-provider",
     actorKind: "anonymous",
 };
 function fixture() {
@@ -33,7 +33,7 @@ function fixture() {
 test("Content returns a native resource stream with cache metadata", async () => {
     const { dispatcher, calls } = fixture();
     const result = (await dispatcher.invoke(
-        "ulvia.cms.content",
+        "ulvia/cms.content",
         "delivery.resolve-resource",
         { path: "/", method: "GET", query: [] },
         context,
@@ -50,7 +50,7 @@ test("missing signed actor context and authored actor injection fail before reso
     const { dispatcher, calls } = fixture();
     await expect(
         dispatcher.invoke(
-            "ulvia.cms.content",
+            "ulvia/cms.content",
             "delivery.resolve-resource",
             { path: "/", method: "GET", query: [] },
             { ...context, actorKind: undefined },
@@ -58,7 +58,7 @@ test("missing signed actor context and authored actor injection fail before reso
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(
         dispatcher.invoke(
-            "ulvia.cms.content",
+            "ulvia/cms.content",
             "delivery.resolve-resource",
             { path: "/", method: "GET", query: [], actorKind: "administrator" },
             context,
@@ -75,7 +75,7 @@ test("Delivery reads HTTP metadata outside input and rejects representation fiel
         http: { headers: new Headers({ "accept-language": "fr", "if-none-match": 'W/"v1"', range: "bytes=-12" }) },
     };
     const result = (await dispatcher.invoke(
-        "ulvia.cms.content",
+        "ulvia/cms.content",
         "delivery.resolve-resource",
         { path: "/", method: "GET", query: [] },
         modern,
@@ -88,7 +88,7 @@ test("Delivery reads HTTP metadata outside input and rejects representation fiel
     expect(request.headers.get("range")).toBe("bytes=-12");
     await expect(
         dispatcher.invoke(
-            "ulvia.cms.content",
+            "ulvia/cms.content",
             "delivery.resolve-resource",
             { path: "/", method: "GET", query: [], acceptLanguage: "en" },
             modern,
@@ -98,7 +98,7 @@ test("Delivery reads HTTP metadata outside input and rejects representation fiel
 });
 test("the removed delivery capability cannot be invoked", async () => {
     const { dispatcher, calls } = fixture();
-    await expect(dispatcher.invoke("ulvia.cms.content", "delivery.resolve-path", {}, context)).rejects.toThrow();
+    await expect(dispatcher.invoke("ulvia/cms.content", "delivery.resolve-path", {}, context)).rejects.toThrow();
     expect(calls).toHaveLength(0);
 });
 import type { ProviderResourceResponse } from "@bernouy/cms-gateway/provider/server";

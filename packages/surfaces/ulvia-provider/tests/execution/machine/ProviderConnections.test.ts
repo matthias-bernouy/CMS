@@ -11,7 +11,7 @@ import { registerProviderConnectionCapabilities } from "@bernouy/ulvia-provider/
 const context = {
     requestId: crypto.randomUUID(),
     siteId: "site-a",
-    providerId: "provider-a",
+    providerId: "ulvia/provider-a",
     contractVersion: "1.0.0",
 };
 
@@ -33,7 +33,7 @@ test("only verified connection authority can configure its own return channel", 
         { connectionId: "connection-a", systemServiceId: "cms-edge" },
     ]) {
         await expect(
-            dispatcher.invoke("ulvia.provider.connections", "connections.configure", input, {
+            dispatcher.invoke("ulvia/provider.connections", "connections.configure", input, {
                 ...context,
                 ...authority,
             }),
@@ -41,7 +41,7 @@ test("only verified connection authority can configure its own return channel", 
     }
     expect(configured).toEqual([]);
     expect(
-        await dispatcher.invoke("ulvia.provider.connections", "connections.configure", input, {
+        await dispatcher.invoke("ulvia/provider.connections", "connections.configure", input, {
             ...context,
             connectionId: "connection-a",
         }),
@@ -78,7 +78,7 @@ test("Provider actors cannot approve installations or look up other Providers' c
     for (const authority of [{}, { sourceInstallationId: "caller" }, { systemServiceId: "cms-edge" }]) {
         await expect(
             dispatcher.invoke(
-                "ulvia.cms.installations",
+                "ulvia/cms.installations",
                 "approve-provider-connection",
                 { ticket: "ticket" },
                 { ...context, ...authority },
@@ -86,7 +86,7 @@ test("Provider actors cannot approve installations or look up other Providers' c
         ).rejects.toMatchObject({ code: "FORBIDDEN" });
         await expect(
             dispatcher.invoke(
-                "ulvia.cms.installations",
+                "ulvia/cms.installations",
                 "gateway.provider.resolve",
                 { token: "a".repeat(64) },
                 { ...context, ...authority },
@@ -107,7 +107,7 @@ test("an approval ticket owned by another administrator is a permanent authoriza
     } as never);
     await expect(
         dispatcher.invoke(
-            "ulvia.cms.installations",
+            "ulvia/cms.installations",
             "approve-provider-connection",
             { ticket: "ticket" },
             { ...context, subjectId: "admin-b" },
@@ -125,7 +125,7 @@ test("the connected logger drops permanent Gateway failures and retries an uncer
                     throw new ProviderClientError(code, false, 409);
                 },
             },
-            contract: { contractId: "ulvia.cms.observability" } as ContractRelease,
+            contract: { contractId: "ulvia/cms.observability" } as ContractRelease,
             service: "test",
             fallback: () => undefined,
         });
@@ -141,7 +141,7 @@ test("the connected logger drops permanent Gateway failures and retries an uncer
 test("the official Provider mounts the connection contract alongside CMS contracts", async () => {
     const contract = structuredClone(await contractRelease());
     const resolved = structuredClone(resolveFixtureContract(contract));
-    (resolved.release as { contractId: string }).contractId = "ulvia.provider.connections";
+    (resolved.release as { contractId: string }).contractId = "ulvia/provider.connections";
     expect(compileProviderRoutes([resolved])).not.toBeEmpty();
     (resolved.release as { contractId: string }).contractId = "unrelated.provider.contract";
     expect(() => compileProviderRoutes([resolved])).toThrow("only accepts");
@@ -165,7 +165,7 @@ test("Providers cannot use internal Gateway control capabilities to escape their
     ]) {
         for (const actor of [{ sourceInstallationId: "source-a" }, { subjectId: "admin-a" }, {}]) {
             await expect(
-                dispatcher.invoke("ulvia.cms.installations", capability, {}, { ...context, ...actor }),
+                dispatcher.invoke("ulvia/cms.installations", capability, {}, { ...context, ...actor }),
             ).rejects.toMatchObject({ code: "FORBIDDEN", status: 403 });
         }
     }

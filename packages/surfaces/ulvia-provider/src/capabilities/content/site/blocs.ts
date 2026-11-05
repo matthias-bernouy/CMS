@@ -18,7 +18,7 @@ export function registerSiteBlocCapabilities(
     dependencies: CmsContentDependencies,
 ): void {
     const register = (capabilityId: string, handler: ProviderCapabilityHandler) => {
-        dispatcher.register("ulvia.cms.content", `site-blocs.${capabilityId}`, async (input, context) =>
+        dispatcher.register("ulvia/cms.content", `site-blocs.${capabilityId}`, async (input, context) =>
             siteBlocCommand(() => handler(input, context)),
         );
     };

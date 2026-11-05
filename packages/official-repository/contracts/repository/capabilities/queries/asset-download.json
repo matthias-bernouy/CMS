@@ -1,0 +1,120 @@
+{
+    "id": "asset-download",
+    "description": "Download one verified immutable asset belonging to a published release.",
+    "access": "public",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync",
+        "sensitive": false
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "kind": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 32,
+                "enum": ["collection", "contract", "provider-manifest"]
+            },
+            "publisherId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 193
+            },
+            "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "assetId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+            }
+        },
+        "required": ["kind", "publisherId", "id", "version", "assetId"]
+    },
+    "output": {
+        "type": "binary",
+        "maxBytes": 104857600
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "GET",
+            "path": "/v1/assets/{kind}/{publisherId}/{id}/{version}/{assetId}",
+            "input": {
+                "path": {
+                    "kind": "kind",
+                    "publisherId": "publisherId",
+                    "id": "id",
+                    "version": "version",
+                    "assetId": "assetId"
+                }
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/octet-stream"],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        }
+    ],
+    "docs": ["overview.md"]
+}

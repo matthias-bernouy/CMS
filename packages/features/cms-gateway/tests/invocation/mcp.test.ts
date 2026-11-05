@@ -33,11 +33,15 @@ test("MCP discovery projects declared schema and calls the normal Gateway", asyn
         additionalProperties: false,
         properties: { input: { additionalProperties: false } },
     });
-    const result = await binding.call(capabilityToolName("catalog", "item.list"), { input: { term: "x" } }, context);
+    const result = await binding.call(
+        capabilityToolName("ulvia/catalog", "item.list"),
+        { input: { term: "x" } },
+        context,
+    );
     expect(result.structuredContent).toEqual({ output: { items: ["found"] } });
     expect(calls()).toBe(1);
     const invalid = await binding.call(
-        capabilityToolName("catalog", "item.list"),
+        capabilityToolName("ulvia/catalog", "item.list"),
         { input: { unknown: true } },
         context,
     );
@@ -47,12 +51,12 @@ test("MCP discovery projects declared schema and calls the normal Gateway", asyn
 
 test("MCP access hints never authorize a caller or accept a forged actor", async () => {
     const { binding, calls } = await fixture({ access: "admin" });
-    const result = await binding.call(capabilityToolName("catalog", "item.list"), { input: {} }, context);
+    const result = await binding.call(capabilityToolName("ulvia/catalog", "item.list"), { input: {} }, context);
     expect(result.isError).toBe(true);
     expect(result.content[0]).toMatchObject({ type: "text", text: expect.stringContaining("not_authorized") });
     await expect(
         binding.call(
-            capabilityToolName("catalog", "item.list"),
+            capabilityToolName("ulvia/catalog", "item.list"),
             { input: {}, actor: { kind: "administrator" } },
             context,
         ),
@@ -64,7 +68,7 @@ test("MCP preserves declared errors and requires explicit keyed command retry id
     const { binding, calls } = await fixture({
         behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "keyed" },
     });
-    const name = capabilityToolName("catalog", "item.list");
+    const name = capabilityToolName("ulvia/catalog", "item.list");
     await expect(binding.call(name, { input: {} }, context)).rejects.toThrow();
     expect(calls()).toBe(0);
     expect((await binding.list(context)).tools[0]?.annotations).toMatchObject({

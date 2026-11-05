@@ -122,9 +122,8 @@ export async function repositoryFixture() {
         catalogue,
         contracts: admissions,
         manifestDigest: manifest.digest,
-        collectionDigest: admittedCollections.find(
-            ({ admission }) => admission.release.collectionId === "ulvia-official",
-        )!.admission.digest,
+        collectionDigest: admittedCollections.find(({ admission }) => admission.release.collectionId === "ulvia/mossa")!
+            .admission.digest,
         contractDigests,
     };
 }

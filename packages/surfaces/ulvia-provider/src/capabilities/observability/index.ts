@@ -5,7 +5,7 @@ export function registerObservabilityCapabilities(
     dispatcher: ProviderCapabilityRegistry,
     observability: CmsObservability,
 ): void {
-    dispatcher.register("ulvia.cms.observability", "logs.append", async (input, context) => {
+    dispatcher.register("ulvia/cms.observability", "logs.append", async (input, context) => {
         if (context.rootRequestId || context.subjectId || (!context.systemServiceId && !context.sourceInstallationId)) {
             throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
         }
@@ -16,9 +16,9 @@ export function registerObservabilityCapabilities(
             ),
         );
     });
-    dispatcher.register("ulvia.cms.observability", "logs.query", (input) => execute(() => observability.query(input)));
-    dispatcher.register("ulvia.cms.observability", "logs.get", (input) => execute(() => observability.get(input)));
-    dispatcher.register("ulvia.cms.observability", "logs.aggregate", (input) =>
+    dispatcher.register("ulvia/cms.observability", "logs.query", (input) => execute(() => observability.query(input)));
+    dispatcher.register("ulvia/cms.observability", "logs.get", (input) => execute(() => observability.get(input)));
+    dispatcher.register("ulvia/cms.observability", "logs.aggregate", (input) =>
         execute(() => observability.aggregate(input)),
     );
 }

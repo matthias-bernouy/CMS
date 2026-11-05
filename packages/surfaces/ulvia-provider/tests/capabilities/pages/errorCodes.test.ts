@@ -23,14 +23,14 @@ test("example pagination is invalid input while an invalid Page remains INVALID_
         requestId: crypto.randomUUID(),
         contractVersion: "1.0.0",
         siteId: "default",
-        providerId: "ulvia.official",
+        providerId: "ulvia/primary-provider",
     };
     await expect(
         dispatcher.invoke(
-            "ulvia.cms.content",
+            "ulvia/cms.content",
             "examples.list",
             {
-                collectionId: "demo",
+                collectionId: "example/demo",
                 locale: "en",
                 cursor: "invalid",
             },
@@ -39,7 +39,7 @@ test("example pagination is invalid input while an invalid Page remains INVALID_
     ).rejects.toMatchObject({ code: "INVALID_INPUT", status: 422 });
     await expect(
         dispatcher.invoke(
-            "ulvia.cms.content",
+            "ulvia/cms.content",
             "pages.create",
             {
                 path: "/draft",

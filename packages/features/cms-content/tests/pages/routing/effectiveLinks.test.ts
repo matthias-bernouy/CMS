@@ -15,7 +15,7 @@ for (const adapter of ["memory", "mongo"] as const) {
             await inner.init();
         }
         await inner.createBloc({
-            id: "test-shell",
+            id: "example--test--shell",
             name: "Shell",
             group: "Test",
             viewJS: "",
@@ -30,7 +30,7 @@ for (const adapter of ["memory", "mongo"] as const) {
 
     test(`${adapter}: template links are checked before publication and protect incoming references on deletion`, async () => {
         const { inner, repo } = await fixture('<main><a href="/target">Target</a><slot></slot></main>');
-        await repo.insertPage("/source", "Source", '<div cms-bloc="test-shell"></div>');
+        await repo.insertPage("/source", "Source", '<div cms-bloc="example--test--shell"></div>');
         const source = (await repo.getPage("/source"))!;
         await expect(repo.updatePage({ id: source.id, visible: true }, source.revision)).rejects.toBeInstanceOf(
             ContentValidationError,
@@ -43,7 +43,7 @@ for (const adapter of ["memory", "mongo"] as const) {
             expect.objectContaining({
                 code: "page.route_draft",
                 severity: "warning",
-                location: expect.objectContaining({ blocId: "test-shell" }),
+                location: expect.objectContaining({ blocId: "example--test--shell" }),
             }),
         );
         await expect(repo.deletePage(target.id, target.revision)).rejects.toBeInstanceOf(PageReferencedError);
@@ -55,7 +55,11 @@ for (const adapter of ["memory", "mongo"] as const) {
         const { inner, repo } = await fixture(
             '<main><a href="../target#heading">One</a><a href="/target#heading">Two</a><slot></slot></main>',
         );
-        await inner.insertPage("/target", "Target", '<div cms-bloc="test-shell"><p id="heading">Heading</p></div>');
+        await inner.insertPage(
+            "/target",
+            "Target",
+            '<div cms-bloc="example--test--shell"><p id="heading">Heading</p></div>',
+        );
         let target = (await inner.getPage("/target"))!;
         target = (await inner.updatePage({ id: target.id, visible: true }, target.revision))!;
         let batches = 0;
@@ -65,7 +69,11 @@ for (const adapter of ["memory", "mongo"] as const) {
             expect(ids).toEqual([target.id]);
             return batch(ids);
         };
-        const feedback = await repo.insertPage("/nested/source", "Source", '<div cms-bloc="test-shell"></div>');
+        const feedback = await repo.insertPage(
+            "/nested/source",
+            "Source",
+            '<div cms-bloc="example--test--shell"></div>',
+        );
         expect(feedback?.diagnostics).toEqual([]);
         expect(batches).toBe(1);
         const source = (await repo.getPage("/nested/source"))!;
@@ -83,7 +91,7 @@ for (const adapter of ["memory", "mongo"] as const) {
         const feedback = await repo.insertPage(
             "/source",
             "Source",
-            '<div cms-bloc="test-shell"><a href="#missing">Jump</a></div>',
+            '<div cms-bloc="example--test--shell"><a href="#missing">Jump</a></div>',
         );
         expect(feedback?.diagnostics).toContainEqual(
             expect.objectContaining({ code: "page.fragment_missing", severity: "warning" }),

@@ -1,3 +1,4 @@
+import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
 import { expect, test } from "bun:test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -15,7 +16,7 @@ function officialArtifacts() {
 test("the official collection passes its source quality contract", async () => {
     const artifact = {
         release: parseCollectionReleaseJson(
-            (await officialArtifacts()).collections.find(({ id }) => id === "ulvia-official")!.canonicalJson,
+            (await officialArtifacts()).collections.find(({ id }) => id === "ulvia/mossa")!.canonicalJson,
         ),
     };
     const visible = artifact.release.blocs.filter((bloc) => bloc.catalogue !== "hidden");
@@ -49,10 +50,10 @@ test("the official collection passes its source quality contract", async () => {
             (text) => text.values.en?.trim() && text.values.fr?.trim() && text.label && text.category && text.group,
         ),
     ).toBeTrue();
-    expect(artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-data-table-cell")?.categories).toEqual([
+    expect(artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--data-table-cell")?.categories).toEqual([
         "bloc.category.data",
     ]);
-    expect(artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-field-caption")?.categories).toEqual([
+    expect(artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--field-caption")?.categories).toEqual([
         "bloc.category.forms",
     ]);
     expect(artifact.release.exports?.blocs).toEqual(visible.map((bloc) => bloc.id).toSorted());
@@ -62,20 +63,20 @@ test("the official collection passes its source quality contract", async () => {
         ),
     ).toBeFalse();
 
-    const fileInput = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-file-input");
-    expect(fileInput?.markup).toContain("{{ cms.i18n.ulvia-official.ui-choose-a-file }}");
+    const fileInput = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--file-input");
+    expect(fileInput?.markup).toContain("{{ cms.i18n.ulvia/mossa.ui-choose-a-file }}");
     expect(fileInput?.markup).toContain('part="replace-action"');
     expect(fileInput?.markup).toContain('data-file-replace=""');
-    expect(fileInput?.markup).toContain("{{ cms.i18n.ulvia-official.ui-replace-content }}");
+    expect(fileInput?.markup).toContain("{{ cms.i18n.ulvia/mossa.ui-replace-content }}");
     expect(fileInput?.settings?.map((setting) => setting.id)).toEqual(["variant"]);
     expect(fileInput?.runtime?.viewJS).not.toMatch(/(?:button|drop|empty|remove|replace)-label/);
     expect(fileInput?.runtime?.viewJS).not.toMatch(/Choose a file|No file selected|Replace|Remove/);
 
-    const adminWorkspace = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-admin-workspace");
+    const adminWorkspace = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--admin-workspace");
     expect(adminWorkspace?.markup).toContain('<slot name="secondary-navigation" slot="secondary-sidebar"></slot>');
     expect(adminWorkspace?.markup).toContain('<slot name="page-navigation" slot="navigation"></slot>');
 
-    const routeTabs = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-route-tabs");
+    const routeTabs = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--route-tabs");
     const appearance = routeTabs?.settings?.find((setting) => setting.id === "appearance");
     expect(appearance?.control?.options?.map((option) => option.value)).toEqual(["underline", "pills"]);
     expect(routeTabs?.markup).not.toContain('role="tablist"');
@@ -83,33 +84,33 @@ test("the official collection passes its source quality contract", async () => {
     expect(routeTabs?.runtime?.viewJS).toContain(".tabIndex=");
     expect(routeTabs?.runtime?.viewJS).toContain("aria-labelledby");
 
-    const fieldHelp = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-field-help");
+    const fieldHelp = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--field-help");
     expect(fieldHelp?.uses).toEqual([]);
     expect(fieldHelp?.markup).toContain('data-field-help-trigger=""');
     expect(fieldHelp?.markup).toContain('data-field-help-panel=""');
-    expect(artifact.release.blocs.some((bloc) => bloc.id.startsWith("ulvia-official-field-help-"))).toBeFalse();
+    expect(artifact.release.blocs.some((bloc) => bloc.id.startsWith("ulvia--mossa--field-help-"))).toBeFalse();
 
-    const appShell = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-app-shell");
+    const appShell = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--app-shell");
     expect(appShell?.style).toContain(':scope > [part~="shell"] > [part~="mobile-backdrop"]');
     expect(appShell?.style).toContain("button[data-mobile-toggle-close]");
 
-    const action = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-action");
-    expect(action?.style).toContain("font-family: var(--ulvia-official-font-family-main, inherit)");
+    const action = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--action");
+    expect(action?.style).toContain("font-family: var(--ulvia--mossa--font-family-main, inherit)");
     expect(action?.style).not.toContain("font: inherit;");
     expect(action?.style).toContain("max-width: 100%");
-    expect(action?.style).toContain("min-height: var(--ulvia-official-action-height)");
+    expect(action?.style).toContain("min-height: var(--ulvia--mossa--action-height)");
     expect(action?.style).toContain("white-space: normal");
     expect(action?.style).not.toContain(":scope > span");
 
-    const heading = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-heading");
+    const heading = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--heading");
     expect(heading?.slots.accent).toEqual({
         accepts: [{ kind: "native-content", profile: "phrasing" }],
         max: 1,
     });
     expect(heading?.markup).toContain('<span part="accent"><slot name="accent"></slot></span>');
-    expect(heading?.style).toContain("--ulvia-official-heading-inherited-size");
+    expect(heading?.style).toContain("--ulvia--mossa--heading-inherited-size");
 
-    const mediaFigure = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-media-figure");
+    const mediaFigure = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--media-figure");
     expect(mediaFigure?.slots.title).toEqual({
         accepts: [{ kind: "native-content", profile: "inline" }],
         max: 1,
@@ -119,34 +120,34 @@ test("the official collection passes its source quality contract", async () => {
         { value: "inverse", label: "setting.option.inverse" },
     ]);
 
-    const hero = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-hero");
-    expect(hero?.uses).toContain("ulvia-official-media-figure");
+    const hero = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--hero");
+    expect(hero?.uses).toContain("ulvia--mossa--media-figure");
     expect(hero?.slots.media?.accepts).toContainEqual({
         kind: "component",
-        tag: "ulvia-official-media-figure",
+        tag: "ulvia--mossa--media-figure",
     });
     expect(() =>
         validatePageDocument(
-            '<div cms-bloc="ulvia-official-hero"><h1 cms-bloc="ulvia-official-heading" slot="heading">Understand Gen Z.<span slot="accent">Engage your teams.</span></h1><div cms-bloc="ulvia-official-media-figure" slot="media" ratio="square" surface="inverse"><strong slot="title">Ada Lovelace</strong><span slot="caption">Trainer</span></div></div>',
+            '<div cms-bloc="ulvia--mossa--hero"><h1 cms-bloc="ulvia--mossa--heading" slot="heading">Understand Gen Z.<span slot="accent">Engage your teams.</span></h1><div cms-bloc="ulvia--mossa--media-figure" slot="media" ratio="square" surface="inverse"><strong slot="title">Ada Lovelace</strong><span slot="caption">Trainer</span></div></div>',
             artifact.release.blocs,
         ),
     ).not.toThrow();
 
-    const link = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-link");
+    const link = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--link");
     expect(link?.style).not.toContain("height: 100%");
 
-    const timeInput = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-time-input");
+    const timeInput = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--time-input");
     expect(timeInput?.style).toContain("max-width: 100%");
     expect(timeInput?.style).toContain("flex: 0 1 3rem");
 
-    const colorInput = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-color-input");
+    const colorInput = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--color-input");
     expect(colorInput?.style).toContain("@container (max-width: 20rem)");
     expect(colorInput?.style).toContain("grid-template-columns: minmax(0, 1fr)");
 
-    const grid = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-grid");
+    const grid = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--grid");
     expect(grid?.style).toContain("repeat(auto-fit, minmax(min(100%, 18rem), 1fr))");
 
-    const dataTable = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-data-table");
+    const dataTable = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--data-table");
     expect(dataTable).toMatchObject({ kind: "component", root: { accepts: ["div"] } });
     expect(dataTable?.runtime?.viewJS).toBeUndefined();
     expect(dataTable?.slots).toMatchObject({
@@ -157,8 +158,8 @@ test("the official collection passes its source quality contract", async () => {
     expect(dataTable?.style).toContain("overflow-x: auto");
     expect(dataTable?.style).toContain("min-width: 36rem");
 
-    const columnHeader = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-data-table-column-header");
-    const rowHeader = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-data-table-row-header");
+    const columnHeader = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--data-table-column-header");
+    const rowHeader = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--data-table-row-header");
     expect(columnHeader).toMatchObject({
         catalogue: "hidden",
         root: { accepts: ["th"], attributes: { scope: { required: true, values: ["col"] } } },
@@ -169,24 +170,24 @@ test("the official collection passes its source quality contract", async () => {
     });
     expect(() =>
         validatePageDocument(
-            '<div cms-bloc="ulvia-official-data-table"><span slot="caption">Users</span><th cms-bloc="ulvia-official-data-table-column-header" scope="row" slot="columns">Name</th></div>',
+            '<div cms-bloc="ulvia--mossa--data-table"><span slot="caption">Users</span><th cms-bloc="ulvia--mossa--data-table-column-header" scope="row" slot="columns">Name</th></div>',
             artifact.release.blocs,
         ),
     ).toThrow("scope");
     expect(() =>
         validatePageDocument(
-            '<div cms-bloc="ulvia-official-data-table"><span slot="caption">Users</span><th cms-bloc="ulvia-official-data-table-column-header" scope="col" slot="columns">Name</th><tr cms-bloc="ulvia-official-data-table-row" slot="rows"><td slot="cells">Ada</td></tr></div>',
+            '<div cms-bloc="ulvia--mossa--data-table"><span slot="caption">Users</span><th cms-bloc="ulvia--mossa--data-table-column-header" scope="col" slot="columns">Name</th><tr cms-bloc="ulvia--mossa--data-table-row" slot="rows"><td slot="cells">Ada</td></tr></div>',
             artifact.release.blocs,
         ),
     ).toThrow("does not accept native <td>");
     expect(() =>
         validatePageDocument(
-            '<div cms-bloc="ulvia-official-data-table"><th cms-bloc="ulvia-official-data-table-column-header" scope="col" slot="columns">Name</th></div>',
+            '<div cms-bloc="ulvia--mossa--data-table"><th cms-bloc="ulvia--mossa--data-table-column-header" scope="col" slot="columns">Name</th></div>',
             artifact.release.blocs,
         ),
     ).toThrow('slot "caption" requires at least 1 item');
 
-    const panel = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-panel");
+    const panel = artifact.release.blocs.find((bloc) => bloc.id === "ulvia--mossa--panel");
     expect(panel?.style).toContain("flex-wrap: wrap");
     expect(panel?.style).toContain("flex: 1 1 10rem");
 
@@ -205,29 +206,31 @@ test("the compiled official snapshot retains exact release and asset bytes throu
     try {
         await writeOfficialBootstrapArtifacts(root, artifacts);
         for (const [id, bytes] of Object.entries(artifacts.contracts)) {
-            const segments = id.startsWith("ulvia.cms.") ? ["contracts", "cms", id] : ["contracts", id];
+            const segments = id.startsWith("ulvia/cms.")
+                ? ["contracts", "cms", resourceName(id)]
+                : ["contracts", resourceName(id)];
             expect((await readFile(join(root, ...segments, "definition.json"), "utf8")).trim()).toBe(bytes);
         }
         for (const asset of artifacts.contractAssets) {
-            const segments = asset.contractId.startsWith("ulvia.cms.")
-                ? ["contracts", "cms", asset.contractId]
-                : ["contracts", asset.contractId];
+            const segments = asset.contractId.startsWith("ulvia/cms.")
+                ? ["contracts", "cms", resourceName(asset.contractId)]
+                : ["contracts", resourceName(asset.contractId)];
             expect((await readFile(join(root, ...segments, asset.id))).equals(Buffer.from(asset.bytes))).toBe(true);
         }
         for (const collection of artifacts.collections) {
             for (const asset of collection.assets) {
                 expect(
-                    (await readFile(join(root, "collections", collection.id, "assets", asset.id))).equals(
+                    (await readFile(join(root, "collections", resourceName(collection.id), "assets", asset.id))).equals(
                         Buffer.from(asset.bytes),
                     ),
                 ).toBe(true);
             }
-            expect((await readFile(join(root, "collections", collection.id, "release.json"), "utf8")).trim()).toBe(
-                collection.canonicalJson,
-            );
+            expect(
+                (await readFile(join(root, "collections", resourceName(collection.id), "release.json"), "utf8")).trim(),
+            ).toBe(collection.canonicalJson);
         }
 
-        expect((await readFile(join(root, "providers", "ulvia.official", "definition.json"), "utf8")).trim()).toBe(
+        expect((await readFile(join(root, "providers", "primary-provider", "definition.json"), "utf8")).trim()).toBe(
             artifacts.provider,
         );
     } finally {

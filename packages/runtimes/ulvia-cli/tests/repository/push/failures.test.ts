@@ -40,7 +40,7 @@ test("a partially failed push all can be resumed by repeating the same command",
             const url = new URL(request.url);
             if (
                 request.method === "POST" &&
-                url.pathname === "/.cms/call/ulvia.repository/v1/uploads" &&
+                url.pathname === "/.cms/call/ulvia/repository/v1/uploads" &&
                 ++creates === 2 &&
                 reject
             ) {
@@ -85,7 +85,7 @@ test("corrupt fixture assets stop push all before any earlier valid release is u
         );
         await f.run(["release", f.source, "--recursive"]);
         const files = new LocalArtifactFiles(join(f.data, "repository"));
-        const bytes = await files.get("contracts", "ulvia.official", "communication.receipt", "0.1.0");
+        const bytes = await files.get("contracts", "ulvia", "ulvia/communication.receipt", "0.1.0");
         await Bun.write(files.fixtureBlob(bytes!.toString("utf8"), "receipt.svg"), "tampered");
         await expect(f.run(["push", "all"])).rejects.toThrow("fixture asset");
         expect(await f.remoteFiles.list("contracts")).toEqual([]);

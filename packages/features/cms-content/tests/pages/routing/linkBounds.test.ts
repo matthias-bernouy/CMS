@@ -4,7 +4,7 @@ import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy
 async function fixture(markup = "<main><slot></slot></main>") {
     const inner = new InMemoryContentRepository();
     await inner.createBloc({
-        id: "test-shell",
+        id: "example--test--shell",
         name: "Shell",
         group: "Test",
         description: "Test",
@@ -32,7 +32,7 @@ test("Page link analysis loads at most 32 unique target documents and reports th
         expect(ids).toHaveLength(32);
         return original(ids);
     };
-    const content = `<div cms-bloc="test-shell">${Array.from({ length: 40 }, (_, i) => `<a href="/target-${i}">Link</a>`).join("")}</div>`;
+    const content = `<div cms-bloc="example--test--shell">${Array.from({ length: 40 }, (_, i) => `<a href="/target-${i}">Link</a>`).join("")}</div>`;
     const feedback = await repo.insertPage("/source", "Source", content);
     expect(batches).toBe(1);
     expect(feedback?.diagnostics.filter((item) => item.code === "page.link_analysis_incomplete")).toHaveLength(8);
@@ -42,7 +42,7 @@ test("analysis is instance scoped even when another instance has a matching targ
     const source = await fixture('<main><a href="/target">Target</a></main>');
     const neighbour = await fixture();
     await neighbour.repo.insertPage("/target", "Private neighbour Page");
-    await source.repo.insertPage("/source", "Source", '<div cms-bloc="test-shell"></div>');
+    await source.repo.insertPage("/source", "Source", '<div cms-bloc="example--test--shell"></div>');
     const page = (await source.repo.getPage("/source"))!;
     await expect(source.repo.updatePage({ id: page.id, visible: true }, page.revision)).rejects.toThrow(
         "unavailable route",
@@ -53,10 +53,10 @@ test("analysis is instance scoped even when another instance has a matching targ
 test("a self alias checks fragment IDs against the candidate document rather than stored content", async () => {
     const { repo } = await fixture();
     await repo.updateSystem({ site: { language: "en" } } as never);
-    await repo.insertPage("/old", "Source", '<div cms-bloc="test-shell"><p id="old">Old</p></div>');
+    await repo.insertPage("/old", "Source", '<div cms-bloc="example--test--shell"><p id="old">Old</p></div>');
     let page = (await repo.getPage("/old"))!;
     page = await repo.setPagePaths(page.id, { en: "/new" }, undefined, undefined, page.revision);
-    const content = '<div cms-bloc="test-shell"><a href="/old#new">New</a><p id="new">New</p></div>';
+    const content = '<div cms-bloc="example--test--shell"><a href="/old#new">New</a><p id="new">New</p></div>';
     const saved = await repo.updatePage({ id: page.id, visible: true, content }, page.revision);
     expect(saved?.diagnostics).toEqual([]);
     await expect(
@@ -70,7 +70,11 @@ test("unpublishing a linked Page succeeds with an incoming-link advisory", async
     await inner.insertPage("/target", "Target");
     let target = (await inner.getPage("/target"))!;
     target = (await inner.updatePage({ id: target.id, visible: true }, target.revision))!;
-    await repo.insertPage("/source", "Source", '<div cms-bloc="test-shell"><a href="/target">Target</a></div>');
+    await repo.insertPage(
+        "/source",
+        "Source",
+        '<div cms-bloc="example--test--shell"><a href="/target">Target</a></div>',
+    );
     const hidden = await repo.updatePage({ id: target.id, visible: false }, target.revision);
     expect(hidden?.visible).toBe(false);
     expect(hidden?.diagnostics).toContainEqual(
@@ -90,7 +94,7 @@ test("an inactive translation of the current Page is unavailable rather than ove
             {
                 id: page.id,
                 visible: true,
-                content: '<div cms-bloc="test-shell"><a href="/fr/cible">Translation</a></div>',
+                content: '<div cms-bloc="example--test--shell"><a href="/fr/cible">Translation</a></div>',
             },
             page.revision,
         ),
@@ -101,9 +105,9 @@ test("an inactive translation of the current Page is unavailable rather than ove
 });
 
 test("replacing a Bloc refuses new HTML errors in indirect Page consumers before persistence", async () => {
-    const { inner, repo } = await fixture('<main><div cms-bloc="test-child"></div></main>');
+    const { inner, repo } = await fixture('<main><div cms-bloc="example--test--child"></div></main>');
     const child = await inner.createBloc({
-        id: "test-child",
+        id: "example--test--child",
         name: "Child",
         group: "Test",
         description: "Test",
@@ -113,7 +117,7 @@ test("replacing a Bloc refuses new HTML errors in indirect Page consumers before
         root: { accepts: ["div"] },
         ownership: { kind: "code-managed" },
     });
-    await inner.insertPage("/source", "Source", '<div cms-bloc="test-shell"></div>');
+    await inner.insertPage("/source", "Source", '<div cms-bloc="example--test--shell"></div>');
     await expect(repo.replaceBloc({ ...child, markupHTML: "<main>Nested</main>" })).rejects.toThrow("nested inside");
     expect((await inner.getBlocRecord(child.id))?.artifact?.markupHTML).toBe("<p>Child</p>");
 });

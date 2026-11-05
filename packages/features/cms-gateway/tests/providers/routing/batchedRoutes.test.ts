@@ -41,9 +41,9 @@ test("a routing hint cannot retain an old destination after a selection redirect
                 digest === first.manifest.admission.digest ? first.manifest : second.manifest,
         } as unknown as CatalogueGatewayRouteResolverOptions["manifests"],
     });
-    expect((await resolver.resolve("site-a", "catalog"))!.selection.installationId).toBe("install-a");
+    expect((await resolver.resolve("site-a", "ulvia/catalog"))!.selection.installationId).toBe("install-a");
     expect(payloadReads).toBe(1);
-    await resolver.resolve("site-a", "catalog");
+    await resolver.resolve("site-a", "ulvia/catalog");
     expect(payloadReads).toBe(1);
     expect(requested.slice(-2)).toEqual([["install-a"], ["install-a"]]);
     state = {
@@ -54,10 +54,10 @@ test("a routing hint cannot retain an old destination after a selection redirect
             plan: { ...state.selections!.plan, selections: [second.selection] },
         },
     };
-    expect((await resolver.resolve("site-a", "catalog"))!.selection.installationId).toBe("install-b");
+    expect((await resolver.resolve("site-a", "ulvia/catalog"))!.selection.installationId).toBe("install-b");
     expect(payloadReads).toBe(2);
     expect(requested.slice(-2)).toEqual([["install-a"], ["install-b"]]);
-    await resolver.resolve("site-a", "catalog");
+    await resolver.resolve("site-a", "ulvia/catalog");
     expect(payloadReads).toBe(2);
     expect(requested.slice(-2)).toEqual([["install-b"], ["install-b"]]);
 });

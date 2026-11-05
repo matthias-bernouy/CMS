@@ -46,11 +46,11 @@ export async function repositoryFixture() {
             ),
         ),
     );
-    const artifact = collections.find(({ release }) => release.collectionId === "ulvia-official");
+    const artifact = collections.find(({ release }) => release.collectionId === "ulvia/mossa");
     if (!artifact) {
         throw new Error("Repository performance fixture requires the official collection");
     }
-    const root = await mkdtemp(join(tmpdir(), "ulvia-repository-performance-"));
+    const root = await mkdtemp(join(tmpdir(), "ulvia--repository--performance-"));
     try {
         const files = new LocalArtifactFiles(root);
         for (const admission of admissions) {

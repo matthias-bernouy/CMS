@@ -5,7 +5,7 @@ const target = (ticket: string) => ({
     ticket,
     sourceInstallationId: "source",
     sourceCredentialFingerprint: "f".repeat(64),
-    contractId: "catalog",
+    contractId: "ulvia/catalog",
     capabilityId: "read",
 });
 test("unused roots close locally, cannot replay, and flush with the next preparation rather than a control round trip", async () => {

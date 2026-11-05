@@ -29,7 +29,7 @@ export function connectInstanceDiagnostics(
 ): void {
     runWithoutRequestContext(() =>
         diagnostics.collector.connect(async (entries) => {
-            const route = await gateway.routes.resolve(gateway.siteId, "ulvia.cms.observability");
+            const route = await gateway.routes.resolve(gateway.siteId, "ulvia/cms.observability");
             if (!route) {
                 throw new Error("Observability selection is unavailable");
             }
@@ -49,7 +49,7 @@ export function connectInstanceDiagnostics(
             }
             const result = await gateway.invoker.invoke({
                 siteId: gateway.siteId,
-                contractId: "ulvia.cms.observability",
+                contractId: "ulvia/cms.observability",
                 capabilityId: "logs.append",
                 input: { entries },
                 actor: { kind: "system", serviceId: "ulvia-provider" },

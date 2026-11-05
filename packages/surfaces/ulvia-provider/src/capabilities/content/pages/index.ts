@@ -29,14 +29,14 @@ export function registerPageCapabilities(
     dependencies: CmsContentDependencies,
 ): void {
     const register = (capabilityId: string, handler: ProviderCapabilityHandler, invalidCode = "INVALID_PAGE") => {
-        dispatcher.register("ulvia.cms.content", `pages.${capabilityId}`, async (input, context) =>
+        dispatcher.register("ulvia/cms.content", `pages.${capabilityId}`, async (input, context) =>
             pageCommand(() => handler(input, context), invalidCode, context),
         );
     };
-    dispatcher.register("ulvia.cms.content", "examples.list", (input) =>
+    dispatcher.register("ulvia/cms.content", "examples.list", (input) =>
         pageCommand(() => listExamples(dependencies, input as never), "INVALID_INPUT"),
     );
-    dispatcher.register("ulvia.cms.content", "examples.get", (input) =>
+    dispatcher.register("ulvia/cms.content", "examples.get", (input) =>
         pageCommand(() => getExample(dependencies, input as never), "INVALID_INPUT"),
     );
     register("list", (input) => listCmsPages(dependencies.repo, input));
@@ -86,7 +86,7 @@ async function pageCommand(
                     invalidCode,
                     { "content-language": language },
                     {
-                        message: errorMessage("ulvia.cms.content", "pages.update", invalidCode, language),
+                        message: errorMessage("ulvia/cms.content", "pages.update", invalidCode, language),
                         diagnostics: error.diagnostics,
                     },
                 );

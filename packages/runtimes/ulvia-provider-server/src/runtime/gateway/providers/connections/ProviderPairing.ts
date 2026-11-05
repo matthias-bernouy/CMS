@@ -65,13 +65,13 @@ export class ProviderPairing {
             if (installationDigest(source) !== intent.baseDigest) {
                 throw pairingConflict();
             }
-            const release = await stores.releases.get("ulvia.provider.connections", "1.0.0");
+            const release = await stores.releases.get("ulvia/provider.connections", "1.0.0");
             const capability = release?.admission.release.capabilities.find(
                 (item) => item.id === "connections.configure",
             );
             const served = source.observation?.report.implementations.find(
                 (item) =>
-                    item.contractId === "ulvia.provider.connections" &&
+                    item.contractId === "ulvia/provider.connections" &&
                     item.digest === release?.admission.digest &&
                     item.status === "ready",
             );

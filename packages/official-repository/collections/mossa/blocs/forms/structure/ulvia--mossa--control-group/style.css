@@ -1,0 +1,92 @@
+:scope {
+    display: block;
+    min-width: 0;
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+    container-type: inline-size;
+}
+[part~="group"] {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    align-items: stretch;
+    min-width: 0;
+}
+[part~="leading"],
+[part~="trailing"] {
+    display: flex;
+    align-items: stretch;
+}
+[part~="leading"] {
+    grid-column: 1;
+}
+[part~="control"] {
+    grid-column: 2;
+    min-width: 0;
+}
+[part~="trailing"] {
+    grid-column: 3;
+}
+[part~="leading"]:empty,
+[part~="trailing"]:empty {
+    display: none;
+}
+[part~="leading"] {
+    display: inline-flex;
+    min-height: var(--ulvia--mossa--control-height-md, 2.875rem);
+    align-items: center;
+    box-sizing: border-box;
+    padding-inline: var(--ulvia--mossa--spacing-md, 1rem);
+    border: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-default);
+    border-radius: var(--ulvia--mossa--radius-md, 0.5rem);
+    color: var(--ulvia--mossa--text-secondary);
+    background: var(--ulvia--mossa--background-subtle);
+    font-weight: var(--ulvia--mossa--font-weight-medium, 500);
+}
+:scope[joined] [part~="group"] {
+    gap: 0;
+}
+:scope[joined] {
+    --ulvia--mossa--input-form-radius: 0;
+    --ulvia--mossa--select-form-radius: 0;
+    --ulvia--mossa--action-form-radius: 0 var(--ulvia--mossa--radius-md, 0.5rem) var(--ulvia--mossa--radius-md, 0.5rem)
+        0;
+}
+:scope[joined] * {
+    position: relative;
+}
+:scope[joined] [part~="leading"] {
+    border-inline-end: 0;
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+}
+:scope[joined] *:focus-within {
+    z-index: 1;
+}
+@container (max-width: 24rem) {
+    [part~="group"] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    [part~="leading"],
+    [part~="control"],
+    [part~="trailing"] {
+        grid-column: 1;
+        display: block;
+    }
+    [part~="leading"]:empty,
+    [part~="trailing"]:empty {
+        display: none;
+    }
+    :scope[joined] {
+        --ulvia--mossa--input-form-radius: var(--ulvia--mossa--radius-md, 0.5rem);
+        --ulvia--mossa--select-form-radius: var(--ulvia--mossa--radius-md, 0.5rem);
+        --ulvia--mossa--action-form-radius: var(--ulvia--mossa--radius-md, 0.5rem);
+    }
+    :scope[joined] [part~="leading"] {
+        border: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-default);
+        border-radius: var(--ulvia--mossa--radius-md, 0.5rem);
+    }
+    [part~="trailing"] {
+        --ulvia--mossa--action-width: 100%;
+        width: 100%;
+    }
+}

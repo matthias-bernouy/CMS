@@ -9,7 +9,7 @@ test("rejects removed collection Page resources without a compatibility reader",
         {
             dependencies: [
                 {
-                    collectionId: "other",
+                    collectionId: "example/other",
                     publisherId: "example",
                     versionRange: "^1.0.0",
                     imports: { pages: [{ id: "home", defaultPath: "/" }] },
@@ -27,9 +27,9 @@ test("example document hosts reject undeclared capability and resource attribute
     const source = collectionDocument({ "page.overview.name": "Overview" });
     const bound = {
         ...example,
-        requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
+        requires: [{ contractId: "ulvia/catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
         document: {
-            html: '<div cms-bloc=\"atlas-panel\" cms-mutation="catalog.items:item.list as catalog"></div>',
+            html: '<div cms-bloc="atlas-dofficial--atlas--panel" cms-mutation="ulvia/catalog.items:item.list as catalog"></div>',
         },
     };
     expect(() => parseCollectionRelease(collectionFixture({ ...source, examples: [bound] }))).toThrow(
@@ -51,7 +51,7 @@ test("example document hosts reject undeclared capability and resource attribute
             {
                 ...example,
                 document: {
-                    html: '<div cms-bloc=\"atlas-panel\" title="{{ cms.i18n.atlas.heading }}" artwork="{{ cms.asset.atlas.logo }}"></div>',
+                    html: '<div cms-bloc="atlas-dofficial--atlas--panel" title="{{ cms.i18n.atlas.official/atlas.heading }}" artwork="{{ cms.asset.atlas.official/atlas.logo }}"></div>',
                 },
             },
         ],
@@ -64,7 +64,9 @@ test("example document hosts reject undeclared capability and resource attribute
                 examples: [
                     {
                         ...example,
-                        document: { html: '<div cms-bloc=\"atlas-panel\" title="{{ cms.i18n.atlas.unknown }}"></div>' },
+                        document: {
+                            html: '<div cms-bloc="atlas-dofficial--atlas--panel" title="{{ cms.i18n.atlas.official/atlas.unknown }}"></div>',
+                        },
                     },
                 ],
             }),
@@ -79,8 +81,8 @@ test("example documents use the closed content grammar", () => {
     });
     const details = { ...example, id: "details", label: "page.details.name" };
     const invalidDocuments = [
-        '<div cms-bloc=\"atlas-panel\"><p slot="body"><span slot="ghost">{{ copy }}</span></p></div>',
-        '<div cms-bloc=\"atlas-panel\"><a slot="body" data-cms-page-ref="details"></a></div>',
+        '<div cms-bloc="atlas-dofficial--atlas--panel"><p slot="body"><span slot="ghost">{{ copy }}</span></p></div>',
+        '<div cms-bloc="atlas-dofficial--atlas--panel"><a slot="body" data-cms-page-ref="details"></a></div>',
     ];
     for (const html of invalidDocuments) {
         expect(() =>
@@ -98,9 +100,9 @@ test("example documents reject executable or unbounded markup", () => {
         '<a href="https://example.com">Leave</a>',
         '<div style="color:red">Inline style</div>',
         '<div onclick="run()">Handler</div>',
-        '<div cms-bloc="atlas-unknown"></div>',
-        '<section cms-mutation="catalog.items:item.list as items"></section>',
-        '<section cms-query="catalog.items:item.list"></section>',
+        '<div cms-bloc="atlas-dofficial--atlas--unknown"></div>',
+        '<section cms-mutation="ulvia/catalog.items:item.list as items"></section>',
+        '<section cms-query="ulvia/catalog.items:item.list"></section>',
     ]) {
         expect(() =>
             parseCollectionRelease(collectionFixture({ ...source, examples: [{ ...example, document: { html } }] })),

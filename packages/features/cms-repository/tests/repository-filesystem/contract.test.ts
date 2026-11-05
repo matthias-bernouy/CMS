@@ -3,10 +3,10 @@ import { readdir, readFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 
-const source = resolve(import.meta.dir, "../../../../official-repository/contracts/ulvia.repository");
+const source = resolve(import.meta.dir, "../../../../official-repository/contracts/repository");
 const compiled = resolve(
     import.meta.dir,
-    "../../../../runtimes/ulvia-cli/dist/bootstrap/contracts/ulvia.repository/definition.json",
+    "../../../../runtimes/ulvia-cli/dist/bootstrap/contracts/repository/definition.json",
 );
 const publicCapabilities = new Set([
     "repository-info",

@@ -101,7 +101,7 @@ test("ACME challenge roots stay readable by Nginx workers across CLI invocations
 });
 
 test("an explicit local Repository is persisted independently of later environment defaults", async () => {
-    const root = await mkdtemp(join(tmpdir(), "ulvia-repository-connection-"));
+    const root = await mkdtemp(join(tmpdir(), "ulvia--repository--connection-"));
     const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
     await ensureUlviaPaths(paths);
     try {

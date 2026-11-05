@@ -8,7 +8,7 @@ export function registerDocumentationCapabilities(
     documentation?: CmsDocumentation,
 ): void {
     for (const operation of ["search", "get"] as const) {
-        dispatcher.register("ulvia.cms.installations", `documentation.${operation}`, async (input) => {
+        dispatcher.register("ulvia/cms.installations", `documentation.${operation}`, async (input) => {
             if (!documentation) {
                 throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
             }

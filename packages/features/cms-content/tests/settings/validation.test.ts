@@ -57,7 +57,7 @@ describe("validateSettingsPatch — system Page references", () => {
                     login: {
                         kind: "contribution",
                         sourceId: "Ulvia Official",
-                        contributionId: "ulvia-official",
+                        contributionId: "ulvia/mossa",
                         pageId: "login",
                     },
                 },

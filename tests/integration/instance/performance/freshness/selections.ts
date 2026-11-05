@@ -2,7 +2,7 @@ import { expect } from "bun:test";
 import { cachedPage, contractSelectionOperation, type Connection } from "./context";
 export async function exerciseSelectionFreshness(connection: Connection, cmsUrl: string) {
     const call = async (capability: string, input: Record<string, unknown> = {}) => {
-        const url = `${cmsUrl}/.cms/query/ulvia.cms.installations/${capability}`;
+        const url = `${cmsUrl}/.cms/query/ulvia/cms.installations/${capability}`;
         const response =
             capability === "list-provider-installations"
                 ? await connection.page.request.get(url)
@@ -17,7 +17,7 @@ export async function exerciseSelectionFreshness(connection: Connection, cmsUrl:
     const current = await call("list-provider-installations");
     const grants = {
         default: "allow-selected",
-        denied: [{ contractId: "ulvia.cms.emailer.smtp", capabilityId: "smtp.configuration.update" }],
+        denied: [{ contractId: "ulvia/cms.emailer.smtp", capabilityId: "smtp.configuration.update" }],
     };
     const plan = await call("plan-contract-upgrade", { selections: current.selections, grants });
     expect(plan.status, JSON.stringify(plan.issues)).toBe("applicable");
@@ -32,12 +32,12 @@ export async function exerciseSelectionFreshness(connection: Connection, cmsUrl:
     expect(after.status).toBe(200);
     expect((await call("plan-contract-upgrade", { selections: current.selections })).grants).toEqual(grants);
     await page.read("HIT");
-    const smtpUrl = `${cmsUrl}/.cms/query/ulvia.cms.emailer.smtp/smtp.configuration.get`;
+    const smtpUrl = `${cmsUrl}/.cms/query/ulvia/cms.emailer.smtp/smtp.configuration.get`;
     const before = await connection.page.request.get(smtpUrl);
     expect(before.status()).toBe(200);
     const configuration = await before.json();
     const denied = await connection.page.request.post(
-        `${cmsUrl}/.cms/mutation/ulvia.cms.emailer.smtp/smtp.configuration.update`,
+        `${cmsUrl}/.cms/mutation/ulvia/cms.emailer.smtp/smtp.configuration.update`,
         {
             data: {
                 enabled: false,

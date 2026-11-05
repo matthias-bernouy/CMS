@@ -515,7 +515,7 @@ function assertActorCredentialTarget(invocation: GatewayInvocation, capability: 
         return;
     }
     if (
-        invocation.contractId !== "ulvia.cms.access" ||
+        invocation.contractId !== "ulvia/cms.access" ||
         invocation.capabilityId !== "resolve-actor" ||
         capability.access !== "public" ||
         capability.behavior.effect !== "query"

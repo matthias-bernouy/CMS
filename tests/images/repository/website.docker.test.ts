@@ -25,7 +25,7 @@ test.skipIf(!images.edge || !images.provider)(
             const pat = await api.pat(owner.cookie);
             const namespace = "website.owner";
             expect(
-                (await api.request("ulvia.repository", "/v1/namespace-actions/claim", "POST", { namespace }, pat))
+                (await api.request("ulvia/repository", "/v1/namespace-actions/claim", "POST", { namespace }, pat))
                     .status,
             ).toBe(200);
 
@@ -34,7 +34,7 @@ test.skipIf(!images.edge || !images.provider)(
                 f.repository.administrator.password,
             );
             const deletion = await api.request(
-                "ulvia.cms.access",
+                "ulvia/cms.access",
                 "/delete-user",
                 "POST",
                 { sub: owner.accountId },
@@ -50,7 +50,7 @@ test.skipIf(!images.edge || !images.provider)(
             expect(
                 (
                     await neighbour.request(
-                        "ulvia.cms.access",
+                        "ulvia/cms.access",
                         "/personal-access-tokens",
                         "GET",
                         undefined,
@@ -62,7 +62,7 @@ test.skipIf(!images.edge || !images.provider)(
                 expect(
                     (
                         await neighbour.request(
-                            "ulvia.cms.access",
+                            "ulvia/cms.access",
                             "/personal-access-tokens",
                             "GET",
                             undefined,
@@ -73,16 +73,16 @@ test.skipIf(!images.edge || !images.provider)(
             }
             const neighbourPat = await neighbour.pat(neighbourAdministrator.cookie);
             expect(
-                (await neighbour.request("ulvia.cms.access", "/personal-access-tokens", "GET", undefined, neighbourPat))
+                (await neighbour.request("ulvia/cms.access", "/personal-access-tokens", "GET", undefined, neighbourPat))
                     .status,
             ).toBe(200);
             for (const credentials of [neighbourAdministrator, neighbourPat]) {
                 expect(
-                    (await api.request("ulvia.repository", "/v1/namespaces", "GET", undefined, credentials)).status,
+                    (await api.request("ulvia/repository", "/v1/namespaces", "GET", undefined, credentials)).status,
                 ).toBe(401);
             }
 
-            const info = await (await api.request("ulvia.repository", "/v1/info")).json();
+            const info = await (await api.request("ulvia/repository", "/v1/info")).json();
             const sample = await sampleContract(namespace);
             const client = new RemoteRepositoryClient(
                 f.repositoryUrl,
@@ -103,17 +103,17 @@ test.skipIf(!images.edge || !images.provider)(
             expect(publication.digest).toBe(sample.digest);
             await exerciseRepositoryWebsite(f.repositoryUrl, captures, sample);
 
-            const pages = await api.request("ulvia.cms.content", "/pages/list", "QUERY", { limit: 100 }, administrator);
+            const pages = await api.request("ulvia/cms.content", "/pages/list", "QUERY", { limit: 100 }, administrator);
             expect(pages.status).toBe(200);
             const before = (await pages.json()).items as { id: string; path: string }[];
             const pageId = before.find(({ path }) => path === "/")!.id;
             const original = await (
-                await api.request("ulvia.cms.content", "/pages/get", "QUERY", { id: pageId }, administrator)
+                await api.request("ulvia/cms.content", "/pages/get", "QUERY", { id: pageId }, administrator)
             ).json();
             expect(
                 (
                     await api.request(
-                        "ulvia.cms.content",
+                        "ulvia/cms.content",
                         "/pages/update",
                         "POST",
                         { id: pageId, expectedRevision: original.revision, title: "My retained Repository catalogue" },
@@ -122,18 +122,18 @@ test.skipIf(!images.edge || !images.provider)(
                 ).status,
             ).toBe(200);
             await f.restartProvider();
-            const saved = await api.request("ulvia.cms.content", "/pages/get", "QUERY", { id: pageId }, administrator);
+            const saved = await api.request("ulvia/cms.content", "/pages/get", "QUERY", { id: pageId }, administrator);
             expect(saved.status).toBe(200);
             expect(await saved.json()).toMatchObject({
                 title: "My retained Repository catalogue",
                 content: original.content,
             });
-            const after = await api.request("ulvia.cms.content", "/pages/list", "QUERY", { limit: 100 }, administrator);
+            const after = await api.request("ulvia/cms.content", "/pages/list", "QUERY", { limit: 100 }, administrator);
             expect((await after.json()).items.map(({ id }: { id: string }) => id).toSorted()).toEqual(
                 before.map(({ id }) => id).toSorted(),
             );
             expect((await api.session(email, password)).accountId).toBe(owner.accountId);
-            const inventory = await api.request("ulvia.repository", "/v1/namespaces", "GET", undefined, pat);
+            const inventory = await api.request("ulvia/repository", "/v1/namespaces", "GET", undefined, pat);
             expect(inventory.status).toBe(200);
             expect((await inventory.json()).namespaces).toContainEqual(
                 expect.objectContaining({ namespace, revision: 1 }),

@@ -17,7 +17,7 @@ export function registerProviderInstallationCapabilities(
     management?: UlviaProviderManagement,
 ): void {
     const registerControl = (id: string, handler: ProviderCapabilityHandler) =>
-        dispatcher.register("ulvia.cms.installations", id, async (input, context) => {
+        dispatcher.register("ulvia/cms.installations", id, async (input, context) => {
             if (!context.controlAuthority) {
                 throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
             }
@@ -26,7 +26,7 @@ export function registerProviderInstallationCapabilities(
     registerProviderAuthorityCapabilities(dispatcher, gateway);
     registerDelegationCapabilities(dispatcher, gateway);
     registerProviderAdministration(dispatcher, management);
-    dispatcher.register("ulvia.cms.installations", "list-provider-installations", async () => {
+    dispatcher.register("ulvia/cms.installations", "list-provider-installations", async () => {
         const active = requiredGateway(gateway);
         const [installed, selected] = await Promise.all([
             active.installations.list(active.siteId),
@@ -44,7 +44,7 @@ export function registerProviderInstallationCapabilities(
             routes: projectRoutes(installed, selections),
         };
     });
-    dispatcher.register("ulvia.cms.installations", "get-provider-installation", async (input) => {
+    dispatcher.register("ulvia/cms.installations", "get-provider-installation", async (input) => {
         const active = requiredGateway(gateway);
         const [installed, selected] = await Promise.all([
             active.installations.get({ siteId: active.siteId, installationId: requiredText(input.installationId) }),
@@ -68,7 +68,7 @@ export function registerProviderInstallationCapabilities(
                     .map(projectSelection) ?? [],
         };
     });
-    dispatcher.register("ulvia.cms.installations", "set-provider-status", async (input) =>
+    dispatcher.register("ulvia/cms.installations", "set-provider-status", async (input) =>
         providerCommand(() =>
             requiredManagement(management).setStatus({
                 installationId: requiredText(input.installationId),

@@ -1,0 +1,132 @@
+{
+    "id": "source-get",
+    "description": "Read private collection sources",
+    "access": "authenticated",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "collectionId": {
+                "type": "string",
+                "maxLength": 193
+            },
+            "version": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "namespaceRevision": {
+                "type": "integer",
+                "minimum": 1
+            }
+        },
+        "required": ["namespace", "collectionId", "version", "namespaceRevision"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "sourceJson": {
+                "type": "string",
+                "maxLength": 1048576,
+                "sensitive": true
+            },
+            "releaseDigest": {
+                "type": "string",
+                "maxLength": 71
+            }
+        },
+        "required": ["sourceJson", "releaseDigest"],
+        "nullable": true
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "ACTOR_UNAVAILABLE",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/v1/source-snapshots",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503,
+                    "ACTOR_UNAVAILABLE": 403
+                }
+            }
+        }
+    ],
+    "docs": ["overview.md"]
+}

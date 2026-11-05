@@ -13,45 +13,49 @@ import { graphFixture, installationFor, siteId } from "./fixtures";
 
 describe("full selection dependency graph", () => {
     test("checks additional mandatory implementation capabilities and exact capability IDs", async () => {
-        const { context, select } = await graphFixture([requirement("emailer", "send", "^1.0.0 || ^2.0.0")]);
-        const selected = [await select("commerce"), await select("payment")];
+        const { context, select } = await graphFixture([requirement("ulvia/emailer", "send", "^1.0.0 || ^2.0.0")]);
+        const selected = [await select("ulvia/commerce"), await select("ulvia/payment")];
         await expect(planContractSelections(siteId, selected, context)).rejects.toMatchObject({
             code: "missing_dependency",
-            dependencyPath: ["commerce", "emailer:send"],
+            dependencyPath: ["ulvia/commerce", "ulvia/emailer:send"],
         });
         await expect(
-            planContractSelections(siteId, [...selected, await select("emailer", "2.0.0")], context),
-        ).rejects.toMatchObject({ code: "incompatible_dependency", dependencyPath: ["commerce", "emailer:send"] });
+            planContractSelections(siteId, [...selected, await select("ulvia/emailer", "2.0.0")], context),
+        ).rejects.toMatchObject({
+            code: "incompatible_dependency",
+            dependencyPath: ["ulvia/commerce", "ulvia/emailer:send"],
+        });
         expect(
-            (await planContractSelections(siteId, [...selected, await select("emailer")], context)).structurallyValid,
+            (await planContractSelections(siteId, [...selected, await select("ulvia/emailer")], context))
+                .structurallyValid,
         ).toBe(true);
     });
 
     test("optional requirements remain absent unless their contract is selected, then must match", async () => {
-        const { context, select } = await graphFixture([{ ...requirement("emailer", "send"), optional: true }]);
-        const selected = [await select("commerce"), await select("payment")];
+        const { context, select } = await graphFixture([{ ...requirement("ulvia/emailer", "send"), optional: true }]);
+        const selected = [await select("ulvia/commerce"), await select("ulvia/payment")];
         const absent = await planContractSelections(siteId, selected, context);
         expect(absent.dependencies.find((dependency) => dependency.optional)).toMatchObject({ present: false });
-        const present = await planContractSelections(siteId, [...selected, await select("emailer")], context);
+        const present = await planContractSelections(siteId, [...selected, await select("ulvia/emailer")], context);
         expect(present.dependencies.find((dependency) => dependency.optional)).toMatchObject({ present: true });
         await expect(
-            planContractSelections(siteId, [...selected, await select("emailer", "2.0.0")], context),
+            planContractSelections(siteId, [...selected, await select("ulvia/emailer", "2.0.0")], context),
         ).rejects.toMatchObject({ code: "incompatible_dependency" });
     });
 
     test("validates implementation requirements independently from capability definitions", async () => {
-        const document = contractDocument("commerce", "checkout");
+        const document = contractDocument("ulvia/commerce", "checkout");
         const capabilities = document.capabilities as Record<string, unknown>[];
         capabilities.push({
             ...capabilities[0],
             id: "refund",
             bindings: [{ id: "http", ...(capabilities[0]!.bindings[0] as object), path: "/refund" }],
         });
-        const releases = await releaseCatalogue(contractDocument("payment", "pay"), document);
+        const releases = await releaseCatalogue(contractDocument("ulvia/payment", "pay"), document);
         const manifests = new InMemoryProviderManifestCatalogue(releases);
-        const commerce = (await releases.get("commerce", "1.0.0"))!.admission;
+        const commerce = (await releases.get("ulvia/commerce", "1.0.0"))!.admission;
         const installation = await installationFor(releases, manifests, [
-            implementation("commerce", "1.0.0", commerce.digest, [requirement("payment", "pay")]),
+            implementation("ulvia/commerce", "1.0.0", commerce.digest, [requirement("ulvia/payment", "pay")]),
         ]);
         await expect(
             planContractSelections(
@@ -59,7 +63,7 @@ describe("full selection dependency graph", () => {
                 [
                     {
                         siteId,
-                        contractId: "commerce",
+                        contractId: "ulvia/commerce",
                         version: "1.0.0",
                         digest: commerce.digest,
                         installationId: installation.id,
@@ -72,22 +76,22 @@ describe("full selection dependency graph", () => {
 
     test("detects cycles crossing approved manifests and preserves a transitive conflict path", async () => {
         const releases = await releaseCatalogue(
-            ...["alpha", "bravo", "charlie"].map((id) => contractDocument(id, "run")),
+            ...["ulvia/alpha", "ulvia/bravo", "ulvia/charlie"].map((id) => contractDocument(id, "run")),
         );
         const manifests = new InMemoryProviderManifestCatalogue(releases);
         const selections: ContractSelection[] = [];
         const installations = [];
         for (const [contractId, target] of [
-            ["alpha", "bravo"],
-            ["bravo", "charlie"],
-            ["charlie", "alpha"],
+            ["ulvia/alpha", "ulvia/bravo"],
+            ["ulvia/bravo", "ulvia/charlie"],
+            ["ulvia/charlie", "ulvia/alpha"],
         ]) {
             const record = (await releases.get(contractId!, "1.0.0"))!.admission;
             const installation = await installationFor(
                 releases,
                 manifests,
                 [implementation(contractId!, "1.0.0", record.digest, [requirement(target!, "run")])],
-                `ulvia.${contractId}`,
+                `ulvia/provider-${contractId!.split("/")[1]}`,
             );
             installations.push(installation);
             selections.push({
@@ -101,21 +105,21 @@ describe("full selection dependency graph", () => {
         const context = { releases, manifests, installations };
         await expect(planContractSelections(siteId, selections, context)).rejects.toMatchObject({
             code: "dependency_cycle",
-            dependencyPath: ["alpha", "bravo", "charlie", "alpha"],
+            dependencyPath: ["ulvia/alpha", "ulvia/bravo", "ulvia/charlie", "ulvia/alpha"],
         });
         await expect(planContractSelections(siteId, selections.slice(0, 2), context)).rejects.toMatchObject({
             code: "missing_dependency",
-            dependencyPath: ["alpha", "bravo", "charlie:run"],
+            dependencyPath: ["ulvia/alpha", "ulvia/bravo", "ulvia/charlie:run"],
         });
     });
 
     test("lets one specialized selection satisfy consumers of its parent", async () => {
         const releases = new InMemoryReleaseCatalogue();
-        const emailer = await admitContractRelease(contractDocument("emailer", "send"));
+        const emailer = await admitContractRelease(contractDocument("ulvia/emailer", "send"));
         await releases.publish(emailer);
-        const smtpDocument = contractDocument("emailer.smtp", "send");
+        const smtpDocument = contractDocument("ulvia/emailer.smtp", "send");
         smtpDocument.extends = {
-            contractId: "emailer",
+            contractId: "ulvia/emailer",
             version: "1.0.0",
             digest: emailer.digest,
         };
@@ -134,18 +138,18 @@ describe("full selection dependency graph", () => {
         ];
         const smtp = await admitContractRelease(smtpDocument);
         await releases.publish(smtp);
-        const commerceDocument = contractDocument("commerce", "checkout");
+        const commerceDocument = contractDocument("ulvia/commerce", "checkout");
         const commerce = await admitContractRelease(commerceDocument);
         await releases.publish(commerce);
         const manifests = new InMemoryProviderManifestCatalogue(releases);
         const installation = await installationFor(releases, manifests, [
-            implementation("commerce", "1.0.0", commerce.digest, [requirement("emailer", "send")]),
-            implementation("emailer.smtp", "1.0.0", smtp.digest),
+            implementation("ulvia/commerce", "1.0.0", commerce.digest, [requirement("ulvia/emailer", "send")]),
+            implementation("ulvia/emailer.smtp", "1.0.0", smtp.digest),
         ]);
         const baseInstallation = await installationFor(
             releases,
             manifests,
-            [implementation("emailer", "1.0.0", emailer.digest)],
+            [implementation("ulvia/emailer", "1.0.0", emailer.digest)],
             "ulvia.base-email",
         );
         const selection = (
@@ -163,16 +167,21 @@ describe("full selection dependency graph", () => {
 
         const plan = await planContractSelections(
             siteId,
-            [selection("commerce", commerce.digest), selection("emailer.smtp", smtp.digest)],
+            [selection("ulvia/commerce", commerce.digest), selection("ulvia/emailer.smtp", smtp.digest)],
             context,
         );
 
         expect(plan.structurallyValid).toBe(true);
-        expect(plan.dependencies).toContainEqual(expect.objectContaining({ contractId: "emailer", present: true }));
+        expect(plan.dependencies).toContainEqual(
+            expect.objectContaining({ contractId: "ulvia/emailer", present: true }),
+        );
         await expect(
             planContractSelections(
                 siteId,
-                [selection("emailer", emailer.digest, baseInstallation.id), selection("emailer.smtp", smtp.digest)],
+                [
+                    selection("ulvia/emailer", emailer.digest, baseInstallation.id),
+                    selection("ulvia/emailer.smtp", smtp.digest),
+                ],
                 context,
             ),
         ).rejects.toMatchObject({ code: "duplicate_selection" });
@@ -194,10 +203,10 @@ test("catalogue dependency revision tracks release, manifest, and installation c
     installation = { ...installation, status: "disabled" };
     expect(await dependencies.isCurrent(siteId, original.revision)).toBe(false);
     const afterInstallation = await dependencies.capture(siteId);
-    await fixture.releases.setYank("payment", "1.0.0", { reason: "retired" });
+    await fixture.releases.setYank("ulvia/payment", "1.0.0", { reason: "retired" });
     expect(await dependencies.isCurrent(siteId, afterInstallation.revision)).toBe(false);
     const afterRelease = await dependencies.capture(siteId);
-    await fixture.manifests.setYank("ulvia.example", "1.0.0", { reason: "retired" });
+    await fixture.manifests.setYank("ulvia/ulvia.example", "1.0.0", { reason: "retired" });
     expect(await dependencies.isCurrent(siteId, afterRelease.revision)).toBe(false);
 });
 

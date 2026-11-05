@@ -12,7 +12,7 @@ export function startTestRepository(root: string) {
         repositoryId: application.repositoryId,
         resolveToken: async () => (await owner).token,
     });
-    const claim = async (namespace = "ulvia.official") => {
+    const claim = async (namespace = "ulvia") => {
         const client = new RepositoryNamespaceClient(url, { credential: await connection() });
         await client.claim(namespace);
         return client.ownedCredential(namespace);

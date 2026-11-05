@@ -6,7 +6,7 @@ test("a warm Page render reads one collection state and one local catalogue whil
     const f = await renderingScopeFixture();
     const inputs = await f.reader.getPageRenderInputs!("/");
     expect(inputs.route?.kind).toBe("current");
-    expect(inputs.renderableBlocs.map((bloc) => bloc.id)).toContain("scoped-card");
+    expect(inputs.renderableBlocs.map((bloc) => bloc.id)).toContain("example--scoped--card");
     expect(f.storage.siteReads).toBe(1);
     expect(f.counts).toEqual({ blocs: 1, system: 2, routes: 2 });
     await f.reader.getPageRenderInputs!("/");
@@ -18,13 +18,13 @@ test("each rendering reloads collection texts, removals and Page visibility with
     const f = await renderingScopeFixture();
     const first = await f.reader.getPageRenderInputs!("/");
     expect(first.contentTexts[0]!.resolve("en")).toEqual({ title: "Initial" });
-    await f.store.saveTexts("site", "scoped", 1, { title: { en: "Changed" } });
+    await f.store.saveTexts("site", "example/scoped", 1, { title: { en: "Changed" } });
     const second = await f.reader.getPageRenderInputs!("/");
     expect(second.contentTexts[0]!.resolve("en")).toEqual({ title: "Changed" });
     expect(second.artifactRevision).not.toBe(first.artifactRevision);
-    await f.store.uninstall("site", "scoped", 2);
+    await f.store.uninstall("site", "example/scoped", 2);
     const removed = await f.reader.getPageRenderInputs!("/");
-    expect(removed.renderableBlocs.map((bloc) => bloc.id)).not.toContain("scoped-card");
+    expect(removed.renderableBlocs.map((bloc) => bloc.id)).not.toContain("example--scoped--card");
     expect(removed.contentTexts).toEqual([]);
     const current = (await f.local.getPage("/"))!;
     await f.local.updatePage({ id: current.id, visible: false }, current.revision);

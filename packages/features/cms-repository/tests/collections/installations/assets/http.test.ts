@@ -18,8 +18,8 @@ test("serves installed collection assets publicly through immutable digest URLs"
             kind: "collection",
             protocol: "ulvia-collection/v1",
             schemaDialect: "ulvia-schema/v1",
-            collectionId: "design-system",
-            publisherId: "ulvia.official",
+            collectionId: "ulvia/design-system",
+            publisherId: "ulvia",
             version: "1.0.0",
             name: "collection.name",
             locale: "en",
@@ -53,7 +53,7 @@ test("serves installed collection assets publicly through immutable digest URLs"
         },
     };
     const rendered = await resolveInstalledCollectionAssets(
-        '<img src="{{ cms.asset.design-system.mark.svg }}">',
+        '<img src="{{ cms.asset.ulvia/design-system.mark.svg }}">',
         source,
         "/site",
     );
@@ -61,9 +61,9 @@ test("serves installed collection assets publicly through immutable digest URLs"
     expect(version).not.toBe(
         await collectionAssetRepresentationVersion({ ...asset, mediaType: "application/octet-stream" }),
     );
-    expect(rendered).toContain(`/site/_content/collections/design-system/assets/mark.svg?v=${version}`);
+    expect(rendered).toContain(`/site/_content/collections/ulvia%2Fdesign-system/assets/mark.svg?v=${version}`);
 
-    const url = `https://example.test/site/_content/collections/design-system/assets/mark.svg?v=${version}`;
+    const url = `https://example.test/site/_content/collections/ulvia%2Fdesign-system/assets/mark.svg?v=${version}`;
     const get = (request: Request) => serveInstalledCollectionAsset(request, source, "/site");
     const response = await get(new Request(url));
     expect(response.status).toBe(200);
@@ -108,7 +108,7 @@ test("serves installed collection assets publicly through immutable digest URLs"
     expect(byteReads).toBe(readsBeforeInvalidRange);
 
     const readsBeforeUninstall = byteReads;
-    await store.uninstall("site", "design-system", 1);
+    await store.uninstall("site", "ulvia/design-system", 1);
     expect((await get(new Request(url))).status).toBe(404);
     expect(byteReads).toBe(readsBeforeUninstall);
 });

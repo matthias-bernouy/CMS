@@ -11,7 +11,7 @@ test("Delivery discovers an inherited replacement and invokes its exact declarin
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
         name: "Delivery",
-        publisherId: "ulvia.official",
+        publisherId: "ulvia",
         version: "1.0.0",
     };
     const capability = (id: string, path: string) => ({
@@ -34,12 +34,12 @@ test("Delivery discovers an inherited replacement and invokes its exact declarin
     });
     const parent = await admitContractRelease({
         ...base,
-        contractId: "example.delivery",
+        contractId: "ulvia/example.delivery",
         capabilities: [capability("delivery.resolve-resource", "/resolve")],
     });
     const child = await admitContractRelease({
         ...base,
-        contractId: "ulvia.cms.content",
+        contractId: "ulvia/cms.content",
         extends: { contractId: parent.release.contractId, version: parent.release.version, digest: parent.digest },
         capabilities: [capability("other", "/other")],
     });
@@ -64,11 +64,11 @@ test("Delivery discovers an inherited replacement and invokes its exact declarin
         },
     });
     expect(await (await handler(new Request("https://site.test/"), { kind: "anonymous" })).text()).toBe("ok");
-    expect(calls[0]).toMatchObject({ contractId: "example.delivery", capabilityId: "delivery.resolve-resource" });
+    expect(calls[0]).toMatchObject({ contractId: "ulvia/example.delivery", capabilityId: "delivery.resolve-resource" });
     expect(resolutions).toBe(2);
     const stale = createPublicResourceHandler({
         resolveContract: async ({ contractId }) =>
-            contractId === "ulvia.cms.content" ? child : { ...parent, digest: `sha256:${"0".repeat(64)}` },
+            contractId === "ulvia/cms.content" ? child : { ...parent, digest: `sha256:${"0".repeat(64)}` },
         invoke: async () => {
             throw new Error("A stale parent must never be invoked");
         },

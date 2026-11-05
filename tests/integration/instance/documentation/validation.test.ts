@@ -35,7 +35,7 @@ integration(
                 () => incompatibleUpgrade(client, source, page.id),
             );
             await fixture.restartProvider();
-            const saved = await client.call("ulvia.cms.content", "pages.get", { id: page.id });
+            const saved = await client.call("ulvia/cms.content", "pages.get", { id: page.id });
             expect(saved).toEqual(page);
             expect(saved).not.toHaveProperty("diagnostics");
             await client.revoke();

@@ -4,7 +4,7 @@ import { mountPublicPages, publicPage } from "./publicPage.fixture";
 test("an administrator renders a hidden Page at its normal URL", async () => {
     let textResolutions = 0;
     const page = {
-        ...publicPage("page-a", "/about", "<h1>{{ cms.i18n.preview.title }}</h1>"),
+        ...publicPage("page-a", "/about", "<h1>{{ cms.i18n.example/preview.title }}</h1>"),
         visible: false,
     };
     const mounted = mountPublicPages({
@@ -14,7 +14,7 @@ test("an administrator renders a hidden Page at its normal URL", async () => {
         resolveActor: async () => ({ kind: "administrator", subjectId: "admin-a" }),
         contentTexts: [
             {
-                namespace: "preview",
+                namespace: "example/preview",
                 resolve: (locale) => {
                     textResolutions += 1;
                     return { title: locale === "fr" ? "Aperçu" : "Preview" };

@@ -33,13 +33,16 @@ test("CLI audits imported browser helpers, reports real violations, and fails cl
         await write(`${pkg}/src/core/data.ts`, 'export const load = () => fetch("/api/items");');
         await write(`${pkg}/src/core/server.ts`, 'fetch("https://provider.test");');
         const template = `${pkg}/src/components/view.html`;
-        await write(template, '<cms-binding-core><div cms-mutation="catalog:save as saved"></div></cms-binding-core>');
+        await write(
+            template,
+            '<cms-binding-core><div cms-mutation="ulvia/catalog:save as saved"></div></cms-binding-core>',
+        );
         const blocked = await run();
         expect(blocked.code).toBe(1);
         const audit = JSON.parse(blocked.stdout) as UiAudit;
         expect(audit.findings.map(({ severity }) => severity).sort()).toEqual(["ERROR", "ERROR", "WARNING"]);
         expect(audit.findings.find(({ severity }) => severity === "WARNING")?.file).toEndWith("/core/data.ts");
-        await write(template, '<div cms-mutation="catalog:save as saved"></div>');
+        await write(template, '<div cms-mutation="ulvia/catalog:save as saved"></div>');
         const mutationViolation = await run();
         expect(mutationViolation.code).toBe(1);
         const mutationAudit = JSON.parse(mutationViolation.stdout) as UiAudit;

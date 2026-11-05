@@ -5,7 +5,7 @@ import { createCollectionThemeComposer } from "cms-repository/collections/integr
 
 function collection(label: string): CollectionRelease {
     return {
-        collectionId: "test",
+        collectionId: "example/test",
         locale: "en",
         translations: { en: { "theme.label": label, "theme.colors": "Colors", "theme.accent": "Accent" } },
         theme: {
@@ -25,20 +25,24 @@ test("theme composition refreshes for site inputs and installation revisions wit
     const base = (await new InMemoryContentRepository().getSystem()).theme;
     const compose = createCollectionThemeComposer();
     const first = compose(base, 1, [collection("Original")]);
-    first.sources.find((source) => source.id === "contribution-test")!.label = "Caller mutation";
+    first.sources.find((source) => source.id === "contribution-example--test")!.label = "Caller mutation";
     expect(
-        compose(base, 1, [collection("Original")]).sources.find((source) => source.id === "contribution-test")!.label,
+        compose(base, 1, [collection("Original")]).sources.find((source) => source.id === "contribution-example--test")!
+            .label,
     ).toBe("Original");
     expect(
-        compose(base, 2, [collection("Updated")]).sources.find((source) => source.id === "contribution-test")!.label,
+        compose(base, 2, [collection("Updated")]).sources.find((source) => source.id === "contribution-example--test")!
+            .label,
     ).toBe("Updated");
     const changedBase = structuredClone(base);
-    changedBase.themes[0]!.values.light["test-accent"] = "#abcdef";
-    expect(compose(changedBase, 2, [collection("Updated")]).themes[0]!.values.light["test-accent"]).toBe("#abcdef");
-    expect(compose(base, 3, []).sources.some((source) => source.id === "contribution-test")).toBe(false);
+    changedBase.themes[0]!.values.light["example--test--accent"] = "#abcdef";
+    expect(compose(changedBase, 2, [collection("Updated")]).themes[0]!.values.light["example--test--accent"]).toBe(
+        "#abcdef",
+    );
+    expect(compose(base, 3, []).sources.some((source) => source.id === "contribution-example--test")).toBe(false);
     expect(
         createCollectionThemeComposer()(base, 1, [collection("Other instance")]).sources.find(
-            (source) => source.id === "contribution-test",
+            (source) => source.id === "contribution-example--test",
         )!.label,
     ).toBe("Other instance");
 });

@@ -7,7 +7,7 @@ import {
 
 const selection = {
     siteId: "site:one",
-    contractId: "payment",
+    contractId: "ulvia/payment",
     version: "1.0.0",
     digest: `sha256:${"a".repeat(64)}`,
     installationId: "installation:one",
@@ -15,9 +15,9 @@ const selection = {
 
 describe("strict contract selection parsing", () => {
     test("returns canonical independent immutable selections", () => {
-        const input = [{ ...selection }, { ...selection, contractId: "commerce" }];
+        const input = [{ ...selection }, { ...selection, contractId: "ulvia/commerce" }];
         const parsed = parseContractSelections(input);
-        expect(parsed.map((item) => item.contractId)).toEqual(["commerce", "payment"]);
+        expect(parsed.map((item) => item.contractId)).toEqual(["ulvia/commerce", "ulvia/payment"]);
         expect(Object.isFrozen(parsed)).toBe(true);
         expect(Object.isFrozen(parsed[0])).toBe(true);
         expect(Object.isFrozen(input[0])).toBe(false);

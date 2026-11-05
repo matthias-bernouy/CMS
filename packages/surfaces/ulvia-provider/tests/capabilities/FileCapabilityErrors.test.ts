@@ -9,7 +9,7 @@ const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
     contractVersion: "1.0.0",
     siteId: "site-a",
-    providerId: "ulvia.official",
+    providerId: "ulvia/primary-provider",
 };
 
 test("file capability failures preserve declared public errors", async () => {
@@ -41,5 +41,5 @@ function invoke(
     capabilityId: string,
     input: Record<string, unknown>,
 ): Promise<unknown> {
-    return dispatcher.invoke("ulvia.cms.files", capabilityId, input, context);
+    return dispatcher.invoke("ulvia/cms.files", capabilityId, input, context);
 }

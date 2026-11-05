@@ -9,18 +9,20 @@ describe("collection bloc admission", () => {
             [composition(), component({ categories: ["Content", "Layout"], order: 20 })],
             new Set(["preview"]),
         );
-        expect(blocs.map((bloc) => bloc.id)).toEqual(["demo-card", "demo-page"]);
+        expect(blocs.map((bloc) => bloc.id)).toEqual(["example--demo--card", "example--demo--page"]);
         expect(blocs[0]?.uses).toEqual([]);
         expect(blocs[0]).toMatchObject({ categories: ["Content", "Layout"], order: 20 });
         expect(() => check([component({ order: -1 })])).toThrow("integer");
     });
 
     test("requires platform-safe namespaced Bloc identifiers", () => {
-        expect(() => parseBlocs([component({ id: "demo.widgets-card" })], "demo", limits)).toThrow("Bloc identifier");
-        expect(() => parseBlocs([component({ id: "font-face" })], "font", limits)).toThrow("Bloc identifier");
-        expect(() => parseBlocs([component({ id: "cms-card" })], "cms", limits)).toThrow("reserved");
-        expect(() => parseBlocs([component({ id: "demo-card" })], "other", limits)).toThrow(
-            "other- collection namespace",
+        expect(() => parseBlocs([component({ id: "demo.widgets-card" })], "example/demo", limits)).toThrow(
+            "Bloc identifier",
+        );
+        expect(() => parseBlocs([component({ id: "font-face" })], "example/font", limits)).toThrow("Bloc identifier");
+        expect(() => parseBlocs([component({ id: "cms-card" })], "example/demo", limits)).toThrow("reserved");
+        expect(() => parseBlocs([component({ id: "example--demo--card" })], "example/other", limits)).toThrow(
+            "example--other-- collection namespace",
         );
     });
 
@@ -123,23 +125,27 @@ describe("collection bloc admission", () => {
     test("enforces IDs, catalogue visibility, finite lists and markup bounds", () => {
         expect(() => check([component({ id: "foreign-card" })])).toThrow("collection namespace");
         expect(() => check([component({ catalogue: "private" })])).toThrow("listed or hidden");
-        expect(() => parseBlocs([component(), component()], "demo", { ...limits, maxBlocs: 1 })).toThrow("at most 1");
-        expect(() => parseBlocs([component()], "demo", { ...limits, maxMarkupLength: 2 })).toThrow("at most 2");
+        expect(() => parseBlocs([component(), component()], "example/demo", { ...limits, maxBlocs: 1 })).toThrow(
+            "at most 1",
+        );
+        expect(() => parseBlocs([component()], "example/demo", { ...limits, maxMarkupLength: 2 })).toThrow("at most 2");
     });
 
     test("checks duplicates, local references, removed fields and cycles", () => {
         expect(() => check([component(), component()])).toThrow("duplicate");
-        expect(() => check([component({ uses: ["demo-other", "demo-other"] })])).toThrow("duplicate");
-        expect(() => check([component({ uses: ["demo-other"] })])).toThrow("neither local nor imported");
-        expect(() => check([component({ thumbnail: "missing" })])).toThrow('unknown property "thumbnail"');
-        expect(() => check([component({ uses: ["demo-page"] }), composition({ uses: ["demo-card"] })])).toThrow(
-            "cyclic",
+        expect(() => check([component({ uses: ["example--demo--other", "example--demo--other"] })])).toThrow(
+            "duplicate",
         );
+        expect(() => check([component({ uses: ["example--demo--other"] })])).toThrow("neither local nor imported");
+        expect(() => check([component({ thumbnail: "missing" })])).toThrow('unknown property "thumbnail"');
+        expect(() =>
+            check([component({ uses: ["example--demo--page"] }), composition({ uses: ["example--demo--card"] })]),
+        ).toThrow("cyclic");
     });
 
     test("checks accepted blocs and slot cardinality", () => {
         expect(() =>
-            check([component({ slots: { body: { accepts: [{ kind: "component", tag: "demo-other" }] } } })]),
+            check([component({ slots: { body: { accepts: [{ kind: "component", tag: "example--demo--other" }] } } })]),
         ).toThrow("neither local nor imported");
         expect(() => check([component({ slots: { body: { min: 2, max: 1 } } })])).toThrow("min must not exceed max");
         expect(() => check([component({ slots: { body: { min: -1 } } })])).toThrow("integer");

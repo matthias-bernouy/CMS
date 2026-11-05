@@ -20,7 +20,7 @@ describe("UlviaProvider", () => {
         const contract = await contractRelease();
         const dispatcher = new DefaultProviderCapabilityDispatcher();
         const subjects: Array<string | undefined> = [];
-        dispatcher.register("ulvia.cms.fixture", "echo", async (input, context) => {
+        dispatcher.register("ulvia/cms.fixture", "echo", async (input, context) => {
             subjects.push(context.subjectId);
             return { id: input.id, value: input.value };
         });
@@ -31,7 +31,7 @@ describe("UlviaProvider", () => {
             expect((await server.request("GET", "/ulvia/report")).status).toBe(401);
             const report = await server.request("GET", "/ulvia/report", { headers: reportAuthorization() });
             expect(report.status).toBe(200);
-            expect((await report.json()).providerId).toBe("ulvia.official");
+            expect((await report.json()).providerId).toBe("ulvia/primary-provider");
 
             const response = await server.request("POST", "/v1/provider/echo/record-1", {
                 headers: { ...invocationHeaders("request-1", "subject-a"), "Content-Type": "application/json" },
@@ -92,7 +92,7 @@ describe("UlviaProvider", () => {
     test("does not expose undeclared routes", async () => {
         const contract = await contractRelease();
         const dispatcher = new DefaultProviderCapabilityDispatcher();
-        dispatcher.register("ulvia.cms.fixture", "echo", async (input) => input);
+        dispatcher.register("ulvia/cms.fixture", "echo", async (input) => input);
         const runner = new BunRunner();
         new UlviaProvider(runner, providerOptions([contract], dispatcher));
         const server = serveForTest(runner);
@@ -112,7 +112,7 @@ describe("UlviaProvider", () => {
     test("logs an unexpected capability failure without recording its input", async () => {
         const contract = await contractRelease();
         const dispatcher = new DefaultProviderCapabilityDispatcher();
-        dispatcher.register("ulvia.cms.fixture", "echo", async () => {
+        dispatcher.register("ulvia/cms.fixture", "echo", async () => {
             throw new Error("storage unavailable");
         });
         const memory = createMemoryLogger({ service: "provider-test", level: "debug" });
@@ -131,7 +131,7 @@ describe("UlviaProvider", () => {
                     level: "error",
                     event: "provider.capability.failed",
                     attributes: {
-                        contractId: "ulvia.cms.fixture",
+                        contractId: "ulvia/cms.fixture",
                         capabilityId: "echo",
                         status: 503,
                     },
@@ -147,7 +147,7 @@ describe("UlviaProvider", () => {
     test("rejects a signed invocation minted for another provider instance", async () => {
         const contract = await contractRelease();
         const dispatcher = new DefaultProviderCapabilityDispatcher();
-        dispatcher.register("ulvia.cms.fixture", "echo", async (input) => input);
+        dispatcher.register("ulvia/cms.fixture", "echo", async (input) => input);
         const runner = new BunRunner();
         new UlviaProvider(runner, providerOptions([contract], dispatcher, "instance:fixture-b"));
         const server = serveForTest(runner);
@@ -170,7 +170,7 @@ describe("UlviaProvider", () => {
         const second = await contractRelease("2.0.0");
         const versions: string[] = [];
         const dispatcher = new DefaultProviderCapabilityDispatcher();
-        dispatcher.register("ulvia.cms.fixture", "echo", async (input, context) => {
+        dispatcher.register("ulvia/cms.fixture", "echo", async (input, context) => {
             versions.push(context.contractVersion);
             return input;
         });
@@ -207,7 +207,7 @@ test("revoked site grants block invocation tokens issued before revocation", asy
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     let allowed = true;
     let calls = 0;
-    dispatcher.register("ulvia.cms.fixture", "echo", async (input) => {
+    dispatcher.register("ulvia/cms.fixture", "echo", async (input) => {
         calls++;
         return { id: input.id, value: input.value };
     });

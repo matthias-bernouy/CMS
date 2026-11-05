@@ -5,7 +5,7 @@ import { currentTraceContext, runWithTraceContext } from "@bernouy/logging/traci
 import { gatewayRoute, NOW } from "../../fixtures";
 const invocation: GatewayInvocation = {
     siteId: "site-a",
-    contractId: "catalog",
+    contractId: "ulvia/catalog",
     capabilityId: "item.list",
     input: {},
     actor: { kind: "anonymous" },

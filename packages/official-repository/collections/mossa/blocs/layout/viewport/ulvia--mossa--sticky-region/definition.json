@@ -1,0 +1,28 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--sticky-region",
+    "label": "bloc.sticky-region.label",
+    "description": "bloc.sticky-region.description",
+    "order": 150,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["sticky-region-default"],
+    "defaultExample": "sticky-region-default"
+}

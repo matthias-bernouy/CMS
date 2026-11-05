@@ -12,7 +12,7 @@ type OutputSchema = Parameters<typeof validateSchemaValue>[0];
 type AuthoredRequirement = { contractId: string; capabilityId: string; versionRange: string; optional: boolean };
 
 const schemaPath = new URL(
-    "../../../../official-repository/contracts/ulvia.cms.installations/capabilities/queries/get-provider-access.json",
+    "../../../../official-repository/contracts/cms.installations/capabilities/queries/get-provider-access.json",
     import.meta.url,
 );
 
@@ -27,11 +27,11 @@ async function accessFixture(longRange?: number, manyRequirements = false) {
         const size = (longRange - 12) / 4;
         const versionRange = [1, 2, 3, 4].map((major) => `^${major}.0.0+${"x".repeat(size - 7)}`).join(" || ");
         expect(versionRange.length).toBe(longRange);
-        document.implementations.find((item) => item.contractId === "commerce")!.requires[0]!.versionRange =
+        document.implementations.find((item) => item.contractId === "ulvia/commerce")!.requires[0]!.versionRange =
             versionRange;
     }
     if (manyRequirements) {
-        const dependency = contractDocument("dependency", "read-0");
+        const dependency = contractDocument("ulvia/dependency", "read-0");
         const template = (dependency.capabilities as Record<string, unknown>[])[0]!;
         dependency.capabilities = Array.from({ length: 260 }, (_, index) => ({
             ...structuredClone(template),
@@ -51,7 +51,7 @@ async function accessFixture(longRange?: number, manyRequirements = false) {
         for (const [index, item] of document.implementations.entries()) {
             item.requires.push(
                 ...Array.from({ length: 65 }, (_, offset) => ({
-                    contractId: "dependency",
+                    contractId: "ulvia/dependency",
                     capabilityId: `read.item${index * 65 + offset}`,
                     versionRange: "^1.0.0",
                     optional: false,

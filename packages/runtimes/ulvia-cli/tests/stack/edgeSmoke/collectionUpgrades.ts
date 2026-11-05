@@ -7,7 +7,7 @@ export async function exerciseCollectionUpgrades(page: Page): Promise<void> {
         const card = collectionReleaseCard(page, `ulvia.test ${version}`);
         await card.locator('a[href^="/admin/collections/upgrade?"]').click();
         const apply = page.locator(
-            'form[cms-mutation="ulvia.cms.installations:apply-collection-upgrade as mutation"] button[type="submit"]',
+            'form[cms-mutation="ulvia/cms.installations:apply-collection-upgrade as mutation"] button[type="submit"]',
         );
         await apply.waitFor();
         console.info(`[edge-smoke] collection upgrade ${version}: submit`);

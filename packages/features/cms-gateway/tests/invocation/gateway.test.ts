@@ -88,7 +88,7 @@ function invocation(
 ) {
     return {
         siteId: "site-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         capabilityId: "item.list",
         actor,
         input,
@@ -216,8 +216,8 @@ describe("capability gateway", () => {
         const alias = scope.sent[0]?.subjectId;
         expect(alias).toMatch(/^[0-9a-f-]{36}$/);
         expect(JSON.stringify(scope.sent[0])).not.toContain("cms-user-1");
-        expect(await scope.identities.resolve({ providerId: "ulvia.example" }, alias!)).toBe("cms-user-1");
-        expect(await scope.identities.resolve({ providerId: "other.example" }, alias!)).toBeNull();
+        expect(await scope.identities.resolve({ providerId: "ulvia/ulvia.example" }, alias!)).toBe("cms-user-1");
+        expect(await scope.identities.resolve({ providerId: "ulvia/other.example" }, alias!)).toBeNull();
 
         const otherInstallation = harness(
             {
@@ -245,7 +245,7 @@ describe("capability gateway", () => {
         const alias = scope.sent[0]?.subjectId;
         expect(alias).toMatch(/^[0-9a-f-]{36}$/);
         expect(JSON.stringify(scope.sent[0])).not.toContain("cms-admin-1");
-        expect(await scope.identities.resolve({ providerId: "ulvia.example" }, alias!)).toBe("cms-admin-1");
+        expect(await scope.identities.resolve({ providerId: "ulvia/ulvia.example" }, alias!)).toBe("cms-admin-1");
     });
 
     test("checks access without invoking the provider or creating an identity alias", async () => {
@@ -256,7 +256,7 @@ describe("capability gateway", () => {
         await scope.gateway.assertAuthorized(call);
         expect(scope.sent).toHaveLength(0);
         expect(
-            await identities.resolve({ authority: "cms", kind: "user", value: "cms-user-1" }, "ulvia.example"),
+            await identities.resolve({ authority: "cms", kind: "user", value: "cms-user-1" }, "ulvia/ulvia.example"),
         ).toBeNull();
         await expect(scope.gateway.assertAuthorized(actorInvocation({ kind: "anonymous" }))).rejects.toMatchObject({
             code: "not_authorized",

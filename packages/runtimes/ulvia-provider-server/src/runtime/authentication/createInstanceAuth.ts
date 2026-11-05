@@ -33,6 +33,6 @@ export async function createInstanceAuth(stores: ProviderStores, cmsUrl: string)
 
 function authActionUrl(origin: string, path: string, token: string): string {
     const url = new URL(path, `${origin}/`);
-    url.searchParams.set("ulvia-official-auth-token", token);
+    url.searchParams.set("ulvia--mossa--auth-token", token);
     return url.toString();
 }

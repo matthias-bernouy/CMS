@@ -1,11 +1,13 @@
-const ASSET_EXPRESSION = /^cms\.asset\.([a-z][a-z0-9-]{0,95})\.([a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*)$/u;
+import { isResourceId } from "@bernouy/resource-identity";
+const ASSET_EXPRESSION =
+    /^cms\.asset\.([a-z][a-z0-9.-]{0,95}\/[a-z][a-z0-9-]{0,95})\.([a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*)$/u;
 
 export type CollectionAssetExpression = Readonly<{ collectionId: string; assetId: string }>;
 
 /** Parses the contents of one immutable collection-asset interpolation. */
 export function parseCollectionAssetExpression(value: string): CollectionAssetExpression | null {
     const match = ASSET_EXPRESSION.exec(value.trim());
-    return match ? { collectionId: match[1]!, assetId: match[2]! } : null;
+    return match && isResourceId(match[1]) ? { collectionId: match[1]!, assetId: match[2]! } : null;
 }
 
 /** Parses one complete `{{ cms.asset.collection.path }}` reference. */

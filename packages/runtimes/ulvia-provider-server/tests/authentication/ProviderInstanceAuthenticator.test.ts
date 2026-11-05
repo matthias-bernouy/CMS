@@ -9,7 +9,7 @@ function invocation(instanceId = INSTANCE_ID, secret = INVOCATION_SECRET) {
         version: 1,
         requestId: crypto.randomUUID(),
         instanceId,
-        contractId: "ulvia.cms.content",
+        contractId: "ulvia/cms.content",
         contractVersion: "1.0.0",
         capabilityId: "pages.list",
         connectionId: "native",

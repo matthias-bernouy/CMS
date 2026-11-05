@@ -52,9 +52,9 @@ integration(
             ).toBe(401);
             expect(
                 (
-                    await primary.call("ulvia.cms.installations", "documentation.search", {
+                    await primary.call("ulvia/cms.installations", "documentation.search", {
                         query: "verify page",
-                        contractId: "ulvia.cms.content",
+                        contractId: "ulvia/cms.content",
                     })
                 ).results.length,
             ).toBeGreaterThan(0);

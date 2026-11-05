@@ -51,7 +51,7 @@ describe("provider connection protocol", () => {
         const response = {
             protocol: "ulvia-provider/v1",
             installationId: request.installationId,
-            providerId: "ulvia.example",
+            providerId: "ulvia/ulvia.example",
             accountId: "account:SHOP_42.prod",
         };
         expect(parseProviderGatewayRegistrationResponseJson(JSON.stringify(response))).toEqual(response);

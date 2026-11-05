@@ -28,12 +28,12 @@ export async function exerciseProviders(f: Stack, page: Page) {
         });
     console.info("[provider-docker] connection form visible");
     const upstream = await readProviderCredential(f.providerName, `${f.id}-named`);
-    const form = page.locator('form[cms-mutation="ulvia.cms.installations:preview-provider-connection as preview"]');
-    await form.locator('[name="providerId"]').fill("ulvia.official");
+    const form = page.locator('form[cms-mutation="ulvia/cms.installations:preview-provider-connection as preview"]');
+    await form.locator('[name="providerId"]').fill("ulvia");
     const manifest = await Bun.file(
         resolve(
             import.meta.dir,
-            "../../../../packages/runtimes/ulvia-cli/dist/bootstrap/providers/ulvia.official/definition.json",
+            "../../../../packages/runtimes/ulvia-cli/dist/bootstrap/providers/primary-provider/definition.json",
         ),
     ).json();
     await form.locator('[name="version"]').fill(manifest.version);
@@ -49,7 +49,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
     const reviewed = await preview.json();
     expect(JSON.stringify(reviewed)).not.toContain(upstream.token);
     expect(reviewed.requests).toContainEqual(
-        expect.objectContaining({ contractId: "ulvia.cms.observability", capabilityId: "logs.append" }),
+        expect.objectContaining({ contractId: "ulvia/cms.observability", capabilityId: "logs.append" }),
     );
     await page
         .getByRole("heading", { name: /^(Requested capability access|Accès demandés aux capabilities)$/u, exact: true })
@@ -64,7 +64,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
     expect(approval.status()).toBe(200);
     await page.waitForURL(/\/admin\/providers$/u);
     const inventory = await page.request.get(
-        `${f.cmsUrl}/.cms/query/ulvia.cms.installations/list-provider-installations`,
+        `${f.cmsUrl}/.cms/query/ulvia/cms.installations/list-provider-installations`,
     );
     expect(inventory.status()).toBe(200);
     const { installations } = await inventory.json();
@@ -73,7 +73,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
     )?.id;
     expect(installationId).toBeString();
     const command = async (capability: string, input: unknown) => {
-        const response = await page.request.post(`${f.cmsUrl}/.cms/mutation/ulvia.cms.installations/${capability}`, {
+        const response = await page.request.post(`${f.cmsUrl}/.cms/mutation/ulvia/cms.installations/${capability}`, {
             data: input,
         });
         expect(response.status()).toBe(200);
@@ -81,7 +81,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
     };
     const access = async () => {
         const response = await page.request.fetch(
-            `${f.cmsUrl}/.cms/query/ulvia.cms.installations/get-provider-access`,
+            `${f.cmsUrl}/.cms/query/ulvia/cms.installations/get-provider-access`,
             { method: "QUERY", data: { installationId } },
         );
         expect(response.status()).toBe(200);
@@ -96,7 +96,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
     });
     const path = resolve(
         import.meta.dir,
-        "../../../../packages/runtimes/ulvia-cli/dist/bootstrap/contracts/cms/ulvia.cms.observability/definition.json",
+        "../../../../packages/runtimes/ulvia-cli/dist/bootstrap/contracts/cms/cms.observability/definition.json",
     );
     const release = (await admitContractReleaseJson(await Bun.file(path).text())).release;
     const entry = {
@@ -107,12 +107,12 @@ export async function exerciseProviders(f: Stack, page: Page) {
         attributes: {},
     };
     expect(
-        (await client.invoke(release, "logs.append", { entries: [entry] }, { authority: "provider" })).output,
+        (await client.invoke(release, "logs.append", { entries: [entry] }, { authority: "ulvia/provider" })).output,
     ).toMatchObject({ stored: 1 });
     expect(
-        (await client.invoke(release, "logs.append", { entries: [entry] }, { authority: "provider" })).output,
+        (await client.invoke(release, "logs.append", { entries: [entry] }, { authority: "ulvia/provider" })).output,
     ).toMatchObject({ duplicates: 1 });
-    await expect(client.invoke(release, "logs.query", {}, { authority: "provider" })).rejects.toMatchObject({
+    await expect(client.invoke(release, "logs.query", {}, { authority: "ulvia/provider" })).rejects.toMatchObject({
         retryable: false,
         status: 403,
     });
@@ -138,7 +138,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
     await f.restartProvider();
     const state = await access();
     expect(state.paired).toBe(true);
-    await page.goto(`${f.cmsUrl}/admin/providers/access?ulvia-official-provider-access-id=${installationId}`);
+    await page.goto(`${f.cmsUrl}/admin/providers/access?ulvia--mossa--provider-access-id=${installationId}`);
     await page
         .getByRole("heading", { name: /^(Requested capability access|Accès demandés aux capabilities)$/u, exact: true })
         .waitFor();
@@ -158,7 +158,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
             release,
             "logs.append",
             { entries: [{ ...entry, id: crypto.randomUUID() }] },
-            { authority: "provider" },
+            { authority: "ulvia/provider" },
         ),
     ).rejects.toMatchObject({ status: 403 });
     const rotated = await readProviderCredential(f.providerName, `${f.id}-named`, installationId);
@@ -170,7 +170,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
                 release,
                 "logs.append",
                 { entries: [{ ...entry, id: crypto.randomUUID() }] },
-                { authority: "provider" },
+                { authority: "ulvia/provider" },
             )
         ).output,
     ).toMatchObject({ stored: 1 });
@@ -184,7 +184,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
             release,
             "logs.append",
             { entries: [{ ...entry, id: crypto.randomUUID() }] },
-            { authority: "provider" },
+            { authority: "ulvia/provider" },
         ),
     ).rejects.toMatchObject({ status: 403 });
     await f.restartProvider();
@@ -193,7 +193,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
             release,
             "logs.append",
             { entries: [{ ...entry, id: crypto.randomUUID() }] },
-            { authority: "provider" },
+            { authority: "ulvia/provider" },
         ),
     ).rejects.toMatchObject({ status: 403 });
 }

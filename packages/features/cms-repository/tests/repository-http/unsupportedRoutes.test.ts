@@ -16,7 +16,7 @@ test("removed evidence publication routes do not read bodies or invoke publicati
     const root = await mkdtemp(join(tmpdir(), "repository-retired-route-"));
     roots.push(root);
     const app = repositoryApplication(root, "retired-route", registry);
-    const request = new Request("https://repository.example/.cms/call/ulvia.repository/v1/conformance-evidence", {
+    const request = new Request("https://repository.example/.cms/call/ulvia/repository/v1/conformance-evidence", {
         method: "POST",
         body: JSON.stringify({ kind: "conformance-evidence" }),
     });
@@ -30,14 +30,14 @@ test("removed evidence downloads remain unavailable even when old files exist", 
     const root = await mkdtemp(join(tmpdir(), "repository-unsupported-routes-"));
     roots.push(root);
     const id = "00000000-0000-4000-8000-000000000001";
-    const directory = join(root, "conformance-evidence", "example.provider", "example.contract");
+    const directory = join(root, "conformance-evidence", "example.provider", "example.publisher/example.contract");
     await mkdir(directory, { recursive: true });
     await writeFile(join(directory, `${id}.json`), JSON.stringify({ private: "old evidence" }));
     const app = repositoryApplication(root);
     for (const method of ["GET", "HEAD"]) {
         const response = await app.handle(
             new Request(
-                `https://repository.example/.cms/call/ulvia.repository/v1/conformance-evidence/example.provider/example.contract/${id}`,
+                `https://repository.example/.cms/call/ulvia/repository/v1/conformance-evidence/example.provider/example.contract/${id}`,
                 {
                     method,
                 },

@@ -35,7 +35,7 @@ export function authenticationDocument(): AuthenticationDocument {
             cmsUrl: "http://127.0.0.1:5100",
             label: "Alpha",
             status: "ready",
-            profile: { id: "ulvia.official", version: "1.0.0" },
+            profile: { id: "ulvia", version: "1.0.0" },
             revision: 1,
             createdAt: time,
             updatedAt: time,

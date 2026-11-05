@@ -6,13 +6,13 @@ export function registerProviderAuthorityCapabilities(
     dispatcher: ProviderCapabilityRegistry,
     gateway?: UlviaProviderGateway,
 ) {
-    dispatcher.register("ulvia.cms.installations", "gateway.provider.resolve", async (input, context) => {
+    dispatcher.register("ulvia/cms.installations", "gateway.provider.resolve", async (input, context) => {
         if (!context.controlAuthority || !gateway?.providers) {
             throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
         }
         return { installationId: await gateway.providers.authenticate(requiredText(input.token)) };
     });
-    dispatcher.register("ulvia.cms.installations", "gateway.provider.authorize", async (input, context) => {
+    dispatcher.register("ulvia/cms.installations", "gateway.provider.authorize", async (input, context) => {
         if (!context.controlAuthority || !gateway?.providers) {
             throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
         }

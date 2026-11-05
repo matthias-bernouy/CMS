@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { EditablePageDocument } from "../../../packages/official-repository/collections/ulvia-official/blocs/admin/pages/ulvia-official-page-editor/runtime/document";
-import type { EditorCatalogueItem } from "../../../packages/official-repository/collections/ulvia-official/blocs/admin/pages/ulvia-official-page-editor/runtime/model";
+import { EditablePageDocument } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/document";
+import type { EditorCatalogueItem } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/model";
 import { heading } from "./fixtures";
 
 describe("EditablePageDocument native elements", () => {
     test("edits text carried by a declared simple native element", () => {
         const field: EditorCatalogueItem = {
             ...heading,
-            id: "ulvia-official-field",
+            id: "ulvia--mossa--field",
             defaultContent: '<span slot="label">Email address</span>',
             authoringJson: JSON.stringify({
                 root: { accepts: ["div"] },
@@ -37,7 +37,7 @@ describe("EditablePageDocument native elements", () => {
     test("projects declared native attributes without exposing fixed contract details", () => {
         const input: EditorCatalogueItem = {
             ...heading,
-            id: "ulvia-official-input",
+            id: "ulvia--mossa--input",
             defaultContent: '<input type="email" name="email" autocomplete="email">',
             authoringJson: JSON.stringify({
                 root: { accepts: ["div"] },

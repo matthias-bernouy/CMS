@@ -22,7 +22,7 @@ export function invoke(
 
 export async function operation(connection: Connection, operationId: string) {
     for (let attempt = 0; attempt < 50; attempt++) {
-        const result = await connection.call("ulvia.cms.installations", "get-operation", { operationId });
+        const result = await connection.call("ulvia/cms.installations", "get-operation", { operationId });
         if (["succeeded", "failed"].includes(result.status)) {
             return result;
         }

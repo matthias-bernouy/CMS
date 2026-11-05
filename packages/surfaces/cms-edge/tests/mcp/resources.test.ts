@@ -1,3 +1,4 @@
+import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { expect, test } from "bun:test";
 import { admitContractRelease } from "@bernouy/cms-repository/contracts";
 import { createAuthoringResources } from "cms-edge/http/mcp/resources";
@@ -13,8 +14,8 @@ test("stable MCP guide URIs read the selected release through authorized documen
         kind: "contract",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
-        publisherId: "example",
-        contractId: "ulvia.cms.files",
+        publisherId: "ulvia",
+        contractId: "ulvia/cms.files",
         name: "Files",
         version: "1.0.0",
         documentation: [{ path: "site-files.md", title: "Files", byteLength: 8, digest: `sha256:${"1".repeat(64)}` }],
@@ -47,10 +48,10 @@ test("stable MCP guide URIs read the selected release through authorized documen
     expect(calls).toHaveLength(2);
     expect(calls[0]).toMatchObject({
         ...context,
-        contractId: "ulvia.cms.installations",
+        contractId: "ulvia/cms.installations",
         capabilityId: "documentation.get",
         input: {
-            reference: { contractId: "ulvia.cms.files", releaseDigest: contract.digest, path: "site-files.md" },
+            reference: { contractId: "ulvia/cms.files", releaseDigest: contract.digest, path: "site-files.md" },
             offset: 0,
         },
     });
@@ -68,7 +69,8 @@ test("onboarding pins the selected site's guide and actual reading tool without 
     const create = (version: string, withGuide = true) =>
         admitContractRelease({
             ...base,
-            contractId: "ulvia.cms.installations",
+            contractId: "ulvia/cms.installations",
+            publisherId: "ulvia",
             version,
             documentation: withGuide
                 ? [
@@ -96,7 +98,7 @@ test("onboarding pins the selected site's guide and actual reading tool without 
         resolveActor: async () => context.actor,
         invoker: {
             resolveContract: async (scope) => {
-                expect(scope).toEqual({ siteId: "site-b", contractId: "ulvia.cms.installations" });
+                expect(scope).toEqual({ siteId: "site-b", contractId: "ulvia/cms.installations" });
                 resolutions++;
                 return selected;
             },
@@ -107,7 +109,9 @@ test("onboarding pins the selected site's guide and actual reading tool without 
     };
     const first = await cmsMcpInstructions(host, context);
     expect(resolutions).toBe(1);
-    expect(first).toContain('MCP tool selected_guide_reader with arguments {"input":{"reference":');
+    expect(first).toContain(
+        `MCP tool ${capabilityToolName("ulvia/cms.installations", "documentation.get", "read", "selected_guide_reader")} with arguments {"input":{"reference":`,
+    );
     expect(first).toContain(selected.digest);
     expect(first).toContain('"path":"working-with-ulvia.md"');
     const oldDigest = selected.digest;

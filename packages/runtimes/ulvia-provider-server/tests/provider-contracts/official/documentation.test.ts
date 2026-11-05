@@ -9,7 +9,7 @@ test("the instance documentation scope follows exact ancestors and rejects subst
         kind: "contract",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
-        publisherId: "example",
+        publisherId: "ulvia",
         name: "Example",
         version: "1.0.0",
         capabilities: [
@@ -35,7 +35,7 @@ test("the instance documentation scope follows exact ancestors and rejects subst
     const parent = await admitContractBundle(
         {
             ...base,
-            contractId: "example.parent",
+            contractId: "ulvia/example.parent",
             documentation: [
                 {
                     path: "guide.md",
@@ -50,7 +50,7 @@ test("the instance documentation scope follows exact ancestors and rejects subst
     const child = await admitContractRelease({
         ...base,
         capabilities: [{ ...base.capabilities[0], id: "child.read" }],
-        contractId: "example.child",
+        contractId: "ulvia/example.child",
         extends: { contractId: parent.release.contractId, version: parent.release.version, digest: parent.digest },
     });
     let wrongParent = false;

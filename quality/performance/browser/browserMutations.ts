@@ -22,7 +22,7 @@ async function rejectFiles(page: Page): Promise<number> {
         const win = window as unknown as BrowserWindow;
         win.__perfResponse = { uploaded: true };
         const root = document.createElement("cms-binding-core");
-        root.innerHTML = `<form cms-mutation="performance:upload as mutation" cms-mutation-reset="false">
+        root.innerHTML = `<form cms-mutation="ulvia.performance/performance:upload as mutation" cms-mutation-reset="false">
             <input name="files" type="file" multiple>
             <output>{{ mutation.outcome.kind }}</output>
         </form>`;
@@ -54,7 +54,7 @@ async function submitForm(page: Page, controlCount: number): Promise<number> {
             { length: count },
             (_, index) => `<input name="field${index}" value="value${index}">`,
         ).join("");
-        root.innerHTML = `<form cms-mutation="performance:save as mutation" cms-mutation-reset="false">
+        root.innerHTML = `<form cms-mutation="ulvia.performance/performance:save as mutation" cms-mutation-reset="false">
             ${controls}<output data-request-id="{{ mutation.outcome.requestId }}">{{ mutation.data.saved }}</output>
         </form>`;
         document.body.appendChild(root);

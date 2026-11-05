@@ -7,10 +7,10 @@ afterEach(resetDom);
 
 describe("Form mutation lifecycle", () => {
     test("publishes typed input, activity and outcome through cms-sync", async () => {
-        const target = { scope: "page", key: "ulvia-official-profile-form" } as const;
+        const target = { scope: "page", key: "ulvia--mossa--profile-form" } as const;
         globalThis.fetch = (async () => Response.json({ id: "profile-1" }, { status: 201 })) as typeof fetch;
         const root = el(`
-            <form cms-mutation="profiles:update as profile" cms-sync="@page:ulvia-official-profile-form">
+            <form cms-mutation="ulvia/profiles:update as profile" cms-sync="@page:ulvia--mossa--profile-form">
                 <input name="displayName" value="Ada">
             </form>
         `) as HTMLFormElement;
@@ -50,12 +50,12 @@ describe("Form mutation lifecycle", () => {
     });
 
     test("publishes selected mutation fields while preserving their structure", async () => {
-        const target = { scope: "page", key: "ulvia-official-profile-signal" } as const;
+        const target = { scope: "page", key: "ulvia--mossa--profile-signal" } as const;
         globalThis.fetch = (async () => Response.json({ id: "profile-1" }, { status: 201 })) as typeof fetch;
         const root = el(`
             <form
-                cms-mutation="profiles:update as profile"
-                cms-sync="@page:ulvia-official-profile-signal"
+                cms-mutation="ulvia/profiles:update as profile"
+                cms-sync="@page:ulvia--mossa--profile-signal"
                 cms-sync-select="lastSuccess.requestId input.displayName"
             >
                 <input name="displayName" value="Ada">

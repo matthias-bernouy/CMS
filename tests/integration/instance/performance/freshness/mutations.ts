@@ -6,6 +6,6 @@ export async function exerciseMutationFreshness(connection: Connection, cmsUrl: 
     const namespace = `cache.test${crypto.randomUUID().replaceAll("-", "")}`;
     const collections = await exerciseCollectionFreshness(connection, cmsUrl, namespace);
     const selections = await exerciseSelectionFreshness(connection, cmsUrl);
-    const files = await exerciseFileFreshness(connection, cmsUrl);
+    const files = await exerciseFileFreshness(connection, cmsUrl, `${namespace}/cache-kit`);
     return { collections, selections, files };
 }

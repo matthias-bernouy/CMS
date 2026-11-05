@@ -13,9 +13,9 @@ export async function exerciseCollectionCatalogue(call: Call, digest: string, in
     let previous: Catalogue | undefined;
     for (let index = 0; index < 2; index++) {
         const started = performance.now();
-        const result = await call("ulvia.cms.installations", "list-available-collections");
+        const result = await call("ulvia/cms.installations", "list-available-collections");
         durations.push(performance.now() - started);
-        const release = result.releases.find((item) => item.collectionId === "mcp-kit");
+        const release = result.releases.find((item) => item.collectionId === "ulvia/mcp-kit");
         expect(release?.digest).toBe(digest);
         expect(release?.action).toBe(installed ? "current" : "install");
         expect(release?.browserRiskDigest).toMatch(/^sha256:[a-f0-9]{64}$/u);

@@ -34,7 +34,7 @@ test("declared asynchronous failures require their output and reject undeclared 
             {},
             {
                 siteId: "site-a",
-                providerId: "example",
+                providerId: "example.official/example",
                 contractVersion: "1.0.0",
                 requestId: crypto.randomUUID(),
                 idempotencyKey: "one",
@@ -94,7 +94,7 @@ test("durable failures project details to their registered release before persis
             {},
             {
                 siteId: "site-a",
-                providerId: "example",
+                providerId: "example.official/example",
                 contractVersion: "1.0.0",
                 requestId: crypto.randomUUID(),
                 idempotencyKey: "one",

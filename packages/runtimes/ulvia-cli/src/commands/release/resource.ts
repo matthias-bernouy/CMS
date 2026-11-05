@@ -1,3 +1,4 @@
+import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
 import { basename, join } from "node:path";
 import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
@@ -82,19 +83,19 @@ export async function storeResource(
 
 export function resourceCoordinate(resource: PreparedResource): string {
     if (resource.kind === "provider-manifest") {
-        const { provenance, providerId, version } = resource.admission.manifest;
-        return `provider ${provenance.publisherId}/${providerId}@${version}`;
+        const { providerId, version } = resource.admission.manifest;
+        return `provider ${providerId}@${version}`;
     }
     if (resource.kind === "contract") {
-        const { publisherId, contractId, version } = resource.admission.release;
-        return `contract ${publisherId}/${contractId}@${version}`;
+        const { contractId, version } = resource.admission.release;
+        return `contract ${contractId}@${version}`;
     }
-    const { publisherId, collectionId, version } = resource.admission.release;
-    return `collection ${publisherId}/${collectionId}@${version}`;
+    const { collectionId, version } = resource.admission.release;
+    return `collection ${collectionId}@${version}`;
 }
 
 function assertFolder(directory: string, id: string): void {
-    if (basename(directory) !== id) {
+    if (basename(directory) !== resourceName(id)) {
         throw new Error(`Resource folder ${basename(directory)} does not match definition ID ${id}`);
     }
 }

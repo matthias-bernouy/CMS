@@ -14,7 +14,7 @@ test("a standalone specialization serves its declaring parent's pinned route", a
     await catalogue.publish(base);
     const child = await admitContractRelease({
         ...base.release,
-        contractId: "catalog.sql",
+        contractId: "ulvia/catalog.sql",
         version: "2.0.0",
         extends: { contractId: base.release.contractId, version: base.release.version, digest: base.digest },
         capabilities: [
@@ -28,23 +28,23 @@ test("a standalone specialization serves its declaring parent's pinned route", a
     await catalogue.publish(child);
     const contract = await resolveContract(catalogue, child);
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    dispatcher.register("catalog.sql", "item.list", async (_input, context) => {
+    dispatcher.register("ulvia/catalog.sql", "item.list", async (_input, context) => {
         expect(context.contractVersion).toBe("1.0.0");
         return { items: ["inherited"] };
     });
-    dispatcher.register("catalog.sql", "sql.configure", async () => ({ items: ["own"] }));
+    dispatcher.register("ulvia/catalog.sql", "sql.configure", async () => ({ items: ["own"] }));
     const requestId = crypto.randomUUID();
     const handler = createProviderHandler({
         contracts: [contract],
         dispatcher,
         authenticate: async () => ({
             siteId: "site-a",
-            providerId: "sql",
+            providerId: "ulvia/sql",
             claims: {
                 version: 1,
                 requestId,
                 instanceId: "instance",
-                contractId: "catalog",
+                contractId: "ulvia/catalog",
                 contractVersion: "1.0.0",
                 capabilityId: "item.list",
                 issuedAt: 0,
@@ -57,7 +57,7 @@ test("a standalone specialization serves its declaring parent's pinned route", a
     );
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ items: ["inherited"] });
-    const otherAdmission = await admitContractRelease({ ...child.release, contractId: "catalog.other" });
+    const otherAdmission = await admitContractRelease({ ...child.release, contractId: "ulvia/catalog.other" });
     await catalogue.publish(otherAdmission);
     const other = await resolveContract(catalogue, otherAdmission);
     expect(() => compileProviderRoutes([contract, other])).toThrow("Ambiguous inherited");

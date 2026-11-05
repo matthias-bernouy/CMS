@@ -1,0 +1,28 @@
+{
+    "kind": "component",
+    "id": "ulvia--repository--shell",
+    "label": "bloc.shell.label",
+    "description": "bloc.shell.description",
+    "catalogue": "listed",
+    "categories": ["category.application"],
+    "order": 0,
+    "uses": [],
+    "requires": [],
+    "root": {
+        "accepts": ["main"]
+    },
+    "slots": {
+        "content": {
+            "accepts": [
+                {
+                    "kind": "native-element",
+                    "accepts": ["section"]
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "examples": ["catalogue"],
+    "defaultExample": "catalogue"
+}

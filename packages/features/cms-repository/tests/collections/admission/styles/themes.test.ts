@@ -6,13 +6,13 @@ import { withInstalledCollections } from "@bernouy/cms-repository/collections/co
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import { colorCollection } from "./fixture";
 
-const style = ":scope { color: var(--atlas-accent); }";
+const style = ":scope { color: var(--atlas-dofficial--atlas--accent); }";
 
 test("accepts explicitly imported tokens without requiring the official collection", () => {
-    const source = colorCollection(":scope { background: var(--brand-surface); }");
+    const source = colorCollection(":scope { background: var(--example--brand--surface); }");
     source.dependencies = [
         {
-            collectionId: "brand",
+            collectionId: "example/brand",
             publisherId: "example",
             versionRange: "^1.0.0",
             imports: { themeTokens: [{ id: "surface" }] },
@@ -37,19 +37,23 @@ test("the same installed Bloc uses each site's light/dark overrides without chan
             withInstalledCollections(new InMemoryContentRepository(), store, siteId!),
         );
         const theme = (await repository.getSystem()).theme;
-        theme.themes[0]!.values.light["atlas-accent"] = light!;
-        theme.themes[0]!.values.dark["atlas-accent"] = dark!;
+        theme.themes[0]!.values.light["atlas-dofficial--atlas--accent"] = light!;
+        theme.themes[0]!.values.dark["atlas-dofficial--atlas--accent"] = dark!;
         await repository.updateSystem({ theme });
         const css = new TextDecoder().decode((await generateStyleEntry(createContentReader(repository))).raw);
         expect(css).toContain(light!);
         expect(css).toContain(dark!);
         repositories.push(repository);
     }
-    const first = (await repositories[0]!.getBlocRecord("atlas-panel"))!.artifact!.styleCSS;
-    expect(first).toContain("var(--atlas-accent)");
-    expect((await repositories[1]!.getBlocRecord("atlas-panel"))!.artifact!.styleCSS).toBe(first);
-    expect((await repositories[0]!.getSystem()).theme.themes[0]!.values.light["atlas-accent"]).toBe("#eeaa11");
-    expect((await repositories[1]!.getSystem()).theme.themes[0]!.values.light["atlas-accent"]).toBe("#1188ee");
+    const first = (await repositories[0]!.getBlocRecord("atlas-dofficial--atlas--panel"))!.artifact!.styleCSS;
+    expect(first).toContain("var(--atlas-dofficial--atlas--accent)");
+    expect((await repositories[1]!.getBlocRecord("atlas-dofficial--atlas--panel"))!.artifact!.styleCSS).toBe(first);
+    expect((await repositories[0]!.getSystem()).theme.themes[0]!.values.light["atlas-dofficial--atlas--accent"]).toBe(
+        "#eeaa11",
+    );
+    expect((await repositories[1]!.getSystem()).theme.themes[0]!.values.light["atlas-dofficial--atlas--accent"]).toBe(
+        "#1188ee",
+    );
 });
 
 test("invalid colors cannot mutate release storage or either site's installations", async () => {

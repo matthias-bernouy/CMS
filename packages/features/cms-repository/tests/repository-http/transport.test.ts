@@ -29,7 +29,7 @@ test("repository transport rejects redirects and oversized responses", async () 
 test("repository base URLs reject credentials and non-HTTPS remote hosts", () => {
     expect(() => repositoryBaseUrl("http://example.com", "Provider")).toThrow("HTTPS or explicitly allowed HTTP");
     expect(repositoryBaseUrl("http://repository:3100", "Provider", { allowInsecureHttp: true }).href).toBe(
-        "http://repository:3100/.cms/call/ulvia.repository/",
+        "http://repository:3100/.cms/call/ulvia/repository/",
     );
     expect(() => repositoryBaseUrl("https://user:pass@example.com", "Provider")).toThrow("URL credentials");
 });
@@ -55,7 +55,7 @@ test("PAT Repository clients retain HTTPS defaults and accept only a host-config
         () => new RemoteRepositoryClient("http://repository:3000", undefined, { allowInsecureHttp: true }),
     ).not.toThrow();
     expect(repositoryUrl("http://repository:3000", { allowInsecureHttp: true }).href).toBe(
-        "http://repository:3000/.cms/call/ulvia.repository/",
+        "http://repository:3000/.cms/call/ulvia/repository/",
     );
     expect(() => repositoryUrl("http://user:password@repository:3000", { allowInsecureHttp: true })).toThrow();
     expect(() => repositoryUrl("file:///tmp/repository", { allowInsecureHttp: true })).toThrow();

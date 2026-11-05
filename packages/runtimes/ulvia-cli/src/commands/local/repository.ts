@@ -8,7 +8,7 @@ const HELP = `Usage:
 
 Login verifies and saves a PAT pinned to the Repository origin and identity.
 Provide it through ULVIA_REPOSITORY_TOKEN or bounded stdin; never as an argument.
-Deploy a Repository with: ulvia instance create registry --profile ulvia.repository@1.0.0.
+Deploy a Repository with: ulvia instance create registry --profile ulvia/repository@1.0.0.
 It uses the normal Edge, Provider and Mongo deployment.`;
 
 export async function repositoryConnectionCommand(

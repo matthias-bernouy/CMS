@@ -1,0 +1,21 @@
+{
+    "id": "account",
+    "label": "page.account.name",
+    "description": "page.account.description",
+    "requires": [
+        {
+            "contractId": "ulvia/cms.access",
+            "capabilityId": "logout",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

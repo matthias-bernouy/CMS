@@ -9,7 +9,10 @@ import { reportDocument } from "./fixtures";
 
 describe("provider runtime report input bounds", () => {
     test("rejects duplicate JSON keys and malformed UTF-8", () => {
-        const json = JSON.stringify(reportDocument()).replace('"providerId":', '"providerId":"other","providerId":');
+        const json = JSON.stringify(reportDocument()).replace(
+            '"providerId":',
+            '"providerId":"example/other","providerId":',
+        );
         expect(() => parseProviderRuntimeReportJson(json)).toThrow("duplicate property");
         expect(() => parseProviderRuntimeReportJson(new Uint8Array([0xc3, 0x28]))).toThrow(
             ProviderInstallationValidationError,

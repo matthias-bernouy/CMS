@@ -1,3 +1,4 @@
+import { isResourceId, resourceRuntimeNamespace } from "@bernouy/resource-identity";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ThemeFontFace, ThemeSettings, ThemeSource, ThemeToken } from "cms-content/theme/interfaces/theme";
 import { parseCollectionAssetReference } from "cms-content/blocs/core/markup/security/collectionAssetExpression";
@@ -78,7 +79,7 @@ function validateFontFace(source: ThemeSource, face: ThemeFontFace): void {
     if (source.owner?.kind !== "contribution") {
         throw new ContentValidationError("theme", `font-face requires a contribution owner: ${face.id}`);
     }
-    const prefix = `${source.owner.contributionId}-`;
+    const prefix = `${resourceRuntimeNamespace(source.owner.contributionId)}--`;
     if (!face.id.startsWith(prefix) || !face.family.startsWith(prefix)) {
         throw new ContentValidationError(
             "theme",
@@ -167,16 +168,18 @@ function validateSource(source: ThemeSource, sourceIds: Set<string>, integration
             );
         }
     } else if (owner?.kind === "contribution") {
-        assertIdentifier("contribution id", owner.contributionId);
+        if (!isResourceId(owner.contributionId)) {
+            throw new ContentValidationError("theme", "invalid contribution resource identity");
+        }
         const imports = new Set<string>();
         for (const tokenId of owner.tokenImports ?? []) {
             assertIdentifier("contribution theme token import", tokenId);
-            if (tokenId.startsWith(`${owner.contributionId}-`)) {
+            if (tokenId.startsWith(`${resourceRuntimeNamespace(owner.contributionId)}--`)) {
                 throw new ContentValidationError("theme", `contribution theme cannot import itself: ${source.id}`);
             }
             assertUnique(imports, tokenId, "contribution theme token import");
         }
-        if (source.id !== `contribution-${owner.contributionId}`) {
+        if (source.id !== `contribution-${resourceRuntimeNamespace(owner.contributionId)}`) {
             throw new ContentValidationError(
                 "theme",
                 `source id is not derived for contribution: ${owner.contributionId}`,
@@ -214,7 +217,7 @@ function validateToken(source: ThemeSource, token: ThemeToken, integrationOwners
     }
 
     if (source.owner?.kind === "contribution") {
-        const prefix = `${source.owner.contributionId}-`;
+        const prefix = `${resourceRuntimeNamespace(source.owner.contributionId)}--`;
         if (token.id !== token.variable || !token.id.startsWith(prefix) || !token.defaults?.light?.trim()) {
             throw new ContentValidationError("theme", `invalid contribution token: ${token.id}`);
         }

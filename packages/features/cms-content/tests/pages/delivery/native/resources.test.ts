@@ -73,7 +73,7 @@ test("restricted system fallbacks cannot expose a Page to anonymous callers or a
     await repo.insertPage(
         "/restricted",
         "Restricted",
-        '<section cms-query="admin:read as value">Private fallback</section>',
+        '<section cms-query="ulvia/admin:read as value">Private fallback</section>',
     );
     const page = (await repo.getAllPages())[0]!;
     await repo.updatePage({ id: page.id, visible: true }, page.revision);

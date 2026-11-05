@@ -1,3 +1,4 @@
+import { resourcePublisher } from "@bernouy/cms-repository/contracts/protocol";
 import { admitContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifest } from "@bernouy/cms-repository/providers";
@@ -29,10 +30,10 @@ export async function gatewayRoute(
         kind: "contract",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
-        contractId: overrides.contractId ?? "catalog",
+        contractId: overrides.contractId ?? "ulvia/catalog",
         name: "Catalog",
         version: "1.0.0",
-        publisherId: "ulvia.official",
+        publisherId: resourcePublisher(overrides.contractId ?? "ulvia/catalog"),
         capabilities: [
             {
                 id: overrides.capabilityId ?? "item.list",
@@ -156,17 +157,20 @@ export async function gatewayRoute(
             kind: "provider-manifest",
             protocol: "ulvia-provider/v1",
             schemaDialect: "ulvia-schema/v1",
-            providerId: overrides.providerId ?? "ulvia.example",
+            providerId: overrides.providerId ?? "ulvia/ulvia.example",
             name: "Example Provider",
             version: "1.0.0",
-            provenance: { publisherId: "ulvia.official", publishedAt: NOW },
+            provenance: {
+                publisherId: resourcePublisher(overrides.providerId ?? "ulvia/ulvia.example"),
+                publishedAt: NOW,
+            },
             buildVersionRange: ">=1.0.0 <2.0.0",
             endpoint: { allowedOrigins: [overrides.endpoint ?? "https://provider.example.com"] },
             configuration: { type: "object", properties: {}, required: [] },
             credentialSlots: [],
             implementations: [
                 {
-                    contractId: overrides.contractId ?? "catalog",
+                    contractId: overrides.contractId ?? "ulvia/catalog",
                     version: "1.0.0",
                     digest: contract.digest,
                     requires: [],
@@ -180,7 +184,7 @@ export async function gatewayRoute(
     return {
         selection: {
             siteId: "site-a",
-            contractId: overrides.contractId ?? "catalog",
+            contractId: overrides.contractId ?? "ulvia/catalog",
             version: "1.0.0",
             digest: contract.digest,
             installationId: overrides.installationId ?? "install-a",
@@ -202,7 +206,7 @@ export async function gatewayRoute(
             installation: {
                 id: overrides.installationId ?? "install-a",
                 siteId: "site-a",
-                providerId: overrides.providerId ?? "ulvia.example",
+                providerId: overrides.providerId ?? "ulvia/ulvia.example",
                 accountId: "account-a",
                 endpoint: overrides.endpoint ?? "https://provider.example.com",
                 status: "enabled",
@@ -221,14 +225,14 @@ export async function gatewayRoute(
                 observedAt: NOW,
                 report: {
                     protocol: "ulvia-provider/v1",
-                    providerId: overrides.providerId ?? "ulvia.example",
+                    providerId: overrides.providerId ?? "ulvia/ulvia.example",
                     instanceId: "instance:account-a",
                     account: { id: "account-a", label: "Account A" },
                     buildVersion: "1.0.0",
                     manifest: { version: "1.0.0", digest: admittedManifest.digest },
                     implementations: [
                         {
-                            contractId: overrides.contractId ?? "catalog",
+                            contractId: overrides.contractId ?? "ulvia/catalog",
                             version: "1.0.0",
                             digest: contract.digest,
                             status: "ready",

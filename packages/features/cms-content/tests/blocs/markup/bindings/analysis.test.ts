@@ -3,7 +3,7 @@ import { validateDocumentBindings, type BindingQueryCapability } from "@bernouy/
 import { parseHTML } from "linkedom";
 
 const capability: BindingQueryCapability = {
-    contractId: "catalog",
+    contractId: "ulvia/catalog",
     capabilityId: "list",
     output: {
         type: "object",
@@ -89,7 +89,7 @@ describe("typed binding analysis", () => {
 
     test("rejects unresolved capability schemas without a Edge-specific escape hatch", () => {
         const { document } = parseHTML("<!DOCTYPE html><html><body></body></html>");
-        document.body.innerHTML = `<section cms-query="ulvia.cms.access:resolve-actor as methods">
+        document.body.innerHTML = `<section cms-query="ulvia/cms.access:resolve-actor as methods">
             <p cms-repeat="methods.data as method">{{ method.displayName }}</p>
         </section>`;
         expect(() => validateDocumentBindings(document, { requireCapabilityResolution: true })).toThrow(
@@ -98,7 +98,7 @@ describe("typed binding analysis", () => {
     });
 
     test("validates mutation outcomes and command output paths", () => {
-        const html = `<form cms-mutation="catalog:save as saved">
+        const html = `<form cms-mutation="ulvia/catalog:save as saved">
             <div cms-match="saved.outcome.kind">
                 <span cms-case='"none"'></span>
                 <p cms-case='"success"'>{{ saved.data.items.length }}</p>
@@ -119,7 +119,7 @@ describe("typed binding analysis", () => {
     });
 
     test("validates mutation redirects in the implicit success branch", () => {
-        const html = `<form cms-mutation="catalog:save as saved"
+        const html = `<form cms-mutation="ulvia/catalog:save as saved"
             cms-mutation-redirect="/saved?id={{ saved.data.items.length | urlencode }}">
             <div cms-match="saved.outcome.kind">
                 <span cms-case='"none"'></span>
@@ -148,7 +148,7 @@ function validate(html: string): void {
 }
 
 function validDocument(beforeMatch = "", success = ""): string {
-    return `<section cms-query="catalog:list as pages">
+    return `<section cms-query="ulvia/catalog:list as pages">
         ${beforeMatch}
         <div cms-match="pages.outcome.kind">
             <div cms-case='"none"'></div>

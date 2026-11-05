@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { EditablePageDocument } from "../../../packages/official-repository/collections/ulvia-official/blocs/admin/pages/ulvia-official-page-editor/runtime/document";
-import type { EditorCatalogueItem } from "../../../packages/official-repository/collections/ulvia-official/blocs/admin/pages/ulvia-official-page-editor/runtime/model";
+import { EditablePageDocument } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/document";
+import type { EditorCatalogueItem } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/model";
 import { heading } from "./fixtures";
 
 describe("EditablePageDocument structure", () => {
     test("builds a recursive source tree and moves only within one slot", () => {
         const page = new EditablePageDocument(
-            '<section cms-bloc="fixture-layout"><h2 cms-bloc="ulvia-official-heading" slot="content">One</h2>' +
-                '<h2 cms-bloc="ulvia-official-heading" slot="content">Two</h2></section>',
+            '<section cms-bloc="fixture-layout"><h2 cms-bloc="ulvia--mossa--heading" slot="content">One</h2>' +
+                '<h2 cms-bloc="ulvia--mossa--heading" slot="content">Two</h2></section>',
         );
         const nodes = page.nodes();
 
@@ -41,7 +41,7 @@ describe("EditablePageDocument structure", () => {
 
     test("restores a selected node by structural address", () => {
         const page = new EditablePageDocument(
-            '<section cms-bloc="fixture-layout"><h2 cms-bloc="ulvia-official-heading" slot="content">One</h2></section>',
+            '<section cms-bloc="fixture-layout"><h2 cms-bloc="ulvia--mossa--heading" slot="content">One</h2></section>',
         );
         const selected = page.nodes()[1]!.element;
         const address = page.addressOf(selected);
@@ -55,7 +55,7 @@ describe("EditablePageDocument structure", () => {
         const layout: EditorCatalogueItem = {
             ...heading,
             id: "fixture-layout",
-            defaultContent: '<h2 cms-bloc="ulvia-official-heading">Required</h2>',
+            defaultContent: '<h2 cms-bloc="ulvia--mossa--heading">Required</h2>',
             authoringJson: JSON.stringify({
                 root: { accepts: ["section"] },
                 slots: {

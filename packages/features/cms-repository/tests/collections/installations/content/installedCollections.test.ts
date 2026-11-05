@@ -14,7 +14,7 @@ const release = collectionFixture({
     kind: "collection",
     protocol: "ulvia-collection/v1",
     schemaDialect: "ulvia-schema/v1",
-    collectionId: "test",
+    collectionId: "example/test",
     publisherId: "example",
     version: "1.0.0",
     name: "collection.name",
@@ -56,7 +56,7 @@ const release = collectionFixture({
 
             kind: "component",
             root: { accepts: ["h1", "h2", "h3", "h4", "h5", "h6"] },
-            id: "test-heading",
+            id: "example--test--heading",
             label: "bloc.heading.label",
             categories: ["bloc.category.content"],
             order: 20,
@@ -75,12 +75,12 @@ const release = collectionFixture({
 
             kind: "composition",
             root: { accepts: ["div"] },
-            id: "test-welcome",
+            id: "example--test--welcome",
             label: "bloc.welcome.label",
             categories: ["bloc.category.content"],
             order: 30,
-            markup: '<h1 cms-bloc="test-heading">{{ cms.i18n.test.title }}</h1>',
-            uses: ["test-heading"],
+            markup: '<h1 cms-bloc="example--test--heading">{{ cms.i18n.example/test.title }}</h1>',
+            uses: ["example--test--heading"],
             requires: [],
             slots: {},
         },
@@ -93,26 +93,26 @@ test("installed resources participate in authoring validation and public read mo
     await store.install("site", artifact.digest, 0);
     const local = new InMemoryContentRepository();
     const repository = new ValidatingContentRepository(withInstalledCollections(local, store, "site"));
-    await repository.insertPage("/test", "Test", '<div cms-bloc="test-welcome"></div>');
+    await repository.insertPage("/test", "Test", '<div cms-bloc="example--test--welcome"></div>');
     const page = (await repository.getPage("/test"))!;
     await repository.updatePage({ id: page.id, visible: true });
-    expect(await local.getBlocRecord("test-welcome")).toBeNull();
-    expect((await repository.getBlocRecord("test-welcome"))!.contributionId).toBe("test");
-    expect((await repository.getBlocRecord("test-welcome"))!.artifact).toMatchObject({
+    expect(await local.getBlocRecord("example--test--welcome")).toBeNull();
+    expect((await repository.getBlocRecord("example--test--welcome"))!.contributionId).toBe("example/test");
+    expect((await repository.getBlocRecord("example--test--welcome"))!.artifact).toMatchObject({
         group: "Content",
         catalogueOrder: 30,
     });
     const reader = createContentReader(repository);
-    expect((await reader.getRenderableBlocs()).find((bloc) => bloc.id === "test-welcome")?.markupHTML).toContain(
-        "cms.i18n.test.title",
-    );
-    expect((await reader.getPublishedPage("/test"))!.content).toContain("test-welcome");
+    expect(
+        (await reader.getRenderableBlocs()).find((bloc) => bloc.id === "example--test--welcome")?.markupHTML,
+    ).toContain("cms.i18n.example/test.title");
+    expect((await reader.getPublishedPage("/test"))!.content).toContain("example--test--welcome");
     expect(await reader.getContentRevision!()).toBe(1);
-    await store.saveTexts("site", "test", 1, { title: { en: "Changed" } });
+    await store.saveTexts("site", "example/test", 1, { title: { en: "Changed" } });
     expect(await reader.getContentRevision!()).toBe(2);
     expect((await reader.getContentTexts!())[0]!.resolve("en").title).toBe("Changed");
     await expect(
-        repository.replaceBloc({ ...(await repository.getBlocRecord("test-welcome"))!.artifact! }),
+        repository.replaceBloc({ ...(await repository.getBlocRecord("example--test--welcome"))!.artifact! }),
     ).rejects.toThrow("immutable");
 });
 
@@ -123,7 +123,7 @@ test("site Pages inherit capability requirements from installed Blocs", async ()
             kind: "contract",
             protocol: "ulvia-provider/v1",
             schemaDialect: "ulvia-schema/v1",
-            contractId: "example.files",
+            contractId: "example/example.files",
             name: "Example files",
             version: "1.0.0",
             publisherId: "example",
@@ -166,12 +166,12 @@ test("site Pages inherit capability requirements from installed Blocs", async ()
         collectionFixture({
             ...release,
             blocs: release.blocs.map((bloc) =>
-                bloc.id === "test-welcome"
+                bloc.id === "example--test--welcome"
                     ? {
                           ...bloc,
                           requires: [
                               {
-                                  contractId: "example.files",
+                                  contractId: "example/example.files",
                                   capabilityId: "files.read",
                                   versionRange: "^1.0.0",
                               },
@@ -185,13 +185,13 @@ test("site Pages inherit capability requirements from installed Blocs", async ()
     const repository = new ValidatingContentRepository(
         withInstalledCollections(new InMemoryContentRepository(), store, "site"),
     );
-    await repository.insertPage("/media", "Media", '<div cms-bloc="test-welcome"></div>');
+    await repository.insertPage("/media", "Media", '<div cms-bloc="example--test--welcome"></div>');
     const page = (await repository.getPage("/media"))!;
     await repository.updatePage({ id: page.id, visible: true });
 
     expect((await createContentReader(repository).getRenderablePage("/media"))?.requirements).toEqual([
         {
-            contractId: "example.files",
+            contractId: "example/example.files",
             capabilityId: "files.read",
             versionRange: "^1.0.0",
         },
@@ -215,7 +215,7 @@ test("installed hidden blocs stay out of the authoring catalogue but remain avai
                     categories: ["bloc.helper.label"],
                     kind: "component",
                     root: { accepts: ["div"] },
-                    id: "test-helper",
+                    id: "example--test--helper",
                     label: "bloc.helper.label",
                     catalogue: "hidden",
                     markup: "<div></div>",
@@ -230,8 +230,12 @@ test("installed hidden blocs stay out of the authoring catalogue but remain avai
     const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site");
 
     expect((await repository.getBlocsList()).map(({ id }) => id)).toEqual([]);
-    expect((await repository.getBlocsList({ includeHidden: true })).map(({ id }) => id)).toEqual(["test-helper"]);
-    expect((await createContentReader(repository).getRenderableBlocs()).map(({ id }) => id)).toEqual(["test-helper"]);
+    expect((await repository.getBlocsList({ includeHidden: true })).map(({ id }) => id)).toEqual([
+        "example--test--helper",
+    ]);
+    expect((await createContentReader(repository).getRenderableBlocs()).map(({ id }) => id)).toEqual([
+        "example--test--helper",
+    ]);
 });
 
 test("installed collection theme contributes immutable tokens to editing and public CSS", async () => {
@@ -263,16 +267,16 @@ test("installed collection theme contributes immutable tokens to editing and pub
         withInstalledCollections(new InMemoryContentRepository(), store, "site"),
     );
     const system = await repo.getSystem();
-    const source = system.theme.sources.find((item) => item.id === "contribution-test")!;
-    expect(source.owner).toEqual({ kind: "contribution", contributionId: "test" });
-    expect(source.categories[0]!.tokens[0]!.variable).toBe("test-accent");
+    const source = system.theme.sources.find((item) => item.id === "contribution-example--test")!;
+    expect(source.owner).toEqual({ kind: "contribution", contributionId: "example/test" });
+    expect(source.categories[0]!.tokens[0]!.variable).toBe("example--test--accent");
     const theme = structuredClone(system.theme);
-    theme.themes[0]!.values.light["test-accent"] = "#abcdef";
+    theme.themes[0]!.values.light["example--test--accent"] = "#abcdef";
     await repo.updateSystem({ theme });
     const projected = await repo.getSystem();
-    expect(projected.theme.themes[0]!.values.light["test-accent"]).toBe("#abcdef");
+    expect(projected.theme.themes[0]!.values.light["example--test--accent"]).toBe("#abcdef");
     const css = new TextDecoder().decode((await generateStyleEntry(createContentReader(repo))).raw);
-    expect(css).toContain("--test-accent");
+    expect(css).toContain("--example--test--accent");
     expect(css).toContain("#abcdef");
 });
 
@@ -280,7 +284,7 @@ test("installed Light DOM component projects its repository-compiled style witho
     const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
     const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}` as const;
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const style = ":scope { color: var(--test-card-accent, currentColor); }";
+    const style = ":scope { color: var(--example--test--card-accent, currentColor); }";
     const artifact = await store.importRelease(
         collectionFixture({
             ...release,
@@ -293,7 +297,7 @@ test("installed Light DOM component projects its repository-compiled style witho
 
                     kind: "component",
                     root: { accepts: ["div"] },
-                    id: "test-card",
+                    id: "example--test--card",
                     label: "bloc.card.label",
                     markup: '<article class="card"><slot name="body"></slot></article>',
                     style,
@@ -308,12 +312,12 @@ test("installed Light DOM component projects its repository-compiled style witho
     await store.install("site", artifact.digest, 0);
     const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site");
     const reader = createContentReader(repository);
-    expect(await reader.getBlocViewJS("test-card")).toBeNull();
-    const projected = (await reader.getRenderableBlocs()).find((bloc) => bloc.id === "test-card");
+    expect(await reader.getBlocViewJS("example--test--card")).toBeNull();
+    const projected = (await reader.getRenderableBlocs()).find((bloc) => bloc.id === "example--test--card");
     expect(projected).toMatchObject({
         hasBehavior: false,
-        styleCollectionId: "test",
-        styleCSS: compileBlocStyle("test-card", style),
+        styleCollectionId: "example/test",
+        styleCSS: compileBlocStyle("example--test--card", style),
     });
     expect(projected?.markupHTML).toBe('<article class="card"><slot name="body"></slot></article>');
 });
@@ -336,11 +340,11 @@ test("installed polymorphic native components project their contract and keep wr
                     categories: ["bloc.card.label"],
 
                     kind: "component",
-                    id: "test-action",
+                    id: "example--test--action",
                     label: "bloc.card.label",
                     root: { accepts: ["div"] },
                     markup: "<slot></slot>",
-                    exampleContent: '<button type="button">{{ cms.i18n.test.title }}</button>',
+                    exampleContent: '<button type="button">{{ cms.i18n.example/test.title }}</button>',
                     settings: [
                         {
                             id: "wrapper-label",
@@ -368,28 +372,28 @@ test("installed polymorphic native components project their contract and keep wr
     const repository = new ValidatingContentRepository(
         withInstalledCollections(new InMemoryContentRepository(), store, "site"),
     );
-    const projected = (await repository.getBlocRecord("test-action"))!.artifact!;
+    const projected = (await repository.getBlocRecord("example--test--action"))!.artifact!;
     expect(projected.slots[""]).toEqual({
         accepts: [{ kind: "native-element", accepts: ["button", "a"] }],
         min: 1,
         max: 1,
     });
-    expect((await createContentReader(repository).getRenderableBlocs()).find(({ id }) => id === "test-action")).toEqual(
-        expect.objectContaining({ root: { accepts: ["div"] } }),
-    );
+    expect(
+        (await createContentReader(repository).getRenderableBlocs()).find(({ id }) => id === "example--test--action"),
+    ).toEqual(expect.objectContaining({ root: { accepts: ["div"] } }));
     await repository.insertPage(
         "/native-button",
         "Button",
-        '<div cms-bloc=\"test-action\" wrapper-label="Wrapper label"><button type="button">Save</button></div>',
+        '<div cms-bloc="example--test--action" wrapper-label="Wrapper label"><button type="button">Save</button></div>',
     );
     await repository.insertPage("/about", "About");
     await repository.insertPage(
         "/native-link",
         "Link",
-        '<div cms-bloc=\"test-action\" wrapper-label="Wrapper label"><a href="/about">About</a></div>',
+        '<div cms-bloc="example--test--action" wrapper-label="Wrapper label"><a href="/about">About</a></div>',
     );
     await expect(
-        repository.insertPage("/native-wrong", "Wrong", '<div cms-bloc="test-action"><p>Wrong</p></div>'),
+        repository.insertPage("/native-wrong", "Wrong", '<div cms-bloc="example--test--action"><p>Wrong</p></div>'),
     ).rejects.toThrow("does not accept native <p>");
 });
 
@@ -398,8 +402,8 @@ test("installed Bloc insertion uses its example without reading unrelated assets
     const artifact = await store.importRelease(release);
     await store.install("site", artifact.digest, 0);
     const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site");
-    const projected = (await repository.getBlocRecord("test-heading"))!.artifact!;
-    expect(projected.initialDocument?.html).toContain('cms-bloc="test-heading"');
+    const projected = (await repository.getBlocRecord("example--test--heading"))!.artifact!;
+    expect(projected.initialDocument?.html).toContain('cms-bloc="example--test--heading"');
     expect(projected.thumbnail).toBeUndefined();
 });
 
@@ -415,10 +419,10 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
 
                     kind: "component",
                     root: { accepts: ["div"] },
-                    id: "test-card",
+                    id: "example--test--card",
                     label: "bloc.card.label",
-                    markup: '<article><slot name="title"></slot><section><p>{{ cms.i18n.test.title }}</p></section></article>',
-                    exampleContent: '<h2 slot="title">{{ cms.i18n.test.title }}</h2>',
+                    markup: '<article><slot name="title"></slot><section><p>{{ cms.i18n.example/test.title }}</p></section></article>',
+                    exampleContent: '<h2 slot="title">{{ cms.i18n.example/test.title }}</h2>',
                     settings: [
                         {
                             id: "tone",
@@ -452,25 +456,29 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
     );
     await store.install("site", artifact.digest, 0);
     const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site");
-    const record = (await repository.getBlocRecord("test-card"))!;
-    expect(record.artifact?.markupHTML).toContain("cms.i18n.test.title");
-    expect(record.artifact?.initialDocument?.html).toContain('<h2 slot="title">{{ cms.i18n.test.title }}</h2>');
+    const record = (await repository.getBlocRecord("example--test--card"))!;
+    expect(record.artifact?.markupHTML).toContain("cms.i18n.example/test.title");
+    expect(record.artifact?.initialDocument?.html).toContain('<h2 slot="title">{{ cms.i18n.example/test.title }}</h2>');
     expect(record.artifact?.settings?.map((item) => [item.id, item.default])).toEqual([
         ["tone", "quiet"],
         ["compact", false],
     ]);
     expect((await createContentReader(repository).getRenderableBlocs())[0]?.markupHTML).toContain(
-        "cms.i18n.test.title",
+        "cms.i18n.example/test.title",
     );
     const { document } = parseHTML(
-        '<html><body><div cms-bloc=\"test-card\"><h2 slot="title">My page</h2></div></body></html>',
+        '<html><body><div cms-bloc="example--test--card"><h2 slot="title">My page</h2></div></body></html>',
     );
     expandCompositions(document.body, await createContentReader(repository).getRenderableBlocs());
     renderCollectionTexts(document.body, "en", [{ collection: artifact.release }]);
-    expect(document.querySelector('[cms-bloc="test-card"]')?.textContent).toBe("My pageWelcome");
+    expect(document.querySelector('[cms-bloc="example--test--card"]')?.textContent).toBe("My pageWelcome");
     const validated = new ValidatingContentRepository(repository);
-    await validated.insertPage("/valid-card", "Valid", '<div cms-bloc=\"test-card\" tone="accent" compact></div>');
+    await validated.insertPage(
+        "/valid-card",
+        "Valid",
+        '<div cms-bloc="example--test--card" tone="accent" compact></div>',
+    );
     await expect(
-        validated.insertPage("/invalid-card", "Invalid", '<div cms-bloc=\"test-card\" tone="unknown"></div>'),
+        validated.insertPage("/invalid-card", "Invalid", '<div cms-bloc="example--test--card" tone="unknown"></div>'),
     ).rejects.toThrow("settings are invalid");
 });

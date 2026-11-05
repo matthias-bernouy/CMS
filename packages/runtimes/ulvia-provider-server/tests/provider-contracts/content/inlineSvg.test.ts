@@ -21,7 +21,7 @@ test("immutable SVG resolution uses the Provider client and caches a public quer
             },
         },
     };
-    const source = "/.cms/call/catalog/v1/files/check";
+    const source = "/.cms/call/ulvia/catalog/v1/files/check";
     const [a, b] = await Promise.all([resolveSvgSources(host, [source]), resolveSvgSources(host, [source])]);
     expect(new TextDecoder().decode(a.get(source))).toBe(SVG);
     expect(b.get(source)).toEqual(a.get(source));
@@ -44,5 +44,5 @@ test.each([
             }),
         },
     };
-    await expect(resolveSvgSources(host, ["/.cms/call/catalog/v1/files/check"])).rejects.toThrow(issue);
+    await expect(resolveSvgSources(host, ["/.cms/call/ulvia/catalog/v1/files/check"])).rejects.toThrow(issue);
 });

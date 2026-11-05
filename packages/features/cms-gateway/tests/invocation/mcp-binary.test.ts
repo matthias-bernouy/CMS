@@ -33,7 +33,7 @@ test("binary tool inputs resolve only through the host resource port and otherwi
         },
     });
     const result = await binding.call(
-        capabilityToolName("catalog", "item.list"),
+        capabilityToolName("ulvia/catalog", "item.list"),
         { input: { uploadId: "upload-a", bytes: "urn:test:asset" } },
         context,
     );
@@ -41,7 +41,7 @@ test("binary tool inputs resolve only through the host resource port and otherwi
     expect(received).toBe("data");
     await expect(
         binding.call(
-            capabilityToolName("catalog", "item.list"),
+            capabilityToolName("ulvia/catalog", "item.list"),
             { input: { uploadId: "upload-a", bytes: "https://arbitrary.test/secret" } },
             context,
         ),
@@ -57,7 +57,7 @@ test("declared errors retain their contract code and retryability in MCP", async
         transport: { send: async () => ({ status: 404, contentType: "application/json", errorCode: "NOT_FOUND" }) },
     });
     const binding = new CapabilityMcpBinding({ invoker: gateway, contracts: async () => [route.release.admission] });
-    const result = await binding.call(capabilityToolName("catalog", "item.list"), { input: {} }, context);
+    const result = await binding.call(capabilityToolName("ulvia/catalog", "item.list"), { input: {} }, context);
     expect(result.isError).toBe(true);
     expect(result.structuredContent).toEqual({ error: { code: "NOT_FOUND", retryable: false } });
 });

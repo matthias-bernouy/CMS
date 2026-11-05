@@ -1,3 +1,4 @@
+import { resourceRuntimeNamespace } from "@bernouy/resource-identity";
 import {
     ContentValidationError,
     defaultThemeSettings,
@@ -123,15 +124,15 @@ describe("structured themes", () => {
         addCustomToken(settings, "brand-accent", "color");
         settings.themes[0]!.values.light["brand-accent"] = "#16634d";
         settings.sources.push({
-            id: "contribution-atlas",
+            id: "contribution-atlas-dofficial--atlas",
             label: "Atlas",
             supportsModes: false,
-            owner: { kind: "contribution", contributionId: "atlas" },
+            owner: { kind: "contribution", contributionId: "atlas.official/atlas" },
             fontFaces: [
                 {
-                    id: "atlas-interface",
-                    family: "atlas-interface",
-                    source: "{{ cms.asset.atlas.fonts/interface.woff2 }}",
+                    id: "atlas-dofficial--atlas--interface",
+                    family: "atlas-dofficial--atlas--interface",
+                    source: "{{ cms.asset.atlas.official/atlas.fonts/interface.woff2 }}",
                     style: "normal",
                     weight: "100 900",
                     display: "swap",
@@ -143,15 +144,17 @@ describe("structured themes", () => {
         const validated = validateThemeSettings(settings);
         const css = generateThemeCss(validated);
 
-        expect(css).toContain('@font-face {\n  font-family: "atlas-interface";');
-        expect(css).toContain('src: url("{{ cms.asset.atlas.fonts/interface.woff2 }}") format("woff2");');
+        expect(css).toContain('@font-face {\n  font-family: "atlas-dofficial--atlas--interface";');
+        expect(css).toContain(
+            'src: url("{{ cms.asset.atlas.official/atlas.fonts/interface.woff2 }}") format("woff2");',
+        );
         expect(css).toContain("font-weight: 100 900;");
         expect(css.indexOf("@font-face")).toBeLessThan(css.indexOf(":root"));
 
         validated.sources.at(-1)!.fontFaces![0]!.source = "https://example.com/font.woff2";
         expect(() => validateThemeSettings(validated)).toThrow("immutable collection asset");
 
-        validated.sources.at(-1)!.fontFaces![0]!.source = "{{ cms.asset.other.fonts/interface.woff2 }}";
+        validated.sources.at(-1)!.fontFaces![0]!.source = "{{ cms.asset.example/other.fonts/interface.woff2 }}";
         expect(() => validateThemeSettings(validated)).toThrow("immutable collection asset");
     });
 
@@ -182,18 +185,19 @@ describe("structured themes", () => {
         const foundation = collectionSource("foundation", "Foundation accent");
         foundation.categories[0]!.tokens.push({
             ...foundation.categories[0]!.tokens[0]!,
-            id: "foundation-muted",
-            variable: "foundation-muted",
+            id: "atlas-dofficial--foundation--muted",
+            variable: "atlas-dofficial--foundation--muted",
             label: "Foundation muted",
         });
         settings.sources.push(shop, foundation);
-        settings.themes[0]!.values.light["shop-accent"] = "var(--foundation-accent)";
+        settings.themes[0]!.values.light["atlas-dofficial--shop--accent"] =
+            "var(--atlas-dofficial--foundation--accent)";
 
         expect(() => validateThemeSettings(settings)).toThrow("undeclared dependency");
 
-        shop.owner.tokenImports = ["foundation-accent"];
+        shop.owner.tokenImports = ["atlas-dofficial--foundation--accent"];
         expect(validateThemeSettings(settings)).toEqual(settings);
-        settings.themes[0]!.values.light["shop-accent"] = "var(--foundation-muted)";
+        settings.themes[0]!.values.light["atlas-dofficial--shop--accent"] = "var(--atlas-dofficial--foundation--muted)";
         expect(() => validateThemeSettings(settings)).toThrow("undeclared dependency");
     });
 });
@@ -236,9 +240,11 @@ function integrationSource(integrationId: string, label: string) {
 }
 
 function collectionSource(contributionId: string, label: string) {
-    const id = `${contributionId}-accent`;
+    contributionId = contributionId.includes("/") ? contributionId : `atlas.official/${contributionId}`;
+    const runtime = resourceRuntimeNamespace(contributionId);
+    const id = `${runtime}--accent`;
     return {
-        id: `contribution-${contributionId}`,
+        id: `contribution-${runtime}`,
         label: contributionId,
         supportsModes: true,
         owner: { kind: "contribution" as const, contributionId },

@@ -1,9 +1,7 @@
+import { isResourceId } from "@bernouy/resource-identity";
 import type { UiFinding, UiSource } from "../contracts/types";
 import { markupFinding } from "./findings";
 import type { MarkupTag } from "./types";
-
-const MUTATION_PATTERN =
-    /^\s*[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*:[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*\s+as\s+[A-Za-z_][A-Za-z0-9_]*\s*$/u;
 
 export function inspectForms(source: UiSource, tag: MarkupTag): UiFinding[] {
     const attrs = tag.attributes;
@@ -35,7 +33,7 @@ export function inspectForms(source: UiSource, tag: MarkupTag): UiFinding[] {
     }
 
     const findings: UiFinding[] = [];
-    if (!MUTATION_PATTERN.test(mutation.value)) {
+    if (!validMutation(mutation.value)) {
         findings.push(
             finding(source, tag, "cms-mutation", {
                 rule: "mutation-contract",
@@ -92,7 +90,8 @@ function validInputEntry([name, value]: [string, unknown]): boolean {
     const optional = value.optional;
     return (
         typeof value.key === "string" &&
-        /^@(param|page|session|persistent):[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u.test(value.key) &&
+        /^@(param|page|session|persistent):[a-z][a-z0-9]*(?:(?:-+|[.])[a-z0-9]+)*$/u.test(value.key) &&
+        value.key.length <= 524 &&
         (value.path === undefined || validPath(value.path)) &&
         (value.cast === undefined || ["string", "number", "integer", "boolean"].includes(String(value.cast))) &&
         (optional === undefined || typeof optional === "boolean") &&
@@ -119,4 +118,9 @@ function exactKeys(value: Record<string, unknown>, accepted: readonly string[]):
 
 function record(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function validMutation(value: string): boolean {
+    const match = /^\s*([^\s:]+):([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)\s*$/u.exec(value);
+    return Boolean(match && isResourceId(match[1]) && match[2]!.length <= 128 && match[3] !== "cms");
 }

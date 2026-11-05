@@ -1,9 +1,11 @@
+import { releaseChannel } from "cms-repository/exports/contracts/compatibility";
 import { fusedRanking, lexicalRanking, semanticRanking } from "@bernouy/text-search";
 import type { RepositorySearchQuery, RepositorySearchRow } from "../interfaces";
 
 export function searchRows(rows: readonly RepositorySearchRow[], query: RepositorySearchQuery) {
     return rows.filter(
         (row) =>
+            (query.channel === "all" || releaseChannel(row.reference.version) === (query.channel ?? "stable")) &&
             (!query.kinds || query.kinds.includes(row.blocId ? "bloc" : row.reference.kind)) &&
             (!query.publisherId || query.publisherId === row.reference.publisherId) &&
             (!query.contractId || row.contractIds.includes(query.contractId)),

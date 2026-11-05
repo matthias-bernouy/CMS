@@ -25,7 +25,7 @@ export class CmsPageNotFoundError extends Error {
     }
 }
 
-/** Provider-neutral, naturally idempotent implementation of `ulvia.cms.content/pages.rename`. */
+/** Provider-neutral, naturally idempotent implementation of `ulvia/cms.content/pages.rename`. */
 export async function renameCmsPage(
     repository: Pick<ContentRepository, "getPageById" | "updatePage">,
     input: CmsPageRenameInput,

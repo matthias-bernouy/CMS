@@ -1,0 +1,21 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--file-picker",
+    "label": "bloc.file-picker.label",
+    "description": "bloc.file-picker.description",
+    "order": 11,
+    "catalogue": "hidden",
+    "uses": ["ulvia--mossa--action", "ulvia--mossa--heading", "ulvia--mossa--image"],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.files",
+            "capabilityId": "workspace.get",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.administration"]
+}

@@ -25,7 +25,7 @@ export function collectionDocument(translations: Record<string, string> = {}): R
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
-        collectionId: "atlas",
+        collectionId: "atlas.official/atlas",
         publisherId: "atlas.official",
         version: "1.0.0",
         name: "collection.name",
@@ -58,7 +58,7 @@ export function component(): Record<string, unknown> {
         categories: ["bloc.panel.label"],
         catalogue: "hidden",
         kind: "component",
-        id: "atlas-panel",
+        id: "atlas-dofficial--atlas--panel",
         label: "bloc.panel.label",
         markup: '<section><slot name="body"></slot></section>',
         style: ":scope { display: block; }",
@@ -75,12 +75,12 @@ export function composition(): Record<string, unknown> {
         categories: ["bloc.page.label"],
         catalogue: "hidden",
         kind: "composition",
-        id: "atlas-page",
+        id: "atlas-dofficial--atlas--page",
         label: "bloc.page.label",
-        markup: '<div cms-bloc=\"atlas-panel\"><slot name="main" slot="body"><p>{{ copy }}</p></slot></div>',
+        markup: '<div cms-bloc="atlas-dofficial--atlas--panel"><slot name="main" slot="body"><p>{{ copy }}</p></slot></div>',
         root: { accepts: ["div"] },
         slots: { main: { accepts: [{ kind: "native-content", profile: "prose" }] } },
-        uses: ["atlas-panel"],
+        uses: ["atlas-dofficial--atlas--panel"],
         requires: [],
     };
 }
@@ -91,7 +91,7 @@ export function demoComponent(extra: Record<string, unknown> = {}) {
         categories: ["Card"],
         catalogue: "hidden",
         kind: "component",
-        id: "demo-card",
+        id: "example--demo--card",
         label: "Card",
         markup: '<slot name="body"></slot>',
         root: { accepts: ["div"] },
@@ -106,7 +106,7 @@ export function demoComposition(extra: Record<string, unknown> = {}) {
         categories: ["Page"],
         catalogue: "hidden",
         kind: "composition",
-        id: "demo-page",
+        id: "example--demo--page",
         label: "Page",
         markup: '<slot name="body"></slot>',
         root: { accepts: ["div"] },
@@ -120,7 +120,7 @@ export function checkDemoBlocs(values: unknown[], assets: ReadonlySet<string> = 
         const { exampleContent: _, ...definition } = value;
         return definition;
     });
-    const blocs = parseBlocs(definitions, "demo", DEFAULT_COLLECTION_LIMITS);
+    const blocs = parseBlocs(definitions, "example/demo", DEFAULT_COLLECTION_LIMITS);
     validateBlocs(blocs, assets, DEFAULT_COLLECTION_LIMITS);
     for (const value of values as any[]) {
         if (value.exampleContent !== undefined) {

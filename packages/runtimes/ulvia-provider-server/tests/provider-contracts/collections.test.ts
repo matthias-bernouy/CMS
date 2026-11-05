@@ -13,14 +13,15 @@ const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
     contractVersion: "1.0.0",
     siteId: "default",
-    providerId: "ulvia.official",
+    providerId: "ulvia/primary-provider",
 };
-function document(collectionId = "sample") {
+function document(collectionId = "ulvia/sample") {
+    collectionId = collectionId.includes("/") ? collectionId : `ulvia/${collectionId}`;
     return {
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
-        publisherId: "ulvia.official",
+        publisherId: "ulvia",
         collectionId,
         version: "1.0.0",
         name: "collection.name",
@@ -44,8 +45,8 @@ async function fixture() {
     const risk = collectionBrowserRiskDigest(browser);
     const reference = {
         repositoryId: "official",
-        publisherId: "ulvia.official",
-        collectionId: "sample",
+        publisherId: "ulvia",
+        collectionId: "ulvia/sample",
         version: "1.0.0",
         digest: artifact.digest,
         approvedBrowserRiskDigest: risk,
@@ -111,8 +112,8 @@ test("collection catalogue identifies only releases with site configuration", as
     await store.installMany("default", [{ digest: plain.digest }, { digest: configured.digest }], 0);
     expect(await new CollectionSources(store, []).catalogue("default")).toMatchObject({
         installed: [
-            { collectionId: "plain", configurable: false },
-            { collectionId: "configured", configurable: true },
+            { collectionId: "ulvia/plain", configurable: false },
+            { collectionId: "ulvia/configured", configurable: true },
         ],
     });
 });
@@ -124,7 +125,7 @@ test("collection details expose translated metadata without revalidating unrelat
         blocs: [
             {
                 kind: "component",
-                id: "sample-card",
+                id: "ulvia--sample--card",
                 root: { accepts: ["div"] },
                 catalogue: "hidden",
                 label: "bloc.card.label",
@@ -145,9 +146,9 @@ test("collection details expose translated metadata without revalidating unrelat
     registerCollectionInstallationCapabilities(dispatcher, { collections: f.store } as never);
     await expect(
         dispatcher.invoke(
-            "ulvia.cms.installations",
+            "ulvia/cms.installations",
             "get-collection-installation",
-            { collectionId: "sample" },
+            { collectionId: "ulvia/sample" },
             context,
         ),
     ).resolves.toMatchObject({
@@ -156,7 +157,7 @@ test("collection details expose translated metadata without revalidating unrelat
         description: "Useful building blocks.",
         blocs: [
             {
-                id: "sample-card",
+                id: "ulvia--sample--card",
                 label: "Card",
                 description: "A reusable card.",
                 catalogue: "hidden",
@@ -172,7 +173,7 @@ test("collection commands stage installs and expose no direct unreviewed upgrade
     registerCollectionInstallationCapabilities(dispatcher, { collections: f.store } as never, undefined, f.sources);
     await expect(
         dispatcher.invoke(
-            "ulvia.cms.installations",
+            "ulvia/cms.installations",
             "install-collection",
             { expectedRevision: 0, targets: [f.reference] },
             context,
@@ -180,7 +181,7 @@ test("collection commands stage installs and expose no direct unreviewed upgrade
     ).resolves.toMatchObject({ revision: 1 });
     await expect(
         dispatcher.invoke(
-            "ulvia.cms.installations",
+            "ulvia/cms.installations",
             "upgrade-collection",
             { expectedRevision: 1, target: f.reference },
             context,

@@ -63,7 +63,7 @@ export function invocationHeaders(
         version: 1,
         requestId: requestUuid,
         instanceId,
-        contractId: "ulvia.cms.fixture",
+        contractId: "ulvia/cms.fixture",
         contractVersion,
         capabilityId,
         ...(subjectId ? { subjectId } : {}),
@@ -91,7 +91,7 @@ export function requestUuidFor(value: string): string {
 export function providerReport(...contracts: Awaited<ReturnType<typeof contractRelease>>[]) {
     return {
         protocol: "ulvia-provider/v1" as const,
-        providerId: "ulvia.official",
+        providerId: "ulvia/primary-provider",
         instanceId: PROVIDER_INSTANCE_ID,
         account: { id: "local", label: "Local Ulvia Provider" },
         buildVersion: "0.1.0",
@@ -111,11 +111,11 @@ export async function contractRelease(version = "1.0.0") {
             kind: "contract",
             protocol: "ulvia-provider/v1",
             schemaDialect: "ulvia-schema/v1",
-            contractId: "ulvia.cms.fixture",
+            contractId: "ulvia/cms.fixture",
             name: "Fixture",
             description: "Ulvia Provider surface fixture.",
             version,
-            publisherId: "ulvia.official",
+            publisherId: "ulvia",
             capabilities: [
                 {
                     id: "echo",

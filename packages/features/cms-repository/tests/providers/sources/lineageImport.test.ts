@@ -12,15 +12,15 @@ import {
 import { contractDocument, implementation, manifestDocument, requirement } from "../support/fixtures";
 
 test("imports exact contract ancestors needed by provider requirements", async () => {
-    const parent = await admitContractRelease(contractDocument("communication.email", "email.send"));
-    const childDocument = contractDocument("communication.smtp", "smtp.configure");
+    const parent = await admitContractRelease(contractDocument("ulvia/communication.email", "email.send"));
+    const childDocument = contractDocument("ulvia/communication.smtp", "smtp.configure");
     childDocument.extends = {
         contractId: parent.release.contractId,
         version: parent.release.version,
         digest: parent.digest,
     };
     const child = await admitContractRelease(childDocument);
-    const consumerDocument = contractDocument("identity.access", "access.login");
+    const consumerDocument = contractDocument("ulvia/identity.access", "access.login");
     const consumer = await admitContractRelease(consumerDocument);
     const sourceContracts = new InMemoryReleaseCatalogue();
     await publishContractSet(sourceContracts, [parent, child, consumer]);
@@ -28,7 +28,7 @@ test("imports exact contract ancestors needed by provider requirements", async (
         manifestDocument([
             implementation(child.release.contractId, child.release.version, child.digest),
             implementation(consumer.release.contractId, consumer.release.version, consumer.digest, [
-                requirement("communication.email", "email.send"),
+                requirement("ulvia/communication.email", "email.send"),
             ]),
         ]),
         sourceContracts,

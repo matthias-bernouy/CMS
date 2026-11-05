@@ -5,7 +5,7 @@ export function registerProviderConnectionCapabilities(
     dispatcher: ProviderCapabilityRegistry,
     connections: ProviderConnectionRegistry,
 ) {
-    dispatcher.register("ulvia.provider.connections", "connections.configure", async (input, context) => {
+    dispatcher.register("ulvia/provider.connections", "connections.configure", async (input, context) => {
         if (
             context.connectionId !== input.connectionId ||
             context.subjectId ||

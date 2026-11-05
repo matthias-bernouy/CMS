@@ -33,7 +33,7 @@ test("indexes installed Blocs once per collection revision", async () => {
             kind: "collection",
             protocol: "ulvia-collection/v1",
             schemaDialect: "ulvia-schema/v1",
-            collectionId: "cached",
+            collectionId: "example/cached",
             publisherId: "example",
             version: "1.0.0",
             name: "collection.name",
@@ -54,7 +54,7 @@ test("indexes installed Blocs once per collection revision", async () => {
 
                     kind: "component",
                     root: { accepts: ["div"] },
-                    id: "cached-card",
+                    id: "example--cached--card",
                     label: "bloc.card.label",
                     markup: "<article></article>",
                     uses: [],
@@ -70,15 +70,15 @@ test("indexes installed Blocs once per collection revision", async () => {
     storage.assetReads = 0;
     const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site");
 
-    await repository.getBlocViewJS("cached-card");
-    await repository.getBlocViewJS("cached-card");
-    expect(await repository.getBlocViewsJS(["cached-card", "missing", "cached-card"])).toEqual({
-        "cached-card": null,
+    await repository.getBlocViewJS("example--cached--card");
+    await repository.getBlocViewJS("example--cached--card");
+    expect(await repository.getBlocViewsJS(["example--cached--card", "missing", "example--cached--card"])).toEqual({
+        "example--cached--card": null,
         missing: null,
     });
-    await repository.getBlocRecord("cached-card");
+    await repository.getBlocRecord("example--cached--card");
     const list = await repository.getBlocsList();
-    expect(list[0]).toMatchObject({ id: "cached-card", name: "Card", hasBehavior: false });
+    expect(list[0]).toMatchObject({ id: "example--cached--card", name: "Card", hasBehavior: false });
     // Listing a rendering/authoring catalogue must not materialize executable artifact payloads.
     expect(list[0]).not.toHaveProperty("viewJS");
     expect(list[0]!.initialDocument).toBeDefined();
@@ -86,7 +86,7 @@ test("indexes installed Blocs once per collection revision", async () => {
     expect(rendering[0]).not.toHaveProperty("initialDocument");
     expect(rendering[0]).not.toHaveProperty("slots");
     expect(rendering[0]).toMatchObject({
-        id: "cached-card",
+        id: "example--cached--card",
         kind: "component",
         markupHTML: "<article></article>",
         root: { accepts: ["div"] },
@@ -94,17 +94,17 @@ test("indexes installed Blocs once per collection revision", async () => {
     });
     list[0]!.root.accepts[0] = "section";
     list[0]!.uses!.push("caller-mutation");
-    expect((await repository.getBlocRecord("cached-card"))!.artifact!.root.accepts).toEqual(["div"]);
+    expect((await repository.getBlocRecord("example--cached--card"))!.artifact!.root.accepts).toEqual(["div"]);
     expect((await repository.getBlocsList())[0]!.uses).toEqual([]);
     await repository.getTextContributions?.();
     await repository.getTextContributions?.();
     expect(storage.metadataReads).toBe(1);
     expect(storage.assetReads).toBe(0);
 
-    await store.saveTexts("site", "cached", 1, {});
+    await store.saveTexts("site", "example/cached", 1, {});
     storage.metadataReads = 0;
     storage.assetReads = 0;
-    await repository.getBlocViewJS("cached-card");
+    await repository.getBlocViewJS("example--cached--card");
     expect(storage.metadataReads).toBe(1);
     expect(storage.assetReads).toBe(0);
 });

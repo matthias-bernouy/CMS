@@ -59,7 +59,7 @@ export async function initialReadsFixture() {
             findByDigest: async () => route.manifest,
         } as unknown as CatalogueGatewayRouteResolverOptions["manifests"],
     });
-    await catalogue.resolve("site-a", "catalog");
+    await catalogue.resolve("site-a", "ulvia/catalog");
     captures = 0;
     payloadReads = 0;
     const issue = createInvocationIssuer(
@@ -136,7 +136,7 @@ export async function initialReadsFixture() {
                               revision: 2,
                               grants: {
                                   default: "allow-selected",
-                                  denied: [{ contractId: "catalog", capabilityId: "item.list" }],
+                                  denied: [{ contractId: "ulvia/catalog", capabilityId: "item.list" }],
                               },
                           },
                       }
@@ -155,7 +155,7 @@ export async function initialReadsFixture() {
 
 export const invocation = {
     siteId: "site-a",
-    contractId: "catalog",
+    contractId: "ulvia/catalog",
     capabilityId: "item.list",
     input: { term: "one" },
     actor: { kind: "anonymous" as const },

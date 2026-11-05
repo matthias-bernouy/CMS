@@ -37,7 +37,7 @@ export class OperatorObservabilityClient {
 
     private async read(capabilityId: ReadCapability, input: unknown): Promise<unknown> {
         const snapshot = await this.control("gateway.route.get", "QUERY", "/gateway/route", {
-            contractId: "ulvia.cms.observability",
+            contractId: "ulvia/cms.observability",
         });
         if (typeof snapshot.route !== "string" || snapshot.route.length > 1024 * 1024) {
             throw new Error("Invalid observability route");
@@ -45,7 +45,7 @@ export class OperatorObservabilityClient {
         const route = JSON.parse(snapshot.route) as GatewayRoute;
         if (
             route.selection?.siteId !== "default" ||
-            route.selection.contractId !== "ulvia.cms.observability" ||
+            route.selection.contractId !== "ulvia/cms.observability" ||
             route.release?.admission.digest !== route.selection.digest ||
             !route.installation.observation
         ) {
@@ -111,7 +111,7 @@ export class OperatorObservabilityClient {
                 authorization: `Bearer ${this.token}`,
                 "content-type": "application/json",
                 "x-ulvia-request-id": crypto.randomUUID(),
-                "x-ulvia-contract-id": "ulvia.cms.installations",
+                "x-ulvia-contract-id": "ulvia/cms.installations",
                 "x-ulvia-contract-version": await this.contractVersion(),
                 "x-ulvia-capability-id": capabilityId,
             },
@@ -142,7 +142,7 @@ export class OperatorObservabilityClient {
             }
             const report = parseProviderRuntimeReportJson(JSON.stringify(await readResponse(response)));
             const control = report.implementations.find(
-                (item) => item.contractId === "ulvia.cms.installations" && item.status === "ready",
+                (item) => item.contractId === "ulvia/cms.installations" && item.status === "ready",
             );
             if (
                 report.instanceId !== this.instanceId ||

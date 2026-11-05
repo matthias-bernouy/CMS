@@ -8,10 +8,10 @@ import { capabilityTransition, contractDocument, releaseCatalogue } from "../../
 describe("collection authored bundle admission", () => {
     test("supports the full identifier length admitted by contracts", async () => {
         const capabilityId = "a".repeat(128);
-        const contracts = await releaseCatalogue(contractDocument("payment", capabilityId));
+        const contracts = await releaseCatalogue(contractDocument("ulvia/payment", capabilityId));
         const source = collectionDocument();
         (source.blocs as Record<string, unknown>[])[0]!.requires = [
-            { contractId: "payment", capabilityId, versionRange: "^1.0.0" },
+            { contractId: "ulvia/payment", capabilityId, versionRange: "^1.0.0" },
         ];
         expect((await admitCollectionRelease(collectionFixture(source), [], { contracts })).digest).toMatch(/^sha256:/);
     });
@@ -35,10 +35,10 @@ describe("collection authored bundle admission", () => {
     test("derives immutable scoped CSS fragments while admitting a release", async () => {
         const source = collectionDocument();
         const admission = await admitCollectionRelease(collectionFixture(source));
-        const component = admission.release.blocs.find((bloc) => bloc.id === "atlas-panel");
+        const component = admission.release.blocs.find((bloc) => bloc.id === "atlas-dofficial--atlas--panel");
 
         expect(component?.kind === "component" ? component.runtime?.styleCSS : undefined).toContain(
-            '@scope ([cms-bloc="atlas-panel"]) to (:scope [cms-bloc])',
+            '@scope ([cms-bloc="atlas-dofficial--atlas--panel"]) to (:scope [cms-bloc])',
         );
         expect(component?.kind === "component" ? component.runtime?.viewJS : undefined).toBeUndefined();
 
@@ -51,13 +51,13 @@ describe("collection authored bundle admission", () => {
 
     test("requires one common contract witness for all requirements of one bloc", async () => {
         const contracts = await releaseCatalogue(
-            contractDocument("payment", "create-link"),
-            ...capabilityTransition("payment", "create-link", "refund"),
+            contractDocument("ulvia/payment", "create-link"),
+            ...capabilityTransition("ulvia/payment", "create-link", "refund"),
         );
         const source = collectionDocument();
         const blocs = source.blocs as Record<string, unknown>[];
-        const create = { contractId: "payment", capabilityId: "create-link", versionRange: "1.0.0 || 2.0.0" };
-        const refund = { contractId: "payment", capabilityId: "refund", versionRange: "1.0.0 || 2.0.0" };
+        const create = { contractId: "ulvia/payment", capabilityId: "create-link", versionRange: "1.0.0 || 2.0.0" };
+        const refund = { contractId: "ulvia/payment", capabilityId: "refund", versionRange: "1.0.0 || 2.0.0" };
         blocs[0]!.requires = [create, refund];
         await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).rejects.toMatchObject({
             code: "resolution_failed",
@@ -79,14 +79,14 @@ describe("collection authored bundle admission", () => {
         await expect(admitCollectionRelease(collectionFixture(source))).rejects.toMatchObject({
             code: "resolution_failed",
         });
-        await contracts.setYank("payment", "1.0.0", { reason: "Withdrawn" });
+        await contracts.setYank("ulvia/payment", "1.0.0", { reason: "Withdrawn" });
         await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).rejects.toMatchObject({
             code: "resolution_failed",
         });
     });
 
     test("rejects capability bindings placed on Page Bloc hosts", async () => {
-        const contracts = await releaseCatalogue(contractDocument("catalog.items", "item.list"));
+        const contracts = await releaseCatalogue(contractDocument("ulvia/catalog.items", "item.list"));
         const source = collectionDocument({ "page.catalog.name": "Catalog" });
         source.examples = [
             {
@@ -94,9 +94,9 @@ describe("collection authored bundle admission", () => {
                 label: "page.catalog.name",
                 description: "page.catalog.name",
                 previews: [{ id: "desktop", frame: { width: 800, height: 600 } }],
-                requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
+                requires: [{ contractId: "ulvia/catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
                 document: {
-                    html: '<div cms-bloc=\"atlas-panel\" cms-mutation="catalog.items:item.list as catalog"></div>',
+                    html: '<div cms-bloc="atlas-dofficial--atlas--panel" cms-mutation="ulvia/catalog.items:item.list as catalog"></div>',
                 },
             },
         ];
@@ -106,7 +106,7 @@ describe("collection authored bundle admission", () => {
     });
 
     test("admits cms-query only for capabilities declared as queries", async () => {
-        const command = contractDocument("catalog.items", "item.list");
+        const command = contractDocument("ulvia/catalog.items", "item.list");
         const query = structuredClone(command);
         ((query.capabilities as Record<string, unknown>[])[0]!.behavior as Record<string, unknown>) = {
             sensitive: false,
@@ -122,9 +122,9 @@ describe("collection authored bundle admission", () => {
 
             kind: "composition",
             root: { accepts: ["div"] },
-            id: "atlas-catalog",
+            id: "atlas-dofficial--atlas--catalog",
             label: "bloc.page.label",
-            markup: `<section cms-query="catalog.items:item.list as items">
+            markup: `<section cms-query="ulvia/catalog.items:item.list as items">
                 <div cms-match="items.outcome.kind">
                     <div cms-case='"none"'></div>
                     <p cms-case='"success"'>{{ items.data.id }}</p>
@@ -133,7 +133,7 @@ describe("collection authored bundle admission", () => {
             </section>`,
             slots: {},
             uses: [],
-            requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
+            requires: [{ contractId: "ulvia/catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
         });
 
         await expect(
@@ -141,7 +141,7 @@ describe("collection authored bundle admission", () => {
         ).rejects.toMatchObject({ code: "resolution_failed" });
         await expect(
             admitCollectionRelease(collectionFixture(source), [], { contracts: await releaseCatalogue(query) }),
-        ).resolves.toMatchObject({ release: { collectionId: "atlas" } });
+        ).resolves.toMatchObject({ release: { collectionId: "atlas.official/atlas" } });
         const binaryQuery = structuredClone(query);
         const binaryCapability = (binaryQuery.capabilities as Record<string, unknown>[])[0]!;
         binaryCapability.output = { type: "binary", maxBytes: 1024 };
@@ -156,7 +156,7 @@ describe("collection authored bundle admission", () => {
     });
 
     test("proves synchronized query projections against their declared state schemas", async () => {
-        const query = contractDocument("catalog.items", "item.list");
+        const query = contractDocument("ulvia/catalog.items", "item.list");
         const capability = (query.capabilities as Record<string, unknown>[])[0]!;
         capability.behavior = { sensitive: false, effect: "query", execution: "sync" };
         (capability.bindings[0] as Record<string, unknown>).method = "QUERY";
@@ -185,11 +185,11 @@ describe("collection authored bundle admission", () => {
 
             kind: "composition",
             root: { accepts: ["div"] },
-            id: "atlas-catalog",
+            id: "atlas-dofficial--atlas--catalog",
             label: "bloc.page.label",
             markup: `<section
-                cms-query="catalog.items:item.list as items"
-                cms-sync="@page:atlas-selection"
+                cms-query="ulvia/catalog.items:item.list as items"
+                cms-sync="@page:atlas-dofficial--atlas--selection"
                 cms-sync-select="data.id"
             >
                 <div cms-match="items.outcome.kind">
@@ -200,12 +200,12 @@ describe("collection authored bundle admission", () => {
             </section>`,
             slots: {},
             uses: [],
-            requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
+            requires: [{ contractId: "ulvia/catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
         });
         const contracts = await releaseCatalogue(query);
 
         await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).resolves.toMatchObject({
-            release: { collectionId: "atlas" },
+            release: { collectionId: "atlas.official/atlas" },
         });
 
         const incompatible = structuredClone(source);

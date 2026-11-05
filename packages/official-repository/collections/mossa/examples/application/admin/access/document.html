@@ -1,0 +1,148 @@
+<div cms-bloc="ulvia--mossa--admin-workspace">
+    <h1 cms-bloc="ulvia--mossa--heading" slot="title">{{ cms.i18n.ulvia/mossa.ui-users }}</h1>
+    <p slot="description">{{ cms.i18n.ulvia/mossa.ui-manage-cms-members-and-administrator-access }}</p>
+    <section
+        cms-bloc="ulvia--mossa--section"
+        id="access-overview"
+        slot="content"
+        cms-query="ulvia/cms.access:list-users as access"
+        cms-query-input='{"limit":{"from":"literal","value":100}}'
+        cms-query-listen="@page:ulvia--mossa--access-mutation/lastSuccess/requestId"
+    >
+        <p slot="content" role="status" aria-live="polite" cms-condition="access.activity === 'fetching'">
+            {{ cms.i18n.ulvia/mossa.ui-loading-access-configuration }}
+        </p>
+        <div cms-bloc="ulvia--mossa--stack" slot="content">
+            <div slot="items" cms-match="access.outcome.kind">
+                <span cms-case='"none"'></span>
+                <div cms-case='"error"' cms-match="access.outcome.code">
+                    <div role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                        <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-access-unavailable }}</h2>
+                        <p>{{ cms.i18n.ulvia/mossa.ui-users-and-settings-could-not-be-read }}</p>
+                    </div>
+                </div>
+                <div cms-bloc="ulvia--mossa--stack" gap="xl" cms-case='"success"'>
+                    <div id="access-members" slot="items">
+                        <header>
+                            <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-members }}</h2>
+                            <p>{{ access.data.total }} {{ cms.i18n.ulvia/mossa.ui-total-users }}</p>
+                        </header>
+                        <div cms-bloc="ulvia--mossa--list" role="list">
+                            <div cms-bloc="ulvia--mossa--list-item" role="listitem" cms-repeat="access.data.users as user" slot="items">
+                                <strong slot="title">{{ user.email }}</strong>
+                                <div cms-bloc="ulvia--mossa--badge" tone="info" cms-condition="user.administrator" slot="meta">
+                                    <span slot="label">{{ cms.i18n.ulvia/mossa.ui-administrator }}</span>
+                                </div>
+                                <div cms-bloc="ulvia--mossa--badge" tone="neutral" cms-condition="user.administrator === false" slot="meta">
+                                    <span slot="label">{{ cms.i18n.ulvia/mossa.ui-member }}</span>
+                                </div>
+                                <div cms-bloc="ulvia--mossa--cluster" gap="sm" slot="description">
+                                    <span slot="items">{{ user.provider }} {{ cms.i18n.ulvia/mossa.ui-identity }}</span>
+                                    <small slot="items"
+                                        >{{ cms.i18n.ulvia/mossa.ui-last-seen }}
+                                        {{ user.lastSeenAt | dateLong }}</small
+                                    >
+                                </div>
+                                <div cms-bloc="ulvia--mossa--cluster" justify="end" items-align="center" slot="actions">
+                                    <form
+                                        slot="items"
+                                        cms-condition="user.administrator === false"
+                                        cms-mutation="ulvia/cms.access:set-administrator as mutation"
+                                        cms-sync="@page:ulvia--mossa--access-mutation"
+                                        cms-sync-select="lastSuccess.requestId"
+                                    >
+                                        <input type="hidden" name="sub" value="{{ user.sub }}">
+                                        <input type="hidden" name="enabled" value="true" cms-form-value-type="boolean">
+                                        <input type="hidden" name="expectedRevision" value="{{ user.administratorRevision }}" cms-form-value-type="number">
+                                        <button cms-bloc="ulvia--mossa--action" size="sm" tone="secondary" variant="outline" type="submit">
+                                            <span>{{ cms.i18n.ulvia/mossa.ui-make-administrator }}</span>
+                                        </button>
+                                        <p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
+                                            {{ cms.i18n.ulvia/mossa.ui-the-administrator-grant-changed-reload-and-retry }}
+                                        </p>
+
+                                        <div cms-match="mutation.outcome.kind">
+                                            <span cms-case='"none"'></span>
+                                            <span cms-case='"success"'></span>
+                                            <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                                <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CANNOT_REMOVE_SELF"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"ACTOR_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            </div>
+                                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        </div>
+                                    </form>
+                                    <form
+                                        slot="items"
+                                        cms-condition="user.administrator"
+                                        cms-mutation="ulvia/cms.access:set-administrator as mutation"
+                                        cms-sync="@page:ulvia--mossa--access-mutation"
+                                        cms-sync-select="lastSuccess.requestId"
+                                    >
+                                        <input type="hidden" name="sub" value="{{ user.sub }}">
+                                        <input type="hidden" name="enabled" value="false" cms-form-value-type="boolean">
+                                        <input type="hidden" name="expectedRevision" value="{{ user.administratorRevision }}" cms-form-value-type="number">
+                                        <button cms-bloc="ulvia--mossa--action" size="sm" tone="secondary" variant="outline" type="submit">
+                                            <span>{{ cms.i18n.ulvia/mossa.ui-remove-administrator }}</span>
+                                        </button>
+                                        <p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
+                                            {{ cms.i18n.ulvia/mossa.ui-your-own-or-protected-grant-cannot-be-removed }}
+                                        </p>
+
+                                        <div cms-match="mutation.outcome.kind">
+                                            <span cms-case='"none"'></span>
+                                            <span cms-case='"success"'></span>
+                                            <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                                <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CANNOT_REMOVE_SELF"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"ACTOR_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            </div>
+                                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        </div>
+                                    </form>
+                                    <form
+                                        slot="items"
+                                        cms-mutation="ulvia/cms.access:delete-user as mutation"
+                                        cms-sync="@page:ulvia--mossa--access-mutation"
+                                        cms-sync-select="lastSuccess.requestId"
+                                    >
+                                        <input type="hidden" name="sub" value="{{ user.sub }}">
+                                        <button cms-bloc="ulvia--mossa--action" size="sm" tone="danger" variant="ghost" type="submit">
+                                            <span>{{ cms.i18n.ulvia/mossa.ui-delete-member }}</span>
+                                        </button>
+                                        <p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
+                                            {{ cms.i18n.ulvia/mossa.ui-protected-members-and-the-current-account-cannot-be-deleted }}
+                                        </p>
+
+                                        <div cms-match="mutation.outcome.kind">
+                                            <span cms-case='"none"'></span>
+                                            <span cms-case='"success"'></span>
+                                            <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CANNOT_REMOVE_SELF"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"PROTECTED_USER"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"ACTOR_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            </div>
+                                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div role="alert" cms-case='"failure"'>
+                    <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-access-unavailable }}</h2>
+                    <p>{{ cms.i18n.ulvia/mossa.ui-users-and-settings-could-not-be-read }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

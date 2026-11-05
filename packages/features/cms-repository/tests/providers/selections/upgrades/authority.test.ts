@@ -16,7 +16,7 @@ test("global requirements are checked once per participating installation withou
         const old = (await f.manifests.get(f.installation.providerId, f.installation.approval.manifestVersion))!
             .admission;
         const next = await admitProviderManifest(
-            { ...old.manifest, version: "1.1.0", requires: [{ ...requirement("payment", "pay"), optional }] },
+            { ...old.manifest, version: "1.1.0", requires: [{ ...requirement("ulvia/payment", "pay"), optional }] },
             f.releases,
         );
         await f.manifests.publish(next);
@@ -27,17 +27,19 @@ test("global requirements are checked once per participating installation withou
         const context = { ...f.context, installations: [installation] };
         const plan = await planContractSelections(
             siteId,
-            [await f.select("payment"), await f.select("emailer")],
+            [await f.select("ulvia/payment"), await f.select("ulvia/emailer")],
             context,
         );
         expect(plan.dependencies.filter(({ source }) => source === "provider")).toHaveLength(1);
         expect(plan.authority.machine).toHaveLength(1);
         if (optional) {
-            const absent = await planContractSelections(siteId, [await f.select("emailer")], context);
+            const absent = await planContractSelections(siteId, [await f.select("ulvia/emailer")], context);
             expect(absent.dependencies[0]!.present).toBe(false);
             expect(absent.authority.machine).toBeEmpty();
         } else {
-            await expect(planContractSelections(siteId, [await f.select("emailer")], context)).rejects.toMatchObject({
+            await expect(
+                planContractSelections(siteId, [await f.select("ulvia/emailer")], context),
+            ).rejects.toMatchObject({
                 code: "missing_dependency",
             });
         }
@@ -53,7 +55,7 @@ test("a non-sensitive wildcard expansion changes reviewed authority and cannot b
             ...currentManifest.manifest,
             version: "1.1.0",
             implementations: currentManifest.manifest.implementations.map((item) =>
-                item.contractId === "commerce" && item.version === "1.0.0"
+                item.contractId === "ulvia/commerce" && item.version === "1.0.0"
                     ? {
                           ...item,
                           delegation: {
@@ -76,7 +78,7 @@ test("a non-sensitive wildcard expansion changes reviewed authority and cannot b
         ["1.0.0", true],
         ["2.0.0", false],
     ] as const) {
-        const document = contractDocument("catalog", sensitive ? "read" : "read-public", version);
+        const document = contractDocument("ulvia/catalog", sensitive ? "read" : "read-public", version);
         const capability = (document.capabilities as { behavior: Record<string, unknown> }[])[0]!;
         capability.behavior.sensitive = sensitive;
         if (!sensitive) {
@@ -94,7 +96,7 @@ test("a non-sensitive wildcard expansion changes reviewed authority and cannot b
     const destination = await installationFor(
         f.releases,
         f.manifests,
-        targets.map((release) => implementation("catalog", release.release.version, release.digest)),
+        targets.map((release) => implementation("ulvia/catalog", release.release.version, release.digest)),
         "catalog.provider",
     );
     const context = { ...f.context, installations: [sourceInstallation, destination] };
@@ -106,12 +108,12 @@ test("a non-sensitive wildcard expansion changes reviewed authority and cannot b
     const store = new InMemoryContractSelectionStore(dependencies);
     const catalog = (index: number) => ({
         siteId,
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         version: targets[index]!.release.version,
         digest: targets[index]!.digest,
         installationId: destination.id,
     });
-    const base = [await f.select("commerce"), await f.select("payment")];
+    const base = [await f.select("ulvia/commerce"), await f.select("ulvia/payment")];
     await store.replace(siteId, [...base, catalog(0)], 0);
     const service = new ContractUpgradeService(store, dependencies, new MemorySiteUpgradeStorage(), {
         usage: async () => ({ complete: true, revision: "usage-1", requirements: [], unknown: [] }),
@@ -122,14 +124,14 @@ test("a non-sensitive wildcard expansion changes reviewed authority and cannot b
     expect(plan.status).toBe("applicable");
     expect(plan.authorityAdded).toHaveLength(1);
     expect(plan.authority.capabilities[plan.authorityAdded[0]!.target]).toMatchObject({
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         version: "2.0.0",
         digest: targets[1]!.digest,
         sensitive: false,
     });
     const grants = {
         default: "allow-selected" as const,
-        denied: [{ contractId: "catalog", capabilityId: "read-public" }],
+        denied: [{ contractId: "ulvia/catalog", capabilityId: "read-public" }],
     };
     const denied = await service.plan(siteId, next, grants);
     expect(denied.authorityAdded).toBeEmpty();

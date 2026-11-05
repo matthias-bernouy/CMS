@@ -42,12 +42,12 @@ describe("formSubmit serialization", () => {
             <form>
                 <input name="product[name]" value="Example">
                 <input name="product[size]" value="medium">
-                <input name="product[sku]" value="example-medium">
+                <input name="product[sku]" value="example-dofficial--example--medium">
             </form>
         `);
         const serialized = serializeForm(target, { url: "/api/products", method: "POST" });
         expect(serialized.data).toEqual({
-            product: { name: "Example", size: "medium", sku: "example-medium" },
+            product: { name: "Example", size: "medium", sku: "example-dofficial--example--medium" },
         });
     });
 

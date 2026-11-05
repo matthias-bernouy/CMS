@@ -85,7 +85,7 @@ test("the private control channel keeps fresh site, provider, account, status an
             stored.installation.status = "disabled";
         }
         if (change === "grant") {
-            state.selections!.grants.denied.push({ contractId: "ulvia.cms.installations", capabilityId: "item.list" });
+            state.selections!.grants.denied.push({ contractId: "ulvia/cms.installations", capabilityId: "item.list" });
         }
         if (change === "digest") {
             selected.digest = `sha256:${"0".repeat(64)}`;

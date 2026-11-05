@@ -10,12 +10,14 @@ test.each(["memory", "mongo"])(
     async (adapter) => {
         const catalogue =
             adapter === "memory" ? new InMemoryReleaseCatalogue() : new MongoReleaseCatalogue(fakeCatalogueDb());
-        const base = await admitContractRelease(contractDocument({ contractId: "example.base", version: "1.0.0" }));
+        const base = await admitContractRelease(
+            contractDocument({ contractId: "ulvia/example.base", version: "1.0.0" }),
+        );
         await catalogue.publish(base);
         const child = (version: string, replacedBy?: string) =>
             admitContractRelease(
                 contractDocument({
-                    contractId: "example.child",
+                    contractId: "ulvia/example.child",
                     version,
                     extends: {
                         contractId: base.release.contractId,
@@ -57,7 +59,7 @@ test.each(["memory", "mongo"])(
         await expect(planContractPublications(catalogue, [missing])).rejects.toThrow(
             "must identify another capability",
         );
-        expect(await catalogue.get("example.child", "1.2.0")).toBeNull();
+        expect(await catalogue.get("ulvia/example.child", "1.2.0")).toBeNull();
         expect(await catalogue.list()).toHaveLength(4);
     },
 );

@@ -91,7 +91,7 @@ export async function mountBindingRows(page: Page, count: number): Promise<numbe
         }));
         const expectedRequestId = String(win.__perfFetches + 1);
         const root = document.createElement("cms-binding-core");
-        root.innerHTML = `<section cms-query="performance:list as result" cms-query-refresh="reconnect">
+        root.innerHTML = `<section cms-query="ulvia.performance/performance:list as result" cms-query-refresh="reconnect">
             <ul cms-condition="result.hasData" data-request-id="{{ result.outcome.requestId }}">
                 <li cms-repeat="result.data as row" data-id="{{ row.id }}">{{ row.label }}</li>
             </ul>

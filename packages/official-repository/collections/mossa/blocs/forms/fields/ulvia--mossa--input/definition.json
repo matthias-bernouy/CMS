@@ -1,0 +1,47 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--input",
+    "label": "bloc.input.label",
+    "description": "bloc.input.description",
+    "order": 10,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "default": {
+            "accepts": [
+                {
+                    "kind": "native-element",
+                    "accepts": ["input"],
+                    "attributes": {
+                        "type": {
+                            "required": true,
+                            "values": [
+                                "text",
+                                "email",
+                                "password",
+                                "search",
+                                "tel",
+                                "url",
+                                "number",
+                                "date",
+                                "time",
+                                "datetime-local",
+                                "month",
+                                "week"
+                            ]
+                        }
+                    },
+                    "defaults": { "type": "text", "name": "field", "autocomplete": "off" }
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["input-default"],
+    "defaultExample": "input-default"
+}

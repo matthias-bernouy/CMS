@@ -11,11 +11,11 @@ export function registerSiteCapabilities(
     dispatcher: ProviderCapabilityRegistry,
     dependencies: CmsContentDependencies,
 ): void {
-    dispatcher.register("ulvia.cms.content", "site.get", async () => {
+    dispatcher.register("ulvia/cms.content", "site.get", async () => {
         const snapshot = await readSystemSnapshot(dependencies.repo);
         return projectSite(snapshot.system, snapshot.revision);
     });
-    dispatcher.register("ulvia.cms.content", "site.update", async (input) =>
+    dispatcher.register("ulvia/cms.content", "site.update", async (input) =>
         configurationCommand(async () => {
             const expectedRevision = revision(input.expectedRevision);
             const pages = await sitePageSettings(dependencies.repo, input);

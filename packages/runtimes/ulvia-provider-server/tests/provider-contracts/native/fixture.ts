@@ -6,7 +6,7 @@ import { specializedRoute } from "../../../../../features/cms-gateway/tests/invo
 import { createNativeInvocationAuthorizer } from "../../../src/runtime/gateway/native/authorizeInvocation";
 
 export async function nativeFixture(options: { specialized?: boolean; control?: boolean } = {}) {
-    const base = await gatewayRoute({ contractId: options.control ? "ulvia.cms.installations" : "catalog" });
+    const base = await gatewayRoute({ contractId: options.control ? "ulvia/cms.installations" : "ulvia/catalog" });
     const special = options.specialized ? await specializedRoute() : undefined;
     const selection = special?.selection ?? base.selection;
     const installed = special?.installation ?? base.installation;
@@ -68,7 +68,7 @@ export async function nativeFixture(options: { specialized?: boolean; control?: 
         expiresAt: issuedAt + 30,
         instanceId: report.instanceId,
         connectionId: selection.installationId,
-        contractId: options.control ? "ulvia.cms.installations" : "catalog",
+        contractId: options.control ? "ulvia/cms.installations" : "ulvia/catalog",
         contractVersion: "1.0.0",
         capabilityId: "item.list",
     } as ProviderInvocationClaims;

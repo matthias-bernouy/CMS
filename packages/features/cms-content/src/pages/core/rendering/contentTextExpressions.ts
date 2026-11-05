@@ -15,7 +15,9 @@ export function replaceContentTextExpressions(
         output += input.slice(cursor, start);
         const end = input.indexOf("}}", start + 2);
         const expression = input.slice(start + 2, end === -1 ? undefined : end).trim();
-        const text = /^cms\.i18n\.([a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9-]{0,95})$/u.exec(expression);
+        const text = /^cms\.i18n\.([a-z][a-z0-9.-]{0,95}\/[a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9-]{0,95})$/u.exec(
+            expression,
+        );
         const asset = parseCollectionAssetExpression(expression);
         if (!text) {
             if (/^cms(?:$|[^\w$-])/u.test(expression) && !asset) {

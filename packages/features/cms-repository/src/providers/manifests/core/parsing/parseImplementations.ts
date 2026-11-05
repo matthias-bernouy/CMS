@@ -5,7 +5,7 @@ import type { ProviderContractImplementation } from "../../interfaces/ProviderMa
 import { parseSemVer } from "../versioning/versionRange";
 import { parseRequirements } from "./parseRequirements";
 import { parseDelegation } from "../delegation/parseDelegation";
-import { parseIdentifier } from "./identifiers";
+import { parseResourceIdentifier } from "./identifiers";
 
 export function parseImplementations(
     value: unknown,
@@ -48,7 +48,7 @@ function parseImplementation(
         );
     }
     return {
-        contractId: parseIdentifier(record.contractId, `${path}.contractId`, 96),
+        contractId: parseResourceIdentifier(record.contractId, `${path}.contractId`),
         version: parseSemVer(record.version, `${path}.version`),
         digest: digest as ReleaseDigest,
         requires: requirements,

@@ -16,7 +16,7 @@ function luminance(hex: string): number {
 }
 
 test("official light/dark text, action, error and focus roles retain contrast after palette migration", async () => {
-    const root = resolve("packages/official-repository/collections/ulvia-official/theme/colors");
+    const root = resolve("packages/official-repository/collections/mossa/theme/colors");
     const categories = await Promise.all(
         ["surfaces-and-text", "actions", "feedback"].map(
             async (id) => JSON.parse(await readFile(resolve(root, `${id}.json`), "utf8")) as { entries: Token[] },

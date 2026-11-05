@@ -35,7 +35,7 @@ test("site upgrade checks wait for queued and running work without resubmitting 
     expect(f.requests).toHaveLength(3);
     expect(f.requests).toEqual(
         Array(3).fill({
-            url: "http://localhost:15100/.cms/query/ulvia.cms.installations/get-operation",
+            url: "http://localhost:15100/.cms/query/ulvia/cms.installations/get-operation",
             options: { method: "QUERY", data: { operationId } },
         }),
     );
@@ -85,7 +85,7 @@ test("upgrade submission observes the acknowledgement and fresh durable operatio
             writes++;
             accept({
                 request: () => ({ method: () => "POST" }),
-                url: () => "http://localhost/.cms/mutation/ulvia.cms.installations/apply-contract-upgrade",
+                url: () => "http://localhost/.cms/mutation/ulvia/cms.installations/apply-contract-upgrade",
                 status: () => 202,
                 json: () => {
                     throw new Error("Response navigated away");

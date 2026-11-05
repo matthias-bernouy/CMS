@@ -6,7 +6,7 @@ export function registerCapabilityDescription(
     dispatcher: ProviderCapabilityRegistry,
     gateway?: UlviaProviderGateway,
 ): void {
-    dispatcher.register("ulvia.cms.installations", "capabilities.describe", async (input) => {
+    dispatcher.register("ulvia/cms.installations", "capabilities.describe", async (input) => {
         if (!gateway?.describeContract || typeof input.contractId !== "string") {
             throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
         }

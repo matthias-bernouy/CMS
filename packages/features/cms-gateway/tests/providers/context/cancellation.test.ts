@@ -10,7 +10,7 @@ test("aborting a query cancels an incomplete structured Response body", async ()
     });
     let cancelled = false;
     f.dispatcher.register(
-        "catalog",
+        "ulvia/catalog",
         "item.list",
         async () =>
             new Response(
@@ -30,7 +30,7 @@ test("aborting a query cancels an incomplete structured Response body", async ()
     const abort = new AbortController();
     const result = f.gateway.invoke({
         siteId: "site-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         capabilityId: "item.list",
         input: {},
         actor: { kind: "anonymous" },
@@ -45,7 +45,7 @@ test("aborting a query cancels an incomplete structured Response body", async ()
 
 test("the canonical HTTP view remains present for long resource URLs and snapshots current headers", async () => {
     const f = await fixture(true);
-    f.dispatcher.register("catalog", "item.list", async (_input, context) => {
+    f.dispatcher.register("ulvia/catalog", "item.list", async (_input, context) => {
         expect(context.http.resource).toEqual({ method: "GET" });
         expect(context.http.transportRequest?.method).toBe("GET");
         expect(context).not.toHaveProperty("headers");
@@ -56,7 +56,7 @@ test("the canonical HTTP view remains present for long resource URLs and snapsho
     f.mount();
     const result = await f.gateway.invoke({
         siteId: "site-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         capabilityId: "item.list",
         input: { fileId: "one" },
         actor: { kind: "anonymous" },

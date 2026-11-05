@@ -1,3 +1,4 @@
+import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -45,7 +46,7 @@ test("all administration capability areas dispatch outputs matching their offici
                     revision: 1,
                     installation: {
                         id: "official",
-                        providerId: "ulvia.official",
+                        providerId: "ulvia/primary-provider",
                         accountId: "local",
                         endpoint: "http://127.0.0.1:5103",
                         status: "enabled",
@@ -56,7 +57,7 @@ test("all administration capability areas dispatch outputs matching their offici
                         report: {
                             implementations: [
                                 {
-                                    contractId: "ulvia.cms.content",
+                                    contractId: "ulvia/cms.content",
                                     version: "1.0.0",
                                     digest: `sha256:${"a".repeat(64)}`,
                                     status: "ready",
@@ -73,7 +74,7 @@ test("all administration capability areas dispatch outputs matching their offici
                 plan: {
                     selections: [
                         {
-                            contractId: "ulvia.cms.content",
+                            contractId: "ulvia/cms.content",
                             version: "1.0.0",
                             digest: `sha256:${"a".repeat(64)}`,
                             installationId: "official",
@@ -105,14 +106,14 @@ test("all administration capability areas dispatch outputs matching their offici
     );
 
     const calls = [
-        ["ulvia.cms.installations", "list-collection-installations", {}],
-        ["ulvia.cms.installations", "list-operations", {}],
-        ["ulvia.cms.installations", "get-site-upgrade-status", {}],
-        ["ulvia.cms.files", "namespace.create", { name: "Smoke files", defaultVisibility: "private" }],
-        ["ulvia.cms.content", "localization.get", {}],
-        ["ulvia.cms.content", "theme.get", {}],
-        ["ulvia.cms.installations", "list-provider-installations", {}],
-        ["ulvia.cms.access", "list-users", {}],
+        ["ulvia/cms.installations", "list-collection-installations", {}],
+        ["ulvia/cms.installations", "list-operations", {}],
+        ["ulvia/cms.installations", "get-site-upgrade-status", {}],
+        ["ulvia/cms.files", "namespace.create", { name: "Smoke files", defaultVisibility: "private" }],
+        ["ulvia/cms.content", "localization.get", {}],
+        ["ulvia/cms.content", "theme.get", {}],
+        ["ulvia/cms.installations", "list-provider-installations", {}],
+        ["ulvia/cms.access", "list-users", {}],
     ] as const;
     for (const [contractId, capabilityId, input] of calls) {
         const release = await load(contractId);
@@ -121,7 +122,7 @@ test("all administration capability areas dispatch outputs matching their offici
             requestId: "00000000-0000-4000-8000-000000000001",
             contractVersion: release.version,
             siteId: "default",
-            providerId: "ulvia.official",
+            providerId: "ulvia/primary-provider",
         });
         expect(() => validateSchemaValue(capability.output, output)).not.toThrow();
     }
@@ -130,7 +131,7 @@ test("all administration capability areas dispatch outputs matching their offici
 async function load(contractId: string) {
     const root = resolve(
         import.meta.dir,
-        `../../../ulvia-cli/dist/bootstrap/contracts/cms/${contractId}/definition.json`,
+        `../../../ulvia-cli/dist/bootstrap/contracts/cms/${resourceName(contractId)}/definition.json`,
     );
     return (await admitContractReleaseJson(await readFile(root))).release;
 }

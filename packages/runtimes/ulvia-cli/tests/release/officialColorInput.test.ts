@@ -1,6 +1,6 @@
 import { afterEach, expect, mock, spyOn, test } from "bun:test";
-import { mount } from "../../../../official-repository/collections/ulvia-official/blocs/forms/fields/ulvia-official-color-input/bloc";
-import { mount as mountPresets } from "../../../../official-repository/collections/ulvia-official/blocs/forms/fields/advanced/ulvia-official-color-presets/bloc";
+import { mount } from "../../../../official-repository/collections/mossa/blocs/forms/fields/ulvia--mossa--color-input/bloc";
+import { mount as mountPresets } from "../../../../official-repository/collections/mossa/blocs/forms/fields/advanced/ulvia--mossa--color-presets/bloc";
 
 afterEach(() => {
     document.body.replaceChildren();
@@ -8,8 +8,8 @@ afterEach(() => {
 });
 
 test.each([
-    ["ulvia-official-color-input", mount],
-    ["ulvia-official-color-presets", mountPresets],
+    ["ulvia--mossa--color-input", mount],
+    ["ulvia--mossa--color-presets", mountPresets],
 ] as const)("%s paints color data only into preview canvases", (tag, mountControl) => {
     const painted: string[] = [];
     const context = {
@@ -35,13 +35,13 @@ test.each([
 
 test("official color input closes on Escape and restores focus", async () => {
     document.body.innerHTML = `
-        <div cms-bloc="ulvia-official-color-input">
+        <div cms-bloc="ulvia--mossa--color-input">
             <span part="trigger-shell"></span>
             <input type="color" aria-label="Brand colour" value="#086c55">
             <span part="popover" hidden></span>
         </div>
     `;
-    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia-official-color-input"]');
+    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia--mossa--color-input"]');
     if (!root) {
         throw new Error("Missing color input fixture");
     }

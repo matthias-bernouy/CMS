@@ -1,3 +1,4 @@
+import { isResourceId } from "cms-repository/exports/contracts/protocol";
 import { ifNoneMatchMatches, ifRangeAllowsPartial, parseSingleByteRange, securityHeaders } from "@bernouy/http-runner";
 import { collectionAssetRepresentationVersion } from "cms-repository/collections/core/admission/assets";
 import {
@@ -84,7 +85,7 @@ function parseReference(request: Request, basePath: string) {
             .slice(prefix.length)
             .split("/")
             .map(decodeURIComponent);
-        const valid = /^[a-z][a-z0-9-]{0,95}$/u.test(collectionId ?? "");
+        const valid = isResourceId(collectionId);
         const validAsset = /^[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*$/u.test(assetId ?? "");
         if (segment !== "assets" || extra.length > 0 || !valid || !validAsset) {
             return null;

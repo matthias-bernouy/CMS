@@ -15,7 +15,7 @@ test("contract and provider releases use explicit kinds and exact local contract
     const data = await mkdtemp(join(tmpdir(), "ulvia-artifacts-"));
     const contractFolder = join(data, "sources", "protocol.examples");
     const bundleFolder = join(data, "sources", "communication.receipt");
-    const providerFolder = join(data, "sources", "ulvia.example");
+    const providerFolder = join(data, "sources", "ulvia/ulvia.example");
     const contracts = new LocalContractReleases(new LocalArtifactFiles(join(data, "repository")));
     const options = { environment: { ULVIA_DATA_DIR: data }, log: () => undefined };
     try {
@@ -55,10 +55,10 @@ test("contract and provider releases use explicit kinds and exact local contract
         await writeFile(join(bundleFolder, "fixtures", "receipt.svg"), await readFile(assetFixture));
         await runCli(["release", bundleFolder], options);
         expect(
-            (await (await contracts.catalogue()).get("communication.receipt", "0.1.0"))?.admission.release
+            (await (await contracts.catalogue()).get("ulvia/communication.receipt", "0.1.0"))?.admission.release
                 .fixtureAssets,
         ).toHaveLength(1);
-        const published = await (await contracts.catalogue()).get("protocol.examples", "1.0.0");
+        const published = await (await contracts.catalogue()).get("ulvia/protocol.examples", "1.0.0");
         expect(published).not.toBeNull();
         implementation.digest = published!.admission.digest;
         await writeFile(join(providerFolder, "definition.json"), JSON.stringify(provider));
@@ -74,13 +74,13 @@ test("contract and provider releases use explicit kinds and exact local contract
             const listedProviders = await remote.list("provider-manifest");
             expect(listedContracts).toHaveLength(2);
             expect(listedProviders).toHaveLength(1);
-            const contractReference = listedContracts.find((item) => item.id === "protocol.examples")!;
+            const contractReference = listedContracts.find((item) => item.id === "ulvia/protocol.examples")!;
             expect(contractReference.icon).toBe("mail");
             expect(contractReference.categories).toEqual(["communication"]);
             expect(contractReference.publishedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
             const providerReference = listedProviders[0]!;
             await importRepositoryArtifact(remote, providerReference, importedContracts, importedProviders);
-            expect((await importedContracts.get("protocol.examples", "1.0.0"))?.admission.digest).toBe(
+            expect((await importedContracts.get("ulvia/protocol.examples", "1.0.0"))?.admission.digest).toBe(
                 contractReference.digest,
             );
             await expect(
@@ -95,7 +95,7 @@ test("contract and provider releases use explicit kinds and exact local contract
             expect((await importedContracts.list()).length).toBe(1);
             expect((await importedProviders.list()).length).toBe(1);
             const catalogue = (kind: string) =>
-                fetch(`${server.url}/.cms/call/ulvia.repository/v1/catalogue`, {
+                fetch(`${server.url}/.cms/call/ulvia/repository/v1/catalogue`, {
                     method: "QUERY",
                     headers: { "content-type": "application/json" },
                     body: JSON.stringify({ kind, limit: 256 }),
@@ -109,7 +109,7 @@ test("contract and provider releases use explicit kinds and exact local contract
             expect(contractsIndex.releases).toHaveLength(2);
             expect(providersIndex.releases).toHaveLength(1);
             const fixtureResponse = await fetch(
-                `${server.url}/.cms/call/ulvia.repository/v1/assets/contract/ulvia.official/communication.receipt/0.1.0/receipt.svg`,
+                `${server.url}/.cms/call/ulvia/repository/v1/assets/contract/ulvia/ulvia%2Fcommunication.receipt/0.1.0/receipt.svg`,
             );
             expect(fixtureResponse.status).toBe(200);
             expect(fixtureResponse.headers.get("content-type")).toBe("application/octet-stream");
@@ -119,7 +119,7 @@ test("contract and provider releases use explicit kinds and exact local contract
             expect(
                 (
                     await fetch(
-                        `${server.url}/.cms/call/ulvia.repository/v1/releases/provider-manifest/ulvia.official/ulvia.example/1.0.0`,
+                        `${server.url}/.cms/call/ulvia/repository/v1/releases/provider-manifest/ulvia/ulvia%2Fulvia.example/1.0.0`,
                     )
                 ).headers.get("ETag"),
             ).toMatch(/^"sha256:/);

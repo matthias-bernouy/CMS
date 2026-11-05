@@ -16,7 +16,7 @@ test("an exact application profile persists without replacing instance identity 
         name: "registry",
         label: "Registry",
         hostname: "registry.localhost",
-        profile: { id: "ulvia.repository", version: "1.0.0" },
+        profile: { id: "repository", version: "1.0.0" },
     };
     try {
         const initial = await loadOrCreateLocalInstanceConfig(root, input);
@@ -24,15 +24,15 @@ test("an exact application profile persists without replacing instance identity 
         await expect(
             loadOrCreateLocalInstanceConfig(root, {
                 ...input,
-                profile: { id: "ulvia.official", version: "1.0.0" },
+                profile: { id: "ulvia", version: "1.0.0" },
             }),
         ).rejects.toThrow("conflicts");
-        await saveLocalInstanceProfile(root, { id: "ulvia.repository", version: "1.1.0" });
+        await saveLocalInstanceProfile(root, { id: "repository", version: "1.1.0" });
         const updated = await loadLocalInstanceConfig(root);
-        expect(updated).toEqual({ ...initial, profile: { id: "ulvia.repository", version: "1.1.0" } });
+        expect(updated).toEqual({ ...initial, profile: { id: "repository", version: "1.1.0" } });
         expect((await stat(join(root, "runtime.json"))).mode & 0o777).toBe(0o600);
         const bytes = await readFile(join(root, "runtime.json"), "utf8");
-        await expect(saveLocalInstanceProfile(root, { id: "ulvia.repository", version: "latest" })).rejects.toThrow();
+        await expect(saveLocalInstanceProfile(root, { id: "repository", version: "latest" })).rejects.toThrow();
         expect(await readFile(join(root, "runtime.json"), "utf8")).toBe(bytes);
         await writeFile(
             join(root, "runtime.json"),

@@ -6,7 +6,7 @@ import type { RepositorySearchRow } from "../../src/repository/search/interfaces
 
 const cacheDirectory = Bun.argv[2];
 if (!cacheDirectory) {
-    throw new Error("Usage: evaluation.ts <cached-model-directory>");
+    throw new Error("Usage: evaluation.ts <example--cached--model-directory>");
 }
 const digest = `sha256:${"a".repeat(64)}`;
 const definitions = [
@@ -15,7 +15,7 @@ const definitions = [
         "Product card",
         "Product card displaying merchandise photograph, title, price and purchase action",
         "bloc",
-        "storefront-product",
+        "acme-dofficial--storefront--product",
     ],
     [
         "gallery",

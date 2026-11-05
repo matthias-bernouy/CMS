@@ -59,7 +59,7 @@ test("authored contracts reject retired monolithic source shapes", async () => {
 test("release publishes a contract and its mocks from the minimal authored source tree", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-contract-release-"));
     try {
-        const source = join(root, "example.contract");
+        const source = join(root, "example.publisher/example.contract");
         const data = join(root, "data");
         await createContract(source, ["queries/alpha.json", "queries/zeta.json"]);
         const expected = await admitContractReleaseJson(await compileContractSource(source));
@@ -68,7 +68,11 @@ test("release publishes a contract and its mocks from the minimal authored sourc
             log: () => undefined,
         });
         const releases = new LocalContractReleases(new LocalArtifactFiles(join(data, "repository")));
-        const published = await releases.getMetadata("example.publisher", "example.contract", "1.0.0");
+        const published = await releases.getMetadata(
+            "example.publisher",
+            "example.publisher/example.contract",
+            "1.0.0",
+        );
         expect(published?.digest).toBe(expected.digest);
         expect(published?.release.capabilities[0]?.mocks).toEqual(expected.release.capabilities[0]?.mocks);
     } finally {
@@ -81,7 +85,7 @@ async function createContract(root: string, paths: readonly string[]): Promise<v
         kind: "contract",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
-        contractId: "example.contract",
+        contractId: "example.publisher/example.contract",
         name: "Example contract",
         version: "1.0.0",
         publisherId: "example.publisher",

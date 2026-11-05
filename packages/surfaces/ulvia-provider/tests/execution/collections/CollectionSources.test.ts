@@ -13,7 +13,7 @@ test("stages only the exact browser-risk report approved by the caller", async (
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
-        collectionId: "example",
+        collectionId: "example.official/example",
         publisherId: "example.official",
         version: "1.0.0",
         name: "collection.name",
@@ -81,7 +81,7 @@ test("derives displayed browser authority from the admitted bundle instead of re
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
-        collectionId: "example",
+        collectionId: "example.official/example",
         publisherId: "example.official",
         version: "1.0.0",
         name: "collection.name",
@@ -93,7 +93,7 @@ test("derives displayed browser authority from the admitted bundle instead of re
                 description: "collection.name",
                 categories: ["collection.name"],
 
-                id: "example-interactive",
+                id: "example-dofficial--example--interactive",
                 catalogue: "hidden",
                 kind: "component",
                 label: "collection.name",
@@ -148,7 +148,7 @@ test("derives displayed browser authority from the admitted bundle instead of re
     expect(catalogue.releases[0]).toMatchObject({
         browserRisk: "high",
         javaScriptBlocCount: 1,
-        javaScriptBlocs: ["example-interactive"],
+        javaScriptBlocs: ["example-dofficial--example--interactive"],
     });
     expect(catalogue.releases[0]!.browserRiskDigest).not.toBe(forgedEntry.browserRiskDigest);
 });

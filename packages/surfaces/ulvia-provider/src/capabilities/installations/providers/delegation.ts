@@ -4,13 +4,13 @@ import type { UlviaProviderGateway } from "../../../ports";
 import type { DelegationSource, DelegationTarget } from "@bernouy/cms-gateway/access/delegation";
 
 export function registerDelegationCapabilities(dispatcher: ProviderCapabilityRegistry, gateway?: UlviaProviderGateway) {
-    dispatcher.register("ulvia.cms.installations", "gateway.delegation.issue", async (input, context) => {
+    dispatcher.register("ulvia/cms.installations", "gateway.delegation.issue", async (input, context) => {
         if (!context.controlAuthority || !gateway?.delegations) {
             throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
         }
         return { delegation: await guarded(() => gateway.delegations!.issue(input.source as DelegationSource)) };
     });
-    dispatcher.register("ulvia.cms.installations", "gateway.delegation.check", async (input, context) => {
+    dispatcher.register("ulvia/cms.installations", "gateway.delegation.check", async (input, context) => {
         if (!context.controlAuthority || !gateway?.delegations) {
             throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
         }
@@ -23,7 +23,7 @@ export function registerDelegationCapabilities(dispatcher: ProviderCapabilityReg
             throw error;
         }
     });
-    dispatcher.register("ulvia.cms.installations", "gateway.delegation.close", async (input, context) => {
+    dispatcher.register("ulvia/cms.installations", "gateway.delegation.close", async (input, context) => {
         if (!context.controlAuthority || !gateway?.delegations) {
             throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
         }

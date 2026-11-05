@@ -26,7 +26,7 @@ beforeAll(async () => {
 
 async function fixture(change: (release: ContractRelease) => ContractRelease = (value) => value) {
     const { repository: f, profiles } = await (base ??= baseFixture());
-    const before = profiles.profiles[0]!.contracts.find(({ contractId }) => contractId === "ulvia.cms.observability")!;
+    const before = profiles.profiles[0]!.contracts.find(({ contractId }) => contractId === "ulvia/cms.observability")!;
     const source = f.contracts.find(
         ({ release }) => release.contractId === before.contractId && release.version === "1.0.0",
     )!;

@@ -11,16 +11,16 @@ export async function incompatibleUpgrade(connection: Connection, source: Source
     setSource(
         next,
         "blocs/mcp-kit-panel/markup.html",
-        '<main><a href="/validation-target#destination">{{ cms.i18n.mcp-kit.link }}</a><slot name="body"></slot></main>',
+        '<main><a href="/validation-target#destination">{{ cms.i18n.ulvia/mcp-kit.link }}</a><slot name="body"></slot></main>',
     );
-    const prepared = await call("ulvia.cms.authoring", "prepare-collection", { sourceJson: JSON.stringify(next) });
+    const prepared = await call("ulvia/cms.authoring", "prepare-collection", { sourceJson: JSON.stringify(next) });
     expect(prepared.valid).toBe(true);
-    await call("ulvia.cms.authoring", "publish-collection", {
+    await call("ulvia/cms.authoring", "publish-collection", {
         preparationId: prepared.preparationId,
         expectedDigest: prepared.digest,
     });
-    const before = await call("ulvia.cms.installations", "list-collection-installations");
-    const pageBefore = await call("ulvia.cms.content", "pages.get", { id: pageId });
+    const before = await call("ulvia/cms.installations", "list-collection-installations");
+    const pageBefore = await call("ulvia/cms.content", "pages.get", { id: pageId });
     const target = {
         repositoryId: prepared.repositoryId,
         publisherId: prepared.publisherId,
@@ -29,7 +29,7 @@ export async function incompatibleUpgrade(connection: Connection, source: Source
         digest: prepared.digest,
         approvedBrowserRiskDigest: prepared.approvedBrowserRiskDigest,
     };
-    const plan = await call("ulvia.cms.installations", "plan-collection-upgrade", { targets: [target] });
+    const plan = await call("ulvia/cms.installations", "plan-collection-upgrade", { targets: [target] });
     expect(plan.status).toBe("blocked");
     expect(plan.issues).toContainEqual(
         expect.objectContaining({
@@ -38,7 +38,7 @@ export async function incompatibleUpgrade(connection: Connection, source: Source
             message: expect.stringContaining("nested inside"),
         }),
     );
-    expect(await call("ulvia.cms.installations", "list-collection-installations")).toEqual(before);
-    expect(await call("ulvia.cms.content", "pages.get", { id: pageId })).toEqual(pageBefore);
-    await call("ulvia.cms.authoring", "discard-preparation", { preparationId: prepared.preparationId });
+    expect(await call("ulvia/cms.installations", "list-collection-installations")).toEqual(before);
+    expect(await call("ulvia/cms.content", "pages.get", { id: pageId })).toEqual(pageBefore);
+    await call("ulvia/cms.authoring", "discard-preparation", { preparationId: prepared.preparationId });
 }

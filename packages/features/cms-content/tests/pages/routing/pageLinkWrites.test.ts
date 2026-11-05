@@ -10,12 +10,12 @@ const factories = {
         return repository;
     },
 };
-const content = (path: string) => `<main cms-bloc="test-page"><p><a href="${path}">Link</a></p></main>`;
+const content = (path: string) => `<main cms-bloc="example--test--page"><p><a href="${path}">Link</a></p></main>`;
 for (const [adapter, factory] of Object.entries(factories)) {
     async function fixture() {
         const inner = await factory();
         await inner.createBloc({
-            id: "test-page",
+            id: "example--test--page",
             name: "Page",
             group: "Test",
             viewJS: "",

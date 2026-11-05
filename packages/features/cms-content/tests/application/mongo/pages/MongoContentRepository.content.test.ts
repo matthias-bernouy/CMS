@@ -35,7 +35,7 @@ describe("MongoContentRepository content persistence", () => {
         await repository.insertPage(
             "/references",
             "References",
-            '<div cms-bloc=\"official-card\"><img src="/.cms/call/ulvia.cms.files/files/file%201/generation">{{ cms.i18n.ulvia-official.card-title }}</div>',
+            '<div cms-bloc=\"official-card\"><img src="/.cms/call/ulvia/cms.files/files/file%201/generation">{{ cms.i18n.ulvia/mossa.card-title }}</div>',
         );
         const page = (await repository.getPage("/references"))!;
 
@@ -45,7 +45,7 @@ describe("MongoContentRepository content persistence", () => {
         expect(
             (
                 await repository.scanPagesByContentReference(
-                    { kind: "text", namespace: "ulvia-official", textId: "card-title" },
+                    { kind: "text", namespace: "ulvia/mossa", textId: "card-title" },
                     undefined,
                     10,
                 )

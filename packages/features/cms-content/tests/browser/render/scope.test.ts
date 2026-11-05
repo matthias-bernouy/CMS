@@ -111,15 +111,15 @@ describe("lookup — arrays (documented behaviour)", () => {
 
 test("cms is reserved even when implicit values, aliases or parents supply it", () => {
     const cms = { i18n: { test: { title: "Spoofed" } } };
-    expect(lookup({ value: { cms } }, "cms.i18n.test.title").found).toBe(false);
+    expect(lookup({ value: { cms } }, "cms.i18n.example/test.title").found).toBe(false);
     expect(lookup({ vars: { cms } }, "cms").found).toBe(false);
     expect(lookup({ parent: { vars: { cms } } }, "cms.i18n").found).toBe(false);
     expect(lookup({ value: { cmsData: { title: "Business" } } }, "cmsData.title").value).toBe("Business");
 });
 
 test("mutation and repeat aliases cannot claim the reserved root", () => {
-    expect(parseMutation("catalog:save as cms")).toBeNull();
+    expect(parseMutation("ulvia/catalog:save as cms")).toBeNull();
     expect(() => parseRepeat("items as cms")).toThrow("reserved");
-    expect(parseMutation("catalog:save as cmsData")?.name).toBe("cmsData");
+    expect(parseMutation("ulvia/catalog:save as cmsData")?.name).toBe("cmsData");
     expect(parseRepeat("items as cmsData").name).toBe("cmsData");
 });

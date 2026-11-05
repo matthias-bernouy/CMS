@@ -5,7 +5,10 @@ import { capabilityDocument, contractDocument } from "../support/fixtures";
 
 describe("capability authority metadata", () => {
     test("rejects removed cross-contract requirements, including empty declarations", () => {
-        for (const requires of [[], [{ contractId: "example.other", capabilityId: "read", versionRange: "^1.0.0" }]]) {
+        for (const requires of [
+            [],
+            [{ contractId: "ulvia/example.other", capabilityId: "read", versionRange: "^1.0.0" }],
+        ]) {
             expect(() =>
                 parseContractRelease(contractDocument({ capabilities: [capabilityDocument({ requires })] })),
             ).toThrow('unknown property "requires"');

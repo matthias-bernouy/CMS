@@ -88,7 +88,7 @@ describe("declarative native dialogs", () => {
             "accessible name",
         ],
         [
-            '<div cms-bloc=\"fixture-dialog\"><dialog id="labelled" aria-labelledby="missing-title"></dialog></div><div cms-bloc=\"fixture-action\"><button type="button" command="show-modal" commandfor="labelled">Open</button></div>',
+            '<div cms-bloc="fixture-dialog"><dialog id="labelled" aria-labelledby="missing-title"></dialog></div><div cms-bloc="fixture-action"><button type="button" command="show-modal" commandfor="labelled">Open</button></div>',
             "aria-labelledby references missing id",
         ],
         [
@@ -140,17 +140,18 @@ describe("Bloc document budgets", () => {
     });
 
     test("bounds CMS operations", () => {
-        const mutation = '<form cms-mutation="example:save-item as saved"><button>Save</button></form>';
+        const mutation =
+            '<form cms-mutation="example.official/example:save-item as saved"><button>Save</button></form>';
         expect(() => fixed(mutation.repeat(BLOC_DOCUMENT_LIMITS.maxOperations + 1))).toThrow("too many CMS operations");
     });
 
     test("separates named queries from mutations", () => {
-        expect(() => fixed('<section cms-mutation="catalog:save as saved"></section>')).toThrow(
+        expect(() => fixed('<section cms-mutation="ulvia/catalog:save as saved"></section>')).toThrow(
             "CMS mutations are reserved for form submissions",
         );
         expect(() =>
             fixed(
-                '<section cms-query="catalog:items as products"></section><section cms-query="catalog:featured as products"></section>',
+                '<section cms-query="ulvia/catalog:items as products"></section><section cms-query="ulvia/catalog:featured as products"></section>',
             ),
         ).toThrow("must be unique");
     });
@@ -290,9 +291,11 @@ test("Page Bloc roots retain bindings supported by their native element", () => 
         slots: {},
     };
     expect(() =>
-        validatePageDocument('<form cms-bloc="fixture-form" cms-mutation="fixture:save as saved"></form>', [form]),
+        validatePageDocument('<form cms-bloc="fixture-form" cms-mutation="ulvia/fixture:save as saved"></form>', [
+            form,
+        ]),
     ).not.toThrow();
     expect(() =>
-        validatePageDocument('<div cms-bloc="fixture-form" cms-mutation="fixture:save as saved"></div>', [form]),
+        validatePageDocument('<div cms-bloc="fixture-form" cms-mutation="ulvia/fixture:save as saved"></div>', [form]),
     ).toThrow();
 });

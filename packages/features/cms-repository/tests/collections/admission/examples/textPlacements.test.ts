@@ -12,10 +12,10 @@ test.each(["textarea", "setting"])(
         if (kind === "textarea") {
             source.blocs[0].slots.body = { accepts: [{ kind: "native-element", accepts: ["textarea"] }] };
             source.examples[0].document.html =
-                '<div cms-bloc="atlas-panel"><textarea slot="body">{{ cms.i18n.atlas.greeting }}</textarea></div>';
+                '<div cms-bloc="atlas-dofficial--atlas--panel"><textarea slot="body">{{ cms.i18n.atlas.official/atlas.greeting }}</textarea></div>';
         } else {
             source.examples[0].document.html =
-                '<div cms-bloc="atlas-panel" tone="{{ cms.i18n.atlas.greeting }}"><p slot="body">Copy</p></div>';
+                '<div cms-bloc="atlas-dofficial--atlas--panel" tone="{{ cms.i18n.atlas.official/atlas.greeting }}"><p slot="body">Copy</p></div>';
         }
         expect(() => parseCollectionRelease(source)).toThrow("Server texts are unsupported");
     },
@@ -25,6 +25,6 @@ test("validating server text placement never replaces shared references", () => 
     const source = exampleCollection();
     const before = JSON.stringify(source);
     const release = parseCollectionRelease(source);
-    expect(release.examples![0].document.html).toContain("{{ cms.i18n.atlas.greeting }}");
+    expect(release.examples![0].document.html).toContain("{{ cms.i18n.atlas.official/atlas.greeting }}");
     expect(JSON.stringify(source)).toBe(before);
 });

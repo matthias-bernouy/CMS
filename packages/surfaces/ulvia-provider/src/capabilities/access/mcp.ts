@@ -20,7 +20,7 @@ export function registerMcpAccessCapabilities(
         "revoke-mcp-connection",
     ];
     for (const id of actions) {
-        dispatcher.register("ulvia.cms.access", id, async (input, context) => {
+        dispatcher.register("ulvia/cms.access", id, async (input, context) => {
             if (!authorization) {
                 throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
             }

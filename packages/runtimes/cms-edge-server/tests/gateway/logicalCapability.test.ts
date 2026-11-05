@@ -7,7 +7,7 @@ test("logical capability resolution preserves command idempotency", async () => 
         getGatewayRoute: async () => JSON.stringify(routeSnapshot()),
     } as ControlProviderClient);
 
-    await expect(gateway.resolveCapability("ulvia.cms.installations", "apply-collection-upgrade")).resolves.toEqual({
+    await expect(gateway.resolveCapability("ulvia/cms.installations", "apply-collection-upgrade")).resolves.toEqual({
         access: "admin",
         version: "1.0.0",
         effect: "command",
@@ -21,7 +21,7 @@ function routeSnapshot() {
     const snapshot = {
         selection: {
             siteId: "default",
-            contractId: "ulvia.cms.installations",
+            contractId: "ulvia/cms.installations",
             version: "1.0.0",
             digest,
             installationId: "installation-a",
@@ -50,7 +50,7 @@ function routeSnapshot() {
         requestedRelease: {},
         lineage: [
             {
-                contractId: "ulvia.cms.installations",
+                contractId: "ulvia/cms.installations",
                 version: "1.0.0",
                 digest,
                 name: "Installations",
@@ -65,7 +65,7 @@ function routeSnapshot() {
                 report: {
                     implementations: [
                         {
-                            contractId: "ulvia.cms.installations",
+                            contractId: "ulvia/cms.installations",
                             version: "1.0.0",
                             digest,
                             status: "ready",
@@ -86,7 +86,7 @@ test("logical capability metadata uses the requested parent release rather than 
     const gateway = createEdgeGateway({
         getGatewayRoute: async () => JSON.stringify(snapshot),
     } as ControlProviderClient);
-    expect(await gateway.resolveCapability("ulvia.cms.installations", "apply-collection-upgrade")).toMatchObject({
+    expect(await gateway.resolveCapability("ulvia/cms.installations", "apply-collection-upgrade")).toMatchObject({
         version: "1.0.0",
         effect: "command",
         idempotency: "keyed",

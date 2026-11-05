@@ -1,3 +1,4 @@
+import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import { CmsObservability } from "@bernouy/cms-observability";
@@ -13,11 +14,11 @@ import {
 import { UlviaProvider, DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { providerOptions, PROVIDER_TOKEN } from "../../ulviaProviderFixture";
 
-const contractId = "ulvia.cms.observability";
+const contractId = "ulvia/cms.observability";
 const contractPath = resolve(
     import.meta.dir,
     "../../../../../runtimes/ulvia-cli/dist/bootstrap/contracts/cms",
-    contractId,
+    resourceName(contractId),
     "definition.json",
 );
 const entry = () => ({
@@ -106,7 +107,7 @@ test("user invocations cannot use Installations to forge a machine identity", as
         invocations: {
             issue: async (input: unknown) => {
                 issued.push(input);
-                return { token: "scoped-token", instanceId: "instance-a" };
+                return { token: "example--scoped--token", instanceId: "instance-a" };
             },
         },
     } as never);
@@ -122,13 +123,13 @@ test("user invocations cannot use Installations to forge a machine identity", as
         requestId: crypto.randomUUID(),
         contractVersion: "1.0.0",
         siteId: "default",
-        providerId: "ulvia.official",
+        providerId: "ulvia/primary-provider",
     };
     await expect(
-        dispatcher.invoke("ulvia.cms.installations", "gateway.invocation.issue", input, context),
+        dispatcher.invoke("ulvia/cms.installations", "gateway.invocation.issue", input, context),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(issued).toEqual([]);
-    await dispatcher.invoke("ulvia.cms.installations", "gateway.invocation.issue", input, {
+    await dispatcher.invoke("ulvia/cms.installations", "gateway.invocation.issue", input, {
         ...context,
         controlAuthority: true,
     });

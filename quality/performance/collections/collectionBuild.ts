@@ -2,11 +2,11 @@ import { join } from "node:path";
 import { buildCollectionBloc, type CollectionBlocBuildInput } from "@bernouy/cms-repository/collections/build";
 import { assertMaximum, benchmark, printResults } from "../benchmark";
 
-const BLOC_ROOT = join(import.meta.dir, "../../../packages/official-repository/collections/ulvia-official/blocs");
+const BLOC_ROOT = join(import.meta.dir, "../../../packages/official-repository/collections/mossa/blocs");
 
 export async function runCollectionBuildBenchmarks(): Promise<void> {
-    const colorInput = await blocSource("forms/fields/ulvia-official-color-input", "ulvia-official-color-input");
-    const pageEditor = await blocSource("admin/pages/ulvia-official-page-editor", "ulvia-official-page-editor");
+    const colorInput = await blocSource("forms/fields/ulvia--mossa--color-input", "ulvia--mossa--color-input");
+    const pageEditor = await blocSource("admin/pages/ulvia--mossa--page-editor", "ulvia--mossa--page-editor");
     const results = [
         await benchmark("compile minimal collection Bloc", () =>
             buildCollectionBloc({

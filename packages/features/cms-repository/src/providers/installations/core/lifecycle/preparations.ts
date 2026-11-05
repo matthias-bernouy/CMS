@@ -82,7 +82,7 @@ export async function validateProposal(
     const document = parseInstallationDocument(value, limits, (record) => record);
     const reportSnapshot = parseProviderRuntimeReport(reportValue, limits);
     const published = await catalogue.get(
-        expectString(document.providerId, "$.providerId", 96),
+        expectString(document.providerId, "$.providerId", 193),
         expectString(document.manifestVersion, "$.manifestVersion", 128),
     );
     if (!published || (!allowYanked && published.yank)) {

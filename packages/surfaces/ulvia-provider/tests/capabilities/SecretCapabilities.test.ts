@@ -9,7 +9,7 @@ const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
     contractVersion: "1.0.0",
     siteId: "site-a",
-    providerId: "ulvia.official",
+    providerId: "ulvia/primary-provider",
 };
 
 test("secret capabilities expose namespace-scoped lifecycle operations", async () => {
@@ -93,5 +93,5 @@ function invoke<T = unknown>(
     capabilityId: string,
     input: Record<string, unknown>,
 ): Promise<T> {
-    return dispatcher.invoke("ulvia.cms.secrets", capabilityId, input, context) as Promise<T>;
+    return dispatcher.invoke("ulvia/cms.secrets", capabilityId, input, context) as Promise<T>;
 }

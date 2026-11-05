@@ -15,14 +15,14 @@ test("Page deletion maps incoming links to the declared PAGE_REFERENCED conflict
     } as never);
     await expect(
         dispatcher.invoke(
-            "ulvia.cms.content",
+            "ulvia/cms.content",
             "pages.delete",
             { id: "target", expectedRevision: 1 },
             {
                 requestId: "test",
                 contractVersion: "1.0.0",
                 siteId: "default",
-                providerId: "test",
+                providerId: "example/test",
             },
         ),
     ).rejects.toMatchObject({ code: "PAGE_REFERENCED", status: 409 });

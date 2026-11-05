@@ -23,7 +23,7 @@ test("durable operations snapshot HTTP metadata, detach browser cancellation and
         requestId: crypto.randomUUID(),
         contractVersion: "1.0.0",
         siteId: "site-a",
-        providerId: "example",
+        providerId: "example.official/example",
         idempotencyKey: "one",
         http: { headers, transportRequest: new Request("https://site.test/") },
         signal: abort.signal,
@@ -47,7 +47,7 @@ test("durable operations snapshot HTTP metadata, detach browser cancellation and
             { ...context, http: { headers: new Headers({ "if-match": '"v1"', "accept-language": "en" }) } },
         );
         expect(replay).toEqual(first);
-        expect(await store.get("other-site", first.operationId)).toBeNull();
+        expect(await store.get("example--other--site", first.operationId)).toBeNull();
     } finally {
         release();
         await executor.stop();

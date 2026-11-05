@@ -1,4 +1,10 @@
-import { isVersionRangeSubset, versionBump } from "cms-repository/exports/contracts/compatibility";
+import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
+import {
+    isVersionRangeSubset,
+    versionBump,
+    isSemVerPrerelease,
+    semVerReleaseTarget,
+} from "cms-repository/exports/contracts/compatibility";
 import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
 import { collectionUpgradeBreakingResources } from "../../installations/core/upgradeCompatibility";
 import type {
@@ -20,6 +26,12 @@ export async function verifyCollectionPublicationEvolution(
     if (!bump) {
         throw new TypeError("Collection publication version must increase");
     }
+    const previewEvolution =
+        isSemVerPrerelease(previous.version) &&
+        semVerReleaseTarget(previous.version) === semVerReleaseTarget(next.version);
+    if (previewEvolution) {
+        return;
+    }
     const [before, after] = await Promise.all([
         describeCollectionResources(previous),
         describeCollectionResources(next),
@@ -27,12 +39,15 @@ export async function verifyCollectionPublicationEvolution(
     const afterByKey = new Map(after.map((resource) => [`${resource.kind}:${resource.id}`, resource]));
     const breaking = collectionUpgradeBreakingResources(previous, next);
     for (const resource of breaking) {
-        const id = resource.kind === "theme-token" ? `${next.collectionId}-${resource.id}` : resource.id;
+        const id =
+            resource.kind === "theme-token"
+                ? `${resourceRuntimeNamespace(next.collectionId)}--${resource.id}`
+                : resource.id;
         if (resource.kind !== "configuration" && afterByKey.has(`${resource.kind}:${id}`)) {
             throw new TypeError(`Incompatible ${resource.kind} ${resource.id} requires a new resource identity`);
         }
     }
-    if (requirementBreaks(previous, next).length) {
+    if (collectionRequirementBreaks(previous, next).length) {
         throw new TypeError("Incompatible resource requirements require a new resource identity");
     }
     const removedExports = removedCollectionExports(previous.exports, next.exports);
@@ -62,7 +77,7 @@ export async function verifyCollectionPublicationEvolution(
     }
 }
 
-function requirementBreaks(previous: CollectionRelease, next: CollectionRelease): string[] {
+export function collectionRequirementBreaks(previous: CollectionRelease, next: CollectionRelease): string[] {
     const breaks: string[] = [];
     const compare = (
         key: string,

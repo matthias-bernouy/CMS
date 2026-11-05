@@ -26,13 +26,13 @@ import { ConfiguredSmtpEmailer } from "@bernouy/cms-smtp-emailer/nodemailer";
 
 const TOKEN = "official-contract-matrix-token";
 const ROUTES = [
-    ["ulvia.cms.access", "list-users", "QUERY", "/list-users", {}],
-    ["ulvia.cms.installations", "list-operations", "QUERY", "/operations", {}],
-    ["ulvia.cms.content", "site.get", "GET", "/site", undefined],
-    ["ulvia.cms.emailer.smtp", "smtp.configuration.get", "GET", "/configuration", undefined],
-    ["ulvia.cms.files", "namespace.create", "POST", "/namespaces", { name: "Test", defaultVisibility: "private" }],
-    ["ulvia.cms.secrets", "namespace.create", "POST", "/namespaces", { name: "Test" }],
-    ["ulvia.cms.installations", "list-provider-installations", "GET", "/list-provider-installations", undefined],
+    ["ulvia/cms.access", "list-users", "QUERY", "/list-users", {}],
+    ["ulvia/cms.installations", "list-operations", "QUERY", "/operations", {}],
+    ["ulvia/cms.content", "site.get", "GET", "/site", undefined],
+    ["ulvia/cms.emailer.smtp", "smtp.configuration.get", "GET", "/configuration", undefined],
+    ["ulvia/cms.files", "namespace.create", "POST", "/namespaces", { name: "Test", defaultVisibility: "private" }],
+    ["ulvia/cms.secrets", "namespace.create", "POST", "/namespaces", { name: "Test" }],
+    ["ulvia/cms.installations", "list-provider-installations", "GET", "/list-provider-installations", undefined],
 ] as const;
 
 test("mounts and dispatches every official CMS contract release", async () => {
@@ -98,9 +98,9 @@ test("mounts and dispatches every official CMS contract release", async () => {
             headers: {
                 Authorization: `Bearer ${TOKEN}`,
                 "x-ulvia-request-id": "00000000-0000-4000-8000-000000000099",
-                "x-ulvia-contract-id": "ulvia.cms.installations",
+                "x-ulvia-contract-id": "ulvia/cms.installations",
                 "x-ulvia-contract-version": contracts.find(
-                    ({ release }) => release.contractId === "ulvia.cms.installations",
+                    ({ release }) => release.contractId === "ulvia/cms.installations",
                 )!.release.version,
                 "x-ulvia-capability-id": "list-provider-installations",
             },
@@ -113,7 +113,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
                         Authorization: `Bearer ${TOKEN}`,
                         "content-type": "application/json",
                         "x-ulvia-request-id": "00000000-0000-4000-8000-000000000100",
-                        "x-ulvia-contract-id": "ulvia.cms.secrets",
+                        "x-ulvia-contract-id": "ulvia/cms.secrets",
                         "x-ulvia-contract-version": "1.0.0",
                         "x-ulvia-capability-id": "namespace.create",
                     },
@@ -152,7 +152,7 @@ test("the official adapters implement the complete declared capability matrix", 
 function report(contracts: Awaited<ReturnType<typeof loadOfficialContract>>[]) {
     return {
         protocol: "ulvia-provider/v1" as const,
-        providerId: "ulvia.official",
+        providerId: "ulvia/primary-provider",
         instanceId: "instance:contract-matrix",
         account: { id: "contract-matrix", label: "Official contract matrix" },
         buildVersion: "0.1.0",

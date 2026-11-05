@@ -1,3 +1,4 @@
+import { isResourceId, isResourceNamespace, resourcePublisher } from "cms-repository/exports/contracts/protocol";
 import { isVersionRangeSubset, parseVersionRange } from "cms-repository/exports/contracts/compatibility";
 import type {
     CollectionCapabilityRequirement,
@@ -31,7 +32,7 @@ export function parseRequirements(
                 invalid("must accept at least one contract version", `${at}.versionRange`);
             }
             return {
-                contractId: contractIdentifier(source.contractId, 128, `${at}.contractId`),
+                contractId: contractIdentifier(source.contractId, 193, `${at}.contractId`),
                 capabilityId: contractIdentifier(source.capabilityId, 128, `${at}.capabilityId`),
                 versionRange,
             };
@@ -63,6 +64,9 @@ export function parseCollectionDependencies(
         );
         if (isVersionRangeSubset(versionRange, "<0.0.0")) {
             invalid("must accept at least one collection version", `${path}.versionRange`);
+        }
+        if (resourcePublisher(collectionId) !== source.publisherId) {
+            invalid("resource namespace must match publisherId", `${path}.publisherId`);
         }
         const imports = parseResourceImports(source.imports, collectionId, `${path}.imports`, limits);
         if (
@@ -250,7 +254,13 @@ function assetIdentifier(value: unknown, path: string): string {
 
 function contractIdentifier(value: unknown, maximum: number, path: string): string {
     const parsed = string(value, maximum, path);
-    if (!/^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/.test(parsed)) {
+    if (
+        path.endsWith(".contractId")
+            ? !isResourceId(parsed)
+            : path.endsWith(".publisherId")
+              ? !isResourceNamespace(parsed)
+              : !/^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/.test(parsed)
+    ) {
         invalid("must be a canonical contract or capability identifier", path);
     }
     return parsed;

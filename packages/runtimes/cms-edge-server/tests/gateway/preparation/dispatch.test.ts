@@ -16,7 +16,7 @@ test("Edge queries prepare identity, delegation and signing in one control reque
         expect(f.preparations[0]!.invocation).not.toHaveProperty("subjectId");
         expect(f.preparations[0]!.invocation).not.toHaveProperty("delegation");
         expect(f.preparations[0]!.invocation).toMatchObject({
-            contractId: "catalog",
+            contractId: "ulvia/catalog",
             capabilityId: "item.list",
             installationId: "install-a",
             bodyBytes: 0,

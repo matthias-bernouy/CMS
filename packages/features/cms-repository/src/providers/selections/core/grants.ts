@@ -1,5 +1,5 @@
 import { compareOrdinal } from "cms-repository/providers/manifests/core/protocol/values";
-import { assertIJson, deepFreeze } from "cms-repository/exports/contracts/protocol";
+import { assertIJson, deepFreeze, isResourceId } from "cms-repository/exports/contracts/protocol";
 import type { CapabilityGrantPolicy } from "../interfaces/ContractSelectionStore";
 
 export function parseCapabilityGrants(value: unknown): CapabilityGrantPolicy {
@@ -23,9 +23,10 @@ export function parseCapabilityGrants(value: unknown): CapabilityGrantPolicy {
         const reference = entry as Record<string, unknown>;
         if (
             Object.keys(reference).some((key) => !["contractId", "capabilityId"].includes(key)) ||
-            [reference.contractId, reference.capabilityId].some(
-                (id) => typeof id !== "string" || id.length > 128 || !/^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/.test(id),
-            )
+            !isResourceId(reference.contractId) ||
+            typeof reference.capabilityId !== "string" ||
+            reference.capabilityId.length > 128 ||
+            !/^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/.test(reference.capabilityId)
         ) {
             throw new TypeError("Invalid capability grant identity");
         }

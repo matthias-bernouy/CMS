@@ -13,7 +13,7 @@ test.skipIf(!images.edge || !images.provider)(
             let body: { mode: string; degraded: boolean; results: unknown[] } | undefined;
             // Search serves lexical results while background corpus preparation runs.
             for (let attempt = 0; attempt < 120; attempt++) {
-                const result = await api.request("ulvia.repository", "/v1/search", "QUERY", {
+                const result = await api.request("ulvia/repository", "/v1/search", "QUERY", {
                     query: "page collection",
                     limit: 3,
                 });

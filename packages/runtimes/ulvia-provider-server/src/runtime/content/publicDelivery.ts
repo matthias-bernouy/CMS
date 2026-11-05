@@ -67,7 +67,7 @@ export function createPublicDelivery(
                         return analyzer.requiredAccess(page, (contractId) =>
                             description(contractId, revision, async () => {
                                 const response = await client(context).invoke(
-                                    await release("ulvia.cms.installations"),
+                                    await release("ulvia/cms.installations"),
                                     "capabilities.describe",
                                     { contractId },
                                     { authority: "provider" },

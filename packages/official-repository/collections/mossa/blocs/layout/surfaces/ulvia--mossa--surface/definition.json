@@ -1,0 +1,32 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--surface",
+    "label": "bloc.surface.label",
+    "description": "bloc.surface.description",
+    "order": 100,
+    "uses": ["ulvia--mossa--heading", "ulvia--mossa--prose"],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["div", "form"]
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["surface-default"],
+    "defaultExample": "surface-default"
+}

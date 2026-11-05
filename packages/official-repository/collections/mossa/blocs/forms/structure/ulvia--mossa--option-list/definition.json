@@ -1,0 +1,23 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--option-list",
+    "label": "bloc.option-list.label",
+    "description": "bloc.option-list.description",
+    "catalogue": "hidden",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "items": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.forms"]
+}

@@ -1,0 +1,51 @@
+<main cms-bloc="ulvia--repository--shell">
+    <section slot="content">
+        <h1 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/repository.resource }}</h1>
+        <p>{{ cms.i18n.ulvia/repository.resource-help }}</p>
+        <section
+            cms-query="ulvia/repository:catalogue-list as details"
+            cms-query-input='{"kind":{"from":"state","key":"@param:ulvia--repository--kind"},"publisherId":{"from":"state","key":"@param:ulvia--repository--publisher"},"id":{"from":"state","key":"@param:ulvia--repository--resource"},"version":{"from":"state","key":"@param:ulvia--repository--version"},"limit":{"from":"literal","value":1}}'
+        >
+            <div cms-match="details.outcome.kind">
+                <span cms-case='"none"'></span>
+                <div cms-case='"success"'>
+                    <p cms-condition="details.data.releases.length === 0">{{ cms.i18n.ulvia/repository.not-found }}</p>
+                    <article cms-repeat="details.data.releases as release">
+                        <h2>{{ release.metadata.name }}</h2>
+                        <p cms-condition="release.metadata.description !== undefined">{{ release.metadata.description }}</p>
+                        <div>
+                            <p><strong>{{ cms.i18n.ulvia/repository.publisher }}</strong> {{ release.publisherId }}</p>
+                            <p><strong>{{ cms.i18n.ulvia/repository.name }}</strong> {{ release.id }}</p>
+                            <p><strong>{{ cms.i18n.ulvia/repository.version }}</strong> {{ release.version }}</p>
+                            <p><strong>{{ cms.i18n.ulvia/repository.digest }}</strong> <code>{{ release.digest }}</code></p>
+                        </div>
+                    </article>
+                </div>
+                <div cms-case='"error"' cms-match="details.outcome.code">
+                    <p role="alert" cms-case='"REJECTED"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                    <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                </div>
+                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+            </div>
+        </section>
+        <section
+            cms-query="ulvia/repository:publication-state as publication"
+            cms-query-input='{"kind":{"from":"state","key":"@param:ulvia--repository--kind"},"publisherId":{"from":"state","key":"@param:ulvia--repository--publisher"},"id":{"from":"state","key":"@param:ulvia--repository--resource"},"version":{"from":"state","key":"@param:ulvia--repository--version"}}'
+        >
+            <div cms-match="publication.outcome.kind">
+                <span cms-case='"none"'></span>
+                <div cms-case='"success"'>
+                    <p>{{ cms.i18n.ulvia/repository.revision }} {{ publication.data.revision }}</p>
+                    <p cms-condition="publication.data.yank !== null">{{ cms.i18n.ulvia/repository.yanked }}</p>
+                </div>
+                <div cms-case='"error"' cms-match="publication.outcome.code">
+                    <p role="alert" cms-case='"REJECTED"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                    <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                </div>
+                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+            </div>
+        </section>
+    </section>
+</main>

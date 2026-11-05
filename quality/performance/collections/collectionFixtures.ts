@@ -3,8 +3,8 @@ import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 export function collectionFixture(blocCount: number, exampleCount: number, version = "1.0.0") {
     const messages: Record<string, string> = { "collection.name": "Performance collection", content: "Content" };
     const blocs = Array.from({ length: blocCount }, (_, index) => {
-        const id = `performance-suite-card-${index}`;
-        const label = `bloc.${id}.label`;
+        const id = `ulvia-dperformance--performance-suite--card-${index}`;
+        const label = `bloc.card-${index}.label`;
         messages[label] = `Performance card ${index}`;
         return {
             kind: "component",
@@ -30,7 +30,7 @@ export function collectionFixture(blocCount: number, exampleCount: number, versi
             requires: [],
             previews: [{ id: "desktop", frame: { width: 1280, height: 720 } }],
             document: {
-                html: `<div cms-bloc=\"performance-suite-card-${index % blocCount}\"></div>`,
+                html: `<div cms-bloc=\"ulvia-dperformance--performance-suite--card-${index % blocCount}\"></div>`,
             },
         };
     });
@@ -38,7 +38,7 @@ export function collectionFixture(blocCount: number, exampleCount: number, versi
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
-        collectionId: "performance-suite",
+        collectionId: "ulvia.performance/performance-suite",
         publisherId: "ulvia.performance",
         version,
         name: "collection.name",

@@ -2,10 +2,10 @@
     "kind": "contract",
     "protocol": "ulvia-provider/v1",
     "schemaDialect": "ulvia-schema/v1",
-    "contractId": "communication.receipt",
+    "contractId": "ulvia/communication.receipt",
     "name": "Receipt",
     "version": "0.1.0",
-    "publisherId": "ulvia.official",
+    "publisherId": "ulvia",
     "fixtureAssets": [
         {
             "id": "receipt.svg",

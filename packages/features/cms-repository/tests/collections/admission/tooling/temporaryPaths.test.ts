@@ -15,14 +15,14 @@ test("compiles through linked temporary paths without changing artifacts or allo
         const source = `
 import { buildCollectionBloc } from "@bernouy/cms-repository/collections/build";
 const artifact = await buildCollectionBloc({
-    tag: "demo-temp-path",
+    tag: "example--demo--temp-path",
     viewSource: 'import { marker } from "./marker"; export function mount(root) { root.dataset.marker = marker; }',
     source: { "marker.ts": Buffer.from('export const marker = "TEMP_PATH_MARKER";').toString("base64") },
 });
 let denied = false;
 try {
     await buildCollectionBloc({
-        tag: "demo-outside-temp",
+        tag: "example--demo--outside-temp",
         viewSource: ${JSON.stringify(`import { marker } from ${JSON.stringify(outside)}; export function mount() { return marker; }`)},
     });
 } catch (error) {

@@ -1,3 +1,7 @@
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { LocalRepositoryYanks } from "@bernouy/cms-repository/repository/filesystem";
 import { expect, test } from "bun:test";
 import { cataloguePage, CatalogueInputError } from "../../../src/repository/filesystem/core/catalogue";
 import type { RepositoryCatalogueReader } from "../../../src/repository/filesystem/catalogueIndex";
@@ -5,11 +9,11 @@ import type { RepositoryCatalogueReader } from "../../../src/repository/filesyst
 test("catalogue filters precede pagination and cursors cannot cross resource queries", async () => {
     let reads = 0;
     const entries = [
-        { publisherId: "a.example", collectionId: "cards", version: "1.0.0" },
-        { publisherId: "b.example", collectionId: "cards", version: "1.0.0" },
-        { publisherId: "b.example", collectionId: "cards", version: "1.0.1" },
-        { publisherId: "b.example", collectionId: "cards", version: "2.0.0" },
-        { publisherId: "b.example", collectionId: "layout", version: "1.0.0" },
+        { publisherId: "a.example", collectionId: "a.example/cards", version: "1.0.0" },
+        { publisherId: "b.example", collectionId: "b.example/cards", version: "1.0.0" },
+        { publisherId: "b.example", collectionId: "b.example/cards", version: "1.0.1" },
+        { publisherId: "b.example", collectionId: "b.example/cards", version: "2.0.0" },
+        { publisherId: "b.example", collectionId: "b.example/layout", version: "1.0.0" },
     ];
     const index: RepositoryCatalogueReader = {
         list: async () => {
@@ -17,7 +21,7 @@ test("catalogue filters precede pagination and cursors cannot cross resource que
             return entries;
         },
     };
-    const filter = { publisherId: "b.example", id: "cards" };
+    const filter = { publisherId: "b.example", id: "b.example/cards" };
     const first = await cataloguePage("collections", index, "2", null, false, filter);
     expect(first.releases.map(({ version }) => version)).toEqual(["1.0.0", "1.0.1"]);
     expect(first.nextCursor).toBeDefined();
@@ -29,10 +33,10 @@ test("catalogue filters precede pagination and cursors cannot cross resource que
     expect(reads).toBe(2);
     const decoded = JSON.parse(Buffer.from(first.nextCursor!, "base64url").toString("utf8"));
     for (const key of [
-        "b.example\u0000cards\u0000invalid",
-        "b.example\u0000cards",
-        "b.example\u0000cards\u00001.0.0\u0000extra",
-        "\u0000cards\u00001.0.0",
+        "b.example\u0000b.example/cards\u0000invalid",
+        "b.example\u0000b.example/cards",
+        "b.example\u0000b.example/cards\u00001.0.0\u0000extra",
+        "\u0000b.example/cards\u00001.0.0",
     ]) {
         const forged = Buffer.from(JSON.stringify([decoded[0], key, decoded[2]])).toString("base64url");
         await expect(cataloguePage("collections", index, "2", forged, false, filter)).rejects.toBeInstanceOf(
@@ -42,7 +46,7 @@ test("catalogue filters precede pagination and cursors cannot cross resource que
     expect(reads).toBe(2);
     for (const changed of [
         { ...filter, publisherId: "a.example" },
-        { ...filter, id: "layout" },
+        { ...filter, id: "b.example/layout" },
         { ...filter, version: "1.0.0" },
         {},
     ]) {
@@ -71,5 +75,48 @@ test("exact catalogue filtering applies to the contract and provider identity fi
         expect((await cataloguePage(type, index, "1", null, false, { id: "commerce.catalogue" })).releases).toEqual([
             expected,
         ]);
+    }
+});
+
+test.each(["collections", "contracts", "providers"] as const)(
+    "%s catalogue channels filter before pagination and fence cursors",
+    async (kind) => {
+        const idKey = kind === "collections" ? "collectionId" : kind === "contracts" ? "contractId" : "providerId";
+        const entries = ["1.0.0", "1.1.0-beta.1", "1.1.0-beta.2"].map((version) => ({
+            publisherId: "ulvia",
+            [idKey]: "ulvia/cards",
+            version,
+        }));
+        const index = { list: async () => entries } as RepositoryCatalogueReader;
+        expect((await cataloguePage(kind, index, "2", null, false, { channel: "stable" })).releases).toEqual([
+            entries[0]!,
+        ]);
+        const page = await cataloguePage(kind, index, "1", null, false, { channel: "beta" });
+        expect(page.releases).toEqual([entries[1]!]);
+        expect(page.nextCursor).toBeDefined();
+        await expect(
+            cataloguePage(kind, index, "1", page.nextCursor!, false, { channel: "stable" }),
+        ).rejects.toBeInstanceOf(CatalogueInputError);
+        expect((await cataloguePage(kind, index, "1", page.nextCursor!, false, { channel: "beta" })).releases).toEqual([
+            entries[2]!,
+        ]);
+    },
+);
+
+test("publication metadata requires complete identities and keeps equal local names independent", async () => {
+    const root = await mkdtemp(join(tmpdir(), "qualified-yanks-"));
+    const yanks = new LocalRepositoryYanks(root);
+    try {
+        await yanks.set("contract", "ulvia", "ulvia/cards", "1.0.0", "Withdrawn");
+        expect(await yanks.get("contract", "other", "other/cards", "1.0.0")).toBeNull();
+        const before = await readFile(join(root, "metadata/yanks.json"));
+        for (const id of ["cards", "other/cards"]) {
+            await expect(yanks.set("contract", "ulvia", id, "1.0.0", "Invalid write")).rejects.toThrow(
+                "Invalid publication identity",
+            );
+        }
+        expect(await readFile(join(root, "metadata/yanks.json"))).toEqual(before);
+    } finally {
+        await rm(root, { recursive: true, force: true });
     }
 });

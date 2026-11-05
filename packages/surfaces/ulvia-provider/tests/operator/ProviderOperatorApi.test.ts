@@ -96,8 +96,8 @@ test("an idempotency key can only replay the exact instance request", async () =
     };
 
     expect(lifecycle.describeProfiles()).toEqual({
-        defaultProfile: { id: "ulvia.official", version: "1.0.0" },
-        profiles: [{ id: "ulvia.official", version: "1.0.0" }],
+        defaultProfile: { id: "ulvia", version: "1.0.0" },
+        profiles: [{ id: "ulvia", version: "1.0.0" }],
     });
     const created = await lifecycle.create("create-one", input);
     expect((await lifecycle.create("create-one", input)).instance.id).toBe(created.instance.id);
@@ -112,16 +112,16 @@ test("an idempotency key can only replay the exact instance request", async () =
 function profiles(): OfficialInstanceProfiles {
     return new OfficialInstanceProfiles([
         {
-            id: "ulvia.official",
+            id: "ulvia",
             version: "1.0.0",
             initialPages: [],
             upgradeFromVersions: [],
-            manifest: { providerId: "ulvia.official", version: "0.3.0", digest: `sha256:${"a".repeat(64)}` },
+            manifest: { providerId: "ulvia/primary-provider", version: "0.3.0", digest: `sha256:${"a".repeat(64)}` },
             contracts: [],
             collections: [
                 {
-                    publisherId: "ulvia.official",
-                    collectionId: "ulvia-official",
+                    publisherId: "ulvia",
+                    collectionId: "ulvia/mossa",
                     version: "1.0.0",
                     digest: `sha256:${"b".repeat(64)}`,
                 },
@@ -140,7 +140,7 @@ function readyInstance(): ProviderInstanceRecord {
         gatewayUrl: "http://edge.internal:3000",
         label: "One",
         status: "ready",
-        profile: { id: "ulvia.official", version: "1.0.0" },
+        profile: { id: "ulvia", version: "1.0.0" },
         revision: 6,
         createdAt: new Date(0).toISOString(),
         updatedAt: new Date(0).toISOString(),

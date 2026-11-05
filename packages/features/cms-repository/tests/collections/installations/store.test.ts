@@ -20,7 +20,7 @@ function release() {
 
                 kind: "composition",
                 root: { accepts: ["div"] },
-                id: "atlas-welcome",
+                id: "atlas-dofficial--atlas--welcome",
                 label: "bloc.welcome.label",
                 markup: "<p>{{ copy }}</p>",
                 uses: [],
@@ -52,15 +52,15 @@ test("concurrent saves conflict, isolate site overrides and preserve release def
     await store.install("a", artifact.digest, 0);
     await store.install("b", artifact.digest, 0);
     const results = await Promise.allSettled([
-        store.saveTexts("a", "atlas", 1, { title: { fr: "Salut" } }),
-        store.saveTexts("a", "atlas", 1, { title: { fr: "Bonsoir" } }),
+        store.saveTexts("a", "atlas.official/atlas", 1, { title: { fr: "Salut" } }),
+        store.saveTexts("a", "atlas.official/atlas", 1, { title: { fr: "Bonsoir" } }),
     ]);
     expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
     expect((await store.snapshot("a")).revision).toBe(2);
     expect((await store.snapshot("b")).collections[0]!.textOverrides).toEqual({});
     expect((await store.snapshot("a")).collections[0]!.release.texts![0]!.values.fr).toBe("Bonjour");
-    await expect(store.saveTexts("a", "atlas", 2, { missing: { fr: "No" } })).rejects.toThrow();
-    await store.saveTexts("a", "atlas", 2, {});
+    await expect(store.saveTexts("a", "atlas.official/atlas", 2, { missing: { fr: "No" } })).rejects.toThrow();
+    await store.saveTexts("a", "atlas.official/atlas", 2, {});
     expect((await store.snapshot("a")).collections[0]!.textOverrides).toEqual({});
 });
 
@@ -68,7 +68,7 @@ test("compatible repository upgrade preserves site texts and rejects removals", 
     const store = new CollectionStore(new MemoryCollectionStorage());
     const old = await store.importRelease(collectionFixture(release()));
     await store.install("site", old.digest, 0, "local");
-    await store.saveTexts("site", "atlas", 1, { title: { fr: "Salut" } });
+    await store.saveTexts("site", "atlas.official/atlas", 1, { title: { fr: "Salut" } });
     const newer = await store.importRelease(
         collectionFixture({
             ...release(),
@@ -87,7 +87,7 @@ test("compatible repository upgrade preserves site texts and rejects removals", 
 });
 
 test("imports verified assets and contract requirements into the installation store", async () => {
-    const contracts = await releaseCatalogue(contractDocument("catalog", "item.list"));
+    const contracts = await releaseCatalogue(contractDocument("ulvia/catalog", "item.list"));
     const store = new CollectionStore(new MemoryCollectionStorage(), contracts);
     const bytes = new TextEncoder().encode("asset bytes");
     const input = release();
@@ -99,7 +99,7 @@ test("imports verified assets and contract requirements into the installation st
             digest: `sha256:${new Bun.CryptoHasher("sha256").update(bytes).digest("hex")}`,
         },
     ];
-    input.blocs[0]!.requires = [{ contractId: "catalog", capabilityId: "item.list", versionRange: "^1.0.0" }];
+    input.blocs[0]!.requires = [{ contractId: "ulvia/catalog", capabilityId: "item.list", versionRange: "^1.0.0" }];
 
     const artifact = await store.importRelease(collectionFixture(input), [{ id: "thumbnail.txt", bytes }]);
     expect(await store.getReleaseAsset(artifact.digest, "thumbnail.txt")).toEqual(bytes);
@@ -134,7 +134,7 @@ test("resolves asset metadata in one batch without hydrating unrelated releases"
     const second = await store.importRelease(
         collectionFixture({
             ...release(),
-            collectionId: "other",
+            collectionId: "atlas.official/other",
             version: "1.0.0",
             assets: [secondAsset.definition],
             blocs: [],
@@ -150,12 +150,14 @@ test("resolves asset metadata in one batch without hydrating unrelated releases"
     };
 
     const resolved = await store.getInstalledAssetMetadataBatch("site", [
-        { collectionId: "atlas", assetId: "first.txt" },
-        { collectionId: "atlas", assetId: "first.txt" },
-        { collectionId: "missing", assetId: "none" },
+        { collectionId: "atlas.official/atlas", assetId: "first.txt" },
+        { collectionId: "atlas.official/atlas", assetId: "first.txt" },
+        { collectionId: "ulvia/missing", assetId: "none" },
     ]);
 
-    expect(resolved).toEqual([{ collectionId: "atlas", digest: first.digest, asset: { ...firstAsset.definition } }]);
+    expect(resolved).toEqual([
+        { collectionId: "atlas.official/atlas", digest: first.digest, asset: { ...firstAsset.definition } },
+    ]);
     expect(reads).toEqual([first.digest]);
 });
 
@@ -168,7 +170,7 @@ test("upgrades may widen but never narrow the stored settings contract", async (
 
         kind: "component",
         root: { accepts: ["div"] },
-        id: "atlas-card",
+        id: "atlas-dofficial--atlas--card",
         label: "bloc.card.label",
         markup: "<article></article>",
         uses: [],
@@ -187,7 +189,7 @@ test("upgrades may widen but never narrow the stored settings contract", async (
     };
     const old = await store.importRelease(collectionFixture(initial));
     await store.install("site", old.digest, 0, "local");
-    await store.saveTexts("site", "atlas", 1, { title: { fr: "Salut" } });
+    await store.saveTexts("site", "atlas.official/atlas", 1, { title: { fr: "Salut" } });
     const changedSettings = structuredClone(initial);
     changedSettings.version = "1.1.0";
     changedSettings.blocs[0]!.settings[0]!.maxLength = 32;

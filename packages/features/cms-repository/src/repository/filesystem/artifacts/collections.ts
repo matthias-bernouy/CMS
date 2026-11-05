@@ -6,14 +6,14 @@ import {
     isCollectionNamespace,
     type AdmittedCollectionRelease,
     DEFAULT_COLLECTION_LIMITS,
-    verifyCollectionPublicationEvolution,
+    verifyCollectionPublicationHistory,
     verifyStoredCollectionReleaseJson,
 } from "cms-repository/exports/collections/index";
-import { deepFreeze } from "cms-repository/exports/contracts/protocol";
+import { resourceName, resourcePublisher, deepFreeze } from "cms-repository/exports/contracts/protocol";
 import { snapshotCollectionAssets, verifyCollectionAssets } from "cms-repository/collections/core/admission/assets";
 import type { CollectionAssetDefinition } from "cms-repository/collections/interfaces/CollectionAssets";
 import type { VerifiedCollectionReleaseMetadata } from "cms-repository/collections/interfaces/CollectionAdmission";
-import { compareSemVer, isRepositoryIdentifier } from "cms-repository/exports/contracts/compatibility";
+import { isRepositoryIdentifier } from "cms-repository/exports/contracts/compatibility";
 import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
 import { listDirectories, writeImmutableFile } from "../core/immutableFiles";
 import { pruneRepository } from "../core/recovery";
@@ -32,13 +32,11 @@ export class LocalCollectionRepository {
         if (existing) {
             return assertSameDigest(existing, artifact);
         }
-        const previous = (await this.listMetadata())
-            .filter((item) => item.release.publisherId === publisherId && item.release.collectionId === collectionId)
-            .sort((left, right) => compareSemVer(right.release.version, left.release.version))[0];
-        if (previous) {
-            await verifyCollectionPublicationEvolution(previous.release, artifact.release);
-        }
-        const directory = join(this.root, "releases", publisherId, collectionId);
+        const history = (await this.listMetadata())
+            .filter((item) => item.release.collectionId === collectionId)
+            .map((item) => item.release);
+        await verifyCollectionPublicationHistory(history, artifact.release);
+        const directory = join(this.root, "releases", publisherId, resourceName(collectionId));
         await ensureDurableDirectory(directory, this.root);
         const assetDirectory = join(this.root, "assets", "collections", releaseHash(artifact.canonicalJson));
         if (artifact.assets.length) {
@@ -96,7 +94,7 @@ export class LocalCollectionRepository {
                         continue;
                     }
                     const version = entry.name.slice(0, -5);
-                    const artifact = await this.getMetadata(publisher, collection, version);
+                    const artifact = await this.getMetadata(publisher, `${publisher}/${collection}`, version);
                     if (!artifact) {
                         throw new Error(`Release disappeared: ${publisher}/${collection}/${version}`);
                     }
@@ -196,7 +194,12 @@ export class LocalCollectionRepository {
     }
 
     private async readDocument(publisherId: string, collectionId: string, version: string) {
-        if (!isRepositoryIdentifier(publisherId) || !isCollectionNamespace(collectionId) || !VERSION.test(version)) {
+        if (
+            !isRepositoryIdentifier(publisherId) ||
+            !isCollectionNamespace(collectionId) ||
+            resourcePublisher(collectionId) !== publisherId ||
+            !VERSION.test(version)
+        ) {
             return null;
         }
         const path = this.releasePath(publisherId, collectionId, version);
@@ -213,7 +216,14 @@ export class LocalCollectionRepository {
     }
 
     private releasePath(publisherId: string, collectionId: string, version: string): string {
-        return join(this.root, "releases", publisherId, collectionId, `${version}.json`);
+        if (
+            resourcePublisher(collectionId) !== publisherId ||
+            !isRepositoryIdentifier(publisherId) ||
+            !VERSION.test(version)
+        ) {
+            throw new RepositoryRequestError("REJECTED", "Invalid collection coordinate");
+        }
+        return join(this.root, "releases", publisherId, resourceName(collectionId), `${version}.json`);
     }
 
     private assetDirectory(canonicalJson: string): string {

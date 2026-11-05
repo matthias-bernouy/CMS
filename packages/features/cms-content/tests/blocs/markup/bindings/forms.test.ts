@@ -9,7 +9,7 @@ import {
 import { nativeBindingAttributeIssue, ValidatingContentRepository, type ContentRepository } from "@bernouy/cms-content";
 
 const form = (attributes: string, children = "") =>
-    `<div cms-bloc=\"fixture-card\"><form cms-mutation="orders:update as saved" ${attributes}>${children}</form></div>`;
+    `<div cms-bloc=\"fixture-card\"><form cms-mutation="ulvia/orders:update as saved" ${attributes}>${children}</form></div>`;
 
 function repository() {
     const writes: string[] = [];
@@ -27,7 +27,7 @@ function repository() {
 describe("declarative form contracts", () => {
     test("accepts the compact mutation grammar without transport attributes", () => {
         expect(
-            nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.mutation, "ulvia.cms.content:pages.update as saved"),
+            nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.mutation, "ulvia/cms.content:pages.update as saved"),
         ).toBeNull();
         expect(
             nativeBindingAttributeIssue(

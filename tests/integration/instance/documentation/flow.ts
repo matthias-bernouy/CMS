@@ -9,9 +9,9 @@ export async function exerciseDocumentation(connection: Awaited<ReturnType<typeo
     }[];
     expect(links).toHaveLength(4);
     const reference = links.find((entry) => entry.reference.path.endsWith("create-and-publish.md"))!.reference;
-    const search = await connection.call("ulvia.cms.installations", "documentation.search", {
+    const search = await connection.call("ulvia/cms.installations", "documentation.search", {
         query: "Comment créer et vérifier une page avant publication ?",
-        contractId: "ulvia.cms.content",
+        contractId: "ulvia/cms.content",
         capabilityId: "pages.create",
     });
     expect(["hybrid", "lexical"]).toContain(search.mode);
@@ -23,7 +23,7 @@ export async function exerciseDocumentation(connection: Awaited<ReturnType<typeo
                 item.reference.releaseDigest === reference.releaseDigest,
         ),
     ).toBe(true);
-    const document = await connection.call("ulvia.cms.installations", "documentation.get", { reference });
+    const document = await connection.call("ulvia/cms.installations", "documentation.get", { reference });
     expect(document.content).toContain("## Verify and improve");
     expect(document.content).toContain("pages.get");
     expect(document.nextOffset).toBeNull();
@@ -41,16 +41,16 @@ export async function exerciseDocumentation(connection: Awaited<ReturnType<typeo
         arguments: { input: { reference, siteId: "another-instance" } },
     });
     expect(forged.isError).toBe(true);
-    const created = await connection.call("ulvia.cms.content", "pages.create", {
+    const created = await connection.call("ulvia/cms.content", "pages.create", {
         path: "/documentation-review",
         title: "Documentation review",
     });
-    const updated = await connection.call("ulvia.cms.content", "pages.update", {
+    const updated = await connection.call("ulvia/cms.content", "pages.update", {
         id: created.id,
         expectedRevision: created.revision,
         title: "Verified documentation review",
     });
-    const saved = await connection.call("ulvia.cms.content", "pages.get", { id: created.id });
+    const saved = await connection.call("ulvia/cms.content", "pages.get", { id: created.id });
     expect(saved.title).toBe(updated.title);
     expect(saved.visible).toBe(false);
     const updateTool = connection.tools.find((entry) => entry._meta["io.ulvia/capability"] === "pages.update")!;
@@ -60,18 +60,18 @@ export async function exerciseDocumentation(connection: Awaited<ReturnType<typeo
     });
     expect(conflict.isError).toBe(true);
     expect(conflict.structuredContent.error.code).toBe("REVISION_CONFLICT");
-    expect((await connection.call("ulvia.cms.content", "pages.get", { id: created.id })).title).toBe(updated.title);
-    const content = await connection.call("ulvia.cms.content", "pages.update", {
+    expect((await connection.call("ulvia/cms.content", "pages.get", { id: created.id })).title).toBe(updated.title);
+    const content = await connection.call("ulvia/cms.content", "pages.update", {
         id: created.id,
         expectedRevision: updated.revision,
-        content: '<h1 cms-bloc="ulvia-official-heading" size="lg" text-align="start">Documentation flow verified</h1>',
+        content: '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Documentation flow verified</h1>',
     });
-    const published = await connection.call("ulvia.cms.content", "pages.publish", {
+    const published = await connection.call("ulvia/cms.content", "pages.publish", {
         id: created.id,
         expectedRevision: content.revision,
         visible: true,
     });
-    expect((await connection.call("ulvia.cms.content", "pages.get", { id: created.id })).visible).toBe(true);
+    expect((await connection.call("ulvia/cms.content", "pages.get", { id: created.id })).visible).toBe(true);
     const publicPage = await connection.browser.newPage();
     try {
         for (const width of [375, 1280]) {
@@ -86,7 +86,7 @@ export async function exerciseDocumentation(connection: Awaited<ReturnType<typeo
     } finally {
         await publicPage.close();
     }
-    await connection.call("ulvia.cms.content", "pages.publish", {
+    await connection.call("ulvia/cms.content", "pages.publish", {
         id: created.id,
         expectedRevision: published.revision,
         visible: false,

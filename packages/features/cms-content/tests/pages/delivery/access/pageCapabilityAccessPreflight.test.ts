@@ -41,7 +41,7 @@ describe("Content page capability access preflight", () => {
 
     test("redirects anonymous visitors when a query capability requires authentication", async () => {
         const { handler } = await mountPage({
-            content: `<section cms-query="shop:my-products as products"><p>Products</p></section>`,
+            content: `<section cms-query="ulvia/shop:my-products as products"><p>Products</p></section>`,
             resolveActor: authSubject(null),
         });
 
@@ -52,7 +52,7 @@ describe("Content page capability access preflight", () => {
 
     test("uses the configured login page", async () => {
         const { handler } = await mountPage({
-            content: `<section cms-query="shop:my-products as products"></section>`,
+            content: `<section cms-query="ulvia/shop:my-products as products"></section>`,
             resolveActor: authSubject(null),
             systemPages: { login: { pageId: "sign-in" } },
         });
@@ -64,7 +64,7 @@ describe("Content page capability access preflight", () => {
 
     test("uses a configured site login Page", async () => {
         const { handler } = await mountPage({
-            content: `<section cms-query="shop:my-products as products"></section>`,
+            content: `<section cms-query="ulvia/shop:my-products as products"></section>`,
             resolveActor: authSubject(null),
             systemPages: {
                 login: {
@@ -80,13 +80,13 @@ describe("Content page capability access preflight", () => {
 
     test("serves public capabilities anonymously and authenticated capabilities to members", async () => {
         const publicPage = await mountPage({
-            content: `<section cms-query="shop:list-products as products"><p>Public</p></section>`,
+            content: `<section cms-query="ulvia/shop:list-products as products"><p>Public</p></section>`,
             resolveActor: authSubject(null),
         });
         expect((await publicPage.handler(new Request("http://site/products"))).status).toBe(200);
 
         const memberPage = await mountPage({
-            content: `<section cms-query="shop:my-products as products"><p>Private</p></section>`,
+            content: `<section cms-query="ulvia/shop:my-products as products"><p>Private</p></section>`,
             resolveActor: authSubject({ identifier: "member-1" }),
         });
         expect((await memberPage.handler(new Request("http://site/products"))).status).toBe(200);
@@ -94,7 +94,7 @@ describe("Content page capability access preflight", () => {
 
     test("requires authentication even when the capability is triggered on submit", async () => {
         const { handler } = await mountPage({
-            content: `<form cms-mutation="shop:create-order as order"><button>Buy</button></form>`,
+            content: `<form cms-mutation="ulvia/shop:create-order as order"><button>Buy</button></form>`,
             pagePath: "/checkout",
             resolveActor: authSubject(null),
         });
@@ -105,7 +105,7 @@ describe("Content page capability access preflight", () => {
 
     test("forbids a verified user when the gateway host grant denies access", async () => {
         const { handler } = await mountPage({
-            content: `<section cms-query="shop:restricted as restricted"></section>`,
+            content: `<section cms-query="ulvia/shop:restricted as restricted"></section>`,
             resolveActor: authSubject({ identifier: "member-1" }),
         });
         const response = await handler(new Request("http://site/products"));

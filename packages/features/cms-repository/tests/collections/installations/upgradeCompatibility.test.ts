@@ -131,11 +131,11 @@ test("upgrades preserve managed native element choices", async () => {
                 categories: ["bloc.panel.label"],
 
                 kind: "component",
-                id: "atlas-action",
+                id: "atlas-dofficial--atlas--action",
                 label: "bloc.panel.label",
                 root: { accepts: ["div"] },
                 markup: "<slot></slot>",
-                exampleContent: `<${root}>{{ cms.i18n.atlas.submit }}</${root}>`,
+                exampleContent: `<${root}>{{ cms.i18n.atlas.official/atlas.submit }}</${root}>`,
                 uses: [],
                 requires: [],
                 slots: {
@@ -160,7 +160,9 @@ test("upgrades preserve managed native element choices", async () => {
 test("upgrades accept wider slot and managed native contracts", async () => {
     const initial = release("1.0.0");
     initial.texts = [actionText()];
-    const panel = (initial.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
+    const panel = (initial.blocs as Record<string, unknown>[]).find(
+        (bloc) => bloc.id === "atlas-dofficial--atlas--panel",
+    )!;
     panel.defaultExample = undefined;
     panel.slots = { body: { accepts: [{ kind: "native-content", profile: "prose" }], min: 1, max: 1 } };
     const managed = {
@@ -168,11 +170,11 @@ test("upgrades accept wider slot and managed native contracts", async () => {
         categories: ["bloc.panel.label"],
 
         kind: "component",
-        id: "atlas-action",
+        id: "atlas-dofficial--atlas--action",
         label: "bloc.panel.label",
         root: { accepts: ["div"] },
         markup: "<slot></slot>",
-        exampleContent: "<button>{{ cms.i18n.atlas.submit }}</button>",
+        exampleContent: "<button>{{ cms.i18n.atlas.official/atlas.submit }}</button>",
         uses: [],
         requires: [],
         slots: {
@@ -190,9 +192,13 @@ test("upgrades accept wider slot and managed native contracts", async () => {
 
     const next = structuredClone(initial);
     next.version = "1.1.0";
-    const nextPanel = (next.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
+    const nextPanel = (next.blocs as Record<string, unknown>[]).find(
+        (bloc) => bloc.id === "atlas-dofficial--atlas--panel",
+    )!;
     nextPanel.slots = { body: { accepts: [{ kind: "native-content", profile: "prose" }], min: 0, max: 2 } };
-    const nextManaged = (next.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-action")!;
+    const nextManaged = (next.blocs as Record<string, unknown>[]).find(
+        (bloc) => bloc.id === "atlas-dofficial--atlas--action",
+    )!;
     nextManaged.slots = {
         default: {
             accepts: [{ kind: "native-element", accepts: ["button", "a"] }],
@@ -212,7 +218,9 @@ test("upgrades allow setting presentation changes while preserving the stored va
         messages["setting.tone.help"] = "Choose a tone";
         messages["setting.compact.label"] = "Compact";
     }
-    const panel = (initial.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
+    const panel = (initial.blocs as Record<string, unknown>[]).find(
+        (bloc) => bloc.id === "atlas-dofficial--atlas--panel",
+    )!;
     panel.settings = [
         {
             id: "tone",
@@ -241,7 +249,9 @@ test("upgrades allow setting presentation changes while preserving the stored va
         messages["setting.tone.help"] = "Updated author guidance";
         messages["setting.layout.label"] = "Layout";
     }
-    const nextPanel = (next.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
+    const nextPanel = (next.blocs as Record<string, unknown>[]).find(
+        (bloc) => bloc.id === "atlas-dofficial--atlas--panel",
+    )!;
     nextPanel.settings = [
         nextPanel.settings[1],
         { ...nextPanel.settings[0], default: "calm", maxLength: 32 },

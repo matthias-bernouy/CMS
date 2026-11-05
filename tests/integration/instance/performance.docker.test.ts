@@ -38,7 +38,7 @@ integration(
         const report: Record<string, unknown> = {};
         try {
             connection = await connectBrowser(stack.cmsUrl, stack.administrator);
-            await connection.call("ulvia.cms.authoring", "configure-connection", { token: stack.repository.pat.token });
+            await connection.call("ulvia/cms.authoring", "configure-connection", { token: stack.repository.pat.token });
             // This instrumented fixture has no Docker healthcheck traffic to warm the cache.
             await stack.restartProvider();
             await verifyPublicTrace(

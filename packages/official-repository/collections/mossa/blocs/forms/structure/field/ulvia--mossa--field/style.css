@@ -1,0 +1,158 @@
+:scope {
+    --ulvia--mossa--field-caption-required-marker-display: none;
+    display: block;
+    min-width: 0;
+    color: var(--ulvia--mossa--text-primary);
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+    container-type: inline-size;
+}
+
+[part~="field"] {
+    display: grid;
+    min-width: 0;
+    gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+}
+
+[part~="heading"] {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}
+
+[part~="heading-actions"] {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+}
+
+label[part~="field-label"] {
+    min-width: 0;
+    cursor: pointer;
+    font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+    font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+    line-height: var(--ulvia--mossa--line-height-snug, 1.35);
+}
+
+[part~="field-control"] {
+    display: block;
+    min-width: 0;
+}
+
+[part~="field-description"],
+[part~="field-error"] {
+    font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+    line-height: var(--ulvia--mossa--line-height-normal, 1.5);
+}
+
+[part~="field-help"]:empty,
+[part~="field-description"]:empty,
+[part~="field-error"]:empty {
+    display: none;
+}
+
+[part~="field-help"] {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 auto;
+    line-height: 1;
+}
+
+[part~="field-value"] {
+    display: inline-flex;
+    min-height: 1.875rem;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding-inline: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    border: 1px solid color-mix(in srgb, var(--ulvia--mossa--primary) 30%, transparent);
+    border-radius: var(--ulvia--mossa--radius-full, 999px);
+    color: var(--ulvia--mossa--on-primary-subtle);
+    background: var(--ulvia--mossa--primary-subtle);
+    font-size: var(--ulvia--mossa--font-size-xs, 0.75rem);
+    font-weight: var(--ulvia--mossa--font-weight-bold, 700);
+    white-space: nowrap;
+}
+
+[part~="field-value"][hidden] {
+    display: none;
+}
+
+[part~="field-description"] {
+    color: var(--ulvia--mossa--text-muted);
+}
+
+[part~="field-error"] {
+    display: flex;
+    min-height: 2.25rem;
+    align-items: center;
+    box-sizing: border-box;
+    padding: var(--ulvia--mossa--spacing-xs, 0.5rem) var(--ulvia--mossa--spacing-sm, 0.75rem);
+    border-inline-start: 0.25rem solid var(--ulvia--mossa--danger-border);
+    border-radius: var(--ulvia--mossa--radius-sm, 0.375rem);
+    color: var(--ulvia--mossa--danger);
+    background: color-mix(in srgb, var(--ulvia--mossa--danger-subtle) 82%, transparent);
+    font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+}
+
+:scope[required] {
+    --ulvia--mossa--field-caption-required-marker-display: inline;
+}
+
+:scope[invalid] [part~="field-control"] {
+    outline: var(--ulvia--mossa--border-width-strong, 2px) solid var(--ulvia--mossa--danger-border);
+    border-radius: var(--ulvia--mossa--radius-md);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ulvia--mossa--danger-border) 22%, transparent);
+}
+
+:scope[invalid] label[part~="field-label"] {
+    color: var(--ulvia--mossa--danger);
+}
+
+:scope[label-position="inline"] [part~="field"] {
+    grid-template-columns: minmax(7.5rem, 8rem) minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--ulvia--mossa--spacing-md, 1rem);
+}
+
+:scope[label-position="inline"] [part~="heading"] {
+    grid-column: 1;
+}
+
+:scope[label-position="inline"] [part~="field-control"] {
+    grid-column: 2;
+}
+
+:scope[label-position="inline"] [part~="field-description"],
+:scope[label-position="inline"] [part~="field-error"] {
+    grid-column: 2;
+}
+
+:scope[label-position="hidden"] [part~="heading"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@container (max-width: 28rem) {
+    :scope[label-position="inline"] [part~="field"] {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: stretch;
+        column-gap: 0;
+    }
+
+    :scope[label-position="inline"] [part~="heading"],
+    :scope[label-position="inline"] [part~="field-control"],
+    :scope[label-position="inline"] [part~="field-description"],
+    :scope[label-position="inline"] [part~="field-error"] {
+        grid-column: 1;
+    }
+}

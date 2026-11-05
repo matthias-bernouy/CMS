@@ -9,7 +9,7 @@ import {
 import { RequestScopedIdentityService } from "@bernouy/cms-gateway/identity/request-scope";
 import { identityServiceContract } from "./identityService.contract";
 
-const alias: IdentityAlias = { authority: "provider", kind: "user", value: "external-1" };
+const alias: IdentityAlias = { authority: "ulvia/provider", kind: "user", value: "external-1" };
 
 describe("RequestScopedIdentityService", () => {
     test("single-flights resolutions, including null, for one scope", async () => {

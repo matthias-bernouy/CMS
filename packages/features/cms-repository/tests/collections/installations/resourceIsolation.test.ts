@@ -1,3 +1,4 @@
+import { resourcePublisher, resourceRuntimeNamespace } from "@bernouy/resource-identity";
 import { reviewedUpgrade } from "./upgrades/reviewed";
 import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
@@ -10,7 +11,7 @@ function release(collectionId: string, version: string, blocId: string, tokenId?
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
         collectionId,
-        publisherId: "atlas.official",
+        publisherId: collectionId.includes("/") ? resourcePublisher(collectionId) : "atlas.official",
         version,
         name: "collection.name",
         locale: "en",
@@ -66,38 +67,28 @@ function release(collectionId: string, version: string, blocId: string, tokenId?
     });
 }
 
-test("installations and upgrades reject global Bloc and theme token collisions", async () => {
+test("qualified collection members isolate equal names and formerly overlapping prefixes", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const first = await store.importRelease(
-        collectionFixture(release("atlas", "1.0.0", "atlas-tools-card", "tools-accent")),
+    for (const collectionId of ["atlas.official/atlas", "atlas.official/atlas-tools", "other/atlas"]) {
+        const runtime = resourceRuntimeNamespace(collectionId);
+        const artifact = await store.importRelease(release(collectionId, "1.0.0", `${runtime}--card`, "accent"));
+        await store.install("site", artifact.digest, (await store.snapshot("site")).revision);
+    }
+    expect((await store.snapshot("site")).collections).toHaveLength(3);
+    await expect(store.importRelease(release("other/atlas", "1.1.0", "atlas-dofficial--atlas--card"))).rejects.toThrow(
+        "collection namespace",
     );
-    await store.install("blocs", first.digest, 0);
-    await store.install("themes", first.digest, 0);
-
-    const blocCollision = await store.importRelease(
-        collectionFixture(release("atlas-tools", "0.9.0", "atlas-tools-card")),
-    );
-    await expect(store.install("blocs", blocCollision.digest, 1)).rejects.toThrow("Bloc tag");
-
-    const initialTools = await store.importRelease(
-        collectionFixture(release("atlas-tools", "1.0.0", "atlas-tools-welcome")),
-    );
-    await store.install("themes", initialTools.digest, 1, "local");
-    const themeCollision = await store.importRelease(
-        collectionFixture(release("atlas-tools", "1.1.0", "atlas-tools-welcome", "accent")),
-    );
-    await expect(reviewedUpgrade(store, "themes", themeCollision.digest, 2, "local")).rejects.toThrow("theme token");
 });
 
 test("installs only declared public resources from compatible collection dependencies", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const assetBytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
     const foundation = {
-        ...release("ulvia-official", "1.0.0", "ulvia-official-button", "primary"),
-        publisherId: "ulvia.official",
+        ...release("ulvia/mossa", "1.0.0", "ulvia--mossa--button", "primary"),
+        publisherId: "ulvia",
         translations: {
             en: {
-                ...release("ulvia-official", "1.0.0", "ulvia-official-button", "primary").translations.en,
+                ...release("ulvia/mossa", "1.0.0", "ulvia--mossa--button", "primary").translations.en,
                 "page.home.name": "Home",
             },
         },
@@ -116,7 +107,7 @@ test("installs only declared public resources from compatible collection depende
                 label: "page.home.name",
                 description: "page.home.name",
                 previews: [{ id: "desktop", frame: { width: 800, height: 600 } }],
-                document: { html: '<div cms-bloc="ulvia-official-button"></div>' },
+                document: { html: '<div cms-bloc="ulvia--mossa--button"></div>' },
             },
         ],
         assets: [
@@ -128,7 +119,7 @@ test("installs only declared public resources from compatible collection depende
             },
         ],
         exports: {
-            blocs: ["ulvia-official-button"],
+            blocs: ["ulvia--mossa--button"],
             themeTokens: ["primary"],
             texts: ["submit"],
             assets: ["empty.svg"],
@@ -140,17 +131,17 @@ test("installs only declared public resources from compatible collection depende
         blocs: [
             {
                 ...baseConsumer.blocs[0]!,
-                markup: '<div cms-bloc=\"ulvia-official-button\"></div><span>{{ cms.i18n.ulvia-official.submit }}</span><img src="{{ cms.asset.ulvia-official.empty.svg }}" alt="{{ cms.i18n.ulvia-official.submit }}">',
-                uses: ["ulvia-official-button"],
+                markup: '<div cms-bloc=\"ulvia--mossa--button\"></div><span>{{ cms.i18n.ulvia/mossa.submit }}</span><img src="{{ cms.asset.ulvia/mossa.empty.svg }}" alt="{{ cms.i18n.ulvia/mossa.submit }}">',
+                uses: ["ulvia--mossa--button"],
             },
         ],
         dependencies: [
             {
-                collectionId: "ulvia-official",
-                publisherId: "ulvia.official",
+                collectionId: "ulvia/mossa",
+                publisherId: "ulvia",
                 versionRange: "^1.0.0",
                 imports: {
-                    blocs: [{ id: "ulvia-official-button" }],
+                    blocs: [{ id: "ulvia--mossa--button" }],
                     themeTokens: [{ id: "primary" }],
                     texts: [{ id: "submit" }],
                     assets: [{ id: "empty.svg" }],
@@ -163,7 +154,7 @@ test("installs only declared public resources from compatible collection depende
         { id: "empty.svg", bytes: assetBytes },
     ]);
     const consumerArtifact = await store.importRelease(collectionFixture(consumer));
-    await expect(store.install("site", consumerArtifact.digest, 0)).rejects.toThrow("requires ulvia-official");
+    await expect(store.install("site", consumerArtifact.digest, 0)).rejects.toThrow("requires ulvia/mossa");
     await store.install("site", foundationArtifact.digest, 0);
     await expect(store.install("site", consumerArtifact.digest, 1)).resolves.toMatchObject({ revision: 2 });
 
@@ -203,7 +194,7 @@ test("installs only declared public resources from compatible collection depende
                                 id: "gap",
                                 label: "theme.token.gap.label",
                                 type: "length",
-                                defaults: { light: "var(--ulvia-official-primary)" },
+                                defaults: { light: "var(--ulvia--mossa--primary)" },
                             },
                         ],
                     },
@@ -226,7 +217,7 @@ test("requires imported cms-svg assets to expose the verified inline profile", a
         digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
     };
     const foundation = {
-        ...release("foundation", "1.0.0", "foundation-card"),
+        ...release("atlas.official/foundation", "1.0.0", "atlas-dofficial--foundation--card"),
         assets: [asset],
         exports: { blocs: [], themeTokens: [], assets: [asset.id] },
     };
@@ -236,12 +227,12 @@ test("requires imported cms-svg assets to expose the verified inline profile", a
         blocs: [
             {
                 ...baseConsumer.blocs[0]!,
-                markup: '<svg cms-svg="{{ cms.asset.foundation.icons/rule.svg }}" aria-hidden="true"></svg>',
+                markup: '<svg cms-svg="{{ cms.asset.atlas.official/foundation.icons/rule.svg }}" aria-hidden="true"></svg>',
             },
         ],
         dependencies: [
             {
-                collectionId: "foundation",
+                collectionId: "atlas.official/foundation",
                 publisherId: "atlas.official",
                 versionRange: "^1.0.0",
                 imports: {
@@ -271,11 +262,11 @@ test("requires imported cms-svg assets to expose the verified inline profile", a
 
 test("admits imported Blocs under the same Page grammar", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const foundationBase = release("ulvia-official", "1.0.0", "ulvia-official-admin-card");
+    const foundationBase = release("ulvia/mossa", "1.0.0", "ulvia--mossa--admin-card");
     const foundationSource = {
         ...foundationBase,
-        publisherId: "ulvia.official",
-        exports: { blocs: ["ulvia-official-admin-card"], themeTokens: [] },
+        publisherId: "ulvia",
+        exports: { blocs: ["ulvia--mossa--admin-card"], themeTokens: [] },
         blocs: foundationBase.blocs,
     };
     const consumerBase = release("shop", "1.0.0", "shop-shell");
@@ -284,11 +275,11 @@ test("admits imported Blocs under the same Page grammar", async () => {
         translations: { en: { ...consumerBase.translations.en, "page.home.name": "Home" } },
         dependencies: [
             {
-                collectionId: "ulvia-official",
-                publisherId: "ulvia.official",
+                collectionId: "ulvia/mossa",
+                publisherId: "ulvia",
                 versionRange: "^1.0.0",
                 imports: {
-                    blocs: [{ id: "ulvia-official-admin-card" }],
+                    blocs: [{ id: "ulvia--mossa--admin-card" }],
                     themeTokens: [],
                 },
             },
@@ -299,7 +290,7 @@ test("admits imported Blocs under the same Page grammar", async () => {
                 label: "page.home.name",
                 description: "page.home.name",
                 previews: [{ id: "desktop", frame: { width: 800, height: 600 } }],
-                document: { html: '<div cms-bloc="ulvia-official-admin-card"></div>' },
+                document: { html: '<div cms-bloc="ulvia--mossa--admin-card"></div>' },
             },
         ],
     };
@@ -311,7 +302,7 @@ test("admits imported Blocs under the same Page grammar", async () => {
 });
 
 test("revalidates imported Bloc Page contracts against the installed catalogue", async () => {
-    const foundationBase = release("foundation", "1.0.0", "foundation-card");
+    const foundationBase = release("atlas.official/foundation", "1.0.0", "atlas-dofficial--foundation--card");
     const foundationSource = {
         ...foundationBase,
         blocs: [
@@ -321,7 +312,7 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
 
                 kind: "component",
                 root: { accepts: ["div"] },
-                id: "foundation-card",
+                id: "atlas-dofficial--foundation--card",
                 label: "bloc.welcome.label",
                 markup: '<section><slot name="body"></slot></section>',
                 uses: [],
@@ -329,14 +320,14 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
                 slots: { body: { accepts: [{ kind: "native-content", profile: "prose" }] } },
             },
         ],
-        exports: { blocs: ["foundation-card"], themeTokens: [] },
+        exports: { blocs: ["atlas-dofficial--foundation--card"], themeTokens: [] },
     };
     const consumerBase = release("consumer", "1.0.0", "consumer-shell");
     const dependency = {
-        collectionId: "foundation",
+        collectionId: "atlas.official/foundation",
         publisherId: "atlas.official",
         versionRange: "^1.0.0",
-        imports: { blocs: [{ id: "foundation-card" }], themeTokens: [] },
+        imports: { blocs: [{ id: "atlas-dofficial--foundation--card" }], themeTokens: [] },
     };
     const consumer = (html: string, version: string) => ({
         ...consumerBase,
@@ -355,8 +346,8 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
     });
 
     for (const [html, message] of [
-        ['<div cms-bloc=\"foundation-card\"><p slot="ghost"></p></div>', "slot target"],
-        ['<div cms-bloc=\"foundation-card\" mystery="value"><p slot="body"></p></div>', "attribute"],
+        ['<div cms-bloc="atlas-dofficial--foundation--card"><p slot="ghost"></p></div>', "slot target"],
+        ['<div cms-bloc="atlas-dofficial--foundation--card" mystery="value"><p slot="body"></p></div>', "attribute"],
     ] as const) {
         const store = new CollectionStore(new MemoryCollectionStorage());
         const foundation = await store.importRelease(collectionFixture(foundationSource));
@@ -368,7 +359,9 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
     const store = new CollectionStore(new MemoryCollectionStorage());
     const foundation = await store.importRelease(collectionFixture(foundationSource));
     const valid = await store.importRelease(
-        collectionFixture(consumer('<div cms-bloc=\"foundation-card\"><p slot="body"></p></div>', "1.0.1")),
+        collectionFixture(
+            consumer('<div cms-bloc="atlas-dofficial--foundation--card"><p slot="body"></p></div>', "1.0.1"),
+        ),
     );
     await store.install("site", foundation.digest, 0);
     await expect(store.install("site", valid.digest, 1)).resolves.toMatchObject({ revision: 2 });
@@ -377,8 +370,8 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
 test("rejects imports that the dependency does not export", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const foundation = {
-        ...release("ulvia-official", "1.0.0", "ulvia-official-button"),
-        publisherId: "ulvia.official",
+        ...release("ulvia/mossa", "1.0.0", "ulvia--mossa--button"),
+        publisherId: "ulvia",
         exports: { blocs: [], themeTokens: [] },
     };
     const baseConsumer = release("shop", "1.0.0", "shop-hero");
@@ -387,16 +380,16 @@ test("rejects imports that the dependency does not export", async () => {
         blocs: [
             {
                 ...baseConsumer.blocs[0]!,
-                markup: '<div cms-bloc="ulvia-official-button"></div>',
-                uses: ["ulvia-official-button"],
+                markup: '<div cms-bloc="ulvia--mossa--button"></div>',
+                uses: ["ulvia--mossa--button"],
             },
         ],
         dependencies: [
             {
-                collectionId: "ulvia-official",
-                publisherId: "ulvia.official",
+                collectionId: "ulvia/mossa",
+                publisherId: "ulvia",
                 versionRange: ">=0.0.0",
-                imports: { blocs: [{ id: "ulvia-official-button" }], themeTokens: [] },
+                imports: { blocs: [{ id: "ulvia--mossa--button" }], themeTokens: [] },
             },
         ],
     };

@@ -52,18 +52,33 @@ test("text sources reject duplicate definitions, duplicate values and unknown ID
 
 test("Bloc folders are discovered recursively while their IDs remain folder-owned", async () => {
     const root = await temporaryDirectory();
-    await writeComposition(join(root, "content", "nested", "example-welcome"), "example-welcome");
-    await writeComposition(join(root, "layout", "example-footer"), "example-footer");
+    await writeComposition(
+        join(root, "content", "nested", "example-dofficial--example--welcome"),
+        "example-dofficial--example--welcome",
+    );
+    await writeComposition(
+        join(root, "layout", "example-dofficial--example--footer"),
+        "example-dofficial--example--footer",
+    );
 
     const blocs = (await loadCollectionBlocs(root, "Example")) as { id: string; markup: string }[];
-    expect(blocs.map((bloc) => bloc.id)).toEqual(["example-footer", "example-welcome"]);
-    expect(blocs[1]!.markup).toBe("<p>example-welcome</p>");
+    expect(blocs.map((bloc) => bloc.id)).toEqual([
+        "example-dofficial--example--footer",
+        "example-dofficial--example--welcome",
+    ]);
+    expect(blocs[1]!.markup).toBe("<p>example-dofficial--example--welcome</p>");
 });
 
 test("Bloc discovery rejects duplicate IDs and files in grouping directories", async () => {
     const duplicateRoot = await temporaryDirectory();
-    await writeComposition(join(duplicateRoot, "one", "example-card"), "example-card");
-    await writeComposition(join(duplicateRoot, "two", "example-card"), "example-card");
+    await writeComposition(
+        join(duplicateRoot, "one", "example-dofficial--example--card"),
+        "example-dofficial--example--card",
+    );
+    await writeComposition(
+        join(duplicateRoot, "two", "example-dofficial--example--card"),
+        "example-dofficial--example--card",
+    );
     await expect(loadCollectionBlocs(duplicateRoot, "Example")).rejects.toThrow("is declared by both");
 
     const orphanRoot = await temporaryDirectory();
@@ -75,14 +90,14 @@ test("Bloc discovery rejects duplicate IDs and files in grouping directories", a
 
 test("component runtime modules stay inside the Bloc source boundary", async () => {
     const root = await temporaryDirectory();
-    const componentRoot = join(root, "control", "example-manager");
+    const componentRoot = join(root, "control", "example-dofficial--example--manager");
     await writeJson(join(componentRoot, "definition.json"), {
-        description: "bloc.example-manager.label",
-        categories: ["bloc.example-manager.label"],
+        description: "bloc.example-dofficial--example--manager.label",
+        categories: ["bloc.example-dofficial--example--manager.label"],
 
-        id: "example-manager",
+        id: "example-dofficial--example--manager",
         kind: "component",
-        label: "bloc.example-manager.label",
+        label: "bloc.example-dofficial--example--manager.label",
         uses: [],
         requires: [],
         slots: {},
@@ -99,22 +114,22 @@ test("component runtime modules stay inside the Bloc source boundary", async () 
     const blocs = (await loadCollectionBlocs(root, "Example")) as { runtime: { viewJS: string } }[];
     expect(blocs[0]!.runtime.viewJS).toContain("modular-runtime");
 
-    const compositionRoot = join(root, "content", "example-composition");
-    await writeComposition(compositionRoot, "example-composition");
+    const compositionRoot = join(root, "content", "example-dofficial--example--composition");
+    await writeComposition(compositionRoot, "example-dofficial--example--composition");
     await Bun.write(join(compositionRoot, "runtime", "invalid.ts"), "export {};");
     await expect(loadCollectionBlocs(root, "Example")).rejects.toThrow("must have only markup.html");
 });
 
 test("CSS-only components do not receive a synthetic JavaScript runtime", async () => {
     const root = await temporaryDirectory();
-    const componentRoot = join(root, "content", "example-card");
+    const componentRoot = join(root, "content", "example-dofficial--example--card");
     await writeJson(join(componentRoot, "definition.json"), {
-        description: "bloc.example-card.label",
-        categories: ["bloc.example-card.label"],
+        description: "bloc.example-dofficial--example--card.label",
+        categories: ["bloc.example-dofficial--example--card.label"],
 
-        id: "example-card",
+        id: "example-dofficial--example--card",
         kind: "component",
-        label: "bloc.example-card.label",
+        label: "bloc.example-dofficial--example--card.label",
         root: { accepts: ["div"] },
         uses: [],
         requires: [],
@@ -135,7 +150,7 @@ test("Bloc discovery follows the collection admission ceiling beyond the former 
     const root = await temporaryDirectory();
     await Promise.all(
         Array.from({ length: 257 }, (_, index) => {
-            const id = `example-bloc-${index}`;
+            const id = `example-dofficial--example--bloc-${index}`;
             return writeComposition(join(root, "catalogue", id), id);
         }),
     );

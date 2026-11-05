@@ -28,7 +28,7 @@ integration(
             };
             const cli = (args: string[]) => runCli(args, options);
             await cli(["repository", "login", url]);
-            await cli(["namespace", "claim", "ulvia.official"]);
+            await cli(["namespace", "claim", "ulvia"]);
             await cli(["release", resolve(import.meta.dir, "../../../packages/official-repository"), "--recursive"]);
             await cli(["push", "all", "--repository", url]);
         };
@@ -39,17 +39,17 @@ integration(
             connection = await connectBrowser(stack.cmsUrl, stack.administrator);
             expect(connection.tools.length).toBeGreaterThan(0);
             const initialToolCount = connection.tools.length;
-            const pages = await connection.call("ulvia.cms.content", "pages.list", { limit: 100 });
+            const pages = await connection.call("ulvia/cms.content", "pages.list", { limit: 100 });
             expect(pages.items.length).toBeGreaterThan(0);
             const snapshots = await Promise.all(
                 pages.items.map((page: { id: string }) =>
-                    connection!.call("ulvia.cms.content", "pages.get", { id: page.id }),
+                    connection!.call("ulvia/cms.content", "pages.get", { id: page.id }),
                 ),
             );
             const registry = repositoryApi(stack.repositoryUrl);
-            const identity = await (await registry.request("ulvia.repository", "/v1/info")).json();
+            const identity = await (await registry.request("ulvia/repository", "/v1/info")).json();
             const inventory = () =>
-                registry.request("ulvia.repository", "/v1/namespaces", "GET", undefined, stack!.repository.pat);
+                registry.request("ulvia/repository", "/v1/namespaces", "GET", undefined, stack!.repository.pat);
             const beforeInventory = await inventory();
             expect(beforeInventory.status).toBe(200);
             const owned = await beforeInventory.json();
@@ -62,16 +62,16 @@ integration(
                 stack.repository.administrator.password,
             );
             const registryPages = await (
-                await registry.request("ulvia.cms.content", "/pages/list", "QUERY", { limit: 100 }, admin)
+                await registry.request("ulvia/cms.content", "/pages/list", "QUERY", { limit: 100 }, admin)
             ).json();
             const pageId = registryPages.items.find(({ path }: { path: string }) => path === "/").id;
             const original = await (
-                await registry.request("ulvia.cms.content", "/pages/get", "QUERY", { id: pageId }, admin)
+                await registry.request("ulvia/cms.content", "/pages/get", "QUERY", { id: pageId }, admin)
             ).json();
             expect(
                 (
                     await registry.request(
-                        "ulvia.cms.content",
+                        "ulvia/cms.content",
                         "/pages/update",
                         "POST",
                         { id: pageId, expectedRevision: original.revision, title: "Retained across image replacement" },
@@ -80,8 +80,8 @@ integration(
                 ).status,
             ).toBe(200);
             await stack.upgradeProvider(candidate!, "1.0.0");
-            await waitForHttp(`${stack.repositoryUrl}/.cms/call/ulvia.repository/v1/info`);
-            expect(await (await registry.request("ulvia.repository", "/v1/info")).json()).toEqual(identity);
+            await waitForHttp(`${stack.repositoryUrl}/.cms/call/ulvia/repository/v1/info`);
+            expect(await (await registry.request("ulvia/repository", "/v1/info")).json()).toEqual(identity);
             const retained = await inventory();
             expect(retained.status).toBe(200);
             expect(await retained.json()).toEqual(owned);
@@ -89,25 +89,25 @@ integration(
             expect(await publicSource.get(published[0]!)).toEqual(bytes);
             expect(
                 await (
-                    await registry.request("ulvia.cms.content", "/pages/get", "QUERY", { id: pageId }, admin)
+                    await registry.request("ulvia/cms.content", "/pages/get", "QUERY", { id: pageId }, admin)
                 ).json(),
             ).toMatchObject({ title: "Retained across image replacement", content: original.content });
             await connection.refreshTools();
             expect(connection.tools).toHaveLength(initialToolCount);
-            expect(await connection.call("ulvia.cms.content", "pages.list", { limit: 100 })).toEqual(pages);
+            expect(await connection.call("ulvia/cms.content", "pages.list", { limit: 100 })).toEqual(pages);
             expect(
                 await Promise.all(
                     pages.items.map((page: { id: string }) =>
-                        connection!.call("ulvia.cms.content", "pages.get", { id: page.id }),
+                        connection!.call("ulvia/cms.content", "pages.get", { id: page.id }),
                     ),
                 ),
             ).toEqual(snapshots);
-            const query = await connection.call("ulvia.cms.observability", "logs.query", { limit: 5 });
+            const query = await connection.call("ulvia/cms.observability", "logs.query", { limit: 5 });
             expect(query.items).toBeArray();
-            const aggregate = await connection.call("ulvia.cms.observability", "logs.aggregate", { groupBy: "level" });
+            const aggregate = await connection.call("ulvia/cms.observability", "logs.aggregate", { groupBy: "level" });
             expect(aggregate).toBeObject();
             await stack.restartProvider();
-            expect(await connection.call("ulvia.cms.content", "pages.list", { limit: 100 })).toEqual(pages);
+            expect(await connection.call("ulvia/cms.content", "pages.list", { limit: 100 })).toEqual(pages);
         } catch (error) {
             throw new Error(`${String(error)}\n${await stack?.diagnostics()}`);
         } finally {

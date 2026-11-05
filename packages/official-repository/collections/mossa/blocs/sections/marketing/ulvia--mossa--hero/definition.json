@@ -1,0 +1,71 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--hero",
+    "label": "bloc.hero.label",
+    "description": "bloc.hero.description",
+    "order": 10,
+    "uses": ["ulvia--mossa--action", "ulvia--mossa--heading", "ulvia--mossa--image", "ulvia--mossa--media-figure"],
+    "requires": [],
+    "slots": {
+        "eyebrow": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        },
+        "heading": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--heading"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        },
+        "body": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ],
+            "max": 1
+        },
+        "actions": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--action"
+                }
+            ],
+            "max": 2
+        },
+        "media": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--image"
+                },
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--media-figure"
+                }
+            ],
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.sections"],
+    "examples": ["hero-default", "landing-page"],
+    "defaultExample": "hero-default"
+}

@@ -1,3 +1,4 @@
+import { isResourceId } from "@bernouy/resource-identity";
 import type {
     CmsMutationBinding,
     CmsQueriesBinding,
@@ -10,7 +11,7 @@ import { asSyncTarget, parseSyncTarget } from "cms-content/blocs/core/markup/bin
 import { asBindingInput, parseBindingInput } from "./input";
 
 const QUERY_PATTERN =
-    /^\s*([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*):([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)\s*$/u;
+    /^\s*([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*\/[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*):([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)\s*$/u;
 const SYNC_QUERY_PATTERN = /^\s*(@(?:param|page|session|persistent):[^\s]+)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)\s*$/u;
 const QUERY_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/u;
 const QUERY_REFRESH_INTERVAL = /^interval\((\d+)(ms|s|m)\)$/u;
@@ -24,7 +25,7 @@ const RESERVED_QUERY_NAMES = new Set(["cms"]);
 
 export function parseMutation(value: string): CmsMutationBinding | null {
     const match = QUERY_PATTERN.exec(value);
-    if (!match || RESERVED_QUERY_NAMES.has(match[3]!)) {
+    if (!match || !isResourceId(match[1]) || match[2]!.length > 128 || RESERVED_QUERY_NAMES.has(match[3]!)) {
         return null;
     }
     return { contractId: match[1]!, capabilityId: match[2]!, name: match[3]! };
@@ -56,7 +57,7 @@ export function parseQuery(value: string): CmsQueryBinding | null {
         return sync && !RESERVED_QUERY_NAMES.has(syncMatch[2]!) ? { sync, name: syncMatch[2]! } : null;
     }
     const match = QUERY_PATTERN.exec(value);
-    if (!match || RESERVED_QUERY_NAMES.has(match[3]!)) {
+    if (!match || !isResourceId(match[1]) || match[2]!.length > 128 || RESERVED_QUERY_NAMES.has(match[3]!)) {
         return null;
     }
     return { contractId: match[1]!, capabilityId: match[2]!, name: match[3]! };

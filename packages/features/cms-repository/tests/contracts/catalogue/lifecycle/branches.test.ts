@@ -22,7 +22,7 @@ test.each(["memory", "mongo"])("%s refuses incompatible backports without publis
     await expect(catalogue.publish(await release("1.1.0", [capabilityDocument(), extra("public")]))).rejects.toThrow(
         "stable",
     );
-    expect(await catalogue.get("communication.email", "1.1.0")).toBeNull();
+    expect(await catalogue.get("ulvia/communication.email", "1.1.0")).toBeNull();
     expect(await catalogue.list()).toHaveLength(2);
     if (adapter === "mongo") {
         expect(await db.collection("cms_contract_artifacts").find({}).toArray()).toHaveLength(2);

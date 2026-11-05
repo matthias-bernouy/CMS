@@ -254,7 +254,7 @@ export class AlternativeFilesProvider {
     }
 
     private fileUrl(file: StoredFile): string {
-        return `https://alternative.example/.cms/call/ulvia.cms.files/files/${file.fileId}/${file.generation}`;
+        return `https://alternative.example/.cms/call/ulvia/cms.files/files/${file.fileId}/${file.generation}`;
     }
 }
 

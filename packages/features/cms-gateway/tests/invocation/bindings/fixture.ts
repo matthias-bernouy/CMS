@@ -4,7 +4,7 @@ import { InMemoryGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 import { gatewayRoute, NOW } from "../../fixtures";
 
 export const context = { siteId: "site-a", actor: { kind: "anonymous" as const } };
-export const invocation = { ...context, contractId: "catalog", capabilityId: "item.list", input: {} };
+export const invocation = { ...context, contractId: "ulvia/catalog", capabilityId: "item.list", input: {} };
 export const mcp = {
     id: "agent",
     transport: "mcp",

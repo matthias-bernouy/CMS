@@ -13,19 +13,19 @@ test("push all orders inherited contracts and omits locally yanked releases", as
         await f.run(["release", f.source, "--recursive"]);
         await new LocalRepositoryYanks(join(f.data, "repository")).set(
             "contract",
-            "ulvia.official",
-            "hidden.example",
+            "ulvia",
+            "ulvia/hidden.example",
             "1.0.0",
             "Local withdrawal",
         );
         f.output.length = 0;
         await f.run(["push", "all"]);
-        expect(f.output[1]).toStartWith("+ contract ulvia.official/z.provider@");
-        expect(f.output[2]).toStartWith("+ contract ulvia.official/a.consumer@");
+        expect(f.output[1]).toStartWith("+ contract ulvia/z.provider@");
+        expect(f.output[2]).toStartWith("+ contract ulvia/a.consumer@");
         expect(await f.remoteFiles.list("contracts")).toHaveLength(2);
-        expect(await f.remoteFiles.get("contracts", "ulvia.official", "hidden.example", "1.0.0")).toBeNull();
+        expect(await f.remoteFiles.get("contracts", "ulvia", "ulvia/hidden.example", "1.0.0")).toBeNull();
         expect(f.output.at(-1)).toBe("Published 2 local releases.");
-        await expect(f.run(["push", "ulvia.official/hidden.example@1.0.0"])).rejects.toThrow("locally yanked");
+        await expect(f.run(["push", "ulvia/hidden.example@1.0.0"])).rejects.toThrow("locally yanked");
     } finally {
         await f.close();
     }
@@ -42,21 +42,19 @@ test("push all publishes every official artifact kind, then inferred provider an
         expect(await f.remoteFiles.list("providers")).toHaveLength(1);
         expect(
             (await new LocalCollectionRepository(f.remote).list()).map(({ release }) => release.collectionId),
-        ).toEqual(["ulvia-official", "ulvia-repository"]);
+        ).toEqual(["ulvia/mossa", "ulvia/repository"]);
         expect(f.output.slice(1, 13).every((line) => line.startsWith("+ contract"))).toBe(true);
         expect(f.output[13]).toStartWith("+ provider-manifest");
-        expect(f.output[14]).toStartWith("+ collection ulvia.official/ulvia-official@");
-        expect(f.output[15]).toStartWith("+ collection ulvia.official/ulvia-repository@");
+        expect(f.output[14]).toStartWith("+ collection ulvia/mossa@");
+        expect(f.output[15]).toStartWith("+ collection ulvia/repository@");
         expect(f.output.at(-1)).toBe("Published 15 local releases.");
-        const provider = JSON.parse(await readFile(join(source, "providers/ulvia.official/definition.json"), "utf8"));
-        const collection = JSON.parse(
-            await readFile(join(source, "collections/ulvia-official/definition.json"), "utf8"),
-        );
-        await f.run(["push", `ulvia.official/${provider.providerId}@${provider.version}`]);
+        const provider = JSON.parse(await readFile(join(source, "providers/primary-provider/definition.json"), "utf8"));
+        const collection = JSON.parse(await readFile(join(source, "collections/mossa/definition.json"), "utf8"));
+        await f.run(["push", `${provider.providerId}@${provider.version}`]);
         expect(f.output.at(-1)).toStartWith("= provider-manifest");
-        await f.run(["push", `ulvia.official/${collection.collectionId}@${collection.version}`]);
+        await f.run(["push", `${collection.collectionId}@${collection.version}`]);
         expect(f.output.at(-1)).toStartWith("= collection");
-        await f.run(["push", "ulvia.official/ulvia-repository@1.0.0"]);
+        await f.run(["push", "collection", "ulvia/repository@1.0.0"]);
         expect(f.output.at(-1)).toStartWith("= collection");
     } finally {
         await f.close();

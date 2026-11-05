@@ -14,15 +14,15 @@ describe("Installations Provider control capabilities", () => {
         ];
         const control = client(requests, () => Response.json(responses.shift()));
 
-        expect(await control.getGatewayRoute("catalog.items")).toContain("selection");
-        expect(await control.resolveGatewayIdentity("catalog", "cms-user-a")).toBe("provider-user-a");
+        expect(await control.getGatewayRoute("ulvia/catalog.items")).toContain("selection");
+        expect(await control.resolveGatewayIdentity("ulvia/catalog", "cms-user-a")).toBe("provider-user-a");
         await control.appendGatewayAudit({
             id: "audit-a",
             requestId: crypto.randomUUID(),
             occurredAt: new Date().toISOString(),
             siteId: "default",
             installationId: "installation-a",
-            contractId: "catalog.items",
+            contractId: "ulvia/catalog.items",
             capabilityId: "items.create",
             actorKind: "administrator",
             actorSubjectId: "cms-user-a",
@@ -32,7 +32,7 @@ describe("Installations Provider control capabilities", () => {
             await control.issueGatewayInvocation({
                 requestId: crypto.randomUUID(),
                 installationId: "installation-a",
-                contractId: "catalog.items",
+                contractId: "ulvia/catalog.items",
                 contractVersion: "1.0.0",
                 capabilityId: "items.list",
             }),
@@ -47,7 +47,7 @@ describe("Installations Provider control capabilities", () => {
         for (const request of requests) {
             const headers = new Headers(request.init?.headers);
             expect(headers.get("authorization")).toBe("Bearer installations-provider-token");
-            expect(headers.get("x-ulvia-contract-id")).toBe("ulvia.cms.installations");
+            expect(headers.get("x-ulvia-contract-id")).toBe("ulvia/cms.installations");
             expect(headers.get("x-ulvia-contract-version")).toBe("1.0.0");
             expect(headers.get("x-ulvia-request-id")).toMatch(/^[0-9a-f-]{36}$/);
         }
@@ -63,7 +63,7 @@ describe("Installations Provider control capabilities", () => {
             malformed.issueGatewayInvocation({
                 requestId: crypto.randomUUID(),
                 installationId: "installation-a",
-                contractId: "catalog.items",
+                contractId: "ulvia/catalog.items",
                 contractVersion: "1.0.0",
                 capabilityId: "items.list",
             }),
@@ -100,7 +100,7 @@ test("delegation preserves refusal, throttling and infrastructure failure semant
                 ticket: "t".repeat(43),
                 sourceInstallationId: "source",
                 sourceCredentialFingerprint: "0".repeat(64),
-                contractId: "target",
+                contractId: "ulvia/target",
                 capabilityId: "read",
             }),
         ).rejects.toMatchObject({ code });
@@ -114,7 +114,7 @@ test("malformed delegation control outputs remain protocol failures", async () =
             siteId: "default",
             requestId: crypto.randomUUID(),
             installationId: "source",
-            contractId: "source",
+            contractId: "ulvia/source",
             version: "1.0.0",
             digest: "sha256:" + "a".repeat(64),
             capabilityId: "render",

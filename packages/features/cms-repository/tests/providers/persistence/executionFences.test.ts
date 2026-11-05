@@ -10,7 +10,10 @@ test.each(["grant", "installation"] as const)(
                 f.model.selection = {
                     ...f.model.selection!,
                     revision: 2,
-                    grants: { default: "allow-selected", denied: [{ contractId: "payment", capabilityId: "pay" }] },
+                    grants: {
+                        default: "allow-selected",
+                        denied: [{ contractId: "ulvia/payment", capabilityId: "pay" }],
+                    },
                 };
                 f.model.beforeInstallationPayload = async () => {};
             };

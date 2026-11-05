@@ -9,12 +9,12 @@ import { assertHostedReleaseRetention } from "../../../src/runtime/instances/pro
 
 const digest = `sha256:${"a".repeat(64)}`;
 const profile: OfficialInstanceProfile = {
-    id: "ulvia.official",
+    id: "ulvia",
     version: "1.0.0",
     upgradeFromVersions: [],
-    manifest: { providerId: "ulvia.official", version: "0.1.0", digest },
-    collections: [{ publisherId: "ulvia.official", collectionId: "ulvia-official", version: "1.0.0", digest }],
-    contracts: [{ contractId: "ulvia.cms.content", version: "1.0.0", digest }],
+    manifest: { providerId: "ulvia/primary-provider", version: "0.1.0", digest },
+    collections: [{ publisherId: "ulvia", collectionId: "ulvia/mossa", version: "1.0.0", digest }],
+    contracts: [{ contractId: "ulvia/cms.content", version: "1.0.0", digest }],
 };
 const profiles = new OfficialInstanceProfiles([profile]);
 const instance: ProviderInstanceRecord = {
@@ -49,7 +49,7 @@ test("even disabled instances retain their exact profile and selected release di
         assertHostedReleaseRetention(profiles, [instance], [], async () => [
             { ...profile.contracts[0]!, digest: `sha256:${"b".repeat(64)}`, location: "site:default" },
         ]),
-    ).rejects.toThrow("drop ulvia.cms.content");
+    ).rejects.toThrow("drop ulvia/cms.content");
 });
 
 test("queued, running and retryable failed transitions retain both profiles", async () => {

@@ -45,8 +45,10 @@ export function isValidResourceIdentifier(id: string): boolean {
  * subset so the tag can also be used safely as an authored artifact path.
  */
 export function isValidCustomElementTag(tag: string): boolean {
-    if (!tag || typeof tag !== "string") {
+    if (!tag || typeof tag !== "string" || tag.length > 512 || !tag.includes("-")) {
         return false;
     }
-    return /^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/.test(tag);
+    return /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:--[a-z][a-z0-9]*(?:-[a-z0-9]+)*--[a-z][a-z0-9]*(?:-[a-z0-9]+)*)?$/.test(
+        tag,
+    );
 }

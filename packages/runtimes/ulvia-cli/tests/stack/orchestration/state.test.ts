@@ -41,7 +41,7 @@ test("local state rejects the obsolete tag-only schema", async () => {
                 schema: "ulvia.local-services-stack.v1",
                 version: "0.0.1-alpha.8",
                 ...localServicesIdentity(paths),
-                images: { provider: "ulvia-provider:old", repository: "ulvia-official-repository:old" },
+                images: { provider: "ulvia-provider:old", repository: "ulvia--mossa--repository:old" },
                 installation: defaultInstallationConfig(),
             }),
         );

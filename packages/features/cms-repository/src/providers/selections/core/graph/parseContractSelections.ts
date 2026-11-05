@@ -1,7 +1,7 @@
 import type { ReleaseDigest } from "cms-repository/exports/contracts/index";
 import { canonicalIJsonBytes, deepFreeze, parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { parseDigest, parseOpaqueId } from "cms-repository/providers/installations/core/parsing/fields";
-import { parseIdentifier } from "cms-repository/providers/manifests/core/parsing/identifiers";
+import { parseResourceIdentifier } from "cms-repository/providers/manifests/core/parsing/identifiers";
 import {
     compareOrdinal,
     expectArray,
@@ -33,7 +33,7 @@ export function parseContractSelections(
             rejectUnknownKeys(record, ["siteId", "contractId", "version", "digest", "installationId"], path);
             const selection = {
                 siteId: parseOpaqueId(record.siteId, `${path}.siteId`),
-                contractId: parseIdentifier(record.contractId, `${path}.contractId`),
+                contractId: parseResourceIdentifier(record.contractId, `${path}.contractId`),
                 version: parseSemVer(record.version, `${path}.version`),
                 digest: parseDigest(record.digest, `${path}.digest`) as ReleaseDigest,
                 installationId: parseOpaqueId(record.installationId, `${path}.installationId`),

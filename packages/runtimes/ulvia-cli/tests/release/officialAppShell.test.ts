@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "bun:test";
-import { mount as mountAppShell } from "../../../../official-repository/collections/ulvia-official/blocs/layout/shells/ulvia-official-app-shell/bloc";
-import { mount as mountPageShell } from "../../../../official-repository/collections/ulvia-official/blocs/layout/shells/ulvia-official-page-shell/bloc";
+import { mount as mountAppShell } from "../../../../official-repository/collections/mossa/blocs/layout/shells/ulvia--mossa--app-shell/bloc";
+import { mount as mountPageShell } from "../../../../official-repository/collections/mossa/blocs/layout/shells/ulvia--mossa--page-shell/bloc";
 
 afterEach(() => {
     document.body.replaceChildren();
@@ -8,7 +8,7 @@ afterEach(() => {
 
 test("official app shell lets native navigation activate before closing its mobile panel", async () => {
     document.body.innerHTML = `
-        <div cms-bloc="ulvia-official-app-shell" layout="dual-sidebar">
+        <div cms-bloc="ulvia--mossa--app-shell" layout="dual-sidebar">
             <div part="shell">
                 <button type="button" data-mobile-toggle="navigation">Navigation</button>
                 <button type="button" data-mobile-toggle="contextual">Context</button>
@@ -20,7 +20,7 @@ test("official app shell lets native navigation activate before closing its mobi
             </div>
         </div>
     `;
-    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia-official-app-shell"]');
+    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia--mossa--app-shell"]');
     const toggle = root?.querySelector<HTMLButtonElement>('[data-mobile-toggle="contextual"]');
     const link = root?.querySelector<HTMLAnchorElement>('[part="secondary-sidebar"] a');
     if (!root || !toggle || !link) {
@@ -42,12 +42,12 @@ test("official app shell lets native navigation activate before closing its mobi
 
 test("official Page shell reveals optional regions populated after query hydration", async () => {
     document.body.innerHTML = `
-        <article cms-bloc="ulvia-official-page-shell">
+        <article cms-bloc="ulvia--mossa--page-shell">
             <div part="actions"></div>
             <div part="description"></div>
         </article>
     `;
-    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia-official-page-shell"]');
+    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia--mossa--page-shell"]');
     const actions = root?.querySelector<HTMLElement>('[part="actions"]');
     if (!root || !actions) {
         throw new Error("Missing Page shell fixture");

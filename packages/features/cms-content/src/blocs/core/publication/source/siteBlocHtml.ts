@@ -152,7 +152,7 @@ function slotMap(slots: SiteBlocSlot[]): Map<string, SiteBlocSlot> {
 }
 
 function assertTag(tag: string): void {
-    if (!TAG.test(tag) || (!isValidCustomElementTag(tag) && !isSiteBlocNativeStructureTag(tag))) {
+    if (!isValidCustomElementTag(tag) && (!TAG.test(tag) || !isSiteBlocNativeStructureTag(tag))) {
         throw new Error(`Invalid site bloc HTML tag "${tag}"`);
     }
 }

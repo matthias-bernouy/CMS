@@ -27,7 +27,7 @@ export async function connectEdgeDiagnostics(
 ): Promise<void> {
     const contract = await gateway.invoker.resolveContract({
         siteId: "default",
-        contractId: "ulvia.cms.observability",
+        contractId: "ulvia/cms.observability",
     });
     for (const capabilityId of ["logs.append", "logs.query", "logs.get", "logs.aggregate"]) {
         if (!contract.release.capabilities.some(({ id }) => id === capabilityId)) {
@@ -36,14 +36,14 @@ export async function connectEdgeDiagnostics(
     }
     await gateway.invoker.assertAuthorized({
         siteId: "default",
-        contractId: "ulvia.cms.observability",
+        contractId: "ulvia/cms.observability",
         capabilityId: "logs.append",
         actor: { kind: "system", serviceId: "cms-edge" },
     });
     diagnostics.collector.connect(async (entries) => {
         const result = await gateway.invoker.invoke({
             siteId: "default",
-            contractId: "ulvia.cms.observability",
+            contractId: "ulvia/cms.observability",
             capabilityId: "logs.append",
             input: { entries },
             actor: { kind: "system", serviceId: "cms-edge" },

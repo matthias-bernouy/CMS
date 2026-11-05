@@ -6,7 +6,7 @@ import { collectionDocument } from "../../../fixtures";
 test("distinct Bloc identities sharing markup and styles produce no design warnings", () => {
     const source = collectionDocument() as any;
     const { examples: _examples, defaultExample: _defaultExample, ...definition } = source.blocs[0];
-    source.blocs.push({ ...definition, id: "atlas-duplicate", catalogue: "hidden" });
+    source.blocs.push({ ...definition, id: "atlas-dofficial--atlas--duplicate", catalogue: "hidden" });
     const release = parseCollectionRelease(source);
     expect(collectionAuthoringDiagnostics(release)).toEqual([]);
 });
@@ -31,7 +31,7 @@ function releaseWithMainErrors(mainCount: number, exampleCount = 1) {
     source.blocs = [bloc];
     source.examples = Array.from({ length: exampleCount }, (_, index) => ({
         ...template,
-        id: `atlas-invalid-${index}`,
+        id: `atlas-dofficial--atlas--invalid-${index}`,
     }));
     bloc.examples = source.examples.map((example: { id: string }) => example.id);
     bloc.defaultExample = source.examples[0].id;

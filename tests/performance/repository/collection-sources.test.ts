@@ -17,7 +17,7 @@ async function fixture() {
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
         publisherId: "example.official",
-        collectionId: "example",
+        collectionId: "example.official/example",
         version: "1.0.0",
         name: "name",
         locale: "en",
@@ -29,7 +29,7 @@ async function fixture() {
         {
             repositoryId: "official",
             publisherId: "example.official",
-            collectionId: "example",
+            collectionId: "example.official/example",
             version: "1.0.0",
             digest: artifact.digest,
             name: "Example",
@@ -124,7 +124,7 @@ test("warm listings keep installations site-scoped and revisions fresh", async (
     expect(a.releases[0]?.action).toBe("current");
     expect(b.releases[0]?.action).toBe("install");
     expect(b.installed).toEqual([]);
-    await f.store.uninstall("site-a", "example", 1);
+    await f.store.uninstall("site-a", "example.official/example", 1);
     const changed = await f.sources.catalogue("site-a");
     expect(changed.revision).toBe(2);
     expect(changed.releases[0]?.action).toBe("install");

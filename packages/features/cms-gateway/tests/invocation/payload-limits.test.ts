@@ -10,7 +10,7 @@ test("Gateway JSON envelopes preserve a contract-sized Page document", async () 
     const body = JSON.stringify({ content: CONTRACT_SIZED_TEXT });
     expect(
         await readGatewayHttpInput(
-            new Request("https://control.example/.cms/call/ulvia.cms.content/pages.update", {
+            new Request("https://control.example/.cms/call/ulvia/cms.content/pages.update", {
                 method: "POST",
                 headers: { "content-type": "application/json" },
                 body,
@@ -20,7 +20,7 @@ test("Gateway JSON envelopes preserve a contract-sized Page document", async () 
     expect(
         snapshotInvocation({
             siteId: "default",
-            contractId: "ulvia.cms.content",
+            contractId: "ulvia/cms.content",
             capabilityId: "pages.update",
             actor: { kind: "administrator", subjectId: "admin-1" },
             input: { content: CONTRACT_SIZED_TEXT },

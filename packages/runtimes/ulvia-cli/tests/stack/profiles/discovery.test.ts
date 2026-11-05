@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { instanceProfileCoordinate, selectInstanceProfile } from "../../../src/runtime/instances/profiles";
 
-const official = { id: "ulvia.official", version: "1.0.0" };
-const registry = { id: "ulvia.repository", version: "1.0.0" };
+const official = { id: "ulvia", version: "1.0.0" };
+const registry = { id: "repository", version: "1.0.0" };
 
 test("profile discovery selects exact Provider references with one bounded authenticated read", async () => {
     const requests: { url: string; authorization: string | null }[] = [];
@@ -19,17 +19,17 @@ test("profile discovery selects exact Provider references with one bounded authe
         expect(requests).toHaveLength(1);
         expect(new URL(requests[0]!.url).pathname).toBe("/ulvia/operator/profiles");
         expect(requests[0]!.authorization).toBe("Bearer operator");
-        expect(await selectInstanceProfile(server.url.origin, "operator", "ulvia.repository@1.0.0")).toEqual(registry);
-        await expect(selectInstanceProfile(server.url.origin, "operator", "ulvia.repository@2.0.0")).rejects.toThrow(
+        expect(await selectInstanceProfile(server.url.origin, "operator", "repository@1.0.0")).toEqual(registry);
+        await expect(selectInstanceProfile(server.url.origin, "operator", "repository@2.0.0")).rejects.toThrow(
             "unavailable",
         );
         const count = requests.length;
         for (const value of [
-            "ulvia.repository",
-            "ulvia.repository@latest",
-            "ulvia.repository@^1.0.0",
+            "ulvia/repository",
+            "ulvia/repository@latest",
+            "ulvia/repository@^1.0.0",
             "@1.0.0",
-            "ulvia.repository@01.0.0",
+            "ulvia/repository@01.0.0",
         ]) {
             expect(() => instanceProfileCoordinate(value)).toThrow();
             await expect(selectInstanceProfile(server.url.origin, "operator", value)).rejects.toThrow();

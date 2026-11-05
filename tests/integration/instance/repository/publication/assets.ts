@@ -10,7 +10,7 @@ export async function putAsset(
     sample: Awaited<ReturnType<typeof sampleContract>>,
 ) {
     return fetch(
-        `${origin}/.cms/call/ulvia.repository/v1/uploads/${uploadId}/assets/${encodeURIComponent(sample.asset.id)}`,
+        `${origin}/.cms/call/ulvia/repository/v1/uploads/${uploadId}/assets/${encodeURIComponent(sample.asset.id)}`,
         {
             method: "PUT",
             headers: {
@@ -28,12 +28,12 @@ export async function putAsset(
 
 export async function publicDownload(origin: string, sample: Awaited<ReturnType<typeof sampleContract>>) {
     const coordinate = `contract/${sample.namespace}/${sample.id}/${sample.version}`;
-    const release = await fetch(`${origin}/.cms/call/ulvia.repository/v1/releases/${coordinate}`);
+    const release = await fetch(`${origin}/.cms/call/ulvia/repository/v1/releases/${coordinate}`);
     expect(release.status).toBe(200);
     expect(release.headers.get("etag")).toBe(`"${sample.digest}"`);
     expect((await release.json()).contractId).toBe(sample.id);
     const asset = await fetch(
-        `${origin}/.cms/call/ulvia.repository/v1/assets/${coordinate}/${encodeURIComponent(sample.asset.id)}`,
+        `${origin}/.cms/call/ulvia/repository/v1/assets/${coordinate}/${encodeURIComponent(sample.asset.id)}`,
     );
     expect(asset.status).toBe(200);
     expect(asset.headers.get("etag")).toBe(`"${sample.asset.digest}"`);

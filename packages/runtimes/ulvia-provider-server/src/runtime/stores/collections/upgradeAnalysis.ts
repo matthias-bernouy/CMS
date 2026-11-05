@@ -12,17 +12,17 @@ import { type ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalog
 
 /** Explicit Edge/Provider consumers; catalogue-only demonstrations add no execution grant. */
 const INTERNAL = [
-    ["ulvia.cms.observability", "logs.append"],
-    ["ulvia.cms.observability", "logs.query"],
-    ["ulvia.cms.observability", "logs.get"],
-    ["ulvia.cms.observability", "logs.aggregate"],
-    ["ulvia.cms.installations", "capabilities.describe"],
-    ["ulvia.cms.access", "resolve-actor"],
-    ["ulvia.cms.installations", "list-provider-installations"],
-    ["ulvia.cms.installations", "gateway.route.get"],
-    ["ulvia.cms.installations", "gateway.identity.resolve"],
-    ["ulvia.cms.installations", "gateway.audit.append"],
-    ["ulvia.cms.installations", "gateway.invocation.issue"],
+    ["ulvia/cms.observability", "logs.append"],
+    ["ulvia/cms.observability", "logs.query"],
+    ["ulvia/cms.observability", "logs.get"],
+    ["ulvia/cms.observability", "logs.aggregate"],
+    ["ulvia/cms.installations", "capabilities.describe"],
+    ["ulvia/cms.access", "resolve-actor"],
+    ["ulvia/cms.installations", "list-provider-installations"],
+    ["ulvia/cms.installations", "gateway.route.get"],
+    ["ulvia/cms.installations", "gateway.identity.resolve"],
+    ["ulvia/cms.installations", "gateway.audit.append"],
+    ["ulvia/cms.installations", "gateway.invocation.issue"],
 ] as const;
 
 export function createCollectionUpgradeAnalysis(
@@ -57,11 +57,11 @@ export function createCollectionUpgradeAnalysis(
                             ),
                             {
                                 type: "capability",
-                                contractId: "ulvia.cms.content",
+                                contractId: "ulvia/cms.content",
                                 capabilityId: "delivery.resolve-resource",
                                 versionRange: "^1.0.0",
                                 scope: "runtime",
-                                location: "internal:edge-provider/ulvia.cms.content/delivery",
+                                location: "internal:edge-provider/ulvia/cms.content/delivery",
                             } as const,
                         ],
                     };

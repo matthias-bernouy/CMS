@@ -1,4 +1,5 @@
-import { compareSemVer, isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
+import { isResourceId, resourcePublisher } from "cms-repository/exports/contracts/protocol";
+import { compareSemVer, releaseChannel, isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
 import { createHash } from "node:crypto";
 
 export function compareCatalogueKeys(left: string, right: string): number {
@@ -21,7 +22,12 @@ export class CatalogueInputError extends TypeError {}
 const DEFAULT_PAGE_SIZE = 256;
 const MAX_PAGE_SIZE = 256;
 const CURSOR = /^[A-Za-z0-9_-]{1,1024}$/u;
-type CatalogueFilters = Readonly<{ publisherId?: string; id?: string; version?: string }>;
+type CatalogueFilters = Readonly<{
+    publisherId?: string;
+    id?: string;
+    version?: string;
+    channel?: "stable" | "beta" | "all";
+}>;
 
 /** Catalogue pagination for the admitted Repository capability service. */
 export async function cataloguePage(
@@ -33,8 +39,18 @@ export async function cataloguePage(
     filters: CatalogueFilters = {},
 ) {
     const limit = parseLimit(suppliedLimit);
+    if (filters.channel !== undefined && !["stable", "beta", "all"].includes(filters.channel)) {
+        throw new CatalogueInputError("Invalid release channel");
+    }
     const fingerprint = createHash("sha256")
-        .update(JSON.stringify([filters.publisherId ?? null, filters.id ?? null, filters.version ?? null]))
+        .update(
+            JSON.stringify([
+                filters.publisherId ?? null,
+                filters.id ?? null,
+                filters.version ?? null,
+                filters.channel ?? "all",
+            ]),
+        )
         .digest("hex");
     const after = decodeCursor(cursor, type, fingerprint);
     const idKey = type === "collections" ? "collectionId" : type === "contracts" ? "contractId" : "providerId";
@@ -44,6 +60,9 @@ export async function cataloguePage(
     for (let position = start; position < entries.length; position++) {
         const entry = entries[position]!;
         if (
+            (filters.channel === undefined ||
+                filters.channel === "all" ||
+                releaseChannel(entry.version as string) === filters.channel) &&
             (filters.publisherId === undefined || entry.publisherId === filters.publisherId) &&
             (filters.id === undefined || entry[idKey] === filters.id) &&
             (filters.version === undefined || entry.version === filters.version)
@@ -115,8 +134,8 @@ function validEntryKey(value: string): boolean {
         publisher.length > 0 &&
         publisher.length <= 96 &&
         typeof id === "string" &&
-        id.length > 0 &&
-        id.length <= 128 &&
+        isResourceId(id) &&
+        resourcePublisher(id) === publisher &&
         isCanonicalSemVer(version)
     );
 }

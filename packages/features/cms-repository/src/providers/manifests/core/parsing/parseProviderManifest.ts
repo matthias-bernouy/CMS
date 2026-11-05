@@ -1,4 +1,10 @@
-import { assertIJson, canonicalizeIJson, deepFreeze, parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import {
+    assertIJson,
+    canonicalizeIJson,
+    deepFreeze,
+    parseStrictJson,
+    resourcePublisher,
+} from "cms-repository/exports/contracts/protocol";
 import { isVersionRangeSubset } from "cms-repository/exports/contracts/compatibility";
 import { translateContractError } from "../protocol/contractErrors";
 import { ProviderManifestValidationError } from "../protocol/errors";
@@ -8,7 +14,7 @@ import type { ProviderManifest } from "../../interfaces/ProviderManifest";
 import { parseVersionRange, parseSemVer, type VersionRange } from "../versioning/versionRange";
 import { parseConfiguration } from "./parseConfiguration";
 import { parseEndpointPolicy } from "./parseEndpoint";
-import { parseIdentifier } from "./identifiers";
+import { parseResourceIdentifier } from "./identifiers";
 import { parseRequirements } from "./parseRequirements";
 import { parseImplementations } from "./parseImplementations";
 import {
@@ -63,7 +69,7 @@ export function parseProviderManifest(
         kind: "provider-manifest",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
-        providerId: parseIdentifier(record.providerId, "$.providerId", 96),
+        providerId: parseResourceIdentifier(record.providerId, "$.providerId"),
         name: expectString(record.name, "$.name", 128),
         ...(links ? { links } : {}),
         version: parseSemVer(record.version, "$.version"),
@@ -82,6 +88,13 @@ export function parseProviderManifest(
         ...(dataPolicy ? { dataPolicy } : {}),
         ...(recovery ? { recovery } : {}),
     };
+    if (resourcePublisher(manifest.providerId) !== manifest.provenance.publisherId) {
+        throw new ProviderManifestValidationError(
+            "invalid_manifest",
+            "resource namespace must match publisherId",
+            "$.provenance.publisherId",
+        );
+    }
     assertCanonicalSize(manifest, limits);
     return deepFreeze(manifest) as ProviderManifest;
 }

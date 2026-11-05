@@ -14,7 +14,7 @@ export function repositoryPeer() {
         hostname: "127.0.0.1",
         port: 0,
         async fetch(request) {
-            const path = new URL(request.url).pathname.replace("/.cms/call/ulvia.repository/", "");
+            const path = new URL(request.url).pathname.replace("/.cms/call/ulvia/repository/", "");
             state.calls.push({ path, authorization: request.headers.get("authorization") });
             if (path === "v1/info") {
                 return Response.json({ repositoryId: state.repositoryId, protocol: "ulvia-repository/v1" });

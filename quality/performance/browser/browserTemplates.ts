@@ -78,7 +78,7 @@ async function mountQuery(page: Page, response: unknown, template: string, expec
             win.__perfResponse = data;
             const request = win.__perfFetches + 1;
             const root = document.createElement("cms-binding-core");
-            root.innerHTML = `<main cms-query="performance:list as result">${markup}</main>`;
+            root.innerHTML = `<main cms-query="ulvia.performance/performance:list as result">${markup}</main>`;
             const startedAt = performance.now();
             document.body.appendChild(root);
             await win.__perfWaitUntil(
@@ -101,7 +101,7 @@ async function mountQueries(page: Page, count: number): Promise<number> {
         root.innerHTML = Array.from(
             { length: queryCount },
             (_, index) =>
-                `<section cms-query="performance:item-${index} as query${index}"><span>{{ query${index}.data.0.label }}</span></section>`,
+                `<section cms-query="ulvia.performance/performance:item-${index} as query${index}"><span>{{ query${index}.data.0.label }}</span></section>`,
         ).join("");
         const startedAt = performance.now();
         document.body.appendChild(root);

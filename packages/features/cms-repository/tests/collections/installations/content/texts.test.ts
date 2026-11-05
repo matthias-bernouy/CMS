@@ -4,7 +4,7 @@ import { renderCollectionTexts, type CollectionTextSource } from "@bernouy/cms-r
 
 const source: CollectionTextSource = {
     collection: {
-        collectionId: "test",
+        collectionId: "example/test",
         locale: "en",
         texts: [
             {
@@ -23,7 +23,7 @@ function root(markup: string) {
 
 test("server text replacement escapes text and attributes, preserves unrelated bindings and removes markers", () => {
     const body = root(
-        '<p>{{ cms.i18n.test.hello }}</p><input placeholder="{{ cms.i18n.test.hello }}"><span aria-roledescription="{{ cms.i18n.test.hello }}"></span><input type="submit" value="{{ cms.i18n.test.hello }}"><b>{{ order.total }}</b>',
+        '<p>{{ cms.i18n.example/test.hello }}</p><input placeholder="{{ cms.i18n.example/test.hello }}"><span aria-roledescription="{{ cms.i18n.example/test.hello }}"></span><input type="submit" value="{{ cms.i18n.example/test.hello }}"><b>{{ order.total }}</b>',
     );
     renderCollectionTexts(body, "fr-CA", [
         { ...source, overrides: { hello: { fr: 'Bonjour <img src=x onerror="alert(1)">' } } },
@@ -43,8 +43,8 @@ test("server text replacement escapes text and attributes, preserves unrelated b
 });
 
 test("render contexts do not share locale or overrides", () => {
-    const french = root("<p>{{ cms.i18n.test.hello }}</p>");
-    const english = root("<p>{{ cms.i18n.test.hello }}</p>");
+    const french = root("<p>{{ cms.i18n.example/test.hello }}</p>");
+    const english = root("<p>{{ cms.i18n.example/test.hello }}</p>");
     renderCollectionTexts(french, "fr", [{ ...source, overrides: { hello: { fr: "Salut" } } }]);
     renderCollectionTexts(english, "en", [source]);
     expect(french.textContent).toStartWith("Salut");
@@ -52,22 +52,22 @@ test("render contexts do not share locale or overrides", () => {
 });
 
 test.each([
-    '<a href="{{ cms.i18n.test.hello }}"></a>',
-    "<script>{{ cms.i18n.test.hello }}</script>",
-    "<template><p>{{ cms.i18n.test.hello }}</p></template>",
-    "<p>{{ cms.i18n.other.hello }}</p>",
-    "<p>{{ cms.i18n.test.hello | innerHTML }}</p>",
-    "<p>{{ cms.i18n.test.hello(name) }}</p>",
-    "<p>{{ cms.i18n.test.hello</p>",
+    '<a href="{{ cms.i18n.example/test.hello }}"></a>',
+    "<script>{{ cms.i18n.example/test.hello }}</script>",
+    "<template><p>{{ cms.i18n.example/test.hello }}</p></template>",
+    "<p>{{ cms.i18n.example/other.hello }}</p>",
+    "<p>{{ cms.i18n.example/test.hello | innerHTML }}</p>",
+    "<p>{{ cms.i18n.example/test.hello(name) }}</p>",
+    "<p>{{ cms.i18n.example/test.hello</p>",
     "<p>{{ cms.other.test }}</p>",
-    '<input type="text" value="{{ cms.i18n.test.hello }}">',
+    '<input type="text" value="{{ cms.i18n.example/test.hello }}">',
 ])("rejects unsupported server expressions or contexts: %s", (markup) => {
     expect(() => renderCollectionTexts(root(markup), "en", [source])).toThrow();
 });
 
 test("mixed server and business expressions preserve children and attribute bindings", () => {
     const body = root(
-        '<p>{{ cms.i18n.test.hello }}: <b>{{ order.total }}</b> {{ cmsData.title }}</p><input placeholder="{{ cms.i18n.test.hello }} — {{ order.label }}">',
+        '<p>{{ cms.i18n.example/test.hello }}: <b>{{ order.total }}</b> {{ cmsData.title }}</p><input placeholder="{{ cms.i18n.example/test.hello }} — {{ order.label }}">',
     );
     renderCollectionTexts(body, "en", [source]);
     expect(body.querySelector("p")!.innerHTML).toBe("Hello: <b>{{ order.total }}</b> {{ cmsData.title }}");
@@ -77,7 +77,7 @@ test("mixed server and business expressions preserve children and attribute bind
 test("rejects duplicate catalogues and dynamic text overrides", () => {
     expect(() => renderCollectionTexts(root(""), "en", [source, source])).toThrow("Duplicate");
     expect(() =>
-        renderCollectionTexts(root("<p>{{ cms.i18n.test.hello }}</p>"), "en", [
+        renderCollectionTexts(root("<p>{{ cms.i18n.example/test.hello }}</p>"), "en", [
             { ...source, overrides: { hello: { en: "Hello {name}" } } },
         ]),
     ).toThrow("do not support interpolation");

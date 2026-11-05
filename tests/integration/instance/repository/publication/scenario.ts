@@ -11,13 +11,13 @@ export async function exercisePublication(
 ) {
     const token = await api.pat(b.cookie);
     const request = api.request;
-    const registry = "ulvia.repository";
+    const registry = "ulvia/repository";
     const begin = async (
         sample: Awaited<ReturnType<typeof sampleContract>>,
         revision: number,
         credentials: { token: string },
     ) => {
-        const response = await fetch(`${origin}/.cms/call/ulvia.repository/v1/uploads`, {
+        const response = await fetch(`${origin}/.cms/call/ulvia/repository/v1/uploads`, {
             method: "POST",
             body: sample.manifest,
             headers: {
@@ -112,7 +112,7 @@ export async function exercisePublication(
     expect(retry.status).toBe(200);
     expect((await retry.json()).digest).toBe(own.digest);
     const interrupted = await begin(await sampleContract("journey.b", "1.0.1"), 1, token);
-    const revoked = await request("ulvia.cms.access", `/personal-access-tokens/${token.id}`, "DELETE", undefined, b);
+    const revoked = await request("ulvia/cms.access", `/personal-access-tokens/${token.id}`, "DELETE", undefined, b);
     expect(revoked.status).toBe(200);
     expect((await commit(interrupted, "journey.b", 1, token)).status).toBe(401);
     const replacement = await api.pat(b.cookie);

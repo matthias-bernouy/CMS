@@ -38,13 +38,13 @@ test("named instances keep independent identities, credentials, state, and hostn
             name: "default",
             label: "Default instance",
             hostname: localInstanceHostname("default"),
-            profile: { id: "ulvia.official", version: "1.0.0" },
+            profile: { id: "ulvia", version: "1.0.0" },
         });
         const previewConfig = await loadOrCreateLocalInstanceConfig(previewInstance.root, {
             name: "preview",
             label: "Preview instance",
             hostname: localInstanceHostname("preview"),
-            profile: { id: "ulvia.repository", version: "1.0.0" },
+            profile: { id: "repository", version: "1.0.0" },
         });
         const connection = await saveLocalInstanceConnection(previewInstance.root, {
             instanceId: "instance:00000000-0000-4000-8000-000000000001",
@@ -103,7 +103,7 @@ test("concurrent instance configuration creation converges on one identity and s
             name: "preview",
             label: "Preview instance",
             hostname: "preview.localhost",
-            profile: { id: "ulvia.official", version: "1.0.0" },
+            profile: { id: "ulvia", version: "1.0.0" },
         } as const;
         const [first, second] = await Promise.all([
             loadOrCreateLocalInstanceConfig(root, input),

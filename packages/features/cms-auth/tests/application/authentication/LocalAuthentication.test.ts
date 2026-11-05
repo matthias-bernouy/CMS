@@ -11,7 +11,7 @@ function setup(rateLimit?: InMemoryRateLimiter) {
     const users = new InMemoryUsersRepository();
     const credentials = new InMemoryLocalCredentialStore();
     const pats = new InMemoryPatRepository();
-    const codec = new SignedCookieCodec(new TextEncoder().encode("test-secret-key-at-least-16-bytes"));
+    const codec = new SignedCookieCodec(new TextEncoder().encode("example--test--secret-key-at-least-16-bytes"));
     const auth = new LocalAuthentication({
         providerId: "local",
         credentials,
@@ -96,7 +96,7 @@ describe("LocalAuthentication", () => {
                 providerId: "local",
                 credentials: new InMemoryLocalCredentialStore(),
                 resolver: new SubjectResolver(users),
-                codec: new SignedCookieCodec(new TextEncoder().encode("test-secret-key-at-least-16-bytes")),
+                codec: new SignedCookieCodec(new TextEncoder().encode("example--test--secret-key-at-least-16-bytes")),
                 sessionTtlSeconds,
             });
         };

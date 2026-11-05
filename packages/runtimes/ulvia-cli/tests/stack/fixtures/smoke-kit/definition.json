@@ -2,7 +2,7 @@
     "kind": "collection",
     "protocol": "ulvia-collection/v1",
     "schemaDialect": "ulvia-schema/v1",
-    "collectionId": "smoke-kit",
+    "collectionId": "ulvia.test/smoke-kit",
     "publisherId": "ulvia.test",
     "version": "1.0.0",
     "name": "collection.name",

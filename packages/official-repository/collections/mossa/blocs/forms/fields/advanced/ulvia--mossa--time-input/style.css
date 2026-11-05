@@ -1,0 +1,113 @@
+:scope {
+    --ulvia--mossa--time-input-time-height: var(--ulvia--mossa--control-height-md, 2.875rem);
+    --ulvia--mossa--time-input-time-font-size: var(--ulvia--mossa--font-size-md, 1rem);
+    display: block;
+    min-width: 0;
+    color: var(--ulvia--mossa--text-primary);
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+}
+[part~="control"] {
+    display: block;
+    min-width: 0;
+}
+input {
+    width: 100%;
+    min-height: var(--ulvia--mossa--time-input-time-height);
+}
+:scope[data-ready] input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+[part~="parts"] {
+    display: flex;
+    width: fit-content;
+    max-width: 100%;
+    min-width: 4.5rem;
+    height: var(--ulvia--mossa--time-input-time-height);
+    align-items: stretch;
+    box-sizing: border-box;
+    padding-inline: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    border: var(--ulvia--mossa--border-width, var(--ulvia--mossa--border-width, 1px)) solid
+        var(--ulvia--mossa--border-default);
+    border-radius: var(--ulvia--mossa--radius-md, 0.5rem);
+    color: inherit;
+    background: var(--ulvia--mossa--background-surface);
+    box-shadow: var(--ulvia--mossa--shadow-sm);
+    overflow: hidden;
+}
+[part~="time-part"] {
+    display: grid;
+    min-width: 0;
+    flex: 0 1 3rem;
+    grid-template-columns: minmax(2rem, 1fr) auto;
+    align-items: center;
+    padding-inline: var(--ulvia--mossa--spacing-3xs, 0.25rem);
+    gap: var(--ulvia--mossa--spacing-3xs, 0.25rem);
+    cursor: text;
+}
+[part~="part-input"] {
+    width: 2.5ch;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    color: inherit;
+    appearance: textfield;
+    background: transparent;
+    font: inherit;
+    font-size: var(--ulvia--mossa--time-input-time-font-size);
+    font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+[part~="part-input"]::-webkit-inner-spin-button {
+    appearance: none;
+}
+[part~="unit"] {
+    color: var(--ulvia--mossa--text-muted);
+    font-size: var(--ulvia--mossa--font-size-xs, 0.75rem);
+    font-weight: var(--ulvia--mossa--font-weight-medium, 500);
+}
+[part~="separator"] {
+    display: grid;
+    width: 0.75rem;
+    place-items: center;
+    color: var(--ulvia--mossa--text-muted);
+    font-size: var(--ulvia--mossa--time-input-time-font-size);
+    font-weight: var(--ulvia--mossa--font-weight-bold, 700);
+}
+:scope:not([show-units]) [part~="unit"] {
+    display: none;
+}
+[part~="parts"]:focus-within {
+    border-color: var(--ulvia--mossa--primary);
+    outline: 3px solid color-mix(in srgb, var(--ulvia--mossa--focus-ring) 28%, transparent);
+    outline-offset: 1px;
+}
+:scope[data-invalid] [part~="parts"] {
+    border-color: var(--ulvia--mossa--danger-border);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ulvia--mossa--danger-border) 22%, transparent);
+}
+:scope[data-disabled] [part~="parts"] {
+    color: var(--ulvia--mossa--text-disabled);
+    background: var(--ulvia--mossa--background-subtle);
+}
+:scope[size="sm"] {
+    --ulvia--mossa--time-input-time-height: var(--ulvia--mossa--control-height-sm, 2.25rem);
+    --ulvia--mossa--time-input-time-font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+}
+:scope[size="sm"] [part~="time-part"] {
+    flex-basis: 2.5rem;
+    padding-inline: 0;
+}
+:scope[size="lg"] {
+    --ulvia--mossa--time-input-time-height: var(--ulvia--mossa--control-height-lg, 3.25rem);
+    --ulvia--mossa--time-input-time-font-size: var(--ulvia--mossa--font-size-lg, 1.125rem);
+}
+:scope[size="lg"] [part~="time-part"] {
+    flex-basis: 3.5rem;
+    padding-inline: var(--ulvia--mossa--spacing-xs, 0.5rem);
+}

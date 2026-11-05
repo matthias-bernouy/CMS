@@ -15,13 +15,13 @@ export function registerSmtpEmailerCapabilities(
     dispatcher: ProviderCapabilityRegistry,
     dependencies: CmsSmtpEmailerDependencies,
 ): void {
-    dispatcher.register("ulvia.cms.emailer.smtp", "smtp.configuration.get", () =>
+    dispatcher.register("ulvia/cms.emailer.smtp", "smtp.configuration.get", () =>
         emailerCall(() => dependencies.emailer.getConfiguration()),
     );
-    dispatcher.register("ulvia.cms.emailer.smtp", "smtp.configuration.update", (input) =>
+    dispatcher.register("ulvia/cms.emailer.smtp", "smtp.configuration.update", (input) =>
         emailerCall(() => dependencies.emailer.updateConfiguration(configuration(input))),
     );
-    dispatcher.register("ulvia.cms.emailer.smtp", "emailer.send", (input) =>
+    dispatcher.register("ulvia/cms.emailer.smtp", "emailer.send", (input) =>
         emailerCall(async () => {
             await dependencies.emailer.send({
                 to: {

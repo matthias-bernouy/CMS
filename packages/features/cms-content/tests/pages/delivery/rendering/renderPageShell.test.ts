@@ -32,7 +32,9 @@ function makeCtx(siteHost = ""): RenderContext {
             blocRuntimeUrl: "/_content/assets/bloc-runtime.js?v=c",
             bindingCoreUrl: BINDING_CORE_URL,
             styleUrl: "/_content/style?v=s",
-            blocStyleUrls: ["/_content/blocstyles?collection=example&tags=example-card&r=revision&v=css"],
+            blocStyleUrls: [
+                "/_content/blocstyles?collection=example&tags=example-dofficial--example--card&r=revision&v=css",
+            ],
             blocUrls: ["/.cms/blocs/example.js?v=b"],
             scriptUrls: ["/_content/assets/bloc-runtime.js?v=c", "/.cms/blocs/example.js?v=b"],
         }),
@@ -182,7 +184,7 @@ describe("renderPage — binding core wrapper", () => {
         };
         repository.getRenderableBlocs = async () => [
             {
-                id: "example-frame",
+                id: "example-dofficial--example--frame",
                 kind: "composition",
                 markupHTML: '<iframe src="https://maps.example.test/embed" sandbox="" title="Map"></iframe>',
                 browser: { frames: { origins: ["https://maps.example.test"], sandbox: [] } },
@@ -208,7 +210,7 @@ describe("renderPage — binding core wrapper", () => {
         const entry = await renderPage(
             {
                 ...page,
-                content: '<div cms-bloc="example-frame"></div>',
+                content: '<div cms-bloc="example-dofficial--example--frame"></div>',
             },
             context,
         );

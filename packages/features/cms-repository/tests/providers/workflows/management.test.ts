@@ -97,7 +97,7 @@ test("catalogue imports reject substituted coordinates or bytes before publishin
         for (const digest of [world.previous.digest, `sha256:${"0".repeat(64)}`]) {
             const reference = {
                 repositoryId: "trusted",
-                publisherId: "ulvia.official",
+                publisherId: "ulvia",
                 id: "unexpected.provider",
                 version: world.previous.manifest.version,
                 digest,

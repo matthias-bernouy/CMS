@@ -7,23 +7,25 @@ describe("renderPageDocument", () => {
         const { document } = parseHTML("<html><body></body></html>");
         const rendered = await renderPageDocument(
             document.body,
-            { html: '<div cms-bloc=\"atlas-card\" onclick="alert(1)"><script>bad()</script>Hello</div>' },
+            {
+                html: '<div cms-bloc="atlas-dofficial--atlas--card" onclick="alert(1)"><script>bad()</script>Hello</div>',
+            },
             {
                 language: "en",
                 repository: {
                     async getRenderableBlocs() {
                         return [
                             {
-                                id: "atlas-card",
+                                id: "atlas-dofficial--atlas--card",
                                 kind: "component" as const,
                                 markupHTML: "<article><slot></slot></article>",
-                                uses: ["atlas-action"],
+                                uses: ["atlas-dofficial--atlas--action"],
                             },
-                            { id: "atlas-action" },
+                            { id: "atlas-dofficial--atlas--action" },
                         ];
                     },
                     async getBlocViewJS(tag) {
-                        return ["atlas-action", "atlas-card"].includes(tag)
+                        return ["atlas-dofficial--atlas--action", "atlas-dofficial--atlas--card"].includes(tag)
                             ? `cmsRuntime.registerBloc('${tag}', { mount() {} })`
                             : null;
                     },
@@ -34,13 +36,16 @@ describe("renderPageDocument", () => {
             },
         );
 
-        expect(rendered.html).toContain('<div cms-bloc="atlas-card"><article>Hello</article></div>');
+        expect(rendered.html).toContain('<div cms-bloc="atlas-dofficial--atlas--card"><article>Hello</article></div>');
         expect(rendered.html).not.toContain("script");
         expect(rendered.html).not.toContain("onclick");
-        expect(rendered.referencedTags).toEqual(["atlas-action", "atlas-card"]);
-        expect(rendered.usedTags).toEqual(["atlas-action", "atlas-card"]);
+        expect(rendered.referencedTags).toEqual(["atlas-dofficial--atlas--action", "atlas-dofficial--atlas--card"]);
+        expect(rendered.usedTags).toEqual(["atlas-dofficial--atlas--action", "atlas-dofficial--atlas--card"]);
         expect(rendered.requiresBindingRuntime).toBe(false);
-        expect(rendered.renderableBlocs.map(({ id }) => id)).toEqual(["atlas-card", "atlas-action"]);
+        expect(rendered.renderableBlocs.map(({ id }) => id)).toEqual([
+            "atlas-dofficial--atlas--card",
+            "atlas-dofficial--atlas--action",
+        ]);
         expect(document.body.hasAttribute("data-prepared")).toBe(true);
     });
 
@@ -68,7 +73,7 @@ describe("renderPageDocument", () => {
         const rendered = await renderPageDocument(
             document.body,
             {
-                html: '<svg cms-svg="{{ cms.asset.atlas.icons/check.svg }}" aria-hidden="true"></svg>',
+                html: '<svg cms-svg="{{ cms.asset.atlas.official/atlas.icons/check.svg }}" aria-hidden="true"></svg>',
             },
             {
                 language: "en",
@@ -77,7 +82,7 @@ describe("renderPageDocument", () => {
                     getBlocViewJS: async () => null,
                 },
                 resolveSvgSources: async (sources) => {
-                    expect(sources).toEqual(["{{ cms.asset.atlas.icons/check.svg }}"]);
+                    expect(sources).toEqual(["{{ cms.asset.atlas.official/atlas.icons/check.svg }}"]);
                     return new Map([
                         [
                             sources[0]!,
@@ -106,7 +111,8 @@ describe("renderPageDocument", () => {
             {
                 html: Array.from(
                     { length: 10 },
-                    () => '<svg cms-svg="{{ cms.asset.atlas.icons/check.svg }}" aria-hidden="true"></svg>',
+                    () =>
+                        '<svg cms-svg="{{ cms.asset.atlas.official/atlas.icons/check.svg }}" aria-hidden="true"></svg>',
                 ).join(""),
             },
             {
@@ -136,7 +142,8 @@ describe("renderPageDocument", () => {
                 {
                     html: Array.from(
                         { length: 17 },
-                        () => '<svg cms-svg="{{ cms.asset.atlas.icons/dense.svg }}" aria-hidden="true"></svg>',
+                        () =>
+                            '<svg cms-svg="{{ cms.asset.atlas.official/atlas.icons/dense.svg }}" aria-hidden="true"></svg>',
                     ).join(""),
                 },
                 {

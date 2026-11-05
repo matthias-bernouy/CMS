@@ -11,7 +11,7 @@ export function createConnectedProviderLogger(options: {
     service: string;
     fallback: LogSink;
 }) {
-    if (options.contract.contractId !== "ulvia.cms.observability") {
+    if (options.contract.contractId !== "ulvia/cms.observability") {
         throw new TypeError("Expected the Observability contract");
     }
     const diagnostics = createObservabilityLogger({

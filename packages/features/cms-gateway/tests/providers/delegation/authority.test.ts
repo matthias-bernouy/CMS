@@ -23,7 +23,7 @@ test("expiry, site/source substitution, grants, disablement and credential/confi
             f.state.now += 30_000;
         },
         (f: Awaited<ReturnType<typeof delegationFixture>>) => {
-            f.state.current.grants.denied.push({ contractId: "destination", capabilityId: "item.list" });
+            f.state.current.grants.denied.push({ contractId: "ulvia/destination", capabilityId: "item.list" });
         },
         (f: Awaited<ReturnType<typeof delegationFixture>>) => {
             f.source.installation.installation.status = "disabled";

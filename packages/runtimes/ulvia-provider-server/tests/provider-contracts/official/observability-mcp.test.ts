@@ -1,3 +1,4 @@
+import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { expect, test } from "bun:test";
 import { CapabilityMcpBinding } from "@bernouy/cms-gateway/mcp";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
@@ -7,7 +8,7 @@ const context = { siteId: "default", actor: { kind: "administrator" as const, su
 
 async function fixture() {
     const repository = await repositoryFixture();
-    const release = repository.contracts.find(({ release }) => release.contractId === "ulvia.cms.observability")!;
+    const release = repository.contracts.find(({ release }) => release.contractId === "ulvia/cms.observability")!;
     const calls: GatewayInvocation[] = [];
     const binding = new CapabilityMcpBinding({
         contracts: async () => [release],
@@ -26,9 +27,9 @@ test("official observability exposes only three administrator read tools with bo
     expect(release.release.version).toBe("1.0.0");
     const { tools } = await binding.list(context);
     expect(tools.map(({ name }) => name)).toEqual([
-        "observability_logs_aggregate",
-        "observability_logs_get",
-        "observability_logs_query",
+        capabilityToolName("ulvia/cms.observability", "logs.aggregate", "mcp", "observability_logs_aggregate"),
+        capabilityToolName("ulvia/cms.observability", "logs.get", "mcp", "observability_logs_get"),
+        capabilityToolName("ulvia/cms.observability", "logs.query", "mcp", "observability_logs_query"),
     ]);
     for (const tool of tools) {
         expect(tool.annotations).toMatchObject({ readOnlyHint: true, destructiveHint: false });
@@ -47,19 +48,27 @@ test("official observability exposes only three administrator read tools with bo
 test("observability MCP reads preserve trusted invocation scope and the existing HTTP binding", async () => {
     const { binding, calls, release } = await fixture();
     const input = { minLevel: "error", eventPrefix: "gateway.", limit: 20 };
-    await binding.call("observability_logs_query", { input }, context);
+    await binding.call(
+        capabilityToolName("ulvia/cms.observability", "logs.query", "mcp", "observability_logs_query"),
+        { input },
+        context,
+    );
     expect(calls).toEqual([
         expect.objectContaining({
             ...context,
             input,
-            contractId: "ulvia.cms.observability",
+            contractId: "ulvia/cms.observability",
             capabilityId: "logs.query",
             bindingId: "mcp",
             bindingTransport: "mcp",
         }),
     ]);
     await expect(
-        binding.call("observability_logs_query", { input, actor: { kind: "system" } }, context),
+        binding.call(
+            capabilityToolName("ulvia/cms.observability", "logs.query", "mcp", "observability_logs_query"),
+            { input, actor: { kind: "system" } },
+            context,
+        ),
     ).rejects.toThrow();
     expect(calls).toHaveLength(1);
     expect(release.release.capabilities.find(({ id }) => id === "logs.query")!.bindings[0]).toMatchObject({

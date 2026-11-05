@@ -9,7 +9,7 @@ test.each(["throw", "response"])(
     "one provider projects %s errors for three selected releases and retains Content-Language",
     async (mode) => {
         const f = await fixture();
-        f.dispatcher.register("catalog", "item.list", async (_input, context) => {
+        f.dispatcher.register("ulvia/catalog", "item.list", async (_input, context) => {
             expect(context.http.headers.get("accept-language")).toBe("es");
             if (mode === "throw") {
                 throw new ProviderCapabilityDispatchError(
@@ -70,7 +70,7 @@ test("SDK and Gateway retain validation of required error fields, bounds, codes 
     let output: unknown;
     let code = "NOT_FOUND";
     let status = 404;
-    f.dispatcher.register("catalog", "item.list", async () => {
+    f.dispatcher.register("ulvia/catalog", "item.list", async () => {
         throw new ProviderCapabilityDispatchError(code, status, "Invalid page", {}, output);
     });
     f.mount();

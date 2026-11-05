@@ -1,3 +1,4 @@
+import { expect } from "bun:test";
 import { inspectObservability } from "./administration/observability";
 import type { Page } from "playwright";
 import {
@@ -66,7 +67,7 @@ async function signIn(
     await page.getByLabel(/^(Email address|Adresse e-mail)$/u).fill(credentials.adminEmail);
     await page.getByLabel(/^(Password|Mot de passe)$/u).fill(credentials.adminPassword);
     const [response] = await Promise.all([
-        page.waitForResponse((response) => response.url().includes("/.cms/mutation/ulvia.cms.access/login-password")),
+        page.waitForResponse((response) => response.url().includes("/.cms/mutation/ulvia/cms.access/login-password")),
         page.getByRole("button", { name: /^(Sign in|Se connecter)$/u }).click(),
     ]);
     if (!response.ok()) {
@@ -121,24 +122,29 @@ async function inspectAdminRoutes(page: Page, edgeOrigin: string): Promise<void>
 async function mutateCollections(page: Page): Promise<void> {
     await adminPageLink(page, "collections").click();
     await page.getByRole("heading", { name: /^(Explore collections|Explorer les Collections)$/u }).waitFor();
+    const betaRelease = collectionReleaseCard(page, "ulvia.test 2.1.0-beta.1");
+    expect(await betaRelease.count()).toBe(0);
+    await page.locator("#ulvia-collection-channel").selectOption("beta");
+    await betaRelease.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
+    await page.locator("#ulvia-collection-channel").selectOption("stable");
     const initialRelease = collectionReleaseCard(page, "ulvia.test 1.0.0");
     await initialRelease.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
     const installResponse = page.waitForResponse((candidate) =>
-        candidate.url().includes("ulvia.cms.installations/install-collection"),
+        candidate.url().includes("ulvia/cms.installations/install-collection"),
     );
     await initialRelease.getByRole("button", { name: /^(Install|Installer)$/u }).click();
     if (!(await installResponse).ok()) {
         throw new Error("Collection installation failed.");
     }
-    await installedCollectionLink(page, "smoke-kit").click({ noWaitAfter: true });
+    await installedCollectionLink(page, "ulvia.test/smoke-kit").click({ noWaitAfter: true });
     await page.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor({ timeout: 60_000 });
     await page.locator('a[href="#collection-blocks"]').click();
     await page.waitForURL(/#collection-blocks$/u, { waitUntil: "domcontentloaded" });
-    await page.getByText("smoke-kit-card", { exact: true }).waitFor();
+    await page.getByText("ulvia-dtest--smoke-kit--card", { exact: true }).waitFor();
     await page.getByRole("link", { name: /^(Explore collections|Explorer les Collections)$/u }).click();
     await exerciseCollectionUpgrades(page);
-    await installedCollectionLink(page, "ulvia-official").click({ noWaitAfter: true });
-    await page.getByRole("heading", { name: "Ulvia Official", exact: true }).waitFor({ timeout: 60_000 });
+    await installedCollectionLink(page, "ulvia/mossa").click({ noWaitAfter: true });
+    await page.getByRole("heading", { name: "Mossa", exact: true }).waitFor({ timeout: 60_000 });
     await page.locator('a[href="#collection-examples"]').click();
     await page.locator("#collection-examples article").first().waitFor();
     await page.locator('a[href="#collection-theme"]').click();
@@ -150,16 +156,16 @@ async function mutateCollections(page: Page): Promise<void> {
     const themeValue = page.locator("#collection-theme-token-value");
     await themeValue.waitFor();
     await themeValue.fill(await themeValue.inputValue());
-    await page.locator('form[cms-mutation^="ulvia.cms.content:theme.token.save "] button[type="submit"]').click();
+    await page.locator('form[cms-mutation^="ulvia/cms.content:theme.token.save "] button[type="submit"]').click();
     await page
         .locator(
-            'form[cms-mutation^="ulvia.cms.content:theme.token.save "] p[cms-condition*="savedThemeToken.outcome.kind === \'success\'"]',
+            'form[cms-mutation^="ulvia/cms.content:theme.token.save "] p[cms-condition*="savedThemeToken.outcome.kind === \'success\'"]',
         )
         .waitFor();
-    const resetTheme = page.locator('form[cms-mutation^="ulvia.cms.content:theme.token.reset "]');
+    const resetTheme = page.locator('form[cms-mutation^="ulvia/cms.content:theme.token.reset "]');
     await resetTheme.waitFor();
     const [resetResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/theme.token.reset")),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia/cms.content/theme.token.reset")),
         resetTheme.locator('button[type="submit"]').click(),
     ]);
     if (!resetResponse.ok()) {
@@ -167,12 +173,12 @@ async function mutateCollections(page: Page): Promise<void> {
     }
     await page.locator('a[href="#collection-texts"]').click();
     await page.waitForURL(/#collection-texts$/u, { waitUntil: "domcontentloaded" });
-    const textForm = page.locator('form[cms-mutation^="ulvia.cms.content:localization.text.save "]').first();
+    const textForm = page.locator('form[cms-mutation^="ulvia/cms.content:localization.text.save "]').first();
     await textForm.waitFor();
     const textValue = textForm.locator('textarea[name="value"]');
     await textValue.fill(await textValue.inputValue());
     const [textResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/localization.text.save")),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia/cms.content/localization.text.save")),
         textForm.locator('button[type="submit"]').click(),
     ]);
     if (!textResponse.ok()) {
@@ -187,7 +193,7 @@ function collectionReleaseCard(page: Page, identity: string) {
 
 async function verifyCollectionAfterRestart(page: Page): Promise<void> {
     await adminPageLink(page, "collections").click();
-    await installedCollectionLink(page, "smoke-kit").waitFor();
+    await installedCollectionLink(page, "ulvia.test/smoke-kit").waitFor();
 }
 
 function adminPageLink(page: Page, pageId: string) {
@@ -196,6 +202,6 @@ function adminPageLink(page: Page, pageId: string) {
 
 function installedCollectionLink(page: Page, collectionId: string) {
     return page
-        .locator(`a[href="/admin/collections/detail?ulvia-official-collection=${encodeURIComponent(collectionId)}"]`)
+        .locator(`a[href="/admin/collections/detail?ulvia--mossa--collection=${encodeURIComponent(collectionId)}"]`)
         .first();
 }

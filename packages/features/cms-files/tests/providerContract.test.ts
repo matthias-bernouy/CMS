@@ -62,7 +62,7 @@ for (const [name, factory] of [
                 bytes: bytes("abcdef"),
                 visibility: "public",
             });
-            expect(publicFile.url).toContain("/.cms/call/ulvia.cms.files/files/");
+            expect(publicFile.url).toContain("/.cms/call/ulvia/cms.files/files/");
             await expect(files.read({ ...publicFile, generation: "wrong" })).rejects.toMatchObject({
                 code: "NOT_FOUND",
             });

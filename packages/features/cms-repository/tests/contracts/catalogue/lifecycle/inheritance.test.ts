@@ -5,10 +5,10 @@ import { capabilityDocument, contractDocument, objectSchema, stringSchema } from
 
 test("changing an exact parent cannot hide an incompatible inherited capability", async () => {
     const catalogue = new InMemoryReleaseCatalogue();
-    const first = await admitContractRelease(contractDocument({ contractId: "example.first", version: "1.0.0" }));
+    const first = await admitContractRelease(contractDocument({ contractId: "ulvia/example.first", version: "1.0.0" }));
     const second = await admitContractRelease(
         contractDocument({
-            contractId: "example.second",
+            contractId: "ulvia/example.second",
             version: "1.0.0",
             capabilities: [capabilityDocument({ input: objectSchema({ value: stringSchema() }, ["value"]) })],
         }),
@@ -16,7 +16,7 @@ test("changing an exact parent cannot hide an incompatible inherited capability"
     const child = (parent: typeof first, version: string) =>
         admitContractRelease(
             contractDocument({
-                contractId: "example.child",
+                contractId: "ulvia/example.child",
                 version,
                 extends: {
                     contractId: parent.release.contractId,
@@ -34,7 +34,7 @@ test("changing an exact parent cannot hide an incompatible inherited capability"
     await publishContractSet(catalogue, [first, await child(first, "1.0.0")]);
     await catalogue.publish(second);
     await expect(catalogue.publish(await child(second, "2.0.0"))).rejects.toThrow("new capability");
-    expect(await catalogue.get("example.child", "2.0.0")).toBeNull();
+    expect(await catalogue.get("ulvia/example.child", "2.0.0")).toBeNull();
 });
 test("restoring verified published bytes preserves historical baselines without republishing them", async () => {
     const first = await admitContractRelease(contractDocument({ version: "1.0.0" }));

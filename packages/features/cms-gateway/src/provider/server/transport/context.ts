@@ -17,7 +17,7 @@ export function providerInvocationContext(
     const encodedCredential = request.headers.get(ACTOR_CREDENTIAL_HEADER);
     if (
         encodedCredential !== null &&
-        (claims.contractId !== "ulvia.cms.access" || claims.capabilityId !== "resolve-actor")
+        (claims.contractId !== "ulvia/cms.access" || claims.capabilityId !== "resolve-actor")
     ) {
         throw new TypeError("Actor credentials are restricted to the Access actor resolver.");
     }

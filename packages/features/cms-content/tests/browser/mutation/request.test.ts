@@ -15,7 +15,7 @@ describe("Form mutation — submit request", () => {
         }) as typeof fetch;
         const host = el(`
             <div>
-                <form cms-mutation="ulvia.cms.content:pages.create as created">
+                <form cms-mutation="ulvia/cms.content:pages.create as created">
                     <input name="title" value="Welcome">
                     <p class="result" cms-condition="created.outcome.kind === 'success'">{{ created.data.id }}</p>
                 </form>
@@ -28,7 +28,7 @@ describe("Form mutation — submit request", () => {
         const result = await mutationFormRequest(host, "created");
 
         const captured = request as unknown as { url: string; init?: RequestInit };
-        expect(captured.url).toBe("http://localhost/.cms/mutation/ulvia.cms.content/pages.create");
+        expect(captured.url).toBe("http://localhost/.cms/mutation/ulvia/cms.content/pages.create");
         expect(captured.init?.method).toBe("POST");
         expect(captured.init?.headers).toEqual(expect.any(Headers));
         expect(JSON.parse(String(captured.init?.body))).toEqual({ title: "Welcome" });
@@ -50,7 +50,7 @@ describe("Form mutation — submit request", () => {
         }) as typeof fetch;
 
         const root = el(`
-            <form cms-mutation="test.users:create as result">
+            <form cms-mutation="ulvia/test.users:create as result">
                 <input name="email">
                 <p class="success" cms-condition="result.outcome.kind === 'success'">Created {{ result.data.id }}</p>
                 <button type="submit">Save</button>
@@ -71,7 +71,7 @@ describe("Form mutation — submit request", () => {
         await waitFor(() => text(root.querySelector(".success")) === "Created 42");
 
         const captured = request as unknown as { url: string; init?: RequestInit };
-        expect(captured.url).toBe("http://localhost/.cms/mutation/test.users/create");
+        expect(captured.url).toBe("http://localhost/.cms/mutation/ulvia/test.users/create");
         expect(captured.init?.method).toBe("POST");
         expect(captured.init?.body).toBe(JSON.stringify({ email: "ada@example.com" }));
         expect(root.querySelector("input")).toBe(input);
@@ -89,7 +89,7 @@ describe("Form mutation — submit request", () => {
         }) as typeof fetch;
 
         const root = el(`
-            <form cms-mutation="test.newsletter:subscribe as result">
+            <form cms-mutation="ulvia/test.newsletter:subscribe as result">
                 <input name="email" value="reader@example.com">
                 <button type="submit">Subscribe</button>
             </form>
@@ -126,7 +126,7 @@ describe("Form mutation — submit request", () => {
             });
         }) as typeof fetch;
         const root = el(`
-            <form cms-mutation="test.jobs:run as result">
+            <form cms-mutation="ulvia/test.jobs:run as result">
                 <input name="name" value="migration">
                 <button type="submit">Run</button>
                 <p class="success" cms-condition="result.outcome.kind === 'success'">Done</p>
@@ -164,7 +164,7 @@ describe("Form mutation — submit request", () => {
             return Response.json({ error: { code: "UNAVAILABLE", retryable: true } }, { status: 503 });
         }) as typeof fetch;
         const root = el(`
-            <form cms-mutation="test.files:upload as result">
+            <form cms-mutation="ulvia/test.files:upload as result">
                 <upload-control name="file"></upload-control>
                 <button type="submit">Upload</button>
             </form>
@@ -198,7 +198,7 @@ describe("Form mutation — submit request", () => {
             payload = JSON.parse(String(init?.body));
             return Response.json({ saved: true });
         }) as typeof fetch;
-        const host = el('<div><form cms-mutation="test.profile:save as save"></form></div>');
+        const host = el('<div><form cms-mutation="ulvia/test.profile:save as save"></form></div>');
         document.body.append(host);
         const runtime = new BindingRuntime(host);
         runtime.start();
@@ -230,7 +230,7 @@ describe("Form mutation — submit request", () => {
                 { error: { code: "INVALID_PROFILE", retryable: false, output: { message: "Invalid profile" } } },
                 { status: 422, statusText: "Unprocessable Content" },
             )) as typeof fetch;
-        const host = el('<div><form cms-mutation="test.profile:save as save"></form></div>');
+        const host = el('<div><form cms-mutation="ulvia/test.profile:save as save"></form></div>');
         document.body.append(host);
         const runtime = new BindingRuntime(host);
         runtime.start();
@@ -242,7 +242,7 @@ describe("Form mutation — submit request", () => {
     });
 
     test("programmatic requests fail immediately while their declarative form is inactive", async () => {
-        const host = el('<div><form cms-mutation="test.profile:save as save"></form></div>');
+        const host = el('<div><form cms-mutation="ulvia/test.profile:save as save"></form></div>');
         document.body.append(host);
 
         await expect(mutationFormRequest(host, "save")).rejects.toThrow("Declarative mutation form is not active");

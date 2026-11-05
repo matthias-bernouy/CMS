@@ -1,0 +1,32 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--grid",
+    "label": "bloc.grid.label",
+    "description": "bloc.grid.description",
+    "order": 40,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "items": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["div", "section", "article"]
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["grid-default"],
+    "defaultExample": "grid-default"
+}

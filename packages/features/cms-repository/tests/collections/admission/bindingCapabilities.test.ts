@@ -24,7 +24,7 @@ test("collection query outputs are safe across every release accepted by their r
 });
 
 function queryContract(version: string): Record<string, unknown> {
-    const contract = contractDocument("catalog.items", "item.list", version);
+    const contract = contractDocument("ulvia/catalog.items", "item.list", version);
     const capability = (contract.capabilities as Record<string, unknown>[])[0]!;
     capability.behavior = { sensitive: false, effect: "query", execution: "sync" };
     (capability.bindings[0] as Record<string, unknown>).method = "QUERY";
@@ -39,9 +39,9 @@ function collection(field: string, versionRange: string): Record<string, unknown
 
         kind: "composition",
         root: { accepts: ["div"] },
-        id: "atlas-catalog",
+        id: "atlas-dofficial--atlas--catalog",
         label: "bloc.page.label",
-        markup: `<section cms-query="catalog.items:item.list as items">
+        markup: `<section cms-query="ulvia/catalog.items:item.list as items">
             <div cms-match="items.outcome.kind">
                 <div cms-case='"none"'></div>
                 <p cms-case='"success"'>{{ items.data.${field} }}</p>
@@ -50,7 +50,7 @@ function collection(field: string, versionRange: string): Record<string, unknown
         </section>`,
         slots: {},
         uses: [],
-        requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange }],
+        requires: [{ contractId: "ulvia/catalog.items", capabilityId: "item.list", versionRange }],
     });
     return source;
 }

@@ -1,0 +1,63 @@
+:scope {
+    display: block;
+    min-width: 0;
+}
+
+[part~="catalogue-header"] {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--ulvia--mossa--spacing-md, 1rem);
+    margin-block-end: var(--ulvia--mossa--spacing-lg, 1.5rem);
+}
+
+[part~="catalogue-header"] > * {
+    margin: 0;
+}
+
+[part~="release-count"],
+[part~="release-meta"] {
+    color: var(--ulvia--mossa--text-muted);
+    font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+}
+
+[part~="release-summary"] {
+    display: grid;
+    gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}
+
+[part~="release-description"],
+[part~="release-meta"] {
+    margin: 0;
+}
+
+[part~="release-statuses"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+}
+
+[part~="security-details"] {
+    padding-block-start: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    border-block-start: 1px solid var(--ulvia--mossa--border-subtle);
+    color: var(--ulvia--mossa--text-secondary);
+    font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+}
+
+[part~="security-details"] summary {
+    color: var(--ulvia--mossa--text-primary);
+    font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+    cursor: pointer;
+}
+
+[part~="security-details"] p,
+[part~="security-details"] div {
+    margin-block: var(--ulvia--mossa--spacing-xs, 0.5rem) 0;
+}
+
+@media (max-width: 42rem) {
+    [part~="catalogue-header"] {
+        align-items: start;
+        flex-direction: column;
+    }
+}

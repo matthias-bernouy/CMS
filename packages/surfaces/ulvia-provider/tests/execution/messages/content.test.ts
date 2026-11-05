@@ -17,7 +17,7 @@ test("the same INVALID_PAGE code reports distinct real validation reasons withou
         },
     } as never);
     const invalid = dispatcher.invoke(
-        "ulvia.cms.content",
+        "ulvia/cms.content",
         "pages.create",
         { path: "/draft", title: "   " },
         context("fr-CH"),
@@ -29,7 +29,7 @@ test("the same INVALID_PAGE code reports distinct real validation reasons withou
     });
     expect(writes).toBe(0);
     const outlines = new DefaultProviderCapabilityDispatcher();
-    outlines.register("ulvia.cms.content", "pages.update", async (input) => {
+    outlines.register("ulvia/cms.content", "pages.update", async (input) => {
         try {
             validateExpandedPageDocument(String(input.html), []);
         } catch (error) {
@@ -40,13 +40,13 @@ test("the same INVALID_PAGE code reports distinct real validation reasons withou
         }
     });
     await expect(
-        outlines.invoke("ulvia.cms.content", "pages.update", { html: "<h1>First</h1><h1>Second</h1>" }, context("fr")),
+        outlines.invoke("ulvia/cms.content", "pages.update", { html: "<h1>First</h1><h1>Second</h1>" }, context("fr")),
     ).rejects.toMatchObject({
         reason: "page.multiple_h1",
         output: { message: "La page peut afficher plusieurs titres H1. Elle doit en afficher au maximum un." },
     });
     await expect(
-        outlines.invoke("ulvia.cms.content", "pages.update", { html: "<h1>First</h1><h3>Third</h3>" }, context("en")),
+        outlines.invoke("ulvia/cms.content", "pages.update", { html: "<h1>First</h1><h3>Third</h3>" }, context("en")),
     ).rejects.toMatchObject({
         output: { message: "The heading hierarchy skips from H1 to H3. Add the intermediate levels." },
     });
@@ -62,11 +62,11 @@ test("unexpected repository TypeErrors stay technical and concurrent languages d
         },
     } as never);
     await expect(
-        dispatcher.invoke("ulvia.cms.content", "pages.create", { path: "/draft", title: "Valid" }, context("fr")),
+        dispatcher.invoke("ulvia/cms.content", "pages.create", { path: "/draft", title: "Valid" }, context("fr")),
     ).rejects.toThrow("private database password");
     const results = await Promise.allSettled(
         ["fr", "en"].map((language) =>
-            dispatcher.invoke("ulvia.cms.content", "pages.create", { path: "/draft", title: "   " }, context(language)),
+            dispatcher.invoke("ulvia/cms.content", "pages.create", { path: "/draft", title: "   " }, context(language)),
         ),
     );
     expect(results[0]).toMatchObject({ status: "rejected", reason: { responseHeaders: { "content-language": "fr" } } });

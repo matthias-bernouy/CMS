@@ -163,11 +163,11 @@ describe("contract release compatibility", () => {
             behavior: { sensitive: false, effect: "command", idempotency: "natural", execution: "sync" },
         });
         const previous = parseContractRelease(
-            contractDocument({ contractId: "ulvia.cms.access", version: "1.0.0", capabilities: [command] }),
+            contractDocument({ contractId: "ulvia/cms.access", version: "1.0.0", capabilities: [command] }),
         );
         const next = parseContractRelease(
             contractDocument({
-                contractId: "ulvia.cms.access",
+                contractId: "ulvia/cms.access",
                 version: "2.0.0",
                 capabilities: [{ ...command, responseEffects: ["session"] }],
             }),

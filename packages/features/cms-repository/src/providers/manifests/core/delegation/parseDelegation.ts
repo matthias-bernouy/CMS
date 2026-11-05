@@ -1,3 +1,4 @@
+import { isResourceId } from "cms-repository/exports/contracts/protocol";
 import type { ProviderDelegationPolicy, ProviderDelegationSelector } from "../../interfaces/ProviderManifest";
 import { ProviderManifestValidationError } from "../protocol/errors";
 import {
@@ -36,7 +37,7 @@ export function parseDelegation(value: unknown, path: string): ProviderDelegatio
             );
         }
         return {
-            contractId: selectorId(selector.contractId, `${at}.contractId`, 96),
+            contractId: selectorId(selector.contractId, `${at}.contractId`, 193),
             capabilityId: selectorId(selector.capabilityId, `${at}.capabilityId`, 128),
             effect: selector.effect,
             ...(selector.sensitive === undefined
@@ -56,5 +57,14 @@ export function parseDelegation(value: unknown, path: string): ProviderDelegatio
 }
 
 function selectorId(value: unknown, path: string, maximum: number): string {
-    return value === "*" ? "*" : parseIdentifier(value, path, maximum);
+    if (value === "*") {
+        return "*";
+    }
+    if (path.endsWith(".contractId")) {
+        if (!isResourceId(value)) {
+            throw new ProviderManifestValidationError("invalid_manifest", "must be namespace/name or *", path);
+        }
+        return value;
+    }
+    return parseIdentifier(value, path, maximum);
 }

@@ -1,0 +1,35 @@
+:scope {
+    display: block;
+    color: var(--ulvia--mossa--text-primary);
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+}
+[part~="field"] {
+    display: grid;
+    gap: var(--ulvia--mossa--spacing-2xs, 0.375rem);
+}
+label[part~="choice-label"] {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    align-items: start;
+    min-height: 2.75rem;
+    box-sizing: border-box;
+    padding-block: var(--ulvia--mossa--spacing-2xs, 0.375rem);
+    line-height: var(--ulvia--mossa--line-height-snug, 1.35);
+    cursor: pointer;
+}
+[part~="choice-error"] {
+    margin-inline-start: 2.75rem;
+    color: var(--ulvia--mossa--danger);
+    font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+    font-weight: var(--ulvia--mossa--font-weight-medium, 500);
+    line-height: var(--ulvia--mossa--line-height-normal, 1.5);
+}
+[part~="choice-error"]:empty {
+    display: none;
+}
+:scope[invalid] {
+    padding: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    border-inline-start: var(--ulvia--mossa--border-width-strong, 2px) solid var(--ulvia--mossa--danger-border);
+    background: var(--ulvia--mossa--danger-subtle);
+}

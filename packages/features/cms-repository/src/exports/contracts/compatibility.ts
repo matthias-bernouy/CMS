@@ -9,6 +9,10 @@ export {
     semVerMajor,
     type VersionBump,
     versionBump,
+    releaseChannel,
+    isSemVerPrerelease,
+    semVerReleaseTarget,
+    type ReleaseChannel,
 } from "cms-repository/contracts/core/compatibility/semver";
 export {
     compareVersionRanges,

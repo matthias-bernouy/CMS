@@ -1,0 +1,48 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--settings-manager",
+    "label": "bloc.settings-manager.label",
+    "description": "bloc.settings-manager.description",
+    "order": 660,
+    "catalogue": "listed",
+    "uses": [
+        "ulvia--mossa--action",
+        "ulvia--mossa--field",
+        "ulvia--mossa--form-actions",
+        "ulvia--mossa--heading",
+        "ulvia--mossa--input",
+        "ulvia--mossa--select",
+        "ulvia--mossa--stack",
+        "ulvia--mossa--surface",
+        "ulvia--mossa--tag-input"
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "site.get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "site.update",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "localization.get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "localization.update",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.administration"],
+    "examples": ["ulvia--mossa--settings-manager-default"],
+    "defaultExample": "ulvia--mossa--settings-manager-default"
+}

@@ -8,17 +8,21 @@ import type { ProviderReleaseRetention } from "@bernouy/cms-repository/providers
 async function fixture(retention?: ProviderReleaseRetention) {
     const f = await installationWorkflow({ retention });
     await f.approve();
-    const release = await admitContractRelease(contractDocument("payment", "create-link", "2.0.0"));
+    const release = await admitContractRelease(contractDocument("ulvia/payment", "create-link", "2.0.0"));
     await f.contracts.publish(release);
     const next = await admitProviderManifest(
-        { ...f.manifest, version: "2.0.0", implementations: [implementation("payment", "2.0.0", release.digest)] },
+        {
+            ...f.manifest,
+            version: "2.0.0",
+            implementations: [implementation("ulvia/payment", "2.0.0", release.digest)],
+        },
         f.contracts,
     );
     await f.catalogue.publish(next);
     const report = {
         ...f.report,
         manifest: { version: next.manifest.version, digest: next.digest },
-        implementations: [{ contractId: "payment", version: "2.0.0", digest: release.digest, status: "ready" }],
+        implementations: [{ contractId: "ulvia/payment", version: "2.0.0", digest: release.digest, status: "ready" }],
     };
     return {
         ...f,

@@ -30,11 +30,11 @@ function result(value: unknown): RepositorySearchResult {
     const row = object(value, ["reference", "blocId", "name", "description", "categories", "contractIds"]);
     return {
         reference: resourceReference(row.reference),
-        ...(row.blocId === undefined ? {} : { blocId: text(row.blocId, 128) }),
+        ...(row.blocId === undefined ? {} : { blocId: text(row.blocId, 512) }),
         name: displayText(row.name, 512),
         description: displayText(row.description, 1600),
         categories: strings(row.categories, 32, 200),
-        contractIds: strings(row.contractIds, 128, 128),
+        contractIds: strings(row.contractIds, 128, 193),
     };
 }
 

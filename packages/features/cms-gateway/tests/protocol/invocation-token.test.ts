@@ -12,7 +12,7 @@ const claims = {
     version: 1 as const,
     requestId: "00000000-0000-4000-8000-000000000001",
     instanceId: "instance:shop-a",
-    contractId: "ulvia.cms.content",
+    contractId: "ulvia/cms.content",
     contractVersion: "1.0.0",
     capabilityId: "pages.update",
     subjectId: "opaque-subject",

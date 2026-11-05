@@ -1,3 +1,5 @@
+import { isResourceId } from "@bernouy/resource-identity";
+import { parseCollectionAssetExpression } from "../security/collectionAssetExpression";
 import type { ExpressionToken } from "cms-content/blocs/core/markup/expression/types";
 
 export function tokenizeExpression(expression: string): ExpressionToken[] {
@@ -148,7 +150,9 @@ function readBareToken(expression: string, start: number): { value: string; next
     if (!value) {
         throw new Error(`unexpected token "${expression[start] ?? ""}"`);
     }
-    if (value !== "." && !/^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/u.test(value)) {
+    const text = /^cms\.i18n\.(.+)\.([a-z][a-z0-9-]{0,95})$/u.exec(value);
+    const reserved = (text && isResourceId(text[1])) || parseCollectionAssetExpression(value);
+    if (value !== "." && !reserved && !/^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/u.test(value)) {
         throw new Error(`invalid path "${value}"`);
     }
     return { value, next: index };

@@ -52,7 +52,7 @@ describe("contract mock assets", () => {
             new URL("../../../fixtures/contracts/protocol-v1/mock.contract.json", import.meta.url),
         ).text();
         const admitted = await admitContractBundleJson(json, [{ id: asset.id, bytes: assetBytes }]);
-        expect(admitted.digest).toBe("sha256:92f8dca596d1dac4b9189255af7c082e26eaee56f46fefdf6c05c53902881dce");
+        expect(admitted.digest).toBe("sha256:7d6a20a1d8ebe798945f6693a32f5f801274a5e47af2feb692e1fd823c1337bd");
         expect(admitted.release.capabilities[0]?.mocks).toHaveLength(2);
     });
 

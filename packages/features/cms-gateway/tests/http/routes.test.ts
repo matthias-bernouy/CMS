@@ -45,7 +45,7 @@ test("catalogue resolver fences selected policy changes without scanning unrelat
             findByDigest: async () => fixture.manifest,
         } as unknown as CatalogueGatewayRouteResolverOptions["manifests"],
     });
-    const route = await resolver.resolve("site-a", "catalog");
+    const route = await resolver.resolve("site-a", "ulvia/catalog");
     expect(route).toMatchObject({ selection: fixture.selection, release: fixture.release });
     expect(await resolver.isCurrent(route!)).toBe(true);
     selected = { ...fixture.selection, installationId: "install-b" };
@@ -74,7 +74,7 @@ test("catalogue resolver fences selected policy changes without scanning unrelat
     expect(await resolver.isCurrent(route!)).toBe(false);
     installation = fixture.installation;
     changeDuringLookup = true;
-    await expect(resolver.resolve("site-a", "catalog")).rejects.toMatchObject({ code: "stale_route" });
+    await expect(resolver.resolve("site-a", "ulvia/catalog")).rejects.toMatchObject({ code: "stale_route" });
 });
 
 test("a parent contract call is routed through its selected specialization", async () => {
@@ -92,20 +92,20 @@ test("a parent contract call is routed through its selected specialization", asy
         now: () => NOW,
     });
 
-    const route = await routes.resolve("site-a", "catalog");
+    const route = await routes.resolve("site-a", "ulvia/catalog");
     expect(route).toMatchObject({
         release: { admission: { digest: childRelease.admission.digest } },
-        lineage: [{ contractId: "catalog.sql" }, { contractId: "catalog" }],
+        lineage: [{ contractId: "ulvia/catalog.sql" }, { contractId: "ulvia/catalog" }],
     });
     const result = await gateway.invoke({
         siteId: "site-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         capabilityId: "item.list",
         actor: { kind: "anonymous" },
         input: {},
     });
     expect(result).toMatchObject({ kind: "success" });
-    expect(dispatchedContractId).toBe("catalog");
+    expect(dispatchedContractId).toBe("ulvia/catalog");
 });
 
 test("fresh observation renewal does not make a completed command uncertain", async () => {
@@ -138,7 +138,7 @@ test("fresh observation renewal does not make a completed command uncertain", as
     await expect(
         gateway.invoke({
             siteId: "site-a",
-            contractId: "catalog",
+            contractId: "ulvia/catalog",
             capabilityId: "item.list",
             actor: { kind: "system", serviceId: "route-test" },
             input: { term: "one" },
@@ -155,13 +155,19 @@ test("editor catalogue includes only callable selected query capabilities", asyn
             }),
         } as unknown as ConstructorParameters<typeof SelectedGatewayCatalogue>[0],
         {
-            resolve: async (siteId, contractId) => (siteId === "site-a" && contractId === "catalog" ? fixture : null),
+            resolve: async (siteId, contractId) =>
+                siteId === "site-a" && contractId === "ulvia/catalog" ? fixture : null,
             isCurrent: async () => true,
         },
         { now: () => NOW },
     );
     expect(await catalogue.list("site-a")).toMatchObject([
-        { contractId: "catalog", contractLabel: "Catalog", capabilityId: "item.list", providerId: "ulvia.example" },
+        {
+            contractId: "ulvia/catalog",
+            contractLabel: "Catalog",
+            capabilityId: "item.list",
+            providerId: "ulvia/ulvia.example",
+        },
     ]);
 
     const command = await gatewayRoute({
@@ -225,15 +231,15 @@ test("collection requirements report selected provider grants as ready, missing,
     const catalogue = new SelectedGatewayCatalogue(
         { get: async () => ({ plan: { selections: [fixture.selection] } }) } as never,
         {
-            resolve: async (_siteId, contractId) => (contractId === "catalog" ? current : null),
+            resolve: async (_siteId, contractId) => (contractId === "ulvia/catalog" ? current : null),
             isCurrent: async () => true,
         },
         { now: () => NOW },
     );
     const requirements = [
-        { contractId: "catalog", capabilityId: "item.list", versionRange: "^1.0.0" },
-        { contractId: "missing", capabilityId: "item.list", versionRange: "^1.0.0" },
-        { contractId: "catalog", capabilityId: "item.list", versionRange: "^2.0.0" },
+        { contractId: "ulvia/catalog", capabilityId: "item.list", versionRange: "^1.0.0" },
+        { contractId: "ulvia/missing", capabilityId: "item.list", versionRange: "^1.0.0" },
+        { contractId: "ulvia/catalog", capabilityId: "item.list", versionRange: "^2.0.0" },
     ];
 
     expect((await catalogue.checkRequirements("site-a", requirements)).map((item) => item.status)).toEqual([
@@ -261,7 +267,7 @@ test("an exact selected contract is resolved before unrelated releases, and ever
     const reads: string[] = [];
     const resolver = new CatalogueGatewayRouteResolver({
         selections: {
-            get: async () => ({ plan: { selections: [{ ...f.selection, contractId: "unrelated" }, selected] } }),
+            get: async () => ({ plan: { selections: [{ ...f.selection, contractId: "ulvia/unrelated" }, selected] } }),
         } as never,
         installations: {
             get: async () => ({
@@ -272,7 +278,7 @@ test("an exact selected contract is resolved before unrelated releases, and ever
         releases: {
             get: async (id: string) => {
                 reads.push(id);
-                if (id !== "catalog") {
+                if (id !== "ulvia/catalog") {
                     throw new Error("Unrelated artifact must not load");
                 }
                 return f.release;
@@ -280,8 +286,8 @@ test("an exact selected contract is resolved before unrelated releases, and ever
         } as never,
         manifests: { findByDigest: async () => f.manifest } as never,
     });
-    expect((await resolver.resolve("site-a", "catalog"))?.selection.installationId).toBe("install-a");
-    expect(reads).toEqual(["catalog"]);
+    expect((await resolver.resolve("site-a", "ulvia/catalog"))?.selection.installationId).toBe("install-a");
+    expect(reads).toEqual(["ulvia/catalog"]);
     selected = { ...f.selection, installationId: "install-b" };
-    expect((await resolver.resolve("site-a", "catalog"))?.selection.installationId).toBe("install-b");
+    expect((await resolver.resolve("site-a", "ulvia/catalog"))?.selection.installationId).toBe("install-b");
 });

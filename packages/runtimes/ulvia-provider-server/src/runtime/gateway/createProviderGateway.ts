@@ -125,7 +125,7 @@ export async function createProviderGateway(
         async (subjectId) => {
             const result = await invoker.invoke({
                 siteId,
-                contractId: "ulvia.cms.access",
+                contractId: "ulvia/cms.access",
                 capabilityId: "inspect-actor",
                 input: { subjectId },
                 actor: { kind: "system", serviceId: "cms-gateway" },
@@ -150,7 +150,7 @@ export async function createProviderGateway(
         stores.selectionChanges.dependencies,
         stores.upgradeStorage,
         {
-            protectedContracts: ["ulvia.cms.installations"],
+            protectedContracts: ["ulvia/cms.installations"],
             usage: async () => {
                 const inventory = await stores.collectionUpgrades.inventory(siteId);
                 return {

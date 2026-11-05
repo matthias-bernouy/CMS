@@ -2,7 +2,7 @@
     "kind": "collection",
     "protocol": "ulvia-collection/v1",
     "schemaDialect": "ulvia-schema/v1",
-    "collectionId": "atlas",
+    "collectionId": "atlas.official/atlas",
     "publisherId": "atlas.official",
     "version": "1.0.0",
     "name": "collection.name",
@@ -41,7 +41,7 @@
                     "div"
                 ]
             },
-            "id": "atlas-panel",
+            "id": "atlas-dofficial--atlas--panel",
             "label": "bloc.panel.label",
             "markup": "<section><slot name=\"body\"></slot></section>",
             "style": ":scope { display: block; } :scope([tone=\"muted\"]) { opacity: 0.8; }",
@@ -82,9 +82,9 @@
                 "bloc.panel.label"
             ],
             "examples": [
-                "atlas-panel-default"
+                "atlas-dofficial--atlas--panel-default"
             ],
-            "defaultExample": "atlas-panel-default"
+            "defaultExample": "atlas-dofficial--atlas--panel-default"
         },
         {
             "kind": "composition",
@@ -93,12 +93,12 @@
                     "div"
                 ]
             },
-            "id": "atlas-page",
+            "id": "atlas-dofficial--atlas--page",
             "label": "bloc.page.label",
             "uses": [
-                "atlas-panel"
+                "atlas-dofficial--atlas--panel"
             ],
-            "markup": "<div cms-bloc=\"atlas-panel\" tone=\"default\"><slot name=\"main\" slot=\"body\"></slot></div>",
+            "markup": "<div cms-bloc=\"atlas-dofficial--atlas--panel\" tone=\"default\"><slot name=\"main\" slot=\"body\"></slot></div>",
             "slots": {
                 "main": {
                     "accepts": [
@@ -115,18 +115,18 @@
                 "bloc.page.label"
             ],
             "examples": [
-                "atlas-page-default"
+                "atlas-dofficial--atlas--page-default"
             ],
-            "defaultExample": "atlas-page-default"
+            "defaultExample": "atlas-dofficial--atlas--page-default"
         }
     ],
     "examples": [
         {
-            "id": "atlas-panel-default",
+            "id": "atlas-dofficial--atlas--panel-default",
             "label": "bloc.panel.label",
             "description": "bloc.panel.label",
             "document": {
-                "html": "<div cms-bloc=\"atlas-panel\"><p slot=\"body\">Example content</p></div>"
+                "html": "<div cms-bloc=\"atlas-dofficial--atlas--panel\"><p slot=\"body\">Example content</p></div>"
             },
             "previews": [
                 {
@@ -139,11 +139,11 @@
             ]
         },
         {
-            "id": "atlas-page-default",
+            "id": "atlas-dofficial--atlas--page-default",
             "label": "bloc.page.label",
             "description": "bloc.page.label",
             "document": {
-                "html": "<div cms-bloc=\"atlas-page\"><p slot=\"main\">Example content</p></div>"
+                "html": "<div cms-bloc=\"atlas-dofficial--atlas--page\"><p slot=\"main\">Example content</p></div>"
             },
             "previews": [
                 {

@@ -42,7 +42,7 @@ test("request metadata is independently snapshotted and bounded before gateway r
     const headers = { "accept-language": "fr" };
     const invocation = snapshotInvocation({
         siteId: "default",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         capabilityId: "read",
         actor: { kind: "anonymous" },
         input: {},

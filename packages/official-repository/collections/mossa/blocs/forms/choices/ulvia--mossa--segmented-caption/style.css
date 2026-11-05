@@ -1,0 +1,13 @@
+:scope {
+    display: block;
+    min-width: 0;
+    margin-block-end: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    color: var(--ulvia--mossa--text-primary);
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+}
+[part~="caption"] {
+    display: block;
+    font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+    font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+    line-height: var(--ulvia--mossa--line-height-snug, 1.35);
+}

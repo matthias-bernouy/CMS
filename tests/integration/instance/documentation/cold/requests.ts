@@ -36,9 +36,9 @@ export async function searchProbe(
     filtered = false,
 ): Promise<SearchObservation> {
     const queries = [
-        ["How do I verify a page before publishing?", "ulvia.cms.content"],
-        ["How do I create a minimal collection with one panel?", "ulvia.cms.authoring"],
-        ["Comment transmettre les octets d'un fichier privé ?", "ulvia.cms.files"],
+        ["How do I verify a page before publishing?", "ulvia/cms.content"],
+        ["How do I create a minimal collection with one panel?", "ulvia/cms.authoring"],
+        ["Comment transmettre les octets d'un fichier privé ?", "ulvia/cms.files"],
     ];
     const [query, contractId] = queries[index % queries.length]!;
     const tool = connection.tools.find((entry) => entry._meta["io.ulvia/capability"] === "documentation.search")!;

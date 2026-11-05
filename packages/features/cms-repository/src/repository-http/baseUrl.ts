@@ -17,5 +17,5 @@ export function repositoryBaseUrl(
     ) {
         throw new TypeError(`${kind} repository must use HTTPS or explicitly allowed HTTP without URL credentials`);
     }
-    return new URL(`${url.origin}/.cms/call/ulvia.repository/`);
+    return new URL(`${url.origin}/.cms/call/ulvia/repository/`);
 }

@@ -9,7 +9,7 @@ test("root finalization checks the current grant after route loads, including a 
         const root = (await f.authority.prepare(source))!;
         f.routes.isCurrent = async () => {
             if (change === "denied") {
-                f.state.current.grants.denied.push({ contractId: "origin", capabilityId: "item.list" });
+                f.state.current.grants.denied.push({ contractId: "ulvia/origin", capabilityId: "item.list" });
             } else {
                 f.selections.get = async () => null as never;
             }

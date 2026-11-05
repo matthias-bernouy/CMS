@@ -13,7 +13,7 @@ describe("contract release parsing", () => {
     test("returns a normalized immutable contract release", () => {
         const release = parseContractRelease(contractDocument());
 
-        expect(release.contractId).toBe("communication.email");
+        expect(release.contractId).toBe("ulvia/communication.email");
         expect(release.capabilities[0]?.id).toBe("email.message.send");
         expect(Object.isFrozen(release)).toBe(true);
         expect(Object.isFrozen(release.capabilities[0]?.input.properties)).toBe(true);
@@ -24,15 +24,15 @@ describe("contract release parsing", () => {
 
         expect(admitted.kind).toBe("admitted-contract-release");
         expect(admitted.bindings[0]?.capabilityId).toBe("email.message.send");
-        expect(admitted.canonicalJson).toContain('"contractId":"communication.email"');
+        expect(admitted.canonicalJson).toContain('"contractId":"ulvia/communication.email"');
         expect(admitted.digest).toMatch(/^sha256:[0-9a-f]{64}$/);
         expect(Object.isFrozen(admitted)).toBe(true);
     });
 
     test("rejects duplicate JSON properties before JSON.parse can hide them", () => {
         const source = JSON.stringify(contractDocument()).replace(
-            '"contractId":"communication.email"',
-            '"contractId":"communication.email","contractId":"replacement"',
+            '"contractId":"ulvia/communication.email"',
+            '"contractId":"ulvia/communication.email","contractId":"ulvia/replacement"',
         );
 
         expect(() => parseContractReleaseJson(source)).toThrow(ReleaseValidationError);
@@ -64,12 +64,12 @@ describe("contract release parsing", () => {
 
         expect(() => parseContractRelease(missingPublisher)).toThrow("$.publisherId: must be a string");
         expect(() => parseContractRelease(contractDocument({ publisherId: "Third Party" }))).toThrow(
-            "must be a lowercase dotted identifier",
+            "must be a bounded lowercase publisher namespace",
         );
         expect(() => parseContractRelease(contractDocument({ publishedAt: "2026-09-22T00:00:00Z" }))).toThrow(
             'unknown property "publishedAt"',
         );
-        expect(() => parseContractRelease(contractDocument({ provenance: { publisherId: "ulvia.official" } }))).toThrow(
+        expect(() => parseContractRelease(contractDocument({ provenance: { publisherId: "ulvia" } }))).toThrow(
             'unknown property "provenance"',
         );
     });
@@ -114,15 +114,15 @@ describe("contract release parsing", () => {
             responseEffects: ["session"],
         });
         expect(() =>
-            parseContractRelease(contractDocument({ contractId: "ulvia.cms.access", capabilities: [sessionCommand] })),
+            parseContractRelease(contractDocument({ contractId: "ulvia/cms.access", capabilities: [sessionCommand] })),
         ).not.toThrow();
         expect(() => parseContractRelease(contractDocument({ capabilities: [sessionCommand] }))).toThrow(
-            "session response effects are reserved to ulvia.cms.access",
+            "session response effects are reserved to ulvia/cms.access",
         );
         expect(() =>
             parseContractRelease(
                 contractDocument({
-                    contractId: "ulvia.cms.access",
+                    contractId: "ulvia/cms.access",
                     capabilities: [capabilityDocument({ ...sessionCommand, access: "authenticated" })],
                 }),
             ),
@@ -130,7 +130,7 @@ describe("contract release parsing", () => {
         expect(() =>
             parseContractRelease(
                 contractDocument({
-                    contractId: "ulvia.cms.access",
+                    contractId: "ulvia/cms.access",
                     capabilities: [capabilityDocument({ ...sessionCommand, responseEffects: ["session", "session"] })],
                 }),
             ),

@@ -1,3 +1,4 @@
+import { isResourceId } from "@bernouy/resource-identity";
 import type { IdentityService, IdentityValue } from "cms-gateway/identity/interfaces/Identity";
 import type {
     ProviderIdentityScope,
@@ -49,7 +50,7 @@ function providerAuthority(scope: ProviderIdentityScope): string {
     if (
         !scope ||
         typeof scope.providerId !== "string" ||
-        !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(scope.providerId) ||
+        !isResourceId(scope.providerId) ||
         scope.providerId === "cms"
     ) {
         throw new TypeError("provider ID is invalid");

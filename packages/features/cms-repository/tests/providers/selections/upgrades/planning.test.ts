@@ -14,7 +14,7 @@ async function fixture() {
         isCurrent: async () => true,
     };
     const selections = new InMemoryContractSelectionStore(dependencies);
-    await selections.replace(siteId, [await f.select("emailer")], 0);
+    await selections.replace(siteId, [await f.select("ulvia/emailer")], 0);
     const evidence = {
         complete: true,
         revision: "usage:1",
@@ -32,12 +32,12 @@ async function fixture() {
 test("a required old capability blocks a major replacement with its concrete location", async () => {
     const f = await fixture();
     f.evidence.requirements.push({
-        contractId: "emailer",
+        contractId: "ulvia/emailer",
         capabilityId: "send",
         versionRange: "^1.0.0",
         location: "page:/contact/form",
     });
-    const plan = await f.service.plan(siteId, [await f.select("emailer", "2.0.0")]);
+    const plan = await f.service.plan(siteId, [await f.select("ulvia/emailer", "2.0.0")]);
     expect(plan.status).toBe("blocked");
     expect(plan.issues).toContainEqual(
         expect.objectContaining({ code: "required-capability", location: "page:/contact/form" }),
@@ -47,18 +47,21 @@ test("a required old capability blocks a major replacement with its concrete loc
 test("unknown consumers and missing source/target coexistence fail closed", async () => {
     const f = await fixture();
     f.evidence.complete = false;
-    expect((await f.service.plan(siteId, [await f.select("emailer", "2.0.0")])).status).toBe("incomplete");
+    expect((await f.service.plan(siteId, [await f.select("ulvia/emailer", "2.0.0")])).status).toBe("incomplete");
     f.evidence.complete = true;
     f.served.available = false;
-    const plan = await f.service.plan(siteId, [await f.select("emailer", "2.0.0")]);
+    const plan = await f.service.plan(siteId, [await f.select("ulvia/emailer", "2.0.0")]);
     expect(plan.status).toBe("blocked");
     expect(plan.issues.some(({ code }) => code === "release-not-served")).toBe(true);
 });
 
 test("unused capabilities may be denied without changing the exact selection", async () => {
     const f = await fixture();
-    const target = [await f.select("emailer")];
-    const grants = { default: "allow-selected" as const, denied: [{ contractId: "emailer", capabilityId: "send" }] };
+    const target = [await f.select("ulvia/emailer")];
+    const grants = {
+        default: "allow-selected" as const,
+        denied: [{ contractId: "ulvia/emailer", capabilityId: "send" }],
+    };
     const plan = await f.service.plan(siteId, target, grants);
     expect(plan.status).toBe("applicable");
     const completed = await f.service.apply(siteId, target, grants, plan.planDigest);
@@ -66,20 +69,20 @@ test("unused capabilities may be denied without changing the exact selection", a
     const current = (await f.selections.get(siteId))!;
     expect(current.revision).toBe(2);
     expect(current.plan.selections).toEqual(target);
-    expect(capabilityGranted(current.grants, "emailer", "send")).toBe(false);
+    expect(capabilityGranted(current.grants, "ulvia/emailer", "send")).toBe(false);
 });
 
 test("required capabilities cannot lose their execution grants", async () => {
     const f = await fixture();
     f.evidence.requirements.push({
-        contractId: "emailer",
+        contractId: "ulvia/emailer",
         capabilityId: "send",
         versionRange: "^1.0.0",
         location: "internal:notifications",
     });
-    const plan = await f.service.plan(siteId, [await f.select("emailer")], {
+    const plan = await f.service.plan(siteId, [await f.select("ulvia/emailer")], {
         default: "allow-selected",
-        denied: [{ contractId: "emailer", capabilityId: "send" }],
+        denied: [{ contractId: "ulvia/emailer", capabilityId: "send" }],
     });
     expect(plan.status).toBe("blocked");
     expect(plan.issues).toContainEqual(
@@ -89,7 +92,7 @@ test("required capabilities cannot lose their execution grants", async () => {
 
 test("usage changes invalidate a reviewed contract switch", async () => {
     const f = await fixture();
-    const target = [await f.select("emailer", "2.0.0")];
+    const target = [await f.select("ulvia/emailer", "2.0.0")];
     const plan = await f.service.plan(siteId, target);
     f.evidence.revision = "usage:2";
     await expect(f.service.apply(siteId, target, undefined, plan.planDigest)).rejects.toThrow("stale");

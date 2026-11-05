@@ -1,9 +1,9 @@
+import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { getOrGenerateEntryAsync, sendCompressed, publicAssetCacheControl, type Cache } from "@bernouy/http-runner";
 import type { ContentReader } from "cms-content/application/interfaces/ContentReader";
 import { generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
 import { collectionBlocsetCacheKey } from "cms-content/blocs/core/assets/resolvePageAssets";
 
-const BLOC_TAG = /^[a-z][a-z0-9]{0,62}-[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u;
 const CONTENT_REVISION = /^sha256:[0-9a-f]{64}$/u;
 const MAX_TAGS = 128;
 const MAX_TAGS_LENGTH = 16_384;
@@ -42,7 +42,7 @@ export async function serveBlocSet(
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
-    if (tags.length === 0 || tags.length > MAX_TAGS || tags.some((tag) => !BLOC_TAG.test(tag))) {
+    if (tags.length === 0 || tags.length > MAX_TAGS || tags.some((tag) => !isValidCustomElementTag(tag))) {
         return new Response(null, { status: 400 });
     }
 

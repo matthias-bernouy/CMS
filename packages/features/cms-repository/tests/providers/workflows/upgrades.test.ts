@@ -56,8 +56,8 @@ describe("provider approval and site upgrade boundaries", () => {
         );
         expect(upgraded.revision).toBe(selected.revision + 1);
         expect(upgraded.plan.selections.map((pin) => `${pin.contractId}@${pin.version}`)).toEqual([
-            "commerce@1.1.0",
-            "payment@2.0.0",
+            "ulvia/commerce@1.1.0",
+            "ulvia/payment@2.0.0",
         ]);
     });
 

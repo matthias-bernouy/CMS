@@ -20,15 +20,18 @@ identityServiceContract("Mongo", () => createService(new FakeIdentityCollection(
 describe("Mongo identity persistence", () => {
     test("gateway refuses numeric aliases without rewriting Mongo identity records", async () => {
         const collection = new FakeIdentityCollection();
-        await createService(collection).bind("subject-1", { authority: "commerce", kind: "user", value: 184 });
+        await createService(collection).bind("subject-1", { authority: "ulvia/commerce", kind: "user", value: 184 });
 
         const gatewayIdentities = new ProviderIdentityAliases(createService(collection));
-        await expect(gatewayIdentities.getOrCreate({ providerId: "commerce" }, "subject-1")).rejects.toThrow(
+        await expect(gatewayIdentities.getOrCreate({ providerId: "ulvia/commerce" }, "subject-1")).rejects.toThrow(
             "transmissible string",
         );
-        expect(await gatewayIdentities.resolve({ providerId: "commerce" }, "184")).toBeNull();
+        expect(await gatewayIdentities.resolve({ providerId: "ulvia/commerce" }, "184")).toBeNull();
         expect(
-            await createService(collection).resolve({ authority: "cms", kind: "user", value: "subject-1" }, "commerce"),
+            await createService(collection).resolve(
+                { authority: "cms", kind: "user", value: "subject-1" },
+                "ulvia/commerce",
+            ),
         ).toBe(184);
     });
 
@@ -48,12 +51,14 @@ describe("Mongo identity persistence", () => {
 
         await expect(
             identities.bind("subject-1", {
-                authority: "commerce",
+                authority: "ulvia/commerce",
                 kind: "user",
                 value: 184,
             }),
         ).resolves.toBeUndefined();
-        expect(await identities.resolve({ authority: "commerce", kind: "user", value: 184 }, "cms")).toBe("subject-1");
+        expect(await identities.resolve({ authority: "ulvia/commerce", kind: "user", value: 184 }, "cms")).toBe(
+            "subject-1",
+        );
     });
 
     test("returns an opaque conflict after a conflicting duplicate-key race", async () => {

@@ -1,3 +1,4 @@
+import { isResourceId } from "@bernouy/resource-identity";
 import { isTraceContext } from "@bernouy/logging";
 import {
     canonicalIJsonBytes,
@@ -45,10 +46,13 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
     ) {
         throw new GatewayError("invalid_input", "site identifier is invalid");
     }
-    for (const field of [value.contractId, value.capabilityId]) {
-        if (typeof field !== "string" || field.length > 128 || !/^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/.test(field)) {
-            throw new GatewayError("invalid_input", "contract or capability identifier is invalid");
-        }
+    if (
+        !isResourceId(value.contractId) ||
+        typeof value.capabilityId !== "string" ||
+        value.capabilityId.length > 128 ||
+        !/^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/.test(value.capabilityId)
+    ) {
+        throw new GatewayError("invalid_input", "contract or capability identifier is invalid");
     }
     if (
         (value.bindingTransport !== undefined &&

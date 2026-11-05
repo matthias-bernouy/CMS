@@ -1,3 +1,4 @@
+import { isResourceId, resourceName } from "cms-repository/exports/contracts/protocol";
 import { mkdir, mkdtemp, writeFile, rm, readdir, stat } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { prepareCollectionRelease } from "cms-repository/exports/collections/build";
@@ -16,13 +17,13 @@ export async function prepareRemoteCollection(host: AuthoringHost, sourceJson: s
     const snapshot = parseSourceSnapshot(sourceJson);
     const definition = JSON.parse(snapshot.files.find((file) => file.path === "definition.json")!.content);
     const collectionId = definition.collectionId;
-    if (typeof collectionId !== "string" || !/^[a-z][a-z0-9-]{0,95}$/u.test(collectionId)) {
+    if (!isResourceId(collectionId)) {
         throw new Error("Invalid collection ID");
     }
     await mkdir(host.root, { recursive: true, mode: 0o700 });
     await expirePrepared(host.root);
     const work = await mkdtemp(join(host.root, "prepare-"));
-    const directory = join(work, collectionId);
+    const directory = join(work, resourceName(collectionId));
     let bytes = Buffer.byteLength(sourceJson);
     try {
         for (const file of snapshot.files) {
@@ -61,7 +62,7 @@ export async function prepareRemoteCollection(host: AuthoringHost, sourceJson: s
                 id,
                 digest,
                 sourceJson: retainedSources,
-                directory: collectionId,
+                directory: resourceName(collectionId),
                 canonicalJson: artifact.canonicalJson,
             }),
             { mode: 0o600, flag: "wx" },

@@ -31,8 +31,8 @@ test.skipIf(!image)(
             `,
         ]);
         expect(JSON.parse(result.stdout)).toEqual([
-            { id: "ulvia.official", version: "1.0.0" },
-            { id: "ulvia.repository", version: "1.0.0" },
+            { id: "ulvia", version: "1.0.0" },
+            { id: "repository", version: "1.0.0" },
         ]);
     },
     30_000,

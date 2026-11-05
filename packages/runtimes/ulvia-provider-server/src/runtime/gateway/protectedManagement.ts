@@ -1,7 +1,7 @@
 import type { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 import type { OfficialInstanceProfile, ProviderInstanceRecord, UlviaProviderManagement } from "@bernouy/ulvia-provider";
 
-const CONTROL_CONTRACT_ID = "ulvia.cms.installations";
+const CONTROL_CONTRACT_ID = "ulvia/cms.installations";
 
 export function createProtectedProviderManagement(
     management: ProviderManagement,
@@ -34,7 +34,7 @@ export function createProtectedProviderManagement(
             ) {
                 throw policyError("control_selection_protected");
             }
-            if (!input.selections.some(({ contractId }) => contractId === "ulvia.cms.observability")) {
+            if (!input.selections.some(({ contractId }) => contractId === "ulvia/cms.observability")) {
                 throw policyError("observability_selection_protected");
             }
             return management.replaceSelections(input);

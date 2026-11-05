@@ -18,7 +18,7 @@ export function registerPersonalAccessCapabilities(
         }
         return sub;
     };
-    dispatcher.register("ulvia.cms.access", "create-personal-access-token", async (input, context) =>
+    dispatcher.register("ulvia/cms.access", "create-personal-access-token", async (input, context) =>
         accessCommand(async () => {
             const sub = await subject(context);
             try {
@@ -32,12 +32,12 @@ export function registerPersonalAccessCapabilities(
             }
         }),
     );
-    dispatcher.register("ulvia.cms.access", "list-personal-access-tokens", async (_input, context) =>
+    dispatcher.register("ulvia/cms.access", "list-personal-access-tokens", async (_input, context) =>
         accessCommand(async () => ({
             tokens: (await dependencies.pats.list(await subject(context))).map(projectPat),
         })),
     );
-    dispatcher.register("ulvia.cms.access", "revoke-personal-access-token", async (input, context) =>
+    dispatcher.register("ulvia/cms.access", "revoke-personal-access-token", async (input, context) =>
         accessCommand(async () => {
             if (!(await dependencies.pats.revoke(await subject(context), requiredText(input.id)))) {
                 throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);

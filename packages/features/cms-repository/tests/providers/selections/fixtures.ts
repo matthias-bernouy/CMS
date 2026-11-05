@@ -19,13 +19,14 @@ export async function installationFor(
     releases: ReleaseCatalogue,
     manifests: InMemoryProviderManifestCatalogue,
     claims: Record<string, unknown>[],
-    providerId = "ulvia.example",
+    providerId = "ulvia/ulvia.example",
 ) {
+    providerId = providerId.includes("/") ? providerId : `ulvia/${providerId}`;
     const admission = await admitProviderManifest(manifestDocument(claims, { providerId }), releases);
     await manifests.publish(admission);
     return parseProviderInstallation({
         ...installationDocument(),
-        id: `installation:${providerId}`,
+        id: `installation:${providerId.replaceAll("/", ":")}`,
         providerId,
         configuration: {},
         approval: { ...installationDocument().approval, manifestDigest: admission.digest },
@@ -33,12 +34,13 @@ export async function installationFor(
 }
 
 export async function graphFixture(extraRequirements: Record<string, unknown>[] = []) {
-    const commerce = (version: string, _versionRange: string) => contractDocument("commerce", "checkout", version);
+    const commerce = (version: string, _versionRange: string) =>
+        contractDocument("ulvia/commerce", "checkout", version);
     const releases = await releaseCatalogue(
-        contractDocument("payment", "pay"),
-        contractDocument("payment", "pay", "2.0.0"),
-        contractDocument("emailer", "send"),
-        ...capabilityTransition("emailer", "send", "deliver"),
+        contractDocument("ulvia/payment", "pay"),
+        contractDocument("ulvia/payment", "pay", "2.0.0"),
+        contractDocument("ulvia/emailer", "send"),
+        ...capabilityTransition("ulvia/emailer", "send", "deliver"),
         commerce("1.0.0", "^1.0.0"),
         commerce("1.1.0", "^1.0.0 || ^2.0.0"),
     );
@@ -46,9 +48,9 @@ export async function graphFixture(extraRequirements: Record<string, unknown>[] 
     const claims = (await releases.list()).map(({ admission }) => {
         const { contractId, version } = admission.release;
         const requires =
-            contractId === "commerce"
+            contractId === "ulvia/commerce"
                 ? [
-                      requirement("payment", "pay", version === "1.0.0" ? "^1.0.0" : "^1.0.0 || ^2.0.0"),
+                      requirement("ulvia/payment", "pay", version === "1.0.0" ? "^1.0.0" : "^1.0.0 || ^2.0.0"),
                       ...extraRequirements,
                   ]
                 : [];

@@ -13,11 +13,11 @@ export async function performanceContract(): Promise<AdmittedContractRelease> {
             kind: "contract",
             protocol: "ulvia-provider/v1",
             schemaDialect: "ulvia-schema/v1",
-            contractId: "ulvia.cms.performance",
+            contractId: "ulvia/cms.performance",
             name: "Performance echo",
             description: "Real transport performance fixture.",
             version: "1.0.0",
-            publisherId: "ulvia.performance",
+            publisherId: "ulvia",
             capabilities: [
                 {
                     id: "echo",
@@ -60,7 +60,7 @@ export async function performanceRoute(admission: AdmittedContractRelease, endpo
             kind: "provider-manifest",
             protocol: "ulvia-provider/v1",
             schemaDialect: "ulvia-schema/v1",
-            providerId: "ulvia.performance",
+            providerId: "ulvia.performance/ulvia.performance",
             name: "Performance Provider",
             version: "1.0.0",
             provenance: { publisherId: "ulvia.performance", publishedAt: "2026-10-15T00:00:00Z" },
@@ -106,7 +106,7 @@ export async function performanceRoute(admission: AdmittedContractRelease, endpo
             installation: {
                 id: "performance-provider",
                 siteId: NETWORK_SITE_ID,
-                providerId: "ulvia.performance",
+                providerId: "ulvia.performance/ulvia.performance",
                 accountId: "local",
                 endpoint,
                 status: "enabled",
@@ -129,7 +129,7 @@ export async function performanceRoute(admission: AdmittedContractRelease, endpo
 export function runtimeReport(admission: AdmittedContractRelease, manifestDigest: `sha256:${string}`) {
     return {
         protocol: "ulvia-provider/v1" as const,
-        providerId: "ulvia.performance",
+        providerId: "ulvia.performance/ulvia.performance",
         instanceId: NETWORK_INSTANCE_ID,
         account: { id: "local", label: "Performance Provider" },
         buildVersion: "1.0.0",

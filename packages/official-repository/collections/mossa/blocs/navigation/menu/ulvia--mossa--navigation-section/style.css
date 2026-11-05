@@ -1,0 +1,37 @@
+:scope {
+    display: block;
+    min-width: 0;
+    flex: var(--ulvia--mossa--navigation-section-flex, 0 0 auto);
+}
+[part~="section"] {
+    display: grid;
+    gap: var(--ulvia--mossa--spacing-2xs, 0.25rem);
+}
+[part~="label"] {
+    display: var(--ulvia--mossa--navigation-section-label-display, flex);
+    align-items: center;
+    gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    padding: var(
+        --ulvia--mossa--navigation-section-label-padding,
+        var(--ulvia--mossa--spacing-xs, 0.5rem) var(--ulvia--mossa--spacing-sm, 0.75rem)
+            var(--ulvia--mossa--spacing-2xs, 0.25rem)
+    );
+    color: var(--ulvia--mossa--text-muted);
+    font-size: 0.6875rem;
+    font-weight: var(--ulvia--mossa--font-weight-bold, 700);
+    letter-spacing: var(--ulvia--mossa--letter-spacing-wide, 0.04em);
+    line-height: 1;
+    text-transform: uppercase;
+}
+:scope[divider] [part~="label"]::after {
+    height: var(--ulvia--mossa--border-width, 1px);
+    flex: 1;
+    background: var(--ulvia--mossa--border-subtle);
+    content: "";
+}
+[part~="items"] {
+    display: flex;
+    flex-direction: var(--ulvia--mossa--navigation-section-direction, column);
+    flex-wrap: var(--ulvia--mossa--navigation-section-wrap, nowrap);
+    gap: var(--ulvia--mossa--navigation-section-gap, 0.125rem);
+}

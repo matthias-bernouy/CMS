@@ -47,16 +47,16 @@ describe("Theme style entry", () => {
     test("resolves immutable font assets before publishing theme CSS", async () => {
         const system = defaultSystem();
         system.theme.sources.push({
-            id: "contribution-atlas",
+            id: "contribution-atlas-dofficial--atlas",
             label: "Atlas",
             supportsModes: false,
-            owner: { kind: "contribution", contributionId: "atlas" },
+            owner: { kind: "contribution", contributionId: "atlas.official/atlas" },
             categories: [],
             fontFaces: [
                 {
-                    id: "atlas-interface",
-                    family: "atlas-interface",
-                    source: "{{ cms.asset.atlas.fonts/interface.woff2 }}",
+                    id: "atlas-dofficial--atlas--interface",
+                    family: "atlas-dofficial--atlas--interface",
+                    source: "{{ cms.asset.atlas.official/atlas.fonts/interface.woff2 }}",
                     style: "normal",
                     weight: "400",
                     display: "swap",
@@ -66,9 +66,9 @@ describe("Theme style entry", () => {
         const reader = { getRenderingSettings: async () => system } as ContentReader;
 
         const entry = await generateStyleEntry(reader, [], async (input) => {
-            expect(input).toContain("{{ cms.asset.atlas.fonts/interface.woff2 }}");
+            expect(input).toContain("{{ cms.asset.atlas.official/atlas.fonts/interface.woff2 }}");
             return input.replace(
-                "{{ cms.asset.atlas.fonts/interface.woff2 }}",
+                "{{ cms.asset.atlas.official/atlas.fonts/interface.woff2 }}",
                 "/_content/collections/atlas/assets/fonts%2Finterface.woff2?v=sha256-test",
             );
         });

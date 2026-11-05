@@ -4,8 +4,8 @@ import type { Connection } from "../client";
 
 export async function validationPages(connection: Connection, cmsUrl: string) {
     const { call } = connection;
-    const content = '<main cms-bloc="mcp-kit-panel"><p slot="body">Validation source</p></main>';
-    const draft = await call("ulvia.cms.content", "pages.create", {
+    const content = '<main cms-bloc="ulvia--mcp-kit--panel"><p slot="body">Validation source</p></main>';
+    const draft = await call("ulvia/cms.content", "pages.create", {
         path: "/validation-source",
         title: "Validation source",
         content,
@@ -13,8 +13,8 @@ export async function validationPages(connection: Connection, cmsUrl: string) {
     expect(draft.diagnostics).toContainEqual(
         expect.objectContaining({ code: "page.route_missing", severity: "warning" }),
     );
-    const before = await call("ulvia.cms.content", "pages.get", { id: draft.id });
-    const denied = await invoke(connection, "ulvia.cms.content", "pages.publish", {
+    const before = await call("ulvia/cms.content", "pages.get", { id: draft.id });
+    const denied = await invoke(connection, "ulvia/cms.content", "pages.publish", {
         id: draft.id,
         expectedRevision: draft.revision,
         visible: true,
@@ -23,14 +23,14 @@ export async function validationPages(connection: Connection, cmsUrl: string) {
     expect(denied.structuredContent.error.output.diagnostics).toContainEqual(
         expect.objectContaining({ code: "page.route_missing", severity: "error" }),
     );
-    expect(await call("ulvia.cms.content", "pages.get", { id: draft.id })).toEqual(before);
+    expect(await call("ulvia/cms.content", "pages.get", { id: draft.id })).toEqual(before);
     expect((await fetch(`${cmsUrl}/validation-source`)).status).toBe(404);
-    const target = await call("ulvia.cms.content", "pages.create", {
+    const target = await call("ulvia/cms.content", "pages.create", {
         path: "/validation-target",
         title: "Validation target",
-        content: '<div cms-bloc="mcp-kit-reference"><p slot="body" id="destination">Destination</p></div>',
+        content: '<div cms-bloc="ulvia--mcp-kit--reference"><p slot="body" id="destination">Destination</p></div>',
     });
-    const published = await call("ulvia.cms.content", "pages.publish", {
+    const published = await call("ulvia/cms.content", "pages.publish", {
         id: draft.id,
         expectedRevision: draft.revision,
         visible: true,
@@ -38,27 +38,27 @@ export async function validationPages(connection: Connection, cmsUrl: string) {
     expect(published.diagnostics).toContainEqual(
         expect.objectContaining({ code: "page.route_draft", severity: "warning" }),
     );
-    let targetState = await call("ulvia.cms.content", "pages.publish", {
+    let targetState = await call("ulvia/cms.content", "pages.publish", {
         id: target.id,
         expectedRevision: target.revision,
         visible: true,
     });
-    const stable = await call("ulvia.cms.content", "pages.update", {
+    const stable = await call("ulvia/cms.content", "pages.update", {
         id: published.id,
         expectedRevision: published.revision,
         content,
     });
     expect(stable.diagnostics).toEqual([]);
-    const stableState = await call("ulvia.cms.content", "pages.get", { id: stable.id });
+    const stableState = await call("ulvia/cms.content", "pages.get", { id: stable.id });
     expect(stableState).not.toHaveProperty("diagnostics");
     for (const [invalid, code] of [
         [`${content}${content}`, "page.multiple_main"],
         [
-            '<main cms-bloc="mcp-kit-panel"><p slot="body"><a href="#missing">Missing</a></p></main>',
+            '<main cms-bloc="ulvia--mcp-kit--panel"><p slot="body"><a href="#missing">Missing</a></p></main>',
             "page.fragment_missing",
         ],
     ]) {
-        const result = await invoke(connection, "ulvia.cms.content", "pages.update", {
+        const result = await invoke(connection, "ulvia/cms.content", "pages.update", {
             id: stable.id,
             expectedRevision: stable.revision,
             content: invalid,
@@ -67,25 +67,25 @@ export async function validationPages(connection: Connection, cmsUrl: string) {
         expect(result.structuredContent.error.output.diagnostics).toContainEqual(
             expect.objectContaining({ code, severity: "error" }),
         );
-        expect(await call("ulvia.cms.content", "pages.get", { id: stable.id })).toEqual(stableState);
+        expect(await call("ulvia/cms.content", "pages.get", { id: stable.id })).toEqual(stableState);
     }
-    const broken = await invoke(connection, "ulvia.cms.content", "pages.create", {
+    const broken = await invoke(connection, "ulvia/cms.content", "pages.create", {
         path: "/validation-broken-aria",
         title: "Broken reference",
-        content: '<div cms-bloc="mcp-kit-broken-reference"></div>',
+        content: '<div cms-bloc="ulvia--mcp-kit--broken-reference"></div>',
     });
     refusal(broken, "INVALID_PAGE");
     expect(broken.structuredContent.error.output.diagnostics).toContainEqual(
         expect.objectContaining({ code: "page.reference_missing", severity: "error" }),
     );
-    expect((await call("ulvia.cms.content", "pages.list", { query: "Broken reference" })).items).toEqual([]);
-    const references = await call("ulvia.cms.content", "pages.create", {
+    expect((await call("ulvia/cms.content", "pages.list", { query: "Broken reference" })).items).toEqual([]);
+    const references = await call("ulvia/cms.content", "pages.create", {
         path: "/validation-references",
         title: "Scoped IDs",
-        content: '<div cms-bloc="mcp-kit-reference"></div><div cms-bloc="mcp-kit-reference"></div>',
+        content: '<div cms-bloc="ulvia--mcp-kit--reference"></div><div cms-bloc="ulvia--mcp-kit--reference"></div>',
     });
     expect(references.diagnostics).toEqual([]);
-    await call("ulvia.cms.content", "pages.publish", {
+    await call("ulvia/cms.content", "pages.publish", {
         id: references.id,
         expectedRevision: references.revision,
         visible: true,
@@ -116,14 +116,14 @@ export async function validationPages(connection: Connection, cmsUrl: string) {
         await browser.close();
     }
     refusal(
-        await invoke(connection, "ulvia.cms.content", "pages.delete", {
+        await invoke(connection, "ulvia/cms.content", "pages.delete", {
             id: target.id,
             expectedRevision: targetState.revision,
         }),
         "PAGE_REFERENCED",
     );
-    expect((await call("ulvia.cms.content", "pages.get", { id: target.id })).revision).toBe(targetState.revision);
-    targetState = await call("ulvia.cms.content", "pages.publish", {
+    expect((await call("ulvia/cms.content", "pages.get", { id: target.id })).revision).toBe(targetState.revision);
+    targetState = await call("ulvia/cms.content", "pages.publish", {
         id: target.id,
         expectedRevision: targetState.revision,
         visible: false,
@@ -132,7 +132,7 @@ export async function validationPages(connection: Connection, cmsUrl: string) {
         expect.objectContaining({ code: "page.incoming_unpublished", severity: "warning" }),
     );
     expect((await fetch(`${cmsUrl}/validation-target`)).status).toBe(404);
-    await call("ulvia.cms.content", "pages.publish", {
+    await call("ulvia/cms.content", "pages.publish", {
         id: target.id,
         expectedRevision: targetState.revision,
         visible: true,

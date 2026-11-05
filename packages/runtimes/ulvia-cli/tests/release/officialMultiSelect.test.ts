@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { mount } from "../../../../official-repository/collections/ulvia-official/blocs/forms/choices/ulvia-official-multi-select/bloc";
+import { mount } from "../../../../official-repository/collections/mossa/blocs/forms/choices/ulvia--mossa--multi-select/bloc";
 
 afterEach(() => {
     document.body.replaceChildren();
@@ -7,7 +7,7 @@ afterEach(() => {
 
 test("official multi-select owns its controls and restores the authored select", () => {
     document.body.innerHTML = `
-        <div cms-bloc="ulvia-official-multi-select">
+        <div cms-bloc="ulvia--mossa--multi-select">
             <span part="control">
                 <select name="roles" multiple aria-label="Roles">
                     <option value="editor">Editor</option>
@@ -17,7 +17,7 @@ test("official multi-select owns its controls and restores the authored select",
             </span>
         </div>
     `;
-    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia-official-multi-select"]');
+    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia--mossa--multi-select"]');
     const select = root?.querySelector<HTMLSelectElement>("select");
     if (!root || !select) {
         throw new Error("Missing multi-select fixture");

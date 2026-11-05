@@ -65,21 +65,21 @@ async function fixture() {
 
 test("remote selected Providers renew their own observation with one coalesced probe", async () => {
     const f = await fixture();
-    const routes = await Promise.all(Array.from({ length: 8 }, () => f.routes.resolve("site-a", "catalog")));
+    const routes = await Promise.all(Array.from({ length: 8 }, () => f.routes.resolve("site-a", "ulvia/catalog")));
     expect(f.probes()).toBe(1);
     expect(routes.every((route) => route!.installation.revision === 3)).toBe(true);
-    await f.routes.resolve("site-a", "catalog");
+    await f.routes.resolve("site-a", "ulvia/catalog");
     expect(f.probes()).toBe(1);
     f.tick();
-    await f.routes.resolve("site-a", "catalog");
+    await f.routes.resolve("site-a", "ulvia/catalog");
     expect(f.probes()).toBe(2);
 });
 
 test("failed remote probes back off, and disablement during a probe cannot be overwritten", async () => {
     const f = await fixture();
     f.fail();
-    await f.routes.resolve("site-a", "catalog");
-    await f.routes.resolve("site-a", "catalog");
+    await f.routes.resolve("site-a", "ulvia/catalog");
+    await f.routes.resolve("site-a", "ulvia/catalog");
     expect(f.probes()).toBe(1);
     expect(f.failures()).toBe(1);
     f.tick();
@@ -88,7 +88,7 @@ test("failed remote probes back off, and disablement during a probe cannot be ov
         f.route.installation.revision++;
         return f.route.installation.observation!.report;
     });
-    expect((await f.routes.resolve("site-a", "catalog"))!.installation.installation.status).toBe("disabled");
+    expect((await f.routes.resolve("site-a", "ulvia/catalog"))!.installation.installation.status).toBe("disabled");
     expect(f.failures()).toBe(2);
 });
 
@@ -102,8 +102,8 @@ test("official warm-up and calls to other contracts share one installation renew
         await gate;
         return f.route.installation.observation!.report;
     });
-    const warming = f.routes.warm("site-a", "ulvia.cms.installations");
-    const invoking = Promise.all(Array.from({ length: 8 }, () => f.routes.resolve("site-a", "catalog")));
+    const warming = f.routes.warm("site-a", "ulvia/cms.installations");
+    const invoking = Promise.all(Array.from({ length: 8 }, () => f.routes.resolve("site-a", "ulvia/catalog")));
     await Bun.sleep(0);
     expect(f.probes()).toBe(1);
     release();
@@ -116,31 +116,31 @@ test("official warm-up and calls to other contracts share one installation renew
 test("disabled installations are never probed during official warm-up", async () => {
     const f = await fixture();
     f.route.installation.installation.status = "disabled";
-    await f.routes.resolve("site-a", "ulvia.cms.installations");
+    await f.routes.resolve("site-a", "ulvia/cms.installations");
     expect(f.probes()).toBe(0);
     expect(f.failures()).toBe(0);
 });
 
 test("bursts of official warm-up coalesce route reads without caching live authorization", async () => {
     const f = await fixture();
-    await Promise.all(Array.from({ length: 96 }, () => f.routes.warm("site-a", "ulvia.cms.installations")));
+    await Promise.all(Array.from({ length: 96 }, () => f.routes.warm("site-a", "ulvia/cms.installations")));
     const warmedReads = f.lookups();
     expect(warmedReads).toBe(2);
     expect(f.probes()).toBe(1);
-    await Promise.all(Array.from({ length: 96 }, () => f.routes.warm("site-a", "ulvia.cms.installations")));
+    await Promise.all(Array.from({ length: 96 }, () => f.routes.warm("site-a", "ulvia/cms.installations")));
     expect(f.lookups()).toBe(warmedReads);
     f.route.installation.installation.status = "disabled";
-    expect((await f.routes.resolve("site-a", "catalog"))!.installation.installation.status).toBe("disabled");
+    expect((await f.routes.resolve("site-a", "ulvia/catalog"))!.installation.installation.status).toBe("disabled");
     expect(f.lookups()).toBe(warmedReads + 1);
 });
 
 test("cold invocation bursts share route resolution and reread state after completion", async () => {
     const f = await fixture();
-    await Promise.all(Array.from({ length: 96 }, () => f.routes.resolve("site-a", "catalog")));
+    await Promise.all(Array.from({ length: 96 }, () => f.routes.resolve("site-a", "ulvia/catalog")));
     expect(f.lookups()).toBe(2);
     expect(f.probes()).toBe(1);
     f.route.installation.installation.status = "disabled";
-    const burst = await Promise.all(Array.from({ length: 96 }, () => f.routes.resolve("site-a", "catalog")));
+    const burst = await Promise.all(Array.from({ length: 96 }, () => f.routes.resolve("site-a", "ulvia/catalog")));
     expect(burst.every((route) => route!.installation.installation.status === "disabled")).toBeTrue();
     expect(f.lookups()).toBe(3);
 });

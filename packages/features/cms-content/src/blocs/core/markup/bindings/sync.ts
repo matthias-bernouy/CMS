@@ -5,8 +5,8 @@ import {
     type CmsSyncTarget,
 } from "cms-content/blocs/core/markup/bindings/types";
 
-const SYNC_TARGET_PATTERN = /^@(param|page|session|persistent):([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)$/u;
-const MAX_SYNC_KEY_LENGTH = 128;
+const SYNC_TARGET_PATTERN = /^@(param|page|session|persistent):([a-z][a-z0-9]*(?:(?:-+|[.])[a-z0-9]+)*)$/u;
+const MAX_SYNC_KEY_LENGTH = 512;
 const MAX_SYNC_SELECTIONS = 16;
 const MAX_SYNC_SELECTION_DEPTH = 24;
 const SYNC_SELECTION_SEGMENT = /^[A-Za-z_$][\w$-]*$/u;

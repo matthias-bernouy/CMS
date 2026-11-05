@@ -10,7 +10,7 @@ describe("InMemoryReleaseCatalogue", () => {
 
         const published = await catalogue.publish(admission);
 
-        expect(await catalogue.get("communication.email", "1.0.0")).toBe(published);
+        expect(await catalogue.get("ulvia/communication.email", "1.0.0")).toBe(published);
         expect(await catalogue.findByDigest(admission.digest)).toBe(published);
         expect(await catalogue.publish(admission)).toBe(published);
     });
@@ -93,16 +93,10 @@ describe("InMemoryReleaseCatalogue", () => {
     test("keeps publisher ownership stable across major release lines", async () => {
         const catalogue = new InMemoryReleaseCatalogue();
         await catalogue.publish(await admitContractRelease(contractDocument({ version: "1.0.0" })));
-        const nextMajor = await admitContractRelease(
-            contractDocument({
-                version: "2.0.0",
-                publisherId: "third.party",
-            }),
-        );
-
-        await expect(catalogue.publish(nextMajor)).rejects.toThrow(
-            "publisher ownership cannot change between releases",
-        );
+        await expect(
+            admitContractRelease(contractDocument({ version: "2.0.0", publisherId: "third.party" })),
+        ).rejects.toThrow("namespace must match");
+        expect(await catalogue.list()).toHaveLength(1);
     });
 
     test("uses configured JSON depth limits during compatibility checks", async () => {
@@ -140,7 +134,7 @@ describe("InMemoryReleaseCatalogue", () => {
         expect(Object.hasOwn(first.admission.release, "publishedAt")).toBe(false);
         await catalogue.publish(await admitContractRelease(contractDocument({ version: "2.0.0" })));
 
-        const updated = await catalogue.setDeprecation("communication.email", "1.0.0", {
+        const updated = await catalogue.setDeprecation("ulvia/communication.email", "1.0.0", {
             replacedByVersion: "2.0.0",
             sunsetAt: "2027-01-01T00:00:00Z",
         });

@@ -25,7 +25,7 @@ export function createPublicResourceHandler(
                     const selected = publicDeliveryInvocation(request);
                     const result = await gateway.invoke({
                         siteId: "default",
-                        contractId: contract?.release.contractId ?? "ulvia.cms.content",
+                        contractId: contract?.release.contractId ?? "ulvia/cms.content",
                         ...selected,
                         actor,
                         requestContext: context,

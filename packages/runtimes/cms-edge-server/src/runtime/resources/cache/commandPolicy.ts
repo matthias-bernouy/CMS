@@ -3,13 +3,13 @@
  * Every new official command requires explicit classification and catalogue coverage.
  */
 const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutral">>>> = {
-    "ulvia.cms.observability": {
+    "ulvia/cms.observability": {
         "logs.append": "neutral",
     },
-    "ulvia.provider.connections": {
+    "ulvia/provider.connections": {
         "connections.configure": "neutral",
     },
-    "ulvia.repository": {
+    "ulvia/repository": {
         "namespace-claim": "neutral",
         "namespace-suspend": "neutral",
         "namespace-transfer": "neutral",
@@ -20,7 +20,7 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "publication-yank": "neutral",
         "source-put": "neutral",
     },
-    "ulvia.cms.authoring": {
+    "ulvia/cms.authoring": {
         "configure-connection": "neutral",
         "disconnect-connection": "neutral",
         "prepare-collection": "neutral",
@@ -28,7 +28,7 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "discard-preparation": "neutral",
         "publish-collection": "neutral",
     },
-    "ulvia.cms.access": {
+    "ulvia/cms.access": {
         "create-personal-access-token": "neutral",
         "revoke-personal-access-token": "neutral",
         "deny-mcp-authorization": "neutral",
@@ -47,13 +47,13 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "authorize-mcp-connection": "neutral",
         "confirm-email-verification": "neutral",
     },
-    "ulvia.cms.emailer": {
+    "ulvia/cms.emailer": {
         "emailer.send": "neutral",
     },
-    "ulvia.cms.emailer.smtp": {
+    "ulvia/cms.emailer.smtp": {
         "smtp.configuration.update": "neutral",
     },
-    "ulvia.cms.content": {
+    "ulvia/cms.content": {
         "theme.token.save": "purge",
         "theme.activate": "purge",
         "theme.token.reset": "purge",
@@ -72,7 +72,7 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "site-blocs.publish": "purge",
         "site-blocs.archive": "purge",
     },
-    "ulvia.cms.installations": {
+    "ulvia/cms.installations": {
         "gateway.provider.prepare": "purge",
         "gateway.invocation.issue": "purge",
         "gateway.delegation.issue": "purge",
@@ -93,7 +93,7 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "gateway.identity.resolve": "purge",
         "gateway.audit.append": "purge",
     },
-    "ulvia.cms.secrets": {
+    "ulvia/cms.secrets": {
         "namespace.delete": "neutral",
         "secrets.create": "neutral",
         "namespace.keys.create": "neutral",
@@ -103,7 +103,7 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "secrets.delete": "neutral",
         "namespace.keys.revoke": "neutral",
     },
-    "ulvia.cms.files": {
+    "ulvia/cms.files": {
         "workspace.upload.create": "neutral",
         "workspace.upload.complete": "purge",
         "namespace.delete": "purge",
@@ -127,7 +127,7 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
     },
 };
 export function commandCacheEffect(contractId: string, capabilityId: string): "purge" | "neutral" | null {
-    if (!contractId.startsWith("ulvia.")) {
+    if (!contractId.startsWith("ulvia/")) {
         return "neutral";
     }
     return COMMANDS[contractId]?.[capabilityId] ?? null;
@@ -137,7 +137,7 @@ export function commandCacheEffect(contractId: string, capabilityId: string): "p
  * Untagged v1 responses still purge globally. Installation and unknown mutations remain global.
  */
 export function commandCacheTags(contractId: string): readonly string[] | undefined {
-    return contractId === "ulvia.cms.content" || contractId === "ulvia.cms.files"
+    return contractId === "ulvia/cms.content" || contractId === "ulvia/cms.files"
         ? ["content:pages", "content:mutable"]
         : undefined;
 }

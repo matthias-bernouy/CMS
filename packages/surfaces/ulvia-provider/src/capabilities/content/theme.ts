@@ -9,7 +9,7 @@ export function registerThemeCapabilities(
     dispatcher: ProviderCapabilityRegistry,
     dependencies: CmsContentDependencies,
 ): void {
-    dispatcher.register("ulvia.cms.content", "theme.get", async (input, context) => {
+    dispatcher.register("ulvia/cms.content", "theme.get", async (input, context) => {
         const { revision, theme } = await readTheme(dependencies, context.siteId);
         return projectThemeWorkspace(theme, revision, {
             collectionId: optionalText(input.collectionId),
@@ -19,7 +19,7 @@ export function registerThemeCapabilities(
             search: optionalText(input.search),
         });
     });
-    dispatcher.register("ulvia.cms.content", "theme.activate", async (input, context) =>
+    dispatcher.register("ulvia/cms.content", "theme.activate", async (input, context) =>
         configurationCommand(async () => {
             const expectedRevision = revision(input.expectedRevision);
             const { theme } = await readTheme(dependencies, context.siteId);
@@ -35,10 +35,10 @@ export function registerThemeCapabilities(
             };
         }),
     );
-    dispatcher.register("ulvia.cms.content", "theme.token.save", async (input, context) =>
+    dispatcher.register("ulvia/cms.content", "theme.token.save", async (input, context) =>
         mutateToken(dependencies, context.siteId, input, false),
     );
-    dispatcher.register("ulvia.cms.content", "theme.token.reset", async (input, context) =>
+    dispatcher.register("ulvia/cms.content", "theme.token.reset", async (input, context) =>
         mutateToken(dependencies, context.siteId, input, true),
     );
 }

@@ -31,7 +31,7 @@ async function fixture() {
     const input = {
         requestId: crypto.randomUUID(),
         installationId: "install-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         contractVersion: "1.0.0",
         capabilityId: "item.list",
     };

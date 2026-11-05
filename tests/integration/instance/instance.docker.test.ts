@@ -48,9 +48,9 @@ integration(
             await exerciseRenderingResources(f.providerName, f.id);
             await exerciseProviders(f, connection.page);
             const namespace = f.id.replaceAll("-", "");
-            await connection.call("ulvia.cms.authoring", "configure-connection", { token: f.repository.pat.token });
+            await connection.call("ulvia/cms.authoring", "configure-connection", { token: f.repository.pat.token });
             const repositoryConnection = await exerciseCollections(connection.call, namespace, f.providerName);
-            const namespaces = await connection.call("ulvia.cms.authoring", "list-namespaces");
+            const namespaces = await connection.call("ulvia/cms.authoring", "list-namespaces");
             expect(namespaces.items).toContainEqual(expect.objectContaining({ namespace, access: "owned" }));
             await exerciseContent(connection.call, f.cmsUrl);
             await exerciseFiles(connection.call, f.cmsUrl, connection.token.access_token);
@@ -58,8 +58,8 @@ integration(
             await exerciseObservabilityMcp(connection, logId);
             await f.restartProvider();
             await verifyObservabilityPersistence(await f.providerUrl(), f.instanceToken, logId);
-            expect(await connection.call("ulvia.cms.authoring", "get-connection")).toEqual(repositoryConnection);
-            expect((await connection.call("ulvia.cms.authoring", "list-namespaces")).items).toContainEqual(
+            expect(await connection.call("ulvia/cms.authoring", "get-connection")).toEqual(repositoryConnection);
+            expect((await connection.call("ulvia/cms.authoring", "list-namespaces")).items).toContainEqual(
                 expect.objectContaining({ namespace, access: "owned" }),
             );
             await connection.revoke();

@@ -1,3 +1,4 @@
+import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { expect, test } from "bun:test";
 import { sitePagesFixture, PAGE_FIELDS, ADMIN } from "./site-pages.fixture";
 
@@ -55,7 +56,7 @@ test("system Page selections are atomic on stale revisions and malformed input",
     expect((await f.call("update", { expectedRevision: 1 })).isError).toBe(true);
 });
 
-test("missing and other-instance Pages are refused before any settings change", async () => {
+test("missing and example--other--instance Pages are refused before any settings change", async () => {
     const f = await sitePagesFixture();
     const neighbour = await sitePagesFixture();
     const snapshot = await f.repository.getSystem();
@@ -80,12 +81,16 @@ test("system Page settings retain administrator authorization and instance isola
     for (const actor of [{ kind: "anonymous" }, { kind: "user", subjectId: "member" }] as const) {
         for (const capability of ["get", "update"] as const) {
             const input = capability === "get" ? {} : { expectedRevision: 0, login: null };
-            const result = await f.binding.call(`content_site_${capability}`, { input }, { siteId: "site-a", actor });
+            const result = await f.binding.call(
+                capabilityToolName("ulvia/cms.content", `site.${capability}`, "mcp", `content_site_${capability}`),
+                { input },
+                { siteId: "site-a", actor },
+            );
             expect(result.isError).toBe(true);
         }
     }
     const otherSite = await f.binding.call(
-        "content_site_update",
+        capabilityToolName("ulvia/cms.content", "site.update", "mcp", "content_site_update"),
         { input: { expectedRevision: 0, login: f.references.login } },
         { ...ADMIN, siteId: "site-b" },
     );

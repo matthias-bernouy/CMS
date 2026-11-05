@@ -10,18 +10,18 @@ import type { MessageLanguage } from "./locale";
 
 export function isOfficialContract(id: string): boolean {
     return [
-        "ulvia.repository",
-        "ulvia.cms.access",
-        "ulvia.cms.content",
-        "ulvia.cms.emailer",
-        "ulvia.cms.emailer.smtp",
-        "ulvia.cms.files",
-        "ulvia.cms.installations",
-        "ulvia.cms.observability",
-        "ulvia.cms.authoring",
-        "ulvia.cms.secrets",
-        "ulvia.provider.connections",
-        "ulvia.provider.cms-instances",
+        "ulvia/repository",
+        "ulvia/cms.access",
+        "ulvia/cms.content",
+        "ulvia/cms.emailer",
+        "ulvia/cms.emailer.smtp",
+        "ulvia/cms.files",
+        "ulvia/cms.installations",
+        "ulvia/cms.observability",
+        "ulvia/cms.authoring",
+        "ulvia/cms.secrets",
+        "ulvia/provider.connections",
+        "ulvia/provider.cms-instances",
     ].includes(id);
 }
 

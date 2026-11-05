@@ -31,7 +31,7 @@ export async function mcpUpload(request: Request, host: CmsMcpHost, uploadId: st
         });
     const result = await host.invoker.invoke({
         siteId: "default",
-        contractId: "ulvia.cms.files",
+        contractId: "ulvia/cms.files",
         capabilityId: "upload.write",
         actor: mcpActor(principal),
         input: { uploadId, uploadToken: token },

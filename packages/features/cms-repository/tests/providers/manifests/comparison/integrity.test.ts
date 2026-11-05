@@ -48,7 +48,7 @@ describe("manifest comparison trust boundary", () => {
     test("compares historical artifacts after their contract releases are yanked", async () => {
         const { contracts, document, admission } = await manifestCatalogueFixture();
         const next = await admitProviderManifest({ ...document, version: "1.0.1" }, contracts);
-        await contracts.setYank("forms.submission", "1.0.0", { reason: "Historical withdrawal" });
+        await contracts.setYank("ulvia/forms.submission", "1.0.0", { reason: "Historical withdrawal" });
         const report = await compareProviderManifests(admission, next);
         expect(report.requiresApproval).toBe(true);
         expect(report.changes).toEqual([
@@ -59,12 +59,12 @@ describe("manifest comparison trust boundary", () => {
     test("reports changed exact implementation digests without asserting reference validity", async () => {
         const { admission } = await manifestCatalogueFixture();
         const contracts = await releaseCatalogue({
-            ...contractDocument("forms.submission", "form.submission.create"),
+            ...contractDocument("ulvia/forms.submission", "form.submission.create"),
             name: "Other catalogue release",
         });
-        const release = (await contracts.get("forms.submission", "1.0.0"))!.admission;
+        const release = (await contracts.get("ulvia/forms.submission", "1.0.0"))!.admission;
         const next = await admitProviderManifest(
-            manifestDocument([implementation("forms.submission", "1.0.0", release.digest)]),
+            manifestDocument([implementation("ulvia/forms.submission", "1.0.0", release.digest)]),
             contracts,
         );
         const report = await compareProviderManifests(admission, next);
@@ -73,7 +73,7 @@ describe("manifest comparison trust boundary", () => {
             {
                 category: "implementation",
                 kind: "changed",
-                path: '$.implementations["forms.submission@1.0.0"].digest',
+                path: '$.implementations["ulvia/forms.submission@1.0.0"].digest',
                 before: admission.manifest.implementations[0]!.digest,
                 after: release.digest,
             },

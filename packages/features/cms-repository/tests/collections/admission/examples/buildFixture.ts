@@ -1,7 +1,34 @@
+import { resourceRuntimeNamespace } from "@bernouy/resource-identity";
 import { parseHTML } from "linkedom";
 
 /** Construct complete examples for small test models, independently of release parsing. */
 export function collectionFixture(source: any): any {
+    if (
+        typeof source.collectionId === "string" &&
+        !source.collectionId.includes("/") &&
+        /^[a-z][a-z0-9-]*$/u.test(source.collectionId)
+    ) {
+        const local = source.collectionId;
+        const identity = `${source.publisherId}/${local}`;
+        const runtime = resourceRuntimeNamespace(identity);
+        const transform = (value: any): any => {
+            if (typeof value === "string") {
+                return value
+                    .replaceAll(`cms.i18n.${local}.`, `cms.i18n.${identity}.`)
+                    .replaceAll(`cms.asset.${local}.`, `cms.asset.${identity}.`)
+                    .replaceAll(`${local}-`, `${runtime}--`);
+            }
+            if (Array.isArray(value)) {
+                return value.map(transform);
+            }
+            if (value && typeof value === "object") {
+                return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, transform(item)]));
+            }
+            return value;
+        };
+        source = transform(source);
+        source.collectionId = identity;
+    }
     const original = source.blocs ?? [];
     const byId = new Map<string, any>(original.map((bloc: any) => [bloc.id, bloc]));
     const examples = [...(source.examples ?? [])].filter(

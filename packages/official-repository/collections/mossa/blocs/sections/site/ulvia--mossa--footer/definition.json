@@ -1,0 +1,61 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--footer",
+    "label": "bloc.footer.label",
+    "description": "bloc.footer.description",
+    "order": 20,
+    "uses": ["ulvia--mossa--image"],
+    "requires": [],
+    "slots": {
+        "brand": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                },
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--image"
+                }
+            ],
+            "max": 1
+        },
+        "navigation": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                },
+                {
+                    "kind": "any-component"
+                }
+            ]
+        },
+        "social": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                },
+                {
+                    "kind": "any-component"
+                }
+            ]
+        },
+        "legal": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.site"],
+    "examples": ["footer-default", "landing-page"],
+    "defaultExample": "footer-default"
+}

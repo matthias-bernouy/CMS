@@ -69,15 +69,23 @@ test("theme discovery rejects orphan and ambiguously named category files", asyn
 
 test("source export wildcards expand into explicit immutable resource lists", () => {
     const resources = {
-        blocs: ["atlas-card", "atlas-grid"],
+        blocs: ["atlas-dofficial--atlas--card", "atlas-dofficial--atlas--grid"],
         themeTokens: ["accent", "surface"],
         texts: ["welcome"],
         assets: ["logo"],
     };
     expect(expandCollectionSourceExports("*", resources)).toEqual(resources);
     expect(
-        expandCollectionSourceExports({ blocs: ["atlas-card"], themeTokens: "*", texts: [], assets: "*" }, resources),
-    ).toEqual({ blocs: ["atlas-card"], themeTokens: ["accent", "surface"], texts: [], assets: ["logo"] });
+        expandCollectionSourceExports(
+            { blocs: ["atlas-dofficial--atlas--card"], themeTokens: "*", texts: [], assets: "*" },
+            resources,
+        ),
+    ).toEqual({
+        blocs: ["atlas-dofficial--atlas--card"],
+        themeTokens: ["accent", "surface"],
+        texts: [],
+        assets: ["logo"],
+    });
     expect(expandCollectionSourceExports({ blocs: "invalid" }, resources)).toEqual({ blocs: "invalid" });
 });
 

@@ -8,7 +8,7 @@ export function registerLocalizationCapabilities(
     dispatcher: ProviderCapabilityRegistry,
     dependencies: CmsContentDependencies,
 ): void {
-    dispatcher.register("ulvia.cms.content", "localization.get", async (_input, context) => {
+    dispatcher.register("ulvia/cms.content", "localization.get", async (_input, context) => {
         const [snapshot, collections] = await Promise.all([
             readSystemSnapshot(dependencies.repo),
             dependencies.collections.snapshot(context.siteId),
@@ -22,7 +22,7 @@ export function registerLocalizationCapabilities(
             activeLanguages: snapshot.system.site.activeLanguages,
         };
     });
-    dispatcher.register("ulvia.cms.content", "localization.update", async (input) =>
+    dispatcher.register("ulvia/cms.content", "localization.update", async (input) =>
         configurationCommand(async () => {
             const expectedRevision = revision(input.expectedRevision);
             const system = await dependencies.repo.updateSystem(
@@ -43,7 +43,7 @@ export function registerLocalizationCapabilities(
             };
         }),
     );
-    dispatcher.register("ulvia.cms.content", "localization.texts.get", async (input, context) => {
+    dispatcher.register("ulvia/cms.content", "localization.texts.get", async (input, context) => {
         const [snapshot, system] = await Promise.all([
             dependencies.collections.snapshot(context.siteId),
             readSystemSnapshot(dependencies.repo),
@@ -63,7 +63,7 @@ export function registerLocalizationCapabilities(
             ],
         });
     });
-    dispatcher.register("ulvia.cms.content", "localization.text.save", async (input, context) =>
+    dispatcher.register("ulvia/cms.content", "localization.text.save", async (input, context) =>
         configurationCommand(async () => {
             const collectionId = requiredText(input.collectionId);
             const expectedRevision = revision(input.expectedRevision);

@@ -23,7 +23,7 @@ test("existing admitted header bindings coexist with identical common metadata a
         authentication: {
             kind: "capability" as const,
             instanceId: "instance",
-            contractId: "example",
+            contractId: "example.official/example",
             contractVersion: "1.0.0",
             capabilityId: "read",
         },

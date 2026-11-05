@@ -63,7 +63,7 @@ async function discoverQueries(page: Page, count: number): Promise<number> {
         const fragment = document.createDocumentFragment();
         for (let index = 0; index < queryCount; index += 1) {
             const query = document.createElement("section");
-            query.setAttribute("cms-query", `performance:item-${index} as query${index}`);
+            query.setAttribute("cms-query", `ulvia.performance/performance:item-${index} as query${index}`);
             query.innerHTML = `<span>{{ query${index}.data.ready }}</span>`;
             fragment.appendChild(query);
         }

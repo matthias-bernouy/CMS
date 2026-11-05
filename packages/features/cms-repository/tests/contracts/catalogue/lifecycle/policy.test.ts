@@ -50,7 +50,7 @@ test.each(["memory", "mongo"])(
         for (const capability of mutations) {
             const rejected = await release("2.0.0", [capability]);
             await expect(catalogue.publish(rejected)).rejects.toThrow("new capability");
-            expect(await catalogue.get("communication.email", "2.0.0")).toBeNull();
+            expect(await catalogue.get("ulvia/communication.email", "2.0.0")).toBeNull();
         }
         expect(await catalogue.list()).toHaveLength(1);
         if (adapter === "mongo") {
@@ -85,7 +85,9 @@ test("deprecation precedes major removal, preserves the replacement and prevents
     await expect(catalogue.publish(await release("3.0.0", [original(), successor()]))).rejects.toThrow(
         "cannot be reused",
     );
-    expect((await catalogue.get("communication.email", "1.0.0"))?.admission.release.capabilities[0]?.id).toBe(oldId);
+    expect((await catalogue.get("ulvia/communication.email", "1.0.0"))?.admission.release.capabilities[0]?.id).toBe(
+        oldId,
+    );
 });
 test("a preview cannot bypass a stable capability or replace a published deprecation", async () => {
     const catalogue = new InMemoryReleaseCatalogue();

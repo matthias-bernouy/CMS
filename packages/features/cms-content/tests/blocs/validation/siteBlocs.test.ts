@@ -216,7 +216,7 @@ describe("site bloc validation", () => {
                         kind: "bloc",
                         tag: "site-results",
                         attributes: {
-                            "cms-query": "catalog:search as results",
+                            "cms-query": "ulvia/catalog:search as results",
                             "cms-query-input": '{"query":{"from":"state","key":"@param:site-query"}}',
                         },
                         children: [
@@ -237,7 +237,7 @@ describe("site bloc validation", () => {
             expect.arrayContaining([
                 expect.objectContaining({
                     attributes: expect.objectContaining({
-                        "cms-query": "catalog:search as results",
+                        "cms-query": "ulvia/catalog:search as results",
                     }),
                 }),
             ]),
@@ -381,12 +381,12 @@ describe("site bloc validation", () => {
             ['<section><span slot="label">Nested slot bypass</span></section>', /direct referenced Bloc child/],
             ['<form cms-bloc="site-contact-form"></form>', /declared CMS mutation/],
             [
-                `<form cms-bloc="site-contact-form" cms-mutation="forms:contact as contact"
+                `<form cms-bloc="site-contact-form" cms-mutation="ulvia/forms:contact as contact"
                     cms-mutation-input='{"safe":{"from":"literal","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
                 /typed parameter map/,
             ],
             [
-                `<form cms-bloc="site-login-form" cms-mutation="ulvia.cms.access:login-password as session"
+                `<form cms-bloc="site-login-form" cms-mutation="ulvia/cms.access:login-password as session"
                     cms-mutation-redirect-param="bad param"></form>`,
                 /redirect parameter is invalid/,
             ],
@@ -400,12 +400,12 @@ describe("site bloc validation", () => {
             siteBlocSnapshot({
                 defaultContent: `<div cms-bloc="site-contact-title" slot="title">Contact</div><form
                     cms-bloc="site-contact-form"
-                    cms-mutation="forms:contact as contact"
+                    cms-mutation="ulvia/forms:contact as contact"
                     cms-mutation-redirect="/thanks" cms-mutation-redirect-param="returnTo"></form>`,
             }),
             "site-feature-panel",
         );
-        expect(valid.defaultContent).toContain('cms-mutation="forms:contact as contact"');
+        expect(valid.defaultContent).toContain('cms-mutation="ulvia/forms:contact as contact"');
         expect(valid.defaultContent).toContain('cms-mutation-redirect-param="returnTo"');
     });
 
@@ -414,7 +414,7 @@ describe("site bloc validation", () => {
             kind: "bloc" as const,
             tag: "form",
             attributes: {
-                "cms-mutation": "system-auth:logout as logout",
+                "cms-mutation": "ulvia/system-auth:logout as logout",
                 "cms-mutation-redirect": "/login",
             },
             children: [],

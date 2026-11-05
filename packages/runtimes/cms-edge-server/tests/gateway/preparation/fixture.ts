@@ -86,7 +86,7 @@ export async function preparedFixture(command = false, settled?: () => void, mac
                         requestId: input.invocation.requestId,
                         ...(input.invocation.trace ? { trace: input.invocation.trace } : {}),
                         instanceId,
-                        contractId: "catalog",
+                        contractId: "ulvia/catalog",
                         contractVersion: "1.0.0",
                         capabilityId: "item.list",
                         ...(machine ? { sourceInstallationId: "verified-source" } : { subjectId: "alias" }),
@@ -105,7 +105,7 @@ export async function preparedFixture(command = false, settled?: () => void, mac
         const invoke = () =>
             gateway.invoker.invoke({
                 siteId: "default",
-                contractId: "catalog",
+                contractId: "ulvia/catalog",
                 capabilityId: "item.list",
                 input: { term: "test" },
                 actor: { kind: "administrator", subjectId: "cms-user", authorizationRevision: 1 },

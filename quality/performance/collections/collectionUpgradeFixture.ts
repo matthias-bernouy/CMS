@@ -36,7 +36,7 @@ function page(index: number): TPage {
         id,
         revision: 1,
         path: `/${id}`,
-        content: '<div cms-bloc="performance-suite-card-0"></div>',
+        content: '<div cms-bloc="ulvia-dperformance--performance-suite--card-0"></div>',
         title: id,
         description: "",
         visible: false,

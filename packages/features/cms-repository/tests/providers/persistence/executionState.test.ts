@@ -22,7 +22,7 @@ test("a warm execution metadata read issues one fresh grouped query and no paylo
     f.model.selection = {
         ...f.model.selection!,
         revision: 2,
-        grants: { default: "allow-selected", denied: [{ contractId: "payment", capabilityId: "pay" }] },
+        grants: { default: "allow-selected", denied: [{ contractId: "ulvia/payment", capabilityId: "pay" }] },
     };
     expect((await f.reader.read(f.siteId, [f.installationId])).selections!.grants.denied).toHaveLength(1);
     expect(f.model.payloads).toBe(4);
@@ -100,7 +100,7 @@ test("the final selection read observes grant revocation after installation head
         f.model.selection = {
             ...f.model.selection!,
             revision: 2,
-            grants: { default: "allow-selected", denied: [{ contractId: "payment", capabilityId: "pay" }] },
+            grants: { default: "allow-selected", denied: [{ contractId: "ulvia/payment", capabilityId: "pay" }] },
         };
         f.model.beforeSelectionRead = () => {};
     };

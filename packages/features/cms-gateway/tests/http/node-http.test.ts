@@ -202,7 +202,7 @@ test("capability dispatch always uses the authenticated network transport", asyn
         authentication: {
             kind: "capability" as const,
             instanceId: "instance:one",
-            contractId: "catalog",
+            contractId: "ulvia/catalog",
             contractVersion: "1.0.0",
             capabilityId: "read",
         },

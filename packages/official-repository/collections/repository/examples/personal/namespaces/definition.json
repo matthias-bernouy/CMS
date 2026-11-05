@@ -1,0 +1,26 @@
+{
+    "id": "namespaces",
+    "label": "page.namespaces.name",
+    "description": "page.namespaces.description",
+    "requires": [
+        {
+            "contractId": "ulvia/repository",
+            "capabilityId": "namespace-claim",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/repository",
+            "capabilityId": "namespace-list",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

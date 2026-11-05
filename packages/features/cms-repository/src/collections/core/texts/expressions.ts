@@ -29,7 +29,9 @@ function replaceCollectionExpressions(input: string, resolvers: CollectionExpres
             }
             output += input.slice(start, end + 2);
         } else {
-            const text = /^cms\.i18n\.([a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9-]{0,95})$/.exec(expression);
+            const text = /^cms\.i18n\.([a-z][a-z0-9.-]{0,95}\/[a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9-]{0,95})$/.exec(
+                expression,
+            );
             const asset = parseCollectionAssetExpression(expression);
             if (end === -1 || (!text && !asset)) {
                 throw new TypeError("Expected {{ cms.i18n.collection.text }} or {{ cms.asset.collection.asset }}");

@@ -40,7 +40,7 @@ export function string(value: unknown, maximum: number, path: string): string {
 
 export function identifier(value: unknown, path: string): string {
     const result = string(value, 96, path);
-    if (!/^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/.test(result)) {
+    if (!/^[a-z][a-z0-9]*(?:(?:-+|[.])[a-z0-9]+)*$/.test(result)) {
         invalid("must be a lowercase identifier", path);
     }
     return result;

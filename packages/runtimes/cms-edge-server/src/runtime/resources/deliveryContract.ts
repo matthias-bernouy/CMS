@@ -7,7 +7,7 @@ export async function resolveDeliveryContract(gateway: GatewayInvoker): Promise<
     if (!gateway.resolveContract) {
         return undefined;
     }
-    let current = await gateway.resolveContract?.({ siteId: "default", contractId: "ulvia.cms.content" });
+    let current = await gateway.resolveContract?.({ siteId: "default", contractId: "ulvia/cms.content" });
     const visited = new Set<string>();
     while (current) {
         if (visited.has(current.release.contractId) || visited.size >= 256) {

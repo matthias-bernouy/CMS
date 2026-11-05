@@ -32,9 +32,9 @@ describe("site Bloc contracts", () => {
 
     test("preserves the native root carrying a component Bloc", async () => {
         const structure = siteBlocStructureFromMarkup(
-            '<section cms-bloc="ulvia-official-hero" tone="soft"><p>Welcome</p></section>',
+            '<section cms-bloc="ulvia--mossa--hero" tone="soft"><p>Welcome</p></section>',
         );
-        expect(structure[0]).toMatchObject({ kind: "bloc", tag: "ulvia-official-hero", root: "section" });
+        expect(structure[0]).toMatchObject({ kind: "bloc", tag: "ulvia--mossa--hero", root: "section" });
         expect(
             serializeSiteBlocMarkup(
                 {
@@ -44,11 +44,11 @@ describe("site Bloc contracts", () => {
                     structure,
                     slots: [],
                     defaultContent: "",
-                    dependencies: ["ulvia-official-hero"],
+                    dependencies: ["ulvia--mossa--hero"],
                 },
                 { controller: false },
             ),
-        ).toBe('<section cms-bloc="ulvia-official-hero" tone="soft"><p>Welcome</p></section>\n');
+        ).toBe('<section cms-bloc="ulvia--mossa--hero" tone="soft"><p>Welcome</p></section>\n');
 
         const repository = new ValidatingContentRepository(new InMemoryContentRepository());
         await expect(
@@ -56,7 +56,7 @@ describe("site Bloc contracts", () => {
                 tag: "site-hero",
                 name: "Hero",
                 group: "Site",
-                content: '<div cms-bloc="ulvia-official-hero" tone="soft"><p>Welcome</p></div>',
+                content: '<div cms-bloc="ulvia--mossa--hero" tone="soft"><p>Welcome</p></div>',
             }),
         ).resolves.toMatchObject({ tag: "site-hero", draftRevision: 1 });
     });

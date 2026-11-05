@@ -18,7 +18,7 @@ describe("resolvePageIndexingMetadata", () => {
                 });
             },
         );
-        expect(calls).toEqual([["commerce", "product.get", { slug: "requested" }]]);
+        expect(calls).toEqual([["ulvia/commerce", "product.get", { slug: "requested" }]]);
         expect(result).toEqual({
             kind: "render",
             dynamic: true,

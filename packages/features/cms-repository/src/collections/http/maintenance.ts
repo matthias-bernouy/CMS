@@ -10,13 +10,13 @@ const AVAILABLE_PATHS = new Set([
     "/.cms/mcp",
 ]);
 const RECOVERY_CAPABILITIES = new Set([
-    "ulvia.cms.installations/get-collection-upgrade",
-    "ulvia.cms.installations/get-operation",
-    "ulvia.cms.installations/list-operations",
-    "ulvia.cms.installations/get-site-upgrade-status",
-    "ulvia.cms.installations/resume-collection-upgrade",
-    "ulvia.cms.installations/get-contract-upgrade",
-    "ulvia.cms.installations/resume-contract-upgrade",
+    "ulvia/cms.installations/get-collection-upgrade",
+    "ulvia/cms.installations/get-operation",
+    "ulvia/cms.installations/list-operations",
+    "ulvia/cms.installations/get-site-upgrade-status",
+    "ulvia/cms.installations/resume-collection-upgrade",
+    "ulvia/cms.installations/get-contract-upgrade",
+    "ulvia/cms.installations/resume-contract-upgrade",
 ]);
 
 type MaintenanceOptions = { siteId: string; upgrades: Pick<SiteUpgradeStorage, "getActive">; basePath: string };

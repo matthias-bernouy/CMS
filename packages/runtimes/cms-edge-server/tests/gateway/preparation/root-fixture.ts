@@ -48,7 +48,7 @@ export function fixture() {
                     invocation: {
                         requestId,
                         installationId: "target",
-                        contractId: "catalog",
+                        contractId: "ulvia/catalog",
                         contractVersion: "1.0.0",
                         capabilityId: "read",
                     },

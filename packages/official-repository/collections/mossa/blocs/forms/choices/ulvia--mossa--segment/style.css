@@ -1,0 +1,56 @@
+:scope {
+    --ulvia--mossa--radio-host-position: absolute;
+    --ulvia--mossa--radio-host-size: 1px;
+    --ulvia--mossa--radio-host-overflow: hidden;
+    --ulvia--mossa--radio-host-clip: inset(50%);
+    display: block;
+    min-width: 0;
+    box-sizing: border-box;
+    border-radius: calc(var(--ulvia--mossa--radius-md, 0.5rem) - var(--ulvia--mossa--spacing-3xs, 0.25rem));
+    overflow: hidden;
+    color: var(--ulvia--mossa--text-secondary);
+    background: transparent;
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+    transition: color var(--ulvia--mossa--duration-fast, 120ms);
+}
+[part~="segment"] {
+    display: contents;
+}
+label[part~="segment"] {
+    display: flex;
+    min-height: var(--ulvia--mossa--segment-min-height, var(--ulvia--mossa--control-height-md, 2.875rem));
+    box-sizing: border-box;
+    padding: var(--ulvia--mossa--spacing-xs, 0.5rem)
+        var(--ulvia--mossa--segment-padding-inline, var(--ulvia--mossa--spacing-md, 1rem));
+    gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+    background: transparent;
+    font-size: var(--ulvia--mossa--segment-font-size, var(--ulvia--mossa--font-size-md, 1rem));
+    font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+    line-height: var(--ulvia--mossa--line-height-snug, 1.35);
+    text-align: center;
+    cursor: pointer;
+}
+:scope:hover:not([data-selected]) {
+    color: var(--ulvia--mossa--text-primary);
+    background: color-mix(in srgb, var(--ulvia--mossa--background-surface) 70%, transparent);
+}
+:scope[data-selected] {
+    z-index: 1;
+    color: var(--ulvia--mossa--on-primary);
+    background: transparent;
+}
+:scope:focus-within {
+    outline: 3px solid var(--ulvia--mossa--focus-ring);
+    outline-offset: -1px;
+}
+:scope[data-disabled] {
+    color: var(--ulvia--mossa--text-disabled);
+    background: var(--ulvia--mossa--background-subtle);
+    opacity: 0.7;
+}
+:scope[data-disabled] label[part~="segment"] {
+    cursor: not-allowed;
+}

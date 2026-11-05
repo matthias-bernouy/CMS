@@ -13,10 +13,10 @@ test("Mongo manifest catalogue keeps exact claims and yanks across adapter resta
     const publishedRevision = await first.revision();
     expect(publishedRevision).not.toBe(beforeRevision);
     const recreated = new MongoProviderManifestCatalogue(db, fixture.contracts);
-    expect((await recreated.get("ulvia.example", "1.0.0"))?.admission.digest).toBe(fixture.admission.digest);
+    expect((await recreated.get("ulvia/ulvia.example", "1.0.0"))?.admission.digest).toBe(fixture.admission.digest);
     expect((await recreated.findByDigest(fixture.admission.digest))?.publishedAt).toBe(published.publishedAt);
     expect((await recreated.publish(fixture.admission)).publishedAt).toBe(published.publishedAt);
-    const yanked = await recreated.setYank("ulvia.example", "1.0.0", { reason: "withdrawn" });
+    const yanked = await recreated.setYank("ulvia/ulvia.example", "1.0.0", { reason: "withdrawn" });
     expect(await recreated.revision()).not.toBe(publishedRevision);
     expect(yanked.yank?.reason).toBe("withdrawn");
     expect((await first.list())[0]?.yank?.reason).toBe("withdrawn");
@@ -29,15 +29,16 @@ test("Mongo manifest catalogue does not store a rejected publisher artifact", as
     const db = fakeCatalogueDb();
     const catalogue = new MongoProviderManifestCatalogue(db, fixture.contracts);
     await catalogue.publish(fixture.admission);
-    const other = await admitProviderManifest(
-        {
-            ...fixture.document,
-            version: "1.0.1",
-            provenance: { publisherId: "other.publisher", publishedAt: "2026-09-22T00:00:00Z" },
-        },
-        fixture.contracts,
-    );
-    await expect(catalogue.publish(other)).rejects.toThrow("publisher ownership");
+    await expect(
+        admitProviderManifest(
+            {
+                ...fixture.document,
+                version: "1.0.1",
+                provenance: { publisherId: "other.publisher", publishedAt: "2026-09-22T00:00:00Z" },
+            },
+            fixture.contracts,
+        ),
+    ).rejects.toThrow("namespace must match");
     expect(await db.collection("cms_manifest_artifacts").find({}).toArray()).toHaveLength(1);
 });
 
@@ -48,15 +49,17 @@ test("a warm manifest read reuses only its verified bytes and observes another a
     const writer = new MongoProviderManifestCatalogue(db, f.contracts);
     await writer.publish(f.admission);
     const spy = spyOn(db.collection("cms_manifest_artifacts"), "findOne");
-    const first = await reader.get("ulvia.example", "1.0.0");
+    const first = await reader.get("ulvia/ulvia.example", "1.0.0");
     expect(spy).toHaveBeenCalledTimes(1);
     expect((await reader.findByDigest(f.admission.digest))?.admission).toBe(first?.admission);
     expect(spy).toHaveBeenCalledTimes(1);
-    await writer.setYank("ulvia.example", "1.0.0", { reason: "withdrawn" });
+    await writer.setYank("ulvia/ulvia.example", "1.0.0", { reason: "withdrawn" });
     const reads = spy.mock.calls.length;
-    expect((await reader.get("ulvia.example", "1.0.0"))?.yank?.reason).toBe("withdrawn");
+    expect((await reader.get("ulvia/ulvia.example", "1.0.0"))?.yank?.reason).toBe("withdrawn");
     expect(spy).toHaveBeenCalledTimes(reads);
-    await db.collection("cms_manifest_heads").updateOne({ _id: "ulvia.example" }, { $set: { publisherId: "forged" } });
-    await expect(reader.get("ulvia.example", "1.0.0")).rejects.toThrow("disagrees");
+    await db
+        .collection("cms_manifest_heads")
+        .updateOne({ _id: "ulvia/ulvia.example" }, { $set: { publisherId: "forged" } });
+    await expect(reader.get("ulvia/ulvia.example", "1.0.0")).rejects.toThrow("disagrees");
     spy.mockRestore();
 });

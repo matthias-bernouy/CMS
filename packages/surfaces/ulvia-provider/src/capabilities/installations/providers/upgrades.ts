@@ -17,7 +17,7 @@ export function registerContractUpgradeCapabilities(
         }
         return gateway.contractUpgrades;
     };
-    dispatcher.register("ulvia.cms.installations", "plan-contract-upgrade", async (input, context) =>
+    dispatcher.register("ulvia/cms.installations", "plan-contract-upgrade", async (input, context) =>
         collectionCommand(async () => {
             const selections =
                 input.selection === undefined
@@ -42,7 +42,7 @@ export function registerContractUpgradeCapabilities(
             };
         }),
     );
-    dispatcher.register("ulvia.cms.installations", "get-contract-upgrade", async (input, context) => {
+    dispatcher.register("ulvia/cms.installations", "get-contract-upgrade", async (input, context) => {
         const intent = await service().get(context.siteId, requiredText(input.upgradeId));
         if (!intent) {
             throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
@@ -53,7 +53,7 @@ export function registerContractUpgradeCapabilities(
         if (!operations) {
             continue;
         }
-        operations.register("ulvia.cms.installations", capabilityId, (input, context) =>
+        operations.register("ulvia/cms.installations", capabilityId, (input, context) =>
             collectionCommand(async () =>
                 result(
                     capabilityId === "apply-contract-upgrade"
@@ -67,8 +67,8 @@ export function registerContractUpgradeCapabilities(
                 ),
             ),
         );
-        dispatcher.register("ulvia.cms.installations", capabilityId, (input, context) =>
-            operations.enqueue("ulvia.cms.installations", capabilityId, input, context),
+        dispatcher.register("ulvia/cms.installations", capabilityId, (input, context) =>
+            operations.enqueue("ulvia/cms.installations", capabilityId, input, context),
         );
     }
 }

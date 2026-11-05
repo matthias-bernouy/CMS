@@ -28,10 +28,10 @@ export function registerOfficialProviderCapabilities(
     fileWorkspace?: CmsFileWorkspace,
     enabledContractIds?: ReadonlySet<string>,
 ): void {
-    if (enabledContractIds?.has("ulvia.cms.authoring")) {
+    if (enabledContractIds?.has("ulvia/cms.authoring")) {
         registerCollectionAuthoringCapabilities(dispatcher, dependencies.collectionAuthoring);
     }
-    if (dependencies.observability && enabledContractIds?.has("ulvia.cms.observability")) {
+    if (dependencies.observability && enabledContractIds?.has("ulvia/cms.observability")) {
         registerObservabilityCapabilities(dispatcher, dependencies.observability);
     }
     registerContentCapabilities(dispatcher, dependencies);
@@ -46,10 +46,10 @@ export function registerOfficialProviderCapabilities(
     if (files) {
         registerFileCapabilities(dispatcher, files, fileWorkspace);
     }
-    if (dependencies.secrets && enabledContractIds?.has("ulvia.cms.secrets")) {
+    if (dependencies.secrets && enabledContractIds?.has("ulvia/cms.secrets")) {
         registerSecretCapabilities(dispatcher, dependencies.secrets);
     }
-    if (dependencies.emailer && enabledContractIds?.has("ulvia.cms.emailer.smtp")) {
+    if (dependencies.emailer && enabledContractIds?.has("ulvia/cms.emailer.smtp")) {
         registerSmtpEmailerCapabilities(dispatcher, { emailer: dependencies.emailer });
     }
     registerAccessCapabilities(dispatcher, dependencies, gateway);

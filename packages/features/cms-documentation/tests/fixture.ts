@@ -1,12 +1,14 @@
+import { resourcePublisher } from "@bernouy/cms-repository/contracts/protocol";
 import { sha256Digest } from "@bernouy/binary-media";
 import { admitContractBundle } from "@bernouy/cms-repository/contracts";
 import type { DocumentationEmbeddings, DocumentationSource } from "@bernouy/cms-documentation";
 
 export async function fixture(
-    contractId = "example.documents",
+    contractId = "example/example.documents",
     large = false,
     overrides?: { texts: readonly string[]; version: string },
 ) {
+    contractId = contractId.includes("/") ? contractId : `example/${contractId}`;
     const texts = overrides
         ? [...overrides.texts]
         : [
@@ -32,7 +34,7 @@ export async function fixture(
             protocol: "ulvia-provider/v1",
             schemaDialect: "ulvia-schema/v1",
             contractId,
-            publisherId: "example",
+            publisherId: resourcePublisher(contractId),
             name: "Documentation",
             version: overrides?.version ?? "1.0.0",
             documentation,

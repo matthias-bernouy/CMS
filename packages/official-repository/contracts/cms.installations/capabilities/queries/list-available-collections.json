@@ -1,0 +1,278 @@
+{
+    "id": "list-available-collections",
+    "access": "admin",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "channel": {
+                "type": "string",
+                "enum": ["stable", "beta", "all"],
+                "maxLength": 6
+            }
+        },
+        "required": []
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "repositories": {
+                "type": "array",
+                "maxItems": 32,
+                "items": {
+                    "type": "string",
+                    "maxLength": 96
+                }
+            },
+            "releases": {
+                "type": "array",
+                "maxItems": 1024,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "repositoryId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "publisherId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "collectionId": {
+                            "type": "string",
+                            "maxLength": 193
+                        },
+                        "version": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "digest": {
+                            "type": "string",
+                            "maxLength": 71
+                        },
+                        "name": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "description": {
+                            "type": "string",
+                            "maxLength": 4096
+                        },
+                        "blocCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1024
+                        },
+                        "hasTheme": {
+                            "type": "boolean"
+                        },
+                        "browserRisk": {
+                            "type": "string",
+                            "maxLength": 6,
+                            "enum": ["none", "review", "high"]
+                        },
+                        "browserRiskDigest": {
+                            "type": "string",
+                            "maxLength": 71
+                        },
+                        "javaScriptBlocCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1024
+                        },
+                        "javaScriptBlocs": {
+                            "type": "array",
+                            "maxItems": 1024,
+                            "items": {
+                                "type": "string",
+                                "maxLength": 96
+                            }
+                        },
+                        "frameBlocCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1024
+                        },
+                        "frameBlocs": {
+                            "type": "array",
+                            "maxItems": 1024,
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "maxLength": 96
+                                    },
+                                    "origins": {
+                                        "type": "array",
+                                        "maxItems": 32,
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 2048
+                                        }
+                                    },
+                                    "sandbox": {
+                                        "type": "array",
+                                        "maxItems": 6,
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 17
+                                        }
+                                    }
+                                },
+                                "required": ["id", "origins", "sandbox"]
+                            }
+                        },
+                        "externalFrameOrigins": {
+                            "type": "array",
+                            "maxItems": 32,
+                            "items": {
+                                "type": "string",
+                                "maxLength": 2048
+                            }
+                        },
+                        "scriptsWithSameOrigin": {
+                            "type": "boolean"
+                        },
+                        "action": {
+                            "type": "string",
+                            "maxLength": 7,
+                            "enum": ["install", "upgrade", "current", "older"]
+                        },
+                        "channel": {
+                            "type": "string",
+                            "enum": ["stable", "beta"],
+                            "maxLength": 6
+                        }
+                    },
+                    "required": [
+                        "repositoryId",
+                        "publisherId",
+                        "collectionId",
+                        "version",
+                        "digest",
+                        "name",
+                        "description",
+                        "blocCount",
+                        "hasTheme",
+                        "browserRisk",
+                        "browserRiskDigest",
+                        "javaScriptBlocCount",
+                        "javaScriptBlocs",
+                        "frameBlocCount",
+                        "frameBlocs",
+                        "externalFrameOrigins",
+                        "scriptsWithSameOrigin",
+                        "action",
+                        "channel"
+                    ]
+                }
+            },
+            "installed": {
+                "type": "array",
+                "maxItems": 256,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "repositoryId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "publisherId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "collectionId": {
+                            "type": "string",
+                            "maxLength": 193
+                        },
+                        "version": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "digest": {
+                            "type": "string",
+                            "maxLength": 71
+                        },
+                        "configurable": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": ["publisherId", "collectionId", "version", "digest", "configurable"]
+                }
+            }
+        },
+        "required": ["revision", "repositories", "releases", "installed"]
+    },
+    "errors": [
+        {
+            "code": "CATALOGUE_TOO_LARGE",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "GET",
+            "path": "/list-available-collections",
+            "input": {
+                "query": {
+                    "channel": "channel"
+                }
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "CATALOGUE_TOO_LARGE": 422,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "installations_list_available_collections",
+                "description": "List releases from the configured Repositories, their browser-risk digests and whether they can be installed or upgraded."
+            }
+        }
+    ],
+    "docs": ["overview.md"]
+}

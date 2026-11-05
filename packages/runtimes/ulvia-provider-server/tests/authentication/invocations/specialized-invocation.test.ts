@@ -48,7 +48,11 @@ test("inherited calls cross the HTTP token broker with parent pins and concrete 
                     requests.push(request.url.href);
                     expect(
                         verifyProviderInvocationToken(request.headers.authorization!.slice(7), secret),
-                    ).toMatchObject({ contractId: "catalog", contractVersion: "1.0.0", capabilityId: "item.list" });
+                    ).toMatchObject({
+                        contractId: "ulvia/catalog",
+                        contractVersion: "1.0.0",
+                        capabilityId: "item.list",
+                    });
                     return Response.json({ items: ["one"] });
                 },
             }),
@@ -57,7 +61,7 @@ test("inherited calls cross the HTTP token broker with parent pins and concrete 
     const invoke = () =>
         gateway.invoke({
             siteId: "site-a",
-            contractId: "catalog",
+            contractId: "ulvia/catalog",
             capabilityId: "item.list",
             input: {},
             actor: { kind: "provider", installationId: "source", credentialFingerprint: "f".repeat(64) },
@@ -65,7 +69,7 @@ test("inherited calls cross the HTTP token broker with parent pins and concrete 
     expect(await invoke()).toMatchObject({ kind: "success", output: { items: ["one"] } });
     expect(issued).toEqual([
         expect.objectContaining({
-            contractId: "catalog",
+            contractId: "ulvia/catalog",
             contractVersion: "1.0.0",
             connectionId: "install-a",
             sourceInstallationId: "source",
@@ -74,14 +78,14 @@ test("inherited calls cross the HTTP token broker with parent pins and concrete 
     expect(provenance).toHaveLength(2);
     for (const target of provenance) {
         expect(target).toMatchObject({
-            contractId: "catalog",
+            contractId: "ulvia/catalog",
             version: "1.0.0",
             capabilityId: "item.list",
             targetInstallationId: "install-a",
             sourceCredentialFingerprint: "f".repeat(64),
         });
     }
-    grants.denied.push({ contractId: "catalog.sql", capabilityId: "item.list" });
+    grants.denied.push({ contractId: "ulvia/catalog.sql", capabilityId: "item.list" });
     await expect(invoke()).rejects.toMatchObject({ code: "transport_failure" });
     expect(requests).toHaveLength(1);
     grants.denied.length = 0;
@@ -89,7 +93,7 @@ test("inherited calls cross the HTTP token broker with parent pins and concrete 
         issuer({
             requestId: crypto.randomUUID(),
             installationId: "install-a",
-            contractId: "catalog",
+            contractId: "ulvia/catalog",
             contractVersion: "2.0.0",
             capabilityId: "item.list",
         }),

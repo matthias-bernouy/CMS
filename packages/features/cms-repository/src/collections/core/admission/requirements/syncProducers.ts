@@ -1,3 +1,4 @@
+import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
 import { parseSyncTarget } from "@bernouy/cms-content/bindings";
 import { resolveSyncProducerSchemas } from "@bernouy/cms-content/page-document";
 import type { BindingQueryCapability, BindingValueSchema } from "@bernouy/cms-content/page-document";
@@ -12,7 +13,12 @@ export function validateSynchronizedProducerSchemas(
     capabilities: readonly BindingQueryCapability[],
     path: string,
 ): void {
-    const states = new Map((release.states ?? []).map((state) => [`${release.collectionId}-${state.id}`, state]));
+    const states = new Map(
+        (release.states ?? []).map((state) => [
+            `${resourceRuntimeNamespace(release.collectionId)}--${state.id}`,
+            state,
+        ]),
+    );
     for (const element of Array.from(document.querySelectorAll("[cms-sync]"))) {
         if (!element.hasAttribute("cms-query") && element.localName !== "form") {
             continue;

@@ -8,7 +8,7 @@ export const example = {
     description: "page.overview.name",
     previews: [{ id: "desktop", frame: { width: 800, height: 600 } }],
     document: {
-        html: '<div cms-bloc="atlas-panel"></div>',
+        html: '<div cms-bloc="atlas-dofficial--atlas--panel"></div>',
     },
 } as const;
 

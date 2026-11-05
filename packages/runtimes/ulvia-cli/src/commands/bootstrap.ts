@@ -1,3 +1,4 @@
+import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
 import { parseContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { dirname } from "node:path";
 import { readFile } from "node:fs/promises";
@@ -51,7 +52,7 @@ export async function bootstrapOfficialRepository(
                 ),
                 { contracts: catalogue },
             );
-            if (entry.release !== `collections/${collection.release.collectionId}/release.json`) {
+            if (entry.release !== `collections/${resourceName(collection.release.collectionId)}/release.json`) {
                 throw new Error("Official collection index differs from its admitted identity");
             }
             await collections.store(collection);
@@ -75,7 +76,7 @@ function parseBootstrapIndex(value: unknown): BootstrapIndex {
             (path) => typeof path !== "string" || !/^contracts\/(?:cms\/)?[a-z0-9.-]+\/definition\.json$/u.test(path),
         ) ||
         new Set(contracts).size !== contracts.length ||
-        index.provider !== "providers/ulvia.official/definition.json" ||
+        index.provider !== "providers/primary-provider/definition.json" ||
         !isCollectionIndex(index.collections)
     ) {
         throw new Error("Official bootstrap index is invalid");

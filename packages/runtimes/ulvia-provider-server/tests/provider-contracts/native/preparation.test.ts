@@ -13,7 +13,7 @@ test("mutable authority is read after asynchronous immutable contract preparatio
     await entered.promise;
     expect(f.model.reads).toHaveLength(0);
     const state = structuredClone(f.model.state);
-    state.selections!.grants.denied.push({ contractId: "ulvia.cms.installations", capabilityId: "item.list" });
+    state.selections!.grants.denied.push({ contractId: "ulvia/cms.installations", capabilityId: "item.list" });
     f.model.state = state;
     release.resolve();
     expect(await pending).toBe(false);

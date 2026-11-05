@@ -1,0 +1,28 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--auth-shell",
+    "label": "bloc.auth-shell.label",
+    "description": "bloc.auth-shell.description",
+    "catalogue": "listed",
+    "uses": ["ulvia--mossa--cover", "ulvia--mossa--center"],
+    "requires": [],
+    "slots": {
+        "default": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--cover"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["main"]
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["login"],
+    "defaultExample": "login",
+    "order": 520
+}

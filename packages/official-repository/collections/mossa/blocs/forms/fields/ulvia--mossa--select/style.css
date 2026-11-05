@@ -1,0 +1,164 @@
+:scope {
+    --ulvia--mossa--select-height: var(
+        --ulvia--mossa--select-form-control-height,
+        var(--ulvia--mossa--control-height-md, 2.875rem)
+    );
+    --ulvia--mossa--select-font-size: var(
+        --ulvia--mossa--select-form-control-font-size,
+        var(--ulvia--mossa--font-size-md, 1rem)
+    );
+    --ulvia--mossa--select-padding-inline: var(
+        --ulvia--mossa--select-form-control-padding-inline,
+        var(--ulvia--mossa--spacing-md, 1rem)
+    );
+    position: relative;
+    display: block;
+    min-width: 0;
+    min-inline-size: var(--ulvia--mossa--select-min-inline-size, 7rem);
+    color: var(--ulvia--mossa--text-primary);
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+}
+[part~="control"] {
+    position: relative;
+    display: block;
+}
+select {
+    width: 100%;
+    min-width: 0;
+    min-height: var(--ulvia--mossa--select-height);
+    box-sizing: border-box;
+    padding: var(--ulvia--mossa--spacing-xs, 0.5rem) var(--ulvia--mossa--select-padding-inline);
+    border: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-default);
+    border-radius: var(--ulvia--mossa--select-form-radius, var(--ulvia--mossa--radius-md, 0.5rem));
+    color: inherit;
+    background: var(--ulvia--mossa--background-surface);
+    font: inherit;
+    font-size: var(--ulvia--mossa--select-font-size);
+}
+:scope[data-ready] select {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+[part~="trigger"] {
+    display: grid;
+    width: 100%;
+    height: var(--ulvia--mossa--select-height);
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    box-sizing: border-box;
+    padding-inline: var(--ulvia--mossa--select-padding-inline) var(--ulvia--mossa--spacing-sm, 0.75rem);
+    border: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-default);
+    border-radius: var(--ulvia--mossa--select-form-radius, var(--ulvia--mossa--radius-md, 0.5rem));
+    gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    color: inherit;
+    background: var(--ulvia--mossa--background-surface);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ulvia--mossa--shadow-color) 5%, transparent);
+    font: inherit;
+    font-size: var(--ulvia--mossa--select-font-size);
+    font-weight: var(--ulvia--mossa--font-weight-medium, 500);
+    text-align: start;
+    cursor: pointer;
+}
+[part~="value"] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+[part~="indicator"] {
+    width: 1.125rem;
+    height: 1.125rem;
+    color: var(--ulvia--mossa--text-muted);
+    background: currentColor;
+    transition: transform var(--ulvia--mossa--duration-fast, 120ms);
+    -webkit-mask: url("{{ cms.asset.ulvia/mossa.icons/controls/chevron-down.svg }}") center / contain no-repeat;
+    mask: url("{{ cms.asset.ulvia/mossa.icons/controls/chevron-down.svg }}") center / contain no-repeat;
+}
+:scope[data-open] [part~="indicator"] {
+    transform: rotate(180deg);
+}
+[part~="trigger"]:hover:not(:disabled) {
+    border-color: var(--ulvia--mossa--border-strong);
+}
+[part~="trigger"]:focus-visible {
+    border-color: var(--ulvia--mossa--primary);
+    outline: 3px solid color-mix(in srgb, var(--ulvia--mossa--focus-ring) 28%, transparent);
+    outline-offset: 1px;
+    box-shadow: 0 0 0 1px var(--ulvia--mossa--primary);
+}
+[part~="popover"] {
+    position: absolute;
+    z-index: 30;
+    inset-block-start: calc(100% + var(--ulvia--mossa--spacing-xs, 0.5rem));
+    inset-inline: 0;
+    box-sizing: border-box;
+    padding: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    border: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-default);
+    border-radius: var(--ulvia--mossa--radius-lg, 0.75rem);
+    background: var(--ulvia--mossa--background-raised);
+    box-shadow: var(--ulvia--mossa--shadow-lg);
+}
+[part~="popover"][hidden] {
+    display: none;
+}
+[part~="listbox"] {
+    display: grid;
+    max-height: 18rem;
+    gap: var(--ulvia--mossa--spacing-3xs, 0.25rem);
+    overflow-y: auto;
+}
+[part~="option"] {
+    display: flex;
+    width: 100%;
+    min-height: var(--ulvia--mossa--select-height);
+    align-items: center;
+    box-sizing: border-box;
+    padding-inline: var(--ulvia--mossa--select-padding-inline);
+    border: 0;
+    border-radius: var(--ulvia--mossa--radius-md, 0.5rem);
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    font-size: var(--ulvia--mossa--select-font-size);
+    text-align: start;
+    cursor: pointer;
+}
+[part~="option"]:hover,
+[part~="option"][data-active] {
+    color: var(--ulvia--mossa--on-primary-subtle);
+    background: var(--ulvia--mossa--primary-subtle);
+}
+[part~="option"][aria-selected="true"]::after {
+    width: 1rem;
+    height: 1rem;
+    margin-inline-start: auto;
+    content: "";
+    color: var(--ulvia--mossa--primary);
+    background: currentColor;
+    -webkit-mask: url("{{ cms.asset.ulvia/mossa.icons/feedback/check.svg }}") center / contain no-repeat;
+    mask: url("{{ cms.asset.ulvia/mossa.icons/feedback/check.svg }}") center / contain no-repeat;
+}
+[part~="option"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+:scope[data-invalid] [part~="trigger"] {
+    border-color: var(--ulvia--mossa--danger-border);
+}
+:scope[data-disabled] [part~="trigger"] {
+    color: var(--ulvia--mossa--text-disabled);
+    background: var(--ulvia--mossa--background-subtle);
+    cursor: not-allowed;
+}
+:scope[size="sm"] {
+    --ulvia--mossa--select-height: var(--ulvia--mossa--control-height-sm, 2.25rem);
+    --ulvia--mossa--select-font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+    --ulvia--mossa--select-padding-inline: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}
+:scope[size="lg"] {
+    --ulvia--mossa--select-height: var(--ulvia--mossa--control-height-lg, 3.25rem);
+    --ulvia--mossa--select-font-size: var(--ulvia--mossa--font-size-lg, 1.125rem);
+    --ulvia--mossa--select-padding-inline: var(--ulvia--mossa--spacing-lg, 1.5rem);
+}

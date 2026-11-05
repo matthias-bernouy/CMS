@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { mount as mountToggle } from "../../../packages/official-repository/collections/ulvia-official/blocs/forms/choices/ulvia-official-toggle/bloc";
-import { mount as mountSelect } from "../../../packages/official-repository/collections/ulvia-official/blocs/forms/fields/ulvia-official-select/bloc";
+import { mount as mountToggle } from "../../../packages/official-repository/collections/mossa/blocs/forms/choices/ulvia--mossa--toggle/bloc";
+import { mount as mountSelect } from "../../../packages/official-repository/collections/mossa/blocs/forms/fields/ulvia--mossa--select/bloc";
 
 describe("progressive official controls", () => {
     test("enhances a select created from its minimal native contract", () => {
         const root = document.createElement("div");
-        root.setAttribute("cms-bloc", "ulvia-official-select");
+        root.setAttribute("cms-bloc", "ulvia--mossa--select");
         root.innerHTML = '<select aria-label="Viewport"><option value="desktop">Desktop</option></select>';
         document.body.append(root);
 
@@ -23,7 +23,7 @@ describe("progressive official controls", () => {
 
     test("enhances a toggle created from its minimal native contract", () => {
         const root = document.createElement("div");
-        root.setAttribute("cms-bloc", "ulvia-official-toggle");
+        root.setAttribute("cms-bloc", "ulvia--mossa--toggle");
         root.innerHTML = '<input type="checkbox" role="switch">';
         document.body.append(root);
 

@@ -7,7 +7,7 @@ const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
     contractVersion: "1.0.0",
     siteId: "default",
-    providerId: "ulvia.official",
+    providerId: "ulvia/primary-provider",
 };
 
 test("content site reads retry until settings and revision belong to one snapshot", async () => {
@@ -25,7 +25,7 @@ test("content site reads retry until settings and revision belong to one snapsho
         } as never,
     } as never);
 
-    const output = await dispatcher.invoke("ulvia.cms.content", "site.get", {}, context);
+    const output = await dispatcher.invoke("ulvia/cms.content", "site.get", {}, context);
     expect(output).toMatchObject({ name: "Current", revision: 2 });
 });
 
@@ -54,7 +54,7 @@ test("settings commands return the revision committed by their own compare-and-s
     registerContentCapabilities(dispatcher, core);
 
     const site = await dispatcher.invoke(
-        "ulvia.cms.content",
+        "ulvia/cms.content",
         "site.update",
         { expectedRevision: 4, name: "Renamed" },
         context,
@@ -62,7 +62,7 @@ test("settings commands return the revision committed by their own compare-and-s
     expect(site).toMatchObject({ revision: 5, name: "Renamed" });
 
     const languages = await dispatcher.invoke(
-        "ulvia.cms.content",
+        "ulvia/cms.content",
         "localization.update",
         { expectedRevision: 5, language: "fr", additionalLanguages: ["en"], activeLanguages: ["fr", "en"] },
         context,
@@ -84,13 +84,13 @@ test("localization settings use the collection locale before a fresh site select
                 revision: 1,
                 collections: [
                     {
-                        collectionId: "example",
+                        collectionId: "example.publisher/example",
                         textOverrides: {},
                         release: {
                             kind: "collection",
                             protocol: "ulvia-collection/v1",
                             schemaDialect: "ulvia-schema/v1",
-                            collectionId: "example",
+                            collectionId: "example.publisher/example",
                             publisherId: "example.publisher",
                             version: "1.0.0",
                             name: "collection.name",
@@ -106,7 +106,7 @@ test("localization settings use the collection locale before a fresh site select
         },
     } as never);
 
-    const output = await dispatcher.invoke("ulvia.cms.content", "localization.get", {}, context);
+    const output = await dispatcher.invoke("ulvia/cms.content", "localization.get", {}, context);
     expect(output.language).toBe("en");
 });
 
@@ -117,10 +117,10 @@ test("localization reads and saves canonical text-first multilingual overrides",
         greeting: { en: "Hello site", fr: "Bonjour site" },
     };
     const installation = () => ({
-        collectionId: "example",
+        collectionId: "example.publisher/example",
         textOverrides,
         release: {
-            collectionId: "example",
+            collectionId: "example.publisher/example",
             locale: "en",
             texts: [
                 {
@@ -162,9 +162,9 @@ test("localization reads and saves canonical text-first multilingual overrides",
     } as never);
 
     const initial = await dispatcher.invoke(
-        "ulvia.cms.content",
+        "ulvia/cms.content",
         "localization.texts.get",
-        { collectionId: "example", locale: "fr" },
+        { collectionId: "example.publisher/example", locale: "fr" },
         context,
     );
     expect(initial).toMatchObject({
@@ -175,10 +175,10 @@ test("localization reads and saves canonical text-first multilingual overrides",
     });
 
     const saved = await dispatcher.invoke(
-        "ulvia.cms.content",
+        "ulvia/cms.content",
         "localization.text.save",
         {
-            collectionId: "example",
+            collectionId: "example.publisher/example",
             expectedRevision: 4,
             locale: "fr",
             textId: "greeting",
@@ -188,7 +188,7 @@ test("localization reads and saves canonical text-first multilingual overrides",
     );
     expect(saved).toEqual({
         revision: 5,
-        collectionId: "example",
+        collectionId: "example.publisher/example",
         textId: "greeting",
         locale: "fr",
         overridden: true,
@@ -196,9 +196,9 @@ test("localization reads and saves canonical text-first multilingual overrides",
     expect(textOverrides).toEqual({ greeting: { en: "Hello site", fr: "Salut" } });
 
     await dispatcher.invoke(
-        "ulvia.cms.content",
+        "ulvia/cms.content",
         "localization.text.save",
-        { collectionId: "example", expectedRevision: 5, locale: "fr", textId: "greeting", value: "" },
+        { collectionId: "example.publisher/example", expectedRevision: 5, locale: "fr", textId: "greeting", value: "" },
         context,
     );
     expect(textOverrides).toEqual({ greeting: { en: "Hello site" } });
@@ -223,10 +223,10 @@ test("theme reads compose the authoritative token catalogues from installed coll
                 revision: 5,
                 collections: [
                     {
-                        collectionId: "example",
+                        collectionId: "example.publisher/example",
                         textOverrides: {},
                         release: {
-                            collectionId: "example",
+                            collectionId: "example.publisher/example",
                             publisherId: "example.publisher",
                             version: "1.0.0",
                             locale: "fr",
@@ -263,16 +263,21 @@ test("theme reads compose the authoritative token catalogues from installed coll
         },
     } as never);
 
-    const output = await dispatcher.invoke("ulvia.cms.content", "theme.get", { collectionId: "example" }, context);
+    const output = await dispatcher.invoke(
+        "ulvia/cms.content",
+        "theme.get",
+        { collectionId: "example.publisher/example" },
+        context,
+    );
     expect(output).toMatchObject({
         revision: 3,
-        collectionId: "example",
+        collectionId: "example.publisher/example",
         sourceFound: true,
         sourceLabel: "Thème exemple",
         profileId: "default",
         mode: "light",
         token: {
-            id: "example-primary",
+            id: "example-dpublisher--example--primary",
             label: "Primaire",
             categoryLabel: "Couleurs",
             value: "#3b5ccc",
@@ -281,17 +286,17 @@ test("theme reads compose the authoritative token catalogues from installed coll
     });
 
     const saved = await dispatcher.invoke(
-        "ulvia.cms.content",
+        "ulvia/cms.content",
         "theme.token.save",
         {
             expectedRevision: 3,
             themeId: "default",
             mode: "light",
-            tokenId: "example-primary",
+            tokenId: "example-dpublisher--example--primary",
             value: "#123456",
         },
         context,
     );
     expect(saved).toMatchObject({ value: "#123456", overridden: true });
-    expect(system.theme.themes[0]!.values.light["example-primary"]).toBe("#123456");
+    expect(system.theme.themes[0]!.values.light["example-dpublisher--example--primary"]).toBe("#123456");
 });

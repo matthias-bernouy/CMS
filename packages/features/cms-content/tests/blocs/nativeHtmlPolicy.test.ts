@@ -146,7 +146,7 @@ describe("platform native HTML policy", () => {
             {
                 kind: "bloc",
                 tag: "img",
-                attributes: { src: "/.cms/call/ulvia.cms.files/files/photo/generation" },
+                attributes: { src: "/.cms/call/ulvia/cms.files/files/photo/generation" },
                 children: [],
             },
             "alternative text",
@@ -156,7 +156,7 @@ describe("platform native HTML policy", () => {
                 kind: "bloc",
                 tag: "img",
                 attributes: {
-                    src: "https://attacker.example/.cms/call/ulvia.cms.files/files/photo/generation",
+                    src: "https://attacker.example/.cms/call/ulvia/cms.files/files/photo/generation",
                     alt: "Photo",
                 },
                 children: [],
@@ -167,7 +167,7 @@ describe("platform native HTML policy", () => {
             {
                 kind: "bloc",
                 tag: "img",
-                attributes: { src: "/.cms/call/ulvia.cms.files/files/photo/generation", alt: "Photo", loading: "auto" },
+                attributes: { src: "/.cms/call/ulvia/cms.files/files/photo/generation", alt: "Photo", loading: "auto" },
                 children: [],
             },
             "loading",
@@ -195,7 +195,7 @@ describe("platform native HTML policy", () => {
             {
                 kind: "bloc",
                 tag: "img",
-                attributes: { src: "/.cms/call/ulvia.cms.files/files/photo/generation", alt: "Photo" },
+                attributes: { src: "/.cms/call/ulvia/cms.files/files/photo/generation", alt: "Photo" },
                 children: [{ kind: "text", value: "forged child" }],
             },
             "cannot contain children",
@@ -273,7 +273,7 @@ describe("platform native HTML policy", () => {
                             kind: "bloc",
                             tag: "img",
                             attributes: {
-                                src: "/.cms/call/ulvia.cms.files/files/photo/generation",
+                                src: "/.cms/call/ulvia/cms.files/files/photo/generation",
                                 alt: "Product photo",
                                 loading: "lazy",
                                 fetchpriority: "auto",
@@ -286,7 +286,7 @@ describe("platform native HTML policy", () => {
                             kind: "bloc",
                             tag: "img",
                             attributes: {
-                                src: "/.cms/call/ulvia.cms.files/files/texture/generation",
+                                src: "/.cms/call/ulvia/cms.files/files/texture/generation",
                                 role: "presentation",
                                 "aria-hidden": "true",
                                 alt: "",
@@ -326,13 +326,13 @@ describe("platform native HTML policy", () => {
                         {
                             kind: "bloc",
                             tag: "a",
-                            attributes: { href: "{{ cms.asset.atlas.guide.pdf }}" },
+                            attributes: { href: "{{ cms.asset.atlas.official/atlas.guide.pdf }}" },
                             children: [{ kind: "text", value: "Guide" }],
                         },
                         {
                             kind: "bloc",
                             tag: "img",
-                            attributes: { src: "{{ cms.asset.atlas.logo.svg }}", alt: "Atlas" },
+                            attributes: { src: "{{ cms.asset.atlas.official/atlas.logo.svg }}", alt: "Atlas" },
                             children: [],
                         },
                     ],
@@ -341,9 +341,9 @@ describe("platform native HTML policy", () => {
         ).not.toThrow();
 
         for (const src of [
-            "prefix {{ cms.asset.atlas.logo.svg }}",
-            "{{ cms.asset.atlas.logo.svg }}?variant=unsafe",
-            "{{ cms.i18n.atlas.logo }}",
+            "prefix {{ cms.asset.atlas.official/atlas.logo.svg }}",
+            "{{ cms.asset.atlas.official/atlas.logo.svg }}?variant=unsafe",
+            "{{ cms.i18n.atlas.official/atlas.logo }}",
         ]) {
             expect(() =>
                 validateSiteBlocSnapshot(

@@ -44,7 +44,7 @@ async function fixture() {
         create,
         input,
         changeReport: () => {
-            currentReport = { ...currentReport, instanceId: "other-instance" };
+            currentReport = { ...currentReport, instanceId: "example--other--instance" };
         },
         setAvailability: (status: "ready" | "unavailable") => {
             currentReport = {
@@ -62,7 +62,7 @@ test("an encrypted-port draft survives workflow restart and cannot be consumed b
     const f = await fixture();
     const preview = await f.create().preview(f.input, "admin-a");
     expect(preview.requests).toContainEqual({
-        contractId: "payment",
+        contractId: "ulvia/payment",
         capabilityId: "create-link",
         versionRange: "^1.0.0",
         optional: false,

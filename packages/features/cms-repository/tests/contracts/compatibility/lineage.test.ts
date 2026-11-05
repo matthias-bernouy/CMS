@@ -15,9 +15,9 @@ describe("contract specialization", () => {
     test("parses one exact parent reference", () => {
         const release = parseContractRelease(
             contractDocument({
-                contractId: "communication.email.smtp",
+                contractId: "ulvia/communication.email.smtp",
                 extends: {
-                    contractId: "communication.email",
+                    contractId: "ulvia/communication.email",
                     version: "1.0.0",
                     digest: digest("a"),
                 },
@@ -25,14 +25,14 @@ describe("contract specialization", () => {
         );
 
         expect(release.extends).toEqual({
-            contractId: "communication.email",
+            contractId: "ulvia/communication.email",
             version: "1.0.0",
             digest: digest("a"),
         });
         expect(() =>
             parseContractRelease(
                 contractDocument({
-                    extends: { contractId: "communication.email", version: "1.0.0", digest: digest("a") },
+                    extends: { contractId: "ulvia/communication.email", version: "1.0.0", digest: digest("a") },
                 }),
             ),
         ).toThrow("cannot extend itself");
@@ -48,7 +48,7 @@ describe("contract specialization", () => {
         });
         const child = await admitContractRelease(
             contractDocument({
-                contractId: "communication.email.smtp",
+                contractId: "ulvia/communication.email.smtp",
                 name: "SMTP Email",
                 version: "1.0.0",
                 extends: parentReference(parent),
@@ -61,14 +61,16 @@ describe("contract specialization", () => {
         const lineage = await resolveContractLineage(catalogue, child.release);
 
         expect(published.map(({ release }) => release.contractId)).toEqual([
-            "communication.email",
-            "communication.email.smtp",
+            "ulvia/communication.email",
+            "ulvia/communication.email.smtp",
         ]);
         expect(lineage.map(({ contractId }) => contractId)).toEqual([
-            "communication.email.smtp",
-            "communication.email",
+            "ulvia/communication.email.smtp",
+            "ulvia/communication.email",
         ]);
-        expect(await findImplementedContract(catalogue, child.release, "communication.email")).toEqual(parent.release);
+        expect(await findImplementedContract(catalogue, child.release, "ulvia/communication.email")).toEqual(
+            parent.release,
+        );
         expect(effectiveLineageCapabilities(lineage).map(({ id }) => id)).toEqual([
             "email.message.send",
             "email.smtp.configure",
@@ -82,7 +84,7 @@ describe("contract specialization", () => {
         const specialized = (capabilities: readonly Record<string, unknown>[], digestValue = parent.digest) =>
             admitContractRelease(
                 contractDocument({
-                    contractId: "communication.email.smtp",
+                    contractId: "ulvia/communication.email.smtp",
                     version: "1.0.0",
                     extends: { ...parentReference(parent), digest: digestValue },
                     capabilities,
@@ -100,9 +102,9 @@ describe("contract specialization", () => {
     test("treats changing the exact parent as a major evolution", () => {
         const previous = parseContractRelease(
             contractDocument({
-                contractId: "communication.email.smtp",
+                contractId: "ulvia/communication.email.smtp",
                 version: "1.0.0",
-                extends: { contractId: "communication.email", version: "1.0.0", digest: digest("a") },
+                extends: { contractId: "ulvia/communication.email", version: "1.0.0", digest: digest("a") },
             }),
         );
         const next = parseContractRelease({
@@ -135,7 +137,7 @@ test("resolved contracts preserve canonical artifacts and the owner of inherited
     const parent = await admitContractRelease(contractDocument({ version: "1.0.0" }));
     const child = await admitContractRelease(
         contractDocument({
-            contractId: "communication.email.smtp",
+            contractId: "ulvia/communication.email.smtp",
             version: "1.0.0",
             extends: parentReference(parent),
             capabilities: [capabilityDocument({ id: "smtp.configure" })],

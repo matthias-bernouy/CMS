@@ -1,6 +1,6 @@
 import type { ReleaseDigest } from "cms-repository/exports/contracts/index";
 import type { ProviderManifestDigest } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
-import { parseIdentifier } from "cms-repository/providers/manifests/core/parsing/identifiers";
+import { parseResourceIdentifier } from "cms-repository/providers/manifests/core/parsing/identifiers";
 import {
     compareOrdinal,
     expectArray,
@@ -46,7 +46,7 @@ export function parseProviderRuntimeReport(
         );
         return {
             protocol: "ulvia-provider/v1",
-            providerId: parseIdentifier(record.providerId, "$.providerId", 96),
+            providerId: parseResourceIdentifier(record.providerId, "$.providerId"),
             instanceId: parseOpaqueId(record.instanceId, "$.instanceId"),
             account: {
                 id: parseOpaqueId(account.id, "$.account.id"),
@@ -84,7 +84,7 @@ function parseImplementation(value: unknown, path: string): ProviderRuntimeImple
         );
     }
     return {
-        contractId: parseIdentifier(record.contractId, `${path}.contractId`, 96),
+        contractId: parseResourceIdentifier(record.contractId, `${path}.contractId`),
         version: parseSemVer(record.version, `${path}.version`),
         digest: parseDigest(record.digest, `${path}.digest`) as ReleaseDigest,
         status,

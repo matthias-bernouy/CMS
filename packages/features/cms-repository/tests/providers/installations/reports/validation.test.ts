@@ -27,7 +27,7 @@ describe("provider runtime report validation", () => {
     test("checks provider and optional expected account identity independently", async () => {
         const { admission, report } = await admittedReport();
         expect(() =>
-            validateProviderRuntimeReport({ ...report, providerId: "other" }, admission, { endpoint }),
+            validateProviderRuntimeReport({ ...report, providerId: "example/other" }, admission, { endpoint }),
         ).toThrow("must match the approved provider");
         expect(() =>
             validateProviderRuntimeReport(report, admission, { endpoint, accountId: "another-account" }),
@@ -72,10 +72,10 @@ describe("provider runtime report validation", () => {
         const { admission, report } = await admittedReport();
         const entry = report.implementations[0]!;
         for (const implementation of [
-            { ...entry, contractId: "shipping" },
+            { ...entry, contractId: "ulvia/shipping" },
             { ...entry, version: "1.0.1" },
             { ...entry, digest },
-            { ...entry, contractId: "shipping", status: "unavailable" },
+            { ...entry, contractId: "ulvia/shipping", status: "unavailable" },
         ]) {
             expect(() =>
                 validateProviderRuntimeReport({ ...report, implementations: [implementation] }, admission, {

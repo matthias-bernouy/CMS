@@ -66,7 +66,7 @@ describe("validateBloc — source patterns", () => {
     test("rejects window.customElements registration with flexible spacing", () => {
         const r = validateBloc({
             tag: "my-bloc",
-            viewSource: `window . customElements . define ("other-tag", X);`,
+            viewSource: `window . customElements . define ("example--other--tag", X);`,
         });
         expect(r.errors).toContainEqual(expect.stringContaining("mount(root)"));
     });
@@ -162,11 +162,11 @@ describe("validateBloc — Location mutations (#6)", () => {
 describe("validateBloc — CSS variable writes", () => {
     test("accepts owned variables and variables owned by declared dependencies", () => {
         const result = validateBloc({
-            tag: "atlas-tabs",
-            uses: ["atlas-tab"],
+            tag: "atlas-dofficial--atlas--tabs",
+            uses: ["atlas-dofficial--atlas--tab"],
             viewSource: `export function mount(root) {
-                root.style.setProperty("--atlas-tabs-offset", "1px");
-                root.style.setProperty("--atlas-tab-offset", "2px");
+                root.style.setProperty("--atlas-dofficial--atlas--tabs-offset", "1px");
+                root.style.setProperty("--atlas-dofficial--atlas--tab-offset", "2px");
             }`,
         });
         expect(result.errors).toHaveLength(0);
@@ -174,7 +174,7 @@ describe("validateBloc — CSS variable writes", () => {
 
     test("rejects arbitrary, foreign and dynamically named variables", () => {
         const result = validateBloc({
-            tag: "atlas-tabs",
+            tag: "atlas-dofficial--atlas--tabs",
             viewSource: `export function mount(root, name) {
                 root.style.setProperty("--random-color", "red");
                 root.style.setProperty(name, "red");
@@ -183,7 +183,7 @@ describe("validateBloc — CSS variable writes", () => {
         expect(result.errors).toEqual(
             expect.arrayContaining([
                 expect.stringContaining("static lowercase literal name"),
-                expect.stringContaining("must belong to Bloc atlas-tabs"),
+                expect.stringContaining("must belong to Bloc atlas-dofficial--atlas--tabs"),
             ]),
         );
     });

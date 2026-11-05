@@ -52,7 +52,7 @@ export async function fixture() {
             dispatcher,
             authenticate: async (request) => {
                 const claims = verifyProviderInvocationToken(request.headers.get("authorization")!.slice(7), secret);
-                return claims ? { claims, siteId: "site-a", providerId: "independent" } : null;
+                return claims ? { claims, siteId: "site-a", providerId: "ulvia/independent" } : null;
             },
         });
     };

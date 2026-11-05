@@ -9,7 +9,7 @@ describe("CompiledTemplate — boundaries", () => {
         const { host, region } = mount(
             `
             <div>
-                <div cms-query="catalog:item as item" data-id="{{ id }}">
+                <div cms-query="ulvia/catalog:item as item" data-id="{{ id }}">
                     <span>{{ id }}</span>
                 </div>
             </div>
@@ -18,12 +18,12 @@ describe("CompiledTemplate — boundaries", () => {
         );
         const source = host.querySelector("[cms-query]")!;
 
-        expect(source.getAttribute("cms-query")).toBe("catalog:item as item");
+        expect(source.getAttribute("cms-query")).toBe("ulvia/catalog:item as item");
         expect(source.getAttribute("data-id")).toBe("7");
         expect(text(source.querySelector("span"))).toBe("{{ id }}");
 
         region.update({ value: { id: 8 } });
-        expect(source.getAttribute("cms-query")).toBe("catalog:item as item");
+        expect(source.getAttribute("cms-query")).toBe("ulvia/catalog:item as item");
         expect(source.getAttribute("data-id")).toBe("8");
         expect(text(source.querySelector("span"))).toBe("{{ id }}");
     });
@@ -31,7 +31,7 @@ describe("CompiledTemplate — boundaries", () => {
     test("descends into mutations for parent data while keeping mutation result bindings inert", () => {
         const { host, region } = mount(
             `
-            <form cms-mutation="test.settings:save as result" data-id="{{ id }}" cms-mutation-redirect="/saved?id={{ result.data.id }}">
+            <form cms-mutation="ulvia/test.settings:save as result" data-id="{{ id }}" cms-mutation-redirect="/saved?id={{ result.data.id }}">
                 <input name="site.name" value="{{ site.name }}">
                 <select name="site.notFound">
                     <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
@@ -100,11 +100,11 @@ describe("CompiledTemplate — boundaries", () => {
 
     test("boolean attributes respect nested mutation and result ownership", () => {
         const { host, region } = mount(
-            `<form cms-mutation="test.settings:save as result">
+            `<form cms-mutation="ulvia/test.settings:save as result">
                 <input required="{{ required }}">
                 <button disabled="{{ result.activity === 'submitting' }}">Save</button>
             </form>
-            <section cms-query="catalog:nested as nested" hidden="{{ hidden }}">
+            <section cms-query="ulvia/catalog:nested as nested" hidden="{{ hidden }}">
                 <input required="{{ required }}">
             </section>`,
             { required: true, hidden: true, result: { pending: false } },

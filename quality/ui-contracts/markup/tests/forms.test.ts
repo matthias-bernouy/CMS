@@ -6,15 +6,20 @@ const inspect = (content: string) => inspectMarkup({ path, content, kind: "html"
 
 describe("declarative mutation form contracts", () => {
     test("reserves mutations for native forms", () => {
-        expect(inspect('<form cms-mutation="catalog:save as saved"></form>')).toEqual([]);
-        expect(inspect('<div cms-mutation="catalog:save as saved"></div>')[0]).toMatchObject({
+        expect(inspect('<form cms-mutation="example/catalog:save as saved"></form>')).toEqual([]);
+        expect(inspect('<div cms-mutation="example/catalog:save as saved"></div>')[0]).toMatchObject({
             severity: "ERROR",
             rule: "mutation-form-owner",
         });
     });
 
     test("requires one logical target and an explicit alias", () => {
-        for (const mutation of ["", "/.cms/call/catalog/save", "catalog:save", "catalog:save as bad-name"]) {
+        for (const mutation of [
+            "",
+            "/.cms/call/ulvia/catalog/save",
+            "example/catalog:save",
+            "example/catalog:save as bad-name",
+        ]) {
             expect(inspect(`<form cms-mutation="${mutation}"></form>`)[0]).toMatchObject({
                 severity: "ERROR",
                 rule: "mutation-contract",
@@ -24,7 +29,9 @@ describe("declarative mutation form contracts", () => {
 
     test("checks typed mutation input descriptors", () => {
         const input = (value: unknown) =>
-            inspect(`<form cms-mutation="catalog:save as saved" cms-mutation-input='${JSON.stringify(value)}'></form>`);
+            inspect(
+                `<form cms-mutation="example/catalog:save as saved" cms-mutation-input='${JSON.stringify(value)}'></form>`,
+            );
         expect(
             input({
                 id: { from: "state", key: "@param:site-id" },

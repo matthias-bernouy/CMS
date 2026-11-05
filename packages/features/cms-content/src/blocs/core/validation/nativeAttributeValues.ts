@@ -376,14 +376,14 @@ export function isCmsMediaSource(value: string): boolean {
         value.startsWith("/") &&
         !value.startsWith("//") &&
         !/[\u0000-\u0020\u007F]/.test(value) &&
-        /\/\.cms\/call\/ulvia\.cms\.files\/files\/[^/?#]+\/[^/?#]+(?:\/representations\/(?:thumbnail|responsive)\/\d+\.webp)?(?:[?#].*)?$/.test(
+        /\/\.cms\/call\/ulvia\/cms\.files\/files\/[^/?#]+\/[^/?#]+(?:\/representations\/(?:thumbnail|responsive)\/\d+\.webp)?(?:[?#].*)?$/.test(
             value,
         )
     );
 }
 
 export function isContributedAssetSource(value: string): boolean {
-    return /^\{\{\s*cms\.asset\.[a-z][a-z0-9-]{0,95}\.[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*\s*\}\}$/u.test(
+    return /^\{\{\s*cms\.asset\.[a-z][a-z0-9.-]{0,95}\/[a-z][a-z0-9-]{0,95}\.[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*\s*\}\}$/u.test(
         value,
     );
 }

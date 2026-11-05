@@ -24,11 +24,14 @@ test("HTTP aliases resolve and dispatch the exact binding selected by the incomi
         }),
     });
     for (const path of ["/v1/items", "/v2/items"]) {
-        const response = await handleGatewayHttpCall(new Request(`https://cms.test/.cms/call/catalog${path}?term=x`), {
-            ...context,
-            invoker: gateway,
-            prefix: "/.cms/call",
-        });
+        const response = await handleGatewayHttpCall(
+            new Request(`https://cms.test/.cms/call/ulvia/catalog${path}?term=x`),
+            {
+                ...context,
+                invoker: gateway,
+                prefix: "/.cms/call",
+            },
+        );
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ items: ["found"] });
     }
@@ -64,7 +67,7 @@ test("logical HTTP entry points cannot expose an MCP-only capability", async () 
             resolveActor: async () => context.actor,
             resolveCapability: async () => ({ access: "public", effect: "query", outputType: "object" }),
         });
-        const response = await handler(new Request("https://cms.test/.cms/query/catalog/item.list"));
+        const response = await handler(new Request("https://cms.test/.cms/query/ulvia/catalog/item.list"));
         expect(response.status).toBe(bindings.length === 1 ? 404 : 200);
         expect(f.sent).toHaveLength(bindings.length === 1 ? 0 : 1);
     }
@@ -97,7 +100,7 @@ test("logical HTTP execution requires a contract resolver and never dispatches w
             },
         } as never,
     });
-    const response = await handler(new Request("https://cms.test/.cms/query/catalog/item.list"));
+    const response = await handler(new Request("https://cms.test/.cms/query/ulvia/catalog/item.list"));
     expect(response.status).toBe(503);
     expect(calls).toBe(0);
 });

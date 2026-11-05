@@ -1,0 +1,42 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--stack",
+    "label": "bloc.stack.label",
+    "description": "bloc.stack.description",
+    "order": 30,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "items": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["div", "header", "section", "article", "fieldset", "form", "svg"]
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["input"],
+                    "attributes": {
+                        "type": {
+                            "required": true,
+                            "values": ["hidden"]
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["div", "form"]
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["stack-default"],
+    "defaultExample": "stack-default"
+}

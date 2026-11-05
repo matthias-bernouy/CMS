@@ -1,9 +1,9 @@
+import { isResourceId } from "@bernouy/resource-identity";
 export const CMS_SVG_ATTRIBUTE = "cms-svg";
 
 import { parseCollectionAssetReference } from "cms-content/blocs/core/markup/security/collectionAssetExpression";
 
 const CONTROL_OR_SPACE = /[\u0000-\u0020\u007f]/u;
-const CONTRACT_ID = /^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/u;
 
 export type SvgCapabilityTarget = Readonly<{ contractId: string; bindingPath: string }>;
 
@@ -32,7 +32,7 @@ export function svgReferenceIssue(value: string): string | null {
             return "cms-svg must reference one immutable collection asset or canonical same-site capability URL";
         }
         const routeSegments = pathname.slice(markerIndex + marker.length).split("/");
-        if (routeSegments.length < 2 || routeSegments.some((segment) => segment.length === 0)) {
+        if (routeSegments.length < 3 || routeSegments.some((segment) => segment.length === 0)) {
             return "cms-svg capability URL must identify one contract and binding path";
         }
         const decoded = routeSegments.map(decodeURIComponent);
@@ -49,7 +49,7 @@ export function svgReferenceIssue(value: string): string | null {
         ) {
             return "cms-svg URL must not contain ambiguous path segments";
         }
-        if (decoded[0]!.length > 128 || !CONTRACT_ID.test(decoded[0]!)) {
+        if (!isResourceId(`${decoded[0]}/${decoded[1]}`)) {
             return "cms-svg capability URL contains an invalid contract identifier";
         }
     } catch {
@@ -65,7 +65,7 @@ export function parseSvgCapabilityReference(value: string): SvgCapabilityTarget 
     }
     const pathname = new URL(value, "https://cms.invalid").pathname;
     const suffix = pathname.slice(pathname.indexOf("/.cms/call/") + "/.cms/call/".length);
-    const separator = suffix.indexOf("/");
+    const separator = suffix.indexOf("/", suffix.indexOf("/") + 1);
     return {
         contractId: suffix.slice(0, separator),
         bindingPath: suffix.slice(separator),

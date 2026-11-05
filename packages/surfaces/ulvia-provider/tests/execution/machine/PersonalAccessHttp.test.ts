@@ -10,7 +10,7 @@ import { createProviderContractRelay } from "../../../src/transport/relay";
 import { resolvedContract } from "../messages/fixtures";
 
 test("the admitted Access HTTP bindings expose self-service PATs without administrator access", async () => {
-    const contract = await resolvedContract("ulvia.cms.access");
+    const contract = await resolvedContract("ulvia/cms.access");
     const pats = new InMemoryPatRepository();
     const users = new InMemoryUsersRepository();
     await users.upsert({ sub: "member-a" });
@@ -26,7 +26,7 @@ test("the admitted Access HTTP bindings expose self-service PATs without adminis
     const relay = createProviderContractRelay(
         compileProviderRoutes([contract]),
         dispatcher,
-        { siteId: "default", providerId: "ulvia.official" },
+        { siteId: "default", providerId: "ulvia/primary-provider" },
         NOOP_LOGGER,
     );
     const invoke = async (id: string, method: string, path: string, input?: unknown, alias = "alias-a") => {

@@ -8,7 +8,7 @@ import {
     compareOrdinal,
 } from "../protocol/values";
 import { parseVersionRange } from "../versioning/versionRange";
-import { parseIdentifier } from "./identifiers";
+import { parseIdentifier, parseResourceIdentifier } from "./identifiers";
 
 export function parseRequirements(value: unknown, path: string, maximum: number): ProviderCapabilityRequirement[] {
     const requirements = expectArray(value, path, maximum).map((value, index) => {
@@ -16,7 +16,7 @@ export function parseRequirements(value: unknown, path: string, maximum: number)
         const record = expectRecord(value, at);
         rejectUnknownKeys(record, ["contractId", "versionRange", "capabilityId", "optional"], at);
         return {
-            contractId: parseIdentifier(record.contractId, `${at}.contractId`, 96),
+            contractId: parseResourceIdentifier(record.contractId, `${at}.contractId`),
             versionRange: parseVersionRange(record.versionRange, `${at}.versionRange`),
             capabilityId: parseIdentifier(record.capabilityId, `${at}.capabilityId`, 128),
             optional: expectBoolean(record.optional, `${at}.optional`),

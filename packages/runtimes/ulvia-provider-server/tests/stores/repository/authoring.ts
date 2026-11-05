@@ -1,3 +1,4 @@
+import { resourceRuntimeNamespace } from "@bernouy/cms-repository/contracts/protocol";
 import { join } from "node:path";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -8,6 +9,8 @@ import { repositoryApplication } from "../../../../../../tests/fixtures/reposito
 import { RepositoryPublisher } from "../../../src/runtime/stores/repository/RepositoryPublisher";
 
 export function sourceSnapshot(version = "1.0.0", publisherId = "community") {
+    const identity = `${publisherId}/sample`;
+    const runtime = resourceRuntimeNamespace(identity);
     return JSON.stringify({
         files: [
             {
@@ -17,7 +20,7 @@ export function sourceSnapshot(version = "1.0.0", publisherId = "community") {
                     protocol: "ulvia-collection/v1",
                     schemaDialect: "ulvia-schema/v1",
                     publisherId,
-                    collectionId: "sample",
+                    collectionId: identity,
                     version,
                     name: "collection.name",
                     locale: "en",
@@ -28,7 +31,7 @@ export function sourceSnapshot(version = "1.0.0", publisherId = "community") {
                 content: JSON.stringify({ "collection.name": "Sample collection", "bloc.label": "Panel" }),
             },
             {
-                path: "blocs/sample-panel/definition.json",
+                path: `blocs/${runtime}--panel/definition.json`,
                 content: JSON.stringify({
                     description: "bloc.label",
                     categories: ["bloc.label"],
@@ -36,7 +39,7 @@ export function sourceSnapshot(version = "1.0.0", publisherId = "community") {
                     defaultExample: "panel",
 
                     kind: "component",
-                    id: "sample-panel",
+                    id: `${runtime}--panel`,
                     label: "bloc.label",
                     root: { accepts: ["div"] },
                     slots: { body: { accepts: [{ kind: "native-content", profile: "prose" }] } },
@@ -55,10 +58,10 @@ export function sourceSnapshot(version = "1.0.0", publisherId = "community") {
             },
             {
                 path: "examples/panel/document.html",
-                content: '<div cms-bloc="sample-panel"><p slot="body">Example</p></div>',
+                content: `<div cms-bloc="${runtime}--panel"><p slot="body">Example</p></div>`,
             },
-            { path: "blocs/sample-panel/markup.html", content: '<section><slot name="body"></slot></section>' },
-            { path: "blocs/sample-panel/style.css", content: ":scope { display: block; }" },
+            { path: `blocs/${runtime}--panel/markup.html`, content: '<section><slot name="body"></slot></section>' },
+            { path: `blocs/${runtime}--panel/style.css`, content: ":scope { display: block; }" },
         ],
     });
 }

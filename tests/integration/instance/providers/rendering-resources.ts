@@ -33,11 +33,11 @@ export async function exerciseRenderingResources(providerName: string, stackId: 
                 collectionId: "scoped", publisherId: "example", version: "1.0.0", name: "name", locale: "en",
                 translations: { en: { name: "Scoped", label: "Card" } }, assets: [],
                 texts: [{ id: "title", label: "label", group: "label", category: "label", values: { en: "Initial" } }],
-                blocs: [{ kind: "component", id: "scoped-card", root: { accepts: ["div"] }, label: "label", description: "label",
+                blocs: [{ kind: "component", id: "example--scoped--card", root: { accepts: ["div"] }, label: "label", description: "label",
                     categories: ["label"], markup: "<article></article>", uses: [], requires: [], slots: {} }],
             }));
             await collections.install("site", artifact.digest, 0);
-            await local.insertPage("/", "Home", '<div cms-bloc="scoped-card"></div>');
+            await local.insertPage("/", "Home", '<div cms-bloc="example--scoped--card"></div>');
             const page = await local.getPage("/");
             await local.updatePage({ id: page.id, visible: true }, page.revision);
             const repository = new ValidatingContentRepository(withInstalledCollections(local, collections, "site"));
@@ -62,7 +62,7 @@ export async function exerciseRenderingResources(providerName: string, stackId: 
             assert.equal(changed.contentTexts[0].resolve("en").title, "Changed");
             assert.notEqual(changed.artifactRevision, first.artifactRevision);
             await collections.uninstall("site", "scoped", 2);
-            assert.equal((await reader.getPageRenderInputs("/")).renderableBlocs.some(bloc => bloc.id === "scoped-card"), false);
+            assert.equal((await reader.getPageRenderInputs("/")).renderableBlocs.some(bloc => bloc.id === "example--scoped--card"), false);
             const current = await local.getPage("/");
             await local.updatePage({ id: current.id, visible: false }, current.revision);
             assert.deepEqual((await reader.getPageRenderInputs("/")).route, { kind: "unavailable" });

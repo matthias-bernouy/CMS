@@ -17,7 +17,7 @@ async function fixture() {
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
-        collectionId: "demo",
+        collectionId: "example/demo",
         publisherId: "example",
         version: "1.0.0",
         name: "name",
@@ -26,7 +26,7 @@ async function fixture() {
         assets: [],
         blocs: [
             {
-                id: "demo-container",
+                id: "example--demo--container",
                 kind: "component",
                 examples: ["welcome"],
                 defaultExample: "welcome",
@@ -62,7 +62,7 @@ async function fixture() {
                 label: "name",
                 description: "description",
                 document: {
-                    html: '<main cms-bloc="demo-container"><h1>{{ cms.i18n.demo.copy }}</h1><p>{{ cms.i18n.demo.label }}</p></main>',
+                    html: '<main cms-bloc="example--demo--container"><h1>{{ cms.i18n.example/demo.copy }}</h1><p>{{ cms.i18n.example/demo.label }}</p></main>',
                 },
                 previews: [{ id: "desktop", frame: { width: 800, height: 600 } }],
             },
@@ -78,7 +78,7 @@ async function fixture() {
         ["insertPage", "updatePage"],
     );
     const dependencies = { repo, collections };
-    const example = { collectionId: "demo", exampleId: "welcome" };
+    const example = { collectionId: "example/demo", exampleId: "welcome" };
     return { ...dependencies, dependencies, inner, example, contentWrites };
 }
 
@@ -87,11 +87,13 @@ test("examples have a bounded catalogue and install no Pages or routes", async (
     expect(await repo.getAllPages()).toEqual([]);
     expect(await createContentReader(repo).getRenderablePages()).toEqual([]);
     expect(await inner.getPageRoute("/welcome")).toBeNull();
-    expect(await listExamples(dependencies, { collectionId: "demo", locale: "fr", limit: 1 })).toMatchObject({
+    expect(await listExamples(dependencies, { collectionId: "example/demo", locale: "fr", limit: 1 })).toMatchObject({
         total: 1,
         items: [{ id: "welcome", label: "Demo" }],
     });
-    await expect(listExamples(dependencies, { collectionId: "demo", locale: "en", limit: 101 })).rejects.toThrow();
+    await expect(
+        listExamples(dependencies, { collectionId: "example/demo", locale: "en", limit: 101 }),
+    ).rejects.toThrow();
 });
 
 test("Pages accept empty or arbitrary valid HTML independently of examples", async () => {
@@ -100,7 +102,7 @@ test("Pages accept empty or arbitrary valid HTML independently of examples", asy
     const page = await createCmsPage(repo, {
         path: "/custom",
         title: "Custom",
-        content: '<main cms-bloc="demo-container"><p>Authored HTML</p></main>',
+        content: '<main cms-bloc="example--demo--container"><p>Authored HTML</p></main>',
     });
     expect(page.content).toContain("Authored HTML");
 });
@@ -110,14 +112,14 @@ test("an editor can reuse example HTML through ordinary Page writes without prov
     const source = await getExample(dependencies, example);
     const first = await createCmsPage(repo, { path: "/first", title: "My title", content: source.document.html });
     const second = await createCmsPage(repo, { path: "/second", title: "Other title", content: source.document.html });
-    expect(first.content).toContain("{{ cms.i18n.demo.copy }}");
+    expect(first.content).toContain("{{ cms.i18n.example/demo.copy }}");
     expect(source).not.toHaveProperty("locale");
-    expect(first.content).toContain("{{ cms.i18n.demo.label }}");
+    expect(first.content).toContain("{{ cms.i18n.example/demo.label }}");
     expect(Object.hasOwn((await repo.getPageById(first.id))!, "origin")).toBe(false);
     await updateCmsPage(repo, {
         id: first.id,
         expectedRevision: first.revision,
-        content: '<main cms-bloc="demo-container"><p>Edited</p></main>',
+        content: '<main cms-bloc="example--demo--container"><p>Edited</p></main>',
     });
     expect((await repo.getPageById(second.id))?.content).toBe(second.content);
     const document = await getExample(dependencies, example);
@@ -127,7 +129,7 @@ test("an editor can reuse example HTML through ordinary Page writes without prov
         content: document.document.html,
     });
     expect(updated).toMatchObject({ id: first.id, path: "/first", title: "My title", visible: false });
-    expect(updated.content).toContain("{{ cms.i18n.demo.copy }}");
+    expect(updated.content).toContain("{{ cms.i18n.example/demo.copy }}");
     await expect(
         updateCmsPage(repo, { id: first.id, expectedRevision: first.revision, content: document.document.html }),
     ).rejects.toThrow();
@@ -136,12 +138,14 @@ test("an editor can reuse example HTML through ordinary Page writes without prov
 test("example reads reject missing sources; catalogue locale validation and ordinary write fencing remain", async () => {
     const { dependencies, repo, example, contentWrites } = await fixture();
     for (const source of [
-        { ...example, collectionId: "missing" },
+        { ...example, collectionId: "ulvia/missing" },
         { ...example, exampleId: "missing" },
     ]) {
         await expect(getExample(dependencies, source)).rejects.toThrow();
     }
-    await expect(listExamples(dependencies, { collectionId: "demo", locale: "not_a_locale" })).rejects.toThrow();
+    await expect(
+        listExamples(dependencies, { collectionId: "example/demo", locale: "not_a_locale" }),
+    ).rejects.toThrow();
     const source = await getExample(dependencies, example);
     await contentWrites.claimMaintenance("default", "upgrade");
     await expect(

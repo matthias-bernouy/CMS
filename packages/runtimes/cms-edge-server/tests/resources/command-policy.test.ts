@@ -15,9 +15,9 @@ test("every official command has a deliberate cache classification; logs and aut
         count++;
     }
     expect(count).toBeGreaterThan(50);
-    expect(commandCacheEffect("ulvia.cms.observability", "logs.append")).toBe("neutral");
-    expect(commandCacheEffect("ulvia.cms.access", "login-password")).toBe("neutral");
-    expect(commandCacheEffect("ulvia.cms.files", "files.make-private")).toBe("purge");
-    expect(commandCacheEffect("ulvia.cms.content", "pages.publish")).toBe("purge");
-    expect(commandCacheEffect("ulvia.cms.content", "future-command")).toBeNull();
+    expect(commandCacheEffect("ulvia/cms.observability", "logs.append")).toBe("neutral");
+    expect(commandCacheEffect("ulvia/cms.access", "login-password")).toBe("neutral");
+    expect(commandCacheEffect("ulvia/cms.files", "files.make-private")).toBe("purge");
+    expect(commandCacheEffect("ulvia/cms.content", "pages.publish")).toBe("purge");
+    expect(commandCacheEffect("ulvia/cms.content", "future-command")).toBeNull();
 });

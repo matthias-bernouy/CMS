@@ -19,12 +19,12 @@ test("maintenance permits authenticated recovery transports while ordinary write
     });
     const guard = createCollectionMaintenanceGuard({ siteId: "site", upgrades: storage, basePath: "/cms" });
     for (const [path, status] of [
-        ["/.cms/query/ulvia.cms.installations/get-operation", 200],
-        ["/.cms/mutation/ulvia.cms.installations/resume-contract-upgrade", 200],
-        ["/.cms/mutation/ulvia.cms.installations/resume-collection-upgrade", 200],
-        ["/.cms/call/ulvia.cms.installations/get-site-upgrade-status", 200],
+        ["/.cms/query/ulvia/cms.installations/get-operation", 200],
+        ["/.cms/mutation/ulvia/cms.installations/resume-contract-upgrade", 200],
+        ["/.cms/mutation/ulvia/cms.installations/resume-collection-upgrade", 200],
+        ["/.cms/call/ulvia/cms.installations/get-site-upgrade-status", 200],
         ["/.cms/mcp", 200],
-        ["/.cms/mutation/ulvia.cms.content/page.update", 423],
+        ["/.cms/mutation/ulvia/cms.content/page.update", 423],
         ["/article", 503],
     ] as const) {
         const response = await guard(new Request(`http://cms.test/cms${path}`), async () => new Response("next"));

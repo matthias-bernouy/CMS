@@ -14,7 +14,7 @@ async function fixture() {
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
         publisherId: "example.official",
-        collectionId: "example",
+        collectionId: "example.official/example",
         version: "1.0.0",
         name: "name",
         locale: "en",
@@ -34,7 +34,7 @@ async function fixture() {
                 {
                     repositoryId: "official",
                     publisherId: "example.official",
-                    collectionId: "example",
+                    collectionId: "example.official/example",
                     version: "1.0.0",
                     digest: artifact.digest,
                     name: "Example",
@@ -60,7 +60,7 @@ async function fixture() {
     const target = {
         repositoryId: "official",
         publisherId: "example.official",
-        collectionId: "example",
+        collectionId: "example.official/example",
         version: "1.0.0",
         digest: artifact.digest,
         approvedBrowserRiskDigest: risk,

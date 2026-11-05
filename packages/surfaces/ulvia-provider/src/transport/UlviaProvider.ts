@@ -108,7 +108,7 @@ function controlInvocationClaims(request: Request, lease: UlviaProviderInstanceL
     const capabilityId = request.headers.get("x-ulvia-capability-id");
     const requestId = request.headers.get("x-ulvia-request-id");
     if (
-        contractId !== "ulvia.cms.installations" ||
+        contractId !== "ulvia/cms.installations" ||
         !contractVersion ||
         !capabilityId ||
         !requestId ||

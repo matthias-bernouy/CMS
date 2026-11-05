@@ -66,7 +66,7 @@ test("the generic SDK calls canonical CMS bindings and forwards only signed mach
             }),
         ]);
         expect(received[0]).not.toHaveProperty("subjectId");
-        const forged = await fetch(new URL("/.cms/call/catalog/v1/items", cms.url), {
+        const forged = await fetch(new URL("/.cms/call/ulvia/catalog/v1/items", cms.url), {
             headers: { "x-ulvia-source-installation-id": "source-a" },
         });
         expect(forged.status).toBe(403);
@@ -160,7 +160,7 @@ test("a pre-dispatch quota rejection remains retryable instead of becoming an un
         authenticateProvider: async () => "source-a",
     });
     const response = await handler(
-        new Request("http://cms/.cms/call/catalog/v1/items", {
+        new Request("http://cms/.cms/call/ulvia/catalog/v1/items", {
             method: "POST",
             headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
             body: "{}",

@@ -1,3 +1,4 @@
+import { isResourceId } from "@bernouy/resource-identity";
 import { isTraceContext, type TraceContext } from "@bernouy/logging";
 import type { DelegationContext } from "cms-gateway/access/delegation/interfaces";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
@@ -194,7 +195,7 @@ function assertClaims(value: Readonly<Record<string, unknown>>): asserts value i
         typeof value.instanceId !== "string" ||
         !IDENTIFIER.test(value.instanceId) ||
         typeof value.contractId !== "string" ||
-        !IDENTIFIER.test(value.contractId) ||
+        !isResourceId(value.contractId) ||
         typeof value.contractVersion !== "string" ||
         !isCanonicalSemVer(value.contractVersion) ||
         typeof value.capabilityId !== "string" ||

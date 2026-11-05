@@ -1,8 +1,9 @@
+import { isResourceId, resourceName, resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
 import { invalid } from "./errors";
 import { string } from "./values";
 
 const COLLECTION_NAMESPACE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
-const BLOC_ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/u;
+const BLOC_ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:--[a-z][a-z0-9]*(?:-[a-z0-9]+)*--[a-z][a-z0-9]*(?:-[a-z0-9]+)*)?$/u;
 const LOCAL_THEME_TOKEN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const RESERVED_COLLECTION_ROOTS = ["be5", "cms", "p9r", "site", "w13c"] as const;
 const RESERVED_BLOC_IDS = new Set([
@@ -17,13 +18,21 @@ const RESERVED_BLOC_IDS = new Set([
 ]);
 
 export function collectionBlocTagIssue(value: unknown): string | null {
-    if (typeof value !== "string" || value.length === 0 || value.length > 96 || !BLOC_ID.test(value)) {
+    if (
+        typeof value !== "string" ||
+        value.length === 0 ||
+        value.length > 512 ||
+        !value.includes("-") ||
+        !BLOC_ID.test(value)
+    ) {
         return "must be a valid lowercase namespaced Bloc identifier";
     }
     if (RESERVED_BLOC_IDS.has(value)) {
         return "uses a platform-reserved Bloc identifier";
     }
-    const reserved = RESERVED_COLLECTION_ROOTS.find((root) => value === root || value.startsWith(`${root}-`));
+    const reserved = value.includes("--")
+        ? undefined
+        : RESERVED_COLLECTION_ROOTS.find((root) => value === root || value.startsWith(`${root}-`));
     return reserved ? `must not use the reserved ${reserved}- namespace` : null;
 }
 
@@ -33,41 +42,37 @@ export function isCollectionBlocTag(value: unknown): value is string {
 
 export function isCollectionNamespace(value: unknown): value is string {
     return (
-        typeof value === "string" &&
-        value.length > 0 &&
-        value.length <= 96 &&
-        COLLECTION_NAMESPACE.test(value) &&
-        !RESERVED_COLLECTION_ROOTS.some((root) => value === root || value.startsWith(`${root}-`))
+        isResourceId(value) &&
+        COLLECTION_NAMESPACE.test(resourceName(value)) &&
+        !RESERVED_COLLECTION_ROOTS.some(
+            (root) => resourceName(value) === root || resourceName(value).startsWith(`${root}-`),
+        )
     );
 }
 
 export function parseCollectionNamespace(value: unknown, path: string): string {
-    const namespace = string(value, 96, path);
-    if (!COLLECTION_NAMESPACE.test(namespace)) {
-        invalid("must be a lowercase kebab-case namespace", path);
+    if (!isCollectionNamespace(value)) {
+        invalid("must be a namespace/name collection identity with a nonreserved kebab-case name", path);
     }
-    const reserved = RESERVED_COLLECTION_ROOTS.find((root) => namespace === root || namespace.startsWith(`${root}-`));
-    if (reserved) {
-        invalid(`must not use the reserved ${reserved}- namespace`, path);
-    }
-    return namespace;
+    return value;
 }
 
 export function parseCollectionBlocTag(value: unknown, collectionId: string, path: string): string {
-    const tag = string(value, 96, path);
+    const tag = string(value, 512, path);
     const issue = collectionBlocTagIssue(tag);
     if (issue) {
         invalid(issue, path);
     }
-    if (!tag.startsWith(`${collectionId}-`) || tag.length === collectionId.length + 1) {
-        invalid(`must use the ${collectionId}- collection namespace`, path);
+    const prefix = resourceRuntimeNamespace(collectionId);
+    if (!tag.startsWith(`${prefix}--`) || tag.length === prefix.length + 2) {
+        invalid(`must use the ${prefix}-- collection namespace`, path);
     }
     return tag;
 }
 
 export function collectionThemeSourceId(collectionId: string): string {
     assertCollectionNamespace(collectionId);
-    return `contribution-${collectionId}`;
+    return `contribution-${resourceRuntimeNamespace(collectionId)}`;
 }
 
 export function collectionThemeTokenId(collectionId: string, tokenId: string): string {
@@ -75,7 +80,7 @@ export function collectionThemeTokenId(collectionId: string, tokenId: string): s
     if (!LOCAL_THEME_TOKEN.test(tokenId) || tokenId.length > 96) {
         throw new TypeError(`Invalid local collection theme token: ${tokenId}`);
     }
-    return `${collectionId}-${tokenId}`;
+    return `${resourceRuntimeNamespace(collectionId)}--${tokenId}`;
 }
 
 function assertCollectionNamespace(value: string): void {

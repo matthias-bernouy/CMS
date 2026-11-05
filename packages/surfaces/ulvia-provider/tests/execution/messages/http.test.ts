@@ -22,7 +22,7 @@ function claims(contractId: string, capabilityId: string): ProviderInvocationCla
 }
 
 test("official HTTP errors preserve codes and localized messages, while technical diagnostics stay in logs", async () => {
-    const contract = await resolvedContract("ulvia.cms.content");
+    const contract = await resolvedContract("ulvia/cms.content");
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     let attempts = 0;
     registerContentCapabilities(dispatcher, {
@@ -37,7 +37,7 @@ test("official HTTP errors preserve codes and localized messages, while technica
     const relay = createProviderContractRelay(
         compileProviderRoutes([contract]),
         dispatcher,
-        { siteId: "default", providerId: "ulvia.official" },
+        { siteId: "default", providerId: "ulvia/primary-provider" },
         {
             ...NOOP_LOGGER,
             error: (...args) => {
@@ -46,7 +46,7 @@ test("official HTTP errors preserve codes and localized messages, while technica
         },
     );
     const invoke = (title: string, preference: string | undefined) => {
-        const identity = claims("ulvia.cms.content", "pages.create");
+        const identity = claims("ulvia/cms.content", "pages.create");
         return relay(
             new Request("https://provider.test/pages/create", {
                 method: "POST",
@@ -89,7 +89,7 @@ test("official HTTP errors preserve codes and localized messages, while technica
 });
 
 test("HEAD failures retain error status, code and Content-Language without a body", async () => {
-    const contract = await resolvedContract("ulvia.cms.files");
+    const contract = await resolvedContract("ulvia/cms.files");
     const capability = contract.capabilities.find(
         ({ definition }) =>
             definition.output.type === "binary" &&
@@ -106,7 +106,7 @@ test("HEAD failures retain error status, code and Content-Language without a bod
     const relay = createProviderContractRelay(
         routes,
         dispatcher,
-        { siteId: "default", providerId: "ulvia.official" },
+        { siteId: "default", providerId: "ulvia/primary-provider" },
         NOOP_LOGGER,
     );
     const response = (await relay(

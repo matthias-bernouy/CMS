@@ -3,7 +3,7 @@ import type {
     ProviderManifestApproval,
 } from "cms-repository/providers/installations/interfaces/ProviderInstallation";
 import type { ProviderManifestDigest } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
-import { parseIdentifier, parseDateTime } from "cms-repository/providers/manifests/core/parsing/identifiers";
+import { parseResourceIdentifier, parseDateTime } from "cms-repository/providers/manifests/core/parsing/identifiers";
 import { parseSemVer } from "cms-repository/providers/manifests/core/versioning/versionRange";
 import { expectRecord, expectString, rejectUnknownKeys } from "cms-repository/providers/manifests/core/protocol/values";
 import { ProviderInstallationValidationError } from "../errors";
@@ -69,7 +69,7 @@ export function parseProviderInstallation(
         return {
             id: parseOpaqueId(record.id, "$.id"),
             siteId: parseOpaqueId(record.siteId, "$.siteId"),
-            providerId: parseIdentifier(record.providerId, "$.providerId", 96),
+            providerId: parseResourceIdentifier(record.providerId, "$.providerId"),
             accountId: parseOpaqueId(record.accountId, "$.accountId"),
             endpoint: parseEndpoint(record.endpoint, "$.endpoint"),
             status,

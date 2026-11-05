@@ -5,7 +5,7 @@ export function installationDocument() {
     return {
         id: "installation:SHOP_42",
         siteId: "site:STORE_1",
-        providerId: "ulvia.example",
+        providerId: "ulvia/ulvia.example",
         accountId: "account:SHOP_42.prod",
         endpoint: "https://provider.example.com",
         status: "enabled",
@@ -24,10 +24,10 @@ export function installationDocument() {
 }
 
 export async function admittedInstallation() {
-    const catalogue = await releaseCatalogue(contractDocument("payment", "create-link"));
+    const catalogue = await releaseCatalogue(contractDocument("ulvia/payment", "create-link"));
     const release = (await catalogue.list())[0].admission;
     const admission = await admitProviderManifest(
-        manifestDocument([implementation("payment", "1.0.0", release.digest)], {
+        manifestDocument([implementation("ulvia/payment", "1.0.0", release.digest)], {
             configuration: {
                 type: "object",
                 properties: { locale: { type: "string", enum: ["en", "fr"], maxLength: 2 } },
@@ -46,6 +46,6 @@ export function registrationDocument() {
         protocol: "ulvia-provider/v1",
         installationId: "installation:SHOP_42",
         gatewayUrl: "https://cms.example.com/ulvia/gateway",
-        gatewayToken: "example-bootstrap-token-not-a-real-secret",
+        gatewayToken: "example-dofficial--example--bootstrap-token-not-a-real-secret",
     };
 }

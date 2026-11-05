@@ -20,12 +20,12 @@ export function cachedPage(cmsUrl: string, path: string) {
     };
 }
 export async function publishPage(connection: Connection, path: string, content: string) {
-    const page = await connection.call("ulvia.cms.content", "pages.create", {
+    const page = await connection.call("ulvia/cms.content", "pages.create", {
         path,
         title: "Mutation freshness",
         content,
     });
-    return connection.call("ulvia.cms.content", "pages.publish", {
+    return connection.call("ulvia/cms.content", "pages.publish", {
         id: page.id,
         expectedRevision: page.revision,
         visible: true,
@@ -38,7 +38,7 @@ export async function contractSelectionOperation(
     input: Record<string, unknown>,
 ) {
     const response = await connection.page.request.post(
-        `${cmsUrl}/.cms/mutation/ulvia.cms.installations/apply-contract-upgrade`,
+        `${cmsUrl}/.cms/mutation/ulvia/cms.installations/apply-contract-upgrade`,
         {
             data: input,
             headers: { "x-ulvia-automatic-idempotency-key": crypto.randomUUID() },
@@ -47,7 +47,7 @@ export async function contractSelectionOperation(
     expect(response.status(), await response.text()).toBe(202);
     const handle = await response.json();
     for (let attempt = 0; attempt < 100; attempt++) {
-        const poll = await connection.page.request.fetch(`${cmsUrl}/.cms/query/ulvia.cms.installations/get-operation`, {
+        const poll = await connection.page.request.fetch(`${cmsUrl}/.cms/query/ulvia/cms.installations/get-operation`, {
             method: "QUERY",
             data: { operationId: handle.operationId },
         });

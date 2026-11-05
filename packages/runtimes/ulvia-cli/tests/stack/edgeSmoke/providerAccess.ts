@@ -52,9 +52,9 @@ export async function mutateProviders(page: Page): Promise<void> {
     await page.locator('a[href="#contract-routing"]').click();
     await page.waitForURL(/#contract-routing$/u);
     await page.locator("#contract-routing").waitFor();
-    await page.locator('a[href^="/admin/providers/upgrade?ulvia-official-contract=ulvia.cms.content&"]').click();
+    await page.locator('a[href^="/admin/providers/upgrade?ulvia--mossa--contract=ulvia%2Fcms.content&"]').click();
     const apply = page.locator(
-        'form[cms-mutation="ulvia.cms.installations:apply-contract-upgrade as mutation"] button[type="submit"]',
+        'form[cms-mutation="ulvia/cms.installations:apply-contract-upgrade as mutation"] button[type="submit"]',
     );
     await apply.waitFor();
     await submitSiteUpgrade(page, apply, "apply-contract-upgrade");
@@ -64,7 +64,7 @@ export async function mutateProviders(page: Page): Promise<void> {
     const installation = page.locator("#provider-installations [role=listitem]").first();
     for (const action of ["disable", "revoke"]) {
         const button = installation
-            .locator('form[cms-mutation^="ulvia.cms.installations:set-provider-status "]')
+            .locator('form[cms-mutation^="ulvia/cms.installations:set-provider-status "]')
             .filter({ has: page.locator(`input[name="action"][value="${action}"]`) })
             .locator('button[type="submit"]');
         if (await button.isEnabled()) {
@@ -78,12 +78,12 @@ export async function mutateAccess(page: Page, adminEmail: string): Promise<void
     await page.locator("#access-members").waitFor();
     const administrator = page.locator('#access-members [role="listitem"]').filter({ hasText: adminEmail });
     const removeAdministrator = administrator
-        .locator('form[cms-mutation^="ulvia.cms.access:set-administrator "]')
+        .locator('form[cms-mutation^="ulvia/cms.access:set-administrator "]')
         .filter({ has: page.locator('input[name="enabled"][value="false"]') });
     await expectMutationError(page, removeAdministrator, "set-administrator", ["CANNOT_REMOVE_SELF"]);
     await expectMutationError(
         page,
-        administrator.locator('form[cms-mutation^="ulvia.cms.access:delete-user "]'),
+        administrator.locator('form[cms-mutation^="ulvia/cms.access:delete-user "]'),
         "delete-user",
         ["CANNOT_REMOVE_SELF", "PROTECTED_USER"],
     );
@@ -96,7 +96,7 @@ async function expectMutationError(
     expectedCodes: string[],
 ): Promise<void> {
     const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes(`ulvia.cms.access/${capability}`)),
+        page.waitForResponse((candidate) => candidate.url().includes(`ulvia/cms.access/${capability}`)),
         form.locator('button[type="submit"]').click(),
     ]);
     if (response.ok()) {

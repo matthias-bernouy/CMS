@@ -9,7 +9,7 @@ const input = {
     invocation: {
         requestId: crypto.randomUUID(),
         installationId: "target",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         contractVersion: "1.0.0",
         capabilityId: "read",
         bodyBytes: 17,

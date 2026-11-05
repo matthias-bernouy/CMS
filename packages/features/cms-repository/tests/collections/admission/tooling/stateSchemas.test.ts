@@ -5,7 +5,7 @@ import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/cata
 import { contractDocument } from "../../../providers/support/fixtures";
 
 test("state schema references copy only the output of an exact admitted capability", async () => {
-    const release = await admitContractRelease(contractDocument("schema.example", "read"));
+    const release = await admitContractRelease(contractDocument("ulvia/schema.example", "read"));
     const contracts = new InMemoryReleaseCatalogue();
     await contracts.publish(release);
     const ref = {

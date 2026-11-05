@@ -1,0 +1,29 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--form-status",
+    "label": "bloc.form-status.label",
+    "description": "bloc.form-status.description",
+    "order": 170,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "default": {
+            "accepts": [{ "kind": "native-content", "profile": "phrasing" }]
+        }
+    },
+    "root": {
+        "accepts": ["output"],
+        "attributes": {
+            "aria-live": {
+                "required": true,
+                "values": ["polite", "assertive"]
+            }
+        },
+        "defaults": {
+            "aria-live": "polite"
+        }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["form-status-default"],
+    "defaultExample": "form-status-default"
+}

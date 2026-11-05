@@ -38,7 +38,7 @@ export async function batchFixture() {
                 kind: "contract",
                 protocol: "ulvia-provider/v1",
                 schemaDialect: "ulvia-schema/v1",
-                contractId: id,
+                contractId: `batch/${id}`,
                 version: options.version ?? "1.0.0",
                 publisherId: "batch",
                 name: "Batch contract",

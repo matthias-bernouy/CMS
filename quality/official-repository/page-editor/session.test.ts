@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { PageEditorSession } from "../../../packages/official-repository/collections/ulvia-official/blocs/admin/pages/ulvia-official-page-editor/runtime/controller/session";
+import { PageEditorSession } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/controller/session";
 
 test("ignores stale binding snapshots for the current Page", () => {
     const session = new PageEditorSession();

@@ -78,27 +78,27 @@ describe("binding syntax", () => {
     });
 
     test("requires one logical target and safe name for queries", () => {
-        expect(asQuery({ contractId: "ulvia.cms.content", capabilityId: "pages.list", name: "pages" })).toBe(
-            "ulvia.cms.content:pages.list as pages",
+        expect(asQuery({ contractId: "ulvia/cms.content", capabilityId: "pages.list", name: "pages" })).toBe(
+            "ulvia/cms.content:pages.list as pages",
         );
-        expect(parseQuery(" ulvia.cms.content:pages.list as pages ")).toEqual({
-            contractId: "ulvia.cms.content",
+        expect(parseQuery(" ulvia/cms.content:pages.list as pages ")).toEqual({
+            contractId: "ulvia/cms.content",
             capabilityId: "pages.list",
             name: "pages",
         });
-        expect(asQuery({ sync: { scope: "page", key: "ulvia-official-pages" }, name: "pages" })).toBe(
-            "@page:ulvia-official-pages as pages",
+        expect(asQuery({ sync: { scope: "page", key: "ulvia--mossa--pages" }, name: "pages" })).toBe(
+            "@page:ulvia--mossa--pages as pages",
         );
-        expect(parseQuery(" @session:ulvia-official-user as user ")).toEqual({
-            sync: { scope: "session", key: "ulvia-official-user" },
+        expect(parseQuery(" @session:ulvia--mossa--user as user ")).toEqual({
+            sync: { scope: "session", key: "ulvia--mossa--user" },
             name: "user",
         });
         for (const value of [
-            "ulvia.cms.content:pages.list",
-            "/.cms/call/ulvia.cms.content/pages.list as pages",
-            "ulvia.cms.content:pages.list as cms",
-            "ulvia.cms.content:pages.list as page-list",
-            "ulvia.cms.content:pages.list as $pages",
+            "ulvia/cms.content:pages.list",
+            "/.cms/call/ulvia/cms.content/pages.list as pages",
+            "ulvia/cms.content:pages.list as cms",
+            "ulvia/cms.content:pages.list as page-list",
+            "ulvia/cms.content:pages.list as $pages",
             "@page:Ulvia-pages as pages",
             "@global:ulvia-pages as pages",
         ]) {
@@ -107,19 +107,19 @@ describe("binding syntax", () => {
     });
 
     test("requires one command target and explicit name for mutations", () => {
-        expect(asMutation({ contractId: "ulvia.cms.content", capabilityId: "pages.update", name: "saved" })).toBe(
-            "ulvia.cms.content:pages.update as saved",
+        expect(asMutation({ contractId: "ulvia/cms.content", capabilityId: "pages.update", name: "saved" })).toBe(
+            "ulvia/cms.content:pages.update as saved",
         );
-        expect(parseMutation(" ulvia.cms.content:pages.update as saved ")).toEqual({
-            contractId: "ulvia.cms.content",
+        expect(parseMutation(" ulvia/cms.content:pages.update as saved ")).toEqual({
+            contractId: "ulvia/cms.content",
             capabilityId: "pages.update",
             name: "saved",
         });
         for (const value of [
-            "ulvia.cms.content:pages.update",
-            "/.cms/call/ulvia.cms.content/pages.update as saved",
-            "ulvia.cms.content:pages.update as cms",
-            "@page:ulvia-official-page as saved",
+            "ulvia/cms.content:pages.update",
+            "/.cms/call/ulvia/cms.content/pages.update as saved",
+            "ulvia/cms.content:pages.update as cms",
+            "@page:ulvia--mossa--page as saved",
         ]) {
             expect(parseMutation(value)).toBeNull();
         }
@@ -146,20 +146,20 @@ describe("binding syntax", () => {
 
     test("formats and parses bounded synchronized query imports", () => {
         const imports = [
-            { sync: { scope: "page" as const, key: "ulvia-official-pages" }, name: "pages" },
-            { sync: { scope: "session" as const, key: "ulvia-official-user" }, name: "user" },
+            { sync: { scope: "page" as const, key: "ulvia--mossa--pages" }, name: "pages" },
+            { sync: { scope: "session" as const, key: "ulvia--mossa--user" }, name: "user" },
         ];
-        expect(asQueries(imports)).toBe("@page:ulvia-official-pages as pages @session:ulvia-official-user as user");
-        expect(parseQueries(" @page:ulvia-official-pages as pages  @session:ulvia-official-user as user ")).toEqual(
+        expect(asQueries(imports)).toBe("@page:ulvia--mossa--pages as pages @session:ulvia--mossa--user as user");
+        expect(parseQueries(" @page:ulvia--mossa--pages as pages  @session:ulvia--mossa--user as user ")).toEqual(
             imports,
         );
         for (const value of [
             "",
-            "ulvia.cms.content:pages.list as pages",
-            "@page:ulvia-official-pages pages",
-            "@page:ulvia-official-pages as cms",
-            "@page:ulvia-official-pages as pages @page:ulvia-official-pages as duplicate",
-            "@page:ulvia-official-pages as pages @session:ulvia-official-user as pages",
+            "ulvia/cms.content:pages.list as pages",
+            "@page:ulvia--mossa--pages pages",
+            "@page:ulvia--mossa--pages as cms",
+            "@page:ulvia--mossa--pages as pages @page:ulvia--mossa--pages as duplicate",
+            "@page:ulvia--mossa--pages as pages @session:ulvia--mossa--user as pages",
         ]) {
             expect(parseQueries(value)).toBeNull();
         }
@@ -171,12 +171,12 @@ describe("binding syntax", () => {
     });
 
     test("parses bounded synchronized-state targets", () => {
-        expect(asSyncTarget({ scope: "persistent", key: "ulvia-official-preferences.theme" })).toBe(
-            "@persistent:ulvia-official-preferences.theme",
+        expect(asSyncTarget({ scope: "persistent", key: "ulvia--mossa--preferences.theme" })).toBe(
+            "@persistent:ulvia--mossa--preferences.theme",
         );
-        expect(parseSyncTarget(" @param:ulvia-official-search ")).toEqual({
+        expect(parseSyncTarget(" @param:ulvia--mossa--search ")).toEqual({
             scope: "param",
-            key: "ulvia-official-search",
+            key: "ulvia--mossa--search",
         });
         for (const value of ["page:key", "@page:key/value", "@page:-key", "@memory:key", "@page:KEY"]) {
             expect(parseSyncTarget(value)).toBeNull();
@@ -204,28 +204,28 @@ describe("binding syntax", () => {
     test("formats and parses bounded explicit query listeners", () => {
         expect(
             asQueryListen([
-                { sync: { scope: "param", key: "ulvia-official-search" }, path: [] },
+                { sync: { scope: "param", key: "ulvia--mossa--search" }, path: [] },
                 {
-                    sync: { scope: "page", key: "ulvia-official-revision" },
+                    sync: { scope: "page", key: "ulvia--mossa--revision" },
                     path: ["lastSuccess", "requestId"],
                 },
             ]),
-        ).toBe("@param:ulvia-official-search @page:ulvia-official-revision/lastSuccess/requestId");
+        ).toBe("@param:ulvia--mossa--search @page:ulvia--mossa--revision/lastSuccess/requestId");
         expect(
-            parseQueryListen(" @param:ulvia-official-search @page:ulvia-official-revision/lastSuccess/requestId "),
+            parseQueryListen(" @param:ulvia--mossa--search @page:ulvia--mossa--revision/lastSuccess/requestId "),
         ).toEqual([
-            { sync: { scope: "param", key: "ulvia-official-search" }, path: [] },
+            { sync: { scope: "param", key: "ulvia--mossa--search" }, path: [] },
             {
-                sync: { scope: "page", key: "ulvia-official-revision" },
+                sync: { scope: "page", key: "ulvia--mossa--revision" },
                 path: ["lastSuccess", "requestId"],
             },
         ]);
         expect(parseQueryListen("")).toBeNull();
-        expect(parseQueryListen("@page:ulvia-official-revision @page:ulvia-official-revision")).toBeNull();
-        expect(parseQueryListen("@unknown:ulvia-official-revision")).toBeNull();
-        expect(parseQueryListen("@param:ulvia-official-search/value")).toBeNull();
-        expect(parseQueryListen("@page:ulvia-official-revision/__proto__")).toBeNull();
-        expect(parseQueryListen("@page:ulvia-official-revision/bad~2pointer")).toBeNull();
+        expect(parseQueryListen("@page:ulvia--mossa--revision @page:ulvia--mossa--revision")).toBeNull();
+        expect(parseQueryListen("@unknown:ulvia--mossa--revision")).toBeNull();
+        expect(parseQueryListen("@param:ulvia--mossa--search/value")).toBeNull();
+        expect(parseQueryListen("@page:ulvia--mossa--revision/__proto__")).toBeNull();
+        expect(parseQueryListen("@page:ulvia--mossa--revision/bad~2pointer")).toBeNull();
         expect(
             parseQueryListen(Array.from({ length: 17 }, (_, index) => `@page:site-key-${index}`).join(" ")),
         ).toBeNull();

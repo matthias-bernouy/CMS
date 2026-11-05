@@ -5,17 +5,17 @@ import { contractDocument, implementation, manifestDocument, releaseCatalogue } 
 
 const rule = { contractId: "*", capabilityId: "*", effect: "query", sensitive: false };
 async function fixture() {
-    const catalogue = await releaseCatalogue(contractDocument("example.content", "render"));
-    const release = (await catalogue.get("example.content", "1.0.0"))!.admission;
+    const catalogue = await releaseCatalogue(contractDocument("ulvia/example.content", "render"));
+    const release = (await catalogue.get("ulvia/example.content", "1.0.0"))!.admission;
     const document = (delegation: unknown) =>
-        manifestDocument([{ ...implementation("example.content", "1.0.0", release.digest), delegation }]);
+        manifestDocument([{ ...implementation("ulvia/example.content", "1.0.0", release.digest), delegation }]);
     return { catalogue, document };
 }
 test("delegation sources are validated, target selectors do not create dependencies", async () => {
     const { catalogue, document } = await fixture();
     const policy = {
         sources: ["render"],
-        allow: [{ ...rule, contractId: "unknown.future", capabilityId: "future.read" }],
+        allow: [{ ...rule, contractId: "ulvia/unknown.future", capabilityId: "future.read" }],
     };
     await expect(admitProviderManifest(document(policy), catalogue)).resolves.toBeDefined();
     await expect(admitProviderManifest(document({ ...policy, sources: ["missing"] }), catalogue)).rejects.toThrow(

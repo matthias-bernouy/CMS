@@ -15,14 +15,14 @@ import { NOOP_LOGGER } from "@bernouy/logging";
 
 const path = resolve(
     import.meta.dir,
-    "../../../packages/runtimes/ulvia-cli/dist/bootstrap/contracts/ulvia.repository/definition.json",
+    "../../../packages/runtimes/ulvia-cli/dist/bootstrap/contracts/repository/definition.json",
 );
 const contract = await resolveContract(
     new InMemoryReleaseCatalogue(),
     await admitContractReleaseJson(await Bun.file(path).text()),
 );
 const routes = compileProviderRoutes([contract]);
-const PREFIX = "/.cms/call/ulvia.repository";
+const PREFIX = "/.cms/call/ulvia/repository";
 
 /** Real admitted binding codecs and domain service; the test host supplies verified PAT subjects. */
 export function repositoryFixtureHttp(
@@ -73,7 +73,7 @@ export function repositoryFixtureHttp(
     const relay = createProviderContractRelay(
         routes,
         dispatcher,
-        { siteId: "fixture", providerId: "fixture.repository" },
+        { siteId: "fixture", providerId: "ulvia/fixture.repository" },
         NOOP_LOGGER,
     );
     return async (request: Request): Promise<Response> => {

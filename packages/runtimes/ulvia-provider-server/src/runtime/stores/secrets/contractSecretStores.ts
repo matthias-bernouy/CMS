@@ -25,22 +25,22 @@ const WRITE_PERMISSIONS = ["secrets.metadata.read", "secrets.resolve", "secrets.
 const DEFINITIONS = {
     repository: {
         bootstrapKey: "CMS_SECRET_NAMESPACE_REPOSITORY",
-        name: "ulvia.cms.authoring",
+        name: "ulvia/cms.authoring",
         permissions: WRITE_PERMISSIONS,
     },
     smtpEmailer: {
         bootstrapKey: "CMS_SECRET_NAMESPACE_SMTP_EMAILER",
-        name: "ulvia.cms.emailer.smtp",
+        name: "ulvia/cms.emailer.smtp",
         permissions: WRITE_PERMISSIONS,
     },
     files: {
         bootstrapKey: "CMS_SECRET_NAMESPACE_FILES",
-        name: "ulvia.cms.files",
+        name: "ulvia/cms.files",
         permissions: WRITE_PERMISSIONS,
     },
     installations: {
         bootstrapKey: "CMS_SECRET_NAMESPACE_INSTALLATIONS",
-        name: "ulvia.cms.installations",
+        name: "ulvia/cms.installations",
         permissions: WRITE_PERMISSIONS,
     },
 } as const satisfies Record<keyof ContractSecretStores, NamespaceDefinition>;

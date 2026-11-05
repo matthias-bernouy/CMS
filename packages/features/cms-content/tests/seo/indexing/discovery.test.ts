@@ -35,8 +35,8 @@ describe("discoverPageIndexingLocations", () => {
                 : Response.json({ items: [{ slug: "lamp", updatedAt: "not-a-date" }], nextCursor: null });
         });
         expect(calls).toEqual([
-            ["commerce", "product.list", {}],
-            ["commerce", "product.list", { cursor: "second-page" }],
+            ["ulvia/commerce", "product.list", {}],
+            ["ulvia/commerce", "product.list", { cursor: "second-page" }],
         ]);
         expect(locations).toEqual([
             { location: "/products/detail?site-product=oak+chair", lastModified: "2026-08-22T08:00:00.000Z" },

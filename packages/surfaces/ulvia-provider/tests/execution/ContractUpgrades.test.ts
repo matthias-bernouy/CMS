@@ -8,10 +8,10 @@ const context = {
     siteId: "site:one",
     requestId: "00000000-0000-4000-8000-000000000001",
     contractVersion: "1.0.0",
-    providerId: "ulvia.official",
+    providerId: "ulvia/primary-provider",
 };
 const digest = `sha256:${"a".repeat(64)}`;
-const selection = { installationId: "provider:one", contractId: "catalog", version: "1.0.0", digest };
+const selection = { installationId: "provider:one", contractId: "ulvia/catalog", version: "1.0.0", digest };
 
 test("contract plan projections match their wire schema and retain explicit source and target pins", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
@@ -36,7 +36,7 @@ test("contract plan projections match their wire schema and retain explicit sour
         },
     } as never);
     const result = (await dispatcher.invoke(
-        "ulvia.cms.installations",
+        "ulvia/cms.installations",
         "plan-contract-upgrade",
         { selections: [selection] },
         context,
@@ -46,7 +46,7 @@ test("contract plan projections match their wire schema and retain explicit sour
     expect(result.selections).toEqual([selection]);
     const definition = await Bun.file(
         new URL(
-            "../../../../official-repository/contracts/ulvia.cms.installations/capabilities/queries/plan-contract-upgrade.json",
+            "../../../../official-repository/contracts/cms.installations/capabilities/queries/plan-contract-upgrade.json",
             import.meta.url,
         ),
     ).json();
@@ -64,7 +64,7 @@ test("usage pagination binds cursors to the analysed revision and exposes no Pag
                 unknown: [],
                 references: ["page:one", "page:two"].map((location) => ({
                     type: "capability",
-                    contractId: "catalog",
+                    contractId: "ulvia/catalog",
                     capabilityId: "read",
                     location,
                     scope: "runtime",
@@ -73,7 +73,7 @@ test("usage pagination binds cursors to the analysed revision and exposes no Pag
         },
     } as never);
     const first = (await dispatcher.invoke(
-        "ulvia.cms.installations",
+        "ulvia/cms.installations",
         "list-site-usage",
         { limit: 1 },
         context,
@@ -81,7 +81,7 @@ test("usage pagination binds cursors to the analysed revision and exposes no Pag
     expect(first.total).toBe(2);
     expect(first.references).toHaveLength(1);
     const second = (await dispatcher.invoke(
-        "ulvia.cms.installations",
+        "ulvia/cms.installations",
         "list-site-usage",
         { cursor: first.cursor, limit: 1 },
         context,
@@ -90,13 +90,13 @@ test("usage pagination binds cursors to the analysed revision and exposes no Pag
     expect(second).not.toHaveProperty("cursor");
     const definition = await Bun.file(
         new URL(
-            "../../../../official-repository/contracts/ulvia.cms.installations/capabilities/queries/list-site-usage.json",
+            "../../../../official-repository/contracts/cms.installations/capabilities/queries/list-site-usage.json",
             import.meta.url,
         ),
     ).json();
     validateSchemaValue(parseUlviaSchema(definition.output), first);
     revision = `sha256:${"b".repeat(64)}`;
     await expect(
-        dispatcher.invoke("ulvia.cms.installations", "list-site-usage", { cursor: first.cursor }, context),
+        dispatcher.invoke("ulvia/cms.installations", "list-site-usage", { cursor: first.cursor }, context),
     ).rejects.toMatchObject({ code: "REVISION_CONFLICT" });
 });

@@ -114,7 +114,7 @@ export async function documentationProcesses() {
             const api = repositoryApi(url);
             const admin = await api.session(administrator.email, administrator.password);
             const connected = await api.request(
-                "ulvia.cms.authoring",
+                "ulvia/cms.authoring",
                 "/configure-connection",
                 "POST",
                 { token: account.token },

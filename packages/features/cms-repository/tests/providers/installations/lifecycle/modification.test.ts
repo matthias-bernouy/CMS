@@ -50,7 +50,7 @@ describe("explicit installation modification and administrative intent", () => {
         for (const patch of [
             { accountId: "account:new" },
             { siteId: "site:new" },
-            { providerId: "other.provider" },
+            { providerId: "ulvia/other.provider" },
             { id: "installation:new" },
         ]) {
             await expect(lifecycle.prepareModification(scope, 1, patch as never, report)).rejects.toThrow();

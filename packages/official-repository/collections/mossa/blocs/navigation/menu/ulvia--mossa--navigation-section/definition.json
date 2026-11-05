@@ -1,0 +1,40 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--navigation-section",
+    "label": "bloc.navigation-section.label",
+    "description": "bloc.navigation-section.description",
+    "order": 40,
+    "uses": ["ulvia--mossa--navigation-group", "ulvia--mossa--navigation-item"],
+    "requires": [],
+    "slots": {
+        "label": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        },
+        "items": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--navigation-group"
+                },
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--navigation-item"
+                }
+            ],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.navigation"],
+    "examples": ["navigation-section-default"],
+    "defaultExample": "navigation-section-default"
+}

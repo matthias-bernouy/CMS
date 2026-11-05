@@ -39,7 +39,7 @@ export class CapabilityMcpBinding {
     async call(name: string, args: unknown, context: McpInvocationContext): Promise<McpToolResult> {
         const entry = (await this.entries(context)).find(
             ({ contractId, capability, binding }) =>
-                (binding.tool?.name ?? capabilityToolName(contractId, capability.id, binding.id)) === name,
+                capabilityToolName(contractId, capability.id, binding.id, binding.tool?.name) === name,
         );
         if (!entry) {
             throw new McpProtocolError(-32602, "Unknown capability tool");
@@ -170,9 +170,8 @@ export class CapabilityMcpBinding {
         if (
             entries.length > 1_024 ||
             new Set(
-                entries.map(
-                    ({ contractId, capability, binding }) =>
-                        binding.tool?.name ?? capabilityToolName(contractId, capability.id, binding.id),
+                entries.map(({ contractId, capability, binding }) =>
+                    capabilityToolName(contractId, capability.id, binding.id, binding.tool?.name),
                 ),
             ).size !== entries.length
         ) {
@@ -188,8 +187,8 @@ export class CapabilityMcpBinding {
                     (this.options.publishBinary || capability.output.type !== "binary"),
             )
             .sort((a, b) => {
-                const left = a.binding.tool?.name ?? capabilityToolName(a.contractId, a.capability.id, a.binding.id);
-                const right = b.binding.tool?.name ?? capabilityToolName(b.contractId, b.capability.id, b.binding.id);
+                const left = capabilityToolName(a.contractId, a.capability.id, a.binding.id, a.binding.tool?.name);
+                const right = capabilityToolName(b.contractId, b.capability.id, b.binding.id, b.binding.tool?.name);
                 return left < right ? -1 : left > right ? 1 : 0;
             });
     }

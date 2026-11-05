@@ -20,7 +20,7 @@ export async function verifyPageDetailTabs(page: Page): Promise<void> {
 export async function mutateRoute(page: Page): Promise<void> {
     await page.locator('a[href="#page-routes"]').click();
     await page.waitForURL(/#page-routes$/u);
-    const form = page.locator('form[cms-mutation^="ulvia.cms.content:pages.update-route "]').first();
+    const form = page.locator('form[cms-mutation^="ulvia/cms.content:pages.update-route "]').first();
     await form.waitFor();
     const path = form.locator('input[name="path"]');
     await path.fill(await path.inputValue());
@@ -30,7 +30,7 @@ export async function mutateRoute(page: Page): Promise<void> {
 export async function mutateSeo(page: Page): Promise<void> {
     await page.locator('a[href="#page-search"]').click();
     await page.waitForURL(/#page-search$/u);
-    const form = page.locator('form[cms-mutation^="ulvia.cms.content:pages.update-seo "]').first();
+    const form = page.locator('form[cms-mutation^="ulvia/cms.content:pages.update-seo "]').first();
     await form.waitFor();
     await form.locator('input[name="title"]').fill("Smoke Page SEO");
     await form.locator('textarea[name="description"]').fill("Smoke Page search description.");
@@ -64,7 +64,7 @@ export async function cyclePublicationState(page: Page, edgeOrigin: string, deta
 export async function deleteSmokePage(page: Page, edgeOrigin: string): Promise<void> {
     await page.goto(`${edgeOrigin}/admin/pages`);
     const detailLink = page
-        .locator('#pages-list a[href^="/admin/pages/detail?ulvia-official-page-id="]')
+        .locator('#pages-list a[href^="/admin/pages/detail?ulvia--mossa--page-id="]')
         .filter({ hasText: "Smoke Page" });
     await detailLink.click();
     await page.locator("#page-general").waitFor();
@@ -74,8 +74,8 @@ export async function deleteSmokePage(page: Page, edgeOrigin: string): Promise<v
     const deleteDialog = page.locator("#delete-page-dialog");
     await deleteDialog.waitFor({ state: "visible" });
     const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/pages.delete")),
-        deleteDialog.locator('form[cms-mutation^="ulvia.cms.content:pages.delete "] button[type="submit"]').click(),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia/cms.content/pages.delete")),
+        deleteDialog.locator('form[cms-mutation^="ulvia/cms.content:pages.delete "] button[type="submit"]').click(),
     ]);
     if (!response.ok()) {
         throw new Error(`Page deletion failed (${response.status()}).`);

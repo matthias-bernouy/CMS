@@ -13,7 +13,7 @@ export function setSource(source: Sources, path: string, content: string) {
 export async function validationCollection(connection: Connection) {
     const { call } = connection;
     const namespace = "validation-journey";
-    await call("ulvia.cms.authoring", "claim-namespace", { namespace });
+    await call("ulvia/cms.authoring", "claim-namespace", { namespace });
     const source = JSON.parse(collectionSnapshot(namespace)) as Sources;
     source.files.push(
         {
@@ -27,7 +27,7 @@ export async function validationCollection(connection: Connection) {
     definition.root.accepts = ["div", "main"];
     setSource(source, panelPath, JSON.stringify(definition));
     const markup =
-        '<section><a href="/validation-target#destination">{{ cms.i18n.mcp-kit.link }}</a><slot name="body"></slot></section>';
+        '<section><a href="/validation-target#destination">{{ cms.i18n.ulvia/mcp-kit.link }}</a><slot name="body"></slot></section>';
     setSource(source, "blocs/mcp-kit-panel/markup.html", markup);
     for (const [suffix, html] of [
         ["clone", markup],
@@ -62,7 +62,7 @@ export async function validationCollection(connection: Connection) {
     }
     const invalidSource = structuredClone(source);
     setSource(invalidSource, "blocs/mcp-kit-panel/markup.html", '<main><main><slot name="body"></slot></main></main>');
-    const invalid = await call("ulvia.cms.authoring", "prepare-collection", {
+    const invalid = await call("ulvia/cms.authoring", "prepare-collection", {
         sourceJson: JSON.stringify(invalidSource),
     });
     expect(invalid.valid).toBe(false);
@@ -70,13 +70,13 @@ export async function validationCollection(connection: Connection) {
     expect(invalid.diagnostics).toContainEqual(
         expect.objectContaining({ code: "page.main_nested", severity: "error" }),
     );
-    const prepared = await call("ulvia.cms.authoring", "prepare-collection", { sourceJson: JSON.stringify(source) });
+    const prepared = await call("ulvia/cms.authoring", "prepare-collection", { sourceJson: JSON.stringify(source) });
     expect(prepared.valid).toBe(true);
     expect(prepared.diagnostics).toEqual([]);
-    const duplicate = await call("ulvia.cms.authoring", "prepare-collection", { sourceJson: JSON.stringify(source) });
+    const duplicate = await call("ulvia/cms.authoring", "prepare-collection", { sourceJson: JSON.stringify(source) });
     expect(duplicate.digest).toBe(prepared.digest);
-    await call("ulvia.cms.authoring", "discard-preparation", { preparationId: duplicate.preparationId });
-    await call("ulvia.cms.authoring", "publish-collection", {
+    await call("ulvia/cms.authoring", "discard-preparation", { preparationId: duplicate.preparationId });
+    await call("ulvia/cms.authoring", "publish-collection", {
         preparationId: prepared.preparationId,
         expectedDigest: prepared.digest,
     });
@@ -88,8 +88,8 @@ export async function validationCollection(connection: Connection) {
         digest: prepared.digest,
         approvedBrowserRiskDigest: prepared.approvedBrowserRiskDigest,
     };
-    const before = await call("ulvia.cms.installations", "list-collection-installations");
-    await call("ulvia.cms.installations", "install-collection", {
+    const before = await call("ulvia/cms.installations", "list-collection-installations");
+    await call("ulvia/cms.installations", "install-collection", {
         expectedRevision: before.revision,
         targets: [target],
     });

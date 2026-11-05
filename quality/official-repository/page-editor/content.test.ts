@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { EditablePageDocument } from "../../../packages/official-repository/collections/ulvia-official/blocs/admin/pages/ulvia-official-page-editor/runtime/document";
-import type { EditorCatalogueItem } from "../../../packages/official-repository/collections/ulvia-official/blocs/admin/pages/ulvia-official-page-editor/runtime/model";
+import { EditablePageDocument } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/document";
+import type { EditorCatalogueItem } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/model";
 import { heading } from "./fixtures";
 
 describe("EditablePageDocument content", () => {
@@ -12,26 +12,26 @@ describe("EditablePageDocument content", () => {
         expect(field.value).toBe("Heading");
         page.updateContentField(element, field.address, "Updated");
 
-        expect(page.serialize()).toBe('<h2 cms-bloc="ulvia-official-heading">Updated</h2>');
+        expect(page.serialize()).toBe('<h2 cms-bloc="ulvia--mossa--heading">Updated</h2>');
     });
 
     test("replaces a Bloc root while preserving its authored state", () => {
         const page = new EditablePageDocument(
-            '<button cms-bloc="ulvia-official-action" variant="outline"><span>Contact us</span></button>',
+            '<button cms-bloc="ulvia--mossa--action" variant="outline"><span>Contact us</span></button>',
         );
 
         const replacement = page.replaceRootTag(page.elements()[0]!, "a");
 
         expect(replacement.localName).toBe("a");
         expect(page.serialize()).toBe(
-            '<a cms-bloc="ulvia-official-action" variant="outline"><span>Contact us</span></a>',
+            '<a cms-bloc="ulvia--mossa--action" variant="outline"><span>Contact us</span></a>',
         );
     });
 
     test("creates a declared native child when a wrapper has no default content", () => {
         const field: EditorCatalogueItem = {
             ...heading,
-            id: "ulvia-official-field",
+            id: "ulvia--mossa--field",
             defaultContent: "",
             authoringJson: JSON.stringify({
                 root: { accepts: ["div"] },
@@ -51,13 +51,13 @@ describe("EditablePageDocument content", () => {
         const page = new EditablePageDocument("");
         page.add(field);
 
-        expect(page.serialize()).toBe('<div cms-bloc="ulvia-official-field"><input type="text" name="field"></div>');
+        expect(page.serialize()).toBe('<div cms-bloc="ulvia--mossa--field"><input type="text" name="field"></div>');
     });
 
     test("edits structured rich content without flattening its markup", () => {
         const prose: EditorCatalogueItem = {
             ...heading,
-            id: "ulvia-official-prose",
+            id: "ulvia--mossa--prose",
             defaultContent: '<div slot="content"><p>Default prose</p></div>',
             authoringJson: JSON.stringify({
                 root: { accepts: ["div"] },
@@ -72,7 +72,7 @@ describe("EditablePageDocument content", () => {
         page.updateContentField(element, field.address, "Updated prose");
 
         expect(page.serialize()).toBe(
-            '<div cms-bloc="ulvia-official-prose"><div slot="content"><p>Updated prose</p></div></div>',
+            '<div cms-bloc="ulvia--mossa--prose"><div slot="content"><p>Updated prose</p></div></div>',
         );
     });
 
@@ -200,7 +200,7 @@ describe("EditablePageDocument content", () => {
     test("creates a required named native-content slot", () => {
         const badge: EditorCatalogueItem = {
             ...heading,
-            id: "ulvia-official-badge",
+            id: "ulvia--mossa--badge",
             defaultContent: "",
             authoringJson: JSON.stringify({
                 root: { accepts: ["div"] },
@@ -216,7 +216,7 @@ describe("EditablePageDocument content", () => {
         const page = new EditablePageDocument("");
         const element = page.add(badge);
 
-        expect(page.serialize()).toBe('<div cms-bloc="ulvia-official-badge"><span slot="label"></span></div>');
+        expect(page.serialize()).toBe('<div cms-bloc="ulvia--mossa--badge"><span slot="label"></span></div>');
         expect(page.contentFields(element, badge)[0]?.slot).toBe("label");
     });
 });

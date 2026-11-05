@@ -15,7 +15,7 @@ test("loads the complete official profile and documentation from immutable files
     try {
         const sources = bundledBootstrapSources(snapshot);
         const loaded = await loadOfficialArtifacts(sources.providers, sources.collections);
-        expect(loaded.defaultProfile.id).toBe("ulvia.official");
+        expect(loaded.defaultProfile.id).toBe("ulvia");
         expect(loaded.contracts.length).toBeGreaterThan(0);
         const documented = loaded.contracts.filter(({ release }) => release.documentation?.length);
         expect(documented.length).toBeGreaterThan(0);
@@ -55,7 +55,7 @@ test("missing snapshot and corrupt declared documentation fail without a remote 
         await cp(snapshot, root, { recursive: true });
         sources = bundledBootstrapSources(root);
         const entries = await sources.providers.list("contract");
-        const entry = entries.find(({ id }) => id === "ulvia.cms.content")!;
+        const entry = entries.find(({ id }) => id === "ulvia/cms.content")!;
         const bytes = await sources.providers.get(entry);
         const canonical = new TextDecoder().decode(bytes);
         const release = JSON.parse(canonical);

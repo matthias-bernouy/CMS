@@ -17,8 +17,8 @@ describe("provider manifest parsing", () => {
         ).toThrow('unknown property "extra"');
 
         const source = JSON.stringify(manifestDocument([implementation("domain.example", "1.0.0", digest)])).replace(
-            '"providerId":"ulvia.example"',
-            '"providerId":"ulvia.example","providerId":"replacement"',
+            '"providerId":"ulvia/ulvia.example"',
+            '"providerId":"ulvia/ulvia.example","providerId":"ulvia/replacement"',
         );
         expect(() => parseProviderManifestJson(source)).toThrow("duplicate property");
     });
@@ -105,14 +105,14 @@ describe("provider manifest parsing", () => {
         );
 
         expect(parsed.implementations.map((entry) => entry.contractId)).toEqual([
-            "domain.chess",
-            "domain.delta",
-            "domain.hotel",
+            "ulvia/domain.chess",
+            "ulvia/domain.delta",
+            "ulvia/domain.hotel",
         ]);
         expect(parsed.implementations[2]?.requires.map((entry) => entry.contractId)).toEqual([
-            "dependency.chess",
-            "dependency.delta",
-            "dependency.hotel",
+            "ulvia/dependency.chess",
+            "ulvia/dependency.delta",
+            "ulvia/dependency.hotel",
         ]);
         expect(parsed.credentialSlots.map((slot) => slot.id)).toEqual(["chess", "delta", "hotel"]);
     });

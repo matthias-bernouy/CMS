@@ -20,10 +20,10 @@ async function fixture() {
     const source = collectionDocument({ "retired.reason": "Use the new panel" }) as any;
     source.blocs[0].deprecation = {
         reason: "retired.reason",
-        replacedBy: "atlas-new-panel",
+        replacedBy: "atlas-dofficial--atlas--new-panel",
         sunsetAt: "2020-01-01T00:00:00.000Z",
     };
-    const replacement = { ...source.blocs[0], id: "atlas-new-panel", catalogue: "hidden" };
+    const replacement = { ...source.blocs[0], id: "atlas-dofficial--atlas--new-panel", catalogue: "hidden" };
     delete replacement.deprecation;
     delete replacement.examples;
     delete replacement.defaultExample;
@@ -41,11 +41,11 @@ test("unused resources can be removed without transforming any Page", async () =
     const plan = await prepareCollectionUpgrade(f.repo, f.collections, "site", [{ digest: f.next.digest }], analysis);
     expect(plan.status).toBe("applicable");
     expect(plan.resources).toContainEqual({
-        collectionId: "atlas",
+        collectionId: "atlas.official/atlas",
         kind: "bloc",
-        id: "atlas-panel",
+        id: "atlas-dofficial--atlas--panel",
         change: "removed",
-        replacement: "atlas-new-panel",
+        replacement: "atlas-dofficial--atlas--new-panel",
     });
     expect(await f.repo.getAllPages()).toEqual(before);
     expect(await f.collections.revision("site")).toBe(1);
@@ -53,7 +53,7 @@ test("unused resources can be removed without transforming any Page", async () =
 
 test.each([false, true])("both draft and published Pages block removed resources (visible=%s)", async (visible) => {
     const f = await fixture();
-    await f.repo.insertPage("/example", "Example", '<div cms-bloc="atlas-panel"></div>');
+    await f.repo.insertPage("/example", "Example", '<div cms-bloc="atlas-dofficial--atlas--panel"></div>');
     const pageId = (await f.repo.getPage("/example"))!.id;
     await f.repo.updatePage({ id: pageId, visible });
     const plan = await prepareCollectionUpgrade(f.repo, f.collections, "site", [{ digest: f.next.digest }], analysis);
@@ -61,11 +61,11 @@ test.each([false, true])("both draft and published Pages block removed resources
     expect(plan.issues).toContainEqual(
         expect.objectContaining({
             code: "missing-resource",
-            replacement: "atlas-new-panel",
+            replacement: "atlas-dofficial--atlas--new-panel",
             location: expect.stringContaining("/example"),
         }),
     );
-    expect((await f.repo.getPage("/example"))!.content).toContain("atlas-panel");
+    expect((await f.repo.getPage("/example"))!.content).toContain("atlas-dofficial--atlas--panel");
 });
 
 test("unknown internal consumers make the analysis incomplete", async () => {
@@ -82,7 +82,7 @@ test("explicit target configuration is validated only against the new schema", a
     const f = await fixture();
     const previous = {
         ...f.source,
-        collectionId: "config",
+        collectionId: "atlas.official/config",
         blocs: [],
         examples: [],
         configuration: {
@@ -111,7 +111,9 @@ test("explicit target configuration is validated only against the new schema", a
         analysis,
     );
     expect(applicable.status).toBe("applicable");
-    expect(applicable.replacements.find(({ collectionId }) => collectionId === "config")!.configuration).toEqual({
+    expect(
+        applicable.replacements.find(({ collectionId }) => collectionId === "atlas.official/config")!.configuration,
+    ).toEqual({
         count: 3,
     });
 });

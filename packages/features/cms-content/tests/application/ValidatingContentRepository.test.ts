@@ -4,7 +4,7 @@ import type { ContentRepository } from "@bernouy/cms-content";
 import type { BindingQueryCapability } from "@bernouy/cms-content/page-document";
 
 const queryCapability: BindingQueryCapability = {
-    contractId: "catalog",
+    contractId: "ulvia/catalog",
     capabilityId: "list",
     output: {
         type: "object",
@@ -206,18 +206,18 @@ describe("ValidatingContentRepository — pages", () => {
                 /not a declared CMS binding/,
             ],
             [
-                `<div cms-bloc=\"fixture-card\"><form cms-mutation="forms:contact as contact"
+                `<div cms-bloc="fixture-card"><form cms-mutation="ulvia/forms:contact as contact"
                     ><button formaction="https://example.invalid/steal">Send</button>
                 </form></div>`,
                 /formaction.*forbidden/,
             ],
             [
-                `<form cms-mutation="forms:contact as contact"
+                `<form cms-mutation="ulvia/forms:contact as contact"
                     cms-mutation-input='{"safe":{"from":"literal","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
                 /typed parameter map/,
             ],
             [
-                `<form cms-mutation="forms:contact as contact" cms-source-inherit-query="maybe"></form>`,
+                `<form cms-mutation="ulvia/forms:contact as contact" cms-source-inherit-query="maybe"></form>`,
                 /not a declared CMS binding/,
             ],
         ] as const;
@@ -232,9 +232,9 @@ describe("ValidatingContentRepository — pages", () => {
     test("accepts immutable cms-files URLs and rejects the removed Source image route", async () => {
         const { repo, calls } = makeRepo({ blocs: ["fixture-card", "fixture-image"] });
         const image =
-            '<div cms-bloc=\"fixture-card\"><div cms-bloc=\"fixture-image\" slot="image"><img src="/.cms/call/ulvia.cms.files/files/photo/generation" alt="Product"></div></div>';
+            '<div cms-bloc=\"fixture-card\"><div cms-bloc=\"fixture-image\" slot="image"><img src="/.cms/call/ulvia/cms.files/files/photo/generation" alt="Product"></div></div>';
         await repo.updatePage({ id: "p1", content: image });
-        expect(calls.updatePage[0].content).toContain("/.cms/call/ulvia.cms.files/files/");
+        expect(calls.updatePage[0].content).toContain("/.cms/call/ulvia/cms.files/files/");
         await expect(
             repo.updatePage({
                 id: "p1",
@@ -250,7 +250,7 @@ describe("ValidatingContentRepository — pages", () => {
             repo.updatePage({
                 id: "p1",
                 content:
-                    '<div cms-bloc=\"fixture-card\"><img src="/.cms/call/ulvia.cms.files/files/photo-1/generation" data-cms-src="https://other.example/tracker.png" alt="Product"></div>',
+                    '<div cms-bloc=\"fixture-card\"><img src="/.cms/call/ulvia/cms.files/files/photo-1/generation" data-cms-src="https://other.example/tracker.png" alt="Product"></div>',
             }),
         ).rejects.toThrow('attribute "data-cms-src" is forbidden');
     });
@@ -263,7 +263,7 @@ describe("ValidatingContentRepository — pages", () => {
             <div cms-bloc=\"fixture-newsletter-card\">
                 <h2 slot="title">Stay informed</h2>
                 <div cms-bloc=\"fixture-button\" slot="actions"><button type="button">Subscribe</button></div>
-                <div cms-bloc=\"fixture-image\" slot="illustration"><img src="/.cms/call/ulvia.cms.files/files/newsletter/generation" alt="Newsletter illustration"></div>
+                <div cms-bloc=\"fixture-image\" slot="illustration"><img src="/.cms/call/ulvia/cms.files/files/newsletter/generation" alt="Newsletter illustration"></div>
                 <span slot="label">Newsletter label</span>
                 <p slot="criteria">Component-owned criterion</p>
             </div>
@@ -396,7 +396,7 @@ describe("ValidatingContentRepository — blocs", () => {
         });
 
         await repo.createBloc(bloc('<p cms-repeat="pages.data.items as item">{{ item }}</p>'));
-        expect(targets).toEqual(["catalog:list"]);
+        expect(targets).toEqual(["ulvia/catalog:list"]);
         await expect(repo.replaceBloc(bloc("<p>{{ pages.data.missing }}</p>"))).rejects.toThrow(
             "is not declared by the output schema",
         );
@@ -419,7 +419,7 @@ describe("ValidatingContentRepository — blocs", () => {
                 markupHTML: "<slot></slot>",
                 root: { accepts: ["div"] },
                 slots: { "": { accepts: [{ kind: "native-element", accepts: ["span"] }] } },
-                defaultContent: '<span cms-query="catalog:list as pages"></span>',
+                defaultContent: '<span cms-query="ulvia/catalog:list as pages"></span>',
             }),
         ).rejects.toThrow("cannot be resolved to an exact contract schema");
     });
@@ -496,7 +496,7 @@ describe("ValidatingContentRepository — blocs", () => {
 });
 
 function queryDocument(success: string): string {
-    return `<span cms-query="catalog:list as pages">
+    return `<span cms-query="ulvia/catalog:list as pages">
         <span cms-match="pages.outcome.kind">
             <span cms-case='"none"'></span>
             <span cms-case='"success"'>${success}</span>

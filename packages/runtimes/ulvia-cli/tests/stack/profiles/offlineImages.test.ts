@@ -6,14 +6,14 @@ import { profileCliFixture } from "./fixture";
 
 const version = "0.1.0";
 
-test("fresh cached-image startup needs no registry pull while an explicit upgrade still pulls", async () => {
+test("fresh example--cached--image startup needs no registry pull while an explicit upgrade still pulls", async () => {
     const fixture = await profileCliFixture();
     try {
         await seedImages(fixture.root);
         const services = await fixture.run(["services", "start", "--version", version]);
         expect(services.stderr).toBe("");
         expect(services.exitCode).toBe(0);
-        const instance = await fixture.run(["instance", "create", "registry", "--profile", "ulvia.repository@1.0.0"]);
+        const instance = await fixture.run(["instance", "create", "registry", "--profile", "repository@1.0.0"]);
         expect(instance.stderr).toBe("");
         expect(instance.exitCode).toBe(0);
         expect((await calls(fixture.root)).filter(({ args }) => args[0] === "pull")).toEqual([]);

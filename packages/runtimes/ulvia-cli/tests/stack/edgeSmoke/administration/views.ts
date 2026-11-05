@@ -3,13 +3,13 @@ import type { Page } from "playwright";
 export async function inspectLightDomIsolation(page: Page): Promise<void> {
     await page.setContent(`
         <style>
-            @scope ([cms-bloc="test-parent"]) to (:scope [cms-bloc]) {
+            @scope ([cms-bloc="example--test--parent"]) to (:scope [cms-bloc]) {
                 [data-scope-probe] { --cms-test-owner: parent; }
             }
         </style>
-        <section cms-bloc="test-parent">
+        <section cms-bloc="example--test--parent">
             <span data-scope-probe="owned"></span>
-            <div cms-bloc="test-child">
+            <div cms-bloc="example--test--child">
                 <span data-scope-probe="nested"></span>
             </div>
         </section>
@@ -33,7 +33,7 @@ export async function inspectResponsiveAdministration(page: Page, edgeOrigin: st
     await page.setViewportSize({ width: 390, height: 844 });
     try {
         await page.goto(`${edgeOrigin}/admin/collections`);
-        const shell = page.locator('[cms-bloc="ulvia-official-app-shell"]');
+        const shell = page.locator('[cms-bloc="ulvia--mossa--app-shell"]');
         const navigation = shell.locator("#workspace-navigation");
         const navigationToggle = shell.locator('[data-mobile-toggle="navigation"]');
         const contextual = shell.locator("#context-navigation");
@@ -82,19 +82,19 @@ export async function inspectResponsiveAdministration(page: Page, edgeOrigin: st
 
 export async function mutateSettings(page: Page): Promise<void> {
     await adminPageLink(page, "settings").click();
-    const generalSubmit = 'form[cms-mutation^="ulvia.cms.content:site.update "] button[type="submit"]';
+    const generalSubmit = 'form[cms-mutation^="ulvia/cms.content:site.update "] button[type="submit"]';
     await waitUntilEnabled(page, generalSubmit);
     await page.locator("#settings-general").waitFor();
     await page.locator("#settings-site-name").fill("Smoke CMS");
     const languageRevision = page.locator(
-        'form[cms-mutation^="ulvia.cms.content:localization.update "] input[name="expectedRevision"]',
+        'form[cms-mutation^="ulvia/cms.content:localization.update "] input[name="expectedRevision"]',
     );
     const initialLanguageRevision = await languageRevision.inputValue();
     const languageRefresh = page.waitForResponse((candidate) =>
-        candidate.url().includes("ulvia.cms.content/localization.get"),
+        candidate.url().includes("ulvia/cms.content/localization.get"),
     );
     const [generalResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/site.update")),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia/cms.content/site.update")),
         page.locator(generalSubmit).click(),
     ]);
     if (!generalResponse.ok()) {
@@ -102,7 +102,7 @@ export async function mutateSettings(page: Page): Promise<void> {
     }
     await page
         .locator(
-            'form[cms-mutation^="ulvia.cms.content:site.update "] p[cms-condition*="savedSite.outcome.kind === \'success\'"]',
+            'form[cms-mutation^="ulvia/cms.content:site.update "] p[cms-condition*="savedSite.outcome.kind === \'success\'"]',
         )
         .waitFor();
     await languageRefresh;
@@ -110,8 +110,8 @@ export async function mutateSettings(page: Page): Promise<void> {
     await page.locator('a[href="#settings-languages"]').click();
     await page.locator("#settings-default-language").fill("fr-FR");
     const [languagesResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/localization.update")),
-        page.locator('form[cms-mutation^="ulvia.cms.content:localization.update "] button[type="submit"]').click(),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia/cms.content/localization.update")),
+        page.locator('form[cms-mutation^="ulvia/cms.content:localization.update "] button[type="submit"]').click(),
     ]);
     if (!languagesResponse.ok()) {
         throw new Error(
@@ -120,7 +120,7 @@ export async function mutateSettings(page: Page): Promise<void> {
     }
     await page
         .locator(
-            'form[cms-mutation^="ulvia.cms.content:localization.update "] p[cms-condition*="savedLanguages.outcome.kind === \'success\'"]',
+            'form[cms-mutation^="ulvia/cms.content:localization.update "] p[cms-condition*="savedLanguages.outcome.kind === \'success\'"]',
         )
         .waitFor();
 }
@@ -131,7 +131,7 @@ export async function inspectDiagnostics(page: Page): Promise<void> {
     await page.locator("#upgrade-health").waitFor();
     await page.locator('a[href="#collection-operation-health"]').click();
     await page.waitForURL(/#collection-operation-health$/u);
-    const operations = page.locator('section[cms-query*="ulvia.cms.installations:list-operations"]');
+    const operations = page.locator('section[cms-query*="ulvia/cms.installations:list-operations"]');
     await operations
         .locator('p[cms-condition*="operations.data.items.length"]')
         .or(operations.locator('article[role="listitem"]'))

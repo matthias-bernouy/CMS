@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { preparedFixture } from "./fixture";
 const invocation = {
     siteId: "default",
-    contractId: "catalog",
+    contractId: "ulvia/catalog",
     capabilityId: "item.list",
     input: { term: "test" },
     actor: { kind: "anonymous" as const },

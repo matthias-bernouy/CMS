@@ -3,7 +3,7 @@ import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy
 import { CapabilityGateway } from "@bernouy/cms-gateway";
 import { InMemoryGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 import { createCapabilityHttpHandler } from "@bernouy/cms-gateway/http/handlers";
-import { CapabilityMcpBinding } from "@bernouy/cms-gateway/mcp";
+import { CapabilityMcpBinding, capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { admitContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifest } from "@bernouy/cms-repository/providers";
@@ -11,12 +11,12 @@ import { DefaultProviderCapabilityDispatcher, ProviderCapabilityDispatchError } 
 import { registerContentCapabilities } from "@bernouy/ulvia-provider/capabilities";
 import { gatewayRoute, NOW } from "../../../../../features/cms-gateway/tests/fixtures";
 
-export const CONTRACT = "ulvia.cms.content";
+export const CONTRACT = "ulvia/cms.content";
 export const PAGE_FIELDS = ["notFound", "forbidden", "serverError", "login"] as const;
 export const ADMIN = { siteId: "site-a", actor: { kind: "administrator", subjectId: "admin" } } as const;
 
 export async function sitePagesFixture() {
-    const root = resolve(import.meta.dir, "../../../../../official-repository/contracts/ulvia.cms.content");
+    const root = resolve(import.meta.dir, "../../../../../official-repository/contracts/cms.content");
     const capabilities = await Promise.all(
         ["queries/get.json", "commands/update.json"].map(async (path) => {
             const capability = await Bun.file(resolve(root, "capabilities/site", path)).json();
@@ -91,7 +91,7 @@ export async function sitePagesFixture() {
                         requestId: request.requestId,
                         contractVersion: "1.0.0",
                         siteId: "site-a",
-                        providerId: "ulvia.example",
+                        providerId: "ulvia/ulvia.example",
                     });
                     return { status: 200, contentType: "application/json", output };
                 } catch (error) {
@@ -116,6 +116,10 @@ export async function sitePagesFixture() {
         resolveActor: async () => ADMIN.actor,
     });
     const call = (capability: "get" | "update", input = {}) =>
-        binding.call(`content_site_${capability}`, { input }, ADMIN);
+        binding.call(
+            capabilityToolName(CONTRACT, `site.${capability}`, "mcp", `content_site_${capability}`),
+            { input },
+            ADMIN,
+        );
     return { repository, references, pageReads, binding, gateway, http, call, dispatches: () => dispatches };
 }

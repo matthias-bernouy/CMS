@@ -17,13 +17,13 @@ import type {
     ProviderRecoveryPolicy,
 } from "../../interfaces/ProviderManifest";
 import { parseVersionRange } from "../versioning/versionRange";
-import { parseDateTime, parseIdentifier } from "./identifiers";
+import { parseDateTime, parseIdentifier, parsePublisherIdentifier } from "./identifiers";
 
 export function parseProvenance(value: unknown, path: string): ProviderManifestProvenance {
     const record = expectRecord(value, path);
     rejectUnknownKeys(record, ["publisherId", "publishedAt"], path);
     return {
-        publisherId: parseIdentifier(record.publisherId, `${path}.publisherId`, 96),
+        publisherId: parsePublisherIdentifier(record.publisherId, `${path}.publisherId`),
         publishedAt: parseDateTime(record.publishedAt, `${path}.publishedAt`),
     };
 }

@@ -26,10 +26,10 @@ export async function exerciseRepositoryWebsite(
         await open("/");
         expect(await page.getByRole("heading", { name: "Catalogue", exact: true }).count()).toBe(1);
         const coordinate = new URLSearchParams({
-            "ulvia-repository-kind": "contract",
-            "ulvia-repository-publisher": sample.namespace,
-            "ulvia-repository-resource": sample.id,
-            "ulvia-repository-version": sample.version,
+            "ulvia--repository--kind": "contract",
+            "ulvia--repository--publisher": sample.namespace,
+            "ulvia--repository--resource": sample.id,
+            "ulvia--repository--version": sample.version,
         });
         await open(`/resource?${coordinate}`);
         await page.getByText(sample.digest, { exact: true }).waitFor();
@@ -66,7 +66,7 @@ export async function exerciseRepositoryWebsite(
         await page.locator("code").waitFor();
         const secret = await page.locator("code").innerText();
         expect(secret.length).toBeGreaterThan(32);
-        const protectedUrl = `${origin}/.cms/call/ulvia.repository/v1/namespaces`;
+        const protectedUrl = `${origin}/.cms/call/ulvia/repository/v1/namespaces`;
         expect((await fetch(protectedUrl, { headers: { authorization: `Bearer ${secret}` } })).status).toBe(200);
         await exerciseRepositoryPagination(page, origin, secret);
         await open("/account/tokens");

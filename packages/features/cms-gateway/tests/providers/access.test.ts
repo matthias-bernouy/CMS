@@ -17,7 +17,7 @@ async function fixture() {
     source.installation.gatewayTokenRef = "${RETURN_TOKEN}";
     const manifest = structuredClone(route.manifest);
     manifest.admission.manifest.implementations[0]!.requires = [
-        { contractId: "catalog", capabilityId: "item.list", versionRange: "^1.0.0", optional: true },
+        { contractId: "ulvia/catalog", capabilityId: "item.list", versionRange: "^1.0.0", optional: true },
     ];
     const credentials = new Map<
         string,
@@ -54,7 +54,7 @@ async function fixture() {
     const selections = { get: async () => current };
     const routes = {
         resolve: async (site: string, contract: string) =>
-            site === "site-a" && contract === "catalog" ? { ...route, installation: destination } : null,
+            site === "site-a" && contract === "ulvia/catalog" ? { ...route, installation: destination } : null,
         isCurrent: async () => true,
     };
     const create = (siteId: string) =>
@@ -72,7 +72,7 @@ async function fixture() {
         sourceInstallationId: "source-a",
         sourceCredentialFingerprint: providerCredentialFingerprint("a".repeat(64)),
         targetInstallationId: "install-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         capabilityId: "item.list",
         version: "1.0.0",
     };
@@ -100,7 +100,7 @@ test("only approved manifest requires authorize exact outbound capability and co
     expect(await f.access.authorize(f.target)).toBe(true);
     for (const change of [
         { capabilityId: "item.delete" },
-        { contractId: "another" },
+        { contractId: "ulvia/another" },
         { version: "2.0.0" },
         { sourceInstallationId: "foreign" },
         { targetInstallationId: "foreign" },
@@ -161,7 +161,7 @@ test("unselected implementation requirements grant nothing while global requirem
     expect(await f.access.authorize(f.target)).toBe(false);
     f.manifest.admission.manifest.requires = [...f.manifest.admission.manifest.implementations[0]!.requires];
     expect(await f.access.authorize(f.target)).toBe(true);
-    f.current.grants.denied.push({ contractId: "catalog", capabilityId: "item.list" });
+    f.current.grants.denied.push({ contractId: "ulvia/catalog", capabilityId: "item.list" });
     expect(await f.access.authorize(f.target)).toBe(false);
 });
 test("rotation in place invalidates the proof of a previously authenticated pending request", async () => {

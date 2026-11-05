@@ -43,7 +43,7 @@ export async function inspectDelegationActor(
     }
     const result = await invoker.invoke({
         siteId,
-        contractId: "ulvia.cms.access",
+        contractId: "ulvia/cms.access",
         capabilityId: "inspect-actor",
         input: { subjectId: actor.subjectId },
         actor: { kind: "system", serviceId: "cms-gateway" },

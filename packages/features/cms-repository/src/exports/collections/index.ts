@@ -114,3 +114,5 @@ export {
 export * from "./texts";
 
 export { collectionExampleDocument } from "cms-repository/collections/core/validation/examples/document";
+
+export { verifyCollectionPublicationHistory } from "cms-repository/collections/core/admission/history";

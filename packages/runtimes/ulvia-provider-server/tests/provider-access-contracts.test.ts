@@ -11,7 +11,7 @@ const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
     contractVersion: "1.0.0",
     siteId: "default",
-    providerId: "ulvia.official",
+    providerId: "ulvia/primary-provider",
     subjectId: "provider-admin",
 };
 
@@ -47,7 +47,7 @@ test("access capabilities protect the caller and cleanly remove another member",
     };
     registerAccessCapabilities(dispatcher, core as never, gateway as never);
 
-    expect(await dispatcher.invoke("ulvia.cms.access", "list-users", {}, context)).toMatchObject({
+    expect(await dispatcher.invoke("ulvia/cms.access", "list-users", {}, context)).toMatchObject({
         users: [
             { sub: "local:admin", administrator: true, administratorRevision: 1 },
             { sub: "external:member", administrator: false, administratorRevision: 0 },
@@ -56,7 +56,7 @@ test("access capabilities protect the caller and cleanly remove another member",
 
     await expect(
         dispatcher.invoke(
-            "ulvia.cms.access",
+            "ulvia/cms.access",
             "set-administrator",
             { sub: "local:admin", enabled: false, expectedRevision: 1 },
             context,
@@ -65,14 +65,14 @@ test("access capabilities protect the caller and cleanly remove another member",
 
     expect(
         await dispatcher.invoke(
-            "ulvia.cms.access",
+            "ulvia/cms.access",
             "set-administrator",
             { sub: "external:member", enabled: true, expectedRevision: 0 },
             context,
         ),
     ).toMatchObject({ sub: "external:member", administrator: true, revision: 1 });
 
-    expect(await dispatcher.invoke("ulvia.cms.access", "delete-user", { sub: "external:member" }, context)).toEqual({
+    expect(await dispatcher.invoke("ulvia/cms.access", "delete-user", { sub: "external:member" }, context)).toEqual({
         sub: "external:member",
         deleted: true,
     });
@@ -122,12 +122,12 @@ describe("Access authentication capabilities", () => {
         };
         registerAccessCapabilities(dispatcher, dependencies as never, gateway as never);
 
-        expect(await dispatcher.invoke("ulvia.cms.access", "resolve-actor", {}, context)).toEqual({
+        expect(await dispatcher.invoke("ulvia/cms.access", "resolve-actor", {}, context)).toEqual({
             state: "anonymous",
         });
         expect(
             await dispatcher.invoke(
-                "ulvia.cms.access",
+                "ulvia/cms.access",
                 "resolve-actor",
                 {},
                 {
@@ -143,7 +143,7 @@ describe("Access authentication capabilities", () => {
         });
         expect(
             await dispatcher.invoke(
-                "ulvia.cms.access",
+                "ulvia/cms.access",
                 "resolve-actor",
                 {},
                 {
@@ -159,7 +159,7 @@ describe("Access authentication capabilities", () => {
         });
 
         const login = (await dispatcher.invoke(
-            "ulvia.cms.access",
+            "ulvia/cms.access",
             "login-password",
             { email: subject.email, password: "correct-password" },
             context,
@@ -173,7 +173,7 @@ describe("Access authentication capabilities", () => {
         });
 
         const logout = (await dispatcher.invoke(
-            "ulvia.cms.access",
+            "ulvia/cms.access",
             "logout",
             {},
             context,
@@ -181,7 +181,7 @@ describe("Access authentication capabilities", () => {
         expect(logout.responseEffect).toEqual({ type: "session", operation: "clear" });
         await expect(
             dispatcher.invoke(
-                "ulvia.cms.access",
+                "ulvia/cms.access",
                 "login-password",
                 { email: subject.email, password: "wrong-password" },
                 context,

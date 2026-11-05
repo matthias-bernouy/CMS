@@ -1,3 +1,4 @@
+import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
 import { collectionExampleDocument } from "../../core/validation/examples/document";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { collectionThemeTokenId } from "../../core/namespace";
@@ -125,7 +126,7 @@ function validateImportedThemeTypes(release: CollectionRelease, byId: ReadonlyMa
             const target = match ? imported.get(match[1]!) : undefined;
             if (target && token.type !== "value" && target.type !== "value" && token.type !== target.type) {
                 reject(
-                    `Theme token ${release.collectionId}-${token.id} cannot use ${target.type} token --${match![1]}`,
+                    `Theme token ${resourceRuntimeNamespace(release.collectionId)}--${token.id} cannot use ${target.type} token --${match![1]}`,
                 );
             }
         }

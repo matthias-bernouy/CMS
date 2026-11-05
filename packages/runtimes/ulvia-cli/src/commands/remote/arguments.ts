@@ -51,7 +51,7 @@ export function parseRemoteArguments(
 }
 
 export function formatCoordinate(value: RemoteCoordinate): string {
-    return `${value.kind} ${value.publisherId}/${value.id}@${value.version}`;
+    return `${value.kind} ${value.id}@${value.version}`;
 }
 
 export function remoteUsage(action: RemoteAction): string {
@@ -75,7 +75,7 @@ function parseCoordinate(value: string): Omit<RemoteCoordinate, "kind"> {
     ) {
         throw new Error("Repository coordinate must use publisher/id@version");
     }
-    return { publisherId, id, version };
+    return { publisherId, id: `${publisherId}/${id}`, version };
 }
 
 function normalizeKind(value: string): RepositoryArtifactKind {

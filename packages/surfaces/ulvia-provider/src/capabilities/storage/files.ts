@@ -8,7 +8,7 @@ export function registerFileCapabilities(
     files: CmsFilesService,
     workspace?: CmsFileWorkspace,
 ): void {
-    dispatcher.register("ulvia.cms.files", "namespace.create", async (input, context) =>
+    dispatcher.register("ulvia/cms.files", "namespace.create", async (input, context) =>
         fileCall(() =>
             files.createNamespace({
                 name: requiredText(input.name),
@@ -20,10 +20,10 @@ export function registerFileCapabilities(
             }),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "namespace.get", async (input) =>
+    dispatcher.register("ulvia/cms.files", "namespace.get", async (input) =>
         fileCall(() => files.getNamespace(requiredText(input.namespaceId), requiredText(input.namespaceKey))),
     );
-    dispatcher.register("ulvia.cms.files", "namespace.keys.create", async (input) =>
+    dispatcher.register("ulvia/cms.files", "namespace.keys.create", async (input) =>
         fileCall(() =>
             files.createNamespaceKey({
                 namespaceId: requiredText(input.namespaceId),
@@ -33,7 +33,7 @@ export function registerFileCapabilities(
             }),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "namespace.keys.rotate", async (input) =>
+    dispatcher.register("ulvia/cms.files", "namespace.keys.rotate", async (input) =>
         fileCall(() =>
             files.rotateNamespaceKey(
                 requiredText(input.namespaceId),
@@ -42,7 +42,7 @@ export function registerFileCapabilities(
             ),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "namespace.keys.revoke", async (input) =>
+    dispatcher.register("ulvia/cms.files", "namespace.keys.revoke", async (input) =>
         fileCall(async () => {
             await files.revokeNamespaceKey(
                 requiredText(input.namespaceId),
@@ -52,13 +52,13 @@ export function registerFileCapabilities(
             return null;
         }),
     );
-    dispatcher.register("ulvia.cms.files", "namespace.delete", async (input) =>
+    dispatcher.register("ulvia/cms.files", "namespace.delete", async (input) =>
         fileCall(async () => {
             await files.deleteNamespace(requiredText(input.namespaceId), requiredText(input.namespaceKey));
             return null;
         }),
     );
-    dispatcher.register("ulvia.cms.files", "upload.create", async (input) =>
+    dispatcher.register("ulvia/cms.files", "upload.create", async (input) =>
         fileCall(() =>
             files.createUpload({
                 namespaceId: requiredText(input.namespaceId),
@@ -76,7 +76,7 @@ export function registerFileCapabilities(
             }),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "upload.write", async (input, context) =>
+    dispatcher.register("ulvia/cms.files", "upload.write", async (input, context) =>
         fileCall(async () => {
             if (!context.binaryBody) {
                 throw officialFailure("INVALID_INPUT", 422, undefined, { code: "file.binary" });
@@ -89,7 +89,7 @@ export function registerFileCapabilities(
             return null;
         }),
     );
-    dispatcher.register("ulvia.cms.files", "upload.complete", async (input) =>
+    dispatcher.register("ulvia/cms.files", "upload.complete", async (input) =>
         fileCall(() =>
             files.completeUpload(
                 requiredText(input.namespaceId),
@@ -98,7 +98,7 @@ export function registerFileCapabilities(
             ),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "files.sign", async (input) =>
+    dispatcher.register("ulvia/cms.files", "files.sign", async (input) =>
         fileCall(() =>
             files.signFile({
                 namespaceId: requiredText(input.namespaceId),
@@ -109,7 +109,7 @@ export function registerFileCapabilities(
             }),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "files.list", async (input) =>
+    dispatcher.register("ulvia/cms.files", "files.list", async (input) =>
         fileCall(() =>
             files.listFiles({
                 namespaceId: requiredText(input.namespaceId),
@@ -119,7 +119,7 @@ export function registerFileCapabilities(
             }),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "files.get", async (input) =>
+    dispatcher.register("ulvia/cms.files", "files.get", async (input) =>
         fileCall(() =>
             files.getFile({
                 namespaceId: requiredText(input.namespaceId),
@@ -128,7 +128,7 @@ export function registerFileCapabilities(
             }),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "files.update", async (input) =>
+    dispatcher.register("ulvia/cms.files", "files.update", async (input) =>
         fileCall(() =>
             files.updateFile({
                 namespaceId: requiredText(input.namespaceId),
@@ -142,7 +142,7 @@ export function registerFileCapabilities(
         ["files.publish", "public"],
         ["files.make-private", "private"],
     ] as const) {
-        dispatcher.register("ulvia.cms.files", capabilityId, async (input) =>
+        dispatcher.register("ulvia/cms.files", capabilityId, async (input) =>
             fileCall(() =>
                 files.setFileVisibility({
                     namespaceId: requiredText(input.namespaceId),
@@ -153,7 +153,7 @@ export function registerFileCapabilities(
             ),
         );
     }
-    dispatcher.register("ulvia.cms.files", "files.delete", async (input) =>
+    dispatcher.register("ulvia/cms.files", "files.delete", async (input) =>
         fileCall(async () => {
             await files.deleteFile(
                 requiredText(input.namespaceId),
@@ -163,7 +163,7 @@ export function registerFileCapabilities(
             return null;
         }),
     );
-    dispatcher.register("ulvia.cms.files", "files.read", async (input) =>
+    dispatcher.register("ulvia/cms.files", "files.read", async (input) =>
         fileCall(async () => {
             const read = await files.readFile({
                 fileId: requiredText(input.fileId),
@@ -175,7 +175,7 @@ export function registerFileCapabilities(
             return binaryResult(read);
         }),
     );
-    dispatcher.register("ulvia.cms.files", "representations.list", async (input) =>
+    dispatcher.register("ulvia/cms.files", "representations.list", async (input) =>
         fileCall(() =>
             files.listRepresentations({
                 fileId: requiredText(input.fileId),
@@ -185,7 +185,7 @@ export function registerFileCapabilities(
             }),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "representations.read", async (input) =>
+    dispatcher.register("ulvia/cms.files", "representations.read", async (input) =>
         fileCall(async () =>
             binaryResult(
                 await files.readRepresentation({
@@ -200,7 +200,7 @@ export function registerFileCapabilities(
             ),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "representations.sign", async (input) =>
+    dispatcher.register("ulvia/cms.files", "representations.sign", async (input) =>
         fileCall(() =>
             files.signRepresentations({
                 namespaceId: requiredText(input.namespaceId),
@@ -217,7 +217,7 @@ export function registerFileCapabilities(
 }
 
 function registerWorkspaceCapabilities(dispatcher: ProviderCapabilityRegistry, workspace: CmsFileWorkspace): void {
-    dispatcher.register("ulvia.cms.files", "workspace.get", async (input) =>
+    dispatcher.register("ulvia/cms.files", "workspace.get", async (input) =>
         fileCall(() =>
             workspace.get({
                 ...(typeof input.offset === "number" ? { offset: requiredInteger(input.offset) } : {}),
@@ -225,7 +225,7 @@ function registerWorkspaceCapabilities(dispatcher: ProviderCapabilityRegistry, w
             }),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "workspace.upload.create", async (input) =>
+    dispatcher.register("ulvia/cms.files", "workspace.upload.create", async (input) =>
         fileCall(() =>
             workspace.createUpload({
                 filename: requiredText(input.filename),
@@ -241,25 +241,25 @@ function registerWorkspaceCapabilities(dispatcher: ProviderCapabilityRegistry, w
             }),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "workspace.upload.complete", async (input) =>
+    dispatcher.register("ulvia/cms.files", "workspace.upload.complete", async (input) =>
         fileCall(async () => {
             await workspace.completeUpload(requiredText(input.uploadId));
             return null;
         }),
     );
-    dispatcher.register("ulvia.cms.files", "workspace.files.update", async (input) =>
+    dispatcher.register("ulvia/cms.files", "workspace.files.update", async (input) =>
         fileCall(async () => {
             await workspace.updateFile(requiredText(input.fileId), requiredText(input.name));
             return null;
         }),
     );
-    dispatcher.register("ulvia.cms.files", "workspace.files.set-visibility", async (input) =>
+    dispatcher.register("ulvia/cms.files", "workspace.files.set-visibility", async (input) =>
         fileCall(async () => {
             await workspace.setFileVisibility(requiredText(input.fileId), requiredVisibility(input.visibility));
             return null;
         }),
     );
-    dispatcher.register("ulvia.cms.files", "workspace.files.sign", async (input) =>
+    dispatcher.register("ulvia/cms.files", "workspace.files.sign", async (input) =>
         fileCall(() =>
             workspace.signFile(
                 requiredText(input.fileId),
@@ -268,7 +268,7 @@ function registerWorkspaceCapabilities(dispatcher: ProviderCapabilityRegistry, w
             ),
         ),
     );
-    dispatcher.register("ulvia.cms.files", "workspace.files.delete", async (input) =>
+    dispatcher.register("ulvia/cms.files", "workspace.files.delete", async (input) =>
         fileCall(async () => {
             await workspace.deleteFile(requiredText(input.fileId));
             return null;

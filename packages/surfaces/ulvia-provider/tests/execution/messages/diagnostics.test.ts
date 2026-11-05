@@ -11,7 +11,7 @@ import { officialFailure } from "../../../src/dispatch/errors/failure";
 import { context, invokeHttp, resolvedContract } from "./fixtures";
 
 test("HTTP refusals log stable reasons once without request fields, parameters or translated output", async () => {
-    const contract = await resolvedContract("ulvia.cms.content");
+    const contract = await resolvedContract("ulvia/cms.content");
     const memory = createMemoryLogger({ service: "provider" });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     let writes = 0;
@@ -52,7 +52,7 @@ test("HTTP refusals log stable reasons once without request fields, parameters o
 });
 
 test("reason metadata survives localization and async schema projection without persisting diagnostic parameters", async () => {
-    const contract = await resolvedContract("ulvia.cms.installations");
+    const contract = await resolvedContract("ulvia/cms.installations");
     const store = new MemoryProviderOperationStore();
     const observations: unknown[] = [];
     const executor = new ProviderOperationExecutor(store, undefined, {
@@ -61,14 +61,14 @@ test("reason metadata survives localization and async schema projection without 
             observations.push(observation);
         },
     });
-    executor.register("ulvia.cms.installations", "apply-collection-upgrade", async () => {
+    executor.register("ulvia/cms.installations", "apply-collection-upgrade", async () => {
         throw officialFailure("REVISION_CONFLICT", 409, undefined, {
             code: "connection.changed",
             parameters: { secret: "private-parameter" },
         });
     });
     const operation = await executor.enqueue(
-        "ulvia.cms.installations",
+        "ulvia/cms.installations",
         "apply-collection-upgrade",
         {},
         { ...context("fr", contract.release.version), idempotencyKey: "reason" },

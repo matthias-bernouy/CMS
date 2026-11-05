@@ -45,7 +45,7 @@ test("node transport pins the target and signs the exact capability grant", asyn
     expect(verifyProviderInvocationToken(authorization.slice(7), PROVIDER_SECRET)).toMatchObject({
         requestId: "00000000-0000-4000-8000-000000000001",
         instanceId: "instance:account-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         contractVersion: "1.0.0",
         capabilityId: "item.list",
         subjectId: "subject-a",
@@ -88,7 +88,7 @@ test("provider credentials remain opaque and are never forwarded byte-for-byte",
     expect(sentAuthorizations[0]).not.toBe(`Bearer ${opaqueCredential}`);
     expect(verifyProviderInvocationToken(sentAuthorizations[0]!.slice(7), opaqueCredential)).toMatchObject({
         instanceId: "instance:account-a",
-        contractId: "catalog",
+        contractId: "ulvia/catalog",
         contractVersion: "1.0.0",
         capabilityId: "item.list",
     });
@@ -144,7 +144,7 @@ test("node transport can delegate exact capability authorization to a remote bro
         authentication: {
             kind: "capability",
             instanceId: "instance:account-a",
-            contractId: "catalog",
+            contractId: "ulvia/catalog",
             contractVersion: "1.0.0",
             capabilityId: "item.list",
         },

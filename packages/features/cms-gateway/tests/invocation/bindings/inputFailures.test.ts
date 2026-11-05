@@ -15,7 +15,7 @@ async function commandScope() {
 test("HTTP schema refusals explain the field locally, without provider dispatch or command effects", async () => {
     const f = await commandScope();
     const response = await handleGatewayHttpCall(
-        new Request("https://cms.test/.cms/call/catalog/v1/items", {
+        new Request("https://cms.test/.cms/call/ulvia/catalog/v1/items", {
             method: "POST",
             headers: { "content-type": "application/json", "accept-language": "fr-CA,en;q=0.8" },
             body: JSON.stringify({ term: "x".repeat(51) }),
@@ -53,7 +53,7 @@ test("logical query and mutation routes share localized input failures without d
             effect === "command" ? createCapabilityMutationHandler(options) : createCapabilityQueryHandler(options);
         const route = effect === "command" ? "mutation" : "query";
         const response = await handler(
-            new Request(`https://cms.test/.cms/${route}/catalog/item.list`, {
+            new Request(`https://cms.test/.cms/${route}/ulvia/catalog/item.list`, {
                 method: effect === "command" ? "POST" : "QUERY",
                 headers: { "content-type": "application/json", "accept-language": "en" },
                 body: JSON.stringify({ term: "x".repeat(51) }),

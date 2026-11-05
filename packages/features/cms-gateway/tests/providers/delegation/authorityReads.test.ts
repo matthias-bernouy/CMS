@@ -33,8 +33,8 @@ test("initial reads deduplicate by store identity, remain operation-local, and c
     });
     const reads = new GatewayAuthorityReads("site-a");
     const [a, b] = await Promise.all([
-        resolver.resolve("site-a", "catalog", reads),
-        resolver.resolve("site-a", "catalog", reads),
+        resolver.resolve("site-a", "ulvia/catalog", reads),
+        resolver.resolve("site-a", "ulvia/catalog", reads),
     ]);
     expect(a).toBe(b);
     expect(selectionReads).toBe(1);
@@ -47,7 +47,7 @@ test("initial reads deduplicate by store identity, remain operation-local, and c
     expect(await resolver.isCurrent(a!)).toBe(false);
     expect(selectionReads).toBe(2);
     expect(installationReads).toBe(2);
-    const next = await resolver.resolve("site-a", "catalog", new GatewayAuthorityReads("site-a"));
+    const next = await resolver.resolve("site-a", "ulvia/catalog", new GatewayAuthorityReads("site-a"));
     expect(next!.installation.installation.status).toBe("disabled");
     expect(selectionReads).toBe(3);
 });
@@ -100,9 +100,9 @@ test("capability metadata avoids transport stores and fences a concurrent select
             },
         } as unknown as CatalogueGatewayRouteResolverOptions["manifests"],
     });
-    expect(await resolver.describe("site-a", "catalog")).toBe(f.release);
+    expect(await resolver.describe("site-a", "ulvia/catalog")).toBe(f.release);
     change = true;
-    await expect(resolver.describe("site-a", "catalog")).rejects.toMatchObject({ code: "stale_route" });
+    await expect(resolver.describe("site-a", "ulvia/catalog")).rejects.toMatchObject({ code: "stale_route" });
 });
 
 test("captured metadata belongs to exact store objects and a final authority check reads fresh state", async () => {
@@ -145,7 +145,7 @@ test("captured metadata belongs to exact store objects and a final authority che
             findByDigest: async () => f.manifest,
         } as unknown as CatalogueGatewayRouteResolverOptions["manifests"],
     });
-    const route = await resolver.resolve("site-a", "catalog", reads);
+    const route = await resolver.resolve("site-a", "ulvia/catalog", reads);
     expect(captures).toBe(1);
     expect(await resolver.checkAuthority(route!, "item.list")).toEqual({ current: true, granted: true });
     snapshot = {
@@ -156,12 +156,12 @@ test("captured metadata belongs to exact store objects and a final authority che
     expect(captures).toBe(3);
     // Ordinary resolution also joins its initial metadata using the previously learned ID hint.
     snapshot = { ...snapshot, installations: [f.installation] };
-    expect((await resolver.resolve("site-a", "catalog"))!.selection).toEqual(f.selection);
+    expect((await resolver.resolve("site-a", "ulvia/catalog"))!.selection).toEqual(f.selection);
     expect(captures).toBe(5);
     const otherStore = { get: async () => null };
     expect(await reads.selection(otherStore, "site-a")).toBeNull();
     expect(() => reads.selection(selections, "another-site")).toThrow("another site");
     await expect(
-        GatewayAuthorityReads.capture("other-site", selections, installations, executionState, ["install-a"]),
+        GatewayAuthorityReads.capture("example--other--site", selections, installations, executionState, ["install-a"]),
     ).rejects.toThrow("another site");
 });

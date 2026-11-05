@@ -16,20 +16,20 @@ test("ordinary accounts create, list and revoke only their own PATs through trus
     const gateway = {
         identities: {
             resolve: async ({ providerId }: { providerId: string }, alias: string) =>
-                providerId === "ulvia.official" ? (aliases.get(alias) ?? null) : null,
+                providerId === "ulvia/primary-provider" ? (aliases.get(alias) ?? null) : null,
         },
     } as unknown as UlviaProviderGateway;
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     registerPersonalAccessCapabilities(dispatcher, { pats, users }, gateway);
     const context = (subjectId?: string): ProviderCapabilityInvocationContext => ({
         siteId: "default",
-        providerId: "ulvia.official",
+        providerId: "ulvia/primary-provider",
         contractVersion: "1.0.0",
         requestId: crypto.randomUUID(),
         ...(subjectId ? { subjectId } : {}),
     });
     const invoke = (capability: string, input: Record<string, unknown>, alias?: string) =>
-        dispatcher.invoke("ulvia.cms.access", capability, input, context(alias));
+        dispatcher.invoke("ulvia/cms.access", capability, input, context(alias));
     const created = (await invoke("create-personal-access-token", { name: "CLI" }, "alias-a")) as {
         token: string;
         metadata: { id: string };

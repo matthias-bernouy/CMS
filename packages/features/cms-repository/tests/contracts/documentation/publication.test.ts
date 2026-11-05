@@ -12,7 +12,10 @@ import { documented } from "./fixtures";
 
 test("account-authorized publication, immutable HTTP reads, pull and Provider import preserve documentation bytes", async () => {
     const root = await mkdtemp(join(tmpdir(), "contract-documentation-"));
-    const f = await documented("# Send a message\n\nExact published bytes.\n", { publisherId: "publisher" });
+    const f = await documented("# Send a message\n\nExact published bytes.\n", {
+        publisherId: "publisher",
+        contractId: "publisher/communication.email",
+    });
     const { application, credential } = await ownerFixture(root);
     const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: application.handle });
     try {
@@ -34,7 +37,7 @@ test("account-authorized publication, immutable HTTP reads, pull and Provider im
             version: f.admission.release.version,
         };
         const url = new URL(
-            `/.cms/call/ulvia.repository/v1/assets/contract/publisher/${coordinate.id}/${coordinate.version}/${encodeURIComponent("docs/guides/send.md")}`,
+            `/.cms/call/ulvia/repository/v1/assets/contract/publisher/${encodeURIComponent(coordinate.id)}/${coordinate.version}/${encodeURIComponent("docs/guides/send.md")}`,
             server.url,
         );
         const response = await fetch(url);
@@ -49,7 +52,7 @@ test("account-authorized publication, immutable HTTP reads, pull and Provider im
             (
                 await fetch(
                     new URL(
-                        `/.cms/call/ulvia.repository/v1/assets/contract/publisher/${coordinate.id}/${coordinate.version}/${encodeURIComponent("docs/../private.md")}`,
+                        `/.cms/call/ulvia/repository/v1/assets/contract/publisher/${encodeURIComponent(coordinate.id)}/${coordinate.version}/${encodeURIComponent("docs/../private.md")}`,
                         server.url,
                     ),
                 )

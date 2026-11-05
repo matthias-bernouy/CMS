@@ -34,11 +34,11 @@ export async function createProviderGatewayAccess(
     const authorize: CapabilityGatewayOptions["authorize"] = async (actor, capability, route) =>
         (actor.kind === "system" &&
             actor.serviceId === "cms-gateway" &&
-            route.selection.contractId === "ulvia.cms.access" &&
+            route.selection.contractId === "ulvia/cms.access" &&
             capability.id === "inspect-actor") ||
         (actor.kind === "system" &&
             actor.serviceId === "ulvia-provider" &&
-            route.selection.contractId === "ulvia.cms.observability" &&
+            route.selection.contractId === "ulvia/cms.observability" &&
             capability.id === "logs.append") ||
         (actor.kind === "provider" &&
             (await providers.authorize({

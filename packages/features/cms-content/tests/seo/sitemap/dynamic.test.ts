@@ -49,13 +49,13 @@ describe("dynamic indexing sitemap", () => {
         expect(materialized.status).toBe("published");
         expect(calls).toMatchObject([
             {
-                contractId: "commerce",
+                contractId: "ulvia/commerce",
                 capabilityId: "product.list",
                 input: { limit: 2, offset: 0 },
                 actor: { kind: "anonymous" },
             },
             {
-                contractId: "commerce",
+                contractId: "ulvia/commerce",
                 capabilityId: "product.list",
                 input: { limit: 2, offset: 2 },
                 actor: { kind: "anonymous" },

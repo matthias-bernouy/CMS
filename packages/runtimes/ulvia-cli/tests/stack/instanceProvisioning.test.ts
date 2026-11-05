@@ -10,7 +10,7 @@ test("local provisioning sends administrator input only to the protected operato
             instance: {
                 id: "instance:00000000-0000-4000-8000-000000000001",
                 status: "ready",
-                profile: { id: "ulvia.repository", version: "1.0.0" },
+                profile: { id: "repository", version: "1.0.0" },
             },
             credentials: {
                 instanceAccessToken: "a".repeat(43),
@@ -26,7 +26,7 @@ test("local provisioning sends administrator input only to the protected operato
                 name: "preview",
                 label: "Preview instance",
                 hostname: "preview.localhost",
-                profile: { id: "ulvia.repository", version: "1.0.0" },
+                profile: { id: "repository", version: "1.0.0" },
                 adminEmail: "dev@ulvia.local",
                 adminPassword: "long-enough-password",
             },
@@ -39,7 +39,7 @@ test("local provisioning sends administrator input only to the protected operato
         expect(captured?.headers.get("idempotency-key")).toBe("ulvia-cli-preview");
         const body = await captured?.json();
         expect(body.administrator.email).toBe("dev@ulvia.local");
-        expect(body.profile).toEqual({ id: "ulvia.repository", version: "1.0.0" });
+        expect(body.profile).toEqual({ id: "repository", version: "1.0.0" });
         expect(body.gatewayUrl).toBe("http://edge.internal:3000");
         expect(body.cmsUrl).toBe("http://preview.localhost:5100");
     } finally {
@@ -54,18 +54,18 @@ test("local upgrade selects the exact official Provider profile", async () => {
         captured = new Request(input, init);
         return Response.json({
             status: "ready",
-            profile: { id: "ulvia.official", version: "1.1.0" },
+            profile: { id: "ulvia", version: "1.1.0" },
         });
     }) as typeof fetch;
     try {
         await upgradeLocalInstanceProfile("http://127.0.0.1:5103", "operator-secret", "instance:one", {
-            id: "ulvia.official",
+            id: "ulvia",
             version: "1.1.0",
         });
         expect(captured?.url).toBe("http://127.0.0.1:5103/ulvia/operator/instances/instance%3Aone/profile");
         expect(captured?.method).toBe("POST");
         expect(captured?.headers.get("authorization")).toBe("Bearer operator-secret");
-        expect(await captured?.json()).toEqual({ id: "ulvia.official", version: "1.1.0" });
+        expect(await captured?.json()).toEqual({ id: "ulvia", version: "1.1.0" });
     } finally {
         globalThis.fetch = originalFetch;
     }

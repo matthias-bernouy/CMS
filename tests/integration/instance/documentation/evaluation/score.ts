@@ -9,18 +9,18 @@ export async function scoreEvaluation(
     expectedUpload = "Uploaded through documented transport.\n",
 ) {
     const { call } = connection;
-    const installed = await call("ulvia.cms.installations", "list-collection-installations");
-    const pages = await call("ulvia.cms.content", "pages.list", { query: "Agent guide", limit: 100 });
+    const installed = await call("ulvia/cms.installations", "list-collection-installations");
+    const pages = await call("ulvia/cms.content", "pages.list", { query: "Agent guide", limit: 100 });
     const authored = pages.items.find((page: { path: string }) => page.path === "/agent-guide");
     const response = await fetch(`${cmsUrl}/agent-guide`);
     const html = await response.text();
-    const draft = await call("ulvia.cms.content", "pages.get", { id: pageId });
-    const workspace = await call("ulvia.cms.files", "workspace.get");
+    const draft = await call("ulvia/cms.content", "pages.get", { id: pageId });
+    const workspace = await call("ulvia/cms.files", "workspace.get");
     const matchingUploads = workspace.items.filter((item: { name: string }) => item.name === "agent-upload.txt");
     const uploaded = matchingUploads[0];
     let uploadMatches = false;
     if (uploaded) {
-        const signed = await call("ulvia.cms.files", "workspace.files.sign", {
+        const signed = await call("ulvia/cms.files", "workspace.files.sign", {
             fileId: uploaded.fileId,
             generation: uploaded.generation,
             expiresIn: 60,
@@ -29,7 +29,7 @@ export async function scoreEvaluation(
         const expected = new TextEncoder().encode(expectedUpload);
         uploadMatches = bytes.length === expected.length && bytes.every((byte, index) => byte === expected[index]);
     }
-    const contactPages = await call("ulvia.cms.content", "pages.list", { query: "Contact", limit: 100 });
+    const contactPages = await call("ulvia/cms.content", "pages.list", { query: "Contact", limit: 100 });
     const contact = contactPages.items.find((page: { path: string }) => page.path === "/contact-cabinet");
     const contactResponse = await fetch(`${cmsUrl}/contact-cabinet`);
     const contactHtml = await contactResponse.text();

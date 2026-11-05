@@ -1,3 +1,4 @@
+import { resourcePublisher } from "cms-repository/exports/contracts/protocol";
 import { validateCollectionLifecycles } from "../validation/lifecycle/validate";
 import { canonicalIJsonBytes, deepFreeze, parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { satisfiesVersionRange } from "cms-repository/exports/contracts/compatibility";
@@ -68,6 +69,9 @@ export function parseCollectionRelease(
             invalid("unsupported collection protocol", "$.protocol");
         }
         const collectionId = parseCollectionNamespace(source.collectionId, "$.collectionId");
+        if (resourcePublisher(collectionId) !== source.publisherId) {
+            invalid("resource namespace must match publisherId", "$.publisherId");
+        }
         const version = parseVersion(source.version);
         const locale = parseLocale(source.locale);
         const translations = parseCollectionTranslations(source.translations, locale);

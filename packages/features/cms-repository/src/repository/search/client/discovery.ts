@@ -1,6 +1,6 @@
 import { RepositoryDiscoveryError, discoveryFailure } from "../core/errors";
 import { sha256Digest } from "@bernouy/binary-media";
-import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
+import { compareSemVer, releaseChannel } from "cms-repository/exports/contracts/compatibility";
 import { object, searchQuery, text } from "../core/input";
 import { RepositoryInspection } from "./inspection";
 import type { RepositoryDiscoverySource, RepositorySearchPage, RepositorySearchResult } from "../interfaces";
@@ -24,6 +24,7 @@ export class RepositoryDiscovery {
     async search(value: unknown) {
         const input = object(value, [
             "query",
+            "channel",
             "kinds",
             "publisherId",
             "contractId",
@@ -67,7 +68,7 @@ export class RepositoryDiscovery {
             const candidates = new Map<string, { result: LocatedResult; score: number }>();
             for (const { id, page } of pages) {
                 page?.results.forEach((result, rank) => {
-                    const key = `${result.reference.kind}\0${result.reference.publisherId}\0${result.reference.id}\0${result.blocId ?? ""}`;
+                    const key = `${result.reference.kind}\0${result.reference.publisherId}\0${result.reference.id}\0${releaseChannel(result.reference.version)}\0${result.blocId ?? ""}`;
                     const previous = candidates.get(key);
                     const version = previous
                         ? compareSemVer(result.reference.version, previous.result.reference.version)

@@ -9,7 +9,7 @@ const page: TPage = {
     path: "/products",
     title: "Products",
     description: "",
-    content: '<form cms-mutation="shop:list-products as products"></form>',
+    content: '<form cms-mutation="ulvia/shop:list-products as products"></form>',
     visible: true,
     tags: [],
 };
@@ -18,22 +18,24 @@ test("derives Page access from declared and authored capabilities", async () => 
     const analyzer = new PageCapabilityAnalyzer({
         satisfiesVersionRange,
         resolveCapability: async (contractId, capabilityId) => {
-            if (contractId === "shop" && capabilityId === "list-products") {
+            if (contractId === "ulvia/shop" && capabilityId === "list-products") {
                 return { access: "authenticated", version: "2.3.0" };
             }
-            return contractId === "search" && capabilityId === "read" ? { access: "public", version: "1.4.0" } : null;
+            return contractId === "ulvia/search" && capabilityId === "read"
+                ? { access: "public", version: "1.4.0" }
+                : null;
         },
     });
     const document = {
         page,
-        requirements: [{ contractId: "search", capabilityId: "read", versionRange: "^1.0.0" }],
+        requirements: [{ contractId: "ulvia/search", capabilityId: "read", versionRange: "^1.0.0" }],
     };
 
     expect(pageRequiresCapabilityAnalysis(document)).toBe(true);
     expect(await analyzer.requiredAccess(document)).toBe("authenticated");
     expect(await analyzer.resolveRequirements(document)).toEqual([
-        { contractId: "search", capabilityId: "read", versionRange: "^1.0.0" },
-        { contractId: "shop", capabilityId: "list-products", versionRange: "=2.3.0" },
+        { contractId: "ulvia/search", capabilityId: "read", versionRange: "^1.0.0" },
+        { contractId: "ulvia/shop", capabilityId: "list-products", versionRange: "=2.3.0" },
     ]);
 });
 
@@ -41,34 +43,33 @@ test("rejects unavailable and version-incompatible Page requirements", async () 
     const analyzer = new PageCapabilityAnalyzer({
         satisfiesVersionRange,
         resolveCapability: async (contractId) =>
-            contractId === "catalog" ? { access: "public", version: "1.4.0" } : null,
+            contractId === "ulvia/catalog" ? { access: "public", version: "1.4.0" } : null,
     });
 
     await expect(
         analyzer.requiredAccess({
             page: { ...page, content: "" },
-            requirements: [{ contractId: "catalog", capabilityId: "read", versionRange: "^2.0.0" }],
+            requirements: [{ contractId: "ulvia/catalog", capabilityId: "read", versionRange: "^2.0.0" }],
         }),
     ).resolves.toBeNull();
     await expect(
         analyzer.requiredAccess({
-            page: { ...page, content: '<section cms-query="missing:list as items"></section>' },
+            page: { ...page, content: '<section cms-query="ulvia/missing:list as items"></section>' },
             requirements: [],
         }),
     ).resolves.toBeNull();
 });
 
-test("ignores Edge-local queries and promotes administrator capabilities", async () => {
+test("promotes administrator capabilities from canonical resource bindings", async () => {
     const analyzer = new PageCapabilityAnalyzer({
         satisfiesVersionRange,
         resolveCapability: async (contractId, capabilityId) =>
-            contractId === "admin" && capabilityId === "settings" ? { access: "admin", version: "1.0.0" } : null,
+            contractId === "ulvia/admin" && capabilityId === "settings" ? { access: "admin", version: "1.0.0" } : null,
     });
     const document = {
         page: {
             ...page,
-            content:
-                '<section cms-query="edge.runtime:status as runtime"></section><section cms-query="admin:settings as settings"></section>',
+            content: '<section cms-query="ulvia/admin:settings as settings"></section>',
         },
         requirements: [],
     };
@@ -85,7 +86,7 @@ test("resolves one contract snapshot for all Page capabilities", async () => {
         },
         resolveContract: async (contractId) => {
             contractResolutions += 1;
-            return contractId === "shop"
+            return contractId === "ulvia/shop"
                 ? {
                       version: "2.3.0",
                       capabilities: [
@@ -102,7 +103,7 @@ test("resolves one contract snapshot for all Page capabilities", async () => {
             page: {
                 ...page,
                 content:
-                    '<section cms-query="shop:list-products as products"></section><section cms-query="shop:read-product as product"></section>',
+                    '<section cms-query="ulvia/shop:list-products as products"></section><section cms-query="ulvia/shop:read-product as product"></section>',
             },
             requirements: [],
         }),

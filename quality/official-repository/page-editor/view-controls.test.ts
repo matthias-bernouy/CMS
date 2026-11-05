@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import type { EditorCatalogueItem } from "../../../packages/official-repository/collections/ulvia-official/blocs/admin/pages/ulvia-official-page-editor/runtime/model";
+import type { EditorCatalogueItem } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/model";
 import {
     renderRootFields,
     renderSettings,
-} from "../../../packages/official-repository/collections/ulvia-official/blocs/admin/pages/ulvia-official-page-editor/runtime/view/settings";
+} from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/view/settings";
 
 const item: EditorCatalogueItem = {
     id: "fixture-control",
@@ -51,11 +51,11 @@ describe("Page editor controls", () => {
         renderRootFields(roots, element, item, { linkUrl: "URL", nativeElement: "Element" });
         renderSettings(settings, element, item);
 
-        expect(roots.querySelector('[cms-bloc="ulvia-official-select"] select[data-root-tag]')).not.toBeNull();
-        expect(settings.querySelector('[cms-bloc="ulvia-official-select"] select[data-setting="tone"]')).not.toBeNull();
-        expect(settings.querySelector('[cms-bloc="ulvia-official-input"] input[data-setting="label"]')).not.toBeNull();
+        expect(roots.querySelector('[cms-bloc="ulvia--mossa--select"] select[data-root-tag]')).not.toBeNull();
+        expect(settings.querySelector('[cms-bloc="ulvia--mossa--select"] select[data-setting="tone"]')).not.toBeNull();
+        expect(settings.querySelector('[cms-bloc="ulvia--mossa--input"] input[data-setting="label"]')).not.toBeNull();
         expect(
-            settings.querySelector('[cms-bloc="ulvia-official-toggle"] input[data-setting="wide"][role="switch"]'),
+            settings.querySelector('[cms-bloc="ulvia--mossa--toggle"] input[data-setting="wide"][role="switch"]'),
         ).not.toBeNull();
     });
 });

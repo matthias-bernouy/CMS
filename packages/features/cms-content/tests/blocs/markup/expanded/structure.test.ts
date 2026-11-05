@@ -5,17 +5,17 @@ const codes = (html: string) => analyzeExpandedPageDocument(html, []).diagnostic
 
 test("expanded authoring catches the reproduced site's nested main landmarks without changing historical validation", () => {
     const definitions = [
-        { id: "test-shell", kind: "component" as const, markupHTML: "<main><slot></slot></main>" },
-        { id: "test-section", kind: "component" as const, markupHTML: "<main><h1>Title</h1></main>" },
+        { id: "example--test--shell", kind: "component" as const, markupHTML: "<main><slot></slot></main>" },
+        { id: "example--test--section", kind: "component" as const, markupHTML: "<main><h1>Title</h1></main>" },
     ];
-    const html = '<div cms-bloc="test-shell"><div cms-bloc="test-section"></div></div>';
+    const html = '<div cms-bloc="example--test--shell"><div cms-bloc="example--test--section"></div></div>';
     expect(() => validateExpandedPageDocument(html, definitions)).not.toThrow();
     const result = analyzeExpandedPageDocument(html, definitions);
     expect(result.diagnostics).toContainEqual(
         expect.objectContaining({
             code: "page.main_nested",
             severity: "error",
-            location: expect.objectContaining({ blocId: "test-section" }),
+            location: expect.objectContaining({ blocId: "example--test--section" }),
         }),
     );
 });
@@ -33,10 +33,12 @@ test("main landmarks respect mutually exclusive cases, hidden alternatives and i
 });
 
 test("slot expansion exposes invalid interactive and form nesting", () => {
-    const definitions = [{ id: "test-link", kind: "component" as const, markupHTML: '<a href="/"><slot></slot></a>' }];
+    const definitions = [
+        { id: "example--test--link", kind: "component" as const, markupHTML: '<a href="/"><slot></slot></a>' },
+    ];
     expect(
         analyzeExpandedPageDocument(
-            '<div cms-bloc="test-link"><button>Action</button></div>',
+            '<div cms-bloc="example--test--link"><button>Action</button></div>',
             definitions,
         ).diagnostics.some((d) => d.code === "page.interactive_nested"),
     ).toBe(true);
@@ -46,14 +48,16 @@ test("slot expansion exposes invalid interactive and form nesting", () => {
 test("expanded references resolve renamed template IDs and diagnose missing and conditional targets", () => {
     const definitions = [
         {
-            id: "test-dialog",
+            id: "example--test--dialog",
             kind: "component" as const,
             markupHTML: '<p id="label">Name</p><div aria-labelledby="label"></div>',
         },
     ];
     expect(
-        analyzeExpandedPageDocument('<div cms-bloc="test-dialog"></div><div cms-bloc="test-dialog"></div>', definitions)
-            .diagnostics,
+        analyzeExpandedPageDocument(
+            '<div cms-bloc="example--test--dialog"></div><div cms-bloc="example--test--dialog"></div>',
+            definitions,
+        ).diagnostics,
     ).toEqual([]);
     expect(codes('<div aria-labelledby="missing"></div>')).toContain("page.reference_missing");
     expect(

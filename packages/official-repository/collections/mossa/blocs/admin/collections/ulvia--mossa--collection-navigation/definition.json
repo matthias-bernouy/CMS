@@ -1,0 +1,23 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--collection-navigation",
+    "label": "bloc.collection-navigation.label",
+    "description": "bloc.collection-navigation.description",
+    "order": 610,
+    "catalogue": "listed",
+    "uses": ["ulvia--mossa--navigation-item", "ulvia--mossa--navigation-menu", "ulvia--mossa--navigation-section"],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.installations",
+            "capabilityId": "list-available-collections",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.administration"],
+    "examples": ["ulvia--mossa--collection-navigation-default"],
+    "defaultExample": "ulvia--mossa--collection-navigation-default"
+}

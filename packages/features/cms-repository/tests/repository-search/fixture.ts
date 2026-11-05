@@ -2,7 +2,7 @@ import type { RepositorySearchRow } from "../../src/repository/search/interfaces
 import { searchRow } from "../../src/repository/search/sources/rows";
 export const digest = `sha256:${"a".repeat(64)}`;
 export function row(
-    id = "shop",
+    id = "example.official/shop",
     description = "Product card with price",
     version = "1.0.0",
     blocId?: string,

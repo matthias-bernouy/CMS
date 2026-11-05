@@ -91,12 +91,12 @@ export function evaluationBridge(
                         args?.id === pageId
                     ) {
                         interrupted = true;
-                        await connection.call("ulvia.cms.content", "pages.update", {
+                        await connection.call("ulvia/cms.content", "pages.update", {
                             id: pageId,
                             expectedRevision: result.structuredContent.output.revision,
                             title: "Colleague revision",
                             content:
-                                '<h1 cms-bloc="ulvia-official-heading" size="lg" text-align="start">Colleague reviewed heading</h1>',
+                                '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Colleague reviewed heading</h1>',
                         });
                         event.concurrentEditInjected = true;
                     }

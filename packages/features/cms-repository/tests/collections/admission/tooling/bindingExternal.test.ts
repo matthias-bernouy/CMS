@@ -10,7 +10,7 @@ describe("binding Bloc external", () => {
             `}`,
         ].join("\n");
 
-        const bloc = await buildCollectionBloc({ tag: "demo-binding", viewSource });
+        const bloc = await buildCollectionBloc({ tag: "example--demo--binding", viewSource });
 
         for (const name of ["mutationFormRequest", "MutationFormError"]) {
             expect(bloc.viewJS).toContain(`window.cmsRuntime.${name}`);

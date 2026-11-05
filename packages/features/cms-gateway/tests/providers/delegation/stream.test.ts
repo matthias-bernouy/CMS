@@ -29,7 +29,7 @@ test("binary source tickets close on completion, cancellation and errors rather 
         });
         const result = await gateway.invoke({
             siteId: "site-a",
-            contractId: "origin",
+            contractId: "ulvia/origin",
             capabilityId: "item.list",
             input: { fileId: "file-1" },
             actor: { kind: "anonymous" },

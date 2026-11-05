@@ -21,7 +21,7 @@ export async function renderingScopeFixture() {
             kind: "collection",
             protocol: "ulvia-collection/v1",
             schemaDialect: "ulvia-schema/v1",
-            collectionId: "scoped",
+            collectionId: "example/scoped",
             publisherId: "example",
             version: "1.0.0",
             name: "name",
@@ -32,7 +32,7 @@ export async function renderingScopeFixture() {
             blocs: [
                 {
                     kind: "component",
-                    id: "scoped-card",
+                    id: "example--scoped--card",
                     root: { accepts: ["div"] },
                     label: "label",
                     description: "label",
@@ -47,7 +47,7 @@ export async function renderingScopeFixture() {
     );
     await store.install("site", artifact.digest, 0);
     const local = new InMemoryContentRepository();
-    await local.insertPage("/", "Home", '<div cms-bloc="scoped-card"></div>');
+    await local.insertPage("/", "Home", '<div cms-bloc="example--scoped--card"></div>');
     const page = (await local.getPage("/"))!;
     await local.updatePage({ id: page.id, visible: true }, page.revision);
     const counts = { blocs: 0, system: 0, routes: 0 };

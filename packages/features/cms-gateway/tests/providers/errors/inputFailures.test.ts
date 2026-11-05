@@ -14,20 +14,23 @@ import { gatewayRoute } from "../../fixtures";
 
 test("independent Provider SDK schema refusals are localized, bounded and occur before the handler", async () => {
     const route = await gatewayRoute();
-    const admission = await admitContractRelease({ ...route.release.admission.release, contractId: "example.catalog" });
+    const admission = await admitContractRelease({
+        ...route.release.admission.release,
+        contractId: "ulvia/example.catalog",
+    });
     const catalogue = new InMemoryReleaseCatalogue();
     await catalogue.publish(admission);
     const resolved = await resolveContract(catalogue, admission);
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     let calls = 0;
-    dispatcher.register("example.catalog", "item.list", async () => {
+    dispatcher.register("ulvia/example.catalog", "item.list", async () => {
         calls++;
         return { items: [] };
     });
     const relay = createProviderContractRelay(
         compileProviderRoutes([resolved]),
         dispatcher,
-        { siteId: "site-a", providerId: "independent" },
+        { siteId: "site-a", providerId: "ulvia/independent" },
         NOOP_LOGGER,
     );
     const requestId = crypto.randomUUID();
@@ -43,7 +46,7 @@ test("independent Provider SDK schema refusals are localized, bounded and occur 
             version: 1,
             requestId,
             instanceId: "instance-a",
-            contractId: "example.catalog",
+            contractId: "ulvia/example.catalog",
             contractVersion: "1.0.0",
             capabilityId: "item.list",
             issuedAt: 0,

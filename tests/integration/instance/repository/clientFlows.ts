@@ -11,7 +11,7 @@ import { repositoryApi } from "./client";
 
 export async function exerciseCli(root: string, origin: string, token: string) {
     const data = join(root, "cli");
-    const directory = join(root, "journey.cli.ping");
+    const directory = join(root, "journey.cli/journey.cli.ping");
     const logs: string[] = [];
     const options = {
         environment: { ULVIA_DATA_DIR: data, ULVIA_REPOSITORY_TOKEN: token },
@@ -29,7 +29,7 @@ export async function exerciseCli(root: string, origin: string, token: string) {
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
         publisherId: "journey.cli",
-        contractId: "journey.cli.ping",
+        contractId: "journey.cli/journey.cli.ping",
         version: "1.0.0",
         name: "CLI ping",
         capabilities: [
@@ -67,19 +67,25 @@ export async function exerciseCli(root: string, origin: string, token: string) {
         id: "journey.cli.ping",
         version: "1.0.0",
     });
-    expect(JSON.parse(pulled.canonicalJson).contractId).toBe("journey.cli.ping");
+    expect(JSON.parse(pulled.canonicalJson).contractId).toBe("journey.cli/journey.cli.ping");
     const contracts = new HttpProviderRepository("journey", origin);
-    expect((await contracts.list("contract")).some((entry) => entry.id === "journey.cli.ping")).toBe(true);
+    expect((await contracts.list("ulvia/contract")).some((entry) => entry.id === "journey.cli/journey.cli.ping")).toBe(
+        true,
+    );
     await run(["yank", "contract", coordinate, "--reason", "Integration verification"]);
-    expect((await contracts.list("contract")).some((entry) => entry.id === "journey.cli.ping")).toBe(false);
+    expect((await contracts.list("ulvia/contract")).some((entry) => entry.id === "journey.cli/journey.cli.ping")).toBe(
+        false,
+    );
     await run(["restore", "contract", coordinate]);
-    expect((await contracts.list("contract")).some((entry) => entry.id === "journey.cli.ping")).toBe(true);
-    await run(["namespace", "claim", "ulvia.official"]);
+    expect((await contracts.list("ulvia/contract")).some((entry) => entry.id === "journey.cli/journey.cli.ping")).toBe(
+        true,
+    );
+    await run(["namespace", "claim", "ulvia"]);
     await run(["release", resolve("packages/official-repository"), "--recursive"]);
     await run(["push", "all"]);
     expect(
         (await new HttpCollectionRepository("journey", origin).list()).some(
-            (entry) => entry.collectionId === "ulvia-official",
+            (entry) => entry.collectionId === "ulvia/mossa",
         ),
     ).toBe(true);
     await run(["repository", "logout"]);
@@ -95,7 +101,7 @@ export async function exerciseCmsAuthoring(
     other: { token: string },
 ) {
     const call = (path: string, body?: unknown, method = "POST") =>
-        api.request("ulvia.cms.authoring", path, method, body, admin);
+        api.request("ulvia/cms.authoring", path, method, body, admin);
     expect((await call("/get-connection", undefined, "GET")).status).toBe(200);
     const configured = await call("/configure-connection", { token: owner.token });
     expect(configured.status).toBe(200);
@@ -107,7 +113,7 @@ export async function exerciseCmsAuthoring(
     expect(await (await call("/get-connection", undefined, "GET")).json()).toEqual(connection);
     expect((await call("/claim-namespace", { namespace: "journey.cms" })).status).toBe(200);
     const guide = await readFile(
-        resolve("packages/official-repository/contracts/ulvia.cms.authoring/docs/collection-source.md"),
+        resolve("packages/official-repository/contracts/cms.authoring/docs/collection-source.md"),
         "utf8",
     );
     const sourceJson = JSON.stringify(
@@ -125,7 +131,7 @@ export async function exerciseCmsAuthoring(
     expect((await published.json()).digest).toBe(artifact.digest);
     const sources = await call(
         "/get-collection-sources",
-        { namespace: "journey.cms", collectionId: "guide-kit", version: "1.0.0" },
+        { namespace: "journey.cms", collectionId: "ulvia/guide-kit", version: "1.0.0" },
         "QUERY",
     );
     expect(sources.status).toBe(200);
@@ -133,13 +139,13 @@ export async function exerciseCmsAuthoring(
     expect(retained.releaseDigest).toBe(artifact.digest);
     expect(JSON.parse(retained.sourceJson).files).toHaveLength(JSON.parse(sourceJson).files.length);
     const refused = await repositoryApi(origin).request(
-        "ulvia.repository",
+        "ulvia/repository",
         "/v1/source-snapshots",
         "QUERY",
         {
             namespace: "journey.cms",
             namespaceRevision: 1,
-            collectionId: "guide-kit",
+            collectionId: "ulvia/guide-kit",
             version: "1.0.0",
         },
         other,
@@ -147,9 +153,9 @@ export async function exerciseCmsAuthoring(
     expect(refused.status).toBe(409);
     const catalogue = new HttpCollectionRepository("journey", origin);
     const entry = (await catalogue.list()).find((entry) => entry.publisherId === "journey.cms");
-    expect(entry?.collectionId).toBe("guide-kit");
+    expect(entry?.collectionId).toBe("ulvia/guide-kit");
     expect(entry?.blocCount).toBe(1);
-    expect((await catalogue.get(entry!)).release.collectionId).toBe("guide-kit");
+    expect((await catalogue.get(entry!)).release.collectionId).toBe("ulvia/guide-kit");
     expect((await call("/disconnect-connection")).status).toBe(200);
     expect((await (await call("/get-connection", undefined, "GET")).json()).configured).toBe(false);
 }

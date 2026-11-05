@@ -1,3 +1,4 @@
+import { resourceName } from "@bernouy/resource-identity";
 import { admitContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 
@@ -6,10 +7,10 @@ export function contractDocument(contractId: string, capabilityId: string, versi
         kind: "contract",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
-        contractId,
+        contractId: contractId.includes("/") ? contractId : `ulvia/${contractId}`,
         name: contractId,
         version,
-        publisherId: "ulvia.official",
+        publisherId: "ulvia",
         capabilities: [
             {
                 id: capabilityId,
@@ -32,7 +33,7 @@ export function contractDocument(contractId: string, capabilityId: string, versi
                         id: "http",
                         transport: "http",
                         method: "POST",
-                        path: `/v1/${contractId.replaceAll(".", "/")}`,
+                        path: `/v1/${(contractId.includes("/") ? resourceName(contractId) : contractId).replaceAll(".", "/")}`,
                         input: { body: true },
                         response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
                     },
@@ -56,9 +57,11 @@ export function capabilityTransition(
     previousId: string,
     nextId: string,
 ): Record<string, unknown>[] {
+    contractId = contractId.includes("/") ? contractId : `ulvia/${contractId}`;
     const next = contractDocument(contractId, nextId, "2.0.0");
     const replacement = (next.capabilities as Record<string, unknown>[])[0]!;
-    (replacement.bindings as Record<string, unknown>[])[0]!.path = `/v2/${contractId.replaceAll(".", "/")}`;
+    (replacement.bindings as Record<string, unknown>[])[0]!.path =
+        `/v2/${(contractId.includes("/") ? resourceName(contractId) : contractId).replaceAll(".", "/")}`;
     const transition = contractDocument(contractId, previousId, "1.1.0");
     const previous = (transition.capabilities as Record<string, unknown>[])[0]!;
     previous.deprecation = { replacedBy: nextId };
@@ -75,10 +78,10 @@ export function manifestDocument(
         kind: "provider-manifest",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
-        providerId: "ulvia.example",
+        providerId: "ulvia/ulvia.example",
         name: "Ulvia Example Provider",
         version: "1.0.0",
-        provenance: { publisherId: "ulvia.official", publishedAt: "2026-09-22T00:00:00Z" },
+        provenance: { publisherId: "ulvia", publishedAt: "2026-09-22T00:00:00Z" },
         buildVersionRange: ">=1.0.0 <2.0.0",
         endpoint: {
             allowedOrigins: ["https://provider.example.com"],
@@ -98,7 +101,7 @@ export function implementation(
     digest: string,
     requires: readonly Record<string, unknown>[] = [],
 ): Record<string, unknown> {
-    return { contractId, version, digest, requires };
+    return { contractId: contractId.includes("/") ? contractId : `ulvia/${contractId}`, version, digest, requires };
 }
 
 export function requirement(
@@ -106,5 +109,10 @@ export function requirement(
     capabilityId: string,
     versionRange = "^1.0.0",
 ): Record<string, unknown> {
-    return { contractId, capabilityId, versionRange, optional: false };
+    return {
+        contractId: contractId.includes("/") ? contractId : `ulvia/${contractId}`,
+        capabilityId,
+        versionRange,
+        optional: false,
+    };
 }

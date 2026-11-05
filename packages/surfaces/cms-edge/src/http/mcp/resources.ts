@@ -36,9 +36,9 @@ export function createAuthoringResources(host: CmsMcpHost) {
         async read(uri: string, context: McpInvocationContext) {
             const document =
                 uri === "ulvia://cms/site-files"
-                    ? { contractId: "ulvia.cms.files", path: "site-files.md" }
+                    ? { contractId: "ulvia/cms.files", path: "site-files.md" }
                     : uri === "ulvia://cms/collection-authoring"
-                      ? { contractId: "ulvia.cms.authoring", path: "collection-authoring.md" }
+                      ? { contractId: "ulvia/cms.authoring", path: "collection-authoring.md" }
                       : undefined;
             if (document) {
                 if (!host.invoker.resolveContract) {
@@ -61,7 +61,7 @@ export function createAuthoringResources(host: CmsMcpHost) {
                 for (let page = 0; page < 8; page++) {
                     const result = await host.invoker.invoke({
                         ...context,
-                        contractId: "ulvia.cms.installations",
+                        contractId: "ulvia/cms.installations",
                         capabilityId: "documentation.get",
                         input: { reference, offset },
                     });
@@ -93,7 +93,7 @@ export function createAuthoringResources(host: CmsMcpHost) {
             const result = await host.invoker.invoke({
                 ...context,
                 contractId:
-                    uri === "ulvia://cms/repository-namespaces" ? "ulvia.cms.authoring" : "ulvia.cms.installations",
+                    uri === "ulvia://cms/repository-namespaces" ? "ulvia/cms.authoring" : "ulvia/cms.installations",
                 capabilityId:
                     uri === "ulvia://cms/repository-namespaces" ? "list-namespaces" : "list-collection-installations",
                 input: {},

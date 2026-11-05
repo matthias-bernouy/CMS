@@ -1,3 +1,4 @@
+import { isResourceId } from "@bernouy/resource-identity";
 import { readTraceContext, TRACE_CONTEXT_HEADER } from "@bernouy/logging";
 import { providerCredentialFingerprint } from "cms-gateway/access/providers/credentials";
 import {
@@ -74,7 +75,7 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
         let actorCredential: ReturnType<typeof actorCredentialFromRequest>;
         try {
             const identifiers = await capabilityIdentifiers(request, config);
-            if (identifiers.contractId === "ulvia.cms.access" && identifiers.route.capability.id === "resolve-actor") {
+            if (identifiers.contractId === "ulvia/cms.access" && identifiers.route.capability.id === "resolve-actor") {
                 actorCredential = actorCredentialFromRequest(request);
             }
             if (
@@ -115,11 +116,14 @@ async function capabilityIdentifiers(request: Request, config: CapabilityHttpHan
         throw new GatewayError("invalid_input", "capability route is invalid");
     }
     const suffix = pathname.slice(prefix.length + 1);
-    const separator = suffix.indexOf("/");
+    const separator = suffix.indexOf("/", suffix.indexOf("/") + 1);
     const encodedContractId = separator < 0 ? suffix : suffix.slice(0, separator);
     let contractId: string;
     try {
-        contractId = decodeURIComponent(encodedContractId);
+        contractId = encodedContractId.split("/").map(decodeURIComponent).join("/");
+        if (!isResourceId(contractId)) {
+            throw new TypeError("Invalid contract identity");
+        }
     } catch {
         throw new GatewayError("invalid_input", "capability contract identifier is invalid");
     }

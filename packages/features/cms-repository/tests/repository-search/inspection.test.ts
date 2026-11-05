@@ -15,7 +15,7 @@ async function fixture() {
                 protocol: "ulvia-collection/v1",
                 schemaDialect: "ulvia-schema/v1",
                 publisherId: "example.official",
-                collectionId: "sample",
+                collectionId: "example.official/sample",
                 version: `1.0.${index}`,
                 name: "name",
                 locale: "en",
@@ -62,7 +62,7 @@ async function fixture() {
             reference: {
                 kind: "collection",
                 publisherId: "example.official",
-                id: "sample",
+                id: "example.official/sample",
                 version: `1.0.${index}`,
                 digest: artifacts[index]!.digest,
             },

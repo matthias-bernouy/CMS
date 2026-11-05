@@ -17,12 +17,15 @@ test("unknown examples return a localized input refusal without reading other co
         collections: {
             snapshot: async () => {
                 reads++;
-                return { revision: 1, collections: [{ collectionId: "demo", release: { examples: [], blocs: [] } }] };
+                return {
+                    revision: 1,
+                    collections: [{ collectionId: "example/demo", release: { examples: [], blocs: [] } }],
+                };
             },
         },
     } as never);
-    const response = await invokeHttp(await resolvedContract("ulvia.cms.content"), dispatcher, "examples.get", {
-        collectionId: "demo",
+    const response = await invokeHttp(await resolvedContract("ulvia/cms.content"), dispatcher, "examples.get", {
+        collectionId: "example/demo",
         exampleId: "missing",
     });
     expect(response.status).toBe(422);
@@ -44,7 +47,7 @@ test("schema rejection explains the invalid field before dispatch, without a wri
             },
         },
     } as never);
-    const response = await invokeHttp(await resolvedContract("ulvia.cms.content"), dispatcher, "pages.create", {
+    const response = await invokeHttp(await resolvedContract("ulvia/cms.content"), dispatcher, "pages.create", {
         path: "/draft",
         title: "x".repeat(71),
     });
@@ -72,7 +75,7 @@ test("send validation describes email data while SMTP configuration retains its 
     } as never);
     await expect(
         dispatcher.invoke(
-            "ulvia.cms.emailer.smtp",
+            "ulvia/cms.emailer.smtp",
             "emailer.send",
             { toEmail: "user@example.com", subject: " ", text: "Body" },
             context("fr"),
@@ -82,7 +85,7 @@ test("send validation describes email data while SMTP configuration retains its 
         output: { message: "Certaines informations fournies sont invalides." },
     });
     await expect(
-        dispatcher.invoke("ulvia.cms.emailer.smtp", "smtp.configuration.update", {}, context("fr")),
+        dispatcher.invoke("ulvia/cms.emailer.smtp", "smtp.configuration.update", {}, context("fr")),
     ).rejects.toMatchObject({
         code: "INVALID_INPUT",
         output: { message: "La configuration SMTP contient des informations invalides." },

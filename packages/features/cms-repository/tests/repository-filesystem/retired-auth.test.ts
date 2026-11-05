@@ -20,7 +20,7 @@ test("retired signing exports and endpoints cannot grant namespace ownership", a
         for (const path of [
             "/v1/namespaces/claim",
             "/v1/publication-uploads",
-            "/.cms/call/ulvia.repository/v1/namespace-actions/rotate",
+            "/.cms/call/ulvia/repository/v1/namespace-actions/rotate",
         ]) {
             const request = new Request(`https://repository.example${path}`, {
                 method: "POST",
@@ -29,7 +29,7 @@ test("retired signing exports and endpoints cannot grant namespace ownership", a
             expect((await app.handle(request)).status).toBe(404);
             expect(request.bodyUsed).toBe(false);
         }
-        const claim = new Request("https://repository.example/.cms/call/ulvia.repository/v1/namespace-actions/claim", {
+        const claim = new Request("https://repository.example/.cms/call/ulvia/repository/v1/namespace-actions/claim", {
             method: "POST",
             headers: { "content-type": "application/json", "x-repository-proof": "retired-proof" },
             body: JSON.stringify({ namespace: "community" }),

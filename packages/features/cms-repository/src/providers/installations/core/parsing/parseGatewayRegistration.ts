@@ -7,7 +7,7 @@ import {
     rejectUnknownKeys,
     type UnknownRecord,
 } from "cms-repository/providers/manifests/core/protocol/values";
-import { parseIdentifier } from "cms-repository/providers/manifests/core/parsing/identifiers";
+import { parseResourceIdentifier } from "cms-repository/providers/manifests/core/parsing/identifiers";
 import { ProviderInstallationValidationError } from "../errors";
 import { DEFAULT_PROVIDER_INSTALLATION_LIMITS, type ProviderInstallationLimits } from "../limits";
 import { parseInstallationDocument, parseInstallationJson } from "./documents";
@@ -41,7 +41,7 @@ export function parseProviderGatewayRegistrationResponse(
         rejectUnknownKeys(record, ["protocol", "installationId", "providerId", "accountId"], "$");
         return {
             ...parseIdentity(record),
-            providerId: parseIdentifier(record.providerId, "$.providerId", 96),
+            providerId: parseResourceIdentifier(record.providerId, "$.providerId"),
             accountId: parseOpaqueId(record.accountId, "$.accountId"),
         };
     });

@@ -33,7 +33,7 @@ test("MCP-selected error and login Pages are used by public Content delivery", a
     await f.repository.insertPage(
         "/private",
         "Private",
-        '<div cms-bloc="fixture-system-page" cms-query="admin:read as data"><span>Protected</span></div>',
+        '<div cms-bloc="fixture-system-page" cms-query="ulvia/admin:read as data"><span>Protected</span></div>',
     );
     const privatePage = (await f.repository.getPage("/private"))!;
     await f.repository.updatePage({ id: privatePage.id, visible: true }, privatePage.revision);

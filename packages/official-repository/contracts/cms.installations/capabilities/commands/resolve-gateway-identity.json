@@ -1,0 +1,90 @@
+{
+    "id": "gateway.identity.resolve",
+    "description": "Edge control connection only. Resolve or create the stable provider-scoped alias for one CMS subject.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "natural",
+        "execution": "sync",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "providerId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 193
+            },
+            "subjectId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+            }
+        },
+        "required": ["providerId", "subjectId"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "providerSubjectId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+            }
+        },
+        "required": ["providerSubjectId"]
+    },
+    "errors": [
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "FORBIDDEN",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/gateway/identity",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "CORE_UNAVAILABLE": 503,
+                    "FORBIDDEN": 403
+                }
+            }
+        }
+    ],
+    "docs": ["overview.md"]
+}

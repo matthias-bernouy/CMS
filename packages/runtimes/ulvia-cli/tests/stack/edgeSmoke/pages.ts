@@ -25,8 +25,8 @@ export async function mutatePages(page: Page, edgeOrigin: string): Promise<void>
         });
     await page.locator("#new-page-path").fill("/smoke-page");
     await Promise.all([
-        page.waitForURL(/\/admin\/pages\/detail\?ulvia-official-page-id=/u),
-        page.locator('form[cms-mutation^="ulvia.cms.content:pages.create "] button[type="submit"]').click(),
+        page.waitForURL(/\/admin\/pages\/detail\?ulvia--mossa--page-id=/u),
+        page.locator('form[cms-mutation^="ulvia/cms.content:pages.create "] button[type="submit"]').click(),
     ]);
     const detailUrl = page.url();
     await page
@@ -45,14 +45,14 @@ export async function mutatePages(page: Page, edgeOrigin: string): Promise<void>
     }
     await mutateRoute(page);
     await mutateSeo(page);
-    await page.locator('a[href^="/admin/pages/edit?ulvia-official-page-id="]').click();
-    await page.waitForURL(/\/admin\/pages\/edit\?ulvia-official-page-id=/u);
+    await page.locator('a[href^="/admin/pages/edit?ulvia--mossa--page-id="]').click();
+    await page.waitForURL(/\/admin\/pages\/edit\?ulvia--mossa--page-id=/u);
     const openCatalogue = page.locator("#page-editor-open-catalogue");
     await openCatalogue.click();
-    const addHeading = page.locator('button[data-add="ulvia-official-heading"]');
+    const addHeading = page.locator('button[data-add="ulvia--mossa--heading"]');
     await addHeading.waitFor();
     await waitUntilEnabled(addHeading, "Page editor did not become ready");
-    const editorError = page.locator('[cms-bloc="ulvia-official-page-editor"] [data-notice][data-error]');
+    const editorError = page.locator('[cms-bloc="ulvia--mossa--page-editor"] [data-notice][data-error]');
     if (await editorError.isVisible().catch(() => false)) {
         throw new Error(`Page editor failed to load at ${page.url()}: ${await editorError.textContent()}`);
     }
@@ -91,12 +91,12 @@ async function fillLatestVisibleElementContent(page: Page, value: string): Promi
 }
 
 async function submitPageDetails(page: Page) {
-    const form = page.locator('form[cms-mutation="ulvia.cms.content:pages.update as saved"]');
+    const form = page.locator('form[cms-mutation="ulvia/cms.content:pages.update as saved"]');
     const revision = form.locator('input[name="expectedRevision"]');
     const initialRevision = await revision.inputValue();
-    const reload = page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/pages.get"));
+    const reload = page.waitForResponse((candidate) => candidate.url().includes("ulvia/cms.content/pages.get"));
     const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/pages.update")),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia/cms.content/pages.update")),
         form.locator('button[type="submit"]').click(),
     ]);
     if (response.ok()) {

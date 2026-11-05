@@ -2,18 +2,18 @@ import { expect, test } from "bun:test";
 import { createProtectedProviderManagement } from "../../src/runtime/gateway/protectedManagement";
 
 const control = {
-    contractId: "ulvia.cms.installations",
+    contractId: "ulvia/cms.installations",
     version: "1.0.0",
     digest: `sha256:${"a".repeat(64)}`,
 };
 const content = {
-    contractId: "ulvia.cms.content",
+    contractId: "ulvia/cms.content",
     version: "1.0.0",
     digest: `sha256:${"b".repeat(64)}`,
 };
 const systemInstallation = {
     id: "provider:system",
-    providerId: "ulvia.official",
+    providerId: "ulvia/primary-provider",
     accountId: "instance:control",
 };
 
@@ -37,7 +37,7 @@ test("the control installation stays pinned while ordinary contract selections r
         selections: [
             { ...control, installationId: systemInstallation.id },
             { ...content, installationId: "provider:alternative" },
-            { ...content, contractId: "ulvia.cms.observability", installationId: "provider:alternative" },
+            { ...content, contractId: "ulvia/cms.observability", installationId: "provider:alternative" },
         ],
     };
 
@@ -46,7 +46,7 @@ test("the control installation stays pinned while ordinary contract selections r
     await expect(
         protectedManagement.replaceSelections({
             ...input,
-            selections: input.selections.filter(({ contractId }) => contractId !== "ulvia.cms.observability"),
+            selections: input.selections.filter(({ contractId }) => contractId !== "ulvia/cms.observability"),
         }),
     ).rejects.toMatchObject({ code: "observability_selection_protected" });
 });
@@ -73,7 +73,7 @@ test("the control installation cannot remove or redirect its own selection", asy
 
 test("only the host can change the control installation status", async () => {
     const statusChanges: unknown[] = [];
-    const alternative = { id: "provider:alternative", providerId: "vendor.remote", accountId: "remote" };
+    const alternative = { id: "provider:alternative", providerId: "ulvia/vendor.remote", accountId: "remote" };
     const management = {
         list: async () => ({ installations: [systemInstallation, alternative] }),
         replaceSelections: async () => ({ revision: 2, selected: [] }),

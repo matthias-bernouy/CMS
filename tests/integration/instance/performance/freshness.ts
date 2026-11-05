@@ -4,7 +4,7 @@ import type { connectBrowser } from "../oauth";
 /** Real commands cross MCP/Gateway; anonymous cache entries must immediately observe completed writes. */
 export async function exerciseFreshness(connection: Awaited<ReturnType<typeof connectBrowser>>, cmsUrl: string) {
     const call = (capability: string, input: Record<string, unknown> = {}) =>
-        connection.call("ulvia.cms.content", capability, input);
+        connection.call("ulvia/cms.content", capability, input);
     let path = "/cache-freshness";
     const read = async (cache?: string) => {
         const response = await fetch(`${cmsUrl}${path}`, { redirect: "manual" });
@@ -20,14 +20,14 @@ export async function exerciseFreshness(connection: Awaited<ReturnType<typeof co
     let page = await call("pages.create", {
         path,
         title: "Freshness",
-        content: '<h1 cms-bloc="ulvia-official-heading" size="lg" text-align="start">Initial cache version</h1>',
+        content: '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Initial cache version</h1>',
     });
     page = await call("pages.publish", { id: page.id, expectedRevision: page.revision, visible: true });
     await warm();
     page = await call("pages.update", {
         id: page.id,
         expectedRevision: page.revision,
-        content: '<h1 cms-bloc="ulvia-official-heading" size="lg" text-align="start">Changed cache version</h1>',
+        content: '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Changed cache version</h1>',
     });
     expect((await read("MISS")).text).toContain("Changed cache version");
     await read("HIT");
@@ -59,7 +59,7 @@ export async function exerciseFreshness(connection: Awaited<ReturnType<typeof co
     expect((await read()).status).not.toBe(200);
     await call("site.update", { expectedRevision: hidden.revision, visible: true });
     await warm();
-    const theme = await call("theme.get", { collectionId: "ulvia-official" });
+    const theme = await call("theme.get", { collectionId: "ulvia/mossa" });
     await call("theme.activate", { expectedRevision: theme.revision, themeId: theme.activeThemeId });
     await warm();
     const localization = await call("localization.get");

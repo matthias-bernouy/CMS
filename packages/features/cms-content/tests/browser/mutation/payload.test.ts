@@ -20,7 +20,7 @@ describe("Form mutation payload", () => {
             remember: { from: "literal", value: true },
         });
         const root = el(`
-            <form cms-mutation="accounts:login as session" cms-mutation-reset="false" cms-mutation-input='${input}'>
+            <form cms-mutation="ulvia/accounts:login as session" cms-mutation-reset="false" cms-mutation-input='${input}'>
                 <input name="email" value="ada@example.com">
             </form>
         `) as HTMLFormElement;
@@ -32,7 +32,7 @@ describe("Form mutation payload", () => {
         await waitFor(() => request !== null);
 
         const captured = request as unknown as { url: string; init?: RequestInit };
-        expect(captured.url).toBe("http://localhost/.cms/mutation/accounts/login");
+        expect(captured.url).toBe("http://localhost/.cms/mutation/ulvia/accounts/login");
         expect(JSON.parse(String(captured.init?.body))).toEqual({
             email: "ada@example.com",
             returnTo: "/dashboard",
@@ -49,7 +49,7 @@ describe("Form mutation payload", () => {
             return Response.json({});
         }) as typeof fetch;
         const root = el(`
-            <form cms-mutation="accounts:login as session"
+            <form cms-mutation="ulvia/accounts:login as session"
                 cms-mutation-input='{"token":{"from":"state","key":"@page:site-missing-token"}}'>
                 <button type="submit">Login</button>
             </form>

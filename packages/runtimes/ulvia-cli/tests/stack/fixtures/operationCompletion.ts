@@ -7,7 +7,7 @@ type ProbePage = Pick<Page, "request" | "url" | "waitForTimeout">;
 /** A 202 acknowledges work; only the terminal operation result permits inspecting the new site state. */
 export async function waitForSiteOperation(page: ProbePage, handle: unknown, now = Date.now): Promise<void> {
     const { operationId } = parseCapabilityOperationHandle(handle);
-    const endpoint = new URL("/.cms/query/ulvia.cms.installations/get-operation", page.url()).href;
+    const endpoint = new URL("/.cms/query/ulvia/cms.installations/get-operation", page.url()).href;
     const deadline = now() + 60_000;
     while (now() < deadline) {
         const response = await page.request.fetch(endpoint, { method: "QUERY", data: { operationId } });
@@ -51,7 +51,7 @@ export async function submitSiteUpgrade(
         .waitForResponse(
             (response) =>
                 response.request().method() === "POST" &&
-                new URL(response.url()).pathname.endsWith(`/ulvia.cms.installations/${capability}`),
+                new URL(response.url()).pathname.endsWith(`/ulvia/cms.installations/${capability}`),
             { timeout: 15_000 },
         )
         .then((response) => {
@@ -70,7 +70,7 @@ export async function submitSiteUpgrade(
 }
 
 async function listSiteOperations(page: ProbePage): Promise<{ operationId: string; capabilityId: string }[]> {
-    const endpoint = new URL("/.cms/query/ulvia.cms.installations/list-operations", page.url()).href;
+    const endpoint = new URL("/.cms/query/ulvia/cms.installations/list-operations", page.url()).href;
     const response = await page.request.fetch(endpoint, { method: "QUERY", data: { limit: 100 } });
     try {
         if (!response.ok()) {

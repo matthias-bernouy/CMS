@@ -6,7 +6,8 @@ import { dirname, join } from "node:path";
 import type { RepositoryArtifactKind } from "cms-repository/repository/publication/types";
 import { durableRename, durableWriteFile, ensureDurableDirectory } from "./core/durable";
 import { sha256Digest } from "@bernouy/binary-media";
-import { canonicalIJsonBytes } from "cms-repository/exports/contracts/protocol";
+import { isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
+import { isResourceId, resourcePublisher, canonicalIJsonBytes } from "cms-repository/exports/contracts/protocol";
 
 export type { RepositoryArtifactKind } from "cms-repository/repository/publication/types";
 export type RepositoryYank = Readonly<{ reason: string; yankedAt: string }>;
@@ -128,11 +129,20 @@ export class LocalRepositoryYanks {
 }
 
 function validMetadata(value: unknown, validate: (item: unknown) => boolean): boolean {
-    return value !== null && typeof value === "object" && !Array.isArray(value) && Object.values(value).every(validate);
+    return (
+        value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        Object.entries(value).every(([coordinate, item]) => validCoordinate(coordinate) && validate(item))
+    );
 }
 
 function key(kind: RepositoryArtifactKind, publisherId: string, id: string, version: string): string {
-    return `${kind}\0${publisherId}\0${id}\0${version}`;
+    const coordinate = `${kind}\0${publisherId}\0${id}\0${version}`;
+    if (!validCoordinate(coordinate)) {
+        throw new RepositoryRequestError("REJECTED", "Invalid publication identity");
+    }
+    return coordinate;
 }
 
 function validEntries(value: unknown): value is Record<string, RepositoryYank> {
@@ -142,7 +152,7 @@ function validEntries(value: unknown): value is Record<string, RepositoryYank> {
         !Array.isArray(value) &&
         Object.entries(value).every(
             ([coordinate, yank]) =>
-                coordinate.split("\0").length === 4 &&
+                validCoordinate(coordinate) &&
                 yank !== null &&
                 typeof yank === "object" &&
                 !Array.isArray(yank) &&
@@ -153,5 +163,16 @@ function validEntries(value: unknown): value is Record<string, RepositoryYank> {
                 typeof (yank as RepositoryYank).yankedAt === "string" &&
                 Number.isFinite(Date.parse((yank as RepositoryYank).yankedAt)),
         )
+    );
+}
+
+function validCoordinate(value: string): boolean {
+    const [kind, publisher, id, version, extra] = value.split("\0");
+    return (
+        extra === undefined &&
+        ["collection", "contract", "provider-manifest"].includes(kind!) &&
+        isResourceId(id) &&
+        resourcePublisher(id) === publisher &&
+        isCanonicalSemVer(version)
     );
 }

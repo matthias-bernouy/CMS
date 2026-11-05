@@ -1,3 +1,4 @@
+import { resourcePublisher } from "cms-repository/exports/contracts/protocol";
 import { isSha256Digest } from "@bernouy/binary-media";
 import type { CollectionRepositoryEntry } from "./interfaces";
 import { isCollectionNamespace } from "../core/namespace";
@@ -18,6 +19,7 @@ export function validCollectionReference(reference: {
     return (
         isRepositoryIdentifier(reference.publisherId) &&
         isCollectionNamespace(reference.collectionId) &&
+        resourcePublisher(reference.collectionId) === reference.publisherId &&
         isCanonicalSemVer(reference.version) &&
         isSha256Digest(reference.digest)
     );
@@ -69,7 +71,7 @@ export function parseCollectionCataloguePage(data: unknown, repositoryId: string
         if (typeof entry.publisherId !== "string" || !isRepositoryIdentifier(entry.publisherId)) {
             throw new TypeError("Invalid repository publisherId");
         }
-        if (!isCollectionNamespace(entry.collectionId)) {
+        if (!isCollectionNamespace(entry.collectionId) || resourcePublisher(entry.collectionId) !== entry.publisherId) {
             throw new TypeError("Invalid repository collectionId");
         }
         if (

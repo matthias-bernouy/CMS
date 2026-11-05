@@ -1,0 +1,62 @@
+:scope {
+    --ulvia--mossa--navigation-menu-padding: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    --ulvia--mossa--navigation-item-height: 2.25rem;
+    --ulvia--mossa--navigation-item-font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+    --ulvia--mossa--navigation-item-icon-size: 1.125rem;
+    --ulvia--mossa--navigation-section-flex: 0 0 auto;
+    --ulvia--mossa--navigation-section-gap: var(--ulvia--mossa--spacing-md, 1rem);
+    --ulvia--mossa--navigation-section-label-padding: var(--ulvia--mossa--spacing-xs, 0.5rem)
+        var(--ulvia--mossa--spacing-sm, 0.75rem) var(--ulvia--mossa--spacing-2xs, 0.25rem);
+    display: block;
+    min-width: 0;
+    height: var(--ulvia--mossa--navigation-menu-height, 100%);
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+}
+
+[part~="menu"] {
+    display: flex;
+    min-height: 100%;
+    box-sizing: border-box;
+    flex-direction: column;
+    padding: var(--ulvia--mossa--navigation-menu-padding);
+    background: transparent;
+}
+[part~="header"] {
+    display: var(--ulvia--mossa--navigation-menu-header-display, block);
+    padding: 0.125rem var(--ulvia--mossa--spacing-sm, 0.75rem) var(--ulvia--mossa--spacing-sm, 0.75rem);
+    color: var(--ulvia--mossa--text-muted);
+    font-size: var(--ulvia--mossa--font-size-xs, 0.75rem);
+    font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+    letter-spacing: var(--ulvia--mossa--letter-spacing-wide, 0.04em);
+    text-transform: uppercase;
+}
+[part~="sections"] {
+    display: flex;
+    flex-flow: var(--ulvia--mossa--navigation-menu-sections-flow, column)
+        var(--ulvia--mossa--navigation-menu-sections-wrap, nowrap);
+    gap: var(--ulvia--mossa--navigation-section-gap);
+}
+[part~="footer"] {
+    display: var(--ulvia--mossa--navigation-menu-footer-display, grid);
+    gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    margin-block-start: auto;
+    padding-block-start: var(--ulvia--mossa--spacing-md, 1rem);
+    border-top: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+}
+:scope[appearance="subtle"] [part~="menu"] {
+    background: var(--ulvia--mossa--background-subtle);
+}
+:scope[density="compact"] {
+    --ulvia--mossa--navigation-menu-padding: 0.25rem 0.5rem 0.75rem;
+    --ulvia--mossa--navigation-item-height: 2rem;
+    --ulvia--mossa--navigation-item-font-size: 0.8125rem;
+    --ulvia--mossa--navigation-item-icon-size: 1rem;
+    --ulvia--mossa--navigation-item-padding: 0.375rem 0.5rem;
+    --ulvia--mossa--navigation-section-gap: 0.75rem;
+    --ulvia--mossa--navigation-section-label-padding: 0.375rem 0.5rem 0.1875rem;
+}
+:scope[density="comfortable"] {
+    --ulvia--mossa--navigation-menu-padding: var(--ulvia--mossa--spacing-md, 1rem);
+    --ulvia--mossa--navigation-item-height: 2.75rem;
+    --ulvia--mossa--navigation-item-font-size: var(--ulvia--mossa--font-size-md, 1rem);
+}

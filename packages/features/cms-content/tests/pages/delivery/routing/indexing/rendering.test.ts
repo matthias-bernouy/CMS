@@ -67,7 +67,7 @@ describe("Content dynamic page metadata", () => {
         expect(calls).toMatchObject([
             {
                 siteId: "site-test",
-                contractId: "commerce",
+                contractId: "ulvia/commerce",
                 capabilityId: "product.get",
                 input: { slug: "requested-chair" },
                 actor: { kind: "user", subjectId: "dev-user" },

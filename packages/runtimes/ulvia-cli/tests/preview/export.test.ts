@@ -17,7 +17,7 @@ test("preview exports immutable example data and a sandboxed explorer without pu
             () => {},
         );
         const manifest = await Bun.file(join(output, "manifest.json")).json();
-        expect(manifest.release.collectionId).toBe("sample");
+        expect(manifest.release.collectionId).toBe("example/sample");
         expect(manifest.frames.map((frame: { width: number; height: number }) => [frame.width, frame.height])).toEqual([
             [640, 240],
             [320, 160],

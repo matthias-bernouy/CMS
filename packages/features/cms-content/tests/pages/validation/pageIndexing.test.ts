@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { validatePageIndexingConfiguration, validatePagePatch } from "@bernouy/cms-content";
 
 const entity = {
-    contractId: "commerce",
+    contractId: "ulvia/commerce",
     label: "Product",
     pageQueryParam: "product",
     resolve: { capabilityId: "product.get", inputParam: "slug", identityPath: "slug" },

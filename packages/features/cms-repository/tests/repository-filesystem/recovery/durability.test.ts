@@ -117,7 +117,7 @@ test("startup recovery removes only unreferenced hash-addressed assets", async (
     const release = Buffer.from('{"kind":"collection"}');
     const referenced = createHash("sha256").update(release).digest("hex");
     const orphan = "f".repeat(64);
-    const releaseDirectory = join(root, "releases", "ulvia.official", "example");
+    const releaseDirectory = join(root, "releases", "ulvia", "example");
     const assets = join(root, "assets", "collections");
     await mkdir(releaseDirectory, { recursive: true });
     await writeFile(join(releaseDirectory, "1.0.0.json"), release);

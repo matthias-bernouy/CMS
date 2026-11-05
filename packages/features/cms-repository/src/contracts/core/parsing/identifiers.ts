@@ -1,4 +1,5 @@
 import { ReleaseValidationError } from "../protocol/errors";
+import { isResourceId, isResourceNamespace } from "./resources";
 import { expectString } from "../protocol/values";
 
 const IDENTIFIER_PATTERN = /^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/;
@@ -35,5 +36,20 @@ export function isCanonicalSemVer(value: unknown): value is string {
 }
 
 export function isRepositoryIdentifier(value: string): boolean {
-    return value.length <= 96 && IDENTIFIER_PATTERN.test(value);
+    return isResourceNamespace(value);
+}
+
+export function parseResourceIdentifier(value: unknown, path: string): string {
+    if (!isResourceId(value)) {
+        throw new ReleaseValidationError("invalid_contract", "must be a namespace/name resource identity", path);
+    }
+    return value;
+}
+
+export function parsePublisherIdentifier(value: unknown, path: string): string {
+    const publisher = expectString(value, path, "invalid_contract", 96);
+    if (!isResourceNamespace(publisher)) {
+        throw new ReleaseValidationError("invalid_contract", "must be a bounded lowercase publisher namespace", path);
+    }
+    return publisher;
 }

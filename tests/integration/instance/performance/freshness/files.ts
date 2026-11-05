@@ -1,8 +1,9 @@
 import { expect } from "bun:test";
+import { resourceRuntimeNamespace } from "@bernouy/cms-repository/contracts/protocol";
 import { cachedPage, publishPage, type Connection } from "./context";
-export async function exerciseFileFreshness(connection: Connection, cmsUrl: string) {
+export async function exerciseFileFreshness(connection: Connection, cmsUrl: string, collectionId: string) {
     const call = (capability: string, input: Record<string, unknown> = {}) =>
-        connection.call("ulvia.cms.files", capability, input);
+        connection.call("ulvia/cms.files", capability, input);
     const bytes = new TextEncoder().encode(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#123abc" d="M1 1h10v10H1z"/></svg>',
     );
@@ -28,11 +29,11 @@ export async function exerciseFileFreshness(connection: Connection, cmsUrl: stri
     const workspace = await call("workspace.get");
     const file = workspace.items.find((item: { name: string }) => item.name === "cache.svg");
     expect(file).toBeDefined();
-    const url = `/.cms/call/ulvia.cms.files/files/${file.fileId}/${file.generation}`;
+    const url = `/.cms/call/ulvia/cms.files/files/${file.fileId}/${file.generation}`;
     await publishPage(
         connection,
         "/cache-file",
-        `<div cms-bloc="cache-kit-media-host"><img src="${url}" alt="File freshness"></div>`,
+        `<div cms-bloc="${resourceRuntimeNamespace(collectionId)}--media-host"><img src="${url}" alt="File freshness"></div>`,
     );
     const page = cachedPage(cmsUrl, "/cache-file");
     expect((await page.warm()).text).toContain(url);

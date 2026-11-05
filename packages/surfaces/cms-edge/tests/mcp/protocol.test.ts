@@ -1,3 +1,4 @@
+import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { mcpActor } from "cms-edge/http/mcp/protocol";
 import { expect, test } from "bun:test";
 import { cmsMcpFixture } from "./fixture";
@@ -36,12 +37,20 @@ test("CMS OAuth discovery, consent, authenticated tools and resources use one cl
     expect(tools).toHaveLength(2);
     expect(tools[0].outputSchema.type).toBe("object");
     expect(
-        (await rpc("tools/call", { name: "echo", arguments: { input: {} } })).result.structuredContent.output.ok,
+        (
+            await rpc("tools/call", {
+                name: capabilityToolName("test/test.cms", "echo", "mcp", "echo"),
+                arguments: { input: {} },
+            })
+        ).result.structuredContent.output.ok,
     ).toBe(true);
     expect(f.mutations).toEqual([]);
-    await rpc("tools/call", { name: "update", arguments: { input: {} } });
-    expect(f.mutations).toEqual([{ contractId: "test.cms", capabilityId: "update" }]);
-    const invocation = f.invocations.findLast((call) => call.contractId === "test.cms")!;
+    await rpc("tools/call", {
+        name: capabilityToolName("test/test.cms", "update", "mcp", "update"),
+        arguments: { input: {} },
+    });
+    expect(f.mutations).toEqual([{ contractId: "test/test.cms", capabilityId: "update" }]);
+    const invocation = f.invocations.findLast((call) => call.contractId === "test/test.cms")!;
     expect(invocation.actor).toEqual({ kind: "administrator", subjectId: "admin", authorizationRevision: 3 });
     expect((await rpc("resources/list")).result.resources).toHaveLength(4);
     expect(

@@ -8,7 +8,7 @@ test("example documents use native links with statically identifiable paths", ()
         "page.private.name": "Private",
     });
     const html =
-        '<div cms-bloc=\"atlas-panel\"><a slot="body" href="/admin/details?id={{ page.id | urlencode }}">{{ copy }}</a></div>';
+        '<div cms-bloc="atlas-dofficial--atlas--panel"><a slot="body" href="/admin/details?id={{ page.id | urlencode }}">{{ copy }}</a></div>';
     const details = { ...example, id: "details", label: "page.details.name" };
     expect(() =>
         parseCollectionRelease(
@@ -16,9 +16,9 @@ test("example documents use native links with statically identifiable paths", ()
         ),
     ).not.toThrow();
     for (const invalidHtml of [
-        '<div cms-bloc=\"atlas-panel\"><a slot="body" href="/{{ page.path }}">{{ copy }}</a></div>',
-        '<div cms-bloc=\"atlas-panel\"><a slot="body" data-cms-page-ref="details">{{ copy }}</a></div>',
-        '<div cms-bloc=\"atlas-panel\"><div slot="body" href="/admin/details">{{ copy }}</div></div>',
+        '<div cms-bloc="atlas-dofficial--atlas--panel"><a slot="body" href="/{{ page.path }}">{{ copy }}</a></div>',
+        '<div cms-bloc="atlas-dofficial--atlas--panel"><a slot="body" data-cms-page-ref="details">{{ copy }}</a></div>',
+        '<div cms-bloc="atlas-dofficial--atlas--panel"><div slot="body" href="/admin/details">{{ copy }}</div></div>',
     ]) {
         expect(() =>
             parseCollectionRelease(
@@ -37,15 +37,15 @@ test("collection admission validates links from every Bloc template", () => {
     source.texts = [textDefinition("details", { en: "Details", "en-US": "Details" })];
     const details = { ...example, id: "details", label: "page.details.name" };
     const blocs = structuredClone(source.blocs) as Record<string, unknown>[];
-    const composition = blocs.find(({ id }) => id === "atlas-page")!;
+    const composition = blocs.find(({ id }) => id === "atlas-dofficial--atlas--page")!;
     composition.slots = {};
     composition.uses = [];
-    composition.markup = '<a href="/admin/details">{{ cms.i18n.atlas.details }}</a>';
+    composition.markup = '<a href="/admin/details">{{ cms.i18n.atlas.official/atlas.details }}</a>';
     expect(() =>
         parseCollectionRelease(collectionFixture({ ...source, blocs, examples: [example, details] })),
     ).not.toThrow();
 
-    composition.markup = '<a href="/admin/pagez">{{ cms.i18n.atlas.details }}</a>';
+    composition.markup = '<a href="/admin/pagez">{{ cms.i18n.atlas.official/atlas.details }}</a>';
     expect(() =>
         parseCollectionRelease(collectionFixture({ ...source, blocs, examples: [example, details] })),
     ).not.toThrow();
@@ -62,7 +62,7 @@ test("collection admission validates the outline after expanding local compositi
         categories: ["bloc.heading.label"],
 
         kind: "component",
-        id: "atlas-heading",
+        id: "atlas-dofficial--atlas--heading",
         label: "bloc.heading.label",
         markup: "<slot></slot>",
         root: { accepts: ["h1", "h2", "h3", "h4", "h5", "h6"] },
@@ -75,15 +75,18 @@ test("collection admission validates the outline after expanding local compositi
         categories: ["bloc.outline.label"],
 
         kind: "composition",
-        id: "atlas-outline",
+        id: "atlas-dofficial--atlas--outline",
         label: "bloc.outline.label",
         markup,
         root: { accepts: ["div"] },
         slots: {},
-        uses: ["atlas-heading"],
+        uses: ["atlas-dofficial--atlas--heading"],
         requires: [],
     });
-    const collectionExample = { ...example, document: { html: '<div cms-bloc="atlas-outline"></div>' } };
+    const collectionExample = {
+        ...example,
+        document: { html: '<div cms-bloc="atlas-dofficial--atlas--outline"></div>' },
+    };
 
     expect(() =>
         parseCollectionRelease(
@@ -92,7 +95,9 @@ test("collection admission validates the outline after expanding local compositi
                 blocs: [
                     ...(source.blocs as unknown[]),
                     heading,
-                    outline('<h2 cms-bloc="atlas-heading">{{ copy }}</h2><h4 cms-bloc="atlas-heading">{{ copy }}</h4>'),
+                    outline(
+                        '<h2 cms-bloc="atlas-dofficial--atlas--heading">{{ copy }}</h2><h4 cms-bloc="atlas-dofficial--atlas--heading">{{ copy }}</h4>',
+                    ),
                 ],
                 examples: [collectionExample],
             }),
@@ -105,7 +110,9 @@ test("collection admission validates the outline after expanding local compositi
                 blocs: [
                     ...(source.blocs as unknown[]),
                     heading,
-                    outline('<h1 cms-bloc="atlas-heading">{{ copy }}</h1><h1 cms-bloc="atlas-heading">{{ copy }}</h1>'),
+                    outline(
+                        '<h1 cms-bloc="atlas-dofficial--atlas--heading">{{ copy }}</h1><h1 cms-bloc="atlas-dofficial--atlas--heading">{{ copy }}</h1>',
+                    ),
                 ],
                 examples: [collectionExample],
             }),

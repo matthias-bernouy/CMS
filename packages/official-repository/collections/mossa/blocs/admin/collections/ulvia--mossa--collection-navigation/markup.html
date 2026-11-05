@@ -1,0 +1,46 @@
+<div
+    data-navigation-root=""
+    cms-query="ulvia/cms.installations:list-available-collections as catalogue"
+    cms-query-listen="@page:ulvia--mossa--collection-catalogue-mutation/lastSuccess/requestId"
+    cms-query-refresh="focus reconnect"
+>
+    <div cms-bloc="ulvia--mossa--navigation-menu" label="{{ cms.i18n.ulvia/mossa.ui-collections }}">
+        <span slot="header">{{ cms.i18n.ulvia/mossa.ui-collections }}</span>
+        <div cms-bloc="ulvia--mossa--navigation-section" slot="sections">
+            <span slot="label">{{ cms.i18n.ulvia/mossa.ui-collection-catalogue }}</span>
+            <a cms-bloc="ulvia--mossa--navigation-item" slot="items" href="/admin/collections">
+                <svg cms-svg="{{ cms.asset.ulvia/mossa.icons/navigation/collections.svg }}" aria-hidden="true" slot="content"></svg>
+                <span slot="content">{{ cms.i18n.ulvia/mossa.ui-explore-collections }}</span>
+            </a>
+        </div>
+        <div cms-bloc="ulvia--mossa--navigation-section" cms-condition="catalogue.outcome.kind === 'success'" slot="sections">
+            <span slot="label">{{ cms.i18n.ulvia/mossa.ui-installed-collections }}</span>
+            <a
+                cms-bloc="ulvia--mossa--navigation-item"
+                cms-repeat="catalogue.data.installed as installed"
+                slot="items"
+                href="/admin/collections/detail?ulvia--mossa--collection={{ installed.collectionId | urlencode }}"
+            >
+                <span slot="content">{{ installed.collectionId }}</span>
+            </a>
+        </div>
+    </div>
+    <p role="status" cms-condition="catalogue.activity === 'fetching'">
+        {{ cms.i18n.ulvia/mossa.ui-reading-collection-catalogue }}
+    </p>
+    <div cms-match="catalogue.outcome.kind">
+        <span cms-case='"none"' hidden></span>
+        <span cms-case='"success"' hidden></span>
+        <div cms-case='"error"' cms-match="catalogue.outcome.code">
+            <p role="alert" cms-case='"CATALOGUE_TOO_LARGE"'>
+                {{ cms.i18n.ulvia/mossa.ui-collection-catalogue-unavailable }}
+            </p>
+            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                {{ cms.i18n.ulvia/mossa.ui-collection-catalogue-unavailable }}
+            </p>
+        </div>
+        <p role="alert" cms-case='"failure"'>
+            {{ cms.i18n.ulvia/mossa.ui-collection-catalogue-unavailable }}
+        </p>
+    </div>
+</div>

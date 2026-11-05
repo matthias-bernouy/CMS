@@ -250,7 +250,7 @@ export class ProviderInstanceHost {
         let registry: Awaited<ReturnType<typeof createInstanceRepository>> | undefined;
         try {
             const profile = this.requiredProfile(instance.profile.id, instance.profile.version);
-            const registryPin = profile.contracts.find(({ contractId }) => contractId === "ulvia.repository");
+            const registryPin = profile.contracts.find(({ contractId }) => contractId === "ulvia/repository");
             if (registryPin) {
                 registry = await createInstanceRepository(
                     stores,
@@ -421,7 +421,7 @@ export class ProviderInstanceHost {
                     );
                 },
                 ensureProviderReady: async () => {
-                    await gateway.routes.warm(SITE_ID, "ulvia.cms.installations");
+                    await gateway.routes.warm(SITE_ID, "ulvia/cms.installations");
                 },
                 close: () =>
                     closeInstanceComposition({

@@ -1,3 +1,4 @@
+import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
 import { parseHTML } from "linkedom";
 import {
     parseQuery,
@@ -29,11 +30,13 @@ export function validateCollectionStateBindings(
     owner: StateOwner,
     installed: ReadonlyMap<string, CollectionRelease> = new Map(),
 ): void {
-    const own = new Map((owner.states ?? []).map((state) => [`${owner.collectionId}-${state.id}`, state]));
+    const own = new Map(
+        (owner.states ?? []).map((state) => [`${resourceRuntimeNamespace(owner.collectionId)}--${state.id}`, state]),
+    );
     const imported = new Map<string, { collectionId: string; id: string }>();
     for (const dependency of owner.dependencies ?? []) {
         for (const state of dependency.imports.states ?? []) {
-            imported.set(`${dependency.collectionId}-${state.id}`, {
+            imported.set(`${resourceRuntimeNamespace(dependency.collectionId)}--${state.id}`, {
                 collectionId: dependency.collectionId,
                 id: state.id,
             });

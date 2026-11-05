@@ -1,0 +1,19 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia/cms.emailer.smtp",
+    "name": "CMS SMTP Emailer",
+    "description": "Configure and deliver outbound CMS email through SMTP without exposing credentials.",
+    "extends": {
+        "contractId": "ulvia/cms.emailer",
+        "version": "1.0.0",
+        "digest": "sha256:a235f01b1fec08716ea722caccc6bc56974b15e449b2f41b0559e4ea686b70ed"
+    },
+    "version": "1.0.0",
+    "publisherId": "ulvia",
+    "catalogue": {
+        "icon": "mail",
+        "categories": ["administration", "infrastructure"]
+    }
+}

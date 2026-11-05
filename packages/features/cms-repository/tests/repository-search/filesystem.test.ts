@@ -25,8 +25,16 @@ test("filesystem discovery reuses snapshots, omits hidden Blocs, and invalidates
         const first = await source.load();
         expect(await source.load()).toBe(first);
         expect(first.rows.filter((row) => row.blocId)).toHaveLength(1);
-        expect((await service.search({ query: "atlas-page" })).results[0]?.blocId).toBe("atlas-page");
-        await new LocalRepositoryYanks(root).set("collection", "atlas.official", "atlas", "1.0.0", "Withdrawn");
+        expect((await service.search({ query: "atlas-dofficial--atlas--page" })).results[0]?.blocId).toBe(
+            "atlas-dofficial--atlas--page",
+        );
+        await new LocalRepositoryYanks(root).set(
+            "collection",
+            "atlas.official",
+            "atlas.official/atlas",
+            "1.0.0",
+            "Withdrawn",
+        );
         index.invalidate();
         expect((await service.search({ query: "atlas" })).results).toEqual([]);
         const hidden = structuredClone(document);
@@ -38,8 +46,8 @@ test("filesystem discovery reuses snapshots, omits hidden Blocs, and invalidates
         expect(updated.revision).not.toBe(first.revision);
         expect(updated.rows.filter((row) => row.blocId)).toHaveLength(1);
         expect(
-            (await service.search({ query: "atlas-panel", kinds: ["bloc"] })).results.some(
-                (row) => row.blocId === "atlas-panel",
+            (await service.search({ query: "atlas-dofficial--atlas--panel", kinds: ["bloc"] })).results.some(
+                (row) => row.blocId === "atlas-dofficial--atlas--panel",
             ),
         ).toBe(false);
     } finally {
@@ -61,7 +69,7 @@ test("the filesystem search snapshot omits historical rows while exact historica
         ).load();
         expect(snapshot.rows).toHaveLength(3);
         expect(snapshot.rows.every((row) => row.reference.version === "1.0.1")).toBe(true);
-        expect(await repository.getMetadata("atlas.official", "atlas", "1.0.0")).not.toBeNull();
+        expect(await repository.getMetadata("atlas.official", "atlas.official/atlas", "1.0.0")).not.toBeNull();
     } finally {
         await rm(root, { recursive: true, force: true });
     }

@@ -1,3 +1,4 @@
+import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
 import { parseHTML } from "linkedom";
 import { collectCmsMutationBindings, collectCmsQueryBindings } from "@bernouy/cms-content";
 import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
@@ -33,14 +34,18 @@ export function documentReferences(
     for (const match of html.matchAll(/var\(\s*--([a-z][a-z0-9-]*)/giu)) {
         const owner = [...releases]
             .sort((a, b) => b.collectionId.length - a.collectionId.length)
-            .find(({ collectionId }) => match[1]!.startsWith(`${collectionId}-`));
+            .find(({ collectionId }) => match[1]!.startsWith(`${resourceRuntimeNamespace(collectionId)}--`));
         if (owner) {
-            add("theme-token", owner.collectionId, match[1]!.slice(owner.collectionId.length + 1));
+            add(
+                "theme-token",
+                owner.collectionId,
+                match[1]!.slice(resourceRuntimeNamespace(owner.collectionId).length + 2),
+            );
         }
     }
     for (const release of releases) {
         for (const state of release.states ?? []) {
-            const key = `${release.collectionId}-${state.id}`;
+            const key = `${resourceRuntimeNamespace(release.collectionId)}--${state.id}`;
             if (new RegExp(`(?<![a-z0-9-])${key}(?![a-z0-9-])`, "u").test(html)) {
                 add("state", release.collectionId, state.id);
             }
@@ -71,7 +76,7 @@ export function documentReferences(
         const offset = path.indexOf(marker);
         if (offset >= 0 && path.startsWith("/") && !path.startsWith("//")) {
             const suffix = path.slice(offset + marker.length);
-            const separator = suffix.indexOf("/");
+            const separator = suffix.indexOf("/", suffix.indexOf("/") + 1);
             if (separator > 0) {
                 references.push({
                     type: "binding",

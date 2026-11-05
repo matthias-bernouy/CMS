@@ -25,7 +25,7 @@ test("remote contract transfer preserves and re-verifies declared fixture bytes"
         const asset = await readFile(join(fixtureRoot, "mock-assets", "receipt.svg"));
         await writeAuthoredContractFixture(directory, definition);
         await writeFile(join(directory, "fixtures", "receipt.svg"), asset);
-        const coordinate = "ulvia.official/communication.receipt@0.1.0";
+        const coordinate = "ulvia/communication.receipt@0.1.0";
 
         await runCli(["release", directory], {
             environment: { ULVIA_DATA_DIR: sourceData },
@@ -44,7 +44,7 @@ test("remote contract transfer preserves and re-verifies declared fixture bytes"
         });
 
         const files = new LocalArtifactFiles(join(targetData, "repository"));
-        const stored = await files.get("contracts", "ulvia.official", "communication.receipt", "0.1.0");
+        const stored = await files.get("contracts", "ulvia", "ulvia/communication.receipt", "0.1.0");
         expect(stored).not.toBeNull();
         expect(await files.fixture(stored!.toString("utf8"), "receipt.svg")).toEqual(asset);
     } finally {

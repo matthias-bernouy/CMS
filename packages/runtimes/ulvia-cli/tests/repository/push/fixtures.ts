@@ -8,7 +8,7 @@ import { LocalArtifactFiles } from "@bernouy/cms-repository/repository/filesyste
 export async function pushFixture() {
     const f = await accountFixture();
     await f.run(["repository", "login", f.server.url.origin]);
-    await f.run(["namespace", "claim", "ulvia.official"]);
+    await f.run(["namespace", "claim", "ulvia"]);
     const source = join(f.root, "source");
     await mkdir(source);
     return {
@@ -36,9 +36,9 @@ export async function pushFixture() {
                 kind: "contract",
                 protocol: "ulvia-provider/v1",
                 schemaDialect: "ulvia-schema/v1",
-                contractId: id,
+                contractId: `${options.publisher ?? "ulvia"}/${id}`,
                 version: options.version ?? "1.0.0",
-                publisherId: options.publisher ?? "ulvia.official",
+                publisherId: options.publisher ?? "ulvia",
                 name: "Push contract",
                 capabilities: [
                     {

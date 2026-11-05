@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { mount } from "../../../../official-repository/collections/ulvia-official/blocs/forms/fields/advanced/ulvia-official-tag-input/bloc";
+import { mount } from "../../../../official-repository/collections/mossa/blocs/forms/fields/advanced/ulvia--mossa--tag-input/bloc";
 
 afterEach(() => {
     document.body.replaceChildren();
@@ -7,14 +7,14 @@ afterEach(() => {
 
 test("official tag input keeps the authored input as its form source", () => {
     document.body.innerHTML = `
-        <div cms-bloc="ulvia-official-tag-input">
+        <div cms-bloc="ulvia--mossa--tag-input">
             <span part="control"><span part="draft"></span><input name="languages" value='["en"]'></span>
             <span part="tags" role="list"></span>
             <span part="hint"></span>
             <span part="status" aria-live="polite"></span>
         </div>
     `;
-    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia-official-tag-input"]');
+    const root = document.querySelector<HTMLElement>('[cms-bloc="ulvia--mossa--tag-input"]');
     const source = root?.querySelector<HTMLInputElement>('input[name="languages"]');
     if (!root || !source) {
         throw new Error("Missing tag input fixture");

@@ -5,7 +5,7 @@ export const repositoryPages: OfficialInstanceProfile["initialPages"] = [
     {
         id: "catalogue",
         path: "/",
-        collectionId: "ulvia-repository",
+        collectionId: "ulvia/repository",
         indexing: true,
         title: "page.catalogue.name",
         description: "page.catalogue.description",
@@ -14,7 +14,7 @@ export const repositoryPages: OfficialInstanceProfile["initialPages"] = [
     {
         id: "search",
         path: "/search",
-        collectionId: "ulvia-repository",
+        collectionId: "ulvia/repository",
         indexing: false,
         title: "page.search.name",
         description: "page.search.description",
@@ -23,7 +23,7 @@ export const repositoryPages: OfficialInstanceProfile["initialPages"] = [
     {
         id: "login",
         path: "/login",
-        collectionId: "ulvia-repository",
+        collectionId: "ulvia/repository",
         indexing: false,
         title: "page.login.name",
         description: "page.login.description",
@@ -32,7 +32,7 @@ export const repositoryPages: OfficialInstanceProfile["initialPages"] = [
     {
         id: "signup",
         path: "/signup",
-        collectionId: "ulvia-repository",
+        collectionId: "ulvia/repository",
         indexing: false,
         title: "page.signup.name",
         description: "page.signup.description",
@@ -41,7 +41,7 @@ export const repositoryPages: OfficialInstanceProfile["initialPages"] = [
     {
         id: "account",
         path: "/account",
-        collectionId: "ulvia-repository",
+        collectionId: "ulvia/repository",
         indexing: false,
         title: "page.account.name",
         description: "page.account.description",
@@ -50,7 +50,7 @@ export const repositoryPages: OfficialInstanceProfile["initialPages"] = [
     {
         id: "tokens",
         path: "/account/tokens",
-        collectionId: "ulvia-repository",
+        collectionId: "ulvia/repository",
         indexing: false,
         title: "page.tokens.name",
         description: "page.tokens.description",
@@ -59,7 +59,7 @@ export const repositoryPages: OfficialInstanceProfile["initialPages"] = [
     {
         id: "namespaces",
         path: "/account/namespaces",
-        collectionId: "ulvia-repository",
+        collectionId: "ulvia/repository",
         indexing: false,
         title: "page.namespaces.name",
         description: "page.namespaces.description",
@@ -68,7 +68,7 @@ export const repositoryPages: OfficialInstanceProfile["initialPages"] = [
     {
         id: "resource",
         path: "/resource",
-        collectionId: "ulvia-repository",
+        collectionId: "ulvia/repository",
         indexing: false,
         title: "page.resource.name",
         description: "page.resource.description",
@@ -77,7 +77,7 @@ export const repositoryPages: OfficialInstanceProfile["initialPages"] = [
     {
         id: "publications",
         path: "/account/publications",
-        collectionId: "ulvia-repository",
+        collectionId: "ulvia/repository",
         indexing: false,
         title: "page.publications.name",
         description: "page.publications.description",

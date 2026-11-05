@@ -35,7 +35,7 @@ test("filters apply before ranking and selection changes fence both search and d
     await service.prepare();
     const filtered = await service.search({ query: "upload", capabilityId: "read" });
     expect(filtered.results.every((result) => result.reference.path === "guide-0.md")).toBe(true);
-    expect((await service.search({ query: "revision", contractId: "unselected" })).results).toEqual([]);
+    expect((await service.search({ query: "revision", contractId: "ulvia/unselected" })).results).toEqual([]);
     const ref = { contractId: f.admission.release.contractId, releaseDigest: f.admission.digest, path: "guide-0.md" };
     const other = await fixture("another.instance.contract");
     const isolated = new CmsDocumentation(other.source, other.model);

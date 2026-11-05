@@ -20,15 +20,19 @@ test("connection preview excludes denied source and target capabilities", async 
         revision: 1,
         dependencyRevision: "state-1",
         grants: { default: "allow-selected" as const, denied: [] as { contractId: string; capabilityId: string }[] },
-        plan: await planContractSelections(siteId, [await f.select("commerce"), await f.select("payment")], f.context),
+        plan: await planContractSelections(
+            siteId,
+            [await f.select("ulvia/commerce"), await f.select("ulvia/payment")],
+            f.context,
+        ),
     };
     const allowed = await previewProviderAuthority(manifest, current, f.releases);
-    expect(allowed.delegation.matches.some((pair) => pair.targetContractId === "payment")).toBeTrue();
-    current.grants.denied.push({ contractId: "payment", capabilityId: "pay" });
+    expect(allowed.delegation.matches.some((pair) => pair.targetContractId === "ulvia/payment")).toBeTrue();
+    current.grants.denied.push({ contractId: "ulvia/payment", capabilityId: "pay" });
     const denied = await previewProviderAuthority(manifest, current, f.releases);
     expect(
         denied.delegation.matches.some(
-            (pair) => pair.targetContractId === "payment" || pair.sourceContractId === "payment",
+            (pair) => pair.targetContractId === "ulvia/payment" || pair.sourceContractId === "payment",
         ),
     ).toBeFalse();
     expect(denied.authorityDigest).not.toBe(allowed.authorityDigest);
@@ -55,7 +59,7 @@ test("review inventories retain each exact capability once across wildcard pairs
     };
     const plan = await planContractSelections(
         siteId,
-        [await f.select("commerce"), await f.select("payment"), await f.select("emailer")],
+        [await f.select("ulvia/commerce"), await f.select("ulvia/payment"), await f.select("ulvia/emailer")],
         { ...f.context, installations: [installed] },
     );
     const { authority } = plan;
@@ -71,9 +75,9 @@ test("review inventories retain each exact capability once across wildcard pairs
     expect(JSON.stringify(authority).length).toBeLessThan(JSON.stringify(expanded).length / 2);
     const effective = grantedAuthority(authority, {
         default: "allow-selected",
-        denied: [{ contractId: "payment", capabilityId: "pay" }],
+        denied: [{ contractId: "ulvia/payment", capabilityId: "pay" }],
     });
-    expect(effective.capabilities.some((entry) => entry.contractId === "payment")).toBeFalse();
+    expect(effective.capabilities.some((entry) => entry.contractId === "ulvia/payment")).toBeFalse();
     expect(effective.delegated).toHaveLength(4);
     for (const entry of effective.delegated) {
         expect(effective.capabilities[entry.source]).toBeDefined();

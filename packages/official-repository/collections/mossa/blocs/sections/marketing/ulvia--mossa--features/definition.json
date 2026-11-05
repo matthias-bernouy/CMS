@@ -1,0 +1,52 @@
+{
+    "kind": "composition",
+    "id": "ulvia--mossa--features",
+    "label": "bloc.features.label",
+    "description": "bloc.features.description",
+    "order": 20,
+    "uses": [
+        "ulvia--mossa--card",
+        "ulvia--mossa--grid",
+        "ulvia--mossa--heading",
+        "ulvia--mossa--prose",
+        "ulvia--mossa--section",
+        "ulvia--mossa--stack"
+    ],
+    "requires": [],
+    "slots": {
+        "heading": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        },
+        "intro": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ],
+            "max": 1
+        },
+        "features": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--card"
+                }
+            ],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.sections"],
+    "examples": ["features-default"],
+    "defaultExample": "features-default"
+}

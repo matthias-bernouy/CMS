@@ -1,0 +1,36 @@
+:scope {
+    --ulvia--mossa--stack-gap: var(--ulvia--mossa--spacing-lg, 1.5rem);
+    --ulvia--mossa--stack-direction: column;
+    --ulvia--mossa--stack-wrap: nowrap;
+    display: block;
+    text-align: inherit;
+}
+
+[part~="stack"] {
+    display: flex;
+    flex-direction: var(--ulvia--mossa--stack-direction);
+    flex-wrap: var(--ulvia--mossa--stack-wrap);
+    gap: var(--ulvia--mossa--stack-gap);
+    align-items: stretch;
+}
+:scope[gap="none"] {
+    --ulvia--mossa--stack-gap: 0rem;
+}
+:scope[gap="sm"] {
+    --ulvia--mossa--stack-gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}
+:scope[gap="md"] {
+    --ulvia--mossa--stack-gap: var(--ulvia--mossa--spacing-md, 1rem);
+}
+:scope[gap="xl"] {
+    --ulvia--mossa--stack-gap: var(--ulvia--mossa--spacing-xl, 2rem);
+}
+:scope[items-align="start"] [part~="stack"] {
+    align-items: flex-start;
+}
+:scope[items-align="center"] [part~="stack"] {
+    align-items: center;
+}
+:scope[items-align="end"] [part~="stack"] {
+    align-items: flex-end;
+}

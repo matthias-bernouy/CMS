@@ -23,9 +23,9 @@ describe("selected query capability resolution", () => {
             releases("sha256:" + "a".repeat(64), true),
         );
 
-        expect(await resolve([{ contractId: "catalog", capabilityId: "list" }])).toEqual([
+        expect(await resolve([{ contractId: "ulvia/catalog", capabilityId: "list" }])).toEqual([
             {
-                contractId: "catalog",
+                contractId: "ulvia/catalog",
                 capabilityId: "list",
                 output: capability.output,
                 errors: capability.errors,
@@ -40,7 +40,7 @@ describe("selected query capability resolution", () => {
             releases("sha256:" + "b".repeat(64), false),
         );
 
-        await expect(resolve([{ contractId: "catalog", capabilityId: "list" }])).rejects.toThrow(
+        await expect(resolve([{ contractId: "ulvia/catalog", capabilityId: "list" }])).rejects.toThrow(
             "unavailable or invalid",
         );
     });
@@ -65,7 +65,7 @@ describe("selected query capability resolution", () => {
         );
 
         await expect(
-            resolve([{ contractId: "forms", capabilityId: "submission.create", effect: "command" }]),
+            resolve([{ contractId: "ulvia/forms", capabilityId: "submission.create", effect: "command" }]),
         ).rejects.toBeInstanceOf(ContentValidationError);
     });
 
@@ -76,7 +76,7 @@ describe("selected query capability resolution", () => {
             svgReleases("sha256:" + "a".repeat(64), "public", ["image/svg+xml"]),
         );
 
-        await expect(validate([{ contractId: "catalog", bindingPath: "/icons/check" }])).resolves.toBeUndefined();
+        await expect(validate([{ contractId: "ulvia/catalog", bindingPath: "/icons/check" }])).resolves.toBeUndefined();
     });
 
     test("rejects authenticated and non-SVG binary bindings before authored content is stored", async () => {
@@ -91,10 +91,10 @@ describe("selected query capability resolution", () => {
             svgReleases("sha256:" + "a".repeat(64), "public", ["image/png"]),
         );
 
-        await expect(authenticated([{ contractId: "catalog", bindingPath: "/icons/check" }])).rejects.toThrow(
+        await expect(authenticated([{ contractId: "ulvia/catalog", bindingPath: "/icons/check" }])).rejects.toThrow(
             "not an available public",
         );
-        await expect(wrongMedia([{ contractId: "catalog", bindingPath: "/icons/check" }])).rejects.toThrow(
+        await expect(wrongMedia([{ contractId: "ulvia/catalog", bindingPath: "/icons/check" }])).rejects.toThrow(
             "not an available public",
         );
     });
@@ -111,7 +111,7 @@ function svgReleases(
                 admission: {
                     digest,
                     release: {
-                        contractId: "catalog",
+                        contractId: "ulvia/catalog",
                         version: "1.0.0",
                         capabilities: [
                             {
@@ -154,7 +154,13 @@ function selections(digest: string): ContractSelectionStore {
                 plan: {
                     siteId: "default",
                     selections: [
-                        { siteId: "default", contractId: "catalog", version: "1.0.0", digest, installationId: "p1" },
+                        {
+                            siteId: "default",
+                            contractId: "ulvia/catalog",
+                            version: "1.0.0",
+                            digest,
+                            installationId: "p1",
+                        },
                     ],
                     dependencies: [],
                     structurallyValid: true,
@@ -171,7 +177,10 @@ function releases(digest: string, yanked: boolean): ReleaseCatalogue {
     return {
         get: async () =>
             ({
-                admission: { digest, release: { contractId: "catalog", version: "1.0.0", capabilities: [capability] } },
+                admission: {
+                    digest,
+                    release: { contractId: "ulvia/catalog", version: "1.0.0", capabilities: [capability] },
+                },
                 publishedAt: "2026-01-01T00:00:00.000Z",
                 ...(yanked ? { yank: { reason: "superseded" } } : {}),
             }) as never,

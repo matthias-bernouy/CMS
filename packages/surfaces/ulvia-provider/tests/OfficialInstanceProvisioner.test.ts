@@ -13,18 +13,22 @@ import {
 } from "../src";
 
 const OFFICIAL_INSTANCE_PROFILE = Object.freeze({
-    id: "ulvia.official",
+    id: "ulvia",
     version: "1.0.0",
     initialPages: [],
     upgradeFromVersions: Object.freeze([] as string[]),
-    manifest: Object.freeze({ providerId: "ulvia.official", version: "0.3.0", digest: `sha256:${"a".repeat(64)}` }),
+    manifest: Object.freeze({
+        providerId: "ulvia/primary-provider",
+        version: "0.3.0",
+        digest: `sha256:${"a".repeat(64)}`,
+    }),
     contracts: Object.freeze([
-        Object.freeze({ contractId: "ulvia.cms.content", version: "1.0.0", digest: `sha256:${"b".repeat(64)}` }),
+        Object.freeze({ contractId: "ulvia/cms.content", version: "1.0.0", digest: `sha256:${"b".repeat(64)}` }),
     ]),
     collections: Object.freeze([
         Object.freeze({
-            publisherId: "ulvia.official",
-            collectionId: "ulvia-official",
+            publisherId: "ulvia",
+            collectionId: "ulvia/mossa",
             version: "1.0.0",
             digest: `sha256:${"c".repeat(64)}`,
         }),
@@ -102,7 +106,7 @@ describe("OfficialInstanceProvisioner", () => {
         const transitions = new MemoryTransitions();
         const provisioner = createProvisioner(registry, transitions, calls);
 
-        await expect(provisioner.upgrade("instance:one", { id: "ulvia.official", version: "1.1.0" })).rejects.toThrow(
+        await expect(provisioner.upgrade("instance:one", { id: "ulvia", version: "1.1.0" })).rejects.toThrow(
             "Unsupported Provider instance profile",
         );
 

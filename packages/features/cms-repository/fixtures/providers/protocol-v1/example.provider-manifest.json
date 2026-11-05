@@ -2,11 +2,11 @@
     "kind": "provider-manifest",
     "protocol": "ulvia-provider/v1",
     "schemaDialect": "ulvia-schema/v1",
-    "providerId": "ulvia.example",
+    "providerId": "ulvia/ulvia.example",
     "name": "Ulvia Example Provider",
     "version": "1.0.0",
     "provenance": {
-        "publisherId": "ulvia.official",
+        "publisherId": "ulvia",
         "publishedAt": "2026-09-22T00:00:00Z"
     },
     "buildVersionRange": ">=1.0.0 <2.0.0",
@@ -41,12 +41,12 @@
     ],
     "implementations": [
         {
-            "contractId": "protocol.examples",
+            "contractId": "ulvia/protocol.examples",
             "version": "1.0.0",
-            "digest": "sha256:66216be960b7797662208059a69a942bb0969425bfdf6a8b6ca110c4cb28903d",
+            "digest": "sha256:0f7adc66326ec67c2d3257be15992b07fde4e2d3e4abfee9372d9b82eeea7bce",
             "requires": [
                 {
-                    "contractId": "communication.email",
+                    "contractId": "ulvia/communication.email",
                     "versionRange": "^1.0.0",
                     "capabilityId": "email.message.send",
                     "optional": false

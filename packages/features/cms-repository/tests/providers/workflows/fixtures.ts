@@ -15,7 +15,7 @@ export const accountId = "account:SHARED_SHOP";
 export const scope = { siteId, installationId };
 
 function commerceDocument(version: string, paymentRange: string) {
-    const document = contractDocument("commerce", "checkout", version);
+    const document = contractDocument("ulvia/commerce", "checkout", version);
     return document;
 }
 
@@ -23,8 +23,8 @@ export async function providerWorld() {
     const releases = new InMemoryReleaseCatalogue();
     const admitted: AdmittedContractRelease[] = [];
     for (const document of [
-        contractDocument("payment", "create-link", "1.0.0"),
-        contractDocument("payment", "create-link", "2.0.0"),
+        contractDocument("ulvia/payment", "create-link", "1.0.0"),
+        contractDocument("ulvia/payment", "create-link", "2.0.0"),
         commerceDocument("1.0.0", "^1.0.0"),
         commerceDocument("1.1.0", "^1.0.0 || ^2.0.0"),
     ]) {
@@ -37,8 +37,14 @@ export async function providerWorld() {
             release.contractId,
             release.version,
             digest,
-            release.contractId === "commerce"
-                ? [requirement("payment", "create-link", release.version === "1.0.0" ? "^1.0.0" : "^1.0.0 || ^2.0.0")]
+            release.contractId === "ulvia/commerce"
+                ? [
+                      requirement(
+                          "ulvia/payment",
+                          "create-link",
+                          release.version === "1.0.0" ? "^1.0.0" : "^1.0.0 || ^2.0.0",
+                      ),
+                  ]
                 : [],
         ),
     );
@@ -55,6 +61,7 @@ export async function providerWorld() {
     await manifests.publish(previous);
     await manifests.publish(next);
     const pin = (contractId: string, version: string) => {
+        contractId = contractId.includes("/") ? contractId : `ulvia/${contractId}`;
         const admission = admitted.find(
             (entry) => entry.release.contractId === contractId && entry.release.version === version,
         )!;

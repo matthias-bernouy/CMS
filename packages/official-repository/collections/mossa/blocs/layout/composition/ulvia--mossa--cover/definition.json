@@ -1,0 +1,50 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--cover",
+    "label": "bloc.cover.label",
+    "description": "bloc.cover.description",
+    "order": 90,
+    "uses": ["ulvia--mossa--heading"],
+    "requires": [],
+    "slots": {
+        "header": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        },
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        },
+        "footer": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["cover-default"],
+    "defaultExample": "cover-default"
+}
