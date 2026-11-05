@@ -60,7 +60,8 @@
         "jsonc-parser": "^3.3.1",
         "linkedom": "^0.18.15",
         "marked": "^18.1.3",
-        "@bernouy/text-search": "workspace:*"
+        "@bernouy/text-search": "workspace:*",
+        "@bernouy/resource-identity": "workspace:*"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

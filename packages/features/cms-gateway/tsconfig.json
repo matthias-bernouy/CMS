@@ -21,6 +21,9 @@
         },
         {
             "path": "../../foundation/image-processing"
+        },
+        {
+            "path": "../../foundation/resource-identity"
         }
     ]
 }

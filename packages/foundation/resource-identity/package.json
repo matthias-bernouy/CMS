@@ -1,0 +1,14 @@
+{
+    "name": "@bernouy/resource-identity",
+    "version": "1.0.0",
+    "description": "Bounded namespace/name identities and reversible CSS-safe names.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    }
+}

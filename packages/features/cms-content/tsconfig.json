@@ -1,18 +1,35 @@
 {
     "extends": "../../../tsconfig.base.json",
     "compilerOptions": {
-        "outDir":  "dist",
+        "outDir": "dist",
         "rootDir": "./src",
         "paths": {
-            "cms-content/*": ["./src/*"]
+            "cms-content/*": [
+                "./src/*"
+            ]
         }
     },
-    "include": ["src/**/*.ts"],
+    "include": [
+        "src/**/*.ts"
+    ],
     "references": [
-        { "path": "../../foundation/binary-media" },
-        { "path": "../../foundation/blob-store" },
-        { "path": "../../foundation/http-runner" },
-        { "path": "../../foundation/image-processing" },
-        { "path": "../../foundation/logging" }
+        {
+            "path": "../../foundation/binary-media"
+        },
+        {
+            "path": "../../foundation/blob-store"
+        },
+        {
+            "path": "../../foundation/http-runner"
+        },
+        {
+            "path": "../../foundation/image-processing"
+        },
+        {
+            "path": "../../foundation/logging"
+        },
+        {
+            "path": "../../foundation/resource-identity"
+        }
     ]
 }

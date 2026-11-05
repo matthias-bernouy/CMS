@@ -31,7 +31,8 @@
     "dependencies": {
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/logging": "workspace:*"
+        "@bernouy/logging": "workspace:*",
+        "@bernouy/resource-identity": "workspace:*"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

@@ -30,6 +30,9 @@
         },
         {
             "path": "../../foundation/text-search"
+        },
+        {
+            "path": "../../foundation/resource-identity"
         }
     ]
 }
