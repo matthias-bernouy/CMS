@@ -1,6 +1,6 @@
 # cms-files
 
-This feature implements the provider-neutral ulvia.cms.files domain.
+This feature implements the provider-neutral ulvia/cms.files domain.
 
 - Namespace credentials are the authority boundary. Creator identity is audit metadata only.
 - Never return a stored verifier or internal signing key.

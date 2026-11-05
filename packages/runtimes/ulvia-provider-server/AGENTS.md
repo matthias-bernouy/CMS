@@ -10,7 +10,7 @@ Production runtime for the official Ulvia Provider.
   the pinned official profile into each instance during provisioning. Bundled
   admitted snapshots must suffice without a reachable remote Repository; missing
   bundled resources fail rather than silently fetching replacements.
-- Enable `ulvia.repository` only for its explicit instance profile. Registry
+- Enable `ulvia/repository` only for its explicit instance profile. Registry
   ownership uses ordinary CMS accounts and PATs, never a parallel signing-key
   authority. Bootstrap installation is not public catalogue publication and
   must not replace the configured Repository connection.

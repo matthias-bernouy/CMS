@@ -70,8 +70,8 @@ collections.
 ## Bootstrap And Repository Connections
 
 The Provider loads supported exact profiles from its bundled admitted snapshot.
-The default CMS profile installs `ulvia-official`; the explicit
-`ulvia.repository@1.0.0` profile also installs `ulvia-repository` and seeds its
+The default CMS profile installs `ulvia/mossa`; the explicit
+`repository@1.0.0` profile also installs `ulvia/repository` and seeds its
 ordinary website Pages. Neither requires a running remote Repository. Missing
 bundled resources fail startup rather than falling back to the network.
 

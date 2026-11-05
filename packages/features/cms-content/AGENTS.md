@@ -31,7 +31,7 @@ bindings, validation, and read models.
   roots.
 - `@bernouy/cms-content/page-document` exposes the provider-neutral Page and
   Bloc document grammar shared by site content and external contributions.
-- File data belongs to providers implementing `ulvia.cms.files`. Content stores
+- File data belongs to providers implementing `ulvia/cms.files`. Content stores
   only provider-neutral file references.
 - Do not import surfaces, runtimes, Edge internals, or persistence adapters
   into `core/` or `interfaces/`.

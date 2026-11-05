@@ -2,12 +2,12 @@
 
 ## CMS instance composition
 
-A Repository is an explicitly enabled `ulvia.repository` CMS application profile.
+A Repository is an explicitly enabled `ulvia/repository` CMS application profile.
 Its Edge exposes the website and admitted API; the official Provider implements
 Repository operations and owns persistence. Edge, Provider and MongoDB remain
 independent processes. Ordinary CMS profiles do not expose Registry capabilities.
 
-`packages/official-repository/contracts/ulvia.repository` contains the authored
+`packages/official-repository/contracts/repository` contains the authored
 registry contract. Domain implementation and validation belong to
 `@bernouy/cms-repository`; the Provider runtime chooses its adapters. Authored
 resources neither mount routes nor connect to databases.
@@ -21,7 +21,7 @@ resources into it remains an explicit authenticated action.
 
 ```sh
 ulvia services start
-ulvia instance create registry --profile ulvia.repository@1.0.0
+ulvia instance create registry --profile repository@1.0.0
 ulvia instance status registry
 ulvia instance stop registry
 ulvia instance start registry
@@ -49,7 +49,7 @@ own at most 32 namespaces. Transfer requires the current owner, expected revisio
 and an existing target account. Suspension does not release the name. Account
 deletion is refused while it owns namespaces, under the same ownership fence;
 refusals leave account credentials and publications unchanged. Startup never
-claims or reassigns names, including `ulvia.official`.
+claims or reassigns names, including `ulvia`.
 
 Uploads bind the account, namespace and ownership revision. Every protected stage
 checks the verified actor and ownership. Transferred namespaces cannot finalize
@@ -66,13 +66,13 @@ not distributed storage.
 
 ## Contract and clients
 
-`ulvia.repository@2.0.0` declares the registry's public and authenticated
-capabilities. Edge mounts selected bindings below `/.cms/call/ulvia.repository`.
+`ulvia/repository@2.0.0` declares the registry's public and authenticated
+capabilities. Edge mounts selected bindings below `/.cms/call/ulvia/repository`.
 Protected operations use `access: "authenticated"` and domain ownership checks.
 Installing a contract definition alone does not load an implementation.
 The old root `/v1` endpoints and namespace proof headers are not accepted.
 
-`ulvia.cms.authoring@2.0.0` prepares, validates and publishes collections from a
+`ulvia/cms.authoring@2.0.0` prepares, validates and publishes collections from a
 CMS to its configured Repository. The rename does not add contract or Provider
 manifest authoring. The CLI can release and publish all three resource kinds.
 CMS publishing stores a shared PAT in the authoring contract's encrypted secret
@@ -183,8 +183,8 @@ commit receipts and audit records. Storage growth, retention and large-catalogue
 indexes need production capacity policy; bounded response pages are not a claim
 of constant work over an unlimited repository.
 
-The Repository profile installs the `ulvia-repository` collection alongside
-`ulvia-official`. It copies examples once into ordinary Content Pages: `/` for
+The Repository profile installs the `ulvia/repository` collection alongside
+`ulvia/mossa`. It copies examples once into ordinary Content Pages: `/` for
 the public catalogue, `/search`, `/resource`, `/signup`, `/login`, `/account`,
 `/account/namespaces`, `/account/publications` and `/account/tokens`. Pages reuse
 shared Access cookies, typed queries and mutations; publishing uses the CLI or
@@ -195,13 +195,13 @@ upgrades do not turn those site-owned Pages into managed immutable templates.
 Federation, teams, SSO, additional PAT scopes and multi-replica storage are outside
 this work.
 Private immutable source snapshots use authenticated bindings below
-`/.cms/call/ulvia.repository/v1/source-snapshots`. Writes must match an existing
+`/.cms/call/ulvia/repository/v1/source-snapshots`. Writes must match an existing
 collection release digest. They remain separate from public downloads.
 The proposed authoring/test roadmap is in [agent authoring](../development/agent-authoring.md).
 
 ## Resource discovery before installation
 
-`QUERY /.cms/call/ulvia.repository/v1/search` is the public `catalogue-search` capability. It searches collection, listed Bloc, contract and Provider manifest metadata. `@bernouy/cms-repository/repository/search` owns ranking orchestration and CMS-side federation; `/repository/search/filesystem` and `/repository/search/http` are explicit adapters. Public exact-release GETs remain the source for inspection and survive yanking.
+`QUERY /.cms/call/ulvia/repository/v1/search` is the public `catalogue-search` capability. It searches collection, listed Bloc, contract and Provider manifest metadata. `@bernouy/cms-repository/repository/search` owns ranking orchestration and CMS-side federation; `/repository/search/filesystem` and `/repository/search/http` are explicit adapters. Public exact-release GETs remain the source for inspection and survive yanking.
 
 The Provider host shares its `@bernouy/text-embeddings` multilingual model across
 documentation and enabled Registry instances. Its image ships verified files in
@@ -219,7 +219,7 @@ vectors retain their existing instance-scoped Mongo storage.
 
 The derived search corpus selects latest non-yanked releases before reading their search metadata and embedding them. This same business corpus is used for preparation and queries; historical exact reads remain available. Identical model/content pairs are embedded once per preparation, including on a cold cache. The search corpus is bounded to 4,096 selected releases, 16,384 rows and 32 MiB of serialized row text. Passage embeddings use the first 4,096 UTF-16 units of each row, while bounded lexical text retains capability identifiers. The index uses exact vector comparisons within this bounded corpus rather than a separate vector database. Eight searches are admitted concurrently per Repository. Metadata indexes rebuild once per changed snapshot and reuse unchanged snapshots after catalogue refresh. Existing filesystem catalogue enumeration still precedes the search release budget; this is not a constant-cost index over unlimited storage.
 
-CMS `ulvia.cms.installations/repository.search` exposes up to fifty candidates per configured source, at most eight sources, with four outgoing requests concurrently. Per-source ranks are fused, identical releases are deduplicated, latest discovered versions are grouped, and same-version digest conflicts retain their source identity. Continuation cursors bind to the query and candidate snapshots. Partial sources and lexical fallback are explicit.
+CMS `ulvia/cms.installations/repository.search` exposes up to fifty candidates per configured source, at most eight sources, with four outgoing requests concurrently. Per-source ranks are fused, identical releases are deduplicated, latest discovered versions are grouped, and same-version digest conflicts retain their source identity. Continuation cursors bind to the query and candidate snapshots. Partial sources and lexical fallback are explicit.
 
 `repository.get` verifies a public exact release and returns bounded JSON continuations, optionally selecting a Bloc or example. It never installs resources or executes code. One CMS discovery service admits eight searches/reads concurrently and retains at most eight verified projections, 16 MiB total, with at most eight pending loads. Keys include source, complete immutable reference and resource selector; failed loads are discarded. Authorization belongs to the normal administrator capability path. Selected-contract documentation search and its instance revision checks remain separate.
 

@@ -137,7 +137,7 @@ ulvia instance logs default all --json
 ulvia instance logs default edge --follow
 ```
 
-CMS instance journals are collected through the selected `ulvia.cms.observability` contract.
+CMS instance journals are collected through the selected `ulvia/cms.observability` contract.
 Use `/admin/observability` or `ulvia instance logs <name>` to search them. Filters run
 in the selected Provider rather than on downloaded journal files. Production
 processes also write structured stdout/stderr for startup and operator diagnosis;

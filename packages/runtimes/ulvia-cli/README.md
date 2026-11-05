@@ -41,13 +41,13 @@ bun run ulvia -- services stop
 bun run ulvia -- upgrade edge --version 0.0.1-beta
 bun run ulvia -- upgrade provider --version 0.0.1-beta
 bun run ulvia -- reset --yes
-bun run ulvia -- release packages/official-repository/collections/ulvia-official
+bun run ulvia -- release packages/official-repository/collections/mossa
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
-bun run ulvia -- push contract ulvia.official/ulvia.cms.installations@1.0.0 --repository https://repository.example
-bun run ulvia -- pull collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
-bun run ulvia -- yank collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example --reason "Superseded"
-bun run ulvia -- restore collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
+bun run ulvia -- push contract ulvia/cms.installations@1.0.0 --repository https://repository.example
+bun run ulvia -- pull collection ulvia/mossa@1.0.0 --repository https://repository.example
+bun run ulvia -- yank collection ulvia/mossa@1.0.0 --repository https://repository.example --reason "Superseded"
+bun run ulvia -- restore collection ulvia/mossa@1.0.0 --repository https://repository.example
 bun run ulvia -- prune
 ```
 
@@ -115,7 +115,7 @@ profile:
 
 ```bash
 ulvia services start
-ulvia instance create registry --profile ulvia.repository@1.0.0
+ulvia instance create registry --profile repository@1.0.0
 ulvia instance status registry
 ```
 
@@ -187,8 +187,8 @@ Contract fixture assets declared in `definition.json` are read from
 `fixtures/<asset-id>` and verified by digest. Releasing the same coordinate with
 different content fails. Local release storage is a private CLI cache, not an
 HTTP server. `push` publishes it to the configured CMS Repository; its public
-catalogue and downloads use admitted `ulvia.repository` bindings under
-`/.cms/call/ulvia.repository`. CMS installation and Provider administration
+catalogue and downloads use admitted `ulvia/repository` bindings under
+`/.cms/call/ulvia/repository`. CMS installation and Provider administration
 consume those public sources. `prune` empties the local cache without deleting
 service or instance data.
 
@@ -217,7 +217,7 @@ availability and every immutable artifact. For single pushes, transfer required
 dependencies first.
 
 ```bash
-ulvia push ulvia.official/ulvia.cms.emailer@1.0.0
+ulvia push ulvia/cms.emailer@1.0.0
 ulvia push all
 ```
 
@@ -304,7 +304,7 @@ exact manifest claims. Provider behavior is covered by implementation-owned test
 The current baseline uses fresh `1.0.0` official releases and `v1` local state.
 Each named instance uses `<name>.localhost` unless an explicit domain is supplied;
 `default` is an ordinary name. Repository hosting uses a CMS instance with the
-`ulvia.repository@1.0.0` profile. Client PAT connections and local release caches
+`repository@1.0.0` profile. Client PAT connections and local release caches
 are separate from the shared services and instance lifecycle.
 
 ## Collection examples

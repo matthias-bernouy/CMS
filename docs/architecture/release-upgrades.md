@@ -45,7 +45,7 @@ failed reads or revisions changing during analysis make an inventory incomplete.
 Native file/download bindings are resolved against exact selected HTTP routes;
 capability requirements include transitive dependencies and inherited contracts.
 
-`ulvia.cms.installations/list-site-usage` returns bounded reference batches. Its
+`ulvia/cms.installations/list-site-usage` returns bounded reference batches. Its
 cursor pins the inventory digest and is rejected after the analysed state
 changes. This inventory contains reference locations, not Page document bodies.
 

@@ -2,7 +2,7 @@
 
 Collection releases declare optional `texts`: JSON data included in validation
 and the immutable release digest. The official catalogue examples live under
-[`texts/`](../../packages/official-repository/collections/ulvia-official/texts/).
+[`texts/`](../../packages/official-repository/collections/mossa/texts/).
 
 ```json
 {
@@ -128,10 +128,10 @@ languages. Complete site-language removal/migration workflows are not implemente
 
 ## Examples and limits
 
-`packages/official-repository/collections/ulvia-official/texts/` contains the installable Ulvia Official
+`packages/official-repository/collections/mossa/texts/` contains the installable Mossa
 catalogue, split recursively by definition, locale, domain and group. It also
 serves as the reference release for validating text metadata independently from
-page-owned Bloc slot content. Ulvia Official ships complete English and French
+page-owned Bloc slot content. Mossa ships complete English and French
 catalogues: its source-quality test requires identical administration keys in
 both locales and a nonblank `en` and `fr` value for every text definition.
 The checkout example remains an admission fixture. The temporary preview route

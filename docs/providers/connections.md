@@ -34,7 +34,7 @@ and acknowledgement rules as remote Providers.
    identity. The encrypted administrator-bound preview expires after five minutes
    and survives a Provider process restart.
 5. The CMS generates a separate random return credential and sends it through
-   `ulvia.provider.connections@1.0.0 / connections.configure`. The receiving
+   `ulvia/provider.connections@1.0.0 / connections.configure`. The receiving
    Provider stores it with the CMS origin and opaque connection ID in an encrypted,
    account-bound store. It must validate the signed connection ID before writing.
    Configuration carries a monotonically increasing generation. Storage uses
@@ -47,7 +47,7 @@ it must be distinct from an operator or user token. It authenticates report read
 and signed capability calls. The official runtime accepts its instance control
 token separately; possession of a report credential does not grant control access.
 
-`/admin/providers/access?ulvia-official-provider-access-id=<installation-id>` shows
+`/admin/providers/access?ulvia--mossa--provider-access-id=<installation-id>` shows
 read-only requirements and pairing state. It allows return-key rotation and a
 reviewed reconnection with a replacement upstream credential. Disable or revoke an
 unselected installation through the Provider manager; selected contracts must be
@@ -76,7 +76,7 @@ const connections = new ProviderConnections(accountEncryptedCompareAndSetStore);
 registerProviderConnectionCapabilities(dispatcher, connections);
 ```
 
-Implement and report `ulvia.provider.connections@1.0.0` with its exact digest in
+Implement and report `ulvia/provider.connections@1.0.0` with its exact digest in
 the manifest. Use the verified `context.connectionId` in business handlers to
 select the return connection. Never accept a CMS URL, source installation ID or
 credential from ordinary business input:
@@ -118,7 +118,7 @@ refusals use 401/403 and are permanent for the current credential.
 
 ## Logs from another Provider
 
-Declare `ulvia.cms.observability / logs.append` in the manifest's global `requires`,
+Declare `ulvia/cms.observability / logs.append` in the manifest's global `requires`,
 usually with `optional: true`, so logging applies to the installation without
 repeating it on every implementation.
 The Producer need not implement the Observability contract itself. Inject an

@@ -9,7 +9,7 @@ them inside its validated scoped stylesheet.
 Theme settings contain token sources, named value sets and one active theme.
 Installed collections contribute immutable tokens whose IDs and CSS variables
 are derived from the collection namespace, for example
-`--ulvia-official-primary`. Unowned site token sources are supported by the
+`--ulvia--mossa--primary`. Unowned site token sources are supported by the
 Content model, but the current administration contract only edits values of
 installed collection tokens; it does not create arbitrary site tokens.
 
@@ -43,7 +43,7 @@ A font face points to one local WOFF2 asset:
 ```
 
 The projected family is prefixed with the collection namespace, for example
-`ulvia-official-interface`. Theme CSS emits the verified `@font-face`
+`ulvia--mossa--interface`. Theme CSS emits the verified `@font-face`
 declaration using the immutable installed-asset URL. Browsers see every declared
 face in the stylesheet but download only faces needed by rendered text and CSS.
 Collections therefore still avoid declaring unused families and weights.
@@ -69,9 +69,9 @@ An authored stylesheet therefore contains only the inner rules:
 
 ```css
 :scope {
-    --example-card-background: var(--ulvia-official-background-surface);
-    --example-card-color: var(--ulvia-official-text-primary);
-    --example-card-padding: var(--ulvia-official-spacing-md, 1rem);
+    --example-card-background: var(--ulvia--mossa--background-surface);
+    --example-card-color: var(--ulvia--mossa--text-primary);
+    --example-card-padding: var(--ulvia--mossa--spacing-md, 1rem);
 
     display: grid;
     padding: var(--example-card-padding);
@@ -85,7 +85,7 @@ An authored stylesheet therefore contains only the inner rules:
 }
 
 [part~="description"] {
-    color: var(--ulvia-official-text-muted, currentColor);
+    color: var(--ulvia--mossa--text-muted, currentColor);
 }
 ```
 
@@ -102,7 +102,7 @@ root. Nested Bloc scopes remain independently owned.
 
 Raw UI colors belong only in theme-token defaults and site theme values. Bloc
 CSS consumes local tokens or explicitly imported tokens. Prefer the semantic
-roles exported by `ulvia-official` when they fit; define a translated, exported
+roles exported by `ulvia/mossa` when they fit; define a translated, exported
 collection token for a genuinely new reusable role. Admission does not require
 an official dependency or rename another collection's tokens.
 
@@ -115,8 +115,8 @@ fallbacks, including `var(--example-accent, #fff)`. Cyclic color aliases,
 `attr()` color injection and unparsed color values are refused. Blocs cannot
 redefine theme tokens or register global `@property` values.
 
-Use `var(--ulvia-official-primary)`, or derive a translucent value with
-`color-mix(in srgb, var(--ulvia-official-primary) 20%, transparent)`.
+Use `var(--ulvia--mossa--primary)`, or derive a translucent value with
+`color-mix(in srgb, var(--ulvia--mossa--primary) 20%, transparent)`.
 `transparent`, `currentColor`, inheritance/reset keywords and `none` remain
 available where valid CSS permits them. Numeric geometry and opacity are
 unaffected. Local aliases remain owned by their Bloc or a declared `uses`

@@ -36,10 +36,10 @@ protocol: two or three internal calls and sequential authority reads.
 
 ### Confirmed Causes
 
-- **Quota 503.** `ulvia-official-image` requires `ulvia.cms.files/files.read`.
+- **Quota 503.** `ulvia--mossa--image` requires `ulvia/cms.files/files.read`.
   Navigation, hero, footer, card and testimonial Blocs include it through
   `uses`, even when a Page contains no image. Content then calls
-  `ulvia.cms.installations/capabilities.describe` through the Edge on every
+  `ulvia/cms.installations/capabilities.describe` through the Edge on every
   view (`ulvia-provider-server/src/runtime/content/publicDelivery.ts`). That
   call costs about 18 ms and 40 sequential Mongo operations and consumes the
   Provider call budget of 120 calls per minute per source
@@ -84,16 +84,16 @@ each phase measures them.
 
    Suspending fills for 15 seconds after an unknown outcome would usually make
    that case immediate. It is an optional improvement, not a guarantee.
-2. **Purge scope.** A dispatched command of `ulvia.cms.content` or
-   `ulvia.cms.installations` (selections, installations, collections and
+2. **Purge scope.** A dispatched command of `ulvia/cms.content` or
+   `ulvia/cms.installations` (selections, installations, collections and
    upgrades), whether completed, declared-error or unknown-outcome, clears the
    whole Edge cache before its response is returned. Commands rejected before
    dispatch do not purge. Every other official command is neutral, notably
-   `ulvia.cms.observability/logs.append`, which the Edge sends through its own
+   `ulvia/cms.observability/logs.append`, which the Edge sends through its own
    Gateway (`cms-edge-server/src/runtime/diagnostics.ts:43`), and the
-   authentication commands of `ulvia.cms.access`. A test enumerates every
+   authentication commands of `ulvia/cms.access`. A test enumerates every
    official command and fails when one is not classified as purging or
-   neutral; `ulvia.cms.files` is conservatively classified as purging rendered
+   neutral; `ulvia/cms.files` is conservatively classified as purging rendered
    state, with real Page/file-origin regressions. The generic Files binding is
    not itself an admitted cms-svg source (see the follow-up below). Non-official contracts are neutral while only
    Content and Installations state reaches cacheable HTML. A purge advances a
@@ -119,8 +119,8 @@ each phase measures them.
    render cache nor the Edge cache stores them. General execution of
    declarative bindings during SSR remains planned and must revisit decisions
    1 to 3.
-5. **Contract evolution.** Minor versions of `ulvia.cms.installations` and
-   `ulvia.cms.content` are accepted in principle. Each one ships with Edge
+5. **Contract evolution.** Minor versions of `ulvia/cms.installations` and
+   `ulvia/cms.content` are accepted in principle. Each one ships with Edge
    version negotiation and an instance profile update, and only after phase 3
    and 4 measurements justify it. Merging authority preparation with dispatch
    is not planned.

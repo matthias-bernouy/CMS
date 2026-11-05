@@ -27,6 +27,7 @@ already been published to a registry.
 | `@bernouy/blob-store` | Stream-first opaque blob contracts with memory, local-filesystem and S3-compatible adapters. |
 | `@bernouy/http-runner` | Runner abstractions, Bun HTTP serving, cache, compression, CSP and test helpers. |
 | `@bernouy/envelope-crypto` | Envelope encryption, KEK/DEK contracts and Mongo DEK storage. |
+| `@bernouy/resource-identity` | Bounded qualified resource identities and collision-free CSS-safe ownership prefixes. |
 | `@bernouy/rate-limiter` | Fixed-window rate limiting with memory and Mongo implementations. |
 | `@bernouy/secret-store` | Secret storage, reference resolution and encrypted Mongo persistence. |
 | `@bernouy/image-processing` | Generic image inspection and WebP transforms used by Files provider implementations. |
@@ -68,7 +69,7 @@ The removed `cms-source` transport grammar is not accepted.
 ## Official Products
 
 `packages/official-repository` contains the authored official contract releases,
-the `ulvia.official` provider manifest and official collections. It has
+the `ulvia` provider manifest and official collections. It has
 no runtime adapters or routes. The official Provider implements Registry operations
 for explicitly enabled CMS instances, exposed through their independent Edge.
 
@@ -76,7 +77,7 @@ for explicitly enabled CMS instances, exposed through their independent Edge.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/ulvia-provider` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous operation execution for admitted `ulvia.cms.*` contracts. |
+| `@bernouy/ulvia-provider` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous operation execution for admitted `ulvia/cms.*` contracts. |
 | `@bernouy/cms-edge` | Stateless HTTP protocols, request-actor resolution, public resource streaming and final security/cache policy. |
 | `@bernouy/cms-edge-server` | Stateless HTTP composition for one pre-provisioned instance, connected only by Provider URL and opaque instance access token. |
 | `@bernouy/ulvia-provider-server` | Durable instance registry and credentials, instance-scoped persistence/auth/gateway/files, exact profile transitions and recovery, operator API and Ulvia Provider listener. |

@@ -126,10 +126,11 @@ executable behavior; installation therefore trusts the configured repository.
 
 ## Dependencies and identity
 
-The collection ID is its global runtime namespace. It uses lowercase kebab-case
-without dots and cannot claim the platform-owned `be5-`, `cms-`, `p9r-`,
-`site-`, or `w13c-` roots. Every Bloc has a valid namespaced identifier prefixed
-with `<collectionId>-`; DOM instances carry it in `cms-bloc`. Local `uses` and slot `accepts` references resolve inside
+The collection ID is the complete `namespace/name` identity. Its publisher must
+match the namespace, and its local name uses nonreserved lowercase kebab-case.
+HTML/CSS ownership derives from `resourceRuntimeNamespace(collectionId)`; every
+Bloc appends `--<localId>` to that prefix. DOM instances carry the result in
+`cms-bloc`. Local `uses` and slot `accepts` references resolve inside
 the release. External references must appear in one dependency's exact imported
 Bloc list. A dependency pins the target collection ID, publisher ID and bounded
 SemVer range; it separately imports explicit public resource IDs with stable
@@ -141,7 +142,7 @@ validate cross-release slot targets and reject collection dependency cycles.
 Upgrades revalidate all installed dependents.
 
 Theme token and example IDs remain local in release JSON. Tokens are projected as both the
-global token ID and CSS variable name `<collectionId>-<tokenId>`. Text
+global token ID and CSS variable name `<runtimeNamespace>--<tokenId>`. Text
 expressions use `cms.i18n.<collectionId>.<textId>`. Live Pages have ordinary
 Content identities and routes; they are not collection resources. Assets remain scoped by the immutable release
 digest. Installation and upgrade reject exact Bloc-tag or projected theme-token

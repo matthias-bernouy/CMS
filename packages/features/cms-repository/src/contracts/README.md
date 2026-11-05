@@ -122,7 +122,7 @@ semantics distinct from transport failures.
 
 An optional `responseEffects` list declares trusted browser-side effects outside
 the ordinary output schema. The V1 vocabulary contains only `session`, reserved
-to public synchronous structured commands of `ulvia.cms.access`. Changing an
+to public synchronous structured commands of `ulvia/cms.access`. Changing an
 existing capability's effect list is a breaking contract change. Providers
 return semantic effect metadata; they never control the browser cookie policy.
 

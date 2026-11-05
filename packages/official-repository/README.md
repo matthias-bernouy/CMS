@@ -15,7 +15,12 @@ or command alias imports state from the previous platform. Future release
 comparison, explicit upgrades and crash recovery remain supported; they do not
 provide compatibility with that previous platform.
 
-The official `ulvia.cms.*` contracts are served by the `@bernouy/ulvia-provider`
+Official releases use the `ulvia` namespace: `ulvia/mossa` for the reusable
+collection, `ulvia/repository` for the Repository application collection, and
+`ulvia/primary-provider` for the Provider manifest. See the
+[identity and release-channel rules](../../docs/architecture/repository-resources.md).
+
+The official `ulvia/cms.*` contracts are served by the `@bernouy/ulvia-provider`
 surface after admission. Generic protocol fixtures remain beside the
 `cms-repository` tests and must not be moved here. `catalog.items`,
 `forms.submissions` and `media.assets` are no longer published demo contracts.
@@ -45,7 +50,7 @@ library consists of verified presentation-only SVG files and authored markup
 references them through empty `svg[cms-svg]` elements; it has no icon-specific
 Bloc or behavior module.
 
-The Ulvia Official collection publishes a selective public surface: foundational
+The Mossa collection publishes a selective public surface: foundational
 layout and content components, reusable content items, composed page sections,
 and the theme tokens they consume. Compositions declare their exact local Bloc
 dependencies through `uses`; selective collection dependencies may import explicitly

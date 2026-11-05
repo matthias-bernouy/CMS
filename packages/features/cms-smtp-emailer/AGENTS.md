@@ -1,6 +1,6 @@
 # @bernouy/cms-smtp-emailer
 
-Feature package for the `ulvia.cms.emailer.smtp` specialization and its official
+Feature package for the `ulvia/cms.emailer.smtp` specialization and its official
 SMTP implementation.
 
 - Implement the transport-neutral `Emailer` port from `@bernouy/cms-emailer`.

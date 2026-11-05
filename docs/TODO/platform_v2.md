@@ -101,7 +101,7 @@ on each implementation:
 {
     "requires": [
         {
-            "contractId": "ulvia.cms.observability",
+            "contractId": "ulvia/cms.observability",
             "capabilityId": "logs.append",
             "versionRange": "^1.0.0",
             "optional": true
@@ -109,7 +109,7 @@ on each implementation:
     ],
     "implementations": [
         {
-            "contractId": "ulvia.cms.content",
+            "contractId": "ulvia/cms.content",
             "version": "2.0.0",
             "digest": "sha256:...",
             "requires": [
@@ -323,7 +323,7 @@ authored document uses the same operations.
 
 There is no `PageInitialContent` union, example reference in a Page write,
 special copy/import command or stored provenance. The implemented reads are
-`ulvia.cms.content/examples.list` and `examples.get`.
+`ulvia/cms.content/examples.list` and `examples.get`.
 
 Examples never contain Page paths, SEO titles, visibility, indexing policy or
 system roles. Those values come from ordinary Content commands or provisioning.

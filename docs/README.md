@@ -31,6 +31,9 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 
 ## Providers And Collections
 
+- [Resource identities and release channels](architecture/repository-resources.md):
+  official names, stable/beta discovery, exact pins and the fresh baseline.
+
 - [Repository and gateway flows](providers/README.md): artifact admission, site
   state, live invocation, identities and remaining integration gaps.
 - [Community Repository](architecture/community-repository.md): CMS-hosted Registry,

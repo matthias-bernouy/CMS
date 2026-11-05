@@ -52,7 +52,7 @@ a Provider or install an official dependency manually.
 | Blank Page | Empty document without an implicit Bloc | Implemented |
 | Landing/Content starters | No exposed starter catalogue | Missing |
 | Nested editing | Slot-aware document model, outline, settings and native controls | Implemented; complete browser acceptance pending |
-| Media selection | Editor dialog mounts `ulvia-official-file-picker`; native and setting fields consume selections | Implemented; combined upload-to-public-Page journey pending |
+| Media selection | Editor dialog mounts `ulvia--mossa--file-picker`; native and setting fields consume selections | Implemented; combined upload-to-public-Page journey pending |
 | Site compositions | Editor creates and publishes a site Bloc from selected authored content | Implemented; broader product flow pending |
 | Undo/redo | Bounded in-memory `EditorHistory`, reset on initialization | Implemented; not persistent history |
 | Saved Page preview | Same-origin iframe at the ordinary Page URL | Implemented with structural-refresh limitations |

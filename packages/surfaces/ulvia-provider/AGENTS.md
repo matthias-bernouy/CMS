@@ -1,7 +1,7 @@
 # @bernouy/ulvia-provider
 
-Provider-facing Ulvia Provider surface. It exposes the official `ulvia.cms.*`
-contracts and explicitly enabled `ulvia.repository` capabilities through their declared HTTP bindings and publishes the runtime report
+Provider-facing Ulvia Provider surface. It exposes the official `ulvia/cms.*`
+contracts and explicitly enabled `ulvia/repository` capabilities through their declared HTTP bindings and publishes the runtime report
 used by the CMS gateway.
 
 The surface owns HTTP authentication, binding dispatch, response mapping and

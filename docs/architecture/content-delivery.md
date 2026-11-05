@@ -1,7 +1,7 @@
 # Public Content Delivery
 
 Every non-reserved public `GET` or `HEAD` crosses Edge's Gateway through
-`ulvia.cms.content/delivery.resolve-resource`. The selected Content Provider owns
+`ulvia/cms.content/delivery.resolve-resource`. The selected Content Provider owns
 path resolution and final HTML. Edge receives no Page, Bloc catalogue, text
 catalogue, rendering settings or editorial projection.
 
@@ -47,7 +47,7 @@ Content resolves system resources (`robots.txt`, sitemap/chunks,
 responses. Published Pages and administrator draft reads use the same existing
 rendering pipeline. Static capability analysis, private-site restrictions and
 system fallback authorization live with Content. Access metadata is read using
-the declared `ulvia.cms.installations/capabilities.describe` requirement; the
+the declared `ulvia/cms.installations/capabilities.describe` requirement; the
 response contains no Provider origin or credential. Analysis is repeated for
 each request, including when the Page document is unchanged.
 

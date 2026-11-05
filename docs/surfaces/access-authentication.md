@@ -1,7 +1,7 @@
 # Access And Authentication
 
 Identity and account operations are exposed by the required
-`ulvia.cms.access` contract. The Edge owns no authentication capability,
+`ulvia/cms.access` contract. The Edge owns no authentication capability,
 account store, administrator store, session secret or authentication route
 family. Its only responsibilities are to resolve one request actor through
 Access and to apply validated browser session effects returned by Access.
@@ -33,7 +33,7 @@ Pages use the ordinary declarative binding grammar. There is no `edge.auth`
 namespace or special browser transport:
 
 ```html
-<form cms-mutation="ulvia.cms.access:login-password as session">
+<form cms-mutation="ulvia/cms.access:login-password as session">
     <input name="email" type="email" autocomplete="username" required>
     <input name="password" type="password" autocomplete="current-password" required>
     <button type="submit">Log in</button>
@@ -42,7 +42,7 @@ namespace or special browser transport:
 
 The browser sends either the `cms-session` cookie or an
 `Authorization: Bearer` credential. Edge forwards exactly one opaque, typed
-credential to the selected `ulvia.cms.access/resolve-actor` capability; it does
+credential to the selected `ulvia/cms.access/resolve-actor` capability; it does
 not forward arbitrary browser Cookie or Authorization headers to every
 capability. A Bearer credential has precedence and never falls back to a cookie
 when invalid. Actor resolution is memoized only for the lifetime of the current
@@ -60,7 +60,7 @@ effect. The Provider returns semantic data (`establish` with an opaque token and
 expiry, or `clear`). Gateway accepts that effect only for a successful
 capability whose admitted contract explicitly declares it. Session effects are
 currently reserved to public synchronous structured commands in
-`ulvia.cms.access`.
+`ulvia/cms.access`.
 
 Only after validation does Edge emit the fixed `cms-session` cookie with
 `HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` on HTTPS and a bounded expiry.

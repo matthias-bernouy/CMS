@@ -17,7 +17,7 @@ published rendering read models.
   reviewed release-switch orchestration belong to
   `@bernouy/cms-repository/collections/installations`.
 
-File bytes belong to providers implementing `ulvia.cms.files`; this package
+File bytes belong to providers implementing `ulvia/cms.files`; this package
 stores provider-neutral references only. Provider composition injects Content
 delivery and rendering ports. Edge has no Content repository or rendering
 dependency and forwards the selected contract's native resources.

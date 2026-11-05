@@ -9,8 +9,8 @@ through the public Provider report and admitted contract capabilities.
 For each instance, this runtime selects the account, local-credential,
 session-token, administrator-grant, Emailer, content, collection, gateway and
 Files adapters injected into `@bernouy/ulvia-provider`. Browser credentials are
-resolved through the official `ulvia.cms.access` contract; outbound delivery
-uses the `ulvia.cms.emailer.smtp` specialization of `ulvia.cms.emailer`, and no authentication store or session secret is
+resolved through the official `ulvia/cms.access` contract; outbound delivery
+uses the `ulvia/cms.emailer.smtp` specialization of `ulvia/cms.emailer`, and no authentication store or session secret is
 shared with the Edge.
 
 Run `bun run generate:official-bootstrap` from the workspace root before native

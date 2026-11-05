@@ -33,7 +33,7 @@ only; it is not a runtime dependency and does not mount routes, connect to
 databases or choose adapters.
 
 `@bernouy/ulvia-provider` is the provider-facing surface for the official
-`ulvia.cms.*` contracts. It receives admitted releases and a capability
+`ulvia/cms.*` contracts. It receives admitted releases and a capability
 dispatcher from a runtime; it must not choose persistence or read environment
 configuration. The local CLI launches `ulvia-provider-server` and
 `cms-edge-server` as independent processes. Each server owns its concrete

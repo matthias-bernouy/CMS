@@ -101,8 +101,8 @@ The Edge sends the resulting business request through ordinary pinned HTTP.
 Commands still resolve identity before their start audit. Failed preparation or
 transport closes any issued root ticket; a binary response retains it until
 completion or cancellation. The current official profile is
-`ulvia.official@1.3.0`, with manifest `1.2.0`;
-the explicit Registry profile is `ulvia.repository@1.0.0` and shares that manifest.
+`ulvia@1.3.0`, with manifest `1.2.0`;
+the explicit Registry profile is `ulvia/repository@1.0.0` and shares that manifest.
 Neither declares a preceding profile transition. After changing the control contract,
 restart the stateless Edge so its startup report selects the exact ready pin.
 

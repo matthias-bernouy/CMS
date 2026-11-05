@@ -203,7 +203,7 @@ Media remains a dedicated Bloc with a managed native media element.
 ## Build And Validation
 
 ```bash
-bun run ulvia -- release packages/official-repository/collections/ulvia-official
+bun run ulvia -- release packages/official-repository/collections/mossa
 bun run build
 bun run verify
 ```

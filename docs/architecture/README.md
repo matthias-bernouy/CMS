@@ -44,14 +44,14 @@ every package must reproduce.
 `application` and `exports`. Its `ContentRepository` is the content
 persistence facade; it is distinct from the `@bernouy/cms-repository` package.
 
-The Provider implementing `ulvia.cms.content` composes a read-only `ContentReader`
+The Provider implementing `ulvia/cms.content` composes a read-only `ContentReader`
 from its `ContentRepository` and owns the rendering pipeline. Edge invokes
 `delivery.resolve-resource`, receiving a native streamed resource rather than
 Content projections. Static Page access checks, collection text and asset
 substitution, robots and sitemap handling stay behind Content. Edge owns actor
 resolution, Gateway authority and final HTTP security/cache policy.
 See [public Content delivery](content-delivery.md) and [stable capability lifecycle](capability-lifecycle.md).
-File references use the selected `ulvia.cms.files` provider. Sitemap storage is
+File references use the selected `ulvia/cms.files` provider. Sitemap storage is
 an independent dependency of the Content Provider runtime.
 
 Every Page has a monotonic concurrency revision used by authoring and
@@ -102,10 +102,10 @@ MCP binding is mounted by the CMS instance.
 `cms-auth` groups accounts, local credential proof, signed session tokens,
 personal access tokens, one-time tokens, authentication email composition and
 account-lifecycle operations. The Provider runtime exposes them through the
-required `ulvia.cms.access` contract. Access delegates delivery to the selected
-`ulvia.cms.emailer` implementation. The official `ulvia.cms.emailer.smtp`
+required `ulvia/cms.access` contract. Access delegates delivery to the selected
+`ulvia/cms.emailer` implementation. The official `ulvia/cms.emailer.smtp`
 specialization owns SMTP configuration and stores it inside its isolated
-`ulvia.cms.secrets` namespace. The Edge owns no
+`ulvia/cms.secrets` namespace. The Edge owns no
 auth capabilities or auth persistence: it resolves one request actor through
 Access and applies validated semantic session effects.
 
@@ -123,7 +123,7 @@ the injected resource handlers on its public URLs.
 Whether a Page is public, authenticated or administrative is derived by
 statically analyzing its capability requirements; there is no Page surface field or separate
 admin/public route namespace. Ulvia Provider mounts the provider report and the
-declared HTTP bindings of `ulvia.cms.*` and explicitly enabled `ulvia.repository`.
+declared HTTP bindings of `ulvia/cms.*` and explicitly enabled `ulvia/repository`.
 Neither surface chooses production
 databases or storage roots.
 

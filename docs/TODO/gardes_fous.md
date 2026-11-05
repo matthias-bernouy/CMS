@@ -60,7 +60,7 @@ existing tests. They do not reliably ask whether it stays safe and efficient.
 The review of 2026-10-29, measured on images built from `4d6cac938`, found:
 
 - Every view of a Page using image-capable Blocs calls
-  `ulvia.cms.installations/capabilities.describe` through the Edge. That call
+  `ulvia/cms.installations/capabilities.describe` through the Edge. That call
   consumes the Provider call budget of 120 calls per minute per source, so such
   Pages and `/admin/pages` return 503 after about 120 views per minute.
 - Journal ingestion upserts entries one at a time into a collection with 12

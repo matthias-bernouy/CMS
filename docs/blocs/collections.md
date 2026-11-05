@@ -202,7 +202,7 @@ An example is a generic document: one Bloc, a composition or a complete document
 Its translated label and description describe the catalogue entry, not Page SEO.
 `previews[].frame` always defines a viewport; interactive capture actions are not supported.
 
-Administrators browse `ulvia.cms.content/examples.list` for one installed
+Administrators browse `ulvia/cms.content/examples.list` for one installed
 collection, with an explicit locale and bounded pagination. `examples.get`
 returns one generic document without a locale or theme parameter. Its normal
 collection text references remain intact. These are read operations, independent

@@ -37,7 +37,7 @@ the exact same operation.
 - Never log credentials, PAT tokens, auth tokens, email verification tokens, or
   password reset tokens.
 - Authentication is exposed only through a provider contract such as
-  `ulvia.cms.access`; do not reintroduce a parallel auth route family.
+  `ulvia/cms.access`; do not reintroduce a parallel auth route family.
 - Membership records contain identity and activity metadata only. Authorization
   belongs to CMS policies, capability access and trusted gateway actors; it must
   not be added to authentication subjects.

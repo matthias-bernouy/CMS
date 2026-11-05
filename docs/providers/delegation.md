@@ -72,7 +72,7 @@ broad policies rather than silently truncating the reviewed inventory.
    resolving the immutable catalogue again. Transport failures remain infrastructure failures; they are not presented as
    permission refusals.
 6. Access owns live user membership and authorization inspection through
-   `ulvia.cms.access / inspect-actor`, restricted to signed `cms-gateway` system
+   `ulvia/cms.access / inspect-actor`, restricted to signed `cms-gateway` system
    authority. Anonymous tickets retain anonymous/public access only.
 7. The broker signs the target invocation with its Provider-scoped user alias
    and source/root provenance. The target receives no reusable delegation ticket.

@@ -48,7 +48,7 @@ connection scopes are also future work.
 
 ## Collection workflow
 
-`ulvia.cms.authoring` exposes `get-connection`, `configure-connection`,
+`ulvia/cms.authoring` exposes `get-connection`, `configure-connection`,
 `disconnect-connection`, `claim-namespace`, `list-namespaces`, `prepare-collection`,
 `publish-collection`, `get-collection-sources` and `discard-preparation`.
 The Provider stores an ordinary Repository account PAT in the contract's encrypted
@@ -131,10 +131,10 @@ remain CLI workflows; the new instance authoring tools focus on collections.
 
 ## Versions and verification
 
-The authored Provider profile is `1.0.0`, pinned to `ulvia.official@1.0.0`:
+The authored Provider profile is `1.0.0`, pinned to `ulvia@1.0.0`:
 Access `1.0.0`, Content `1.0.0`, Files `1.0.0`, Installations `1.0.0` and
 Repository authoring `1.0.0`. Private snapshots require Repository protocol
-`ulvia.repository@2.0.0`. These are source artifacts until explicitly released;
+`ulvia/repository@2.0.0`. These are source artifacts until explicitly released;
 editing them does not upgrade a deployed image or publish a catalogue release.
 This profile currently provisions fresh instances; automatic migration from
 older Provider profiles is not implemented.

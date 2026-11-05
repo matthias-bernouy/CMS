@@ -249,24 +249,24 @@ For a local installation:
 
 ```bash
 ulvia services start
-ulvia instance create registry --profile ulvia.repository@1.0.0
+ulvia instance create registry --profile repository@1.0.0
 ulvia instance status registry
 ulvia instance credentials registry
 ```
 
 The Registry API is available below
-`http://registry.localhost:5100/.cms/call/ulvia.repository`. Its public identity
+`http://registry.localhost:5100/.cms/call/ulvia/repository`. Its public identity
 endpoint is `GET /v1/info` relative to that prefix. Ordinary CMS instances do not
 expose this contract. The profile creates ordinary CMS Pages for the public
 catalogue, search, resource details, registration/login and personal namespaces,
-publications and PAT management. These Pages use the `ulvia-repository` collection
-and shared `ulvia-official` resources.
+publications and PAT management. These Pages use the `ulvia/repository` collection
+and shared `ulvia/mossa` resources.
 
 For public hosting, configure network exposure and ACME as described in section 6
 before creating instances, then create the application on its public domain:
 
 ```bash
-ulvia instance create registry --domain repository.example.com --profile ulvia.repository@1.0.0
+ulvia instance create registry --domain repository.example.com --profile repository@1.0.0
 ```
 
 Replace the example domain with a domain routed to this host. The same shared
@@ -275,7 +275,7 @@ proxy handles its HTTPS certificate. Provider management remains on loopback.
 ### Publisher Accounts And Credentials
 
 Registration, password login and PAT management use the normal Access bindings
-under `/.cms/call/ulvia.cms.access`. Registration follows the instance policy.
+under `/.cms/call/ulvia/cms.access`. Registration follows the instance policy.
 An ordinary account can claim and publish; it does not need CMS administrator
 privileges. The protected publisher operations use a shared CMS PAT.
 
@@ -308,7 +308,7 @@ Publication never installs a collection on a site.
 Namespace claims are atomic and limited to 32 owned names per account. Transfer
 uses an explicit target account and expected revision. Suspension retains the
 name; account deletion is refused while it owns namespaces. Startup does not
-reserve or reclaim names, including `ulvia.official`.
+reserve or reclaim names, including `ulvia`.
 
 ### Restart And Updates
 
@@ -329,7 +329,7 @@ credentials remain in the normal CMS storage.
 A profile change is separate from an image replacement:
 `ulvia instance upgrade-profile registry ID@VERSION`. The target must be a
 supported explicit transition shipped by the Provider and retain the
-`ulvia.repository` application ID. The CLI saves the exact new reference only
+`ulvia/repository` application ID. The CLI saves the exact new reference only
 after the Provider acknowledges it. Restart never selects a different profile.
 
 Back up the Provider database, file storage, matching encryption credentials and

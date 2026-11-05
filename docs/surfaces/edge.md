@@ -6,7 +6,7 @@ persistence dependency in its configuration.
 
 Edge mounts MCP/OAuth, generic `/.cms/call`, `/.cms/query` and `/.cms/mutation`
 protocols, plus runtime health/readiness. Other public GET/HEAD requests resolve
-through the selected `ulvia.cms.content/delivery.resolve-resource` capability.
+through the selected `ulvia/cms.content/delivery.resolve-resource` capability.
 Authentication remains owned by Access. Content receives a verified actor class
 and Provider-scoped alias in signed invocation context, never browser cookies.
 

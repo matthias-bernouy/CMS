@@ -39,7 +39,7 @@ and bounds directory depth and entries. Authored manifests are rejected:
 `documentation` belongs to compiled releases.
 
 Public immutable reads use
-`GET /.cms/call/ulvia.repository/v1/assets/contract/{publisherId}/{contractId}/{version}/{assetId}`.
+`GET /.cms/call/ulvia/repository/v1/assets/contract/{publisherId}/{contractId}/{version}/{assetId}`.
 Encode `docs/<relative-document-path>` as the single `assetId` URL component.
 HEAD returns metadata without text. Pull, Provider imports and the local bootstrap transport
 and verify these assets. Mongo stores text separately in
@@ -51,7 +51,7 @@ though metadata-only admission is available for discovery and stored records.
 
 The CMS Edge supplies English `instructions` in the authenticated MCP
 `initialize` response. They explain when to search and how to read guides.
-When the selected `ulvia.cms.installations` release contains
+When the selected `ulvia/cms.installations` release contains
 `working-with-ulvia.md` and an MCP binding for `documentation.get`, the response
 includes the actual reading tool name and arguments with that release's digest.
 Initialization resolves only contract metadata; it does not read or index the
@@ -60,7 +60,7 @@ server instructions to their agent; tool-linked references remain available.
 The generic Gateway transport accepts host instructions without Ulvia-specific
 content. Simple operations with clear schemas do not require repeated searches.
 
-`ulvia.cms.installations` exposes administrator capabilities
+`ulvia/cms.installations` exposes administrator capabilities
 `documentation.search` and `documentation.get`, with HTTP QUERY bindings at
 `/documentation/search` and `/documentation/get` and MCP tools
 `installations_documentation_search` and `installations_documentation_get`.
@@ -74,7 +74,7 @@ excerpt, inverse capability links, version and an exact reference:
 
 ```json
 {
-  "contractId": "ulvia.cms.content",
+  "contractId": "ulvia/cms.content",
   "releaseDigest": "sha256:<64 lowercase hex digits>",
   "path": "pages/create-and-publish.md"
 }

@@ -327,10 +327,15 @@ models and validation for CMS-owned installations and site selections.
   does not change server text keys and does not grant runtime capabilities.
   Text locale values are static strings: parameters, plural forms and braces are
   not part of the collection contract.
-- Treat `collectionId` as the runtime namespace. It is lowercase kebab-case,
-  excludes platform-owned roots, prefixes every Bloc identifier and derives
-  global theme token IDs and CSS variables. Validate derived identities during
-  collection admission rather than waiting for installation or compilation.
+- Resource IDs are full `namespace/name` identities; every publisher field must
+  match that namespace. Collection names are nonreserved lowercase kebab-case.
+  Derive HTML/CSS ownership through `resourceRuntimeNamespace`, then append `--`
+  and the local Bloc, token or state ID. Never use the canonical slash identity
+  directly as a CSS prefix or infer ownership by a loose string prefix.
+- Stable and beta discovery derive from canonical SemVer, not mutable metadata.
+  Every prerelease belongs to the beta filter. Search and installation discovery
+  default to stable; historical catalogue listing defaults to all releases.
+  Exact installations, approvals and selections remain pinned and explicit.
 - Collection theme categories, entries and Pages are admitted
   and included in the release digest. Cross-collection dependencies import only explicitly
   exported Bloc tags, collection-local theme token IDs, server text IDs and immutable
