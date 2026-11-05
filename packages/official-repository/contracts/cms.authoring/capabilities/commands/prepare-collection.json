@@ -1,6 +1,6 @@
 {
     "id": "prepare-collection",
-    "description": "Validate and build a complete collection source snapshot before publishing. Read ulvia://cms/collection-authoring for the source format.",
+    "description": "Validate and build a complete collection source snapshot. Read the source and Bloc design guides. Preparation does not publish or establish visual quality.",
     "access": "admin",
     "behavior": {
         "effect": "command",
@@ -15,7 +15,7 @@
                 "type": "string",
                 "maxLength": 1048576,
                 "sensitive": true,
-                "description": "JSON object with files: [{path, content}] and optional exact asset references. Read ulvia://cms/collection-authoring first. Maximum 1 MiB of source JSON."
+                "description": "JSON object with files: [{path, content}] and optional exact asset references. Read collection-source.md and bloc-design.md first. Maximum 1 MiB of source JSON."
             }
         },
         "required": ["sourceJson"]
@@ -180,9 +180,9 @@
             "transport": "mcp",
             "tool": {
                 "name": "authoring_prepare_collection",
-                "description": "Validate and build a complete collection source snapshot before publishing. Read ulvia://cms/collection-authoring for the source format."
+                "description": "Validate and build a complete collection source snapshot. Read the source and Bloc design guides. Preparation does not publish or establish visual quality."
             }
         }
     ],
-    "docs": ["overview.md", "collection-authoring.md", "collection-source.md"]
+    "docs": ["overview.md", "collection-authoring.md", "collection-source.md", "bloc-design.md"]
 }

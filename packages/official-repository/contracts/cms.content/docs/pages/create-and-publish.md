@@ -10,6 +10,8 @@ Identify the page's purpose, intended audience, required information, route and 
 
 Use `pages.editor-catalogue` and the installed collection inventory to discover supported Blocs, configuration and examples. Read a relevant existing page to understand the site's conventions. Preserve reusable text references and follow the installed collections rather than inventing unsupported markup.
 
+For a new layout or substantial redesign, follow [Page design](design.md). Keep the content editable and use [rendered design review](design-review.md) to assess the result.
+
 ## Create a draft
 
 Use the selected `pages.create` schema. The optional content is bounded HTML, not an arbitrary application bundle. Keep the returned page ID and revision. Resolve any declared refusal before continuing; a Provider may enforce additional validation rules beyond the input schema.

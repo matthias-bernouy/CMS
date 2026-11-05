@@ -12,6 +12,8 @@ Read `get-collection-sources` before changing a previously published collection.
 
 Every Bloc has a native root contract. Listed Blocs use translated descriptions, categories and appropriate examples. Author example `definition.json` and `document.html` with explicit preview frames. Page content and mutable site configuration remain site-owned.
 
+For a new or redesigned Bloc, follow [Design a reusable Bloc](bloc-design.md) before preparing sources. It covers the editor contract, visual system, interaction states and examples.
+
 ## Make colors reusable
 
 Put literal colors in theme-token defaults and site theme values. Bloc paint styles must consume declared or explicitly imported tokens. Prefer semantic `ulvia/mossa` roles such as `background-surface`, `text-primary`, `primary`, `on-primary`, `border-default`, `focus-ring` and feedback colors when suitable. Import the exact token IDs from a dependency; declaring its collection name alone does not authorize every token. A new role may use a translated token in your collection, exported when other collections should reuse it.

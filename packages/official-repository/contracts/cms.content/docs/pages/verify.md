@@ -10,6 +10,8 @@ Read the current page. Compare the actual title, path, content, visibility and r
 
 When an authorized browser or equivalent rendering tool is available, inspect the actual page at narrow and wide widths. Check legibility, layout overflow, images, headings, empty sections and the main task flow. Test relevant links, buttons and forms without performing unrelated destructive actions. Do not fabricate screenshots or browser results when those tools are unavailable.
 
+For a substantial redesign, also follow [the rendered design review](design-review.md), including content stress, typography, theme and interaction checks.
+
 ## Correction loop
 
 Page creation, content updates and publication return optional `diagnostics`. Each entry has a stable `code`, a `severity` (`error` or `warning`), a message and optional location, related resource IDs and correction suggestion. An error refuses the write; warnings accompany a successful write and its new revision. Do not retry a successful write merely because it contains warnings. `INVALID_PAGE` refusals can include the same diagnostics in their error output.

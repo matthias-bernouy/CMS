@@ -282,9 +282,16 @@
             "transport": "mcp",
             "tool": {
                 "name": "content_pages_update",
-                "description": "Update selected Page fields using its current expectedRevision. Fetch the Page again after a revision conflict."
+                "description": "Update Page fields using the current expectedRevision. For redesigns, read the Page design and rendered review guides. Reread after a revision conflict."
             }
         }
     ],
-    "docs": ["overview.md", "pages/create-and-publish.md", "pages/verify.md", "pages/revisions.md"]
+    "docs": [
+        "overview.md",
+        "pages/create-and-publish.md",
+        "pages/verify.md",
+        "pages/revisions.md",
+        "pages/design.md",
+        "pages/design-review.md"
+    ]
 }
