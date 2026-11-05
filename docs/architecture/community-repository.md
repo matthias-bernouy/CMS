@@ -72,7 +72,7 @@ Protected operations use `access: "authenticated"` and domain ownership checks.
 Installing a contract definition alone does not load an implementation.
 The old root `/v1` endpoints and namespace proof headers are not accepted.
 
-`ulvia/cms.authoring@2.0.0` prepares, validates and publishes collections from a
+`ulvia/cms.authoring@1.0.0` prepares, validates and publishes collections from a
 CMS to its configured Repository. The rename does not add contract or Provider
 manifest authoring. The CLI can release and publish all three resource kinds.
 CMS publishing stores a shared PAT in the authoring contract's encrypted secret
@@ -226,3 +226,33 @@ CMS `ulvia/cms.installations/repository.search` exposes up to fifty candidates p
 Run `bun run packages/features/cms-repository/tests/repository-search/evaluation.ts <cached-model-directory>` for an offline lexical/hybrid relevance sample. It measures a small synthetic corpus, not production retrieval quality.
 
 Discovery uses typed domain failures across adapters: invalid input (422), absent exact resource (404), release mismatch or expired cursor (409), corpus/response budgets (422), and infrastructure unavailability (503). Remote error bodies are bounded to 4 KiB and 100 ms, interpreted only for known codes, and never forwarded as diagnostic text. Search may report failed sources as partial results; a 404 during an exact read remains `NOT_FOUND`.
+
+## Authoring Publication Evidence And Recovery
+
+Collection preparation asks the configured Repository to check publication
+history through `publication-check-collection`. The authenticated query holds the
+namespace ownership fence and Repository write lock and inspects only the
+candidate collection, including yanked releases. It reads at most 256 directory entries and 64 historical
+metadata documents (plus one exact-coordinate probe), retains at most 32 MiB of
+history, and never hydrates asset bytes. CMS authoring caps candidate metadata at 1 MiB of UTF-8; the native query
+string schema allows 1,048,576 UTF-16 code units. Missing service or excess evidence returns explicit
+incomplete preflight; the final registry publication remains authoritative.
+
+Evolution errors retain known publication codes across Repository and Provider
+boundaries. Remote technical messages are not forwarded; clients reconstruct
+known safe guidance from the declared code and bounded resource identity.
+
+Preparations bind their canonical release and retained sources to checked
+hashes, a Repository origin/identity and a seven-day expiry. Successful release
+publication writes an atomic, synced local receipt before private source
+retention. A retry with a receipt completes the sources without rebuilding or
+re-uploading; loss of the commit response instead reports an unknown outcome
+and exact replay uses the Repository's existing idempotent commit. Current
+namespace authority is rechecked on every retry. Preparations are scoped to an
+instance; missing or expired preparations never receive an implicit repair.
+
+For a configured connection, preparation adds four bounded HTTP reads: two
+Repository identity probes, one owned-namespace inventory and one preflight
+query. Previously preparation made no Repository request. No asset bytes are
+downloaded for history. A source-completion retry with a retained receipt uses
+namespace authorization and the source write, and opens no publication upload.
