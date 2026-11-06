@@ -1,6 +1,6 @@
 {
     "id": "logout",
-    "description": "Revoke the current CMS browser session and clear its cookie.",
+    "description": "Clear the current CMS session.",
     "access": "public",
     "behavior": {
         "effect": "command",
