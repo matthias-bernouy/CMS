@@ -1,5 +1,5 @@
 import { isResourceId, resourceName } from "cms-repository/exports/contracts/protocol";
-import { mkdir, mkdtemp, writeFile, rm, readdir, stat } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { writePreparation, sourceDigest } from "./record";
 import type { PublicationPreflight } from "../preflight";
@@ -9,6 +9,7 @@ import { parseSourceSnapshot, canonicalSourceSnapshot, type SourceAsset } from "
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { collectionBrowserRisk, collectionBrowserRiskDigest } from "cms-repository/exports/collections/index";
 import { randomUUID } from "node:crypto";
+import { reservePreparationWorkspace, commitPreparationWorkspace, discardPreparationWorkspace } from "./workspace";
 
 export interface AuthoringHost {
     readonly root: string;
@@ -27,9 +28,7 @@ export async function prepareRemoteCollection(
     if (!isResourceId(collectionId)) {
         throw new Error("Invalid collection ID");
     }
-    await mkdir(host.root, { recursive: true, mode: 0o700 });
-    await expirePrepared(host.root);
-    const work = await mkdtemp(join(host.root, "prepare-"));
+    const work = await reservePreparationWorkspace(host.root);
     const directory = join(work, resourceName(collectionId));
     let bytes = Buffer.byteLength(sourceJson);
     try {
@@ -76,8 +75,7 @@ export async function prepareRemoteCollection(
             repositoryId: preflight.repositoryId,
             repositoryOrigin: preflight.origin,
         });
-        const { rename } = await import("node:fs/promises");
-        await rename(work, join(host.root, id));
+        await commitPreparationWorkspace(host.root, work, id);
         const browserRisk = collectionBrowserRisk(artifact.release);
         return {
             preparationId: id,
@@ -104,25 +102,7 @@ export async function prepareRemoteCollection(
             ],
         };
     } catch (error) {
-        await rm(work, { recursive: true, force: true });
+        await discardPreparationWorkspace(host.root, work);
         throw error;
-    }
-}
-
-export async function expirePrepared(root: string) {
-    let retained = 0;
-    for (const entry of await readdir(root, { withFileTypes: true })) {
-        if (!entry.isDirectory() || !/^(?:prepare-|[a-f0-9-]{36}$)/u.test(entry.name)) {
-            continue;
-        }
-        const path = join(root, entry.name);
-        if ((await stat(path)).mtimeMs < Date.now() - 7 * 86400_000) {
-            await rm(path, { recursive: true, force: true });
-        } else {
-            retained += 1;
-        }
-    }
-    if (retained >= 64) {
-        throw new Error("Prepared collection limit reached; remove an old preparation before adding more");
     }
 }

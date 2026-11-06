@@ -1,10 +1,14 @@
-import { mkdir, mkdtemp, writeFile, rm, rename } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 import { isResourceId, resourceName, parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import type { CollectionPublisher } from "../CollectionAuthoring";
 import type { AuthoringHost } from "../preparations/prepare";
-import { expirePrepared } from "../preparations/prepare";
+import {
+    reservePreparationWorkspace,
+    commitPreparationWorkspace,
+    discardPreparationWorkspace,
+} from "../preparations/workspace";
 import { sourceDigest, writeRecord } from "../preparations/record";
 import { parseSourceSnapshot, canonicalSourceSnapshot } from "../snapshot";
 import { compileArtifact } from "./compiler";
@@ -27,9 +31,7 @@ export async function prepareRemoteArtifact(
     if (definition.kind !== kind || !isResourceId(id)) {
         throw new Error("Invalid artifact kind or identifier");
     }
-    await mkdir(host.root, { recursive: true, mode: 0o700 });
-    await expirePrepared(host.root);
-    const work = await mkdtemp(join(host.root, "prepare-"));
+    const work = await reservePreparationWorkspace(host.root);
     const directory = join(work, resourceName(id));
     let bytes = Buffer.byteLength(sourceJson);
     try {
@@ -81,7 +83,7 @@ export async function prepareRemoteArtifact(
             repositoryId: status.repositoryId,
         };
         await writeRecord(work, "prepared.json", prepared);
-        await rename(work, join(host.root, preparationId));
+        await commitPreparationWorkspace(host.root, work, preparationId);
         return {
             preparationId,
             publisherId: artifact.publisherId,
@@ -93,7 +95,7 @@ export async function prepareRemoteArtifact(
             diagnostics: [],
         };
     } catch (error) {
-        await rm(work, { recursive: true, force: true });
+        await discardPreparationWorkspace(host.root, work);
         throw error;
     }
 }

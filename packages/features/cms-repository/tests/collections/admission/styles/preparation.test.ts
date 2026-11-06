@@ -58,7 +58,8 @@ test("remote preparation reports the Bloc and property and leaves no publishable
                 },
             ),
         ).rejects.toThrow(/atlas-dofficial--atlas--panel.*background-color.*theme token/);
-        expect(await readdir(root)).toEqual([]);
+        // Keep the lock inode across refusals, but retain no source workspace.
+        expect(await readdir(root)).toEqual([".write-lock"]);
     } finally {
         await rm(root, { recursive: true, force: true });
     }

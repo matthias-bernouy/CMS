@@ -1,5 +1,4 @@
 import type { NamespaceInventoryQuery, NamespaceInventoryPage } from "./namespaces";
-import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { RepositorySourceClient } from "../sources/client";
 import { CollectionAuthoringValidationError } from "cms-repository/exports/collections/build";
@@ -11,6 +10,7 @@ import { RepositoryRequestError } from "../core/errors";
 import { NamespaceAccessError } from "./namespaces";
 export { CollectionPreparationError, CollectionPublicationRecoveryError } from "./preparations/errors";
 import type { RepositoryNamespaceCredential } from "cms-repository/exports/repository/namespaces";
+import { discardPreparationWorkspace } from "./preparations/workspace";
 
 export interface RepositoryConnectionStatus {
     readonly configured: boolean;
@@ -93,7 +93,7 @@ export class CollectionAuthoring {
         ).get(collectionId, version);
     }
     async discard(id: string) {
-        await rm(this.path(id), { recursive: true, force: true });
+        await discardPreparationWorkspace(this.host.root, this.path(id));
         return { discarded: true };
     }
     private path(id: string) {
