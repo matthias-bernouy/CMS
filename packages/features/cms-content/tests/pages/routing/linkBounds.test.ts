@@ -1,5 +1,12 @@
 import { expect, test } from "bun:test";
-import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
+import {
+    InMemoryContentRepository,
+    ValidatingContentRepository,
+    analyzePageLinks,
+    analyzePageLinkReport,
+} from "@bernouy/cms-content";
+
+import { analyzeExpandedPageDocument } from "@bernouy/cms-content/page-document";
 
 async function fixture(markup = "<main><slot></slot></main>") {
     const inner = new InMemoryContentRepository();
@@ -121,3 +128,47 @@ test("replacing a Bloc refuses new HTML errors in indirect Page consumers before
     await expect(repo.replaceBloc({ ...child, markupHTML: "<main>Nested</main>" })).rejects.toThrow("nested inside");
     expect((await inner.getBlocRecord(child.id))?.artifact?.markupHTML).toBe("<p>Child</p>");
 });
+
+test.each(["warnings", "error", "budget"] as const)(
+    "link report preserves verification state when %s diagnostics are truncated",
+    async (scenario) => {
+        const { inner } = await fixture();
+        let html = '<a href="/missing">Missing</a>'.repeat(40);
+        if (scenario === "error") {
+            html += '<a href="/#%ZZ">Invalid fragment</a>';
+        }
+        if (scenario === "budget") {
+            for (let i = 0; i < 40; i++) {
+                await inner.insertPage(`/target-${i}`, "Target");
+                const page = (await inner.getPage(`/target-${i}`))!;
+                await inner.updatePage({ id: page.id, visible: true }, page.revision);
+                html += `<a href="/target-${i}">Target</a>`;
+            }
+        }
+        let routeBatches = 0;
+        let pageBatches = 0;
+        const routes = inner.getPageRoutes.bind(inner);
+        const pages = inner.getPagesByIds.bind(inner);
+        inner.getPageRoutes = async (paths) => {
+            routeBatches++;
+            return routes(paths);
+        };
+        inner.getPagesByIds = async (ids) => {
+            pageBatches++;
+            expect(ids.length).toBeLessThanOrEqual(32);
+            return pages(ids);
+        };
+        const analysis = analyzeExpandedPageDocument(html, []);
+        const page = { path: "/source", visible: false };
+        const report = await analyzePageLinkReport(inner, analysis, page, [page.path]);
+        expect(report.complete).toBe(scenario !== "budget");
+        expect(report.hasErrors).toBe(scenario === "error");
+        expect(report.diagnostics).toHaveLength(16);
+        expect(report.diagnostics.at(-1)?.code).toBe("analysis.truncated");
+        expect(report.diagnostics.some((value) => value.code === "page.link_analysis_incomplete")).toBe(false);
+        expect(report.diagnostics.some((value) => value.severity === "error")).toBe(scenario === "error");
+        expect(routeBatches).toBe(1);
+        expect(pageBatches).toBe(1);
+        expect(await analyzePageLinks(inner, analysis, page, [page.path])).toEqual(report.diagnostics);
+    },
+);

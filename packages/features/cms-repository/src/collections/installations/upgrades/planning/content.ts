@@ -1,6 +1,6 @@
 import type { ContentRepository } from "@bernouy/cms-content";
 import type { PageRoute } from "@bernouy/cms-content";
-import { analyzePageLinks } from "@bernouy/cms-content";
+import { analyzePageLinkReport } from "@bernouy/cms-content";
 import { assertContentRefsExist } from "@bernouy/cms-content/page-document";
 import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 import type { UsageSnapshot } from "../usage/snapshot";
@@ -71,17 +71,17 @@ export async function validateUpgradeContent(
                 { complete: Boolean(page) },
             );
             if (page && analysis) {
-                const diagnostics = await analyzePageLinks(reads, analysis, page, [page.path]);
-                for (const diagnostic of diagnostics.filter(
-                    (value) =>
-                        value.severity === "error" ||
-                        value.code === "analysis.truncated" ||
-                        value.code === "page.link_analysis_incomplete",
-                )) {
+                const report = await analyzePageLinkReport(reads, analysis, page, [page.path]);
+                if (report.hasErrors) {
+                    for (const diagnostic of report.diagnostics.filter((value) => value.severity === "error")) {
+                        issues.push({ code: "incompatible-content", location, message: diagnostic.message });
+                    }
+                }
+                if (!report.complete) {
                     issues.push({
-                        code: diagnostic.severity === "error" ? "incompatible-content" : "incomplete",
+                        code: "incomplete",
                         location,
-                        message: diagnostic.message,
+                        message: "Page link destinations could not all be verified within the bounded analysis.",
                     });
                 }
             }

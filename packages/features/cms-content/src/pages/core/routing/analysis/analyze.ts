@@ -6,10 +6,16 @@ import { resolvePageRouteTarget } from "cms-content/pages/core/queries/resolvePu
 import { fragmentReader, localFragmentDiagnostics } from "./fragments";
 import { collectDocumentLinks, linkIssue } from "./collect";
 
+import type { PageLinkAnalysis } from "cms-content/application/interfaces/diagnostics";
+
 type Analysis = ReturnType<typeof analyzeExpandedPageDocument>;
 
+export async function analyzePageLinks(...args: Parameters<typeof analyzePageLinkReport>) {
+    return (await analyzePageLinkReport(...args)).diagnostics;
+}
+
 /** One metadata batch and one bounded Page batch; never crawl linked Pages recursively. */
-export async function analyzePageLinks(
+export async function analyzePageLinkReport(
     repository: Pick<
         ContentRepository,
         "getSystem" | "getPageRoute" | "getPageRoutes" | "getPageById" | "getPagesByIds"
@@ -17,9 +23,13 @@ export async function analyzePageLinks(
     analysis: Analysis,
     page: Pick<TPage, "path" | "visible"> & Partial<Pick<TPage, "id">>,
     availablePaths: readonly string[],
-) {
+): Promise<PageLinkAnalysis> {
     if (!analysis.root.querySelector("a[href], form[cms-mutation-redirect], iframe[src]")) {
-        return analysis.diagnostics;
+        return {
+            diagnostics: analysis.diagnostics,
+            hasErrors: analysis.diagnostics.some((value) => value.severity === "error"),
+            complete: true,
+        };
     }
     const system = await repository.getSystem();
     const { links, diagnostics } = collectDocumentLinks(
@@ -45,6 +55,7 @@ export async function analyzePageLinks(
     const byId = new Map(pages.map((target) => [target.id, target]));
     const readFragment = fragmentReader(analysis);
     const missingSeverity = page.visible ? "error" : "warning";
+    let complete = true;
     for (const link of links) {
         const ownRoute = byPath.get(link.path!);
         const selfAlias =
@@ -63,6 +74,7 @@ export async function analyzePageLinks(
         const route = byPath.get(link.path!);
         const target = route ? byId.get(route.pageId) : undefined;
         if (route && route.state !== "gone" && route.pageId !== page.id && !ids.includes(route.pageId)) {
+            complete = false;
             diagnostics.push(
                 linkIssue(
                     link,
@@ -96,5 +108,10 @@ export async function analyzePageLinks(
             }
         }
     }
-    return boundedDiagnostics([...analysis.diagnostics, ...diagnostics]);
+    const combined = [...analysis.diagnostics, ...diagnostics];
+    return {
+        diagnostics: boundedDiagnostics(combined),
+        hasErrors: combined.some((value) => value.severity === "error"),
+        complete,
+    };
 }
