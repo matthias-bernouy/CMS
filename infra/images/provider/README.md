@@ -21,3 +21,7 @@ for build caches, native preparation and the offline image test.
 
 Image tests live in [`tests/images/provider`](../../../tests/images/provider).
 Run them from the workspace root with `bun test ./tests/images/provider`.
+
+Set `ULVIA_RETENTION_PROVIDER_IMAGE` to an exact image reference to also verify
+the real retention entrypoint and Provider startup against an isolated MongoDB
+on an internal network with an unreachable public Repository.
