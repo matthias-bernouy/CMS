@@ -33,5 +33,5 @@
     display: flex;
     flex-direction: var(--ulvia--mossa--navigation-section-direction, column);
     flex-wrap: var(--ulvia--mossa--navigation-section-wrap, nowrap);
-    gap: var(--ulvia--mossa--navigation-section-gap, 0.125rem);
+    gap: var(--ulvia--mossa--navigation-section-items-gap, 0.125rem);
 }

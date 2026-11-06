@@ -15,6 +15,22 @@
     ],
     "requires": [],
     "slots": {
+        "brand": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["svg"]
+                }
+            ],
+            "max": 1
+        },
         "breadcrumb": {
             "accepts": [
                 {

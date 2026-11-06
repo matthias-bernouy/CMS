@@ -1,5 +1,5 @@
 <div cms-bloc="ulvia--mossa--app-shell" data-cms-composition-controller="" density="compact" sticky-header="" layout="sidebar">
-    <strong slot="brand">{{ cms.i18n.ulvia/mossa.ui-ulvia }}</strong>
+    <slot name="brand" slot="brand"><strong>{{ cms.i18n.ulvia/mossa.ui-brand }}</strong></slot>
     <span slot="primary-mobile-label">{{ cms.i18n.ulvia/mossa.ui-workspace }}</span>
     <div cms-bloc="ulvia--mossa--navigation-menu" density="compact" label="{{ cms.i18n.ulvia/mossa.ui-administration }}" slot="secondary-navigation">
         <div cms-bloc="ulvia--mossa--navigation-section" divider="" slot="sections">
@@ -39,6 +39,7 @@
                 ><span slot="content">{{ cms.i18n.ulvia/mossa.ui-settings }}</span></a
             >
             <a cms-bloc="ulvia--mossa--navigation-item" slot="items" href="/admin/observability"
+                ><svg cms-svg="{{ cms.asset.ulvia/mossa.icons/feedback/observability.svg }}" aria-hidden="true" slot="content"></svg
                 ><span slot="content">{{ cms.i18n.ulvia/mossa.ui-observability }}</span></a
             >
             <a cms-bloc="ulvia--mossa--navigation-item" slot="items" href="/admin/diagnostics"
