@@ -82,6 +82,8 @@ export interface CmsAccessDependencies {
     readonly authentication: {
         authenticate(email: string | undefined, password: string | undefined): Promise<LocalLoginResult>;
         resolveCredential(credential: AuthenticationCredential | undefined): Promise<Subject | null>;
+        revokeCredential(credential: AuthenticationCredential | undefined): Promise<void>;
+        revokeSessionsForSub(sub: string): Promise<void>;
     };
     readonly accountLifecycle: Pick<
         PublicAuthActions,

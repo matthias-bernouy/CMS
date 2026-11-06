@@ -9,4 +9,6 @@ export type LocalLoginResult =
 export interface LocalAuthenticationActions {
     authenticate(email: string | undefined, password: string | undefined): Promise<LocalLoginResult>;
     resolveCredential(credential: AuthenticationCredential | undefined): Promise<Subject | null>;
+    revokeCredential(credential: AuthenticationCredential | undefined): Promise<void>;
+    revokeSessionsForSub(sub: string): Promise<void>;
 }

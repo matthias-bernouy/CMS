@@ -75,7 +75,10 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
         let actorCredential: ReturnType<typeof actorCredentialFromRequest>;
         try {
             const identifiers = await capabilityIdentifiers(request, config);
-            if (identifiers.contractId === "ulvia/cms.access" && identifiers.route.capability.id === "resolve-actor") {
+            if (
+                identifiers.contractId === "ulvia/cms.access" &&
+                ["resolve-actor", "logout"].includes(identifiers.route.capability.id)
+            ) {
                 actorCredential = actorCredentialFromRequest(request);
             }
             if (

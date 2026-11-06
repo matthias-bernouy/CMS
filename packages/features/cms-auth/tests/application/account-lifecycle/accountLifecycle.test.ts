@@ -33,7 +33,7 @@ describe("local account lifecycle", () => {
         await pats.create({ sub: user.sub, name: "laptop" });
         await pats.create({ sub: user.sub, name: "automation" });
 
-        await deleteUserCompletely({ credentials, users, pats }, user);
+        await deleteUserCompletely({ credentials, users, pats, revokeSessionsForSub: async () => {} }, user);
 
         expect(await credentials.getByEmail("admin@example.com")).toBeNull();
         expect(await pats.list(user.sub)).toEqual([]);

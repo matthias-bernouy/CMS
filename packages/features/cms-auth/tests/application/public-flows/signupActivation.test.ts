@@ -128,6 +128,7 @@ function flowConfig(): PublicAuthFlowConfig {
     return {
         credentials: new InMemoryLocalCredentialStore(),
         users: new InMemoryUsersRepository(),
+        revokeSessionsForSub: async () => {},
         tokens: new InMemoryAuthTokenStore(),
         emailer: new InMemoryEmailer(),
         emailVerificationUrl: "https://example.test/verify",

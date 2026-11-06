@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-auth",
     "version": "1.0.0",
-    "description": "Provider-owned local authentication, personal access tokens, signed sessions, membership and credential stores.",
+    "description": "Provider-owned local authentication, personal access tokens, persistent sessions, membership and credential stores.",
     "license": "MIT",
     "type": "module",
     "main": "./src/exports/index.ts",

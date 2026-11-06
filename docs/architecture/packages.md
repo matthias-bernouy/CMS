@@ -48,7 +48,7 @@ already been published to a registry.
 | `@bernouy/cms-secrets` | Credential-scoped secret namespaces, metadata and lifecycle over an injected generic encrypted secret store. |
 | `@bernouy/cms-emailer` | Provider-neutral outbound email delivery interface. |
 | `@bernouy/cms-smtp-emailer` | SMTP-specific administration, secret-backed configuration and the official Nodemailer implementation. |
-| `@bernouy/cms-auth` | Provider-owned accounts, local credentials, PATs, signed session tokens, account lifecycle and authentication email composition. It exposes no HTTP routes. |
+| `@bernouy/cms-auth` | Provider-owned accounts, local credentials, PATs, persistent opaque sessions, account lifecycle and authentication email composition. It exposes no HTTP routes. |
 
 Collections own reusable examples, not live Pages or routes. Runtime profiles
 may copy selected examples into ordinary Content Pages once during provisioning.

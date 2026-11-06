@@ -5,8 +5,8 @@
  * in-memory stores. Administrative mutations have an explicit ./management
  * entrypoint.
  *
- * Browser-safe helpers live under ./browser. Mongo adapters live under
- * ./mongo for composition roots; they are not loaded here.
+ * Mongo adapters live under ./mongo for composition roots; they are not
+ * loaded here.
  */
 
 // ── Authentication ─────────────────────────────────────────────────────
@@ -15,7 +15,6 @@ export type {
     LocalAuthenticationActions,
     LocalLoginResult,
 } from "cms-auth/application/interfaces/LocalAuthenticationActions";
-export { SignedCookieCodec } from "cms-auth/sessions/core/SignedCookieCodec";
 export {
     LocalAuthentication,
     type LocalAuthConfig,
@@ -84,3 +83,12 @@ export {
     type TemplatedAuthEmailComposerConfig,
 } from "cms-auth/email/default-implementation/TemplatedAuthEmailComposer";
 export { DefaultAuthEmailComposer } from "cms-auth/email/default-implementation/DefaultAuthEmailComposer";
+
+export { SessionTokenService, type SessionTokenServiceConfig } from "cms-auth/sessions/core/SessionTokenService";
+export type { SessionRepository, SessionRecord } from "cms-auth/sessions/interfaces/SessionRepository";
+export { InMemorySessionRepository } from "cms-auth/sessions/default-implementation/memory/InMemorySessionRepository";
+export {
+    SESSION_IDLE_TIMEOUT_SECONDS,
+    SESSION_ABSOLUTE_TIMEOUT_SECONDS,
+    MAX_ACCOUNT_SESSIONS,
+} from "cms-auth/sessions/core/sessionPolicy";

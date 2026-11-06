@@ -495,3 +495,35 @@ describe("capability gateway", () => {
         expect(seen).toEqual(["system"]);
     });
 });
+
+test("permits the opaque credential on Access logout and rejects mismatched effects or contracts", async () => {
+    for (const contractId of ["ulvia/cms.access", "ulvia/catalog"]) {
+        for (const effect of ["command", "query"]) {
+            const route = await gatewayRoute({
+                contractId,
+                capabilityId: "logout",
+                access: "public",
+                behavior: {
+                    sensitive: true,
+                    effect,
+                    execution: "sync",
+                    ...(effect === "command" ? { idempotency: "natural" } : {}),
+                },
+            });
+            const scope = harness(route);
+            const call = {
+                ...invocation({ kind: "anonymous" }),
+                contractId,
+                capabilityId: "logout",
+                actorCredential: { kind: "session" as const, token: "opaque-session" },
+            };
+            if (contractId === "ulvia/cms.access" && effect === "command") {
+                expect(await scope.gateway.invoke(call)).toMatchObject({ kind: "success" });
+                expect(scope.sent[0]!.actorCredential).toEqual(call.actorCredential);
+            } else {
+                await expect(scope.gateway.invoke(call)).rejects.toMatchObject({ code: "invalid_input" });
+                expect(scope.sent).toHaveLength(0);
+            }
+        }
+    }
+});

@@ -87,6 +87,9 @@ export function createCapabilityMutationHandler(config: CapabilityMutationHandle
                 input,
                 actor,
                 ...(idempotencyKey ? { idempotencyKey } : {}),
+                ...(contractId === "ulvia/cms.access" && capabilityId === "logout"
+                    ? { actorCredential: actorCredentialFromRequest(request) }
+                    : {}),
             });
             if (result.kind === "success") {
                 notifyMutationSuccess(config, { contractId, capabilityId });

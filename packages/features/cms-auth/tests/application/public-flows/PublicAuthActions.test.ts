@@ -11,6 +11,7 @@ test("public auth exposes only account lifecycle operations used by Access", () 
     const config = {
         credentials: new InMemoryLocalCredentialStore(),
         users: new InMemoryUsersRepository(),
+        revokeSessionsForSub: async () => {},
         tokens: new InMemoryAuthTokenStore(),
         emailer: new InMemoryEmailer(),
         emailVerificationUrl: "https://example.test/verify",

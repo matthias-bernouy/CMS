@@ -6,7 +6,7 @@ test("the host deletion guard runs before any credential, PAT or membership muta
     const credentials = new InMemoryLocalCredentialStore();
     const pats = new InMemoryPatRepository();
     const users = new InMemoryUsersRepository();
-    const stores = { credentials, pats, users };
+    const stores = { credentials, pats, users, revokeSessionsForSub: async () => {} };
     const user = await createLocalUser(stores, { email: "owner@example.test", password: "safe-password" });
     const token = await pats.create({ sub: user.sub, name: "publication" });
     let identityCleanup = false;

@@ -99,7 +99,7 @@ MCP binding is mounted by the CMS instance.
 
 ### Authentication
 
-`cms-auth` groups accounts, local credential proof, signed session tokens,
+`cms-auth` groups accounts, local credential proof, persistent opaque sessions,
 personal access tokens, one-time tokens, authentication email composition and
 account-lifecycle operations. The Provider runtime exposes them through the
 required `ulvia/cms.access` contract. Access delegates delivery to the selected

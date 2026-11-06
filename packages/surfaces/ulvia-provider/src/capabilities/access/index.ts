@@ -80,9 +80,10 @@ export function registerAccessCapabilities(
             },
         );
     });
-    dispatcher.register("ulvia/cms.access", "logout", async () =>
-        capabilityResponse({ cleared: true }, { type: "session", operation: "clear" }),
-    );
+    dispatcher.register("ulvia/cms.access", "logout", async (_input, context) => {
+        await dependencies.authentication.revokeCredential(context.actorCredential);
+        return capabilityResponse({ cleared: true }, { type: "session", operation: "clear" });
+    });
     dispatcher.register("ulvia/cms.access", "signup", async (input) =>
         accountAction(async () => {
             await dependencies.accountLifecycle.signup({
@@ -173,6 +174,7 @@ export function registerAccessCapabilities(
                     users: dependencies.users,
                     credentials: dependencies.credentials,
                     pats: dependencies.pats,
+                    revokeSessionsForSub: (sub) => dependencies.authentication.revokeSessionsForSub(sub),
                     withUserDeletion: dependencies.withUserDeletion,
                     beforeMembershipDelete: async () => {
                         const state = await active.administrators.get(sub);

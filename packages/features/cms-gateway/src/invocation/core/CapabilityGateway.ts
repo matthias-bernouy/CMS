@@ -516,11 +516,11 @@ function assertActorCredentialTarget(invocation: GatewayInvocation, capability: 
     }
     if (
         invocation.contractId !== "ulvia/cms.access" ||
-        invocation.capabilityId !== "resolve-actor" ||
+        !["resolve-actor", "logout"].includes(invocation.capabilityId) ||
         capability.access !== "public" ||
-        capability.behavior.effect !== "query"
+        capability.behavior.effect !== (invocation.capabilityId === "logout" ? "command" : "query")
     ) {
-        throw new GatewayError("invalid_input", "actor credentials are restricted to the Access actor resolver");
+        throw new GatewayError("invalid_input", "actor credentials are restricted to Access resolution and logout");
     }
 }
 

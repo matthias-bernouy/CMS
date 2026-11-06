@@ -1,7 +1,7 @@
 # @bernouy/cms-auth
 
 Provider-owned authentication primitives for local credentials, personal access
-tokens, signed sessions, public account flows, and membership persistence.
+tokens, persistent sessions, public account flows, and membership persistence.
 
 ## Public API
 

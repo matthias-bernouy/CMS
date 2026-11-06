@@ -4,6 +4,7 @@ import { AuthValidationError, validatePassword } from "cms-auth/application/core
 
 export type ChangeOwnPasswordStores = {
     credentials: LocalCredentialStore;
+    revokeSessionsForSub(sub: string): Promise<void>;
 };
 
 export async function changeOwnPassword(
@@ -26,8 +27,10 @@ export async function changeOwnPassword(
         throw new AuthValidationError("currentPassword", "incorrect");
     }
 
+    await stores.revokeSessionsForSub(user.sub);
     const changed = await stores.credentials.setPassword(identity.sub, newPassword);
     if (!changed) {
         throw new AuthValidationError("credential", "not found after password verification");
     }
+    await stores.revokeSessionsForSub(user.sub);
 }

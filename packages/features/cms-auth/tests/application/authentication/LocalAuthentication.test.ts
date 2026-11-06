@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { SignedCookieCodec } from "@bernouy/cms-auth";
+import { SessionTokenService, InMemorySessionRepository } from "@bernouy/cms-auth";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { SubjectResolver } from "cms-auth/accounts/core/SubjectResolver";
 import { InMemoryUsersRepository } from "cms-auth/accounts/default-implementation/memory/InMemoryUsersRepository";
@@ -11,16 +11,15 @@ function setup(rateLimit?: InMemoryRateLimiter) {
     const users = new InMemoryUsersRepository();
     const credentials = new InMemoryLocalCredentialStore();
     const pats = new InMemoryPatRepository();
-    const codec = new SignedCookieCodec(new TextEncoder().encode("example--test--secret-key-at-least-16-bytes"));
     const auth = new LocalAuthentication({
         providerId: "local",
         credentials,
         resolver: new SubjectResolver(users),
-        codec,
+        sessions: new SessionTokenService({ repository: new InMemorySessionRepository() }),
         pats,
         ...(rateLimit ? { rateLimit } : {}),
     });
-    return { auth, codec, credentials, pats };
+    return { auth, credentials, pats };
 }
 
 describe("LocalAuthentication", () => {
@@ -71,7 +70,7 @@ describe("LocalAuthentication", () => {
     });
 
     test("resolves PATs and fails closed for invalid credentials", async () => {
-        const { auth, codec, credentials, pats } = setup();
+        const { auth, credentials, pats } = setup();
         await credentials.create({ email: "a@x.com", password: "password-1" });
         const login = await auth.authenticate("a@x.com", "password-1");
         expect(login.ok).toBeTrue();
@@ -83,21 +82,23 @@ describe("LocalAuthentication", () => {
         expect(await auth.resolveCredential({ kind: "bearer", token })).toEqual(login.subject);
         expect(await pats.revoke(login.subject.identifier, pat.id)).toBeTrue();
         expect(await auth.resolveCredential({ kind: "bearer", token })).toBeNull();
-        const expiredSession = await codec.sign({ kind: "session", sub: login.subject.identifier }, -1);
+        const expiredSession = "obsolete-signed.payload";
         expect(await auth.resolveCredential({ kind: "session", token: expiredSession })).toBeNull();
         expect(await auth.resolveCredential({ kind: "bearer", token: "pat_invalid" })).toBeNull();
         expect(await auth.resolveCredential(undefined)).toBeNull();
     });
 
     test("rejects session TTLs that the Edge cookie policy cannot honor", () => {
-        const create = (sessionTtlSeconds: number) => {
+        const create = (absoluteTimeoutSeconds: number) => {
             const users = new InMemoryUsersRepository();
             return new LocalAuthentication({
                 providerId: "local",
                 credentials: new InMemoryLocalCredentialStore(),
                 resolver: new SubjectResolver(users),
-                codec: new SignedCookieCodec(new TextEncoder().encode("example--test--secret-key-at-least-16-bytes")),
-                sessionTtlSeconds,
+                sessions: new SessionTokenService({
+                    repository: new InMemorySessionRepository(),
+                    absoluteTimeoutSeconds,
+                }),
             });
         };
 

@@ -131,6 +131,7 @@ async function flowConfig(
     });
     return {
         credentials,
+        revokeSessionsForSub: async () => {},
         tokens,
         users,
         emailer: new InMemoryEmailer(),

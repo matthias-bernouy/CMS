@@ -1,16 +1,18 @@
-import { createPublicAuthActions, LocalAuthentication, SignedCookieCodec, SubjectResolver } from "@bernouy/cms-auth";
+import { createPublicAuthActions, LocalAuthentication, SessionTokenService, SubjectResolver } from "@bernouy/cms-auth";
 import type { ProviderStores } from "../stores/providerStores";
 
 export async function createInstanceAuth(stores: ProviderStores, cmsUrl: string) {
+    const sessions = new SessionTokenService({ repository: stores.sessions });
     const auth = new LocalAuthentication({
         providerId: "local",
         credentials: stores.credentials,
         resolver: new SubjectResolver(stores.users),
-        codec: new SignedCookieCodec(new TextEncoder().encode(stores.runtimeSessionSecret)),
+        sessions,
         pats: stores.pats,
         rateLimit: stores.rateLimit,
     });
     const shared = {
+        revokeSessionsForSub: (sub: string) => sessions.revokeForSub(sub),
         credentials: stores.credentials,
         users: stores.users,
         tokens: stores.authTokens,

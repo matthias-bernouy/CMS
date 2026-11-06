@@ -300,3 +300,60 @@ test("explicit Provider authority never forwards a rejected return credential to
     expect(userResolutions).toBe(0);
     expect(calls).toBeEmpty();
 });
+
+test("logical logout forwards only its selected credential and preserves Bearer precedence", async () => {
+    const calls: GatewayInvocation[] = [];
+    const transport = invoker(calls);
+    const resolveContract = transport.resolveContract;
+    transport.resolveContract = async (request) => {
+        const contract = await resolveContract(request);
+        return {
+            ...contract,
+            release: {
+                ...contract.release,
+                capabilities: [
+                    ...contract.release.capabilities,
+                    {
+                        ...contract.release.capabilities.find((capability) => capability.id === "item.create")!,
+                        id: "logout",
+                    },
+                ],
+            },
+        };
+    };
+    const handler = createCapabilityMutationHandler({
+        basePath: "",
+        siteId: "site-a",
+        invoker: transport,
+        resolveActor: async () => ({ kind: "anonymous" }),
+        resolveCapability: async () => ({
+            access: "public",
+            effect: "command",
+            idempotency: "natural",
+            outputType: "object",
+        }),
+    });
+    for (const headers of [
+        { cookie: "cms-session=session-token" },
+        { cookie: "cms-session=session-token", authorization: "Bearer pat-token" },
+    ]) {
+        const response = await handler(
+            new Request("http://site/.cms/mutation/ulvia/cms.access/logout", {
+                method: "POST",
+                headers: { ...headers, "content-type": "application/json" },
+                body: "{}",
+            }),
+        );
+        expect(response.status).toBe(200);
+    }
+    expect(calls[0]!.actorCredential).toEqual({ kind: "session", token: "session-token" });
+    expect(calls[1]!.actorCredential).toEqual({ kind: "bearer", token: "pat-token" });
+    await handler(
+        new Request("http://site/.cms/mutation/ulvia/catalog/item.create", {
+            method: "POST",
+            headers: { cookie: "cms-session=session-token", "content-type": "application/json" },
+            body: "{}",
+        }),
+    );
+    expect(calls[2]!.actorCredential).toBeUndefined();
+});

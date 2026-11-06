@@ -36,6 +36,7 @@ test("access capabilities protect the caller and cleanly remove another member",
         },
     };
     const core = {
+        authentication: { revokeSessionsForSub: async () => {} },
         users,
         credentials: {},
         pats: { list: async () => [], revoke: async () => false },
@@ -87,6 +88,8 @@ describe("Access authentication capabilities", () => {
         const admin = { identifier: "local:admin", email: "admin@example.test" };
         const dependencies = {
             authentication: {
+                revokeCredential: async () => {},
+                revokeSessionsForSub: async () => {},
                 authenticate: async (email: string | undefined, password: string | undefined) =>
                     email === subject.email && password === "correct-password"
                         ? {

@@ -56,3 +56,26 @@ describe("Edge session effects", () => {
         expect(() => applySessionEffect(expired)).toThrow("outside the Edge policy");
     });
 });
+
+test("a persistent cookie has the fixed 30-day deadline and ordinary responses do not renew it", () => {
+    const expiresAt = new Date(Date.now() + 30 * 86400_000).toISOString();
+    const response = applySessionEffect(
+        new Response(null, {
+            headers: {
+                [SESSION_EFFECT_HEADER]: encodeSessionEffect({
+                    type: "session",
+                    operation: "establish",
+                    token: "opaque-session",
+                    expiresAt,
+                }),
+            },
+        }),
+        { secure: true },
+    );
+    const cookie = response.headers.get("set-cookie")!;
+    expect(cookie).toContain(`Expires=${new Date(expiresAt).toUTCString()}`);
+    expect(cookie).toContain("HttpOnly");
+    expect(cookie).toContain("Secure");
+    expect(cookie).not.toContain("Domain=");
+    expect(applySessionEffect(new Response("ok")).headers.has("set-cookie")).toBeFalse();
+});

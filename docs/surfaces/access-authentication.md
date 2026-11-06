@@ -44,7 +44,8 @@ The browser sends either the `cms-session` cookie or an
 `Authorization: Bearer` credential. Edge forwards exactly one opaque, typed
 credential to the selected `ulvia/cms.access/resolve-actor` capability; it does
 not forward arbitrary browser Cookie or Authorization headers to every
-capability. A Bearer credential has precedence and never falls back to a cookie
+capability. Logout also receives the selected opaque credential to revoke the current session.
+A Bearer credential has precedence and never falls back to a cookie
 when invalid. Actor resolution is memoized only for the lifetime of the current
 request.
 
@@ -54,6 +55,22 @@ capability calls are authorized and dispatched by Gateway; callers cannot
 choose their own subject or administrator flag.
 
 ## Session Effects
+
+Browser sessions use random opaque tokens; the Provider stores only their SHA-256
+hashes in instance-owned persistence. The session cookie expires 30 days after
+login, without JavaScript timers or refresh calls. Provider time alone enforces
+both seven days since the last authenticated actor resolution and the fixed
+30-day deadline. Successful resolutions atomically advance activity, including
+background authenticated calls. Public collection assets and health probes do
+not count as activity. Expired sessions never revive, even if Mongo TTL cleanup
+has not run. Each account retains at most 20 sessions; a new login replaces the
+oldest retained login when full.
+
+Logout revokes the selected session before clearing its cookie. Password reset,
+password change and account deletion invalidate the account's sessions, including
+password proofs started before invalidation. PAT and MCP OAuth lifetimes are
+independent. Authentication refuses old signed session cookies; there is no
+legacy-session import path.
 
 `login-password` and `logout` declare the contract-level `session` response
 effect. The Provider returns semantic data (`establish` with an opaque token and

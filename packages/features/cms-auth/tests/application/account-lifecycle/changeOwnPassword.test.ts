@@ -20,7 +20,12 @@ describe("changeOwnPassword", () => {
         const credentials = new InMemoryLocalCredentialStore();
         await credentials.create({ email: "a@x.com", password: "old-password" });
 
-        await changeOwnPassword({ credentials }, user(), "old-password", "new-password");
+        await changeOwnPassword(
+            { credentials, revokeSessionsForSub: async () => {} },
+            user(),
+            "old-password",
+            "new-password",
+        );
 
         expect(await credentials.verify("a@x.com", "old-password")).toBeNull();
         expect(await credentials.verify("a@x.com", "new-password")).not.toBeNull();
@@ -29,14 +34,24 @@ describe("changeOwnPassword", () => {
     test("rejects non-local users", async () => {
         const credentials = new InMemoryLocalCredentialStore();
         await expect(
-            changeOwnPassword({ credentials }, user({ provider: "external" }), "old-password", "new-password"),
+            changeOwnPassword(
+                { credentials, revokeSessionsForSub: async () => {} },
+                user({ provider: "external" }),
+                "old-password",
+                "new-password",
+            ),
         ).rejects.toMatchObject({ field: "provider" });
     });
 
     test("rejects a local membership without an email address", async () => {
         const credentials = new InMemoryLocalCredentialStore();
         await expect(
-            changeOwnPassword({ credentials }, user({ email: undefined }), "old-password", "new-password"),
+            changeOwnPassword(
+                { credentials, revokeSessionsForSub: async () => {} },
+                user({ email: undefined }),
+                "old-password",
+                "new-password",
+            ),
         ).rejects.toMatchObject({ field: "email" });
     });
 
@@ -45,7 +60,12 @@ describe("changeOwnPassword", () => {
         await credentials.create({ email: "a@x.com", password: "old-password" });
 
         await expect(
-            changeOwnPassword({ credentials }, user(), "wrong-password", "new-password"),
+            changeOwnPassword(
+                { credentials, revokeSessionsForSub: async () => {} },
+                user(),
+                "wrong-password",
+                "new-password",
+            ),
         ).rejects.toBeInstanceOf(AuthValidationError);
         expect(await credentials.verify("a@x.com", "old-password")).not.toBeNull();
     });

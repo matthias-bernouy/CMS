@@ -7,6 +7,7 @@ import { withInstalledCollections } from "@bernouy/cms-repository/collections/co
 import { CollectionUpgradeService } from "@bernouy/cms-repository/collections/installations";
 import {
     MongoOAuthStore,
+    MongoSessionRepository,
     MongoAuthTokenStore,
     MongoLocalCredentialStore,
     MongoPatRepository,
@@ -166,6 +167,8 @@ export async function createProviderStores(
     await oauthPublicLimiter.init();
     const oauthStore = new MongoOAuthStore(db);
     await oauthStore.init();
+    const sessions = new MongoSessionRepository(db);
+    await sessions.init();
     const authTokens = new MongoAuthTokenStore(db);
     await authTokens.init();
     const rateLimit = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 });
@@ -211,6 +214,7 @@ export async function createProviderStores(
         users,
         credentials,
         pats,
+        sessions,
         authTokens,
         oauthStore,
         oauthPublicLimiter,

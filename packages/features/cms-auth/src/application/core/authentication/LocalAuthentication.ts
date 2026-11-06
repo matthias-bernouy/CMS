@@ -3,12 +3,11 @@ import type {
     LocalAuthenticationActions,
     LocalLoginResult,
 } from "cms-auth/application/interfaces/LocalAuthenticationActions";
-import type { SignedCookieCodec } from "cms-auth/sessions/core/SignedCookieCodec";
 import type { LocalCredentialStore } from "cms-auth/providers/interfaces/LocalCredentialStore";
 import type { SubjectResolver } from "cms-auth/accounts/core/SubjectResolver";
 import type { PatRepository } from "cms-auth/tokens/personal-access/interfaces/PatRepository";
 import type { RateLimiter } from "@bernouy/rate-limiter";
-import { SessionTokenService } from "cms-auth/sessions/core/SessionTokenService";
+import type { SessionTokenService } from "cms-auth/sessions/core/SessionTokenService";
 import { LocalPasswordProof } from "cms-auth/providers/core/local/LocalPasswordProof";
 import {
     RequestSubjectResolver,
@@ -20,9 +19,8 @@ export type LocalAuthConfig = {
     providerId: string;
     credentials: LocalCredentialStore;
     resolver: SubjectResolver;
-    codec: SignedCookieCodec;
-    sessionTtlSeconds?: number;
-    /** Optional PAT store. When set, `getSubject` also accepts an
+    sessions: SessionTokenService;
+    /** Optional PAT store. When set, credential resolution also accepts an
      *  `Authorization: Bearer <pat>` header — the CLI / server-to-server path. */
     pats?: PatRepository;
     /** Optional brute-force throttle for the password login path, keyed by
@@ -32,7 +30,7 @@ export type LocalAuthConfig = {
 };
 
 /**
- * Local credential proof, signed session issuance and opaque credential
+ * Local credential proof, persistent session issuance and opaque credential
  * resolution. HTTP and cookie response policy belong to the Edge boundary.
  */
 export class LocalAuthentication implements LocalAuthenticationActions {
@@ -41,10 +39,7 @@ export class LocalAuthentication implements LocalAuthenticationActions {
     private readonly subjects: RequestSubjectResolver;
 
     constructor(private readonly cfg: LocalAuthConfig) {
-        this.sessions = new SessionTokenService({
-            codec: cfg.codec,
-            ttlSeconds: cfg.sessionTtlSeconds,
-        });
+        this.sessions = cfg.sessions;
         this.passwords = new LocalPasswordProof(cfg);
         this.subjects = new RequestSubjectResolver({ resolver: cfg.resolver, sessions: this.sessions, pats: cfg.pats });
     }
@@ -53,12 +48,24 @@ export class LocalAuthentication implements LocalAuthenticationActions {
         return this.subjects.resolveCredential(credential);
     }
 
+    async revokeCredential(credential: AuthenticationCredential | undefined): Promise<void> {
+        if (credential?.kind === "session") {
+            await this.sessions.revoke(credential.token);
+        }
+    }
+
+    revokeSessionsForSub(sub: string): Promise<void> {
+        return this.sessions.revokeForSub(sub);
+    }
+
     async authenticate(email: string | undefined, password: string | undefined): Promise<LocalLoginResult> {
+        const authenticatedAt = this.sessions.now();
         const proof = await this.passwords.verify(email, password);
         if (!proof.ok) {
             return { ok: false, error: proof.error };
         }
         const subject = await this.cfg.resolver.fromIdentity({ ...proof.identity, provider: this.cfg.providerId });
-        return { ok: true, subject, session: await this.sessions.issue(subject.identifier) };
+        const session = await this.sessions.issue(subject.identifier, authenticatedAt);
+        return session ? { ok: true, subject, session } : { ok: false, error: "invalid_credentials" };
     }
 }

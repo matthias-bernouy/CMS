@@ -48,3 +48,13 @@ Branch on the declared error code. `error.output.message` explains a refusal in 
 ## Verify the result
 
 Read back the affected resource using its owning contract, verify the requested state and inspect asynchronous operation details when a handle was returned. Report any checks that could not be performed. Diagnostic journal records help explain failures but are not durable business audit or proof of visual quality.
+
+## Browser session lifetime
+
+Sessions expire after seven days without authenticated actor resolution and at
+most 30 days after login. All deadlines and activity timestamps are calculated
+by the Provider. Browser cookies have a fixed 30-day deadline; no frontend
+refresh request is required. Background authenticated requests count as activity;
+public collection assets and health probes do not. Logout revokes the selected
+browser session and clears its cookie. Password recovery and account deletion
+invalidate existing sessions. These limits do not change PAT or MCP OAuth tokens.

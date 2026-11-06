@@ -97,11 +97,13 @@ export async function confirmPasswordReset(
         if (!(await hasActivatedMembership(cfg, sub))) {
             throw new AuthValidationError("token", "invalid or expired", { code: "auth.token" });
         }
+        await cfg.revokeSessionsForSub(internalUserId("local", sub));
         const changed = await cfg.credentials.setPassword(sub, input.password);
         if (!changed) {
             throw new AuthValidationError("token", "credential not found", { code: "auth.token" });
         }
         await cfg.credentials.markEmailVerified(sub);
+        await cfg.revokeSessionsForSub(internalUserId("local", sub));
     });
 }
 

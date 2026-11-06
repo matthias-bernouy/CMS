@@ -1,13 +1,13 @@
 # @bernouy/cms-auth
 
 Feature package for Provider-owned authentication: local credentials, PATs,
-signed session tokens, public account flows, and membership stores.
+persistent opaque sessions, public account flows, and membership stores.
 
 ## Layout
 
 - `accounts/`: CMS membership records and identity-to-subject resolution.
 - `providers/`: local credentials and password proof.
-- `sessions/`: signed session-token issuance and verification. Cookie policy
+- `sessions/`: persistent session issuance, activity validation and revocation. Cookie policy
   belongs to the Edge boundary that applies a validated session effect.
 - `tokens/`: separate personal-access and one-time token contracts and stores.
 - `email/`: authentication-owned verification and password-reset composition.
@@ -46,7 +46,7 @@ the exact same operation.
   guards for external ownership constraints; authentication must not import the
   Registry domain to implement namespace deletion rules.
 - Do not add browser components to this package.
-- Keep local password proof in `providers`, signed session tokens in `sessions`,
+- Keep local password proof in `providers`, persistent opaque sessions in `sessions`,
   and opaque credential resolution in `application`. Provider surfaces receive
   bounded account-lifecycle actions, never stores.
 - Security-sensitive changes require tests around credential precedence, rate

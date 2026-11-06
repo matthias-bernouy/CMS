@@ -17,9 +17,9 @@ export function providerInvocationContext(
     const encodedCredential = request.headers.get(ACTOR_CREDENTIAL_HEADER);
     if (
         encodedCredential !== null &&
-        (claims.contractId !== "ulvia/cms.access" || claims.capabilityId !== "resolve-actor")
+        (claims.contractId !== "ulvia/cms.access" || !["resolve-actor", "logout"].includes(claims.capabilityId))
     ) {
-        throw new TypeError("Actor credentials are restricted to the Access actor resolver.");
+        throw new TypeError("Actor credentials are restricted to Access resolution and logout.");
     }
     const actorCredential = decodeActorCredential(encodedCredential);
     const metadata = decodeRequestContext(request.headers.get(REQUEST_CONTEXT_HEADER)) ?? requestContext(request);

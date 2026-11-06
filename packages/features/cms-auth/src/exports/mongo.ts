@@ -22,3 +22,5 @@ export {
 } from "cms-auth/tokens/one-time/default-implementation/mongo/MongoAuthTokenStore";
 
 export { MongoOAuthStore } from "cms-auth/oauth/default-implementation/mongo/MongoOAuthStore";
+
+export { MongoSessionRepository } from "cms-auth/sessions/default-implementation/mongo/MongoSessionRepository";

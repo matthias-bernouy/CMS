@@ -14,6 +14,7 @@ export type PublicAuthFlowConfig = {
     credentials: LocalCredentialStore;
     users: UsersRepository;
     tokens: AuthTokenStore;
+    revokeSessionsForSub(sub: string): Promise<void>;
     emailer: Emailer;
     emailComposer?: AuthEmailComposer;
     /** Frontend page where users land after clicking a verification email. */
