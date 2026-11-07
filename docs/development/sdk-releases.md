@@ -1,7 +1,7 @@
 # SDK release workflow
 
 The SDK pilots are Emailer/SMTP in `packages/features/email/base` and `smtp`,
-and Secrets in `packages/features/cms-secrets`.
+Secrets in `packages/features/cms-secrets`, and Files in `packages/features/cms-files`.
 Their documentation is authored as ordinary `docs/**/*.md` files and discovered
 during SDK compilation. Reusable Zod data schemas live in `src/schemas/` and the TypeScript
 ports infer their types from those schemas. Each capability declares its stable ID,
@@ -13,7 +13,7 @@ storage are injected by the runtime.
 ## Sources and generated artifacts
 
 `infra/releases/ulvia.release.ts` is the explicit trusted local source entry.
-It prepares SDK Emailer/SMTP and Secrets contracts, the remaining authored contracts and
+It prepares SDK Emailer/SMTP, Secrets and Files contracts, the remaining authored contracts and
 collections, and a manifest with computed exact contract digests. SDK executor functions are captured during authoring/compilation without being
 invoked. Runtime mounting binds injected service ports; invocations run the executors.
 Older pilot JSON and the authored manifest remain parity references; the new
@@ -127,7 +127,7 @@ input. TypeScript inference and build admission validate their payloads and code
 local mock IDs must be unique. Binary fixtures retain their verified asset references.
 
 These changes preserve existing contract versions, canonical bytes and digests.
-Emailer/SMTP and Secrets capabilities own
+Emailer/SMTP, Secrets and Files capabilities own
 `execute({ input, services, context, fail })`. `src/capabilities/define.ts` types
 capabilities once with `capabilitiesFor<Services>()`, which returns `defineCapability`.
 `src/feature.ts` calls the SDK's `defineFeature` directly. It is the single source
@@ -175,3 +175,19 @@ The SDK authoring API uses capability terminology consistently. The protocol's
 `execution: "operation"` and `operationId` retain their long-running meaning.
 No published contract, Provider manifest, HTTP route, version or digest changes
 merely because the source vocabulary changes.
+
+## Files execution
+
+Files contributes its complete 27-capability implementation through the same surface
+inventory. Schemas, HTTP/MCP bindings, default executors and the two Markdown documents
+live in `@bernouy/cms-files`; the manifest retains the same Secrets requirements.
+The runtime injects `FilesService` and a `CmsFileWorkspace` port. Workspace credentials
+and concrete blob/metadata/secret stores stay in the runtime. Mounting a selected Files
+release without either port refuses, rather than advertising a partial implementation.
+
+Uploads borrow `context.binaryBody.stream`. Downloads return a streaming `Response`
+with the immutable generation's content type, length, ETag, cache policy, disposition,
+Range and If-Range metadata. The SDK enforces admitted binary bounds and propagates
+cancellation; it does not collect a complete file in memory. Namespace credentials,
+quotas and ownership checks remain in Files. No Files capability uses keyed receipts,
+so this migration adds no durable execution policy or pre-receipt authorization hook.

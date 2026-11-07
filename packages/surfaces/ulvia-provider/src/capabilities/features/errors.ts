@@ -1,3 +1,4 @@
+import { CmsFilesError } from "@bernouy/cms-files";
 import type { CapabilityFailure } from "@bernouy/ulvia-sdk";
 import type { CapabilityFailurePresentation, CapabilityFailurePresentationContext } from "@bernouy/ulvia-sdk/provider";
 import { officialFailure } from "../../dispatch/errors/failure";
@@ -9,7 +10,13 @@ export function formatOfficialCapabilityFailure(
     { contractId, status, invocation }: CapabilityFailurePresentationContext,
 ): CapabilityFailurePresentation {
     const localized = localizeOfficialError(
-        officialFailure(failure.code, status, failure.cause),
+        officialFailure(
+            failure.code,
+            status,
+            failure.cause,
+            undefined,
+            failure.cause instanceof CmsFilesError ? failure.cause.responseHeaders : {},
+        ),
         contractId,
         failure.capability.id,
         invocation,

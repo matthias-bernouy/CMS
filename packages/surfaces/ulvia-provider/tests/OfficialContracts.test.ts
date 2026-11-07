@@ -136,13 +136,17 @@ test("the official adapters implement the complete declared capability matrix", 
     const emailer = new ConfiguredSmtpEmailer({ secrets: new InMemorySecretStore() });
     await registerOfficialProviderCapabilities(
         dispatcher,
-        { ...({} as UlviaProviderDependencies), emailer, secrets },
+        {
+            ...({} as UlviaProviderDependencies),
+            emailer,
+            secrets,
+            files: {} as CmsFilesService,
+            workspace: {} as CmsFileWorkspace,
+        },
         undefined,
         operations,
         undefined,
         undefined,
-        {} as CmsFilesService,
-        {} as CmsFileWorkspace,
         contracts.map(({ release, digest }) => ({ contractId: release.contractId, version: release.version, digest })),
         smtpOptions(),
     );

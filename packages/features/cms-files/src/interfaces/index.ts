@@ -1,22 +1,9 @@
-export type NamespacePermission =
-    | "files.read"
-    | "files.write"
-    | "files.delete"
-    | "files.sign"
-    | "files.publish"
-    | "namespace.manage";
+import type { z } from "zod";
+import type { namespacePermissionSchema, namespaceRecordSchema } from "cms-files/schemas/values";
+import type { fileReferenceValueSchema } from "cms-files/schemas/files";
 
-export interface NamespaceRecord {
-    readonly id: string;
-    readonly name: string;
-    readonly defaultVisibility: "private" | "public";
-    readonly createdAt: string;
-    readonly createdBy: {
-        readonly kind: "administrator" | "provider" | "system";
-        readonly id: string;
-    };
-    readonly quota: { readonly maxBytes: number; readonly maxFiles: number };
-}
+export type NamespacePermission = z.infer<typeof namespacePermissionSchema>;
+export type NamespaceRecord = z.infer<typeof namespaceRecordSchema>;
 
 export interface NamespaceKeyRecord {
     readonly id: string;
@@ -95,28 +82,7 @@ export interface CmsFilesStore {
     deleteFile(id: string, generation: string): Promise<void>;
 }
 
-export interface FileReference {
-    readonly fileId: string;
-    readonly generation: string;
-    readonly namespaceId: string;
-    readonly mimeType: string;
-    readonly size: number;
-    readonly visibility: "private" | "public";
-    readonly name: string;
-    readonly width?: number;
-    readonly height?: number;
-    readonly url: string;
-    /** Canonical same-site path suitable for persisted Page markup. */
-    readonly path: string;
-    readonly variants?: readonly {
-        readonly width: number;
-        readonly height: number;
-        readonly profile: "thumbnail" | "responsive";
-        readonly mimeType: "image/webp";
-        readonly url: string;
-        readonly path: string;
-    }[];
-}
+export type FileReference = z.infer<typeof fileReferenceValueSchema>;
 
 export interface FileDerivativeScheduler {
     enqueue(file: FileRecord): void;

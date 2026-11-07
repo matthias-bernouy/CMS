@@ -358,6 +358,8 @@ export class ProviderInstanceHost {
                     authoring,
                     emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
+                    files: stores.providerFiles,
+                    workspace: fileWorkspace,
                     sitemapStore: stores.sitemapStore,
                     logger: instanceLogger.child({ component: "content-delivery" }),
                     mcpAuthorization: new McpAuthorization(
@@ -382,8 +384,6 @@ export class ProviderInstanceHost {
                     administration: providerAdministration(stores, gateway, management, instance.gatewayUrl),
                 },
                 new CollectionSources(stores.collections, [this.#collectionSource]),
-                stores.providerFiles,
-                fileWorkspace,
                 profile.contracts,
                 {
                     providerId: profile.manifest.providerId,

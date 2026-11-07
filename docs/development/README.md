@@ -13,7 +13,7 @@ reusable insertion examples and locally generated previews.
 Provider authors: see [HTTP context and streaming](provider-http.md) for the generic receiver,
 standard responses, validators and the compatible Content transition.
 
-SDK authors: see [SDK releases](sdk-releases.md) for Emailer/SMTP and Secrets,
+SDK authors: see [SDK releases](sdk-releases.md) for Emailer/SMTP, Secrets and Files,
 inferred types and release preparation. [SDK runtime artifacts](sdk-runtime.md)
 explains build output, startup attachment and authorization before durable replay.
 

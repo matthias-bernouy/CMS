@@ -144,7 +144,7 @@ export class FileCatalog {
             throw new CmsFilesError("NOT_FOUND", 404);
         }
         const files = await this.store.listFileGenerations(boundedText(fileId, 128));
-        if (files.length === 0) {
+        if (files.length === 0 || files.some((file) => file.namespaceId !== authority.namespaceId)) {
             throw new CmsFilesError("NOT_FOUND", 404);
         }
         await Promise.all(files.map((file) => this.access.deleteRecord(file)));

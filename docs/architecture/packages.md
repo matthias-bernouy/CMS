@@ -42,7 +42,7 @@ already been published to a registry.
 | `platform/contracts` | `@bernouy/ulvia-contracts` | Contract schemas, parsing, validation, admission, bindings, compatibility and release read ports. |
 | `platform/providers` | `@bernouy/ulvia-providers` | Manifest admission, Provider execution models, selection validation, readiness and read ports. |
 | `platform/gateway` | `@bernouy/cms-gateway` | Authorized generic capability invocation, HTTP/MCP transports, Provider SDK, authority, identities and audit. |
-| `platform/sdk` | `@bernouy/ulvia-sdk` | Typed operations/contracts, static Provider assembly, generated manifests and an explicit Gateway HTTP receiver adapter used by the Emailer pilot. |
+| `platform/sdk` | `@bernouy/ulvia-sdk` | Typed feature capabilities/contracts, static Provider assembly, generated manifests and an explicit Gateway HTTP receiver adapter used by Emailer/SMTP, Secrets and Files. |
 
 Platform depends only on Platform and Foundation. Catalogue publication, installation
 approval and selection replacement remain feature-owned. Edge and the official
@@ -55,7 +55,7 @@ Provider remain surfaces; documentation search remains a feature.
 | `@bernouy/cms-documentation` | Selection-bound Markdown retrieval and hybrid lexical/semantic search, with explicit runtime adapters for multilingual embeddings and derived Mongo vectors. |
 | `@bernouy/cms-content` | Provider-neutral Pages, routes, Blocs, settings, themes, metadata, structured data, indexing, sitemap snapshots, rendering and generic contribution inputs. |
 | `@bernouy/cms-observability` | Instance-scoped journal validation, bounded collection, query and retention services; explicit memory and Mongo adapters. |
-| `@bernouy/cms-files` | Official provider implementation for namespaces, credentials, uploads, immutable files, private signatures and image representations. |
+| `@bernouy/cms-files` | SDK feature and default implementation for namespaces, credentials, streaming uploads, immutable files, private signatures and image representations. |
 | `@bernouy/cms-repository` | Persistent release catalogues, publication, installation/selection workflows, authored collection admission, content projections, upgrades and build tooling. |
 | `@bernouy/cms-secrets` | Credential-scoped secret namespaces, metadata and lifecycle over an injected generic encrypted secret store. |
 | `@bernouy/email` (`features/email/base`) | Provider-neutral outbound email delivery interface. |
@@ -81,8 +81,8 @@ The removed `cms-source` transport grammar is not accepted.
 ## Official Products
 
 `packages/official-repository` contains the authored official contract releases,
-the retained manifest reference and official collections. Emailer schemas/types/docs
-live in `features/email`; the Provider surface generates its contracts and manifest
+the retained manifest reference and official collections. Emailer/SMTP, Secrets and Files
+schemas, types and docs live in their feature packages; the Provider surface generates contracts and manifest
 claims through the [SDK release workflow](../development/sdk-releases.md). It has
 no runtime adapters or routes. The official Provider implements Registry operations
 for explicitly enabled CMS instances, exposed through their independent Edge.

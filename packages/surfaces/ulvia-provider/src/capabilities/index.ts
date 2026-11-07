@@ -1,20 +1,13 @@
 import type { ProviderCapabilityRegistry } from "../dispatch/registry";
-import type {
-    CmsFileWorkspace,
-    UlviaProviderDependencies,
-    UlviaProviderGateway,
-    UlviaProviderManagement,
-} from "../ports/index";
+import type { UlviaProviderDependencies, UlviaProviderGateway, UlviaProviderManagement } from "../ports/index";
 import { registerObservabilityCapabilities } from "./observability/index";
 import { registerAccessCapabilities } from "./access/index";
 import { registerContentCapabilities } from "./content/index";
-import { registerFileCapabilities } from "./storage/files";
 import { registerOfficialFeatures } from "./features";
 import { registerAuthoringCapabilities } from "./installations/authoring/index";
 import { registerInstallationCapabilities } from "./installations/index";
 import type { CollectionSources } from "./installations/sources/index";
 import type { ProviderOperationExecutor } from "../operations/ProviderOperationExecutor";
-import type { CmsFilesService } from "@bernouy/cms-files";
 
 export async function registerOfficialProviderCapabilities(
     dispatcher: ProviderCapabilityRegistry,
@@ -23,8 +16,6 @@ export async function registerOfficialProviderCapabilities(
     operations?: ProviderOperationExecutor,
     providerManagement?: UlviaProviderManagement,
     collectionSources?: CollectionSources,
-    files?: CmsFilesService,
-    fileWorkspace?: CmsFileWorkspace,
     enabledContracts?: readonly ImplementationRelease[],
     featureOptions?: ProviderRegistrationOptions,
 ): Promise<void> {
@@ -44,9 +35,6 @@ export async function registerOfficialProviderCapabilities(
         providerManagement,
         collectionSources,
     );
-    if (files) {
-        registerFileCapabilities(dispatcher, files, fileWorkspace);
-    }
     if (enabledContracts) {
         await registerOfficialFeatures(dispatcher, dependencies, enabledContracts, featureOptions);
     }
@@ -60,7 +48,6 @@ export {
     registerObservabilityCapabilities,
     registerContentCapabilities,
     registerOfficialFeatures,
-    registerFileCapabilities,
     registerInstallationCapabilities,
 };
 export type { UlviaProviderFeatureServices } from "../ports/index";

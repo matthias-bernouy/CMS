@@ -1,6 +1,6 @@
 import type { CmsFilesService, FileReference } from "@bernouy/cms-files";
 import type { SecretStore } from "@bernouy/secret-store";
-import type { CmsFileWorkspace as CmsFileWorkspacePort } from "@bernouy/ulvia-provider";
+import type { CmsFileWorkspace as CmsFileWorkspacePort } from "@bernouy/cms-files";
 
 const CREDENTIALS_KEY = "CMS_FILES_WORKSPACE";
 

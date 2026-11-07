@@ -12,6 +12,9 @@ import {
 import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
+import { loadOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
+import { CmsFileWorkspace } from "../../src/runtime/stores/CmsFileWorkspace";
+import { InMemorySecretStore } from "@bernouy/secret-store";
 import { CmsFilesService } from "@bernouy/cms-files";
 import { InMemoryCmsFilesStore } from "@bernouy/cms-files/memory";
 
@@ -97,12 +100,13 @@ test("all administration capability areas dispatch outputs matching their offici
     });
     await registerOfficialProviderCapabilities(
         dispatcher,
-        core as never,
+        { ...core, files, workspace: new CmsFileWorkspace(files, new InMemorySecretStore()) } as never,
         gateway as never,
         new ProviderOperationExecutor(new MemoryProviderOperationStore()),
         undefined,
         undefined,
-        files,
+        (await loadOfficialFeatures()).implementations.filter(({ contractId }) => contractId === "ulvia/cms.files"),
+        { providerId: "ulvia/primary-provider", scope: { siteId: "default", instanceId: "smoke" } },
     );
 
     const calls = [
@@ -122,6 +126,7 @@ test("all administration capability areas dispatch outputs matching their offici
             requestId: "00000000-0000-4000-8000-000000000001",
             contractVersion: release.version,
             siteId: "default",
+            invocation: { instanceId: "smoke", contractId },
             providerId: "ulvia/primary-provider",
         });
         expect(() => validateSchemaValue(capability.output, output)).not.toThrow();

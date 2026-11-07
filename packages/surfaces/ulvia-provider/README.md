@@ -46,3 +46,11 @@ service port. Its 13 capabilities own their schemas, bindings and execution in t
 feature; the former surface registrars are removed. Keyed creation/rotation verify
 namespace write permission before every receipt lookup, including replay. Namespace
 credential checks are domain-owned; Provider authorization/localization stay here.
+
+Files uses the same inventory for its complete 27-capability implementation.
+Its entry under `src/capabilities/features/implementations/` projects injected
+`files` and `workspace` ports and preserves its Secrets requirements. Feature-owned
+executors adapt binary reads to streaming responses, preserving range/cache headers.
+The surface preserves domain response headers when localizing declared errors,
+including the required `Content-Range` on a `416` response. The former Files registrar
+and handwritten manifest claim are removed. Files has no keyed capabilities.

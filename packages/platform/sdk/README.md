@@ -4,7 +4,7 @@ Define typed feature capabilities, expose contracts, assemble a Provider and com
 its exact manifest from the same handler table. The optional `./provider` adapter
 mounts that build through the existing Gateway HTTP receiver.
 
-The Emailer/SMTP and Secrets pilots use the SDK in the official Provider and bootstrap. Other
+The Emailer/SMTP, Secrets and Files pilots use the SDK in the official Provider and bootstrap. Other
 feature families retain their existing adapters. Release orchestration lives in
 the CLI and infrastructure. Root authoring performs no IO; `./build` discovers
 Markdown only below explicitly declared directories and never publishes releases.

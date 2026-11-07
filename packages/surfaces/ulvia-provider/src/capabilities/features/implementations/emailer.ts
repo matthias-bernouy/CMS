@@ -1,7 +1,7 @@
 import { implementFeature } from "@bernouy/ulvia-sdk";
 import { smtpEmailerFeature } from "@bernouy/email-smtp/feature";
 
-import type { UlviaProviderFeatureServices } from "../../ports/index";
+import type { UlviaProviderFeatureServices } from "../../../ports/index";
 
 export const smtpEmailerImplementation = implementFeature(smtpEmailerFeature, {
     services: (dependencies: UlviaProviderFeatureServices) => {

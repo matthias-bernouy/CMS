@@ -91,6 +91,8 @@
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "zod": "4.6.7",
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",

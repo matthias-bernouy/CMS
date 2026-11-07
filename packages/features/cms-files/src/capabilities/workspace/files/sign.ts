@@ -1,0 +1,41 @@
+import { defineCapability } from "cms-files/capabilities/define";
+import { fileCall } from "cms-files/capabilities/support";
+import { signFileOutputSchema } from "cms-files/schemas/files";
+import { signWorkspaceFileInputSchema } from "cms-files/schemas/workspace";
+import { workspaceErrors as errors } from "cms-files/schemas/errors";
+
+export const signWorkspaceFile = defineCapability({
+    id: "workspace.files.sign",
+    description: "Create a short-lived private read URL for a site workspace file generation.",
+    access: "admin",
+    behavior: { effect: "command", execution: "sync", idempotency: "none", sensitive: true },
+    bindings: [
+        {
+            id: "http",
+            transport: "http",
+            method: "POST",
+            path: "/workspace.files.sign",
+            input: { body: true },
+            response: {
+                successStatuses: [200],
+                contentTypes: ["application/json"],
+                errorStatuses: { INVALID_INPUT: 422, NOT_FOUND: 404, CORE_UNAVAILABLE: 503 },
+            },
+        },
+        {
+            id: "mcp",
+            transport: "mcp",
+            tool: {
+                name: "files_workspace_files_sign",
+                description:
+                    "Create an expiring download URL for one exact file generation. This does not make a private file public.",
+            },
+        },
+    ],
+    docs: ["overview.md", "site-files.md"],
+    input: signWorkspaceFileInputSchema,
+    output: signFileOutputSchema,
+    errors,
+    execute: ({ input, services, fail }) =>
+        fileCall(errors, fail, () => services.workspace.signFile(input.fileId, input.generation, input.expiresIn)),
+});
