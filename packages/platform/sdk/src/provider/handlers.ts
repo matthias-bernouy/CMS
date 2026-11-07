@@ -1,3 +1,4 @@
+import { ProviderResourceResponse, resourceResponse } from "@bernouy/cms-gateway/provider/responses";
 import { handlerAuthorization } from "ulvia-sdk/definitions/authorization";
 import type {
     ProviderCapabilityHandler,
@@ -103,16 +104,25 @@ export function bindHandler<Dependencies>(
                 return output;
             }
             const route = selectedRoute(routes, entry.contractId, entry.capability.id, context, claimsFor(context));
-            const response = output instanceof Uint8Array ? bytesResponse(output, entry, route) : output;
+            const resource = output instanceof ProviderResourceResponse ? output : undefined;
+            if (resource && !entry.capability.output.resource) {
+                await resource.response.body?.cancel().catch(() => undefined);
+                throw new TypeError("Resource metadata requires an admitted resource capability");
+            }
+            const response =
+                resource?.response ?? (output instanceof Uint8Array ? bytesResponse(output, entry, route) : output);
             if (!(response instanceof Response)) {
                 throw new TypeError("Binary handler must return bytes or a Response");
             }
-            return boundBinaryResponse(
+            const bounded = boundBinaryResponse(
                 response,
                 entry.capability.output.maxBytes,
-                route.capability.binding.response.successStatuses,
+                entry.capability.output.resource
+                    ? [response.status]
+                    : route.capability.binding.response.successStatuses,
                 context.signal,
             );
+            return resource ? resourceResponse(bounded, resource.metadata) : bounded;
         } finally {
             lease.close();
         }

@@ -88,3 +88,9 @@ Typed authoring and Provider assembly SDK. Depend only on Platform and Foundatio
   envelope. Keep effect authority and wire validation in existing admitted Gateway
   handling. Local JSON execution refuses declared effects before invoking services;
   never issue credentials and then reject the local output envelope.
+
+- Native resource capabilities may return `resourceResponse(Response, {vary, cacheTags})`
+  from the SDK root. Keep the narrow Platform response import free of HTTP bootstrap.
+  Preserve native representation metadata, bound bodyful statuses, and reject metadata
+  on ordinary binary outputs. Release readers/listeners on completion, cancellation,
+  error and request abort, including pending reads and backpressured consumers.

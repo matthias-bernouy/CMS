@@ -1,4 +1,11 @@
-import { capabilitiesFor, defineFeature, z, capabilityResponse } from "@bernouy/ulvia-sdk";
+import {
+    capabilitiesFor,
+    defineFeature,
+    z,
+    capabilityResponse,
+    resourceResponse,
+    contractBinary,
+} from "@bernouy/ulvia-sdk";
 import { executeCapability } from "@bernouy/ulvia-sdk/provider";
 const author = capabilitiesFor<{ notes: { read(): string } }>();
 const read = author({
@@ -55,3 +62,13 @@ void wrapped;
 author({ ...read, execute: () => capabilityResponse(42) });
 // @ts-expect-error Session effects cannot invent an operation.
 capabilityResponse("one", { type: "session", operation: "unknown" });
+
+const resource = author({
+    ...read,
+    mocks: undefined,
+    output: contractBinary({ maxBytes: 4, resource: true }),
+    execute: () => resourceResponse(new Response("data")),
+});
+void resource;
+// @ts-expect-error Resource envelopes cannot replace a structured JSON output.
+author({ ...read, execute: () => resourceResponse(new Response("data")) });

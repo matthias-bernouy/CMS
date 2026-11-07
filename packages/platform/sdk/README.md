@@ -224,6 +224,15 @@ its content type/status. The receiver validates those choices. Stream size bound
 are enforced without buffering the whole body; overflow aborts an already-open
 response, and cancellation propagates to the source.
 
+Native HTTP resources use `contractBinary({ maxBytes, resource: true })` and may
+return `resourceResponse(response, { vary, cacheTags })` from the SDK root. The
+receiver preserves admitted representation metadata and strips cookies/security
+headers. Metadata wrappers are refused for ordinary binary capabilities. Native
+resource body limits apply to error representations as well as successful ones;
+redirect/revalidation bodies are discarded by the receiver. Request aborts cancel
+the source even while it is backpressured or waiting for a chunk. Local JSON
+execution refuses every binary mode before invoking services.
+
 A streamed binary input is absent from the JSON handler input and available as
 `context.binaryBody`. Its size is bounded while consumed. The input lease ends
 when the handler returns: finish consuming/validating it before mutating business

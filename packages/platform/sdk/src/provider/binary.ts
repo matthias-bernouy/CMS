@@ -6,18 +6,73 @@ function limitBinaryStream(
     maximum: number,
     signal?: AbortSignal,
 ): ReadableStream<Uint8Array> {
+    const reader = source.getReader();
     let received = 0;
-    return source.pipeThrough(
-        new TransformStream<Uint8Array, Uint8Array>({
-            transform(chunk, controller) {
-                if (!(chunk instanceof Uint8Array) || chunk.byteLength > maximum - received) {
-                    throw new TypeError("Binary stream exceeds its admitted byte bound");
+    let finished = false;
+    let onAbort: (() => void) | undefined;
+    const detach = () => {
+        if (onAbort) {
+            signal?.removeEventListener("abort", onAbort);
+        }
+    };
+    const cancel = async (reason?: unknown) => {
+        if (finished) {
+            return;
+        }
+        finished = true;
+        detach();
+        try {
+            await reader.cancel(reason);
+        } finally {
+            reader.releaseLock();
+        }
+    };
+    return new ReadableStream<Uint8Array>(
+        {
+            start(controller) {
+                onAbort = () => {
+                    if (!finished) {
+                        controller.error(signal?.reason);
+                        void cancel(signal?.reason).catch(() => undefined);
+                    }
+                };
+                signal?.addEventListener("abort", onAbort, { once: true });
+                if (signal?.aborted) {
+                    onAbort();
                 }
-                received += chunk.byteLength;
-                controller.enqueue(chunk);
             },
-        }),
-        signal ? { signal } : {},
+            async pull(controller) {
+                if (finished) {
+                    return;
+                }
+                try {
+                    const next = await reader.read();
+                    if (finished) {
+                        return;
+                    }
+                    if (next.done) {
+                        finished = true;
+                        detach();
+                        reader.releaseLock();
+                        controller.close();
+                        return;
+                    }
+                    const chunk = next.value;
+                    if (!(chunk instanceof Uint8Array) || chunk.byteLength > maximum - received) {
+                        throw new TypeError("Binary stream exceeds its admitted byte bound");
+                    }
+                    received += chunk.byteLength;
+                    controller.enqueue(chunk);
+                } catch (error) {
+                    if (!finished) {
+                        controller.error(error);
+                        await cancel(error).catch(() => undefined);
+                    }
+                }
+            },
+            cancel,
+        },
+        { highWaterMark: 0 },
     );
 }
 

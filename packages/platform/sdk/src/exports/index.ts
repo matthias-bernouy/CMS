@@ -1,4 +1,9 @@
-export { capabilityResponse, ProviderCapabilityResponse } from "@bernouy/cms-gateway/provider/responses";
+export {
+    capabilityResponse,
+    ProviderCapabilityResponse,
+    resourceResponse,
+    ProviderResourceResponse,
+} from "@bernouy/cms-gateway/provider/responses";
 export { z } from "zod";
 export { defineCapability } from "ulvia-sdk/definitions/defineCapability";
 export { createCapabilityDefiner as capabilitiesFor } from "ulvia-sdk/definitions/capabilityDefiner";
