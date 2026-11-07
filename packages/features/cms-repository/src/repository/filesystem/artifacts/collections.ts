@@ -1,3 +1,4 @@
+import type { CollectionVerifier } from "cms-repository/collections/sources/verification";
 import { RepositoryRequestError } from "../../core/errors";
 import { createHash, randomUUID } from "node:crypto";
 import { link, readFile, readdir, rm } from "node:fs/promises";
@@ -24,7 +25,10 @@ import { ImmutableJsonCache } from "../core/immutableJsonCache";
 export class LocalCollectionRepository {
     private readonly metadataCache = new ImmutableJsonCache<VerifiedCollectionReleaseMetadata>();
 
-    constructor(private readonly root: string) {}
+    constructor(
+        private readonly root: string,
+        private readonly verifier?: CollectionVerifier,
+    ) {}
 
     async store(artifact: AdmittedCollectionRelease): Promise<boolean> {
         const { publisherId, collectionId, version } = artifact.release;
@@ -127,8 +131,11 @@ export class LocalCollectionRepository {
         publisherId: string,
         collectionId: string,
         version: string,
+        signal?: AbortSignal,
     ): Promise<VerifiedCollectionReleaseMetadata | null> {
+        signal?.throwIfAborted();
         const document = await this.readDocument(publisherId, collectionId, version);
+        signal?.throwIfAborted();
         if (!document) {
             return null;
         }
@@ -137,7 +144,9 @@ export class LocalCollectionRepository {
         if (cached) {
             return cached;
         }
-        const artifact = await verifyStoredCollectionReleaseJson(bytes, `sha256:${releaseHash(bytes)}`);
+        const artifact = this.verifier
+            ? await this.verifier.metadataJson(canonicalJson, `sha256:${releaseHash(bytes)}`, signal)
+            : await verifyStoredCollectionReleaseJson(bytes, `sha256:${releaseHash(bytes)}`);
         if (
             artifact.release.publisherId !== publisherId ||
             artifact.release.collectionId !== collectionId ||

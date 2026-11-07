@@ -83,5 +83,9 @@
     "text.ui-locale-french.label": "Français",
     "text.ui-examples-first-page.label": "Première page",
     "text.ui-show-collection-history.label": "Afficher les versions historiques",
-    "text.ui-more-operations.label": "Opérations suivantes"
+    "text.ui-more-operations.label": "Opérations suivantes",
+    "text.ui-collection-release-history.label": "Historique des versions",
+    "text.ui-collections-on-page.label": "collections sur cette page",
+    "text.ui-next-collection-page.label": "Page suivante",
+    "text.ui-version.label": "Version"
 }

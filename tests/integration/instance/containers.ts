@@ -93,7 +93,7 @@ export async function mcpContainers(
             cmsUrl,
             administrator,
             "http://edge:3000",
-            { id: "ulvia", version: legacyStarters ? "1.0.0" : "1.2.0" },
+            { id: "ulvia", version: legacyStarters ? "1.0.0" : "1.3.0" },
         );
         const named = await provisionInstance(
             providerUrl,
@@ -102,7 +102,7 @@ export async function mcpContainers(
             `http://preview.localhost:${edgePort}`,
             administrator,
             "http://named-edge:3000",
-            { id: "ulvia", version: legacyStarters ? "1.0.0" : "1.2.0" },
+            { id: "ulvia", version: legacyStarters ? "1.0.0" : "1.3.0" },
         );
         const startEdge = async (cache = initialResponseCache) =>
             run(edgeName, "edge", images.edge, [

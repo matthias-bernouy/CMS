@@ -1,3 +1,9 @@
+import {
+    collectionBrowserRisk,
+    collectionBrowserRiskDigest,
+    resolveCollectionTranslation,
+} from "cms-repository/exports/collections/index";
+import type { CollectionVerifier } from "cms-repository/collections/sources/verification";
 import { RepositoryRequestError } from "../../core/errors";
 import type { RepositoryCapabilityPorts } from "../../capabilities/interfaces";
 import type { RemoteCoordinate } from "../../publication/types";
@@ -17,19 +23,30 @@ export class FilesystemRegistryReads {
     constructor(
         root: string,
         private readonly index: FilesystemRepositoryCatalogueIndex,
+        verifier?: CollectionVerifier,
     ) {
-        this.collections = new LocalCollectionRepository(root);
+        this.collections = new LocalCollectionRepository(root, verifier);
         this.contracts = new LocalContractReleases(new LocalArtifactFiles(root));
         this.providers = new LocalProviderReleases(new LocalArtifactFiles(root), this.contracts);
     }
 
-    async catalogue(input: Parameters<RepositoryCapabilityPorts["catalogue"]>[0]) {
+    async catalogue(input: Parameters<RepositoryCapabilityPorts["catalogue"]>[0], signal?: AbortSignal) {
         try {
+            signal?.throwIfAborted();
             const type =
                 input.kind === "collection" ? "collections" : input.kind === "contract" ? "contracts" : "providers";
             const page = await cataloguePage(type, this.index, String(input.limit), input.cursor ?? null, false, input);
+            const hydrated = [];
+            for (const entry of page.releases) {
+                signal?.throwIfAborted();
+                hydrated.push(
+                    input.kind === "collection" && (input.latestPerResource || input.id !== undefined)
+                        ? await this.hydrateCollection(entry, signal)
+                        : entry,
+                );
+            }
             return {
-                releases: page.releases.map((entry) => ({
+                releases: hydrated.map((entry) => ({
                     kind: input.kind,
                     publisherId: entry.publisherId as string,
                     id: (entry.collectionId ?? entry.contractId ?? entry.providerId) as string,
@@ -57,6 +74,37 @@ export class FilesystemRegistryReads {
             }
             throw error;
         }
+    }
+
+    private async hydrateCollection(
+        entry: Readonly<Record<string, unknown>>,
+        signal?: AbortSignal,
+    ): Promise<Readonly<Record<string, unknown>>> {
+        const artifact = await this.collections.getMetadata(
+            String(entry.publisherId),
+            String(entry.collectionId),
+            String(entry.version),
+            signal,
+        );
+        if (!artifact) {
+            throw new Error("Collection metadata disappeared during catalogue read");
+        }
+        const { release, digest } = artifact;
+        const browser = collectionBrowserRisk(release);
+        return {
+            ...entry,
+            digest,
+            name: resolveCollectionTranslation(release, release.name),
+            description: release.description ? resolveCollectionTranslation(release, release.description) : "",
+            blocCount: release.blocs.length,
+            hasTheme: Boolean(release.theme),
+            browserRisk: browser.level,
+            browserRiskDigest: collectionBrowserRiskDigest(browser),
+            javaScriptBlocCount: browser.javaScriptBlocs.length,
+            frameBlocCount: browser.frameBlocs.length,
+            externalFrameOrigins: browser.externalFrameOrigins,
+            scriptsWithSameOrigin: browser.scriptsWithSameOrigin,
+        };
     }
 
     async release(coordinate: RemoteCoordinate) {

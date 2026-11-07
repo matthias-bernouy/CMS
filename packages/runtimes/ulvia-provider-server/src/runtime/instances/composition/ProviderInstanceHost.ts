@@ -269,6 +269,7 @@ export class ProviderInstanceHost {
                     instance.id,
                     this.#documentation.model,
                     this.#registryVectors,
+                    this.#verification,
                 );
             }
             const readReport = async (endpoint: string, token: string) =>

@@ -14,7 +14,7 @@ Production runtime for the official Ulvia Provider.
   transitions. A ready or disabled instance must not require its original recipe
   or bundled collection resources. Missing installation resources refuse a new
   installation rather than silently fetching replacements.
-- Default `ulvia@1.2.0` and `repository@1.2.0` initialization installs system APIs
+- Default `ulvia@1.3.0` and `repository@1.3.0` initialization installs system APIs
   and an administrator only. Never enumerate optional collection sources, create
   Pages or publish the public catalogue during profile provisioning. Persist the
   explicit initialization marker only for a newly provisioned supporting profile.

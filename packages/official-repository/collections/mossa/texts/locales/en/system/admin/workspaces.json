@@ -83,5 +83,9 @@
     "ui-locale-french": "French",
     "ui-examples-first-page": "First page",
     "ui-show-collection-history": "Show historical releases",
-    "ui-more-operations": "More operations"
+    "ui-more-operations": "More operations",
+    "ui-collection-release-history": "Release history",
+    "ui-collections-on-page": "collections on this page",
+    "ui-next-collection-page": "Next page",
+    "ui-version": "Version"
 }

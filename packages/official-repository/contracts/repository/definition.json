@@ -5,6 +5,6 @@
     "contractId": "ulvia/repository",
     "name": "Ulvia Repository",
     "description": "Public discovery and account-owned namespaces for immutable contracts, providers and collections.",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "publisherId": "ulvia"
 }

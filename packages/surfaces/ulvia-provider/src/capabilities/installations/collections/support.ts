@@ -37,6 +37,9 @@ export async function collectionCommand<T>(operation: () => Promise<T>): Promise
             throw error;
         }
         const status = typeof error === "object" && error && "status" in error ? Number(error.status) : 0;
+        if (status === 503) {
+            throw officialFailure("CORE_UNAVAILABLE", 503, error);
+        }
         if (status === 404) {
             throw officialFailure("NOT_FOUND", 404, error);
         }

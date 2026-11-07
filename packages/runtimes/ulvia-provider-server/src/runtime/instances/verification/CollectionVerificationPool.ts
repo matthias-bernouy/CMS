@@ -13,6 +13,8 @@ type Pending = {
     reject(error: unknown): void;
     detach(): void;
     timer?: ReturnType<typeof setTimeout>;
+    transportPending?: boolean;
+    releaseAfterTransport?: boolean;
 };
 
 /** One CPU worker per host, shared by instances; never executes authored JavaScript. */
@@ -20,6 +22,7 @@ export class CollectionVerificationPool implements CollectionVerifier {
     private worker?: Worker;
     private ready = false;
     private stopping?: Promise<void>;
+    private sending?: Promise<void>;
     private active?: Pending;
     private queue: Pending[] = [];
     private bytes = 0;
@@ -32,6 +35,11 @@ export class CollectionVerificationPool implements CollectionVerifier {
         }
     }
 
+    readonly metadataJson: CollectionVerifier["metadataJson"] = (value, digest, signal, limits) =>
+        this.submit(
+            { kind: "json", value: typeof value === "string" ? value : new Uint8Array(value), digest, limits },
+            signal,
+        );
     readonly metadata: CollectionVerifier["metadata"] = (value, digest, signal, limits) =>
         this.submit({ kind: "metadata", value, digest, limits }, signal);
     readonly artifact: CollectionVerifier["artifact"] = (value, assets, digest, signal, limits) =>
@@ -50,6 +58,7 @@ export class CollectionVerificationPool implements CollectionVerifier {
         }
         this.reset(new Error("Collection verifier closed"));
         await this.stopping;
+        await this.sending;
     }
 
     private submit<T>(task: VerificationTask, signal?: AbortSignal): Promise<T> {
@@ -57,7 +66,7 @@ export class CollectionVerificationPool implements CollectionVerifier {
             signal?.throwIfAborted();
             const bytes = taskBytes(task);
             if (this.closed || this.queue.length >= 8 || this.bytes + bytes > 64 * 1024 * 1024) {
-                throw new Error("Collection verification capacity unavailable");
+                throw Object.assign(new Error("Collection verification capacity unavailable"), { status: 503 });
             }
             const snapshot: VerificationTask =
                 task.kind === "artifact"
@@ -103,7 +112,7 @@ export class CollectionVerificationPool implements CollectionVerifier {
     }
 
     private pump(): void {
-        if (this.closed || this.active || this.stopping || !this.queue.length) {
+        if (this.closed || this.active || this.stopping || this.sending || !this.queue.length) {
             return;
         }
         const job = this.queue.shift()!;
@@ -143,7 +152,10 @@ export class CollectionVerificationPool implements CollectionVerifier {
                     }
                 });
             }
-            job.timer = setTimeout(() => this.reset(new Error("Collection verification timed out")), this.timeoutMs);
+            job.timer = setTimeout(
+                () => this.reset(Object.assign(new Error("Collection verification timed out"), { status: 503 })),
+                this.timeoutMs,
+            );
             if (this.ready) {
                 this.send(this.worker, job);
             }
@@ -153,9 +165,17 @@ export class CollectionVerificationPool implements CollectionVerifier {
     }
 
     private send(worker: Worker, job: Pending): void {
-        void transferableTask(job.task)
+        job.transportPending = true;
+        const sending = transferableTask(job.task)
             .then((task) => {
                 if (this.worker === worker && this.active === job) {
+                    const bytes = taskBytes(task);
+                    if (this.bytes - job.bytes + bytes > 64 * 1024 * 1024) {
+                        throw Object.assign(new Error("Collection verification capacity unavailable"), { status: 503 });
+                    }
+                    this.bytes += bytes - job.bytes;
+                    job.bytes = bytes;
+                    job.task = task;
                     worker.postMessage({ id: job.id, task });
                 }
             })
@@ -163,13 +183,28 @@ export class CollectionVerificationPool implements CollectionVerifier {
                 if (this.worker === worker && this.active === job) {
                     this.reset(error);
                 }
+            })
+            .finally(() => {
+                job.transportPending = false;
+                if (job.releaseAfterTransport) {
+                    this.bytes -= job.bytes;
+                }
+                if (this.sending === sending) {
+                    this.sending = undefined;
+                }
+                this.pump();
             });
+        this.sending = sending;
     }
 
     private finish(job: Pending, error?: unknown, value?: unknown): void {
         clearTimeout(job.timer);
         job.detach();
-        this.bytes -= job.bytes;
+        if (job.transportPending) {
+            job.releaseAfterTransport = true;
+        } else {
+            this.bytes -= job.bytes;
+        }
         if (error !== undefined) {
             job.reject(error);
         } else {

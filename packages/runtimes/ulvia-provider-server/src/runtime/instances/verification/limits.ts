@@ -7,7 +7,12 @@ export function taskBytes(task: VerificationTask): number {
     const values = task.kind === "evolution" ? [task.previous, task.next] : [task.value];
     let bytes = 0;
     for (const value of values) {
-        const json = JSON.stringify(value);
+        const json =
+            task.kind === "json"
+                ? typeof value === "string"
+                    ? value
+                    : new TextDecoder("utf-8", { fatal: true }).decode(value as Uint8Array)
+                : JSON.stringify(value);
         if (!json || json.length > 8 * 1024 * 1024) {
             throw new CollectionValidationError("body_limit_exceeded", "verification document exceeds limit");
         }

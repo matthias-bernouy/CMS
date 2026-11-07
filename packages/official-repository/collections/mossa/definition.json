@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "collectionId": "ulvia/mossa",
     "publisherId": "ulvia",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "name": "collection.name",
     "description": "collection.description",
     "locale": "en",
@@ -21,6 +21,7 @@
             "ulvia--mossa--choice-field",
             "ulvia--mossa--choice-group",
             "ulvia--mossa--cluster",
+            "ulvia--mossa--collection-history",
             "ulvia--mossa--collection-manager",
             "ulvia--mossa--collection-navigation",
             "ulvia--mossa--collection-texts",
@@ -31,6 +32,7 @@
             "ulvia--mossa--control-group",
             "ulvia--mossa--cover",
             "ulvia--mossa--data-table",
+            "ulvia--mossa--date-range",
             "ulvia--mossa--detail-layout",
             "ulvia--mossa--dialog",
             "ulvia--mossa--error-summary",
@@ -55,6 +57,7 @@
             "ulvia--mossa--link-card",
             "ulvia--mossa--list",
             "ulvia--mossa--list-item",
+            "ulvia--mossa--log-journal",
             "ulvia--mossa--lookup",
             "ulvia--mossa--media-figure",
             "ulvia--mossa--media-placeholder",
@@ -64,6 +67,7 @@
             "ulvia--mossa--navigation-item",
             "ulvia--mossa--navigation-menu",
             "ulvia--mossa--navigation-section",
+            "ulvia--mossa--operation-status",
             "ulvia--mossa--page-editor",
             "ulvia--mossa--page-shell",
             "ulvia--mossa--panel",
@@ -75,6 +79,7 @@
             "ulvia--mossa--range",
             "ulvia--mossa--range-control",
             "ulvia--mossa--reel",
+            "ulvia--mossa--request-journal",
             "ulvia--mossa--route-tab",
             "ulvia--mossa--route-tabs",
             "ulvia--mossa--scroll-area",
@@ -95,11 +100,7 @@
             "ulvia--mossa--testimonial",
             "ulvia--mossa--textarea",
             "ulvia--mossa--time-input",
-            "ulvia--mossa--toggle",
-            "ulvia--mossa--date-range",
-            "ulvia--mossa--log-journal",
-            "ulvia--mossa--request-journal",
-            "ulvia--mossa--operation-status"
+            "ulvia--mossa--toggle"
         ],
         "themeTokens": [
             "background-base",
@@ -834,8 +835,8 @@
                             "data": {
                                 "$capabilityOutput": {
                                     "contractId": "ulvia/cms.installations",
-                                    "version": "1.1.0",
-                                    "digest": "sha256:e5932d6d023d72d1e42ac8e750dbd5ad5f07c23207bfaa62ebb372fb562e2970",
+                                    "version": "1.2.0",
+                                    "digest": "sha256:109492b625294814e4a6780048f968e4ec6623bd245f8c8c30f8860043b0bf3e",
                                     "capabilityId": "preview-provider-connection"
                                 }
                             }
@@ -918,6 +919,14 @@
             "schema": {
                 "type": "string",
                 "maxLength": 256
+            }
+        },
+        {
+            "id": "collection-cursor",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 2048
             }
         }
     ]

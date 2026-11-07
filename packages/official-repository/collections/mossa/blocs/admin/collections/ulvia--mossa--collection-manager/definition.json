@@ -13,14 +13,13 @@
         "ulvia--mossa--grid",
         "ulvia--mossa--heading",
         "ulvia--mossa--stack",
-        "ulvia--mossa--surface",
-        "ulvia--mossa--select"
+        "ulvia--mossa--surface"
     ],
     "requires": [
         {
             "contractId": "ulvia/cms.installations",
-            "capabilityId": "list-available-collections",
-            "versionRange": "^1.0.0"
+            "capabilityId": "list-collection-catalogue",
+            "versionRange": "^1.2.0"
         },
         {
             "contractId": "ulvia/cms.installations",

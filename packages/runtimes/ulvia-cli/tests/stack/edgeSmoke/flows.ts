@@ -135,11 +135,14 @@ async function mutateCollections(page: Page): Promise<void> {
     await page.getByRole("heading", { name: /^(Explore collections|Explorer les Collections)$/u }).waitFor();
     const betaRelease = collectionReleaseCard(page, "ulvia.test 2.1.0-beta.1");
     expect(await betaRelease.count()).toBe(0);
-    await page.locator("#ulvia-collection-channel").selectOption("beta");
+    await page.getByRole("link", { name: /^(Beta|Bêta)$/u, exact: true }).click();
     await betaRelease.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
-    await page.locator("#ulvia-collection-channel").selectOption("stable");
-    const initialRelease = collectionReleaseCard(page, "ulvia.test 1.0.0");
-    await initialRelease.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
+    await page.getByRole("link", { name: "Stable", exact: true }).click();
+    const latestRelease = collectionReleaseCard(page, "ulvia.test 2.0.0");
+    await latestRelease.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
+    expect(await collectionReleaseCard(page, "ulvia.test 1.0.0").count()).toBe(0);
+    await latestRelease.getByRole("link", { name: /^(Release history|Historique des versions)$/u }).click();
+    const initialRelease = page.locator("tbody tr").filter({ has: page.getByText("1.0.0", { exact: true }) });
     const installResponse = page.waitForResponse((candidate) =>
         candidate.url().includes("ulvia/cms.installations/install-collection"),
     );

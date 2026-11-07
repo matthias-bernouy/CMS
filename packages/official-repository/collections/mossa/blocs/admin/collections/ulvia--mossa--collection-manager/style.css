@@ -108,26 +108,8 @@
     margin-block-start: auto;
 }
 
-[part~="history-filter"] {
-    display: none;
-    align-items: center;
-    gap: 0.5rem;
-    margin-block-end: 1.5rem;
-    color: var(--ulvia--mossa--text-secondary);
-    font-size: 0.875rem;
-    cursor: pointer;
-}
-:scope:has([data-release-action="older"]) [part~="history-filter"] {
-    display: inline-flex;
-}
-[part~="history-input"] {
-    inline-size: 1rem;
-    block-size: 1rem;
-    accent-color: var(--ulvia--mossa--primary);
-}
-[part~="release"][data-release-action="older"] {
-    display: none;
-}
-:scope:has([part~="history-input"]:checked) [part~="release"][data-release-action="older"] {
+[part~="catalogue-filter"] {
     display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia--mossa--spacing-sm);
 }

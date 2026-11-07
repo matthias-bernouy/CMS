@@ -4,7 +4,8 @@ import type { Page } from "playwright";
 export async function exerciseCollectionUpgrades(page: Page): Promise<void> {
     for (const version of ["1.1.0", "2.0.0"]) {
         console.info(`[edge-smoke] collection upgrade ${version}: plan`);
-        const card = collectionReleaseCard(page, `ulvia.test ${version}`);
+        await openHistory(page);
+        const card = historyRow(page, version);
         await card.locator('a[href^="/admin/collections/upgrade?"]').click();
         const apply = page.locator(
             'form[cms-mutation="ulvia/cms.installations:apply-collection-upgrade as mutation"] button[type="submit"]',
@@ -33,15 +34,25 @@ export async function exerciseCollectionUpgrades(page: Page): Promise<void> {
             );
         });
         await page.reload({ waitUntil: "domcontentloaded" });
-        await installedRelease(page, `ulvia.test ${version}`).waitFor({ timeout: 60_000 });
+        await openHistory(page);
+        await historyRow(page, version)
+            .getByRole("link", { name: /^(Manage|Gérer)$/u })
+            .waitFor({ timeout: 60_000 });
+        await page
+            .getByRole("link", { name: /^(Back to collections|Retour aux Collections|Retour aux collections)$/u })
+            .click();
         console.info(`[edge-smoke] collection upgrade ${version}: done`);
     }
 }
 
-function collectionReleaseCard(page: Page, identity: string) {
-    return page.locator('[role="listitem"]').filter({ has: page.getByText(identity, { exact: true }) });
+async function openHistory(page: Page) {
+    const card = page
+        .locator('[role="listitem"]')
+        .filter({ has: page.getByRole("heading", { name: "Smoke Kit", exact: true }) });
+    await card.getByRole("link", { name: /^(Release history|Historique des versions)$/u }).click();
+    await page.locator("tbody tr").first().waitFor();
 }
 
-function installedRelease(page: Page, identity: string) {
-    return collectionReleaseCard(page, identity).getByText(/^(Installed|Installée)$/u);
+function historyRow(page: Page, version: string) {
+    return page.locator("tbody tr").filter({ has: page.getByText(version, { exact: true }) });
 }

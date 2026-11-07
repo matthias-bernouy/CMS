@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { expect, test } from "bun:test";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
+import { admitCollectionRelease, CollectionValidationError } from "@bernouy/cms-repository/collections";
 import { CollectionVerificationPool } from "../../../src/runtime/instances/verification/CollectionVerificationPool";
 
 const document = {
@@ -22,6 +22,10 @@ test("worker verification preserves exact identity, typed refusals and immutable
     const pool = new CollectionVerificationPool();
     try {
         expect((await pool.metadata(document, artifact.digest)).digest).toBe(artifact.digest);
+        expect((await pool.metadataJson(artifact.canonicalJson, artifact.digest)).digest).toBe(artifact.digest);
+        expect(
+            await rejection(pool.metadataJson('{"kind":"collection","kind":"collection"}', artifact.digest)),
+        ).toBeInstanceOf(CollectionValidationError);
         const copy = await pool.artifact(document, [], artifact.digest);
         expect(copy.canonicalJson).toBe(artifact.canonicalJson);
         expect(await rejection(pool.metadata(document, `sha256:${"0".repeat(64)}`))).toMatchObject({
@@ -106,6 +110,56 @@ test("worker asset inputs are snapshotted and corrupt bytes refuse", async () =>
             code: "asset_mismatch",
         });
     } finally {
+        await pool.close();
+    }
+});
+
+test("canceled Blob reads retain capacity and defer successors and shutdown until released", async () => {
+    const artifact = await admitCollectionRelease(document);
+    let started!: () => void;
+    let release!: () => void;
+    const reading = new Promise<void>((resolve) => {
+        started = resolve;
+    });
+    const held = new Promise<void>((resolve) => {
+        release = resolve;
+    });
+    class DelayedBlob extends Blob {
+        override async arrayBuffer(): Promise<ArrayBuffer> {
+            started();
+            await held;
+            return super.arrayBuffer();
+        }
+    }
+    const pool = new CollectionVerificationPool();
+    const controller = new AbortController();
+    const pending = pool.artifact(
+        document,
+        [{ id: "held", bytes: new DelayedBlob(["held"]) }],
+        artifact.digest,
+        controller.signal,
+    );
+    try {
+        await reading;
+        const retained = pool.stats().bytes;
+        controller.abort();
+        await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+        expect(pool.stats()).toEqual({ active: false, queued: 0, bytes: retained });
+        const next = pool.metadata(document, artifact.digest);
+        expect(pool.stats().queued).toBe(1);
+        expect(pool.stats().active).toBe(false);
+        let closed = false;
+        const closing = pool.close().then(() => {
+            closed = true;
+        });
+        await expect(next).rejects.toThrow("closed");
+        await Bun.sleep(20);
+        expect(closed).toBe(false);
+        release();
+        await closing;
+        expect(pool.stats()).toEqual({ active: false, queued: 0, bytes: 0 });
+    } finally {
+        release();
         await pool.close();
     }
 });

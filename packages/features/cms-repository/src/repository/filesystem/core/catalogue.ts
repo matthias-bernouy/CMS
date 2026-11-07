@@ -1,3 +1,4 @@
+import { latestCollections } from "./latestCollections";
 import { isResourceId, resourcePublisher } from "cms-repository/exports/contracts/protocol";
 import { compareSemVer, releaseChannel, isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
 import { createHash } from "node:crypto";
@@ -27,6 +28,7 @@ type CatalogueFilters = Readonly<{
     id?: string;
     version?: string;
     channel?: "stable" | "beta" | "all";
+    latestPerResource?: boolean;
 }>;
 
 /** Catalogue pagination for the admitted Repository capability service. */
@@ -49,13 +51,31 @@ export async function cataloguePage(
                 filters.id ?? null,
                 filters.version ?? null,
                 filters.channel ?? "all",
+                ...(filters.latestPerResource ? ["latest-per-collection/v1"] : []),
             ]),
         )
         .digest("hex");
     const after = decodeCursor(cursor, type, fingerprint);
     const idKey = type === "collections" ? "collectionId" : type === "contracts" ? "contractId" : "providerId";
-    const entries = await index.list(type, refresh);
-    const start = after === undefined ? 0 : firstAfter(entries, type, after);
+    if (filters.latestPerResource && (type !== "collections" || filters.version !== undefined)) {
+        throw new CatalogueInputError("Latest discovery requires collections without an exact version");
+    }
+    let entries =
+        filters.latestPerResource && index.latestCollectionReferences
+            ? await index.latestCollectionReferences(filters.channel ?? "all", refresh)
+            : type === "collections" && filters.id !== undefined && index.collectionReleaseReferences
+              ? await index.collectionReleaseReferences({
+                    collectionId: filters.id,
+                    publisherId: filters.publisherId,
+                    channel: filters.channel ?? "all",
+                    version: filters.version,
+                })
+              : await index.list(type, refresh);
+    if (filters.latestPerResource && !index.latestCollectionReferences) {
+        entries = latestCollections(entries, filters.channel ?? "all");
+    }
+
+    const start = after === undefined ? 0 : firstAfter(entries, type, after, filters.latestPerResource);
     const releases: RepositoryCatalogueEntry[] = [];
     for (let position = start; position < entries.length; position++) {
         const entry = entries[position]!;
@@ -144,9 +164,29 @@ function firstAfter(
     entries: readonly RepositoryCatalogueEntry[],
     type: RepositoryCatalogueType,
     cursor: string,
+    identityOnly = false,
 ): number {
-    const index = entries.findIndex((entry) => compareCatalogueKeys(entryKey(type, entry), cursor) > 0);
-    return index < 0 ? entries.length : index;
+    const key = (value: string) => (identityOnly ? value.split("\0").slice(0, 2).join("\0") : value);
+    const target = key(cursor);
+    let left = 0;
+    let right = entries.length;
+    while (left < right) {
+        const middle = Math.floor((left + right) / 2);
+        const candidate = key(entryKey(type, entries[middle]!));
+        const comparison = identityOnly
+            ? candidate > target
+                ? 1
+                : candidate === target
+                  ? 0
+                  : -1
+            : compareCatalogueKeys(candidate, target);
+        if (comparison <= 0) {
+            left = middle + 1;
+        } else {
+            right = middle;
+        }
+    }
+    return left;
 }
 
 function entryKey(type: RepositoryCatalogueType, entry: RepositoryCatalogueEntry): string {

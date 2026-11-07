@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test";
+import { createHash } from "node:crypto";
+import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 
@@ -56,25 +58,29 @@ test("collection bundle downloads have bounded asset concurrency and no duplicat
         id: `asset-${index}.txt`,
         mediaType: "text/plain",
         byteLength: 1,
-        digest,
+        digest: `sha256:${createHash("sha256").update("x").digest("hex")}`,
     }));
+    const artifact = await admitCollectionRelease(
+        {
+            kind: "collection",
+            protocol: "ulvia-collection/v1",
+            schemaDialect: "ulvia-schema/v1",
+            publisherId: "example.official",
+            collectionId: "example.official/example",
+            version: "1.0.0",
+            name: "name",
+            locale: "en",
+            translations: { en: { name: "Example" } },
+            assets,
+            blocs: [],
+        },
+        assets.map(({ id }) => ({ id, bytes: new TextEncoder().encode("x") })),
+    );
     const source = new HttpCollectionRepository("official", "https://repository.example", {
         request: async (url) => {
             const id = url.pathname.split("/assets/")[1];
             if (!id) {
-                return Response.json({
-                    kind: "collection",
-                    protocol: "ulvia-collection/v1",
-                    schemaDialect: "ulvia-schema/v1",
-                    publisherId: "example.official",
-                    collectionId: "example.official/example",
-                    version: "1.0.0",
-                    name: "name",
-                    locale: "en",
-                    translations: { en: { name: "Example" } },
-                    assets,
-                    blocs: [],
-                });
+                return Response.json(artifact.release);
             }
             requested.push(id);
             maximum = Math.max(maximum, ++active);
@@ -87,7 +93,7 @@ test("collection bundle downloads have bounded asset concurrency and no duplicat
         publisherId: "example.official",
         collectionId: "example.official/example",
         version: "1.0.0",
-        digest,
+        digest: artifact.digest,
     });
     expect(bundle.assets).toHaveLength(12);
     expect(maximum).toBe(4);

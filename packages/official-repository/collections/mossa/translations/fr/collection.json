@@ -38,5 +38,7 @@
     "page.log-detail.name": "Détail du journal",
     "page.log-detail.description": "Rechercher dans les journaux de cette instance.",
     "bootstrap.label": "Administration",
-    "bootstrap.description": "Créer les pages d’administration et de connexion avec Mossa."
+    "bootstrap.description": "Créer les pages d’administration et de connexion avec Mossa.",
+    "page.collection-releases.name": "Versions de collection",
+    "page.collection-releases.description": "Parcourir l’historique paginé des versions d’une collection."
 }

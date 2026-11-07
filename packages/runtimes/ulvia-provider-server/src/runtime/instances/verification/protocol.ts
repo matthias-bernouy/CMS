@@ -8,6 +8,7 @@ import type {
 } from "@bernouy/cms-repository/collections";
 
 export type VerificationTask =
+    | { kind: "json"; value: string | Uint8Array; digest: unknown; limits?: Readonly<CollectionLimits> }
     | { kind: "metadata"; value: unknown; digest: unknown; limits?: Readonly<CollectionLimits> }
     | {
           kind: "artifact";

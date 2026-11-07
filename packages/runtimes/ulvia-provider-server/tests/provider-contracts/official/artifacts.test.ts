@@ -13,7 +13,7 @@ test("builds the official profile from verified repository releases", async () =
     expect(loaded.profiles[1]!.collections).toEqual([]);
     expect(loaded.defaultProfile.collections).toHaveLength(0);
     expect(loaded.defaultProfile.initialPages).toHaveLength(0);
-    expect(loaded.defaultProfile.version).toBe("1.2.0");
+    expect(loaded.defaultProfile.version).toBe("1.3.0");
     expect(loaded.defaultProfile.manifest.digest).toBe(fixture.manifestDigest);
     expect(loaded.defaultProfile.contracts).toEqual(
         loaded.contracts
@@ -63,14 +63,20 @@ test("rejects repository metadata that does not match the official bytes", async
 test("the official baseline contains explicit application profiles and one version of every contract", async () => {
     const fixture = await repositoryFixture();
     const loaded = await loadOfficialArtifacts(fixture.providers, fixture.collections);
-    expect(loaded.profiles.map(({ version }) => version)).toEqual(["1.2.0", "1.2.0"]);
+    expect(loaded.profiles.map(({ version }) => version)).toEqual(["1.3.0", "1.3.0"]);
     expect(loaded.defaultProfile.upgradeFromVersions).toEqual([]);
-    expect(loaded.defaultProfile.manifest.version).toBe("1.1.0");
+    expect(loaded.defaultProfile.manifest.version).toBe("1.2.0");
     expect(loaded.defaultProfile.collections).toEqual([]);
     expect(fixture.contracts).toHaveLength(12);
     expect(
         fixture.contracts.every(
-            ({ release }) => release.version === (release.contractId === "ulvia/cms.installations" ? "1.1.0" : "1.0.0"),
+            ({ release }) =>
+                release.version ===
+                (release.contractId === "ulvia/cms.installations"
+                    ? "1.2.0"
+                    : release.contractId === "ulvia/repository"
+                      ? "1.1.0"
+                      : "1.0.0"),
         ),
     ).toBe(true);
     const content = loaded.contracts.find(({ release }) => release.contractId === "ulvia/cms.content")!;

@@ -42,6 +42,48 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
     private readonly request?: RepositoryFetch;
     private readonly verifier: CollectionVerifier;
 
+    async page(input: Parameters<NonNullable<CollectionRepositorySource["page"]>>[0], signal?: AbortSignal) {
+        if (
+            !Number.isSafeInteger(input.limit) ||
+            input.limit < 1 ||
+            input.limit > 100 ||
+            (input.mode === "history" && (!input.collectionId || !input.publisherId))
+        ) {
+            throw new TypeError("Invalid collection page");
+        }
+        const { mode, collectionId, ...filters } = input;
+        const bytes = await getRepositoryBytes(
+            this.base,
+            mode === "latest" ? "v1/collections" : "v1/catalogue",
+            "Collection",
+            {
+                request: this.request,
+                signal,
+                query: { ...filters, ...(mode === "history" ? { kind: "collection", id: collectionId } : {}) },
+            },
+        );
+        const page = parseCollectionCataloguePage(
+            registryCataloguePage(
+                parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64),
+                "collection",
+                "collectionId",
+            ),
+            this.id,
+        );
+        if (
+            page.entries.length > input.limit ||
+            page.entries.some(
+                (entry) =>
+                    (input.collectionId !== undefined && entry.collectionId !== input.collectionId) ||
+                    (input.publisherId !== undefined && entry.publisherId !== input.publisherId) ||
+                    (input.version !== undefined && entry.version !== input.version),
+            )
+        ) {
+            throw new TypeError("Repository collection page exceeds its scope");
+        }
+        return page;
+    }
+
     async list(): Promise<CollectionRepositoryEntry[]> {
         return readCataloguePages(
             async (cursor) => {

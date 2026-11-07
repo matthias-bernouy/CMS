@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { CollectionSourceCache } from "../../../src/capabilities/installations/sources/cache";
+import { CollectionSourceCache } from "../../../../src/capabilities/installations/sources/cache";
 
 test("shared validation survives one caller abort and cancels when its last caller leaves", async () => {
     const cache = new CollectionSourceCache<number>(2, 16, () => 1);

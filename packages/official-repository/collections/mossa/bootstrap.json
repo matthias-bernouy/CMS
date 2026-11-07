@@ -187,6 +187,15 @@
                     "indexing": false,
                     "exampleId": "reset-password",
                     "visible": true
+                },
+                {
+                    "id": "collection-releases",
+                    "exampleId": "collection-releases",
+                    "path": "/admin/collections/releases",
+                    "title": "page.collection-releases.name",
+                    "description": "page.collection-releases.description",
+                    "visible": true,
+                    "indexing": false
                 }
             ]
         }

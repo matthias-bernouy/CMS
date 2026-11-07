@@ -508,5 +508,29 @@
         "label": "text.ui-more-operations.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-collection-release-history",
+        "label": "text.ui-collection-release-history.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-collections-on-page",
+        "label": "text.ui-collections-on-page.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-next-collection-page",
+        "label": "text.ui-next-collection-page.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-version",
+        "label": "text.ui-version.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
     }
 ]

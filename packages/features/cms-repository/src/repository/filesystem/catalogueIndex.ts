@@ -1,3 +1,6 @@
+import type { CollectionReferenceScope } from "./artifacts/collectionReferences";
+import type { CollectionVerifier } from "cms-repository/collections/sources/verification";
+import { LatestCollectionCatalogue } from "./artifacts/latestCatalogue";
 import {
     collectionBrowserRisk,
     collectionBrowserRiskDigest,
@@ -15,6 +18,11 @@ export type RepositoryCatalogueEntry = Readonly<Record<string, unknown>>;
 
 export interface RepositoryCatalogueReader {
     list(type: RepositoryCatalogueType, refresh?: boolean): Promise<readonly RepositoryCatalogueEntry[]>;
+    latestCollectionReferences?(
+        channel: "stable" | "beta" | "all",
+        refresh?: boolean,
+    ): Promise<readonly RepositoryCatalogueEntry[]>;
+    collectionReleaseReferences?(input: CollectionReferenceScope): Promise<readonly RepositoryCatalogueEntry[]>;
 }
 
 type Snapshot = Readonly<Record<RepositoryCatalogueType, readonly RepositoryCatalogueEntry[]>>;
@@ -24,22 +32,33 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
     private readonly collections: LocalCollectionRepository;
     private readonly contracts: LocalContractReleases;
     private readonly providers: LocalProviderReleases;
+    private readonly latest: LatestCollectionCatalogue;
     private readonly yanks: LocalRepositoryYanks;
     private snapshot?: Snapshot;
     private revision = 0;
     private refreshing?: Promise<Snapshot>;
 
-    constructor(root: string) {
+    constructor(root: string, verifier?: CollectionVerifier) {
         const files = new LocalArtifactFiles(root);
         this.yanks = new LocalRepositoryYanks(root);
-        this.collections = new LocalCollectionRepository(root);
+        this.collections = new LocalCollectionRepository(root, verifier);
+        this.latest = new LatestCollectionCatalogue(root, this.yanks);
         this.contracts = new LocalContractReleases(files, this.yanks);
         this.providers = new LocalProviderReleases(files, this.contracts, this.yanks);
     }
 
     invalidate(): void {
         this.revision++;
+        this.latest.invalidate();
         this.snapshot = undefined;
+    }
+
+    latestCollectionReferences(channel: "stable" | "beta" | "all", refresh = false) {
+        return this.latest.read(channel, refresh);
+    }
+
+    collectionReleaseReferences(input: CollectionReferenceScope) {
+        return this.latest.history(input);
     }
 
     async refresh(): Promise<void> {

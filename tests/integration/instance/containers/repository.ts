@@ -28,7 +28,7 @@ export async function repositoryApplication(
         url,
         administrator,
         "http://repository:3000",
-        { id: "repository", version: legacyStarter ? "1.0.0" : "1.2.0" },
+        { id: "repository", version: legacyStarter ? "1.0.0" : "1.3.0" },
     );
     await cluster.run(name, "repository", edgeImage, [
         "--publish",

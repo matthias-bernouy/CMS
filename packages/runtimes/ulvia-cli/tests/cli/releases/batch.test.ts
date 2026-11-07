@@ -47,7 +47,11 @@ test("recursive release prepares the official contracts, provider and collection
         expect(collections.map(({ release }) => release.collectionId)).toEqual(["ulvia/mossa", "ulvia/repository"]);
         expect(collections[0]!.assets).toHaveLength(58);
         expect(collections[0]!.assets.map((asset) => asset.id)).toContain("icons/feedback/observability.svg");
-        expect(collections[0]!.release.examples).toHaveLength(111);
+        expect(collections[0]!.release.examples).toHaveLength(113);
+        expect(collections[0]!.release.examples?.map((example) => example.id)).toContain("collection-releases");
+        expect(collections[0]!.release.examples?.map((example) => example.id)).toContain(
+            "ulvia--mossa--collection-history-default",
+        );
         expect(collections[1]!.release.dependencies?.map(({ collectionId }) => collectionId)).toEqual(["ulvia/mossa"]);
         expect(collections[1]!.release.examples).toHaveLength(9);
         expect(f.output[12]).toStartWith("+ provider ulvia/primary-provider@");

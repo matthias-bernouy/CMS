@@ -1,28 +1,26 @@
 <section
-    cms-query="ulvia/cms.installations:list-available-collections as catalogue"
-    cms-query-input='{"channel":{"from":"state","key":"@param:ulvia--mossa--collection-channel","fallback":"stable"}}'
-    cms-query-listen="@param:ulvia--mossa--collection-channel @page:ulvia--mossa--collection-catalogue-mutation/lastSuccess/requestId"
+    cms-query="ulvia/cms.installations:list-collection-catalogue as catalogue"
+    cms-query-input='{"channel":{"from":"state","key":"@param:ulvia--mossa--collection-channel","fallback":"stable"},"limit":{"from":"literal","value":25},"cursor":{"from":"state","key":"@param:ulvia--mossa--collection-cursor","optional":true}}'
+    cms-query-listen="@param:ulvia--mossa--collection-cursor @param:ulvia--mossa--collection-channel @page:ulvia--mossa--collection-catalogue-mutation/lastSuccess/requestId"
     cms-query-refresh="focus reconnect"
 >
-    <div part="catalogue-filter">
-        <label for="ulvia-collection-channel">{{ cms.i18n.ulvia/mossa.ui-release-channel }}</label>
-        <div cms-bloc="ulvia--mossa--select">
-            <select id="ulvia-collection-channel" name="channel" cms-sync="@param:ulvia--mossa--collection-channel">
-                <option value="stable">{{ cms.i18n.ulvia/mossa.ui-release-stable }}</option>
-                <option value="beta">{{ cms.i18n.ulvia/mossa.ui-release-beta }}</option>
-                <option value="all">{{ cms.i18n.ulvia/mossa.ui-release-all }}</option>
-            </select>
-        </div>
-    </div>
-    <label part="history-filter">
-        <input type="checkbox" part="history-input">
-        <span>{{ cms.i18n.ulvia/mossa.ui-show-collection-history }}</span>
-    </label>
+    <nav part="catalogue-filter" aria-label="{{ cms.i18n.ulvia/mossa.ui-release-channel }}">
+        <a cms-bloc="ulvia--mossa--action" tone="secondary" variant="outline" size="sm" href="/admin/collections?ulvia--mossa--collection-channel=stable"
+            ><span>{{ cms.i18n.ulvia/mossa.ui-release-stable }}</span></a
+        >
+        <a cms-bloc="ulvia--mossa--action" tone="secondary" variant="outline" size="sm" href="/admin/collections?ulvia--mossa--collection-channel=beta"
+            ><span>{{ cms.i18n.ulvia/mossa.ui-release-beta }}</span></a
+        >
+        <a cms-bloc="ulvia--mossa--action" tone="secondary" variant="outline" size="sm" href="/admin/collections?ulvia--mossa--collection-channel=all"
+            ><span>{{ cms.i18n.ulvia/mossa.ui-release-all }}</span></a
+        >
+    </nav>
     <p role="status" cms-condition="catalogue.activity === &#x27;fetching&#x27;">{{ cms.i18n.ulvia/mossa.ui-reading-collection-catalogue }}</p>
     <div cms-match="catalogue.outcome.kind">
         <span cms-case='"none"' hidden></span>
         <div cms-case='"error"' cms-match="catalogue.outcome.code">
-            <p role="alert" cms-case='"CATALOGUE_TOO_LARGE"'>{{ cms.i18n.ulvia/mossa.ui-collection-catalogue-unavailable }}</p>
+            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-collection-catalogue-unavailable }}</p>
+            <p role="alert" cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia/mossa.ui-collection-catalogue-unavailable }}</p>
             <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-collection-catalogue-unavailable }}</p>
         </div>
         <div cms-case='"success"'>
@@ -30,7 +28,7 @@
                 <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-explore-collections }}</h2>
                 <p part="release-count">
                     {{ catalogue.data.releases.length }}
-                    {{ cms.i18n.ulvia/mossa.ui-available-releases }}
+                    {{ cms.i18n.ulvia/mossa.ui-collections-on-page }}
                 </p>
             </header>
             <div part="releases" role="list">
@@ -93,6 +91,14 @@
                         </details>
                     </div>
                     <div part="release-actions">
+                        <a
+                            cms-bloc="ulvia--mossa--action"
+                            size="sm"
+                            tone="secondary"
+                            variant="outline"
+                            href="/admin/collections/releases?ulvia--mossa--repository={{ release.repositoryId | urlencode }}&amp;ulvia--mossa--publisher={{ release.publisherId | urlencode }}&amp;ulvia--mossa--collection={{ release.collectionId | urlencode }}"
+                            ><span>{{ cms.i18n.ulvia/mossa.ui-collection-release-history }}</span></a
+                        >
                         <div cms-condition="release.action === &#x27;install&#x27;">
                             <form
                                 cms-mutation="ulvia/cms.installations:install-collection as mutation"
@@ -154,6 +160,14 @@
                     </div>
                 </article>
             </div>
+            <a
+                cms-bloc="ulvia--mossa--action"
+                tone="secondary"
+                variant="outline"
+                cms-condition="catalogue.data.nextCursor !== &#x27;&#x27;"
+                href="/admin/collections?ulvia--mossa--collection-channel={{ catalogue.data.channel | urlencode }}&amp;ulvia--mossa--collection-cursor={{ catalogue.data.nextCursor | urlencode }}"
+                ><span>{{ cms.i18n.ulvia/mossa.ui-next-collection-page }}</span></a
+            >
             <div cms-bloc="ulvia--mossa--surface" radius="sm" padding="md" appearance="subtle" cms-condition="catalogue.data.releases.length === 0">
                 <p slot="content">{{ cms.i18n.ulvia/mossa.ui-no-repository-release-is-available }}</p>
             </div>

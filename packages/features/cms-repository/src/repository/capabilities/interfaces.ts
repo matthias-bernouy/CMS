@@ -14,15 +14,19 @@ export interface RepositoryCapabilityPorts {
     readonly namespaces: RepositoryNamespaces;
     readonly registry: RepositoryPublicationRegistry;
     readonly uploads: RepositoryPublicationUploadStore;
-    readonly catalogue: (input: {
-        kind: RemoteCoordinate["kind"];
-        limit: number;
-        cursor?: string;
-        publisherId?: string;
-        channel?: "stable" | "beta" | "all";
-        id?: string;
-        version?: string;
-    }) => Promise<{
+    readonly catalogue: (
+        input: {
+            kind: RemoteCoordinate["kind"];
+            limit: number;
+            cursor?: string;
+            publisherId?: string;
+            channel?: "stable" | "beta" | "all";
+            id?: string;
+            version?: string;
+            latestPerResource?: boolean;
+        },
+        signal?: AbortSignal,
+    ) => Promise<{
         releases: readonly (RemoteCoordinate & { digest: string; metadata: Readonly<Record<string, unknown>> })[];
         nextCursor?: string;
     }>;
@@ -35,5 +39,5 @@ export interface RepositoryCapabilityPorts {
     readonly asset: (coordinate: RemoteCoordinate, assetId: string) => ReturnType<RepositoryCapabilityPorts["release"]>;
 }
 
-export type RepositoryCapabilityContext = Readonly<{ accountId?: string }>;
+export type RepositoryCapabilityContext = Readonly<{ accountId?: string; signal?: AbortSignal }>;
 export type RepositoryBinaryInput = Readonly<{ stream: ReadableStream<Uint8Array>; contentLength?: number }>;

@@ -13,6 +13,24 @@ export function registerCollectionInstallationCapabilities(
     sources?: CollectionSources,
 ): void {
     registerCollectionOperationCapabilities(dispatcher, operations);
+    for (const [capability, method] of [
+        ["list-collection-catalogue", "list"],
+        ["list-collection-releases", "history"],
+    ] as const) {
+        dispatcher.register("ulvia/cms.installations", capability, async (input, context) => {
+            if (!sources) {
+                throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
+            }
+            return sources.discovery[method](context.siteId, input, context.signal);
+        });
+    }
+    dispatcher.register("ulvia/cms.installations", "get-collection-release", async (input, context) => {
+        if (!sources) {
+            throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
+        }
+        return collectionCommand(() => sources.discovery.review(context.siteId, input, context.signal));
+    });
+
     dispatcher.register("ulvia/cms.installations", "list-collection-installations", async (_input, context) => {
         return dependencies.collections.listInstalled(context.siteId);
     });

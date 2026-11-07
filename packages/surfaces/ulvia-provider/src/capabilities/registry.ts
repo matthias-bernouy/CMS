@@ -18,7 +18,10 @@ export function registerRepositoryCapabilities(
         dispatcher.register(contract.release.contractId, definition.id, async (input, context) => {
             try {
                 const accountId = definition.access === "public" ? undefined : await actorSubject(gateway, context);
-                const output = await repository.invoke(definition.id, input, context.binaryBody, { accountId });
+                const output = await repository.invoke(definition.id, input, context.binaryBody, {
+                    accountId,
+                    signal: context.signal,
+                });
                 if (definition.output.type !== "binary") {
                     return output;
                 }

@@ -62,7 +62,19 @@ export class RepositoryCapabilityService {
             return this.ports.search.search(input);
         }
         if (id === "catalogue-list") {
-            return this.ports.catalogue(input as Parameters<RepositoryCapabilityPorts["catalogue"]>[0]);
+            return this.ports.catalogue(input as Parameters<RepositoryCapabilityPorts["catalogue"]>[0], context.signal);
+        }
+        if (id === "collection-catalogue") {
+            return this.ports.catalogue(
+                {
+                    ...input,
+                    kind: "collection",
+                    limit: input.limit as number,
+                    channel: (input.channel ?? "stable") as "stable" | "beta" | "all",
+                    latestPerResource: true,
+                },
+                context.signal,
+            );
         }
         if (id === "publication-state") {
             return this.publicationState(input);
