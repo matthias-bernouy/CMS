@@ -8,8 +8,6 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./nodemailer": "./src/exports/nodemailer.ts",
-        "./schemas": "./src/exports/schemas.ts",
-        "./operations": "./src/exports/operations.ts",
         "./feature": "./src/feature.ts"
     },
     "dependencies": {

@@ -1,15 +1,15 @@
 import { expect, test } from "bun:test";
-import { contractBinary, defineOperation, defineContract, z } from "@bernouy/ulvia-sdk";
+import { contractBinary, defineCapability, defineFeature, z } from "@bernouy/ulvia-sdk";
 import { compileContract } from "@bernouy/ulvia-sdk/build";
 function binaryContract(bytes: Uint8Array) {
-    return defineContract({
+    return defineFeature({
         contractId: "example/binary",
         name: "Binary",
         publisherId: "example",
         version: "1.0.0",
         fixtures: [{ id: "receipt", mediaType: "application/octet-stream", bytes }],
-        operations: [
-            defineOperation({
+        capabilities: [
+            defineCapability({
                 input: z.strictObject({}),
                 output: contractBinary({ maxBytes: 4 }),
                 errors: {},

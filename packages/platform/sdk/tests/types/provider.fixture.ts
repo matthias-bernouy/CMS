@@ -1,39 +1,39 @@
 import {
     contractBinary,
-    defineContract,
-    defineOperation,
+    defineFeature,
+    defineCapability,
     implementContract,
-    operationError,
+    capabilityError,
     z,
 } from "@bernouy/ulvia-sdk";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { createProvider } from "@bernouy/ulvia-sdk/provider";
-import { notesContract, readNote } from "../../examples/notes";
+import { notesFeature, readNote } from "../../examples/notes";
 import { notesProviderDefinition } from "../../examples/provider";
 // @ts-expect-error Every effective capability requires a handler factory.
-implementContract(notesContract, {});
-implementContract(notesContract, {
+implementContract(notesFeature, {});
+implementContract(notesFeature, {
     // @ts-expect-error The operation's result schema determines the handler output.
     "notes.read": (_dependencies: {}) => (input) => ({ id: input.id, text: 42 }),
 });
-implementContract(notesContract, {
+implementContract(notesFeature, {
     // @ts-expect-error A handler cannot substitute an incompatible input schema.
     "notes.read": (_dependencies: {}) => (input: { id: number }) => ({ id: String(input.id), text: "Wrong" }),
 });
-operationError(readNote, "NOT_FOUND", { message: "Missing" });
+capabilityError(readNote, "NOT_FOUND", { message: "Missing" });
 // @ts-expect-error Error codes come from this operation's declaration.
-operationError(readNote, "UNKNOWN", { message: "Missing" });
+capabilityError(readNote, "UNKNOWN", { message: "Missing" });
 // @ts-expect-error The declared error requires its typed payload.
-operationError(readNote, "NOT_FOUND");
+capabilityError(readNote, "NOT_FOUND");
 // @ts-expect-error The declared error payload has a string message.
-operationError(readNote, "NOT_FOUND", { message: 42 });
-const upload = defineContract({
+capabilityError(readNote, "NOT_FOUND", { message: 42 });
+const upload = defineFeature({
     contractId: "example/upload",
     name: "Upload",
     publisherId: "example",
     version: "1.0.0",
-    operations: [
-        defineOperation({
+    capabilities: [
+        defineCapability({
             input: z.strictObject({ payload: contractBinary({ maxBytes: 4 }) }),
             output: z.null(),
             errors: {},
@@ -52,12 +52,12 @@ implementContract(upload, {
         return null;
     },
 });
-const child = defineContract({
-    ...notesContract,
+const child = defineFeature({
+    ...notesFeature,
     contractId: "example/special",
-    extends: notesContract,
-    operations: [
-        defineOperation({
+    extends: notesFeature,
+    capabilities: [
+        defineCapability({
             input: z.strictObject({}),
             output: z.boolean(),
             errors: {},

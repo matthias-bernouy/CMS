@@ -384,7 +384,7 @@ export class ProviderInstanceHost {
                 new CollectionSources(stores.collections, [this.#collectionSource]),
                 stores.providerFiles,
                 fileWorkspace,
-                new Set(profile.contracts.map(({ contractId }) => contractId)),
+                profile.contracts,
                 {
                     providerId: profile.manifest.providerId,
                     scope: { siteId: SITE_ID, instanceId: instance.id },

@@ -1,16 +1,16 @@
 import { expect, test } from "bun:test";
-import { defineContract, defineOperation, implementContract, operationError, z } from "@bernouy/ulvia-sdk";
+import { defineFeature, defineCapability, implementContract, capabilityError, z } from "@bernouy/ulvia-sdk";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { createProvider } from "@bernouy/ulvia-sdk/provider";
 import { notesProviderDefinition } from "../../../examples/provider";
 import { unitProvider } from "../support/runtime";
-const command = defineContract({
+const command = defineFeature({
     contractId: "example/flag",
     name: "Flag",
     publisherId: "example",
     version: "1.0.0",
-    operations: [
-        defineOperation({
+    capabilities: [
+        defineCapability({
             input: z.strictObject({ flag: z.boolean() }),
             output: z.boolean(),
             errors: {},
@@ -124,24 +124,24 @@ test("trusted keyed execution receives complete scope and refusal leaves busines
     expect(writes).toBe(1);
 });
 test("durable middleware observes the current binding's declared failure before persisting it", async () => {
-    const capability = command.operations[0];
-    const operation = defineOperation({
-        ...capability,
+    const baseCapability = command.capabilities[0];
+    const capability = defineCapability({
+        ...baseCapability,
         errors: { DISABLED: { retryable: false } },
         bindings: [
             {
-                ...capability.bindings[0],
-                response: { ...capability.bindings[0].response, errorStatuses: { DISABLED: 409 } },
+                ...baseCapability.bindings[0],
+                response: { ...baseCapability.bindings[0].response, errorStatuses: { DISABLED: 409 } },
             },
         ],
     });
-    const contract = defineContract({ ...command, operations: [operation] });
+    const feature = defineFeature({ ...command, capabilities: [capability] });
     const build = await compileProvider({
         ...notesProviderDefinition("http://127.0.0.1:5103"),
         implementations: [
-            implementContract(contract, {
+            implementContract(feature, {
                 "flag.set": () => () => {
-                    throw operationError(operation, "DISABLED");
+                    throw capabilityError(capability, "DISABLED");
                 },
             }),
         ],
@@ -151,6 +151,7 @@ test("durable middleware observes the current binding's declared failure before 
         build,
         {},
         {
+            formatCapabilityFailure: () => ({ responseHeaders: { "content-language": "fr" } }),
             executeKeyed: async (_invocation, execute) => {
                 try {
                     return await execute();
@@ -167,5 +168,6 @@ test("durable middleware observes the current binding's declared failure before 
         headers: { "content-type": "application/json", "idempotency-key": "disabled-1" },
     });
     expect(response.status).toBe(409);
-    expect(observed).toMatchObject({ code: "DISABLED", status: 409 });
+    expect(observed).toMatchObject({ code: "DISABLED", status: 409, responseHeaders: { "content-language": "fr" } });
+    expect(response.headers.get("content-language")).toBe("fr");
 });

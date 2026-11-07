@@ -46,11 +46,11 @@ for (const [name, schema] of unsupported) {
 
 test("unsupported nested constraints retain the exact source path", () => {
     try {
-        compileSchema(z.strictObject({ items: z.array(z.number().refine(() => true)).max(2) }), "$.operation.input");
+        compileSchema(z.strictObject({ items: z.array(z.number().refine(() => true)).max(2) }), "$.capability.input");
         throw new Error("Expected compilation refusal");
     } catch (error) {
         expect(error).toBeInstanceOf(SdkDefinitionError);
-        expect((error as SdkDefinitionError).path).toBe('$.operation.input.properties["items"].items');
+        expect((error as SdkDefinitionError).path).toBe('$.capability.input.properties["items"].items');
     }
 });
 

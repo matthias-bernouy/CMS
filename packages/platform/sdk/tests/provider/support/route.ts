@@ -60,10 +60,10 @@ export function observedRoute<Dependencies>(
                     account: { id: "account-notes", label: "Example" },
                     buildVersion: "1.0.0",
                     manifest: { version: build.manifest.manifest.version, digest: build.manifest.digest },
-                    implementations: build.implementedContracts.map((contract) => ({
-                        contractId: contract.release.contractId,
-                        version: contract.release.version,
-                        digest: contract.digest,
+                    implementations: build.implementedContracts.map((feature) => ({
+                        contractId: feature.release.contractId,
+                        version: feature.release.version,
+                        digest: feature.digest,
                         status: "ready",
                     })),
                 },

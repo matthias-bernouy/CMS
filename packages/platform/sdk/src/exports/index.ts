@@ -1,14 +1,23 @@
 export { z } from "zod";
-export { defineOperation } from "ulvia-sdk/definitions/defineOperation";
-export { defineContract } from "ulvia-sdk/definitions/defineContract";
+export { defineCapability } from "ulvia-sdk/definitions/defineCapability";
+export { createCapabilityDefiner as capabilitiesFor } from "ulvia-sdk/definitions/capabilityDefiner";
+export { implementFeature } from "ulvia-sdk/definitions/implementFeature";
+export type { FeatureDefinition, FeatureServices } from "ulvia-sdk/interfaces/features";
+export type {
+    CapabilityExecutor,
+    CapabilityExecutionContext,
+    CapabilityServices,
+    CapabilityServiceRequirement,
+} from "ulvia-sdk/interfaces/execution";
+export { defineFeature } from "ulvia-sdk/definitions/defineFeature";
 export { contractString, contractMap, contractBinary } from "ulvia-sdk/schema/adapters";
 export { implementContract, defineProvider } from "ulvia-sdk/definitions/defineProvider";
-export { operationError, isOperationFailure } from "ulvia-sdk/definitions/errors";
-export type { OperationFailure } from "ulvia-sdk/definitions/errors";
+export { capabilityError, isCapabilityFailure } from "ulvia-sdk/definitions/errors";
+export type { CapabilityFailure } from "ulvia-sdk/definitions/errors";
 export type {
-    EffectiveOperations,
-    ProviderOperationContext,
-    ProviderOperationHandler,
+    EffectiveCapabilities,
+    ProviderCapabilityContext,
+    ProviderCapabilityHandler,
     ContractHandlers,
 } from "ulvia-sdk/interfaces/handlers";
 export type {
@@ -22,19 +31,18 @@ export type {
 } from "ulvia-sdk/interfaces/providers";
 export { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 export type {
-    OperationDefinition,
-    OperationExposure,
-    OperationSource,
-    OperationErrors,
-    OperationError,
-    OperationMock,
+    CapabilityDefinition,
+    CapabilityExposure,
+    CapabilitySource,
+    CapabilityErrors,
+    CapabilityError,
+    CapabilityMock,
     MockValue,
-    OperationInput,
-    OperationOutput,
-    OperationHandler,
-} from "ulvia-sdk/interfaces/operations";
+    CapabilityInput,
+    CapabilityOutput,
+    CapabilityHandler,
+} from "ulvia-sdk/interfaces/capabilities";
 export type {
-    ContractDefinition,
-    ContractOperations,
-    ContractFixtureSource,
-} from "ulvia-sdk/interfaces/contracts";
+    FeatureCapabilities,
+    FeatureFixtureSource,
+} from "ulvia-sdk/interfaces/features";

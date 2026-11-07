@@ -44,3 +44,24 @@ test("invalid, unauthenticated and cross-instance SMTP requests cannot claim a r
         f.close();
     }
 });
+
+test("declared feature-handler refusals replay through parent routes without delivery or persisted payloads", async () => {
+    const f = await runningEmailer();
+    try {
+        const input = { ...message, subject: " ", text: "Private email body" };
+        const first = await fetch(f.request(input));
+        const replay = await fetch(f.request(input, { claims: { contractId: "ulvia/cms.emailer" } }));
+        expect(first.status).toBe(422);
+        expect(replay.status).toBe(422);
+        expect(await first.json()).toEqual(await replay.json());
+        expect(f.sent).toHaveLength(0);
+        expect(f.counts).toEqual({ authenticate: 2, authorize: 2 });
+        expect(f.receipt.calls).toEqual({ insert: 2, find: 1, update: 1, retained: 0 });
+        const stored = JSON.stringify([...f.receipt.documents.values()]);
+        expect(stored).not.toContain("Private email body");
+        expect(stored).not.toContain("private-password");
+        expect(stored).not.toContain('"message"');
+    } finally {
+        f.close();
+    }
+});

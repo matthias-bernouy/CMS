@@ -1,11 +1,11 @@
 import { sha256Digest, snapshotBinary } from "@bernouy/binary-media";
 import type { ContractBundleAsset, ContractFixtureAssetDefinition } from "@bernouy/ulvia-contracts";
 import { DEFAULT_RELEASE_LIMITS } from "@bernouy/ulvia-contracts";
-import type { ContractFixtureSource } from "ulvia-sdk/interfaces/contracts";
+import type { FeatureFixtureSource } from "ulvia-sdk/interfaces/features";
 import { SDK_BUILD_LIMITS } from "ulvia-sdk/compiler/limits";
 import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 
-export function snapshotFixtures(fixtures: readonly ContractFixtureSource[] = []) {
+export function snapshotFixtures(fixtures: readonly FeatureFixtureSource[] = []) {
     if (fixtures.length > DEFAULT_RELEASE_LIMITS.maxFixtureAssets) {
         throw new SdkDefinitionError("Too many mock fixtures", "$.fixtures");
     }

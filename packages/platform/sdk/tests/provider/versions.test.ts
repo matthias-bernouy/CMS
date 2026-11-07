@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
-import { defineContract, defineOperation, implementContract, z } from "@bernouy/ulvia-sdk";
+import { defineFeature, defineCapability, implementContract, z } from "@bernouy/ulvia-sdk";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
-import { notesContract } from "../../examples/notes";
+import { notesFeature } from "../../examples/notes";
 import { notesProviderDefinition } from "../../examples/provider";
 import { unitProvider } from "./support/runtime";
-const status = defineOperation({
-    id: "test.operation",
+const status = defineCapability({
+    id: "test.capability",
     access: "public",
     behavior: { effect: "query", execution: "sync", sensitive: false },
     bindings: [{ id: "mcp", transport: "mcp" }],
@@ -13,13 +13,13 @@ const status = defineOperation({
     output: z.boolean(),
     errors: {},
 });
-const child = defineContract({
+const child = defineFeature({
     contractId: "example/special-notes",
     name: "Specialized notes",
     publisherId: "example",
     version: "1.0.0",
-    extends: notesContract,
-    operations: [
+    extends: notesFeature,
+    capabilities: [
         {
             ...status,
             access: "public",
@@ -62,11 +62,11 @@ test("specialized contracts type and mount inherited handlers under concrete and
 });
 test("multiple exact versions dispatch only to their matching typed handler", async () => {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
-    const newer = defineContract({ ...notesContract, version: "1.1.0" });
+    const newer = defineFeature({ ...notesFeature, version: "1.1.0" });
     const build = await compileProvider({
         ...base,
         implementations: [
-            implementContract(notesContract, {
+            implementContract(notesFeature, {
                 "notes.read": (_dependencies: {}) => (input) => ({ id: input.id, text: "Original" }),
             }),
             implementContract(newer, {
@@ -103,14 +103,14 @@ test("multiple exact versions dispatch only to their matching typed handler", as
     ).rejects.toThrow("Ambiguous inherited");
 });
 test("every exact ancestor exposes its effective inherited capabilities through the same handler", async () => {
-    const grandchild = defineContract({
+    const grandchild = defineFeature({
         ...child,
         contractId: "example/grandchild",
         name: "Grandchild",
         extends: child,
-        operations: [
+        capabilities: [
             {
-                ...child.operations[0],
+                ...child.capabilities[0],
                 bindings: [
                     {
                         id: "http",

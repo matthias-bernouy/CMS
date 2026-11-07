@@ -34,6 +34,7 @@ export function createProvider<Dependencies>(
         {
             ...runtimeOptions,
             providerId: build.manifest.manifest.providerId,
+            implementations: build.implementations,
         },
         claimsFor,
     );

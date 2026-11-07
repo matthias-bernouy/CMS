@@ -1,16 +1,16 @@
 import { expect, test } from "bun:test";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
-import { defineOperation, operationError, z } from "@bernouy/ulvia-sdk";
+import { defineCapability, capabilityError, z } from "@bernouy/ulvia-sdk";
 import { notesProviderDefinition } from "../../examples/provider";
-import { notesContract, readNote } from "../../examples/notes";
+import { notesFeature, readNote } from "../../examples/notes";
 import { unitProvider } from "./support/runtime";
 test("typed errors follow the selected HTTP alias instead of carrying a hardcoded status", async () => {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
-    const original = notesContract.operations[0];
+    const original = notesFeature.capabilities[0];
     const http = original.bindings[0];
-    const contract = {
-        ...notesContract,
-        operations: [
+    const feature = {
+        ...notesFeature,
+        capabilities: [
             {
                 ...original,
                 bindings: [
@@ -30,10 +30,10 @@ test("typed errors follow the selected HTTP alias instead of carrying a hardcode
         ...base,
         implementations: [
             {
-                contract,
+                feature,
                 handlers: {
                     "notes.read": (_dependencies: {}) => () => {
-                        throw operationError(contract.operations[0]!, "NOT_FOUND", { message: "Missing" });
+                        throw capabilityError(feature.capabilities[0]!, "NOT_FOUND", { message: "Missing" });
                     },
                 },
             },
@@ -47,8 +47,8 @@ test("typed errors follow the selected HTTP alias instead of carrying a hardcode
 });
 test("invalid results, unrelated failures and malformed errors never expose implementation details", async () => {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
-    const other = defineOperation({
-        id: "test.operation",
+    const other = defineCapability({
+        id: "test.capability",
         access: "public",
         behavior: { effect: "query", execution: "sync", sensitive: false },
         bindings: [{ id: "mcp", transport: "mcp" }],
@@ -74,7 +74,7 @@ test("invalid results, unrelated failures and malformed errors never expose impl
         ],
     });
     const runtime = unitProvider(build, {});
-    for (const value of [output, new Error("Private implementation secret"), operationError(other, "NOT_FOUND")]) {
+    for (const value of [output, new Error("Private implementation secret"), capabilityError(other, "NOT_FOUND")]) {
         output = value;
         const response = await runtime.call("example/notes", "notes.read", "/notes/welcome");
         expect(response.status).toBe(503);
@@ -83,22 +83,22 @@ test("invalid results, unrelated failures and malformed errors never expose impl
 });
 test("error ownership is captured before asynchronous admission", async () => {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
-    const operations = [readNote];
-    const contract = { ...notesContract, operations };
+    const capabilities = [readNote];
+    const feature = { ...notesFeature, capabilities };
     const pending = compileProvider({
         ...base,
         implementations: [
             {
-                contract,
+                feature,
                 handlers: {
                     "notes.read": (_dependencies: {}) => () => {
-                        throw operationError(readNote, "NOT_FOUND", { message: "Original" });
+                        throw capabilityError(readNote, "NOT_FOUND", { message: "Original" });
                     },
                 },
             },
         ],
     });
-    operations[0] = { ...readNote };
+    capabilities[0] = { ...readNote };
     const runtime = unitProvider(await pending, {});
     const response = await runtime.call("example/notes", "notes.read", "/notes/welcome");
     expect(response.status).toBe(404);

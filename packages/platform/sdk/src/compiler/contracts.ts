@@ -2,7 +2,7 @@ import { admitContractBundle, resolveContract } from "@bernouy/ulvia-contracts";
 import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import { verifySpecialization } from "@bernouy/ulvia-contracts/catalogue";
 import type { ContractReleaseReader } from "@bernouy/ulvia-contracts/catalogue";
-import type { ContractDefinition } from "ulvia-sdk/interfaces/contracts";
+import type { FeatureDefinition } from "ulvia-sdk/interfaces/features";
 import { compileFixtures } from "ulvia-sdk/compiler/contracts/fixtures";
 import { compileDocuments } from "ulvia-sdk/compiler/contracts/documents";
 import { snapshotContracts } from "ulvia-sdk/compiler/contracts/sources";
@@ -11,7 +11,7 @@ import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 
 /** Compile ancestors before children, preserving exact immutable parent pins. No publication occurs. */
 export async function compileContracts(
-    sources: readonly ContractDefinition[],
+    sources: readonly FeatureDefinition[],
 ): Promise<readonly AdmittedContractRelease[]> {
     const snapshots = snapshotContracts(sources);
     const admitted = new Map<ContractSourceSnapshot, AdmittedContractRelease>();
@@ -61,7 +61,7 @@ export async function compileContracts(
     return Object.freeze([...coordinates.values()]);
 }
 
-export async function compileContract(source: ContractDefinition): Promise<AdmittedContractRelease> {
+export async function compileContract(source: FeatureDefinition): Promise<AdmittedContractRelease> {
     const { contractId, version } = source;
     const releases = await compileContracts([source]);
     return releases.find(

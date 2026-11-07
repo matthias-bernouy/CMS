@@ -7,7 +7,7 @@ import {
     parseDocumentationMarkdown,
 } from "@bernouy/ulvia-contracts/documentation";
 import { readDocumentDirectory } from "ulvia-sdk/compiler/contracts/documentDirectory";
-import type { ContractDefinition } from "ulvia-sdk/interfaces/contracts";
+import type { FeatureDefinition } from "ulvia-sdk/interfaces/features";
 import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 
 interface SourceDocument {
@@ -16,7 +16,7 @@ interface SourceDocument {
     readonly bytes: Uint8Array;
 }
 
-export function snapshotDocuments(source: ContractDefinition["documents"] = {}): readonly SourceDocument[] {
+export function snapshotDocuments(source: FeatureDefinition["documents"] = {}): readonly SourceDocument[] {
     const directory = source instanceof URL || source instanceof NodeURL ? new NodeURL(source.href) : undefined;
     const entries = Object.entries(directory ? readDocumentDirectory(directory) : source);
     if (entries.length > DOCUMENTATION_LIMITS.documents) {

@@ -7,7 +7,7 @@ import type {
     AdmittedProviderManifest,
 } from "@bernouy/ulvia-providers";
 import type { AdmittedContractRelease, ResolvedContract } from "@bernouy/ulvia-contracts";
-import type { ContractDefinition } from "ulvia-sdk/interfaces/contracts";
+import type { FeatureDefinition } from "ulvia-sdk/interfaces/features";
 import type { ContractHandlers } from "ulvia-sdk/interfaces/handlers";
 
 export interface ProviderRequirement extends Omit<ProviderCapabilityRequirement, "versionRange"> {
@@ -20,13 +20,13 @@ export interface ImplementationOptions {
 }
 
 export interface ContractImplementation<Dependencies> extends ImplementationOptions {
-    readonly contract: ContractDefinition;
+    readonly feature: FeatureDefinition;
     /** These factories are captured at build time and invoked only at runtime. */
     readonly handlers: Readonly<Record<string, (dependencies: Dependencies) => unknown>>;
 }
 
-export type HandlerFactories<Contract extends ContractDefinition, Dependencies> = {
-    readonly [Id in keyof ContractHandlers<Contract>]: (dependencies: Dependencies) => ContractHandlers<Contract>[Id];
+export type HandlerFactories<Feature extends FeatureDefinition, Dependencies> = {
+    readonly [Id in keyof ContractHandlers<Feature>]: (dependencies: Dependencies) => ContractHandlers<Feature>[Id];
 };
 
 export interface ProviderDefinition<Dependencies>
@@ -49,7 +49,7 @@ export interface ProviderDefinition<Dependencies>
     readonly configuration: z.ZodObject;
     readonly implementations: readonly ContractImplementation<Dependencies>[];
     /** Definitions needed to satisfy requirements without claiming to implement them. */
-    readonly dependencies?: readonly ContractDefinition[];
+    readonly dependencies?: readonly FeatureDefinition[];
 }
 
 declare const compiledProvider: unique symbol;

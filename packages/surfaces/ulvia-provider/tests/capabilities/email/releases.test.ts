@@ -1,13 +1,13 @@
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import { readFile } from "node:fs/promises";
-import { compileEmailReleases, compileOfficialManifest } from "@bernouy/ulvia-provider/build";
+import { compileOfficialFeatures, compileOfficialManifest } from "@bernouy/ulvia-provider/build";
 import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
 
 test("SDK email releases preserve every schema, mock, binding, document byte and parent digest", async () => {
-    const compiled = await compileEmailReleases();
+    const compiled = await compileOfficialFeatures();
     for (const admission of compiled.contracts) {
         const name = admission.release.contractId.slice("ulvia/".length);
         const old = (
@@ -40,7 +40,7 @@ test("generated manifest preserves its release identity and exact dependency cla
         await readFile(resolve(root, "providers/primary-provider/definition.json"), "utf8"),
         catalogue,
     );
-    const next = await compileOfficialManifest(catalogue, await compileEmailReleases());
+    const next = await compileOfficialManifest(catalogue, await compileOfficialFeatures());
     expect(next.canonicalJson).toBe(old.canonicalJson);
     expect(next.digest).toBe(old.digest);
 });

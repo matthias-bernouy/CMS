@@ -1,4 +1,3 @@
-import { ProviderCapabilityDispatchError } from "@bernouy/cms-gateway/provider/server";
 import type {
     ProviderCapabilityHandler,
     ProviderCapabilityInvocationContext,
@@ -8,7 +7,8 @@ import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import type { ProviderRegistrationOptions } from "ulvia-sdk/interfaces/runtime";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { RuntimeCapabilityPlan } from "ulvia-sdk/compiler/plan";
-import { OperationFailure } from "ulvia-sdk/definitions/errors";
+import { presentCapabilityFailure } from "ulvia-sdk/provider/failures";
+import { CapabilityFailure } from "ulvia-sdk/definitions/errors";
 import { binaryInputLease, boundBinaryResponse } from "ulvia-sdk/provider/binary";
 import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 
@@ -63,17 +63,8 @@ export function bindHandler<Dependencies>(
                 try {
                     return await handler(input, lease.context);
                 } catch (error) {
-                    if (!(error instanceof OperationFailure) || error.operation !== entry.operation) {
+                    if (!(error instanceof CapabilityFailure) || error.capability !== entry.source) {
                         throw error;
-                    }
-                    const declaration = entry.capability.errors.find((candidate) => candidate.code === error.code);
-                    if (!declaration) {
-                        throw new TypeError("Handler threw an undeclared operation error");
-                    }
-                    if (declaration.output) {
-                        validateSchemaValue(declaration.output, error.output);
-                    } else if (error.output !== undefined) {
-                        throw new TypeError("Undeclared operation error payload");
                     }
                     const route = selectedRoute(
                         routes,
@@ -82,11 +73,7 @@ export function bindHandler<Dependencies>(
                         context,
                         claimsFor(context),
                     );
-                    const status = route.capability.binding.response.errorStatuses[error.code];
-                    if (status === undefined) {
-                        throw new TypeError("Operation error has no admitted HTTP status");
-                    }
-                    throw new ProviderCapabilityDispatchError(error.code, status, error.code, {}, error.output);
+                    throw presentCapabilityFailure(error, entry.capability, route, options, context);
                 }
             };
             const behavior = entry.capability.behavior;

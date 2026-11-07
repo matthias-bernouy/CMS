@@ -1,17 +1,17 @@
 import { expect, test } from "bun:test";
-import { contractBinary, defineContract, defineOperation, implementContract, z } from "@bernouy/ulvia-sdk";
+import { contractBinary, defineFeature, defineCapability, implementContract, z } from "@bernouy/ulvia-sdk";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { notesProviderDefinition } from "../../../examples/provider";
 import { unitProvider } from "../support/runtime";
 test("streaming uploads are bounded and invalid bytes leave business state unchanged", async () => {
     let writes = 0;
-    const upload = defineContract({
+    const upload = defineFeature({
         contractId: "example/upload",
         name: "Upload",
         publisherId: "example",
         version: "1.0.0",
-        operations: [
-            defineOperation({
+        capabilities: [
+            defineCapability({
                 input: z.strictObject({ payload: contractBinary({ maxBytes: 4 }) }),
                 output: z.int().min(0).max(4),
                 errors: {},

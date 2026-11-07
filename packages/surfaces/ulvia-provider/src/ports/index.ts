@@ -33,8 +33,7 @@ import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
 import type { ContractSelectionStore, ContractUpgradeService } from "@bernouy/cms-repository/providers/selections";
 import type { FileReference, NamespaceRecord } from "@bernouy/cms-files";
 import type { CmsSecrets } from "@bernouy/cms-secrets";
-import type { Emailer } from "@bernouy/email";
-import type { SmtpEmailerAdministration } from "@bernouy/email-smtp";
+import type { SmtpEmailerServices } from "@bernouy/email-smtp/feature";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { Logger } from "@bernouy/logging";
 import type { CmsObservability } from "@bernouy/cms-observability";
@@ -90,10 +89,13 @@ export interface CmsAccessDependencies {
     >;
 }
 
+/** Ports supplied by the runtime for SDK feature implementations. */
+export type UlviaProviderFeatureServices = Partial<SmtpEmailerServices>;
+
 export type UlviaProviderDependencies = CmsContentDependencies &
     CmsCollectionDependencies &
-    CmsAccessDependencies & {
-        readonly emailer?: Emailer & SmtpEmailerAdministration;
+    CmsAccessDependencies &
+    UlviaProviderFeatureServices & {
         readonly secrets?: CmsSecrets;
         readonly observability?: CmsObservability;
     };

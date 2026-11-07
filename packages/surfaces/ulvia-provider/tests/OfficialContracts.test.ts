@@ -143,7 +143,7 @@ test("the official adapters implement the complete declared capability matrix", 
         undefined,
         {} as CmsFilesService,
         {} as CmsFileWorkspace,
-        new Set(contracts.map(({ release }) => release.contractId)),
+        contracts.map(({ release, digest }) => ({ contractId: release.contractId, version: release.version, digest })),
         smtpOptions(),
     );
 

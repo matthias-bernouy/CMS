@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
 import { admitContractBundleJson } from "@bernouy/ulvia-contracts";
 import { compileContract, compileContracts } from "@bernouy/ulvia-sdk/build";
-import { defineContract, defineOperation, z } from "@bernouy/ulvia-sdk";
-import type { ContractDefinition } from "@bernouy/ulvia-sdk";
-import { notesContract, readNote, createReadNoteHandler } from "../../examples/notes";
-const marker = defineOperation({
-    id: "test.operation",
+import { defineFeature, defineCapability, z } from "@bernouy/ulvia-sdk";
+import type { FeatureDefinition } from "@bernouy/ulvia-sdk";
+import { notesFeature, readNote, createReadNoteHandler } from "../../examples/notes";
+const marker = defineCapability({
+    id: "test.capability",
     access: "public",
     behavior: { effect: "query", execution: "sync", sensitive: false },
     bindings: [{ id: "mcp", transport: "mcp" }],
@@ -13,14 +13,14 @@ const marker = defineOperation({
     output: z.boolean(),
     errors: {},
 });
-function derived(id: string, parent: ContractDefinition, capabilityId = "notes.available") {
-    return defineContract({
+function derived(id: string, parent: FeatureDefinition, capabilityId = "notes.available") {
+    return defineFeature({
         contractId: id,
         name: "Specialized notes",
         publisherId: "example",
         version: "1.0.0",
         extends: parent,
-        operations: [
+        capabilities: [
             {
                 ...marker,
                 access: "public",
@@ -32,7 +32,7 @@ function derived(id: string, parent: ContractDefinition, capabilityId = "notes.a
     });
 }
 test("the fictitious feature compiles to a normal admitted HTTP/MCP contract with verified docs and mocks", async () => {
-    const compiled = await compileContract(notesContract);
+    const compiled = await compileContract(notesFeature);
     expect(compiled.release).toMatchObject({
         contractId: "example/notes",
         protocol: "ulvia-provider/v1",
@@ -47,14 +47,14 @@ test("the fictitious feature compiles to a normal admitted HTTP/MCP contract wit
     expect(compiled.documentationAssets).toHaveLength(1);
     const again = await admitContractBundleJson(compiled.canonicalJson, compiled.documentationAssets!);
     expect(again.digest).toBe(compiled.digest);
-    expect(await compiled.documentationAssets![0]!.bytes.text()).toBe(notesContract.documents!["overview.md"]!);
+    expect(await compiled.documentationAssets![0]!.bytes.text()).toBe(notesFeature.documents!["overview.md"]!);
     expect(Object.isFrozen(compiled.release)).toBe(true);
     const read = createReadNoteHandler({ read: async (id) => ({ id, text: "Hello" }) });
     expect(await read({ id: "welcome" }, undefined)).toEqual({ id: "welcome", text: "Hello" });
 });
 test("parent references and digests are generated from exact compiled parent sources", async () => {
-    const child = derived("example/special-notes", notesContract);
-    const releases = await compileContracts([child, notesContract]);
+    const child = derived("example/special-notes", notesFeature);
+    const releases = await compileContracts([child, notesFeature]);
     expect(releases).toHaveLength(2);
     expect(releases[0]!.release.contractId).toBe("example/notes");
     expect(releases[1]!.release.extends).toEqual({
@@ -66,29 +66,29 @@ test("parent references and digests are generated from exact compiled parent sou
     expect((await compileContract(child)).digest).toBe(releases[1]!.digest);
 });
 test("inheritance cycles, redeclared inherited capabilities and conflicting coordinates are refused", async () => {
-    await expect(compileContract(derived("example/special-notes", notesContract, "notes.read"))).rejects.toThrow(
+    await expect(compileContract(derived("example/special-notes", notesFeature, "notes.read"))).rejects.toThrow(
         "redeclare",
     );
     const cyclic: {
-        extends?: ContractDefinition;
-    } & ContractDefinition = { ...notesContract };
+        extends?: FeatureDefinition;
+    } & FeatureDefinition = { ...notesFeature };
     cyclic.extends = cyclic;
     await expect(compileContract(cyclic)).rejects.toThrow("Cyclic");
-    await expect(compileContracts([notesContract, { ...notesContract, name: "Different" }])).rejects.toThrow(
+    await expect(compileContracts([notesFeature, { ...notesFeature, name: "Different" }])).rejects.toThrow(
         "Conflicting",
     );
-    expect(await compileContracts([notesContract, { ...notesContract }])).toHaveLength(1);
+    expect(await compileContracts([notesFeature, { ...notesFeature }])).toHaveLength(1);
 });
 test("documentation references, broken links and malformed mocks are checked by ordinary admission", async () => {
-    await expect(compileContract({ ...notesContract, documents: {} })).rejects.toThrow("documentation");
+    await expect(compileContract({ ...notesFeature, documents: {} })).rejects.toThrow("documentation");
     await expect(
-        compileContract({ ...notesContract, documents: { "overview.md": "# Notes\n\n[Missing](missing.md)" } }),
+        compileContract({ ...notesFeature, documents: { "overview.md": "# Notes\n\n[Missing](missing.md)" } }),
     ).rejects.toThrow();
-    await expect(compileContract({ ...notesContract, documents: { "../outside.md": "# Outside" } })).rejects.toThrow();
-    await expect(compileContract({ ...notesContract, documents: { "overview.md": "No heading" } })).rejects.toThrow();
+    await expect(compileContract({ ...notesFeature, documents: { "../outside.md": "# Outside" } })).rejects.toThrow();
+    await expect(compileContract({ ...notesFeature, documents: { "overview.md": "No heading" } })).rejects.toThrow();
     const invalid = {
-        ...notesContract,
-        operations: [
+        ...notesFeature,
+        capabilities: [
             {
                 ...readNote,
                 mocks: [
@@ -109,11 +109,11 @@ test("compilation is deterministic and snapshots source values before asynchrono
     const mocks = [
         { id: "captured", input, outcome: { kind: "success" as const, output: { id: "welcome", text: "Original" } } },
     ];
-    const documents = { ...notesContract.documents };
+    const documents: Record<string, string> = { ...notesFeature.documents };
     const source = {
-        ...notesContract,
+        ...notesFeature,
         documents,
-        operations: [
+        capabilities: [
             {
                 ...readNote,
                 mocks,
@@ -128,5 +128,5 @@ test("compilation is deterministic and snapshots source values before asynchrono
     documents["overview.md"] = "# Changed";
     expect((await pending).digest).toBe(before.digest);
     expect((await compileContract(source)).digest).not.toBe(before.digest);
-    expect((await compileContract(notesContract)).digest).toBe((await compileContract(notesContract)).digest);
+    expect((await compileContract(notesFeature)).digest).toBe((await compileContract(notesFeature)).digest);
 });

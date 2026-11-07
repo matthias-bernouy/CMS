@@ -1,7 +1,10 @@
+import { compileOfficialFeatures } from "@bernouy/ulvia-provider/build";
 import { expect, test } from "bun:test";
+import { ConfiguredSmtpEmailer } from "@bernouy/email-smtp/nodemailer";
+import { InMemorySecretStore } from "@bernouy/secret-store";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { registerContentCapabilities } from "@bernouy/ulvia-provider/capabilities";
-import { registerSmtpEmailerCapabilities } from "../../../src/capabilities/emailer";
+import { registerOfficialFeatures } from "../../../src/capabilities/features";
 import { context, invokeHttp, resolvedContract } from "./fixtures";
 
 test("unknown examples return a localized input refusal without reading other collections or writing", async () => {
@@ -66,15 +69,19 @@ test("schema rejection explains the invalid field before dispatch, without a wri
 test("send validation describes email data while SMTP configuration retains its own explanation", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     let sends = 0;
-    await registerSmtpEmailerCapabilities(
+    await registerOfficialFeatures(
         dispatcher,
         {
-            emailer: {
-                send: async () => {
-                    sends++;
-                },
-            },
-        } as never,
+            emailer: new ConfiguredSmtpEmailer({
+                secrets: new InMemorySecretStore(),
+                transportFactory: async () => ({
+                    sendMail: async () => {
+                        sends++;
+                    },
+                }),
+            }),
+        },
+        (await compileOfficialFeatures()).implementations,
         smtpOptions("default"),
     );
     await expect(
@@ -84,6 +91,10 @@ test("send validation describes email data while SMTP configuration retains its 
             { toEmail: "user@example.com", subject: " ", text: "Body" },
             {
                 ...context("fr"),
+                http: {
+                    headers: new Headers({ "accept-language": "fr" }),
+                    transportRequest: new Request("https://provider.test/send", { method: "POST" }),
+                },
                 invocation: { contractId: "ulvia/cms.emailer.smtp", instanceId: "instance-a" },
                 idempotencyKey: "send-1",
             },
@@ -96,8 +107,21 @@ test("send validation describes email data while SMTP configuration retains its 
         dispatcher.invoke(
             "ulvia/cms.emailer.smtp",
             "smtp.configuration.update",
-            { smtp: { password: " " } },
-            { ...context("fr"), invocation: { contractId: "ulvia/cms.emailer.smtp", instanceId: "instance-a" } },
+            {
+                enabled: false,
+                fromEmail: "",
+                fromName: "",
+                replyTo: "",
+                smtp: { host: "", port: 587, secure: false, username: "", password: " " },
+            },
+            {
+                ...context("fr"),
+                http: {
+                    headers: new Headers({ "accept-language": "fr" }),
+                    transportRequest: new Request("https://provider.test/configuration", { method: "POST" }),
+                },
+                invocation: { contractId: "ulvia/cms.emailer.smtp", instanceId: "instance-a" },
+            },
         ),
     ).rejects.toMatchObject({
         code: "INVALID_INPUT",

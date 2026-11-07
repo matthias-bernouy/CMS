@@ -1,5 +1,5 @@
 import { defineProvider, implementContract, z } from "@bernouy/ulvia-sdk";
-import { notesContract, createReadNoteHandler } from "./notes";
+import { notesFeature, createReadNoteHandler } from "./notes";
 import type { ExampleNoteReader } from "./notes";
 
 export interface NotesDependencies {
@@ -20,7 +20,7 @@ export function notesProviderDefinition(origin: string) {
         configuration: z.strictObject({}),
         requires: [],
         implementations: [
-            implementContract(notesContract, {
+            implementContract(notesFeature, {
                 "notes.read": (dependencies: NotesDependencies) => {
                     dependencies.factoryCreated?.();
                     return createReadNoteHandler(dependencies.notes);

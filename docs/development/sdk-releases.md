@@ -3,17 +3,18 @@
 The Emailer pilot is implemented in `packages/features/email/base` and `smtp`.
 Their documentation is authored as ordinary `docs/**/*.md` files and discovered
 during SDK compilation. Reusable Zod data schemas live in `src/schemas/` and the TypeScript
-ports infer their types from those schemas. Each operation declares its stable ID,
+ports infer their types from those schemas. Each capability declares its stable ID,
 access, behavior and bindings. The `./feature` export owns contract identity,
-version, parent and operation list. `@bernouy/ulvia-provider/build` assembles
-implementations and manifest requirements. Nodemailer and durable storage are injected by the runtime.
+version, parent and capability list. `@bernouy/ulvia-provider/build` assembles
+feature-owned capability executors and manifest requirements. Nodemailer and durable
+storage are injected by the runtime.
 
 ## Sources and generated artifacts
 
 `infra/releases/ulvia.release.ts` is the explicit trusted local source entry.
 It prepares SDK Emailer/SMTP contracts, the remaining authored contracts and
-collections, and a manifest with computed exact contract digests. SDK handler
-factories are captured during compilation and invoked only during runtime mounting.
+collections, and a manifest with computed exact contract digests. SDK executor functions are captured during authoring/compilation without being
+invoked. Runtime mounting binds injected service ports; invocations run the executors.
 Older Emailer JSON and the authored manifest remain parity references; the new
 bootstrap and release entry do not use them as generation inputs. Other feature
 families continue using their authored JSON until their migration is requested.
@@ -58,7 +59,8 @@ previously prepared resources. Preparation never publishes remotely.
 
 ## SMTP replay and uncertain delivery
 
-`registerProviderHandlers` mounts compiled Emailer handlers in the existing
+`registerOfficialFeatures` mounts the selected SDK implementations through
+`registerProviderHandlers` in the existing
 Provider registry. The authenticated receiver supplies exact invocation identity;
 registration checks the mounted site/Provider/instance before executing a handler.
 The host still authorizes every invocation, including receipt replays.
@@ -87,20 +89,21 @@ commands and general receipt administration remain outside this pilot.
 
 ## Feature source layout
 
-Features expose `./schemas`, `./operations` and `./feature`. Keep reusable Zod data
-models under `src/schemas/`; infer port types directly from them. Each operation
-has its own descriptor under `src/operations/`, grouped by domain such as
+Features expose the complete `./feature`, business ports/errors on the package root,
+and useful adapter subpaths. Schema and capability construction files stay internal. Keep reusable Zod data
+models under `src/schemas/`; infer port types directly from them. Each capability
+has its own descriptor under `src/capabilities/`, grouped by domain such as
 `configuration/get.ts`. Read/write/storage projections derive from shared fields;
 private storage schemas remain internal. Business normalization belongs in core.
 Documentation remains ordinary Markdown under `docs/`. `src/feature.ts` declares
 `documents: new URL("../docs/", import.meta.url)`; compilation scans recursively.
 IDs are case-preserving relative paths including the extension: `docs/setup/smtp.md`
-becomes `setup/smtp.md`. Titles come from exactly one H1 per file. Operations reference
+becomes `setup/smtp.md`. Titles come from exactly one H1 per file. Capabilities reference
 these IDs in `docs: [...]`; internal links resolve relative to the document. Moving a
 file changes its ID and requires updating references and links.
 
 The source directory must exist. Discovery rejects symlinks, invalid document paths,
-invalid UTF-8, missing headings, broken links and dangling operation references.
+invalid UTF-8, missing headings, broken links and dangling capability references.
 Only `.md` files are included; other regular files are ignored. Limits are 64 documents,
 128 KiB each, 4 MiB total, 1,024 visited entries and eight nested directory levels.
 The SDK root does no filesystem IO; compilation snapshots exact bytes synchronously
@@ -109,16 +112,62 @@ once during initialization, so those source documentation directories must be sh
 alongside the feature modules. Mounting admitted artifacts directly remains future work.
 
 Migrated feature definitions have no `contracts/` directory or public `./contracts`
-entry. `src/feature.ts` declares identity, version, parent and the operation list.
-Operation descriptors own IDs, access, behavior and HTTP/MCP bindings. Optional
+entry. `src/feature.ts` declares identity, version, parent and the capability list.
+Capability descriptors own IDs, access, behavior and HTTP/MCP bindings. Optional
 deprecation and response effects retain ordinary admission rules. The Provider
 selects implementations and enforces mounting/authentication policy.
 
-Named mocks are explicit operation data, optionally imported from `src/mocks/`;
+Named mocks are explicit capability data, optionally imported from `src/mocks/`;
 no directory scan or repeated owner ID is needed. Multiple scenarios may share
 input. TypeScript inference and build admission validate their payloads and codes;
 local mock IDs must be unique. Binary fixtures retain their verified asset references.
 
 These changes preserve existing contract versions, canonical bytes and digests.
-Runtime compilation and Provider handler adapters retain their current paths.
-Adding domain folders does not change operation identities or release versions.
+Runtime compilation retains its current path. Emailer/SMTP capabilities now own
+`execute({ input, services, context, fail })`. `src/capabilities/define.ts` types
+capabilities once with `capabilitiesFor<Services>()`, which returns `defineCapability`.
+`src/feature.ts` calls the SDK's `defineFeature` directly. It is the single source
+for identity, version, parent, capabilities and documentation. Build generates the
+contract projection. Required services are inferred from own/inherited capabilities;
+inputs, outputs and failures
+are inferred from capability schemas. SMTP services satisfy the parent Emailer port,
+so the send executor is inherited. Short executors stay beside their declarations;
+larger treatments can be ordinary functions referenced by `execute` or core services.
+There is no feature-owned handler registry or mandatory `handlers/` directory.
+
+The surface selects the complete defaults with `implementFeature` and retains secret
+capability requirements and official error presentation. Its single inventory is
+`packages/surfaces/ulvia-provider/src/capabilities/features/build.ts`.
+`compileOfficialFeatures` compiles and caches that inventory once per process;
+release preparation and runtime mounting consume the same captured plan. The manifest
+claims and generated current execution support matrix follow that inventory.
+`registerOfficialProviderCapabilities` receives exact profile release pins rather than
+contract IDs alone; `registerOfficialFeatures` mounts the selected SDK families.
+Unsupported versions/digests reject before service projection or registration.
+Missing services refuse a claimed implementation; disabled features mount nothing.
+Adding the next migrated feature requires its implementation entry and injected
+service ports, without a family-specific registrar or separate compilation cache. Other implementations may
+use `implementContract` with complete coverage. Service projections select ports from
+runtime dependencies for features with different service contexts; they run only at
+mounting. Missing default executors reject feature implementation, while contract-only
+definitions remain compilable. Contracts and build artifacts never serialize executors.
+
+Public Zod schemas retain v1 constraints and digest parity. Derived internal schemas
+own text/password normalization and enabled SMTP configuration checks. State checks
+still run after retaining the existing password. Handlers no longer carry repeated
+manual field checks. `executeCapability` from `@bernouy/ulvia-sdk/provider` validates
+local synchronous JSON calls using Zod; streaming/operation modes use the Provider.
+Provider calls retain admitted Ulvia validation; the bridge does not parse JSON again.
+
+Declared failures carry safe payloads and optional private causes. The surface's
+`formatCapabilityFailure` hook retains official translations and language headers;
+actual admitted bindings select statuses. Causes, passwords and mail bodies never
+become receipt payloads. A new send still uses one port call, one receipt insert and
+one update; replay uses one duplicate insert and one lookup. Error presentation
+adds one host callback and payload validation for declared failures, without IO.
+Adding domain folders does not change capability identities or release versions.
+
+The SDK authoring API uses capability terminology consistently. The protocol's
+`execution: "operation"` and `operationId` retain their long-running meaning.
+No published contract, Provider manifest, HTTP route, version or digest changes
+merely because the source vocabulary changes.

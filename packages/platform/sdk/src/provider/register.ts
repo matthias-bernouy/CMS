@@ -6,7 +6,7 @@ import type {
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { CompiledImplementations } from "ulvia-sdk/interfaces/providers";
 import type { ProviderRegistrationOptions } from "ulvia-sdk/interfaces/runtime";
-import { providerPlan } from "ulvia-sdk/compiler/plan";
+import { selectImplementations } from "ulvia-sdk/provider/selection";
 import { bindHandler } from "ulvia-sdk/provider/handlers";
 
 type RoutingClaims = Pick<ProviderInvocationClaims, "contractId" | "contractVersion">;
@@ -19,7 +19,7 @@ export function registerProviderHandlers<Dependencies>(
     options: ProviderRegistrationOptions,
     verifiedClaims?: (context: ProviderCapabilityInvocationContext) => RoutingClaims,
 ): void {
-    const plan = providerPlan(build);
+    const { plan, contracts } = selectImplementations(build, options.implementations);
     const snapshot = Object.freeze({ ...options, scope: Object.freeze({ ...options.scope }) });
     if (!snapshot.providerId || !snapshot.scope.siteId || !snapshot.scope.instanceId) {
         throw new TypeError("Exact Provider registration scope is required");
@@ -47,7 +47,7 @@ export function registerProviderHandlers<Dependencies>(
                   contractVersion: context.contractVersion,
               };
     };
-    const routes = compileProviderRoutes(build.implementedContracts);
+    const routes = compileProviderRoutes(contracts);
     const groups = new Map<string, (typeof plan)[number][]>();
     for (const entry of plan) {
         const key = `${entry.contractId}\0${entry.capability.id}`;

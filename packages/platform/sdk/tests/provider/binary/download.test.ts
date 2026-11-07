@@ -1,15 +1,15 @@
 import { expect, test } from "bun:test";
-import { contractBinary, defineContract, defineOperation, implementContract, z } from "@bernouy/ulvia-sdk";
+import { contractBinary, defineFeature, defineCapability, implementContract, z } from "@bernouy/ulvia-sdk";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { notesProviderDefinition } from "../../../examples/provider";
 import { unitProvider } from "../support/runtime";
-const download = defineContract({
+const download = defineFeature({
     contractId: "example/bytes",
     name: "Bytes",
     publisherId: "example",
     version: "1.0.0",
-    operations: [
-        defineOperation({
+    capabilities: [
+        defineCapability({
             input: z.strictObject({}),
             output: contractBinary({ maxBytes: 4 }),
             errors: {},

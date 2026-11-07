@@ -1,8 +1,9 @@
+import { compileOfficialFeatures } from "@bernouy/ulvia-provider/build";
 import { expect, test } from "bun:test";
 import { ConfiguredSmtpEmailer, type SmtpSendMailInput } from "@bernouy/email-smtp/nodemailer";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { DefaultProviderCapabilityDispatcher, type ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";
-import { registerSmtpEmailerCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { registerOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
 
 const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
@@ -20,7 +21,12 @@ test("Emailer capabilities configure secret-backed SMTP delivery without returni
         transportFactory: async () => ({ sendMail: async (input) => sent.push(input) }),
     });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    await registerSmtpEmailerCapabilities(dispatcher, { emailer }, smtpOptions());
+    await registerOfficialFeatures(
+        dispatcher,
+        { emailer },
+        (await compileOfficialFeatures()).implementations,
+        smtpOptions(),
+    );
 
     const configuration = await invoke<Record<string, unknown>>(dispatcher, "smtp.configuration.update", {
         enabled: true,

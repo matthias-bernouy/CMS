@@ -1,8 +1,8 @@
-import type { OperationSource } from "ulvia-sdk/interfaces/operations";
-import { ownOperations } from "ulvia-sdk/compiler/contracts/operations";
+import type { CapabilitySource } from "ulvia-sdk/interfaces/capabilities";
+import { ownCapabilities } from "ulvia-sdk/compiler/contracts/capabilitySources";
 import { resolveContract } from "@bernouy/ulvia-contracts";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
-import type { ContractDefinition } from "ulvia-sdk/interfaces/contracts";
+import type { FeatureDefinition } from "ulvia-sdk/interfaces/features";
 import type { CompiledImplementations, ContractImplementation } from "ulvia-sdk/interfaces/providers";
 import type { RuntimeCapabilityPlan } from "ulvia-sdk/compiler/plan";
 import { compileContracts } from "ulvia-sdk/compiler/contracts";
@@ -10,21 +10,21 @@ import { buildCatalogue } from "ulvia-sdk/compiler/catalogue";
 import { storeProviderPlan } from "ulvia-sdk/compiler/plan";
 import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 
-function effectiveSources(source: ContractDefinition): Map<string, OperationSource> {
-    const capabilities = new Map<string, OperationSource>();
-    const seen = new Set<ContractDefinition>();
-    let current: ContractDefinition | undefined = source;
+function effectiveSources(source: FeatureDefinition): Map<string, CapabilitySource> {
+    const capabilities = new Map<string, CapabilitySource>();
+    const seen = new Set<FeatureDefinition>();
+    let current: FeatureDefinition | undefined = source;
     while (current) {
         if (seen.has(current) || seen.size >= 24) {
             throw new SdkDefinitionError("Cyclic or oversized contract lineage", "$.extends");
         }
         seen.add(current);
-        for (const operation of ownOperations(current)) {
-            const id = operation.id;
+        for (const capability of ownCapabilities(current)) {
+            const id = capability.id;
             if (capabilities.has(id)) {
                 throw new SdkDefinitionError(`Cannot redeclare inherited capability ${id}`);
             }
-            capabilities.set(id, operation);
+            capabilities.set(id, capability);
         }
         current = current.extends;
     }
@@ -34,31 +34,31 @@ function effectiveSources(source: ContractDefinition): Map<string, OperationSour
 /** One static handler table drives both manifest claims and the runtime registration plan. */
 export async function compileImplementations<Dependencies>(
     sources: readonly ContractImplementation<Dependencies>[],
-    dependencies: readonly ContractDefinition[] = [],
+    dependencies: readonly FeatureDefinition[] = [],
 ): Promise<CompiledImplementations<Dependencies>> {
     const implementations = sources.map((source) => {
-        const operations = new Map([...effectiveSources(source.contract)].map(([id, operation]) => [id, operation]));
+        const capabilities = new Map([...effectiveSources(source.feature)].map(([id, capability]) => [id, capability]));
         const handlers = Object.freeze({ ...source.handlers });
-        const expected = [...operations.keys()].sort();
+        const expected = [...capabilities.keys()].sort();
         const actual = Object.keys(handlers).sort();
         if (
             expected.length !== actual.length ||
             expected.some((id, index) => actual[index] !== id) ||
             actual.some((id) => typeof handlers[id] !== "function")
         ) {
-            throw new SdkDefinitionError(`Handler table does not match ${source.contract.contractId}`);
+            throw new SdkDefinitionError(`Handler table does not match ${source.feature.contractId}`);
         }
         return {
-            contract: source.contract,
-            contractId: source.contract.contractId,
-            version: source.contract.version,
+            feature: source.feature,
+            contractId: source.feature.contractId,
+            version: source.feature.version,
             handlers,
-            operations,
+            capabilities,
             requires: structuredClone(source.requires ?? []),
             ...(source.delegation ? { delegation: structuredClone(source.delegation) } : {}),
         };
     });
-    const contracts = await compileContracts([...implementations.map((source) => source.contract), ...dependencies]);
+    const contracts = await compileContracts([...implementations.map((source) => source.feature), ...dependencies]);
     const catalogue = buildCatalogue(contracts);
     const implementedContracts = [];
     const claims = [];
@@ -102,7 +102,7 @@ export async function compileImplementations<Dependencies>(
                     version: source.version,
                     requests: Object.freeze(requests),
                     capability,
-                    operation: source.operations.get(capability.id)!,
+                    source: source.capabilities.get(capability.id)!,
                     createHandler: source.handlers[capability.id]!,
                 }),
             );

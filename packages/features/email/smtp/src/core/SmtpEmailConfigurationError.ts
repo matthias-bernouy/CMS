@@ -1,6 +1,7 @@
+import { EmailDeliveryInputError } from "@bernouy/email";
 export type SmtpEmailConfigurationErrorCode = "invalid_configuration";
 
-export class SmtpEmailConfigurationError extends Error {
+export class SmtpEmailConfigurationError extends EmailDeliveryInputError {
     constructor(
         message: string,
         readonly code: SmtpEmailConfigurationErrorCode = "invalid_configuration",

@@ -3,7 +3,7 @@ import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { createProvider } from "@bernouy/ulvia-sdk/provider";
 import { implementContract } from "@bernouy/ulvia-sdk";
 import { notesProviderDefinition } from "../../examples/provider";
-import { notesContract } from "../../examples/notes";
+import { notesFeature } from "../../examples/notes";
 import { SITE, INSTANCE } from "./support/network";
 
 test("compiling a Provider derives exact claims and never initializes handlers or adapters", async () => {
@@ -12,7 +12,7 @@ test("compiling a Provider derives exact claims and never initializes handlers o
     const definition = {
         ...base,
         implementations: [
-            implementContract(notesContract, {
+            implementContract(notesFeature, {
                 "notes.read": (_dependencies: {}) => {
                     factories++;
                     return (input) => ({ id: input.id, text: "Built" });

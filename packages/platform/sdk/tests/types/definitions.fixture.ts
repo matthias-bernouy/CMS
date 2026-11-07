@@ -1,11 +1,12 @@
-import "./operations.fixture";
+import "./execution.fixture";
+import "./capabilities.fixture";
 import "./provider.fixture";
-import { contractString, defineContract, defineOperation, z } from "@bernouy/ulvia-sdk";
-import type { OperationHandler, OperationInput, OperationOutput } from "@bernouy/ulvia-sdk";
-import { notesContract, readNote } from "../../examples/notes";
-const input: OperationInput<typeof readNote> = { id: "one" };
-const output: OperationOutput<typeof readNote> = { id: input.id, text: "One" };
-const handler: OperationHandler<
+import { contractString, defineFeature, defineCapability, z } from "@bernouy/ulvia-sdk";
+import type { CapabilityHandler, CapabilityInput, CapabilityOutput } from "@bernouy/ulvia-sdk";
+import { notesFeature, readNote } from "../../examples/notes";
+const input: CapabilityInput<typeof readNote> = { id: "one" };
+const output: CapabilityOutput<typeof readNote> = { id: input.id, text: "One" };
+const handler: CapabilityHandler<
     typeof readNote,
     {
         prefix: string;
@@ -16,13 +17,13 @@ const handler: OperationHandler<
 });
 void handler(input, { prefix: output.text });
 // @ts-expect-error The inferred input requires a string identifier.
-const invalidInput: OperationInput<typeof readNote> = { id: 1 };
+const invalidInput: CapabilityInput<typeof readNote> = { id: 1 };
 // @ts-expect-error Output types come from the operation schema.
-const invalidOutput: OperationOutput<typeof readNote> = { id: "one" };
+const invalidOutput: CapabilityOutput<typeof readNote> = { id: "one" };
 // @ts-expect-error Handlers must implement the operation's result type.
-const invalidHandler: OperationHandler<typeof readNote> = () => ({ text: "Missing id" });
-const booleanOperation = defineOperation({
-    id: "test.operation",
+const invalidHandler: CapabilityHandler<typeof readNote> = () => ({ text: "Missing id" });
+const booleanOperation = defineCapability({
+    id: "test.capability",
     access: "public",
     behavior: { effect: "query", execution: "sync", sensitive: false },
     bindings: [{ id: "mcp", transport: "mcp" }],
@@ -32,8 +33,8 @@ const booleanOperation = defineOperation({
     // @ts-expect-error A mock cannot change the schema inferred from the declaration.
     mocks: [{ id: "invalid", input: { flag: "yes" }, outcome: { kind: "success", output: true } }],
 });
-const errorOperation = defineOperation({
-    id: "test.operation",
+const errorOperation = defineCapability({
+    id: "test.capability",
     access: "public",
     behavior: { effect: "query", execution: "sync", sensitive: false },
     bindings: [{ id: "mcp", transport: "mcp" }],
@@ -43,8 +44,8 @@ const errorOperation = defineOperation({
     // @ts-expect-error Error mock outputs follow the error-specific schema.
     mocks: [{ id: "invalid-error", input: {}, outcome: { kind: "error", code: "NOT_FOUND", output: { message: 1 } } }],
 });
-const unknownError = defineOperation({
-    id: "test.operation",
+const unknownError = defineCapability({
+    id: "test.capability",
     access: "public",
     behavior: { effect: "query", execution: "sync", sensitive: false },
     bindings: [{ id: "mcp", transport: "mcp" }],
@@ -54,11 +55,11 @@ const unknownError = defineOperation({
     // @ts-expect-error Mock error codes must be declared by the operation.
     mocks: [{ id: "unknown-error", input: {}, outcome: { kind: "error", code: "UNKNOWN" } }],
 });
-defineContract({
-    ...notesContract,
-    operations: [
+defineFeature({
+    ...notesFeature,
+    capabilities: [
         {
-            ...notesContract.operations[0],
+            ...notesFeature.capabilities[0],
             // @ts-expect-error Every command must declare its idempotency behavior.
             behavior: { effect: "command", execution: "sync", sensitive: false },
             id: "notes.read",

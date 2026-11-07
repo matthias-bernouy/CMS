@@ -8,3 +8,12 @@ export const sendEmailInputSchema = z.strictObject({
 });
 
 export const sendEmailOutputSchema = z.strictObject({ sent: z.boolean() });
+
+// Internal normalization adds business preparation without changing the published v1 input schema.
+const nonBlankText = z.string().trim().min(1);
+export const normalizedSendEmailInputSchema = sendEmailInputSchema.extend({
+    toEmail: sendEmailInputSchema.shape.toEmail.pipe(nonBlankText),
+    subject: sendEmailInputSchema.shape.subject.pipe(nonBlankText),
+    text: sendEmailInputSchema.shape.text.pipe(nonBlankText),
+    html: sendEmailInputSchema.shape.html.unwrap().pipe(nonBlankText).optional(),
+});

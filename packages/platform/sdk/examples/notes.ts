@@ -1,8 +1,8 @@
 import { noteMocks } from "./mocks/notes";
-import { contractString, defineContract, defineOperation, operationError, z } from "@bernouy/ulvia-sdk";
-import type { OperationHandler } from "@bernouy/ulvia-sdk";
+import { contractString, defineFeature, defineCapability, capabilityError, z } from "@bernouy/ulvia-sdk";
+import type { CapabilityHandler } from "@bernouy/ulvia-sdk";
 // Feature-owned API declaration, including its HTTP/MCP bindings; dependencies are injected.
-export const readNote = defineOperation({
+export const readNote = defineCapability({
     id: "notes.read",
     access: "authenticated",
     behavior: { effect: "query", execution: "sync", sensitive: false },
@@ -30,13 +30,13 @@ export const readNote = defineOperation({
     mocks: noteMocks,
 });
 // Feature identity and exact operation list; the Provider chooses an implementation.
-export const notesContract = defineContract({
+export const notesFeature = defineFeature({
     contractId: "example/notes",
     name: "Example notes",
     publisherId: "example",
     version: "1.0.0",
     documents: { "overview.md": "# Notes\n\nRead one note by its exact identifier.\n" },
-    operations: [readNote],
+    capabilities: [readNote],
 });
 export interface ExampleNoteReader {
     read(id: string): Promise<{
@@ -45,11 +45,11 @@ export interface ExampleNoteReader {
     } | null>;
 }
 // A host injects its own implementation. This factory does not open connections during the build.
-export function createReadNoteHandler(reader: ExampleNoteReader): OperationHandler<typeof readNote> {
+export function createReadNoteHandler(reader: ExampleNoteReader): CapabilityHandler<typeof readNote> {
     return async (input) => {
         const note = await reader.read(input.id);
         if (!note) {
-            throw operationError(readNote, "NOT_FOUND", { message: "Note not found" });
+            throw capabilityError(readNote, "NOT_FOUND", { message: "Note not found" });
         }
         return note;
     };

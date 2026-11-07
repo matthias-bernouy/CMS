@@ -1,6 +1,6 @@
 import type { CapabilityDefinition } from "@bernouy/ulvia-contracts";
 import type { CompiledImplementations } from "ulvia-sdk/interfaces/providers";
-import type { OperationSource } from "ulvia-sdk/interfaces/operations";
+import type { CapabilitySource } from "ulvia-sdk/interfaces/capabilities";
 import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 
 export interface RuntimeCapabilityPlan<Dependencies> {
@@ -8,7 +8,7 @@ export interface RuntimeCapabilityPlan<Dependencies> {
     readonly version: string;
     readonly requests: readonly Readonly<{ contractId: string; version: string }>[];
     readonly capability: CapabilityDefinition;
-    readonly operation: OperationSource;
+    readonly source: CapabilitySource;
     readonly createHandler: (dependencies: Dependencies) => unknown;
 }
 

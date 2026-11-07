@@ -1,14 +1,14 @@
 import { expect, test } from "bun:test";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
-import { contractBinary, defineOperation, z } from "@bernouy/ulvia-sdk";
+import { contractBinary, defineCapability, z } from "@bernouy/ulvia-sdk";
 import { notesProviderDefinition } from "../../../examples/provider";
-import { notesContract } from "../../../examples/notes";
+import { notesFeature } from "../../../examples/notes";
 import { unitProvider } from "../support/runtime";
 test("operation handlers return a standard handle instead of the terminal result schema", async () => {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
     for (const output of [z.boolean(), contractBinary({ maxBytes: 4 })]) {
-        const terminal = defineOperation({
-            id: "test.operation",
+        const terminal = defineCapability({
+            id: "test.capability",
             access: "public",
             behavior: { effect: "query", execution: "sync", sensitive: false },
             bindings: [{ id: "mcp", transport: "mcp" }],
@@ -16,11 +16,11 @@ test("operation handlers return a standard handle instead of the terminal result
             output,
             errors: {},
         });
-        const contract = {
-            ...notesContract,
+        const feature = {
+            ...notesFeature,
             contractId: "example/operation",
             documents: {},
-            operations: [
+            capabilities: [
                 {
                     ...terminal,
                     access: "admin" as const,
@@ -47,7 +47,7 @@ test("operation handlers return a standard handle instead of the terminal result
         const operationId = crypto.randomUUID();
         const build = await compileProvider({
             ...base,
-            implementations: [{ contract, handlers: { start: (_dependencies: {}) => () => ({ operationId }) } }],
+            implementations: [{ feature, handlers: { start: (_dependencies: {}) => () => ({ operationId }) } }],
         });
         const runtime = unitProvider(build, {});
         const response = await runtime.call("example/operation", "start", "/start", {

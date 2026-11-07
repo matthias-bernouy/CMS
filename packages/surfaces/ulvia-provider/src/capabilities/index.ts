@@ -9,7 +9,7 @@ import { registerObservabilityCapabilities } from "./observability/index";
 import { registerAccessCapabilities } from "./access/index";
 import { registerContentCapabilities } from "./content/index";
 import { registerFileCapabilities } from "./storage/files";
-import { registerSmtpEmailerCapabilities } from "./emailer";
+import { registerOfficialFeatures } from "./features";
 import { registerAuthoringCapabilities } from "./installations/authoring/index";
 import { registerInstallationCapabilities } from "./installations/index";
 import { registerSecretCapabilities } from "./storage/secrets/index";
@@ -26,13 +26,14 @@ export async function registerOfficialProviderCapabilities(
     collectionSources?: CollectionSources,
     files?: CmsFilesService,
     fileWorkspace?: CmsFileWorkspace,
-    enabledContractIds?: ReadonlySet<string>,
-    smtpOptions?: ProviderRegistrationOptions,
+    enabledContracts?: readonly ImplementationRelease[],
+    featureOptions?: ProviderRegistrationOptions,
 ): Promise<void> {
-    if (enabledContractIds?.has("ulvia/cms.authoring")) {
+    const enabledContractIds = new Set(enabledContracts?.map(({ contractId }) => contractId));
+    if (enabledContractIds.has("ulvia/cms.authoring")) {
         registerAuthoringCapabilities(dispatcher, dependencies.authoring);
     }
-    if (dependencies.observability && enabledContractIds?.has("ulvia/cms.observability")) {
+    if (dependencies.observability && enabledContractIds.has("ulvia/cms.observability")) {
         registerObservabilityCapabilities(dispatcher, dependencies.observability);
     }
     registerContentCapabilities(dispatcher, dependencies);
@@ -47,14 +48,11 @@ export async function registerOfficialProviderCapabilities(
     if (files) {
         registerFileCapabilities(dispatcher, files, fileWorkspace);
     }
-    if (dependencies.secrets && enabledContractIds?.has("ulvia/cms.secrets")) {
+    if (dependencies.secrets && enabledContractIds.has("ulvia/cms.secrets")) {
         registerSecretCapabilities(dispatcher, dependencies.secrets);
     }
-    if (dependencies.emailer && enabledContractIds?.has("ulvia/cms.emailer.smtp")) {
-        if (!smtpOptions) {
-            throw new TypeError("SMTP registration requires exact scope and durable keyed execution");
-        }
-        await registerSmtpEmailerCapabilities(dispatcher, { emailer: dependencies.emailer }, smtpOptions);
+    if (enabledContracts) {
+        await registerOfficialFeatures(dispatcher, dependencies, enabledContracts, featureOptions);
     }
     registerAccessCapabilities(dispatcher, dependencies, gateway);
 }
@@ -63,12 +61,12 @@ export {
     registerAccessCapabilities,
     registerObservabilityCapabilities,
     registerContentCapabilities,
-    registerSmtpEmailerCapabilities,
+    registerOfficialFeatures,
     registerFileCapabilities,
     registerInstallationCapabilities,
     registerSecretCapabilities,
 };
-export type { CmsSmtpEmailerDependencies } from "./emailer";
+export type { UlviaProviderFeatureServices } from "../ports/index";
 export { registerRepositoryCapabilities } from "./registry";
 export {
     CollectionSources,
@@ -83,4 +81,4 @@ export type {
     UlviaProviderManagement,
 } from "../ports/index";
 
-import type { ProviderRegistrationOptions } from "@bernouy/ulvia-sdk/provider";
+import type { ImplementationRelease, ProviderRegistrationOptions } from "@bernouy/ulvia-sdk/provider";

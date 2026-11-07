@@ -1,4 +1,4 @@
-import type { ContractDefinition } from "ulvia-sdk/interfaces/contracts";
+import type { FeatureDefinition } from "ulvia-sdk/interfaces/features";
 import type {
     ContractImplementation,
     HandlerFactories,
@@ -6,13 +6,13 @@ import type {
     ProviderDefinition,
 } from "ulvia-sdk/interfaces/providers";
 
-export function implementContract<const Contract extends ContractDefinition, Dependencies>(
-    contract: Contract,
-    handlers: HandlerFactories<NoInfer<Contract>, Dependencies> &
+export function implementContract<const Feature extends FeatureDefinition, Dependencies>(
+    feature: Feature,
+    handlers: HandlerFactories<NoInfer<Feature>, Dependencies> &
         Readonly<Record<string, (dependencies: Dependencies) => unknown>>,
     options: ImplementationOptions = {},
 ): ContractImplementation<Dependencies> {
-    return Object.freeze({ ...options, contract, handlers: Object.freeze({ ...handlers }) });
+    return Object.freeze({ ...options, feature, handlers: Object.freeze({ ...handlers }) });
 }
 
 export function defineProvider<Dependencies>(

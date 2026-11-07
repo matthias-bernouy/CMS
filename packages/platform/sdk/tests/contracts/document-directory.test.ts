@@ -4,10 +4,10 @@ import { writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { defineContract } from "@bernouy/ulvia-sdk";
+import { defineFeature } from "@bernouy/ulvia-sdk";
 import { compileContract } from "@bernouy/ulvia-sdk/build";
 import { DOCUMENTATION_LIMITS } from "@bernouy/ulvia-contracts/documentation";
-import { notesContract } from "../../examples/notes";
+import { notesFeature } from "../../examples/notes";
 
 const roots: string[] = [];
 afterEach(async () => {
@@ -19,7 +19,7 @@ async function fixture() {
     const docs = join(root, "docs");
     await mkdir(docs);
     const url = pathToFileURL(`${docs}/`);
-    return { root, docs, url, compile: () => compileContract({ ...notesContract, documents: url }) };
+    return { root, docs, url, compile: () => compileContract({ ...notesFeature, documents: url }) };
 }
 
 test("recursive discovery uses relative paths, keeps exact bytes and matches in-memory admission", async () => {
@@ -34,10 +34,10 @@ test("recursive discovery uses relative paths, keeps exact bytes and matches in-
     }
     await writeFile(join(f.docs, "ignored.txt"), "Not a document");
     const compiled = await f.compile();
-    const memory = await compileContract({ ...notesContract, documents });
+    const memory = await compileContract({ ...notesFeature, documents });
     expect(compiled.canonicalJson).toBe(memory.canonicalJson);
     expect(compiled.digest).toBe(memory.digest);
-    expect((await compileContract({ ...notesContract, documents: new URL(f.url.href) })).digest).toBe(memory.digest);
+    expect((await compileContract({ ...notesFeature, documents: new URL(f.url.href) })).digest).toBe(memory.digest);
     expect(compiled.release.documentation?.map((doc) => [doc.path, doc.title])).toEqual([
         ["overview.md", "Notes"],
         ["setup/overview.md", "SMTP"],
@@ -50,7 +50,7 @@ test("recursive discovery uses relative paths, keeps exact bytes and matches in-
 
 test("definitions perform no filesystem IO; explicit missing or invalid directory URLs fail at build time", async () => {
     const f = await fixture();
-    const source = defineContract({ ...notesContract, documents: pathToFileURL(join(f.root, "missing")) });
+    const source = defineFeature({ ...notesFeature, documents: pathToFileURL(join(f.root, "missing")) });
     await expect(compileContract(source)).rejects.toThrow();
     await writeFile(join(f.root, "file"), "# File");
     for (const documents of [
@@ -58,7 +58,7 @@ test("definitions perform no filesystem IO; explicit missing or invalid director
         new URL("https://example.com/docs/"),
         new URL(`${f.url}#fragment`),
     ]) {
-        await expect(compileContract({ ...notesContract, documents })).rejects.toThrow();
+        await expect(compileContract({ ...notesFeature, documents })).rejects.toThrow();
     }
     await expect(f.compile()).rejects.toThrow("documentation");
 });
@@ -83,9 +83,9 @@ test("root, nested-directory and file symlinks are refused", async () => {
     const f = await fixture();
     await writeFile(join(f.docs, "overview.md"), "# Notes");
     await symlink(f.docs, join(f.root, "alias"));
-    await expect(
-        compileContract({ ...notesContract, documents: pathToFileURL(join(f.root, "alias")) }),
-    ).rejects.toThrow("directories");
+    await expect(compileContract({ ...notesFeature, documents: pathToFileURL(join(f.root, "alias")) })).rejects.toThrow(
+        "directories",
+    );
     for (const target of [join(f.docs, "overview.md"), f.docs]) {
         await symlink(target, join(f.docs, "linked"));
         await expect(f.compile()).rejects.toThrow("symbolic links");
@@ -133,6 +133,6 @@ test("directory content and URL are captured before asynchronous admission", asy
     writeFileSync(overview, "# Notes\nChanged");
     f.url.pathname = join(f.root, "missing");
     expect((await pending).digest).toBe(before.digest);
-    const after = await compileContract({ ...notesContract, documents: pathToFileURL(f.docs) });
+    const after = await compileContract({ ...notesFeature, documents: pathToFileURL(f.docs) });
     expect(after.digest).not.toBe(before.digest);
 });

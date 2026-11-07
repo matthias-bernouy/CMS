@@ -27,7 +27,7 @@ export function binaryInputLease(capability: CapabilityDefinition, context: Prov
     }
     const leaves = Object.values(capability.input.properties).filter((schema) => schema.type === "binary");
     if (leaves.length !== 1 || leaves[0]!.type !== "binary") {
-        throw new TypeError("Binary body does not match the admitted operation");
+        throw new TypeError("Binary body does not match the admitted capability");
     }
     const maximum = leaves[0]!.maxBytes;
     const body = context.binaryBody;

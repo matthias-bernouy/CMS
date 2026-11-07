@@ -1,24 +1,26 @@
 # @bernouy/ulvia-sdk
 
-Define typed feature operations, expose contracts, assemble a Provider and compile
+Define typed feature capabilities, expose contracts, assemble a Provider and compile
 its exact manifest from the same handler table. The optional `./provider` adapter
 mounts that build through the existing Gateway HTTP receiver.
 
 The Emailer/SMTP pilot uses the SDK in the official Provider and bootstrap. Other
 feature families retain their existing adapters. Release orchestration lives in
-the CLI and infrastructure; the SDK remains free of filesystem discovery and publication.
+the CLI and infrastructure. Root authoring performs no IO; `./build` discovers
+Markdown only below explicitly declared directories and never publishes releases.
 
 ## Public API
 
 | Entry | Responsibility |
 | --- | --- |
-| `.` → `z`, `defineOperation` | Stable operation IDs, access, behavior, HTTP/MCP bindings, typed data/errors and named mocks. |
-| `.` → `defineContract` | Contract identity/version, parent, operation list and document/fixture sources. |
+| `.` → `z`, `defineCapability` | Stable capability IDs, access, behavior, HTTP/MCP bindings, typed data/errors and named mocks. |
+| `.` → `defineFeature` | Contract identity/version, parent, capability list and document/fixture sources. |
 | `.` → `contractString`, `contractMap`, `contractBinary` | Zod schemas with exact Ulvia v1 semantics. |
-| `.` → `implementContract`, `defineProvider` | Typed handler factories and static manifest metadata. |
-| `.` → `operationError`, `isOperationFailure` | Declared, validated business errors without HTTP policy. |
-| `.` → `OperationInput`, `OperationOutput`, `OperationHandler` | Infer domain types from operation schemas. |
-| `.` → `ContractHandlers`, `ProviderOperationHandler` | Infer inherited handlers, streaming inputs and operation handles. |
+| `.` → `capabilitiesFor`, `implementFeature` | Type capability services once; select complete default execution. |
+| `.` → `implementContract`, `defineProvider` | Alternative complete implementations and static manifest metadata. |
+| `.` → `capabilityError`, `isCapabilityFailure` | Declared, validated business errors without HTTP policy. |
+| `.` → `CapabilityInput`, `CapabilityOutput`, `CapabilityHandler` | Infer domain types from capability schemas. |
+| `.` → `ContractHandlers`, `ProviderCapabilityHandler` | Infer inherited handlers, streaming inputs and operation handles. |
 | `./build` → `compileSchema`, `compileContract`, `compileContracts` | Produce validated schemas and immutable contract admissions. |
 | `./build` → `compileImplementations` | Compile a partial surface with exact claims and a captured handler plan. |
 | `./build` → `compileProvider` | Generate exact manifest claims and a captured runtime handler plan. |
@@ -27,34 +29,67 @@ the CLI and infrastructure; the SDK remains free of filesystem discovery and pub
 
 ## One definition, two stages
 
-A feature owns each operation's stable ID, access, behavior, HTTP/MCP bindings,
-data schemas and errors in `defineOperation`. Its `feature.ts` uses `defineContract`
-to declare identity, version, parent and an explicit `operations` list. The Provider
+A feature owns each capability's stable ID, access, behavior, HTTP/MCP bindings,
+data schemas and errors in `defineCapability`. Its `feature.ts` uses `defineFeature`
+to declare identity, version, parent and an explicit `capabilities` list. The Provider
 selects implementations and applies its mounting/authentication policy.
 The [notes example](examples/notes.ts) includes typed mocks, verified Markdown and
 an injected business handler. [Its Provider](examples/provider.ts) assembles it:
 
 ```ts
-const implementation = implementContract(notesContract, {
+const implementation = implementContract(notesFeature, {
     "notes.read": (dependencies: NotesDependencies) =>
         createReadNoteHandler(dependencies.notes),
 });
 ```
 
-Operation IDs are declared once. Duplicate IDs within a contract or redeclared
+Capability IDs are declared once. Duplicate IDs within a contract or redeclared
 inherited IDs refuse compilation. Literal IDs and behavior remain inferred across
 package exports, preserving typed inherited handler coverage and execution modes.
 
-`mocks` is an optional array on each operation, not a scanned source directory.
+`mocks` is an optional array on each capability, not a scanned source directory.
 Scenarios may share input and have different named success/error outcomes. The
 [imported notes mocks](examples/mocks/notes.ts) need no owning capability ID.
 TypeScript checks their inferred shapes; build admission also validates inputs,
 success/error payloads, declared error codes, asset references and unique local IDs.
 
-Handler factories are an explicit table, not a function that discovers handlers
-by running code. Build checks the full effective key set, including inherited
-capabilities, and captures the factories without calling them. Factories should
-only capture injected services; adapters belong to the host composition root.
+A feature is the only authored definition. `defineFeature({ contractId, version,
+extends, capabilities, documents })` combines its API, docs/mocks and optional
+executors. Build projects this source into an immutable contract; it never serializes
+or calls executors. There is no separate createFeature/defineContract API.
+
+Feature authors type capability ports once in a shared authoring module:
+
+```ts
+export const defineCapability = capabilitiesFor<EmailerServices>();
+```
+
+`capabilitiesFor` returns a function, not another feature or a factory of feature
+constructors. The feature itself is declared once with `defineFeature` imported
+from the SDK. Service requirements compose from its capabilities and its parent.
+
+A capability may then provide `execute({ input, services, context, fail })`.
+Schemas infer input/result types and declared failure arguments; `services` is
+feature-local. `throw fail(code, payload, { cause })` binds a failure to its owner
+without referencing the capability during its initialization. An extracted function
+can receive the inferred schema data and service ports instead of requiring a
+handler factory or registry entry.
+
+`implementFeature(feature, { requires })` captures the defaults and requires every
+own/inherited capability to have an executor. Declarative capabilities can omit
+`execute` and still compile. Features infer combined own and inherited service
+requirements; incompatible shared ports reject, and inherited capabilities reuse their original executor. Published
+contracts contain no executable code or service values.
+
+Providers with different feature ports may pass
+`implementFeature(feature, { services: host => ({ emailer: host.emailer }) })`.
+This typed projection selects existing runtime-owned ports once per mounted
+capability; it performs no authoring/build IO and never runs during compilation.
+Executors run only on invocation. Adapters belong to runtime composition roots.
+
+The explicit `implementContract` factory table remains available for a complete
+alternative implementation. Build checks its own and inherited handler coverage;
+it never invokes factories, projections or capability executors.
 
 ```ts
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
@@ -77,16 +112,35 @@ provenance remain explicit declarations validated by `ulvia-providers`.
 
 The runtime validates Provider/site/instance scope before dispatch. The Gateway
 receiver handles input/output validation, admitted routing and error envelopes;
-the SDK does not parse JSON DTOs a second time. Dependency factories run once per
-mounted effective handler. The captured plan cannot be replaced by mutating the
+the SDK does not parse JSON DTOs a second time in the executor bridge. Dependency
+factories or feature service projections run once per mounted effective capability. The captured plan cannot be replaced by mutating the
 source table after compilation.
+
+For direct local synchronous JSON calls, `executeCapability(capability, { input,
+services, context })` from `./provider` validates both input and output with the
+capability's Zod schemas. The caller owns authorization; this does not activate a
+Provider or durable command receipts. Invalid input refuses before business calls.
+Binary streams and asynchronous operation handles use the Provider adapter, and
+are rejected by the local JSON helper before execution. The raw `execute` callback
+is a validated-boundary body; use the helper for unvalidated local data.
 
 ## Errors, versions and execution
 
-Use `throw operationError(operation, code, payload)` in a business handler. Code
-and payload are inferred from that operation. Runtime checks the error's owner
+Inside a default executor use `throw fail(code, payload)`. Explicit alternative
+handlers can use `throw capabilityError(capability, code, payload)`. Code
+and payload are inferred from that capability. Runtime checks the error's owner
 and admitted payload, then selects the status of the actual HTTP binding. Unknown
 errors and invalid results use the existing receiver's generic failure response.
+An optional final `{ cause }` argument retains private diagnostics using standard
+Error semantics; causes are never copied into wire payloads.
+
+Hosts may supply `formatCapabilityFailure(failure, context)` when registering handlers
+or creating a Provider. Context contains the selected contract ID, HTTP status and
+trusted invocation context. Return `{ output, responseHeaders?, reason? }` for
+localization or other presentation policy. Both the original and formatted payload
+must satisfy the admitted concrete error schema. The hook cannot select code or
+status, and runs before the durable executor captures a declared failure. Successful
+calls do not invoke it. Hosts remain responsible for safe copy and replay presentation.
 
 A specialization references its parent SDK definition through `extends`. Build
 calculates the exact parent pin, retains separate artifacts and requires the
@@ -143,7 +197,7 @@ Set `documents: new URL("../docs/", import.meta.url)` in `src/feature.ts` to sca
 `docs/**/*.md` during compilation. No Markdown imports, declarations or generated
 source manifest are needed. IDs are case-preserving paths relative to that directory:
 `docs/overview.md` becomes `overview.md`; `docs/setup/smtp.md` becomes
-`setup/smtp.md`. Moving a file changes its ID, so update operation references and
+`setup/smtp.md`. Moving a file changes its ID, so update capability references and
 internal links. The title comes from its single H1; references and links are checked.
 
 The explicit directory must exist and contain regular files without symlinks;
@@ -176,3 +230,21 @@ The tests include negative TypeScript fixtures, JSON acceptance comparisons,
 exact parent pinning, generated manifests, real loopback HTTP calls signed by
 CapabilityGateway, cross-instance refusals, binary cancellation and host-owned
 keyed execution. No external database is required for the SDK tests.
+
+The authoring vocabulary uses `defineCapability`, `CapabilityDefinition` and
+`capabilities/`. Protocol `execution: "operation"`, `operationId` and operation
+handles still describe long-running executions and retain their published names.
+
+## Mounting approved implementations
+
+`registerProviderHandlers(build, registry, services, options)` mounts all compiled
+implementations by default. A host mounting an installed profile passes
+`options.implementations: [{ contractId, version, digest }]`. The SDK checks every
+exact pin and rejects unknown or duplicate claims before constructing handlers or
+registering capabilities. An empty list mounts nothing. Only selected implementations
+project services or require durable keyed execution. Inherited calls retain the same
+concrete handler and receipt identity. This selection runs during mounting, with no
+additional per-request lookup or IO.
+
+`createProvider` assembles a complete standalone Provider and always mounts all its
+manifest implementations. Its runtime options do not accept a partial selection.
