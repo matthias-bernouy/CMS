@@ -434,6 +434,14 @@ export class ProviderInstanceHost {
                         stores,
                     }),
                 runtime: {
+                    contracts: this.contracts.filter(({ release, digest }) =>
+                        profile.contracts.some(
+                            (pin) =>
+                                pin.contractId === release.contractId &&
+                                pin.version === release.version &&
+                                pin.digest === digest,
+                        ),
+                    ),
                     siteId: SITE_ID,
                     logger: instanceLogger,
                     report,

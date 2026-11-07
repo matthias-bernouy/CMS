@@ -28,12 +28,12 @@ export function providerOptions(
 ): UlviaProviderOptions {
     const runtime: UlviaProviderInstanceRuntime = {
         siteId: "default",
+        contracts: contracts.map(resolveFixtureContract),
         report: { ...providerReport(...contracts), instanceId },
         dispatcher,
         ...(authorizeInvocation ? { authorizeInvocation } : {}),
     };
     return {
-        contracts: contracts.map(resolveFixtureContract),
         logger,
         authenticateControlToken: async (token) =>
             token === PROVIDER_TOKEN ? { resource: runtime, release: () => undefined } : null,

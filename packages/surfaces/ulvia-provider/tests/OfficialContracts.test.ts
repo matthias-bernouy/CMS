@@ -51,11 +51,11 @@ test("mounts and dispatches every official CMS contract release", async () => {
     const runner = new BunRunner();
     const runtime = {
         siteId: "site-a",
+        contracts: contracts.map(({ resolved }) => resolved),
         dispatcher,
         report: report(contracts),
     };
     new UlviaProvider(runner, {
-        contracts: contracts.map(({ resolved }) => resolved),
         logger: NOOP_LOGGER,
         authenticateControlToken: async (token) =>
             token === TOKEN ? { resource: runtime, release: () => undefined } : null,

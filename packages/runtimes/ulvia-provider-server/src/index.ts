@@ -97,7 +97,6 @@ try {
         );
         provider = mountUlviaProvider({
             env,
-            contracts: artifacts.contracts,
             authenticator,
             host: instanceHost,
             lifecycle,

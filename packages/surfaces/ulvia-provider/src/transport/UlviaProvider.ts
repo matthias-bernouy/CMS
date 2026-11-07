@@ -9,6 +9,7 @@ import { compileProviderRoutes } from "./routes";
 
 export type UlviaProviderInstanceRuntime = Readonly<{
     siteId: string;
+    contracts: readonly ResolvedContract[];
     report: ProviderRuntimeReport;
     dispatcher: ProviderCapabilityRegistry;
     logger?: Logger;
@@ -21,7 +22,6 @@ export type UlviaProviderInstanceLease = Readonly<{
 }>;
 
 export type UlviaProviderOptions = Readonly<{
-    contracts: readonly ResolvedContract[];
     logger: Logger;
     authenticateReportToken?(token: string): Promise<UlviaProviderInstanceLease | null>;
     authenticateControlToken(token: string): Promise<UlviaProviderInstanceLease | null>;
@@ -33,7 +33,6 @@ export type UlviaProviderOptions = Readonly<{
 /** Mounts the provider-facing official CMS contract surface on a dedicated runner. */
 export class UlviaProvider {
     constructor(runner: Runner, options: UlviaProviderOptions) {
-        const routes = compileProviderRoutes(options.contracts);
         const relays = new WeakMap<ProviderCapabilityRegistry, ReturnType<typeof createProviderContractRelay>>();
         runner.get("/ulvia/report", async (request) => {
             const token = bearerToken(request);
@@ -49,12 +48,7 @@ export class UlviaProvider {
                 lease.release();
             }
         });
-        const methods = new Set<HttpMethod>(routes.map(({ capability }) => capability.binding.method));
-        if (
-            routes.some(({ capability }) => capability.binding.method === "GET" && capability.output.type === "binary")
-        ) {
-            methods.add("HEAD");
-        }
+        const methods: readonly HttpMethod[] = ["GET", "HEAD", "QUERY", "POST", "PUT", "PATCH", "DELETE"];
         for (const method of methods) {
             runner.setDefaultEndpoint(method, async (request) => {
                 const token = bearerToken(request);
@@ -71,16 +65,22 @@ export class UlviaProvider {
                     const runtime = lease.resource;
                     let relay = relays.get(runtime.dispatcher);
                     if (!relay) {
-                        runtime.dispatcher.seal(
-                            options.contracts.filter(({ release, digest }) =>
-                                runtime.report.implementations.some(
-                                    (pin) =>
-                                        pin.contractId === release.contractId &&
-                                        pin.version === release.version &&
-                                        pin.digest === digest,
-                                ),
+                        const contracts = runtime.contracts.filter(({ release, digest }) =>
+                            runtime.report.implementations.some(
+                                (pin) =>
+                                    pin.contractId === release.contractId &&
+                                    pin.version === release.version &&
+                                    pin.digest === digest,
                             ),
                         );
+                        if (
+                            contracts.length !== runtime.contracts.length ||
+                            contracts.length !== runtime.report.implementations.length
+                        ) {
+                            throw new Error("Instance contracts differ from its implementation report");
+                        }
+                        const routes = compileProviderRoutes(contracts);
+                        runtime.dispatcher.seal(contracts);
                         relay = createProviderContractRelay(
                             routes,
                             runtime.dispatcher,
