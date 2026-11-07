@@ -22,6 +22,7 @@ the exact same operation.
 
 ## Boundaries
 
+- `./feature` authors the complete `ulvia/cms.access` SDK feature in `application/`, with schemas, grouped capabilities and package Markdown docs. Default execution receives required `AccessServices`; administrator grants and trusted aliases use the structural `AccessGovernance` port. Keep schema-derived wire DTOs separate from persistence records.
 - Root export exposes adapter-light contracts, credential/session assembly,
   in-memory stores and public account action composition. Management mutations
   use `@bernouy/cms-auth/management`.

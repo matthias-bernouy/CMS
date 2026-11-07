@@ -30,6 +30,11 @@ test("all administration capability areas dispatch outputs matching their offici
             listInstalled: async () => ({ revision: 0, items: [] }),
             snapshot: async () => ({ revision: 0, collections: [] }),
         },
+        credentials: {},
+        pats: {},
+        authentication: {},
+        accountLifecycle: {},
+        mcpAuthorization: {},
         users: {
             list: async () => ({
                 users: [{ sub: "local:user-1", email: "admin@example.test", createdAt: now, lastSeenAt: now }],
@@ -105,7 +110,9 @@ test("all administration capability areas dispatch outputs matching their offici
         new ProviderOperationExecutor(new MemoryProviderOperationStore()),
         undefined,
         undefined,
-        (await loadOfficialFeatures()).implementations.filter(({ contractId }) => contractId === "ulvia/cms.files"),
+        (await loadOfficialFeatures()).implementations.filter(({ contractId }) =>
+            ["ulvia/cms.files", "ulvia/cms.access"].includes(contractId),
+        ),
         { providerId: "ulvia/primary-provider", scope: { siteId: "default", instanceId: "smoke" } },
     );
 

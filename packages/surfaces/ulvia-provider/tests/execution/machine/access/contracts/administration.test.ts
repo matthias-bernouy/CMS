@@ -1,0 +1,78 @@
+import { expect, test } from "bun:test";
+import { type ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";
+import { accessServices } from "../services";
+import { accessTransport } from "../transport";
+import { InMemoryUsersRepository } from "@bernouy/cms-auth";
+
+const context: ProviderCapabilityInvocationContext = {
+    requestId: "00000000-0000-4000-8000-000000000001",
+    contractVersion: "1.0.0",
+    siteId: "default",
+    providerId: "ulvia/primary-provider",
+    subjectId: "provider-admin",
+};
+
+test("access capabilities protect the caller and cleanly remove another member", async () => {
+    const users = new InMemoryUsersRepository();
+    await users.upsert({ sub: "local:admin", provider: "local", email: "admin@example.test" });
+    await users.upsert({ sub: "external:member", provider: "external", email: "member@example.test" });
+    const grants = new Map([["local:admin", { sub: "local:admin", enabled: true, revision: 1, bootstrap: true }]]);
+    const administrators = {
+        list: async () => [...grants.values()].filter(({ enabled }) => enabled).map(({ sub }) => sub),
+        get: async (sub: string) => grants.get(sub) ?? { sub, enabled: false, revision: 0, bootstrap: false },
+        canRevoke: async (sub: string) => sub !== "local:admin",
+        set: async (sub: string, enabled: boolean, expectedRevision: number) => {
+            const current = grants.get(sub) ?? { sub, enabled: false, revision: 0, bootstrap: false };
+            if (current.revision !== expectedRevision) {
+                throw Object.assign(new Error("conflict"), { status: 409 });
+            }
+            const next = { ...current, enabled, revision: current.revision + 1 };
+            grants.set(sub, next);
+            return next;
+        },
+    };
+    const core = {
+        authentication: { revokeSessionsForSub: async () => {} },
+        users,
+        credentials: {},
+        pats: { list: async () => [], revoke: async () => false },
+    };
+    const gateway = {
+        siteId: "default",
+        identities: { resolve: async () => "local:admin" },
+        administrators,
+    };
+    const dispatcher = await accessTransport(accessServices({ ...core, governance: gateway } as never));
+
+    expect(await dispatcher.invoke("ulvia/cms.access", "list-users", {}, context)).toMatchObject({
+        users: [
+            { sub: "local:admin", administrator: true, administratorRevision: 1 },
+            { sub: "external:member", administrator: false, administratorRevision: 0 },
+        ],
+    });
+
+    await expect(
+        dispatcher.invoke(
+            "ulvia/cms.access",
+            "set-administrator",
+            { sub: "local:admin", enabled: false, expectedRevision: 1 },
+            context,
+        ),
+    ).rejects.toMatchObject({ code: "CANNOT_REMOVE_SELF", status: 409 });
+
+    expect(
+        await dispatcher.invoke(
+            "ulvia/cms.access",
+            "set-administrator",
+            { sub: "external:member", enabled: true, expectedRevision: 0 },
+            context,
+        ),
+    ).toMatchObject({ sub: "external:member", administrator: true, revision: 1 });
+
+    expect(await dispatcher.invoke("ulvia/cms.access", "delete-user", { sub: "external:member" }, context)).toEqual({
+        sub: "external:member",
+        deleted: true,
+    });
+    expect(await users.getBySub("external:member")).toBeNull();
+    expect((await administrators.get("external:member")).enabled).toBe(false);
+});

@@ -1,19 +1,39 @@
 {
     "extends": "../../../tsconfig.base.json",
     "compilerOptions": {
-        "outDir":   "dist",
-        "rootDir":  "./src",
+        "outDir": "dist",
+        "rootDir": "./src",
         "paths": {
-            "cms-auth/*": ["./src/*"]
+            "cms-auth/*": [
+                "./src/*"
+            ]
         },
         "resolveJsonModule": true
     },
-    "include": ["src/**/*.ts"],
+    "include": [
+        "src/**/*.ts"
+    ],
     "references": [
-        { "path": "../email/base" },
-        { "path": "../../foundation/http-runner" },
-        { "path": "../../foundation/logging" },
-        { "path": "../../foundation/envelope-crypto" },
-        { "path": "../../foundation/rate-limiter" }
+        {
+            "path": "../email/base"
+        },
+        {
+            "path": "../../foundation/http-runner"
+        },
+        {
+            "path": "../../foundation/logging"
+        },
+        {
+            "path": "../../foundation/envelope-crypto"
+        },
+        {
+            "path": "../../foundation/rate-limiter"
+        },
+        {
+            "path": "../../platform/sdk"
+        },
+        {
+            "path": "../../platform/contracts"
+        }
     ]
 }

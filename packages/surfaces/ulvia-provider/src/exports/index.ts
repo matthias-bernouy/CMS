@@ -8,7 +8,6 @@ export {
 export { registerOfficialProviderCapabilities } from "../capabilities/index";
 export { CollectionSources } from "../capabilities/installations/sources/index";
 export type {
-    CmsAccessDependencies,
     CmsCollectionDependencies,
     CmsContentDependencies,
     CmsFileWorkspace,

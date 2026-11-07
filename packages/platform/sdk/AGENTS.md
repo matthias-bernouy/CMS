@@ -2,7 +2,7 @@
 
 Typed authoring and Provider assembly SDK. Depend only on Platform and Foundation.
 
-- Emailer/SMTP, Secrets, Files and Observability are the production migration pilots. Keep other feature families
+- Emailer/SMTP, Secrets, Files, Observability and Access are the production migration pilots. Keep other feature families
   outside the SDK until their migration is explicitly requested. Release discovery
   and publication remain CLI/infrastructure responsibilities.
 - Root definitions perform no filesystem, network, environment or runtime initialization.

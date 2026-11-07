@@ -10,17 +10,7 @@ import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
 import type { ProviderAccess } from "@bernouy/cms-gateway/access/providers";
 import type { ProviderAdministration } from "./providers";
 import type { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
-import type { McpAuthorization } from "@bernouy/cms-auth/oauth";
-import type { UserDeletionStores } from "@bernouy/cms-auth/management";
-import type {
-    AuthenticationCredential,
-    LocalCredentialStore,
-    LocalLoginResult,
-    PatRepository,
-    PublicAuthActions,
-    Subject,
-    UsersRepository,
-} from "@bernouy/cms-auth";
+import type { AccessServices } from "@bernouy/cms-auth/feature";
 import type { ContentRepository } from "@bernouy/cms-content";
 import type { CollectionUpgradeService } from "@bernouy/cms-repository/collections/installations";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
@@ -68,36 +58,14 @@ export interface CmsCollectionDependencies {
     readonly collectionUpgrades: CollectionUpgradeService;
 }
 
-export interface CmsAccessDependencies {
-    readonly withUserDeletion?: UserDeletionStores["withUserDeletion"];
-    readonly mcpAuthorization?: McpAuthorization;
-    readonly users: UsersRepository;
-    readonly credentials: LocalCredentialStore;
-    readonly pats: PatRepository;
-    readonly authentication: {
-        authenticate(email: string | undefined, password: string | undefined): Promise<LocalLoginResult>;
-        resolveCredential(credential: AuthenticationCredential | undefined): Promise<Subject | null>;
-        revokeCredential(credential: AuthenticationCredential | undefined): Promise<void>;
-        revokeSessionsForSub(sub: string): Promise<void>;
-    };
-    readonly accountLifecycle: Pick<
-        PublicAuthActions,
-        | "signup"
-        | "requestEmailVerification"
-        | "confirmEmailVerification"
-        | "requestPasswordReset"
-        | "confirmPasswordReset"
-    >;
-}
-
 /** Ports supplied by the runtime for SDK feature implementations. */
 export type UlviaProviderFeatureServices = Partial<
-    SmtpEmailerServices & SecretsServices & FilesServices & ObservabilityServices
+    SmtpEmailerServices & SecretsServices & FilesServices & ObservabilityServices & AccessServices
 >;
 
 export type UlviaProviderDependencies = CmsContentDependencies &
     CmsCollectionDependencies &
-    CmsAccessDependencies &
+    Omit<AccessServices, "governance"> &
     UlviaProviderFeatureServices;
 
 type UlviaProviderAdministratorState = Readonly<{

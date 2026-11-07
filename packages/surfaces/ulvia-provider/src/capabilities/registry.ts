@@ -5,7 +5,7 @@ import { RepositoryDiscoveryError } from "@bernouy/cms-repository/repository/sea
 import { ProviderCapabilityDispatchError } from "../dispatch/registry";
 import type { ProviderCapabilityRegistry, ProviderBinaryResult } from "../dispatch/registry";
 import type { UlviaProviderGateway } from "../ports/index";
-import { actorSubject } from "./access/support";
+import type { ProviderCapabilityInvocationContext } from "../dispatch/registry";
 
 /** Only an explicitly composed Repository profile registers these handlers. */
 export function registerRepositoryCapabilities(
@@ -64,4 +64,18 @@ export function registerRepositoryCapabilities(
             }
         });
     }
+}
+
+async function actorSubject(
+    gateway: UlviaProviderGateway,
+    context: ProviderCapabilityInvocationContext,
+): Promise<string> {
+    if (!context.subjectId) {
+        throw new ProviderCapabilityDispatchError("ACTOR_UNAVAILABLE", 403);
+    }
+    const sub = await gateway.identities.resolve({ providerId: context.providerId }, context.subjectId);
+    if (!sub) {
+        throw new ProviderCapabilityDispatchError("ACTOR_UNAVAILABLE", 403);
+    }
+    return sub;
 }

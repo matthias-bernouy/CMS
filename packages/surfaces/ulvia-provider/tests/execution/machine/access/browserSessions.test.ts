@@ -7,9 +7,10 @@ import {
     SessionTokenService,
     SubjectResolver,
 } from "@bernouy/cms-auth";
-import { DefaultProviderCapabilityDispatcher, ProviderCapabilityResponse } from "@bernouy/ulvia-provider";
+import { ProviderCapabilityResponse } from "@bernouy/ulvia-provider";
 import type { ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";
-import { registerAccessCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { accessServices } from "./services";
+import { accessTransport } from "./transport";
 
 const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
@@ -30,8 +31,7 @@ test("Access logout revokes the exact browser session before returning its clear
         sessions,
     });
     await credentials.create({ email: "member@example.test", password: "safe-password" });
-    const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerAccessCapabilities(dispatcher, { users, authentication } as never, undefined);
+    const dispatcher = await accessTransport(accessServices({ users, authentication }));
     const login = (await dispatcher.invoke(
         "ulvia/cms.access",
         "login-password",
@@ -52,9 +52,7 @@ test("Access logout revokes the exact browser session before returning its clear
     repository.revoke = async () => {
         throw new Error("session persistence unavailable");
     };
-    await expect(dispatcher.invoke("ulvia/cms.access", "logout", {}, caller)).rejects.toThrow(
-        "session persistence unavailable",
-    );
+    await expect(dispatcher.invoke("ulvia/cms.access", "logout", {}, caller)).rejects.toThrow("CORE_UNAVAILABLE");
     expect(await dispatcher.invoke("ulvia/cms.access", "resolve-actor", {}, caller)).toMatchObject({
         state: "authenticated",
     });

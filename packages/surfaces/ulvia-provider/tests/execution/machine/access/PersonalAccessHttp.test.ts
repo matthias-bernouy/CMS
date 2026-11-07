@@ -3,11 +3,11 @@ import { InMemoryPatRepository, InMemoryUsersRepository } from "@bernouy/cms-aut
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import { NOOP_LOGGER } from "@bernouy/logging";
-import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import type { UlviaProviderGateway } from "@bernouy/ulvia-provider";
-import { registerPersonalAccessCapabilities } from "../../../src/capabilities/access/pats";
-import { createProviderContractRelay } from "../../../src/transport/relay";
-import { resolvedContract } from "../messages/fixtures";
+import { accessServices } from "./services";
+import { accessTransport } from "./transport";
+import { createProviderContractRelay } from "../../../../src/transport/relay";
+import { resolvedContract } from "../../messages/fixtures";
 
 test("the admitted Access HTTP bindings expose self-service PATs without administrator access", async () => {
     const contract = await resolvedContract("ulvia/cms.access");
@@ -21,8 +21,7 @@ test("the admitted Access HTTP bindings expose self-service PATs without adminis
                 alias === "alias-a" ? "member-a" : alias === "alias-b" ? "member-b" : null,
         },
     } as unknown as UlviaProviderGateway;
-    const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerPersonalAccessCapabilities(dispatcher, { pats, users }, gateway);
+    const { dispatcher } = await accessTransport(accessServices({ pats, users, governance: gateway }));
     const relay = createProviderContractRelay(
         compileProviderRoutes([contract]),
         dispatcher,

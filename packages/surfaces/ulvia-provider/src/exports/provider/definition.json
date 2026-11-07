@@ -32,18 +32,6 @@
     ],
     "implementations": [
         {
-            "contractId": "ulvia/cms.access",
-            "version": "1.0.0",
-            "requires": [
-                {
-                    "contractId": "ulvia/cms.emailer",
-                    "versionRange": "^1.0.0",
-                    "capabilityId": "emailer.send",
-                    "optional": false
-                }
-            ]
-        },
-        {
             "contractId": "ulvia/cms.installations",
             "version": "1.0.0",
             "requires": [

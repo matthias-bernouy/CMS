@@ -42,6 +42,9 @@
         "@bernouy/email": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "zod": "4.6.7",
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
