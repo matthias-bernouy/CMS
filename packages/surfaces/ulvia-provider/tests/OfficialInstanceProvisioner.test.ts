@@ -37,6 +37,25 @@ const OFFICIAL_INSTANCE_PROFILE = Object.freeze({
 const PROFILES = new OfficialInstanceProfiles([OFFICIAL_INSTANCE_PROFILE]);
 
 describe("OfficialInstanceProvisioner", () => {
+    test("acknowledging an unchanged ready profile needs no installation kit", async () => {
+        const registry = new MemoryRegistry({ ...instance(), status: "ready" });
+        const transitions = new MemoryTransitions();
+        const calls: string[] = [];
+        const unavailable = () => {
+            throw new Error("Installation kit must not be loaded");
+        };
+        const provisioner = new OfficialInstanceProvisioner(
+            registry,
+            transitions,
+            async () => target(calls, async () => undefined),
+            administratorCredentials(),
+            { describe: unavailable, resolve: unavailable, canUpgrade: unavailable },
+        );
+        expect((await provisioner.upgrade("instance:one", { id: "ulvia", version: "1.0.0" })).status).toBe("ready");
+        expect(transitions.record).toBeNull();
+        expect(calls).toEqual([]);
+    });
+
     test("journals provisioning steps and never replays a completed transition", async () => {
         const registry = new MemoryRegistry(instance());
         const transitions = new MemoryTransitions();

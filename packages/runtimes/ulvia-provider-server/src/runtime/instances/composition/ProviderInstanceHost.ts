@@ -1,3 +1,6 @@
+import { readInstalledExecution } from "../profiles/execution/installed";
+import { ProviderExecutionSupport, type ExecutionProfile } from "../profiles/execution/support";
+import type { LazyOfficialProfiles } from "../profiles/execution/LazyOfficialProfiles";
 import { MemoryVectorStore } from "@bernouy/text-search";
 import { HttpRepositoryDiscovery } from "@bernouy/cms-repository/repository/search/http";
 import { RepositoryDiscovery } from "@bernouy/cms-repository/repository/search";
@@ -22,14 +25,12 @@ import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
-import type { ReleaseDigest, ResolvedContract } from "@bernouy/cms-repository/contracts";
+import type { ReleaseDigest } from "@bernouy/cms-repository/contracts";
 import {
     CollectionSources,
     DefaultProviderCapabilityDispatcher,
     ProviderOperationExecutor,
     registerOfficialProviderCapabilities,
-    type OfficialInstanceProfile,
-    type OfficialInstanceProfiles,
     type OfficialInstanceProvisioningTarget,
     type ProviderInstanceRecord,
     type ProviderInstanceRegistry,
@@ -69,7 +70,7 @@ export type InstanceComposition = Readonly<{
     runtime: UlviaProviderInstanceRuntime;
     management: ProviderManagement;
     managementForProfile(
-        profile: OfficialInstanceProfile,
+        profile: ExecutionProfile,
         execution?: ProviderInstanceTransitionExecution,
     ): ProviderManagement;
     administrators: Awaited<ReturnType<typeof createProviderGateway>>["administrators"];
@@ -89,9 +90,9 @@ export class ProviderInstanceHost {
     constructor(
         private readonly env: ProviderRuntimeEnv,
         private readonly credentials: EncryptedInstanceCredentials,
-        private readonly profiles: OfficialInstanceProfiles,
+        private readonly profiles: LazyOfficialProfiles,
         private readonly logger: Logger,
-        private readonly contracts: readonly ResolvedContract[],
+        private readonly support: ProviderExecutionSupport,
         instances: Pick<ProviderInstanceRegistry, "get">,
         private readonly bootstrap: OfficialBootstrapSources,
     ) {
@@ -143,7 +144,6 @@ export class ProviderInstanceHost {
         return {
             resource: {
                 ...lease.resource.runtime,
-                report: providerReport(instance, this.requiredProfile(instance.profile.id, instance.profile.version)),
             },
             release: lease.release,
         };
@@ -249,7 +249,11 @@ export class ProviderInstanceHost {
         let documentationTimer: ReturnType<typeof setInterval> | undefined;
         let registry: Awaited<ReturnType<typeof createInstanceRepository>> | undefined;
         try {
-            const profile = this.requiredProfile(instance.profile.id, instance.profile.version);
+            const execution =
+                instance.status === "ready" || instance.status === "disabled"
+                    ? await readInstalledExecution(instance, stores, this.support, this.env.ULVIA_PROVIDER_PUBLIC_URL)
+                    : await this.provisioningExecution(instance);
+            const { profile, contracts, report } = execution;
             const registryPin = profile.contracts.find(({ contractId }) => contractId === "ulvia/repository");
             if (registryPin) {
                 registry = await createInstanceRepository(
@@ -262,7 +266,7 @@ export class ProviderInstanceHost {
             }
             const readReport = async (endpoint: string, token: string) =>
                 endpoint === this.env.ULVIA_PROVIDER_PUBLIC_URL && token === credentials.invocationSecret
-                    ? providerReport(instance, profile)
+                    ? providerReport(instance, profile, this.support.buildVersion)
                     : readRemoteProviderReport(endpoint, token);
             const gateway = await createProviderGateway(stores, SITE_ID, {
                 readReport,
@@ -270,7 +274,7 @@ export class ProviderInstanceHost {
                     instanceLogger.warn("provider.observation.refresh.failed", { installationId }, error),
             });
             const managementForProfile = (
-                profile: OfficialInstanceProfile,
+                profile: ExecutionProfile,
                 execution?: ProviderInstanceTransitionExecution,
             ) => {
                 const retention = createProviderRetention(gateway, stores.upgradeStorage, profile, instance.id);
@@ -282,16 +286,15 @@ export class ProviderInstanceHost {
                     drafts: stores.connectionDrafts,
                     readReport: async (endpoint, token) =>
                         endpoint === this.env.ULVIA_PROVIDER_PUBLIC_URL && token === credentials.invocationSecret
-                            ? providerReport(instance, profile)
+                            ? providerReport(instance, profile, this.support.buildVersion)
                             : readRemoteProviderReport(endpoint, token),
                 });
             };
-            const report = providerReport(instance, profile);
             const management = managementForProfile(profile);
             const providerOperations = new MongoProviderOperationStore(stores.db);
             await providerOperations.init();
             const instanceOperations = new ProviderOperationExecutor(providerOperations, undefined, {
-                contracts: this.contracts,
+                contracts,
                 retainResource: lifetime.retain,
                 onFailure: (observation, error) => {
                     const attributes = { instanceId: instance.id, ...observation };
@@ -303,7 +306,7 @@ export class ProviderInstanceHost {
                 },
             });
             operations = instanceOperations;
-            const dispatcher = new DefaultProviderCapabilityDispatcher();
+            const dispatcher = new DefaultProviderCapabilityDispatcher(contracts);
             const providerConnections = new ProviderConnections(stores.providerConnections);
             registerProviderConnectionCapabilities(dispatcher, providerConnections);
             const officialPairing = new ProviderPairing(stores, gateway, instance.gatewayUrl, {
@@ -375,7 +378,7 @@ export class ProviderInstanceHost {
                 new Set(profile.contracts.map(({ contractId }) => contractId)),
             );
             if (registry && registryPin) {
-                const contract = this.contracts.find(
+                const contract = contracts.find(
                     ({ release, digest }) =>
                         release.contractId === registryPin.contractId &&
                         release.version === registryPin.version &&
@@ -434,14 +437,7 @@ export class ProviderInstanceHost {
                         stores,
                     }),
                 runtime: {
-                    contracts: this.contracts.filter(({ release, digest }) =>
-                        profile.contracts.some(
-                            (pin) =>
-                                pin.contractId === release.contractId &&
-                                pin.version === release.version &&
-                                pin.digest === digest,
-                        ),
-                    ),
+                    contracts,
                     siteId: SITE_ID,
                     logger: instanceLogger,
                     report,
@@ -482,12 +478,19 @@ export class ProviderInstanceHost {
             throw error;
         }
     }
-    private requiredProfile(id: string, version: string): OfficialInstanceProfile {
-        const profile = this.profiles.resolve(id, version);
+    private async provisioningExecution(instance: ProviderInstanceRecord) {
+        const profile = await this.profiles.resolve(instance.profile.id, instance.profile.version);
         if (!profile) {
-            throw new Error(`Unsupported Provider instance profile: ${id}@${version}`);
+            throw new Error(`Unsupported provisioning profile: ${instance.profile.id}@${instance.profile.version}`);
         }
-        return profile;
+        for (const pin of profile.contracts) {
+            this.support.assert(pin, `provisioning:${instance.id}`);
+        }
+        return {
+            profile,
+            contracts: await this.profiles.contracts(profile),
+            report: providerReport(instance, profile, this.support.buildVersion),
+        };
     }
 
     private reportRuntimeTiming(instanceId: string, openMs: number, readyMs: number): void {
@@ -510,13 +513,17 @@ function roundDuration(value: number): number {
     return Math.round(value * 100) / 100;
 }
 
-function providerReport(instance: ProviderInstanceRecord, profile: OfficialInstanceProfile): ProviderRuntimeReport {
+function providerReport(
+    instance: ProviderInstanceRecord,
+    profile: ExecutionProfile,
+    buildVersion: string,
+): ProviderRuntimeReport {
     return {
         protocol: "ulvia-provider/v1",
         providerId: profile.manifest.providerId,
         instanceId: instance.id,
         account: { id: instance.id, label: instance.label },
-        buildVersion: "1.0.0",
+        buildVersion,
         manifest: { version: profile.manifest.version, digest: profile.manifest.digest as ProviderManifestDigest },
         implementations: profile.contracts.map((contract) => ({
             ...contract,

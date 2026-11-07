@@ -60,6 +60,8 @@ export {
     OfficialInstanceProfiles,
     canUpgradeOfficialInstanceProfile,
     type OfficialInstanceProfile,
+    type OfficialInstanceProfileSource,
+    type OfficialProfileListing,
 } from "./instances/officialProfile";
 export {
     OfficialInstanceProvisioner,

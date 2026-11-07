@@ -23,6 +23,17 @@ export type OfficialInstanceProfile = Readonly<{
     }>[];
 }>;
 
+export type OfficialProfileListing = Readonly<{
+    profiles: readonly OfficialInstanceProfile[];
+    defaultProfile: OfficialInstanceProfile;
+}>;
+
+export interface OfficialInstanceProfileSource {
+    describe(): OfficialProfileListing | Promise<OfficialProfileListing>;
+    resolve(id: string, version: string): OfficialInstanceProfile | null | Promise<OfficialInstanceProfile | null>;
+    canUpgrade(source: OfficialInstanceProfile, target: OfficialInstanceProfile): boolean;
+}
+
 export class OfficialInstanceProfiles {
     readonly defaultProfile: OfficialInstanceProfile;
     readonly profiles: readonly OfficialInstanceProfile[];
@@ -45,6 +56,10 @@ export class OfficialInstanceProfiles {
 
     resolve(id: string, version: string): OfficialInstanceProfile | null {
         return this.#byCoordinate.get(coordinate(id, version)) ?? null;
+    }
+
+    describe(): OfficialProfileListing {
+        return { profiles: this.profiles, defaultProfile: this.defaultProfile };
     }
 
     canUpgrade(source: OfficialInstanceProfile, target: OfficialInstanceProfile): boolean {

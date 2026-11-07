@@ -35,7 +35,7 @@ test("builds the official profile from verified repository releases", async () =
     expect(smtp.digest).toBe(fixture.contractDigests.get(smtp.release.contractId));
 });
 
-test("a missing application collection prevents startup instead of falling back to the public Repository", async () => {
+test("a missing application collection refuses installation profiles instead of falling back to the public Repository", async () => {
     const fixture = await repositoryFixture();
     const collections = {
         ...fixture.collections,

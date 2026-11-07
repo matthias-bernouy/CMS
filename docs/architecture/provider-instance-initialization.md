@@ -69,11 +69,20 @@ collections.
 
 ## Bootstrap And Repository Connections
 
-The Provider loads supported exact profiles from its bundled admitted snapshot.
+The Provider loads installation profiles lazily from its bundled admitted snapshot
+when an operator requests provisioning or an unfinished transition needs recovery.
 The default CMS profile installs `ulvia/mossa`; the explicit
 `repository@1.0.0` profile also installs `ulvia/repository` and seeds its
 ordinary website Pages. Neither requires a running remote Repository. Missing
-bundled resources fail startup rather than falling back to the network.
+bundled resources refuse those installation operations rather than falling back
+to the network. They do not prevent ready instances from restarting.
+
+Ready instances reopen their approved persisted manifest, observed implementation
+pins, exact contract admissions and selections. The runtime checks each digest
+against its explicit implementation support matrix and compiles HTTP bindings
+per authenticated instance. The historical installation profile is not execution
+authority, and its collection resources are not needed in the image to reopen a
+site. Missing or unsupported installed state fails without repairing data.
 
 `CMS_REPOSITORY_URL` remains required by the Provider; the CLI supplies
 `https://repo.ulvia.fr` by default and persists an explicitly selected origin.

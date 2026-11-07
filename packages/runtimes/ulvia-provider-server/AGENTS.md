@@ -6,10 +6,14 @@ Production runtime for the official Ulvia Provider.
 - Compose only the persistence and provider-management adapters required by
   the official contracts. Never depend on the Edge runtime or a shared
   aggregate instance runtime.
-- Load exact admitted contract bindings before mounting the Provider and import
-  the pinned official profile into each instance during provisioning. Bundled
-  admitted snapshots must suffice without a reachable remote Repository; missing
-  bundled resources fail rather than silently fetching replacements.
+- Reopen ready instances from their approved persisted manifests, observations,
+  selections and exact admitted contracts. Check every release against the
+  build's explicit implementation support matrix; persistence or SemVer alone
+  never grants executable support. Compile HTTP bindings per authenticated instance.
+- Load bundled installation profiles lazily for provisioning and unfinished
+  transitions. A ready or disabled instance must not require its original recipe
+  or bundled collection resources. Missing installation resources refuse a new
+  installation rather than silently fetching replacements.
 - Enable `ulvia/repository` only for its explicit instance profile. Registry
   ownership uses ordinary CMS accounts and PATs, never a parallel signing-key
   authority. Bootstrap installation is not public catalogue publication and

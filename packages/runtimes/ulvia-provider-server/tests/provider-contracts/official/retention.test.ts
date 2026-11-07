@@ -5,6 +5,7 @@ import {
     type ProviderInstanceRecord,
     type InstanceTransitionRecord,
 } from "@bernouy/ulvia-provider";
+import { ProviderExecutionSupport } from "../../../src/runtime/instances/profiles/execution/support";
 import { assertHostedReleaseRetention } from "../../../src/runtime/instances/profiles/retention";
 
 const digest = `sha256:${"a".repeat(64)}`;
@@ -14,9 +15,15 @@ const profile: OfficialInstanceProfile = {
     upgradeFromVersions: [],
     manifest: { providerId: "ulvia/primary-provider", version: "0.1.0", digest },
     collections: [{ publisherId: "ulvia", collectionId: "ulvia/mossa", version: "1.0.0", digest }],
+    initialPages: [],
     contracts: [{ contractId: "ulvia/cms.content", version: "1.0.0", digest }],
 };
 const profiles = new OfficialInstanceProfiles([profile]);
+const support = new ProviderExecutionSupport({
+    providerId: profile.manifest.providerId,
+    buildVersion: "1.0.0",
+    releases: [...profile.contracts],
+});
 const instance: ProviderInstanceRecord = {
     id: "instance:one",
     idempotencyKey: "one",
@@ -33,23 +40,37 @@ const instance: ProviderInstanceRecord = {
 
 test("even disabled instances retain their exact profile and selected release digests", async () => {
     await expect(
-        assertHostedReleaseRetention(profiles, [instance], [], async () => [
-            { ...profile.contracts[0]!, location: "site:default" },
-        ]),
+        assertHostedReleaseRetention(
+            support,
+            [instance],
+            [],
+            async () => [{ ...profile.contracts[0]!, location: "site:default" }],
+            profiles,
+        ),
     ).resolves.toBeUndefined();
     await expect(
         assertHostedReleaseRetention(
-            profiles,
-            [{ ...instance, profile: { id: profile.id, version: "0.9.0" } }],
+            support,
+            [{ ...instance, profile: { id: "removed-recipe", version: "0.9.0" } }],
             [],
             async () => [],
+            {
+                ...profiles,
+                resolve: () => {
+                    throw new Error("Must not load a recipe");
+                },
+            } as never,
         ),
-    ).rejects.toThrow("drop profile");
+    ).resolves.toBeUndefined();
     await expect(
-        assertHostedReleaseRetention(profiles, [instance], [], async () => [
-            { ...profile.contracts[0]!, digest: `sha256:${"b".repeat(64)}`, location: "site:default" },
-        ]),
-    ).rejects.toThrow("drop ulvia/cms.content");
+        assertHostedReleaseRetention(
+            support,
+            [instance],
+            [],
+            async () => [{ ...profile.contracts[0]!, digest: `sha256:${"b".repeat(64)}`, location: "site:default" }],
+            profiles,
+        ),
+    ).rejects.toThrow("does not support ulvia/cms.content");
 });
 
 test("queued, running and retryable failed transitions retain both profiles", async () => {
@@ -68,15 +89,16 @@ test("queued, running and retryable failed transitions retain both profiles", as
             createdAt: instance.createdAt,
             updatedAt: instance.updatedAt,
         };
-        await expect(assertHostedReleaseRetention(profiles, [instance], [transition], async () => [])).rejects.toThrow(
-            "transition:upgrade:one",
-        );
+        await expect(
+            assertHostedReleaseRetention(support, [instance], [transition], async () => [], profiles),
+        ).rejects.toThrow("transition:upgrade:one");
         await expect(
             assertHostedReleaseRetention(
-                profiles,
+                support,
                 [instance],
                 [{ ...transition, status: "succeeded" }],
                 async () => [],
+                profiles,
             ),
         ).resolves.toBeUndefined();
     }

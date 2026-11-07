@@ -117,16 +117,33 @@ switch. Retention revisions and the lease are checked again before approval.
 The subsequent durable step updates the exact site selections; Pages and
 collection requirements are unchanged. Ordinary approval has no such authority.
 The Provider checks all managed instance pins, including disabled instances,
-and both profiles of queued/running/retryable failed transitions before startup.
+against the build's explicit implementation support matrix before startup. Ready
+instances load the exact approved manifest, observations, selections and contracts
+from their own persistent stores, independently of the bundled installation kit.
+The check still retains both profiles of queued/running/retryable failed transitions
+and profiles of unfinished instances so recovery cannot lose its installation resources.
 The CLI runs a one-shot `checkRetention.ts` preflight in the candidate Provider
 image before replacing the live image; startup repeats the guard. The public
 Repository does not track sites outside this Provider's administrative scope.
 
-Supported profiles and exact artifact pins are declared in the Provider runtime
-and bundled bootstrap snapshot. The default CMS and explicit Repository
-profiles share the same runtime. Profile transitions retain exact releases
-while instances or pending transitions reference them. An image update never
-silently changes an existing profile pin.
+Installation profiles and their exact artifact pins are declared in the Provider
+runtime and bundled bootstrap snapshot, loaded lazily for installation operations.
+Implementation support is declared separately in
+`packages/runtimes/ulvia-provider-server/src/runtime/instances/profiles/execution/supported-releases.json`.
+Adding a release there requires implementation and contract tests; neither a
+recipe, an installed artifact nor a compatible version number expands support.
+The default CMS and explicit Repository profiles share the same runtime.
+An image update never silently changes an existing profile or selected release pin.
+
+Compatibility evidence recorded on 2026-11-07 also covers the exact published
+`cyaxis/ulvia-provider:1.0.11` digests of `cms.authoring`, `cms.content` and
+`repository`. Their installed `1.0.0` artifacts differ from the current authored
+baseline. The fixture records executable capability signatures from that image:
+access, behavior, schemas, tool names and HTTP mappings must remain unchanged.
+Only those reviewed digests are retained; existing coordinates are never
+rewritten or republished. An older instance registers only its declared
+capabilities even when the new build implements additional ones. Future artifact
+changes must use the required new release versions.
 
 Expired worker leases can be reclaimed for an exact intent. Normal write permits
 are not erased merely because their heartbeat expired: a delayed writer may

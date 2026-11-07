@@ -1,6 +1,8 @@
+import type { ProviderExecutionSupport } from "./execution/support";
+import { readInstalledExecution } from "./execution/installed";
 import type { MongoClient } from "mongodb";
 import type {
-    OfficialInstanceProfiles,
+    OfficialInstanceProfileSource,
     ProviderInstanceRecord,
     InstanceTransitionRecord,
 } from "@bernouy/ulvia-provider";
@@ -19,18 +21,16 @@ type RequiredRelease = Readonly<{ contractId: string; version: string; digest: s
 
 /** The check runs before listeners and recovery workers can mutate the managed instance registry. */
 export async function assertHostedReleaseRetention(
-    profiles: OfficialInstanceProfiles,
+    support: ProviderExecutionSupport,
     instances: readonly ProviderInstanceRecord[],
     transitions: readonly InstanceTransitionRecord[],
     readRequired: (instance: ProviderInstanceRecord) => Promise<readonly RequiredRelease[]>,
+    profiles: OfficialInstanceProfileSource,
 ): Promise<void> {
-    const supported = new Set(
-        profiles.profiles.flatMap((profile) =>
-            profile.contracts.map((pin) => `${pin.contractId}@${pin.version}:${pin.digest}`),
-        ),
-    );
     const requiredProfiles = [
-        ...instances.map((instance) => ({ ...instance.profile, location: `instance:${instance.id}` })),
+        ...instances
+            .filter(({ status }) => status !== "ready" && status !== "disabled")
+            .map((instance) => ({ ...instance.profile, location: `instance:${instance.id}` })),
         ...transitions
             .filter(({ status }) => status !== "succeeded")
             .flatMap((transition) =>
@@ -40,27 +40,18 @@ export async function assertHostedReleaseRetention(
             ),
     ];
     for (const pin of requiredProfiles) {
-        if (!profiles.resolve(pin.id, pin.version)) {
+        if (!(await profiles.resolve(pin.id, pin.version))) {
             throw new Error(`Provider image would drop profile ${pin.id}@${pin.version} required by ${pin.location}`);
         }
     }
     for (const instance of instances) {
         for (const release of await readRequired(instance)) {
-            if (!supported.has(`${release.contractId}@${release.version}:${release.digest}`)) {
-                throw new Error(
-                    `Provider image would drop ${release.contractId}@${release.version} required by ${release.location}`,
-                );
-            }
+            support.assert(release, release.location);
         }
     }
 }
 
-export function managedReleaseReader(
-    mongo: MongoClient,
-    profiles: OfficialInstanceProfiles,
-    instances: readonly ProviderInstanceRecord[],
-) {
-    const accounts = new Set(instances.map(({ id }) => id));
+export function managedReleaseReader(mongo: MongoClient, support: ProviderExecutionSupport, endpoint: string) {
     return async (instance: ProviderInstanceRecord): Promise<readonly RequiredRelease[]> => {
         const db = mongo.db(instanceDatabaseName(instance.storageKey));
         const releases = new MongoReleaseCatalogue(db);
@@ -76,12 +67,20 @@ export function managedReleaseReader(
             installations.list("default"),
             upgrades.getActive("default"),
         ]);
+        const execution =
+            instance.status === "ready" || instance.status === "disabled"
+                ? await readInstalledExecution(
+                      instance,
+                      { releases, manifests, installations, selections },
+                      support,
+                      endpoint,
+                  )
+                : undefined;
         const owned = new Set(
             installed
                 .filter(
                     ({ installation }) =>
-                        installation.providerId === profiles.defaultProfile.manifest.providerId &&
-                        accounts.has(installation.accountId),
+                        installation.providerId === support.providerId && installation.accountId === instance.id,
                 )
                 .map(({ installation }) => installation.id),
         );
@@ -89,7 +88,7 @@ export function managedReleaseReader(
             active?.kind === "contracts"
                 ? await upgrades.get<{ selections: readonly ContractSelection[] }>("default", active.id, "contracts")
                 : null;
-        return [...(selected?.plan.selections ?? []), ...(pending?.payload.selections ?? [])]
+        const retained = [...(selected?.plan.selections ?? []), ...(pending?.payload.selections ?? [])]
             .filter(({ installationId }) => owned.has(installationId))
             .map((pin) => ({
                 contractId: pin.contractId,
@@ -97,5 +96,12 @@ export function managedReleaseReader(
                 digest: pin.digest,
                 location: `instance:${instance.id}/selection-or-transition`,
             }));
+        return [
+            ...retained,
+            ...(execution?.profile.contracts ?? []).map((pin) => ({
+                ...pin,
+                location: `instance:${instance.id}/implementation`,
+            })),
+        ];
     };
 }

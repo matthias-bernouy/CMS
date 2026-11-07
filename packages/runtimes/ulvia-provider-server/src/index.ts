@@ -1,12 +1,10 @@
+import { LazyOfficialProfiles } from "./runtime/instances/profiles/execution/LazyOfficialProfiles";
+import { ProviderExecutionSupport } from "./runtime/instances/profiles/execution/support";
 import { assertHostedReleaseRetention, managedReleaseReader } from "./runtime/instances/profiles/retention";
 import { MongoClient } from "mongodb";
 import { ValidatingSecretStore } from "@bernouy/secret-store";
 import { EncryptedMongoSecretStore } from "@bernouy/secret-store/mongo";
-import {
-    OfficialInstanceProfiles,
-    OfficialInstanceProvisioner,
-    ProviderInstanceLifecycle,
-} from "@bernouy/ulvia-provider";
+import { OfficialInstanceProvisioner, ProviderInstanceLifecycle } from "@bernouy/ulvia-provider";
 import { EncryptedInstanceCredentials } from "./runtime/authentication/EncryptedInstanceCredentials";
 import { MongoInstanceCredentialStore } from "./runtime/authentication/MongoInstanceCredentialStore";
 import { MongoInstanceAuthenticationReader } from "./runtime/authentication/material/MongoInstanceAuthenticationReader";
@@ -56,21 +54,24 @@ try {
     let operationRecovery: Promise<void> | undefined;
     try {
         const bootstrap = bundledBootstrapSources(env.ULVIA_BOOTSTRAP_DIR);
-        const artifacts = await loadOfficialArtifacts(bootstrap.providers, bootstrap.collections);
-        const profiles = new OfficialInstanceProfiles(artifacts.profiles, artifacts.defaultProfile);
+        const profiles = new LazyOfficialProfiles(() =>
+            loadOfficialArtifacts(bootstrap.providers, bootstrap.collections),
+        );
+        const support = new ProviderExecutionSupport();
         const managedInstances = await instances.list();
         await assertHostedReleaseRetention(
-            profiles,
+            support,
             managedInstances,
             await transitions.listRetained(),
-            managedReleaseReader(mongo, profiles, managedInstances),
+            managedReleaseReader(mongo, support, env.ULVIA_PROVIDER_PUBLIC_URL),
+            profiles,
         );
         const instanceHost = new ProviderInstanceHost(
             env,
             credentials,
             profiles,
             logger,
-            artifacts.contracts,
+            support,
             instances,
             bootstrap,
         );

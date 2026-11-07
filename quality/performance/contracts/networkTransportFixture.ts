@@ -82,11 +82,11 @@ export async function createNetworkJourney() {
 async function providerOptions(admission: AdmittedContractRelease, dispatcher: DefaultProviderCapabilityDispatcher) {
     const runtime: UlviaProviderInstanceRuntime = {
         siteId: NETWORK_SITE_ID,
+        contracts: [await resolveContract(new InMemoryReleaseCatalogue(), admission)],
         report: runtimeReport(admission, `sha256:${"0".repeat(64)}`),
         dispatcher,
     };
     return {
-        contracts: [await resolveContract(new InMemoryReleaseCatalogue(), admission)],
         logger: NOOP_LOGGER,
         authenticateControlToken: async (token: string) =>
             token === NETWORK_TOKEN ? { resource: runtime, release: () => undefined } : null,

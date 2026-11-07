@@ -19,7 +19,13 @@ export class ProviderOperatorApi {
 
         runner.get(
             "/ulvia/operator/profiles",
-            authorized(async () => Response.json(lifecycle.describeProfiles(), noStore())),
+            authorized(async () => {
+                try {
+                    return Response.json(await lifecycle.describeProfiles(), noStore());
+                } catch (error) {
+                    return operatorError(error);
+                }
+            }),
         );
         runner.get(
             "/ulvia/operator/instances",

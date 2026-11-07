@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { ProviderInstanceRegistry } from "./registry";
-import type { OfficialInstanceProfile, OfficialInstanceProfiles } from "./officialProfile";
+import type { OfficialInstanceProfile, OfficialInstanceProfileSource } from "./officialProfile";
 import type { InstanceTransitionRecord, InstanceTransitionStore } from "./transitions";
 import type { ProviderInstanceProfile, ProviderInstanceRecord } from "./types";
 import {
@@ -27,7 +27,7 @@ export class OfficialInstanceProvisioner {
             read(instanceId: string): Promise<ProviderInstanceAdministrator | null>;
             clear(instanceId: string): Promise<void>;
         }>,
-        private readonly profiles: OfficialInstanceProfiles,
+        private readonly profiles: OfficialInstanceProfileSource,
         private readonly now: () => Date = () => new Date(),
         private readonly leaseMs = DEFAULT_LEASE_MS,
     ) {
@@ -61,12 +61,12 @@ export class OfficialInstanceProvisioner {
             throw new Error(`Provider instance is disabled: ${instanceId}`);
         }
         const target = requestedTarget ?? instance.profile;
-        const targetProfile = this.exactProfile(target);
         if (requestedTarget && instance.status === "ready" && sameProfile(instance.profile, target)) {
             return instance;
         }
+        const targetProfile = await this.exactProfile(target);
         if (requestedTarget && !sameProfile(instance.profile, target)) {
-            const sourceProfile = this.exactProfile(instance.profile);
+            const sourceProfile = await this.exactProfile(instance.profile);
             if (!this.profiles.canUpgrade(sourceProfile, targetProfile)) {
                 throw new Error(
                     `Unsupported Provider instance profile transition: ${sourceProfile.id}@${sourceProfile.version} -> ${targetProfile.id}@${targetProfile.version}`,
@@ -136,7 +136,7 @@ export class OfficialInstanceProvisioner {
             execution.throwIfLeaseLost();
             await this.clearCompletedAdministrator(transition);
             execution.throwIfLeaseLost();
-            const profile = this.exactProfile(transition.targetProfile);
+            const profile = await this.exactProfile(transition.targetProfile);
             target = await this.openTarget(instance);
             execution.throwIfLeaseLost();
             for (const step of transition.steps as readonly TransitionStep[]) {
@@ -199,8 +199,8 @@ export class OfficialInstanceProvisioner {
         }
     }
 
-    private exactProfile(profile: ProviderInstanceProfile): OfficialInstanceProfile {
-        const resolved = this.profiles.resolve(profile.id, profile.version);
+    private async exactProfile(profile: ProviderInstanceProfile): Promise<OfficialInstanceProfile> {
+        const resolved = await this.profiles.resolve(profile.id, profile.version);
         if (!resolved) {
             throw new Error(`Unsupported Provider instance profile: ${profile.id}@${profile.version}`);
         }

@@ -1,0 +1,85 @@
+{
+    "image": "cyaxis/ulvia-provider:1.0.11",
+    "imageDigest": "sha256:e62e369e4bdc4b30c2fca406579da52aa681ae25e79c84ef6a12bdd6c09827fe",
+    "releases": [
+        {
+            "contractId": "ulvia/cms.authoring",
+            "version": "1.0.0",
+            "digest": "sha256:a147034f2a4d1d80f6ca47b76600c0f416f8ecb4226e03c207d04dacbb9f6bb0",
+            "capabilities": {
+                "claim-namespace": "0edf35e909796c014dbfcd870d5cb21510957c86931a852bf6fedd33de39bd69",
+                "configure-connection": "f31dd6aee1c6dc8ae0d6f9ea6520528ba964a285a994034c74882c04b064be82",
+                "discard-preparation": "e19d4c0bfe4220322f3a06393564b8290d0ea84a945a5b6a7771644c0536ab69",
+                "disconnect-connection": "e320301267d64d156996c9da54116c908b044895e2e41ba23febe478639973f1",
+                "get-collection-sources": "ffcf43c1326304ed7953d34f5c6b43cbbd87f8dc2b0e8264e7955285e4068b61",
+                "get-connection": "5a6de181494c351737d999491becce300f2e231ed58e5d912614e5ee021d52ea",
+                "list-namespaces": "8b9a17efdaf58dc8194399dbe3a5e991392042608aedb69590eb4fffe665f038",
+                "prepare-collection": "846d51785ed13cac84cd1fab6da93a0d12473adb5f042be048b0b19a2ef4f5ec",
+                "publish-collection": "53e08bf22b53a1f2ccaa8c3903d980536ca5a212e03ac620261ded4d566e5c47"
+            }
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "version": "1.0.0",
+            "digest": "sha256:48dac5e0805df0c3f669cd981f135980ca8d5cf6dc74a3bb5eea7c943212dd52",
+            "capabilities": {
+                "delivery.resolve-resource": "d8c7e0ac2dbfbad718d27dc534f8a66409e36bbf3de7c0d0a91cec2e73f84255",
+                "examples.get": "7e9030a8b83508e0b08d72deb3e368493c58f4ba1dc6da9b2867e2da9b75685f",
+                "examples.list": "bad2319d8d4c1af37f001c2cbeee1b03a72ddf1e20af9dad1249fad15495e8e0",
+                "localization.get": "9991e61d9a7525062ba2c554b3d5ec68ed15b5098dcbb992c39e06e2bc3f79b4",
+                "localization.text.save": "09045577e1b7ddb8bf1ff8643c6295838e53cdfaf1d6ddb4eab02207a74e8cc6",
+                "localization.texts.get": "5be5a269e843fd46e62a2b2a4af062f6953cda4dbc926a520124859d6e9e1c10",
+                "localization.update": "2a41d8e24d3adf183d21c0a73ea127fac35b70ed32e876366ba9db87020212f6",
+                "pages.create": "824be233ac0bc83513d578863dd8b2ef6dd9206a12f7a1555f97fc2a44d50bff",
+                "pages.delete": "8f6aa29deb8e76bfbcbd7781ca0154456db9ebdf2f999f0c121422fc74debc76",
+                "pages.editor-catalogue": "21bbc5f562a28fc615ea46d0b3a0c6b76ec09d33bc40c1c02b5facb785984c7f",
+                "pages.get": "ad974b9fe41a7d44bd14656d059ca8c8bcf23e2e6d9b91a2b01991d6fa9ea09a",
+                "pages.list": "936b23c3e1d489fc0f699ea5d2aaaaf9bec33db9786dd75dd7b106c9849fb1d0",
+                "pages.publish": "87492e4a4871d7b93ecd88c6b00c9c3c3f39ed40c8a1c1f2953a56816b755ee9",
+                "pages.rename": "784a830fc4f98e7476f90a77b2543886e8b0c5f1e49f61d41dad57d9a006b99b",
+                "pages.update": "dd1ac88ce3b70c8ccb308c257924400d3f11bc7e321ba51e21e338c0e0570e11",
+                "pages.update-route": "ca20d6902324eb3c8d1195b42b350f75a7eaff080a94368e8eab5ea65df7c999",
+                "pages.update-seo": "8af36ad12d7ded17deff97acae18769aabcf659133d5c8944011a90bab92a026",
+                "site-blocs.archive": "912493f529a76c98974954ddb7f5d4270d644304beb58659c6edc6c349da33c0",
+                "site-blocs.create": "e80b19f0dbc35c8793ee925940c516b46ef44a048ee5a8ccd43d7bb4e067b7ae",
+                "site-blocs.get": "64e9994b5dd0eb7a552b63807b7fe4c59942e8bfe7c483f8b585d8349c570a24",
+                "site-blocs.list": "ec337d2cee83130c6c35606e33764408e6a9aeb8d2387b0347236bab6fb89dce",
+                "site-blocs.publish": "97298ce5af5eadac1aeb5a109c7861b0df0f507196d2773209b41bbe5057210e",
+                "site-blocs.restore": "3c1bbe6f95a98d75c12ff2ba47c3e1b6ac076bceca02fb0dd25701a6e12e282c",
+                "site.get": "197f0e1da63b387ceae987bcd500ec6d178e65ff8cd5973184671186da511b24",
+                "site.update": "fc07b380b3c59c776962f843a73734fbc94591ce7e592c012251035929fcce0e",
+                "theme.activate": "8f1344a0f736c06fe5d579ed5e351184a90ebb1d2e87bbfc825596ae3dd38296",
+                "theme.get": "9fdb7b39482ac775d04babef0a395170052c2c8a1ce8e6c0868ab457f4231e03",
+                "theme.token.reset": "5429b3545236ad9fa5d0d864469c7ef233e6a1d233fd956fe7f66dcb06937455",
+                "theme.token.save": "ed51e1da861b905fa0cc8697c6cef609d80e0b7dacc3803415ab11a5fd339ede"
+            }
+        },
+        {
+            "contractId": "ulvia/repository",
+            "version": "1.0.0",
+            "digest": "sha256:7ed2f7729e9010ef6cb055ed48580f20c8b19475724f182a80f5cdfb9f35ec0a",
+            "capabilities": {
+                "asset-download": "ff50691556f1a5fc95e7fd7dcae925562e95d5b1bdce6db00047f6ea9aa00f71",
+                "catalogue-list": "d485325b05079957e257509ecb79a1ec587ef1f04a2b6fe00abb1fdd116307a5",
+                "catalogue-search": "c1da505837d0e6e16752d52538966026b1e2d8b9e4a3999b465c579f25ded306",
+                "namespace-claim": "9e9e5983b9a0492bd9cd6b99aeab27862dbb71ae449e983b451c4c86ab9c43fd",
+                "namespace-get": "ad264e7c395fab5a2413d70920420ec77209eff26b316d1889a13abfb84bf741",
+                "namespace-list": "152bcb3880737fdea7a06ce2035416fcc8259ed50585ffaff5b42800758d9bbb",
+                "namespace-suspend": "e9e20ef92b315407e00d5c7ccc17d7783f8b30b44e9434a281d49afce4479a62",
+                "namespace-transfer": "e70a8e6e4507b3f08933dff5c4ae7710387620a597e6eb87b65f0e4f181282ac",
+                "publication-abort": "5e804b1367fbfe1f83e4240a241522b78fdebec51cca35d6bf66d15bb71ce690",
+                "publication-asset": "8a5a3c16edb8a5052fc7c7d36af714671ebf5ab1f682494ad47aa75fdd3f346c",
+                "publication-begin": "5562cfbda668bfbadd3dccdcf00afab25771516fd88dfa8d176012f9cbe8be03",
+                "publication-check-collection": "ff30eaa88b659506f9fa13d22f3d22b84161a25a26beccc48ef50ff921c6eec2",
+                "publication-commit": "7372191bd1a875c09846e49a6f1da9d70f79bb7ed8260a3019f2b499ff5ac480",
+                "publication-state": "53040e7c73ff0b76b817e49f7f04991db4ecfd9b3de243acc2c0bb42f286a85a",
+                "publication-status": "271c44bdcbbcd85a52515682058a0093eec12b74d6406e9e13a3b4c14547c8ba",
+                "publication-yank": "db24326097affe8b986be7c01929f3c641c6e58484257743e33f6c3301364243",
+                "release-download": "a2adb2d81f1ea0de905020e7055e53d2c76a03024b4e59d60648854b1140d27c",
+                "repository-info": "48c9807e8412d0b3039f3299956252b5015cfbc41cbcc46eddf2bd1ce3a9edbe",
+                "source-get": "3daee3fc448687cd0680d7de8a67758d0d7233fc57915c96330f4d7d7a805e84",
+                "source-put": "fffc3832debb5e0ca32606e322c08c218f1733efc654117525c4310c02a835f8"
+            }
+        }
+    ]
+}

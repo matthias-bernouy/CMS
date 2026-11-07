@@ -41,6 +41,19 @@ test("the provider dispatcher rejects missing, unexpected and duplicate handlers
     expect(() => duplicate.register("ulvia/cms.settings", "get", async () => ({}))).toThrow("already registered");
 });
 
+test("an instance registers only its exact capability set while newer build handlers remain unavailable", async () => {
+    const releases = [contract("ulvia/cms.settings", ["get"])];
+    const dispatcher = new DefaultProviderCapabilityDispatcher(releases);
+    dispatcher.register("ulvia/cms.settings", "get", async () => ({ value: "old" }));
+    dispatcher.register("ulvia/cms.settings", "new", async () => ({ value: "new" }));
+    dispatcher.seal(releases);
+    await expect(dispatcher.invoke("ulvia/cms.settings", "get", {}, context)).resolves.toEqual({ value: "old" });
+    await expect(dispatcher.invoke("ulvia/cms.settings", "new", {}, context)).rejects.toMatchObject({
+        code: "CAPABILITY_NOT_FOUND",
+    });
+    expect(() => dispatcher.register("ulvia/cms.settings", "new", async () => ({}))).toThrow("already sealed");
+});
+
 function contract(contractId: string, capabilityIds: readonly string[]): ResolvedContract {
     return {
         release: { contractId },

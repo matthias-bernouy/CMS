@@ -62,6 +62,11 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
             { headers: authorization },
         );
         expect((await disabled.json()).status).toBe("disabled");
+        lifecycle.describeProfiles = async () => {
+            throw new Error("Installation kit unavailable");
+        };
+        expect((await server.request("GET", "/ulvia/operator/profiles", { headers: authorization })).status).toBe(503);
+        expect((await server.request("GET", "/ulvia/operator/instances", { headers: authorization })).status).toBe(200);
     } finally {
         server.stop();
     }
@@ -95,7 +100,7 @@ test("an idempotency key can only replay the exact instance request", async () =
         administrator: { email: "admin@example.test", password: "long-enough-password" },
     };
 
-    expect(lifecycle.describeProfiles()).toEqual({
+    expect(await lifecycle.describeProfiles()).toEqual({
         defaultProfile: { id: "ulvia", version: "1.0.0" },
         profiles: [{ id: "ulvia", version: "1.0.0" }],
     });

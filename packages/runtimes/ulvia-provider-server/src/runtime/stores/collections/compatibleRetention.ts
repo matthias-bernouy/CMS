@@ -1,16 +1,17 @@
+import type { ExecutionProfile } from "../../instances/profiles/execution/support";
 import { resolveContract } from "@bernouy/cms-repository/contracts/catalogue";
 import { compareContractReleases, semVerMajor } from "@bernouy/cms-repository/contracts/compatibility";
 import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 import type { ProviderReleaseRetention } from "@bernouy/cms-repository/providers/installations";
 import type { ProviderManagementGateway } from "@bernouy/cms-repository/providers/management";
-import type { OfficialInstanceProfile, ProviderInstanceTransitionExecution } from "@bernouy/ulvia-provider";
+import type { ProviderInstanceTransitionExecution } from "@bernouy/ulvia-provider";
 
 /** Only the provisioner receives this policy while the instance is fenced from live traffic. */
 export function compatibleTransitionRetention(
     retention: ProviderReleaseRetention,
     gateway: ProviderManagementGateway,
     instanceId: string,
-    target: OfficialInstanceProfile,
+    target: ExecutionProfile,
     execution: ProviderInstanceTransitionExecution,
 ): ProviderReleaseRetention {
     return {

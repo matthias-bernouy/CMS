@@ -1,5 +1,6 @@
 import { MongoClient } from "mongodb";
-import { OfficialInstanceProfiles } from "@bernouy/ulvia-provider";
+import { LazyOfficialProfiles } from "./runtime/instances/profiles/execution/LazyOfficialProfiles";
+import { ProviderExecutionSupport } from "./runtime/instances/profiles/execution/support";
 import { readProviderRuntimeEnv } from "./runtimeEnv";
 import { MongoProviderInstanceRegistry } from "./runtime/instances/MongoProviderInstanceRegistry";
 import { MongoInstanceTransitionStore } from "./runtime/instances/MongoInstanceTransitionStore";
@@ -13,15 +14,16 @@ const mongo = new MongoClient(env.MONGO_URL);
 try {
     await mongo.connect();
     const bootstrap = bundledBootstrapSources(env.ULVIA_BOOTSTRAP_DIR);
-    const artifacts = await loadOfficialArtifacts(bootstrap.providers, bootstrap.collections);
-    const profiles = new OfficialInstanceProfiles(artifacts.profiles, artifacts.defaultProfile);
+    const profiles = new LazyOfficialProfiles(() => loadOfficialArtifacts(bootstrap.providers, bootstrap.collections));
+    const support = new ProviderExecutionSupport();
     const instances = await new MongoProviderInstanceRegistry(mongo.db()).list();
     const transitions = await new MongoInstanceTransitionStore(mongo.db()).listRetained();
     await assertHostedReleaseRetention(
-        profiles,
+        support,
         instances,
         transitions,
-        managedReleaseReader(mongo, profiles, instances),
+        managedReleaseReader(mongo, support, env.ULVIA_PROVIDER_PUBLIC_URL),
+        profiles,
     );
 } finally {
     await mongo.close();

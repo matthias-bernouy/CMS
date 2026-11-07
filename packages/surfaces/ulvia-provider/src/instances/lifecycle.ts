@@ -1,5 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import type { OfficialInstanceProfiles } from "./officialProfile";
+import type { OfficialInstanceProfileSource, OfficialInstanceProfile } from "./officialProfile";
 import type { OfficialInstanceProvisioner, ProviderInstanceAdministrator } from "./provisioning";
 import type { ProviderInstanceRegistry } from "./registry";
 import type { ProviderInstanceProfile, ProviderInstanceRecord } from "./types";
@@ -42,23 +42,24 @@ export class ProviderInstanceLifecycle {
         private readonly instances: ProviderInstanceRegistry,
         private readonly credentials: ProviderInstanceCredentials,
         private readonly provisioner: OfficialInstanceProvisioner,
-        private readonly profiles: OfficialInstanceProfiles,
+        private readonly profiles: OfficialInstanceProfileSource,
         private readonly idempotencySecret: string,
     ) {}
 
-    describeProfiles() {
-        const reference = ({ id, version }: OfficialInstanceProfiles["defaultProfile"]) => ({ id, version });
+    async describeProfiles() {
+        const profiles = await this.profiles.describe();
+        const reference = ({ id, version }: OfficialInstanceProfile) => ({ id, version });
         return {
-            defaultProfile: reference(this.profiles.defaultProfile),
-            profiles: this.profiles.profiles.map(reference),
+            defaultProfile: reference(profiles.defaultProfile),
+            profiles: profiles.profiles.map(reference),
         };
     }
 
     async create(idempotencyKey: string, input: CreateProviderInstance): Promise<CreatedProviderInstance> {
         validateCreateInput(idempotencyKey, input);
         const profile = input.profile
-            ? this.profiles.resolve(input.profile.id, input.profile.version)
-            : this.profiles.defaultProfile;
+            ? await this.profiles.resolve(input.profile.id, input.profile.version)
+            : (await this.profiles.describe()).defaultProfile;
         if (!profile) {
             throw new TypeError("Instance profile is unavailable");
         }

@@ -1,12 +1,13 @@
+import type { ExecutionProfile } from "../instances/profiles/execution/support";
 import type { ProviderManagement } from "@bernouy/cms-repository/providers/management";
-import type { OfficialInstanceProfile, ProviderInstanceRecord, UlviaProviderManagement } from "@bernouy/ulvia-provider";
+import type { ProviderInstanceRecord, UlviaProviderManagement } from "@bernouy/ulvia-provider";
 
 const CONTROL_CONTRACT_ID = "ulvia/cms.installations";
 
 export function createProtectedProviderManagement(
     management: ProviderManagement,
     instance: ProviderInstanceRecord,
-    profile: OfficialInstanceProfile,
+    profile: ExecutionProfile,
 ): UlviaProviderManagement {
     const controlInstallation = async () => {
         const state = await management.list();
