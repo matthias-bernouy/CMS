@@ -6,22 +6,32 @@ import type { InstallationsProviderTransport } from "./InstallationsProviderTran
 
 export const INSTALLATIONS_CONTRACT = {
     contractId: "ulvia/cms.installations",
-    version: "1.0.0",
-    digest: "sha256:3fe9ec3a39901418a8817742d2aebadf731f87c7de4b8c70e5e13c60d1f2d4af",
+    version: "1.1.0",
+    digest: "sha256:e5932d6d023d72d1e42ac8e750dbd5ad5f07c23207bfaa62ebb372fb562e2970",
 } as const;
+
+const SUPPORTED_CONTROL_CONTRACTS = [
+    INSTALLATIONS_CONTRACT,
+    {
+        contractId: "ulvia/cms.installations",
+        version: "1.0.0",
+        digest: "sha256:3fe9ec3a39901418a8817742d2aebadf731f87c7de4b8c70e5e13c60d1f2d4af",
+    },
+] as const;
 
 export type InstallationsControlContract = Readonly<{ contractId: string; version: string; digest: string }>;
 export function installationsControlContract(report: ProviderRuntimeReport): InstallationsControlContract {
-    if (
+    const selected = SUPPORTED_CONTROL_CONTRACTS.find((supported) =>
         report.implementations.some(
             (candidate) =>
-                candidate.contractId === INSTALLATIONS_CONTRACT.contractId &&
-                candidate.version === INSTALLATIONS_CONTRACT.version &&
-                candidate.digest === INSTALLATIONS_CONTRACT.digest &&
+                candidate.contractId === supported.contractId &&
+                candidate.version === supported.version &&
+                candidate.digest === supported.digest &&
                 candidate.status === "ready",
-        )
-    ) {
-        return INSTALLATIONS_CONTRACT;
+        ),
+    );
+    if (selected) {
+        return selected;
     }
     throw new Error("Installations Provider does not expose the required control contract");
 }

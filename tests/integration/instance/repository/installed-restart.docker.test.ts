@@ -10,7 +10,7 @@ const integration = baseline && candidate && edge ? test : test.skip;
 integration(
     "an installed site survives image replacement without a Repository or initialization kit",
     async () => {
-        const stack = await mcpContainers({ provider: baseline!, edge: edge! });
+        const stack = await mcpContainers({ provider: baseline!, edge: edge! }, undefined, undefined, undefined, true);
         try {
             const api = repositoryApi(stack.cmsUrl);
             const session = await api.session(stack.administrator.email, stack.administrator.password);

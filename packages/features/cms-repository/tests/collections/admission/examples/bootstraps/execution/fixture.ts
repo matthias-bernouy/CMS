@@ -83,7 +83,7 @@ export async function initializationFixture(instanceId = "instance-a", pages = 1
         ["replace"],
     );
     await state.initialize("default");
-    const upgrades = observed(new MemorySiteUpgradeStorage(), ["transition"]);
+    const upgrades = observed(new MemorySiteUpgradeStorage(), ["begin", "transition"]);
     const collections = observed(new CollectionStore(new MemoryCollectionStorage()), ["installMany"]);
     const raw = new ValidatingContentRepository(
         withInstalledCollections(new InMemoryContentRepository(), collections, "default"),

@@ -1,4 +1,12 @@
 export const servicesMessages = {
+    "PROVIDER_SHUTTING_DOWN": [
+        "The Provider is restarting. Retry this operation when it is available again.",
+        "Le Provider redémarre. Réessayez cette opération lorsqu’il est de nouveau disponible.",
+    ],
+    "IDEMPOTENCY_KEY_REQUIRED": [
+        "This operation requires an idempotency key so interrupted requests can be retried safely.",
+        "Cette opération nécessite une clé d’idempotence pour pouvoir reprendre une demande interrompue.",
+    ],
     "REJECTED": [
         "The Repository refused this request. Check namespace ownership, the current revision and the submitted data.",
         "Le Repository a refusé cette demande. Vérifiez la propriété du namespace, sa révision actuelle et les données envoyées.",

@@ -4,7 +4,7 @@ import type { ProviderCapabilityRegistry } from "../../../dispatch/registry";
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
 import type { UlviaProviderGateway } from "../../../ports";
 import type { ProviderOperationExecutor } from "../../../operations/ProviderOperationExecutor";
-import { collectionCommand, requiredText } from "../support";
+import { collectionCommand, requiredText } from "../collections/support";
 
 export function registerContractUpgradeCapabilities(
     dispatcher: ProviderCapabilityRegistry,

@@ -34,6 +34,9 @@ test("bounded bootstrap downloads verify the exact metadata and aggregate size b
         version: artifact.release.version,
         digest: artifact.digest,
     };
+    await expect(repository.get(reference, { maxAssetBytes: 4, signal: AbortSignal.abort() })).rejects.toThrow();
+    expect(metadata).toBe(0);
+    expect(assets).toBe(0);
     await expect(repository.get(reference, { maxAssetBytes: 3 })).rejects.toThrow("aggregate byte limit");
     expect(assets).toBe(0);
     await expect(

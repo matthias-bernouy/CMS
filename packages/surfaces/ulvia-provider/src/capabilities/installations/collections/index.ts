@@ -1,10 +1,10 @@
-import type { ProviderOperationExecutor } from "../../operations/ProviderOperationExecutor";
-import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
-import type { CmsCollectionDependencies } from "../../ports";
+import type { ProviderOperationExecutor } from "../../../operations/ProviderOperationExecutor";
+import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
+import type { CmsCollectionDependencies } from "../../../ports";
 import { projectUpgradePlan, projectUpgradeResult, projectSnapshot, projectInstalled } from "./projection";
 import { collectionCommand, integer, parseConfiguration, requiredText, targets } from "./support";
-import type { CollectionSources } from "./sources";
-import { registerCollectionOperationCapabilities } from "./operations";
+import type { CollectionSources } from "../sources";
+import { registerCollectionOperationCapabilities } from "../operations";
 
 export function registerCollectionInstallationCapabilities(
     dispatcher: ProviderCapabilityRegistry,

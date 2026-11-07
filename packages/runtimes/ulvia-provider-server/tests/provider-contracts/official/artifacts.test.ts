@@ -7,18 +7,14 @@ test("builds the official profile from verified repository releases", async () =
     const fixture = await repositoryFixture();
     const loaded = await loadOfficialArtifacts(fixture.providers, fixture.collections);
 
-    expect(loaded.profiles.map(({ id }) => id)).toEqual(["ulvia", "repository", "ulvia", "repository"]);
+    expect(loaded.profiles.map(({ id }) => id)).toEqual(["ulvia", "repository"]);
     expect(loaded.defaultProfile.contracts.some(({ contractId }) => contractId === "ulvia/repository")).toBe(false);
     expect(loaded.profiles[1]!.contracts.some(({ contractId }) => contractId === "ulvia/repository")).toBe(true);
-    expect(loaded.profiles[1]!.collections.map(({ collectionId }) => collectionId)).toEqual([
-        "ulvia/mossa",
-        "ulvia/repository",
-    ]);
+    expect(loaded.profiles[1]!.collections).toEqual([]);
     expect(loaded.defaultProfile.collections).toHaveLength(0);
     expect(loaded.defaultProfile.initialPages).toHaveLength(0);
-    expect(loaded.defaultProfile.version).toBe("1.1.0");
+    expect(loaded.defaultProfile.version).toBe("1.2.0");
     expect(loaded.defaultProfile.manifest.digest).toBe(fixture.manifestDigest);
-    expect(loaded.profiles[0]!.collections[0]!.digest).toBe(fixture.collectionDigest);
     expect(loaded.defaultProfile.contracts).toEqual(
         loaded.contracts
             .filter(({ release }) => release.contractId !== "ulvia/repository")
@@ -36,14 +32,19 @@ test("builds the official profile from verified repository releases", async () =
     expect(smtp.digest).toBe(fixture.contractDigests.get(smtp.release.contractId));
 });
 
-test("a missing application collection refuses installation profiles instead of falling back to the public Repository", async () => {
+test("core profiles never open missing optional starter collections", async () => {
     const fixture = await repositoryFixture();
+    let reads = 0;
     const collections = {
         ...fixture.collections,
-        list: async () =>
-            (await fixture.collections.list()).filter(({ collectionId }) => collectionId !== "ulvia/repository"),
+        list: async () => {
+            reads++;
+            throw new Error("No optional starters");
+        },
     };
-    await expect(loadOfficialArtifacts(fixture.providers, collections)).rejects.toThrow("ulvia/repository@1.0.0");
+    const loaded = await loadOfficialArtifacts(fixture.providers, collections);
+    expect(loaded.defaultProfile.collections).toEqual([]);
+    expect(reads).toBe(0);
 });
 
 test("rejects repository metadata that does not match the official bytes", async () => {
@@ -62,12 +63,16 @@ test("rejects repository metadata that does not match the official bytes", async
 test("the official baseline contains explicit application profiles and one version of every contract", async () => {
     const fixture = await repositoryFixture();
     const loaded = await loadOfficialArtifacts(fixture.providers, fixture.collections);
-    expect(loaded.profiles.map(({ version }) => version)).toEqual(["1.0.0", "1.0.0", "1.1.0", "1.1.0"]);
+    expect(loaded.profiles.map(({ version }) => version)).toEqual(["1.2.0", "1.2.0"]);
     expect(loaded.defaultProfile.upgradeFromVersions).toEqual([]);
-    expect(loaded.defaultProfile.manifest.version).toBe("1.0.0");
+    expect(loaded.defaultProfile.manifest.version).toBe("1.1.0");
     expect(loaded.defaultProfile.collections).toEqual([]);
     expect(fixture.contracts).toHaveLength(12);
-    expect(fixture.contracts.every(({ release }) => release.version === "1.0.0")).toBe(true);
+    expect(
+        fixture.contracts.every(
+            ({ release }) => release.version === (release.contractId === "ulvia/cms.installations" ? "1.1.0" : "1.0.0"),
+        ),
+    ).toBe(true);
     const content = loaded.contracts.find(({ release }) => release.contractId === "ulvia/cms.content")!;
     expect(content.capabilities.some(({ definition }) => definition.deprecation)).toBe(false);
     expect(content.capabilities.some(({ definition }) => definition.id === "delivery.resolve-resource")).toBe(true);

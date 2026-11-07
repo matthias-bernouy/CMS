@@ -4,6 +4,7 @@ import type { InitializationRecord } from "@bernouy/cms-repository/collections/i
 import { initializationFixture } from "./fixture";
 
 for (const phase of [
+    "begin",
     "running-record",
     "applying-intent",
     "installMany",
@@ -31,7 +32,14 @@ for (const phase of [
         };
         await expect(f.service.apply("admin", f.root, review.digest)).rejects.toThrow("Simulated interruption");
         expect(interrupted).toBe(true);
-        await expect(f.guarded.insertPage("/unrelated", "Unrelated")).rejects.toMatchObject({ status: 423 });
+        if (phase !== "begin") {
+            await expect(f.guarded.insertPage("/unrelated", "Unrelated")).rejects.toMatchObject({ status: 423 });
+        }
+        if (phase === "begin" || phase === "completed-record") {
+            expect((await f.service.status()).status).toBe("running");
+            expect((await f.service.status()).planDigest).toBe(review.digest);
+            expect(await f.service.entry()).toEqual({ pending: true });
+        }
         const before = { list: f.model.list, bundles: f.model.bundles, metadata: f.model.metadata };
         const resumed = new SiteInitializationService({
             ...f.options,

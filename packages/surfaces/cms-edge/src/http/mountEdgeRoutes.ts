@@ -11,9 +11,11 @@ import { resolveRequestActor } from "cms-edge/http/auth/resolveRequestActor";
 import { mountCmsMcpRoutes } from "cms-edge/http/mcp/routes";
 import { applySessionEffect } from "cms-edge/http/session/applySessionEffect";
 import { isEdgeReservedPath } from "./reservedPaths";
+import { mountSetupRoutes, setupEntryResponse } from "./setup/routes";
 
 export function mountEdgeRoutes(edge: EdgeCms): void {
     const runner = edge.runner;
+    mountSetupRoutes(edge);
     if (edge.mcpHandler) {
         mountCmsMcpRoutes(runner, edge.mcpHandler);
     }
@@ -75,7 +77,11 @@ export function mountEdgeRoutes(edge: EdgeCms): void {
                 return new Response(null, { status: 404 });
             }
             try {
-                return await edge.resourceHandler(request, await resolveRequestActor(edge, request));
+                return await setupEntryResponse(
+                    edge,
+                    request,
+                    await edge.resourceHandler(request, await resolveRequestActor(edge, request)),
+                );
             } catch (error) {
                 edge.logger.error("edge.resource.failed", {}, error);
                 return new Response("Service unavailable", { status: 503, headers: { "cache-control": "no-store" } });

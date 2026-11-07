@@ -40,6 +40,7 @@ test("official MCP V1 exposes authoring, collection lifecycle and administrator 
             if (release.contractId === "ulvia/cms.installations") {
                 expect(
                     capability.id.includes("collection") ||
+                        capability.id.startsWith("initialization.") ||
                         [
                             "get-operation",
                             "list-operations",
@@ -58,5 +59,5 @@ test("official MCP V1 exposes authoring, collection lifecycle and administrator 
             }
         }
     }
-    expect(tools).toBe(74);
+    expect(tools).toBe(79);
 });

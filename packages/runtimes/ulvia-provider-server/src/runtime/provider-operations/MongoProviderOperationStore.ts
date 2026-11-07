@@ -1,4 +1,5 @@
 import type { Collection, Db } from "mongodb";
+import { latestOperation } from "./latestOperation";
 import type { ProviderOperationPage, ProviderOperationRecord, ProviderOperationStore } from "@bernouy/ulvia-provider";
 
 type OperationDocument = Omit<ProviderOperationRecord, "id"> & { _id: string };
@@ -18,6 +19,10 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
             ),
             this.#records.createIndex({ status: 1, "lease.expiresAt": 1 }, { name: "provider_operation_recovery" }),
             this.#records.createIndex(
+                { siteId: 1, contractId: 1, capabilityId: 1, _id: -1 },
+                { name: "provider_operation_capability_latest" },
+            ),
+            this.#records.createIndex(
                 { siteId: 1, contractId: 1, _id: -1 },
                 { name: "provider_operation_contract_history" },
             ),
@@ -29,6 +34,10 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
                 throw error;
             }
         }
+    }
+
+    latest(siteId: string, contractId: string, capabilityId: string) {
+        return latestOperation(this.#records, siteId, contractId, capabilityId);
     }
 
     async createOrGet(record: ProviderOperationRecord): Promise<{ record: ProviderOperationRecord; created: boolean }> {

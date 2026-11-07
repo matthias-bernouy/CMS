@@ -4,6 +4,12 @@ import type { ProviderOperationRecord } from "../../operations/types";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
 
 const CONTRACT_ID = "ulvia/cms.installations";
+const UPGRADE_OPERATIONS = new Set([
+    "apply-collection-upgrade",
+    "resume-collection-upgrade",
+    "apply-contract-upgrade",
+    "resume-contract-upgrade",
+]);
 
 export function registerCollectionOperationCapabilities(
     dispatcher: ProviderCapabilityRegistry,
@@ -21,7 +27,9 @@ export function registerCollectionOperationCapabilities(
             limit,
         );
         return {
-            items: page.items.map((operation) => projectOperation(operation, false)),
+            items: page.items
+                .filter((operation) => UPGRADE_OPERATIONS.has(operation.capabilityId))
+                .map((operation) => projectOperation(operation, false)),
             ...(page.nextCursor ? { nextCursor: page.nextCursor } : {}),
         };
     });
@@ -33,7 +41,7 @@ export function registerCollectionOperationCapabilities(
             throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
         }
         const operation = await operations.store.get(context.siteId, input.operationId);
-        if (!operation || operation.contractId !== CONTRACT_ID) {
+        if (!operation || operation.contractId !== CONTRACT_ID || !UPGRADE_OPERATIONS.has(operation.capabilityId)) {
             throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
         }
         const detail = projectOperation(operation, true);

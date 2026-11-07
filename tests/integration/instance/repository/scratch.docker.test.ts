@@ -3,6 +3,7 @@ import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
+import { initializationApi } from "./initializationClient";
 import { scratchRepository } from "../containers/scratch";
 import { docker } from "../docker";
 import { repositoryApi } from "./client";
@@ -26,7 +27,11 @@ integration(
             expect((await (await pages()).json()).items).toEqual([]);
             const initial = await (await installed()).json();
             expect(initial.items).toEqual([]);
-            expect((await fetch(`${stack.url}/`)).status).toBe(404);
+            expect((await fetch(`${stack.url}/`, { redirect: "manual" })).status).toBe(303);
+            const setup = initializationApi(stack.url, session.cookie);
+            const empty = await setup.plan(null);
+            await setup.apply(null, empty.digest);
+            expect((await fetch(`${stack.url}/`, { redirect: "manual" })).status).toBe(404);
             const collections = new HttpCollectionRepository("scratch", stack.url, { allowInsecureHttp: true });
             expect(await collections.list()).toEqual([]);
             for (const path of [

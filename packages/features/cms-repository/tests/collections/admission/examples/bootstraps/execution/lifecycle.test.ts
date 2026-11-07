@@ -59,3 +59,21 @@ test("missing initialization state is never inferred from empty Pages or repaire
     await expect(f.service.plan("admin", null)).rejects.toThrow("not configured");
     expect(f.records.size).toBe(0);
 });
+
+test("cancelled preparation and a lost operation lease refuse before any site mutation", async () => {
+    const f = await initializationFixture();
+    await expect(f.service.plan("admin", f.root, undefined, AbortSignal.abort())).rejects.toThrow();
+    expect(f.model.list).toBe(0);
+    const review = await f.service.plan("admin", f.root);
+    await expect(
+        f.service.apply("admin", f.root, review.digest, undefined, {
+            signal: new AbortController().signal,
+            assertHeld: () => {
+                throw new Error("Operation lease lost");
+            },
+        }),
+    ).rejects.toThrow("Operation lease lost");
+    expect((await f.raw.scanPages(undefined, 1)).pages).toEqual([]);
+    expect((await f.options.collections.listInstalled("default")).items).toEqual([]);
+    expect(await f.options.upgrades.getActive("default")).toBeNull();
+});

@@ -13,7 +13,7 @@ resolved through the official `ulvia/cms.access` contract; outbound delivery
 uses the `ulvia/cms.emailer.smtp` specialization of `ulvia/cms.emailer`, and no authentication store or session secret is
 shared with the Edge.
 
-New `ulvia@1.1.0` (default) and `repository@1.1.0` instances start with system
+New `ulvia@1.2.0` (default) and `repository@1.2.0` instances start with system
 contracts and an administrator, but no collections or Pages. A Repository API
 can therefore start before any public catalogue or browser interface exists.
 Authenticate through `ulvia/cms.access` and publish resources through CLI/API;
@@ -30,10 +30,19 @@ discovery and explicit imports still use the configured Repository connection.
 
 The full `bun run generate:official-bootstrap` remains available for authoring
 and example tests. Exact `1.0.0` starter profiles retain their original meaning
-and require those optional resources for new or unfinished provisioning. A
+and require an explicit matching historical snapshot for new or unfinished provisioning. A
 core-only image refuses such provisioning when resources are absent. Existing
 ready instances reopen from persisted execution and do not read their old kit.
+The full generator emits current collections, not historical starter resources.
 Profile versions are independent of contract and collection release versions.
+
+New profiles persist a pending site-initialization marker. Edge serves native
+setup at `/.cms/setup`; its ordinary Gateway calls use `ulvia/cms.installations@1.1.0`
+for review and explicit asynchronous application. Starting empty works offline.
+Optional bootstrap application imports exact verified releases, creates ordinary
+Content Pages and checkpoints recovery under the site maintenance fence. Ready
+instances with no marker are never silently initialized or backfilled. See
+[initialization architecture](../../../docs/architecture/provider-instance-initialization.md).
 
 ```bash
 bun --no-macros run packages/runtimes/ulvia-provider-server/src/index.ts

@@ -1,7 +1,34 @@
-import type { ProviderOperationPage, ProviderOperationRecord, ProviderOperationStore } from "./types";
+import type {
+    ProviderOperationPage,
+    ProviderOperationRecord,
+    ProviderOperationStore,
+    ProviderOperationSummary,
+} from "./types";
 
 export class MemoryProviderOperationStore implements ProviderOperationStore {
     readonly #records = new Map<string, ProviderOperationRecord>();
+
+    async latest(siteId: string, contractId: string, capabilityId: string): Promise<ProviderOperationSummary | null> {
+        const record = [...this.#records.values()]
+            .filter(
+                (item) =>
+                    item.siteId === siteId && item.contractId === contractId && item.capabilityId === capabilityId,
+            )
+            .sort((a, b) => (a.id > b.id ? -1 : 1))[0];
+        if (!record) {
+            return null;
+        }
+        const {
+            input: _input,
+            context: _context,
+            idempotencyKey: _key,
+            inputDigest: _digest,
+            result: _result,
+            lease: _lease,
+            ...summary
+        } = record;
+        return structuredClone(summary);
+    }
 
     async createOrGet(
         candidate: ProviderOperationRecord,

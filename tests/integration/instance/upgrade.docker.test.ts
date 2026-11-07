@@ -35,7 +35,13 @@ integration(
         let stack: Awaited<ReturnType<typeof mcpContainers>> | undefined;
         let connection: Awaited<ReturnType<typeof connectBrowser>> | undefined;
         try {
-            stack = await mcpContainers({ edge: edge!, provider: baselineProvider! }, publish);
+            stack = await mcpContainers(
+                { edge: edge!, provider: baselineProvider! },
+                publish,
+                undefined,
+                undefined,
+                true,
+            );
             connection = await connectBrowser(stack.cmsUrl, stack.administrator);
             expect(connection.tools.length).toBeGreaterThan(0);
             const initialToolCount = connection.tools.length;

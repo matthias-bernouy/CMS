@@ -391,8 +391,12 @@ models and validation for CMS-owned installations and site selections.
   capability witnesses for each recipe's local Pages. External includes pin a
   publisher, collection, version, digest and recipe ID; their resolution and
   combined Page conflicts belong to an explicit initialization plan. Changes to
-  recipe data require a minor release. Keep parsers and authoring support distinct
-  from the not-yet-mounted execution workflow.
+  recipe data require a minor release. `./collections/installations` also owns the
+  explicit initialization planner and recoverable executor; transports remain
+  outside this feature. Require administrator-bound review, exact pins, current
+  execution evidence, bounded downloads, disposable Content preview and durable
+  maintenance fencing before ordinary collection/Page writes. Never infer missing
+  initialization state or run recipes during collection install/upgrade.
 
 - Contract documentation has a generated bounded manifest and separate verified
   `docs/<path>` assets. Mongo stores document text separately from release

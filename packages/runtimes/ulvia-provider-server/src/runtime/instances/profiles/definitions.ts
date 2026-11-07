@@ -37,22 +37,31 @@ const REPOSITORY_EXAMPLE_PROFILE: ProfileDefinition = Object.freeze({
 });
 
 /** Core-only initialization; no collection, Page or public catalogue publication. */
-export const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
+const EMPTY_PROFILE: ProfileDefinition = Object.freeze({
     ...EXAMPLE_PROFILE,
     version: "1.1.0",
     collections: Object.freeze([]),
     initialPages: Object.freeze([]),
 });
 
-const REPOSITORY_PROFILE: ProfileDefinition = Object.freeze({
-    ...CURRENT_PROFILE,
+const EMPTY_REPOSITORY_PROFILE: ProfileDefinition = Object.freeze({
+    ...EMPTY_PROFILE,
     id: "repository",
     repository: true,
 });
 
+/** System initialization capabilities are selected explicitly by the new core profile. */
+export const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
+    ...EMPTY_PROFILE,
+    version: "1.2.0",
+    manifest: Object.freeze({ providerId: "ulvia/primary-provider", version: "1.1.0" }),
+});
+const REPOSITORY_PROFILE: ProfileDefinition = Object.freeze({ ...CURRENT_PROFILE, id: "repository", repository: true });
+export const CURRENT_PROFILES = Object.freeze([CURRENT_PROFILE, REPOSITORY_PROFILE]);
 export const SUPPORTED_PROFILES = Object.freeze([
     EXAMPLE_PROFILE,
     REPOSITORY_EXAMPLE_PROFILE,
-    CURRENT_PROFILE,
-    REPOSITORY_PROFILE,
+    EMPTY_PROFILE,
+    EMPTY_REPOSITORY_PROFILE,
+    ...CURRENT_PROFILES,
 ]);

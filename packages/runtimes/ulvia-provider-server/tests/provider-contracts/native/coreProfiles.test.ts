@@ -40,11 +40,11 @@ test("core profiles discover, resolve and initialize without reading optional co
         },
         collections: collections.source,
     });
-    expect(profiles.describe().defaultProfile).toEqual({ id: "ulvia", version: "1.1.0" });
+    expect(profiles.describe().defaultProfile).toEqual({ id: "ulvia", version: "1.2.0" });
     expect(await profiles.resolve("unknown", "1.0.0")).toBeNull();
     expect(artifactReads).toBe(0);
     for (const id of ["ulvia", "repository"]) {
-        const [profile, same] = await Promise.all([profiles.resolve(id, "1.1.0"), profiles.resolve(id, "1.1.0")]);
+        const [profile, same] = await Promise.all([profiles.resolve(id, "1.2.0"), profiles.resolve(id, "1.2.0")]);
         expect(profile).toBe(same);
         expect(profile!.collections).toEqual([]);
         expect(profile!.initialPages).toEqual([]);
@@ -71,12 +71,12 @@ test("core profiles discover, resolve and initialize without reading optional co
     }
     expect(artifactReads).toBe(4);
     expect(collections.reads()).toBe(0);
-    await expect(profiles.resolve("ulvia", "1.0.0")).rejects.toThrow("Optional collection resources");
-    expect(collections.reads()).toBe(1);
+    await expect(profiles.resolve("ulvia", "1.0.0")).rejects.toThrow("unavailable");
+    expect(collections.reads()).toBe(0);
 }, 30_000);
 
 test("failed profile loads can retry while unknown references never read artifacts", async () => {
-    const reference = { id: "ulvia", version: "1.1.0" };
+    const reference = { id: "ulvia", version: "1.2.0" };
     let loads = 0;
     const profiles = new LazyOfficialProfiles({ defaultProfile: reference, profiles: [reference] }, async () => {
         loads++;

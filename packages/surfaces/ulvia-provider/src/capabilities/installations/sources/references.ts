@@ -1,5 +1,5 @@
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
-import { requiredText } from "../support";
+import { requiredText } from "../collections/support";
 
 export type ReleaseReference = {
     repositoryId: string;

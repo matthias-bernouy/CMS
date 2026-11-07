@@ -13,7 +13,8 @@
     "include": [
         "src/**/*.ts",
         "src/**/*.json",
-        "types/**/*.ts"
+        "types/**/*.ts",
+        "src/**/*.js"
     ],
     "references": [
         {

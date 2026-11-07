@@ -34,7 +34,7 @@ export interface CollectionRepositorySource {
     getMetadata(reference: CollectionRepositoryReference): Promise<unknown>;
     get(
         reference: CollectionRepositoryReference,
-        options?: { readonly maxAssetBytes: number },
+        options?: { readonly maxAssetBytes: number; readonly signal?: AbortSignal },
     ): Promise<CollectionRepositoryBundle>;
 }
 import type { CollectionBundleAsset } from "../interfaces/CollectionAssets";

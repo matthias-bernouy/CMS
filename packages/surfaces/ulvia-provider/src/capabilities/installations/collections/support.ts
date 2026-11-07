@@ -1,5 +1,5 @@
-import { officialFailure } from "../../dispatch/errors/failure";
-import { ProviderCapabilityDispatchError } from "../../dispatch/registry";
+import { officialFailure } from "../../../dispatch/errors/failure";
+import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
 import type { CollectionUpgradeTarget } from "@bernouy/cms-repository/collections/installations";
 import {
     MAX_CAPABILITY_JSON_BYTES,

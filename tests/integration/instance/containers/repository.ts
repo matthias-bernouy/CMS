@@ -10,6 +10,7 @@ export async function repositoryApplication(
     edgeImage: string,
     providerUrl: string,
     operatorToken: string,
+    legacyStarter = false,
 ) {
     const reservation = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(null) });
     const port = reservation.port!;
@@ -27,7 +28,7 @@ export async function repositoryApplication(
         url,
         administrator,
         "http://repository:3000",
-        { id: "repository", version: "1.0.0" },
+        { id: "repository", version: legacyStarter ? "1.0.0" : "1.2.0" },
     );
     await cluster.run(name, "repository", edgeImage, [
         "--publish",

@@ -1,6 +1,6 @@
 import { resourcePublisher } from "@bernouy/cms-repository/contracts/protocol";
 import { loadDocumentedContract } from "@bernouy/cms-repository/providers/sources";
-import { CURRENT_PROFILE, SUPPORTED_PROFILES, type ProfileDefinition } from "./definitions";
+import { CURRENT_PROFILE, CURRENT_PROFILES, type ProfileDefinition } from "./definitions";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
 import { type AdmittedContractRelease, type ResolvedContract } from "@bernouy/cms-repository/contracts";
@@ -30,7 +30,7 @@ export async function loadOfficialArtifacts(
 ): Promise<LoadedOfficialArtifacts> {
     const manifestEntries = await providers.list("provider-manifest");
     const loaded = await Promise.all(
-        SUPPORTED_PROFILES.map((profile) => loadOfficialProfile(providers, collections, manifestEntries, profile)),
+        CURRENT_PROFILES.map((profile) => loadOfficialProfile(providers, collections, manifestEntries, profile)),
     );
     const defaultProfile = loaded.find(
         ({ profile }) => profile.id === CURRENT_PROFILE.id && profile.version === CURRENT_PROFILE.version,

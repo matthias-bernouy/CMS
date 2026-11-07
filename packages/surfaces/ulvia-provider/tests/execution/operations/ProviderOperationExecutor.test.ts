@@ -263,6 +263,9 @@ test("the installations contract exposes a completed operation result only from 
     const unrelated = await executor.enqueue("ulvia/cms.content", "rebuild", {}, context);
     await expectTerminal(store, queued.operationId, "succeeded");
     await expectTerminal(store, unrelated.operationId, "succeeded");
+    executor.register("ulvia/cms.installations", "initialization.apply", async () => ({ status: "completed" }));
+    const initialization = await executor.enqueue("ulvia/cms.installations", "initialization.apply", {}, context);
+    await expectTerminal(store, initialization.operationId, "succeeded");
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     registerCollectionOperationCapabilities(dispatcher, executor);
 
@@ -295,6 +298,14 @@ test("the installations contract exposes a completed operation result only from 
     }
 
     expect((listed.items as unknown[])[0]).not.toHaveProperty("result");
+    await expect(
+        dispatcher.invoke(
+            "ulvia/cms.installations",
+            "get-operation",
+            { operationId: initialization.operationId },
+            context,
+        ),
+    ).rejects.toMatchObject({ code: "NOT_FOUND", status: 404 });
     await expect(
         dispatcher.invoke("ulvia/cms.installations", "get-operation", { operationId: unrelated.operationId }, context),
     ).rejects.toMatchObject({ code: "NOT_FOUND", status: 404 });

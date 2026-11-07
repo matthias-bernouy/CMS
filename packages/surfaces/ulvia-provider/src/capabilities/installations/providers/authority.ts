@@ -1,6 +1,6 @@
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
 import type { UlviaProviderGateway } from "../../../ports";
-import { requiredText } from "../support";
+import { requiredText } from "../collections/support";
 
 export function registerProviderAuthorityCapabilities(
     dispatcher: ProviderCapabilityRegistry,

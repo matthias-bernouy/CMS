@@ -1,5 +1,6 @@
 import { containerCluster } from "./containers/cluster";
 import { repositoryApplication } from "./containers/repository";
+import { installStarter } from "./repository/initializationClient";
 import { publishBundledReleases } from "./repository/bootstrap";
 import { provisionInstance } from "./provision";
 import { randomBytes } from "node:crypto";
@@ -13,6 +14,7 @@ export async function mcpContainers(
     prepareRepository?: (url: string, token: string) => Promise<void>,
     fetchPreload?: string,
     initialResponseCache?: boolean,
+    legacyStarters = false,
 ) {
     const cluster = await containerCluster(images.edge, fetchPreload);
     const { id, names, run, close } = cluster;
@@ -67,12 +69,22 @@ export async function mcpContainers(
         ]);
         const providerUrl = await cluster.endpoint(providerName, 5103);
         await waitForHttp(`${providerUrl}/ulvia/operator/instances`, { Authorization: `Bearer ${operatorToken}` });
-        const repository = await repositoryApplication(cluster, images.edge, providerUrl, operatorToken);
+        const repository = await repositoryApplication(
+            cluster,
+            images.edge,
+            providerUrl,
+            operatorToken,
+            legacyStarters,
+        );
         const repositoryUrl = repository.url;
+        if (!legacyStarters || !prepareRepository) {
+            await publishBundledReleases(repositoryUrl, "http://ulvia-provider:5103", repository.pat.token);
+        }
+        if (!legacyStarters) {
+            await installStarter(repositoryUrl, repository.administrator, "ulvia/repository");
+        }
         if (prepareRepository) {
             await prepareRepository(repositoryUrl, repository.pat.token);
-        } else {
-            await publishBundledReleases(repositoryUrl, "http://ulvia-provider:5103", repository.pat.token);
         }
         const instance = await provisionInstance(
             providerUrl,
@@ -81,6 +93,7 @@ export async function mcpContainers(
             cmsUrl,
             administrator,
             "http://edge:3000",
+            { id: "ulvia", version: legacyStarters ? "1.0.0" : "1.2.0" },
         );
         const named = await provisionInstance(
             providerUrl,
@@ -89,6 +102,7 @@ export async function mcpContainers(
             `http://preview.localhost:${edgePort}`,
             administrator,
             "http://named-edge:3000",
+            { id: "ulvia", version: legacyStarters ? "1.0.0" : "1.2.0" },
         );
         const startEdge = async (cache = initialResponseCache) =>
             run(edgeName, "edge", images.edge, [
@@ -104,6 +118,9 @@ export async function mcpContainers(
             ]);
         await startEdge();
         await waitForHttp(`${cmsUrl}/readyz`);
+        if (!legacyStarters) {
+            await installStarter(cmsUrl, administrator, "ulvia/mossa");
+        }
         return {
             id,
             gatewayUrl: "http://edge:3000",

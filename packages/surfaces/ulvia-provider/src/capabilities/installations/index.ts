@@ -8,6 +8,7 @@ import type { CmsCollectionDependencies, UlviaProviderGateway, UlviaProviderMana
 import { registerCollectionInstallationCapabilities } from "./collections";
 import { registerProviderInstallationCapabilities } from "./providers";
 import type { CollectionSources } from "./sources";
+import { registerInitializationCapabilities } from "./initialization";
 
 export function registerInstallationCapabilities(
     dispatcher: ProviderCapabilityRegistry,
@@ -17,6 +18,7 @@ export function registerInstallationCapabilities(
     management?: UlviaProviderManagement,
     sources?: CollectionSources,
 ): void {
+    registerInitializationCapabilities(dispatcher, dependencies.initialization, operations, gateway);
     registerCapabilityDescription(dispatcher, gateway);
     registerDocumentationCapabilities(dispatcher, dependencies.documentation);
     registerRepositoryDiscoveryCapabilities(dispatcher, dependencies.repositoryDiscovery);
