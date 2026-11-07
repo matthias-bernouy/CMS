@@ -1,0 +1,27 @@
+# @bernouy/ulvia-sdk
+
+Typed authoring and Provider assembly SDK. Depend only on Platform and Foundation.
+
+- Keep this SDK standalone until a separate migration is requested. Production
+  features, authored official releases and bootstraps retain their existing paths.
+- Root definitions perform no filesystem, network, environment or runtime initialization.
+  `./build` admits artifacts; it does not publish or approve them.
+- One static typed handler-factory table drives manifest claims and runtime registration.
+  Never invoke dependency factories at build time. Capture source metadata before awaits.
+- Preserve exact parent pins, handler coverage, version selection and error ownership.
+  Reject ambiguous inherited routes and conflicting coordinates.
+- `./provider` reuses the Gateway receiver. Hosts own authentication, explicit
+  authorization, trusted site/instance scope, credentials, quotas and listeners.
+- Keyed commands require a host-owned durable executeKeyed adapter. Never silently
+  activate them with an in-memory deduplication fallback.
+- Keep the v1 UTF-16 and format rules unchanged. Native Zod string schemas differ;
+  use the documented adapters and reject unrepresentable checks or transformations.
+- Account for registered adapter children in schema node/depth budgets. Snapshot
+  mock assets and enforce build count/byte limits before hashing.
+- Stream binary bodies without whole-body buffering. Propagate cancellation,
+  enforce byte limits and close the handler's borrowed input lease on completion.
+- Documentation/fixtures are explicit in-memory sources; no package scanning.
+- Keep business errors independent from HTTP statuses. Only map the current
+  operation's declared error through the actual admitted binding.
+- Maintain the executable fictitious Provider example and the real signed HTTP
+  Gateway journey, including cross-instance and refusal-without-mutation checks.

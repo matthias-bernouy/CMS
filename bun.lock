@@ -292,6 +292,17 @@
         "@bernouy/ulvia-contracts": "workspace:*",
       },
     },
+    "packages/platform/sdk": {
+      "name": "@bernouy/ulvia-sdk",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/binary-media": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-providers": "workspace:*",
+        "zod": "4.6.7",
+      },
+    },
     "packages/runtimes/cms-edge-server": {
       "name": "@bernouy/cms-edge-server",
       "version": "1.0.0",
@@ -455,6 +466,8 @@
     "@bernouy/ulvia-provider-server": ["@bernouy/ulvia-provider-server@workspace:packages/runtimes/ulvia-provider-server"],
 
     "@bernouy/ulvia-providers": ["@bernouy/ulvia-providers@workspace:packages/platform/providers"],
+
+    "@bernouy/ulvia-sdk": ["@bernouy/ulvia-sdk@workspace:packages/platform/sdk"],
 
     "@biomejs/biome": ["@biomejs/biome@2.6.4", "", { "optionalDependencies": { "@biomejs/cli-android-arm64": "2.6.4", "@biomejs/cli-android-x64": "2.6.4", "@biomejs/cli-darwin-arm64": "2.6.4", "@biomejs/cli-darwin-x64": "2.6.4", "@biomejs/cli-linux-arm64": "2.6.4", "@biomejs/cli-linux-arm64-musl": "2.6.4", "@biomejs/cli-linux-x64": "2.6.4", "@biomejs/cli-linux-x64-musl": "2.6.4", "@biomejs/cli-win32-arm64": "2.6.4", "@biomejs/cli-win32-x64": "2.6.4" }, "bin": { "biome": "bin/biome" } }, "sha512-8sKKwaNW4ot22awZ3lBjwWLHnUFXgXnrBPYS2gNlBAXRbDC++7kqjK2H7dR/FgCDtPvO1xfKpgEhJkGxAKYkxA=="],
 

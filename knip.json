@@ -48,6 +48,11 @@
                 "src/index.ts",
                 "src/checkRetention.ts"
             ]
+        },
+        "packages/platform/sdk": {
+            "entry": [
+                "tests/types/definitions.fixture.ts"
+            ]
         }
     },
     "ignoreFiles": [

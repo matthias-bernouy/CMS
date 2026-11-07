@@ -54,7 +54,8 @@ CmsCore/
 |   |-- platform/
 |   |   |-- contracts/         @bernouy/ulvia-contracts
 |   |   |-- providers/         @bernouy/ulvia-providers
-|   |   `-- gateway/           @bernouy/cms-gateway
+|   |   |-- gateway/           @bernouy/cms-gateway
+|   |   `-- sdk/               @bernouy/ulvia-sdk
 |   |-- features/
 |   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, themes, SEO)
 |   |   |-- cms-auth/          @bernouy/cms-auth
@@ -88,8 +89,8 @@ CmsCore/
 - One direction only: `runtimes → surfaces → features → platform → foundation`. Never
   upward, never surface→surface (compose through features).
 - Lateral feature→feature edges are allowed when one feature consumes
-  another's published contract (e.g. cms-gateway → cms-repository for selected
-  capabilities). Features may consume generic Foundation contracts such as
+  another's published contract (e.g. cms-smtp-emailer → cms-emailer for outbound
+  delivery). Features may consume generic Foundation contracts such as
   `@bernouy/secret-store` for `SecretReader`.
 - Network adapters are only imported by runtimes (`./mongo`, `./s3`
   subpaths); surfaces consume contracts and receive instances injected.

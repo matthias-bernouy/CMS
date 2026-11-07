@@ -72,6 +72,7 @@ export async function adaptProviderResponse(
         }
         if (
             capability.output.type === "binary" &&
+            capability.behavior.execution === "sync" &&
             capability.binding.response.successStatuses.includes(response.status)
         ) {
             const contentLength = responseLength(response, capability.output.maxBytes);

@@ -1,0 +1,20 @@
+{
+    "name": "@bernouy/ulvia-sdk",
+    "version": "1.0.0",
+    "description": "Typed authoring SDK for Ulvia operations and contract releases.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./build": "./src/exports/build.ts",
+        "./provider": "./src/exports/provider.ts"
+    },
+    "dependencies": {
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/binary-media": "workspace:*",
+        "zod": "4.6.7",
+        "@bernouy/ulvia-providers": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*"
+    }
+}

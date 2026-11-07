@@ -120,7 +120,7 @@ export function createProviderContractRelay(
             if (responseEffect && !capability.responseEffects?.includes(responseEffect.type)) {
                 throw new TypeError("Capability returned an undeclared response effect.");
             }
-            if (capability.output.type === "binary") {
+            if (capability.output.type === "binary" && capability.behavior.execution === "sync") {
                 if (responseEffect) {
                     throw new TypeError("Binary capabilities cannot return response effects.");
                 }

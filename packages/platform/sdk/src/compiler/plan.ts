@@ -1,0 +1,32 @@
+import type { CapabilityDefinition } from "@bernouy/ulvia-contracts";
+import type { CompiledProvider } from "ulvia-sdk/interfaces/providers";
+import type { OperationSource } from "ulvia-sdk/interfaces/operations";
+import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
+
+export interface RuntimeCapabilityPlan<Dependencies> {
+    readonly contractId: string;
+    readonly version: string;
+    readonly requests: readonly Readonly<{ contractId: string; version: string }>[];
+    readonly capability: CapabilityDefinition;
+    readonly operation: OperationSource;
+    readonly createHandler: (dependencies: Dependencies) => unknown;
+}
+
+const plans = new WeakMap<object, unknown>();
+
+export function storeProviderPlan<Dependencies>(
+    build: CompiledProvider<Dependencies>,
+    plan: readonly RuntimeCapabilityPlan<Dependencies>[],
+): void {
+    plans.set(build, Object.freeze([...plan]));
+}
+
+export function providerPlan<Dependencies>(
+    build: CompiledProvider<Dependencies>,
+): readonly RuntimeCapabilityPlan<Dependencies>[] {
+    const plan = plans.get(build);
+    if (!plan) {
+        throw new SdkDefinitionError("Provider runtime requires a build returned by compileProvider");
+    }
+    return plan as readonly RuntimeCapabilityPlan<Dependencies>[];
+}

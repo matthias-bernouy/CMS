@@ -1,0 +1,60 @@
+{
+    "extends": "../../../../../tsconfig.base.json",
+    "compilerOptions": {
+        "composite": false,
+        "declaration": false,
+        "emitDeclarationOnly": false,
+        "noEmit": true,
+        "paths": {
+            "ulvia-sdk/*": [
+                "../../src/*"
+            ],
+            "ulvia-contracts/*": [
+                "../../../contracts/src/*"
+            ],
+            "binary-media/*": [
+                "../../../../foundation/binary-media/src/*"
+            ],
+            "resource-identity/*": [
+                "../../../../foundation/resource-identity/src/*"
+            ],
+            "ulvia-providers/*": [
+                "../../../providers/src/*"
+            ],
+            "cms-gateway/*": [
+                "../../../gateway/src/*"
+            ],
+            "text-embeddings/*": [
+                "../../../../foundation/text-embeddings/src/*"
+            ],
+            "http-runner/*": [
+                "../../../../foundation/http-runner/src/*"
+            ],
+            "logging/*": [
+                "../../../../foundation/logging/src/*"
+            ],
+            "rate-limiter/*": [
+                "../../../../foundation/rate-limiter/src/*"
+            ],
+            "image-processing/*": [
+                "../../../../foundation/image-processing/src/*"
+            ],
+            "secret-store/*": [
+                "../../../../foundation/secret-store/src/*"
+            ],
+            "blob-store/*": [
+                "../../../../foundation/blob-store/src/*"
+            ],
+            "text-search/*": [
+                "../../../../foundation/text-search/src/*"
+            ],
+            "envelope-crypto/*": [
+                "../../../../foundation/envelope-crypto/src/*"
+            ]
+        }
+    },
+    "include": [
+        "./definitions.fixture.ts",
+        "../../examples/provider.ts"
+    ]
+}

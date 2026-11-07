@@ -1,5 +1,6 @@
 import type { HttpBindingDefinition } from "@bernouy/ulvia-contracts/bindings";
 import { capabilityBindings, pathTemplatesOverlap } from "@bernouy/ulvia-contracts/bindings";
+import { effectiveLineageCapabilities } from "@bernouy/ulvia-contracts";
 import type { CapabilityDefinition, ResolvedContract } from "@bernouy/ulvia-contracts";
 
 export type HttpBoundCapability = CapabilityDefinition & {
@@ -26,7 +27,8 @@ export function compileProviderRoutes(releases: readonly ResolvedContract[]): re
     );
     const aliases = new Map<string, ProviderRoute>();
     for (const contract of releases) {
-        for (const { release } of contract.lineage.slice(1)) {
+        for (let ancestorIndex = 1; ancestorIndex < contract.lineage.length; ancestorIndex++) {
+            const release = contract.lineage[ancestorIndex]!.release;
             if (
                 releases.some(
                     (view) =>
@@ -35,7 +37,10 @@ export function compileProviderRoutes(releases: readonly ResolvedContract[]): re
             ) {
                 continue;
             }
-            for (const capability of release.capabilities) {
+            const effective = effectiveLineageCapabilities(
+                contract.lineage.slice(ancestorIndex).map((entry) => entry.release),
+            );
+            for (const capability of effective) {
                 for (const binding of capabilityBindings(capability)) {
                     if (binding.transport !== "http") {
                         continue;

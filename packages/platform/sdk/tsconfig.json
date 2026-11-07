@@ -1,0 +1,29 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "ulvia-sdk/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../contracts"
+        },
+        {
+            "path": "../../foundation/binary-media"
+        },
+        {
+            "path": "../providers"
+        },
+        {
+            "path": "../gateway"
+        }
+    ]
+}

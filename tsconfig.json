@@ -84,6 +84,9 @@
         },
         {
             "path": "packages/platform/providers"
+        },
+        {
+            "path": "packages/platform/sdk"
         }
     ]
 }

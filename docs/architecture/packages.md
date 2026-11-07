@@ -42,6 +42,7 @@ already been published to a registry.
 | `platform/contracts` | `@bernouy/ulvia-contracts` | Contract schemas, parsing, validation, admission, bindings, compatibility and release read ports. |
 | `platform/providers` | `@bernouy/ulvia-providers` | Manifest admission, Provider execution models, selection validation, readiness and read ports. |
 | `platform/gateway` | `@bernouy/cms-gateway` | Authorized generic capability invocation, HTTP/MCP transports, Provider SDK, authority, identities and audit. |
+| `platform/sdk` | `@bernouy/ulvia-sdk` | Typed operations/contracts, static Provider assembly, generated manifests and an explicit Gateway HTTP receiver adapter; standalone. |
 
 Platform depends only on Platform and Foundation. Catalogue publication, installation
 approval and selection replacement remain feature-owned. Edge and the official
