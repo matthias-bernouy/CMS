@@ -1,4 +1,20 @@
 export { CollectionStore } from "repository/collections/installations/core/CollectionStore";
+export { SiteInitializationService } from "repository/collections/installations/initialization/execution/service";
+export { applyInitializationPages } from "repository/collections/installations/initialization/execution/pages";
+export type {
+    InitializationServiceOptions,
+    InitializationStateStore,
+    InitializationRecord,
+    InitializationExecution,
+    InitializationReview,
+} from "repository/collections/installations/initialization/execution/interfaces";
+export { planCollectionInitialization } from "repository/collections/installations/initialization/planning/plan";
+export type {
+    CollectionInitializationPlan,
+    InitializationRoot,
+    InitializationOptions,
+    InitializationRelease,
+} from "repository/collections/installations/initialization/interfaces";
 export {
     assertCompatibleCollectionUpgrade,
     collectionUpgradeBreakingResources,

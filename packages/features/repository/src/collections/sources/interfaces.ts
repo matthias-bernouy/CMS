@@ -32,6 +32,9 @@ export interface CollectionRepositorySource {
     list(): Promise<CollectionRepositoryEntry[]>;
     /** Untrusted release JSON without assets; consumers verify its exact digest before using it. */
     getMetadata(reference: CollectionRepositoryReference): Promise<unknown>;
-    get(reference: CollectionRepositoryReference): Promise<CollectionRepositoryBundle>;
+    get(
+        reference: CollectionRepositoryReference,
+        options?: { readonly maxAssetBytes: number },
+    ): Promise<CollectionRepositoryBundle>;
 }
 import type { CollectionBundleAsset } from "../interfaces/CollectionAssets";

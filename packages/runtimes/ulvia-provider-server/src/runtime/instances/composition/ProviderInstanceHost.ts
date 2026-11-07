@@ -355,6 +355,7 @@ export class ProviderInstanceHost {
                     authoring,
                     repository: registry?.service,
                     providerConnections,
+                    initialization: stores.createInitialization(this.#collectionSource),
                     emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
                     files: stores.providerFiles,

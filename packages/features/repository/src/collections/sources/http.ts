@@ -1,3 +1,4 @@
+import { verifyStoredCollectionRelease } from "repository/collections/core/admission/collectionArtifact";
 import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { DEFAULT_COLLECTION_LIMITS } from "repository/collections/core/limits";
 import { parseCollectionRelease } from "repository/collections/core/parsing/parseCollectionRelease";
@@ -77,8 +78,19 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
         return parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64);
     }
 
-    async get(reference: CollectionRepositoryReference) {
-        const release = parseCollectionRelease(await this.getMetadata(reference));
+    async get(reference: CollectionRepositoryReference, options?: { readonly maxAssetBytes: number }) {
+        const metadata = await this.getMetadata(reference);
+        const release = options
+            ? (await verifyStoredCollectionRelease(metadata, reference.digest)).release
+            : parseCollectionRelease(metadata);
+        if (
+            options &&
+            (!Number.isSafeInteger(options.maxAssetBytes) ||
+                options.maxAssetBytes < 0 ||
+                release.assets.reduce((sum, asset) => sum + asset.byteLength, 0) > options.maxAssetBytes)
+        ) {
+            throw new TypeError("Collection asset download exceeds its aggregate byte limit");
+        }
         const assets = new Array<{ id: string; bytes: Uint8Array }>(release.assets.length);
         let nextIndex = 0;
         const fetchAsset = async () => {

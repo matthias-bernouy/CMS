@@ -1,3 +1,5 @@
+import { MongoInitializationStateStore } from "@bernouy/repository/collections/mongo";
+import { initializationFactory } from "./collections/initialization";
 import { observeSelectionCommits } from "./selections/notifications";
 import { createCollectionUpgradeAnalysis } from "./collections/upgradeAnalysis";
 import { CollectionStore } from "@bernouy/repository/collections/installations";
@@ -129,6 +131,17 @@ export async function createProviderStores(
         createCollectionUpgradeAnalysis(SCOPE_ID, selections, releases, selectionDependencies),
     );
     const repo = withSiteWriteFence(upgradeRepo, upgradeStorage, SCOPE_ID, CMS_REPOSITORY_FENCED_MUTATIONS);
+    const initializationState = new MongoInitializationStateStore(db);
+    const createInitialization = initializationFactory(
+        env.instanceId,
+        initializationState,
+        upgradeRepo,
+        upgradeCollections,
+        upgradeStorage,
+        selections,
+        executionState,
+        releases,
+    );
     const collections = withSiteWriteFence(
         upgradeCollections,
         upgradeStorage,
@@ -206,6 +219,8 @@ export async function createProviderStores(
         runtimeSessionSecret: env.CMS_SESSION_SECRET,
         collections,
         collectionUpgrades,
+        initializationState,
+        createInitialization,
         upgradeStorage,
         mongo,
         db,
