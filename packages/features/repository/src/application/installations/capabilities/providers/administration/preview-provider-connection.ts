@@ -5,7 +5,7 @@ import {
 } from "repository/application/installations/schemas/providers/administration/preview-provider-connection";
 import { approveProviderConnectionErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { administration } from "repository/application/installations/core/providers/administration";
-import { actor } from "repository/application/installations/core/requirements";
+import { actor } from "repository/application/installations/core/gateway/requirements";
 export const previewProviderConnection = defineCapability({
     id: "preview-provider-connection",
     description: "preview provider connection",

@@ -35,6 +35,7 @@ export type {
     ProviderOperationHandler,
     ProviderOperationPage,
     ProviderOperationRecord,
+    ProviderOperationSummary,
     ProviderOperationStatus,
     ProviderOperationStore,
 } from "../operations/types";

@@ -25,6 +25,7 @@ export function installationFixturePorts(
 ): UlviaProviderFeatureServices {
     const { siteId } = options.context ?? { siteId: "default" };
     const fallback = {
+        initialization: absent,
         collections: absent,
         collectionUpgrades: absent,
         gateway: { siteId, contractUpgrades: absent },
@@ -96,7 +97,7 @@ export async function mountInstallations(
             },
         },
     );
-    if (workers.length !== 4) {
-        throw new Error("The SDK must derive all four Installations workers");
+    if (workers.length !== 5) {
+        throw new Error("The SDK must derive all five Installations workers");
     }
 }

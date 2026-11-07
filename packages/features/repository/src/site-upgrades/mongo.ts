@@ -54,7 +54,7 @@ export class MongoSiteUpgradeStorage extends MongoSiteWriteFence implements Site
         return project<T>(await this.records.findOne({ _id: id, siteId, kind }));
     }
     async getActive(siteId: string): Promise<SiteUpgradeActive | null> {
-        return project(await this.records.findOne({ siteId, active: true }));
+        return project(await this.records.findOne({ siteId, active: true }, { projection: { payload: 0 } }));
     }
     async transition(
         siteId: string,

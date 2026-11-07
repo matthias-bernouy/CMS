@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Set up your site · Ulvia</title>
+    <link rel="stylesheet" href="setup/style.css">
+    <script type="module" src="setup/app.asset.js"></script>
+</head>
+<body>
+    <div class="shell">
+        <aside class="sidebar" aria-label="Setup steps">
+            <a class="brand" href="setup" aria-label="Ulvia setup"><span aria-hidden="true">u</span> Ulvia</a>
+            <p class="eyebrow">A fresh start</p>
+            <h1>Your site,<br>your starting point.</h1>
+            <p>Start with an empty workspace or choose a collection to make it yours.</p>
+            <ol class="steps">
+                <li data-step="login"><span>1</span> Sign in</li>
+                <li data-step="choice"><span>2</span> Choose a starting point</li>
+                <li data-step="review"><span>3</span> Review and install</li>
+            </ol>
+            <p class="sidebar-note">You stay in control.<br>Nothing is installed without your confirmation.</p>
+        </aside>
+        <main aria-busy="false">
+            <div class="main-top"><span>Site setup</span><button id="sign-out" class="text-button" type="button" hidden>Sign out</button></div>
+            <p id="error" class="notice error" role="alert" hidden></p>
+            <section id="loading" class="stage" aria-live="polite"><p class="eyebrow">Getting ready</p><h2>Opening your workspace…</h2></section>
+            <section id="login" class="stage" hidden>
+                <p class="eyebrow">Step 1 of 3</p><h2>Welcome to your new site.</h2>
+                <p class="intro">Sign in with the administrator account created during installation.</p>
+                <form id="login-form" method="post" action="setup">
+                    <label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="username" maxlength="254" required>
+                    <label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="256" required>
+                    <button class="primary" type="submit">Continue <span aria-hidden="true">→</span></button>
+                </form>
+            </section>
+            <section id="choice" class="stage" hidden>
+                <p class="eyebrow">Step 2 of 3</p><h2>Where would you like to start?</h2>
+                <p class="intro">Choose a blank canvas or a starter you can make your own.</p>
+                <div class="choices">
+                    <button id="empty" class="choice" type="button"><span class="choice-icon" aria-hidden="true">＋</span><strong>Start from scratch</strong><span>No collections. No pages. Build at your own pace.</span><span class="choice-action">Choose an empty site →</span></button>
+                    <button id="browse" class="choice" type="button"><span class="choice-icon" aria-hidden="true">▦</span><strong>Use a starter</strong><span>Choose a collection with a ready-to-use setup recipe.</span><span class="choice-action">Browse available starters →</span></button>
+                </div>
+            </section>
+            <section id="recipes" class="stage" hidden>
+                <button class="back" data-back type="button">← Starting point</button>
+                <p class="eyebrow">Choose a starter</p><h2>A useful place to begin.</h2>
+                <p class="intro">You will review every collection and page before anything is installed.</p>
+                <div id="recipe-list" class="recipe-list"></div>
+                <p id="no-recipes" class="notice" hidden>No starters on this page. You can browse further or start from scratch.</p>
+                <button id="more" class="secondary" type="button" hidden>Load more starters</button>
+            </section>
+            <section id="review" class="stage" hidden>
+                <button class="back" data-back type="button">← Starting point</button>
+                <p class="eyebrow">Step 3 of 3</p><h2 id="review-title">Review your starting point.</h2>
+                <p class="intro" id="review-description"></p>
+                <div id="review-summary" class="summary"></div>
+                <div id="review-collections"></div>
+                <details id="page-details"><summary>Pages to create</summary><div class="table-wrap"><table><thead><tr><th>Page</th><th>Route</th><th>Visibility</th></tr></thead><tbody id="review-pages"></tbody></table></div></details>
+                <form id="apply-form" method="post" action="setup">
+                    <label id="risk-consent" class="notice consent" hidden><input id="approve-code" type="checkbox"><span>This starter includes browser code or embedded content. I approve the collection resources shown above.</span></label>
+                    <p class="muted">Created pages belong to your site. Updating a collection will not run this setup again.</p>
+                    <button id="confirm" class="primary" type="submit">Confirm and install <span aria-hidden="true">→</span></button>
+                </form>
+            </section>
+            <section id="progress" class="stage" hidden aria-live="polite">
+                <p class="eyebrow">Setting things up</p><h2>Making room for your ideas.</h2>
+                <p class="intro" id="progress-label">Verifying the reviewed resources…</p>
+                <progress id="progress-bar" aria-label="Setup progress"></progress>
+                <p class="muted">Completed steps are saved. You can reopen this screen after an interruption.</p>
+                <button id="resume" class="primary" type="button" hidden>Resume setup</button>
+            </section>
+            <section id="done" class="stage" hidden>
+                <span class="done-mark" aria-hidden="true">✓</span><p class="eyebrow">All set</p><h2>Your workspace is ready.</h2>
+                <p class="intro" id="done-description">Your starting point is installed. Make it yours.</p>
+                <a id="open-site" class="primary" href="/" hidden>Open your site <span aria-hidden="true">→</span></a>
+            </section>
+            <section id="unavailable" class="stage" hidden><p class="eyebrow">Site setup</p><h2>Setup is not available here.</h2><p class="intro">This instance does not have a pending initialization. Existing content is preserved.</p></section>
+            <button id="refresh" class="text-button" type="button" hidden>Refresh setup status</button>
+            <noscript><p class="notice">Enable JavaScript to use the setup assistant.</p></noscript>
+            <footer>Ulvia <span aria-hidden="true">·</span> A starting point, not a constraint.</footer>
+        </main>
+    </div>
+</body>
+</html>

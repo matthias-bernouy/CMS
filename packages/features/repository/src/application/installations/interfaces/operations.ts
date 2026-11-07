@@ -1,8 +1,10 @@
+import type { InitializationOperation } from "repository/application/installations/interfaces/initialization";
 import type { ProviderCapabilityResponse } from "@bernouy/ulvia-sdk";
 import type { GetOperationOutput, ListOperationsOutput } from "repository/application/installations/interfaces/outputs";
 import type { ListOperationsInput } from "repository/application/installations/interfaces/inputs";
 /** The host owns durable storage and localizes persisted failures before returning this read view. */
 export interface InstallationOperationQueries {
+    initialization(siteId: string): Promise<InitializationOperation>;
     get(
         siteId: string,
         operationId: string,

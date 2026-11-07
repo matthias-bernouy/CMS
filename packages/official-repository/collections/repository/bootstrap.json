@@ -1,0 +1,104 @@
+{
+    "bootstraps": [
+        {
+            "id": "repository",
+            "label": "bootstrap.label",
+            "description": "bootstrap.description",
+            "requires": [],
+            "includes": [
+                {
+                    "publisherId": "ulvia",
+                    "collectionId": "ulvia/mossa",
+                    "version": "1.1.0",
+                    "digest": "sha256:b43ee0330758a504ef0ce622459f2d529c1e1aa336b0bb12c7f568cb3153d8f8",
+                    "bootstrapId": "administration",
+                    "omitPages": ["login"]
+                }
+            ],
+            "pages": [
+                {
+                    "id": "catalogue",
+                    "path": "/",
+                    "indexing": true,
+                    "title": "page.catalogue.name",
+                    "description": "page.catalogue.description",
+                    "exampleId": "catalogue",
+                    "visible": true
+                },
+                {
+                    "id": "search",
+                    "path": "/search",
+                    "indexing": false,
+                    "title": "page.search.name",
+                    "description": "page.search.description",
+                    "exampleId": "search",
+                    "visible": true
+                },
+                {
+                    "id": "login",
+                    "path": "/login",
+                    "indexing": false,
+                    "title": "page.login.name",
+                    "description": "page.login.description",
+                    "exampleId": "login",
+                    "visible": true,
+                    "systemRole": "login"
+                },
+                {
+                    "id": "signup",
+                    "path": "/signup",
+                    "indexing": false,
+                    "title": "page.signup.name",
+                    "description": "page.signup.description",
+                    "exampleId": "signup",
+                    "visible": true
+                },
+                {
+                    "id": "account",
+                    "path": "/account",
+                    "indexing": false,
+                    "title": "page.account.name",
+                    "description": "page.account.description",
+                    "exampleId": "account",
+                    "visible": true
+                },
+                {
+                    "id": "tokens",
+                    "path": "/account/tokens",
+                    "indexing": false,
+                    "title": "page.tokens.name",
+                    "description": "page.tokens.description",
+                    "exampleId": "tokens",
+                    "visible": true
+                },
+                {
+                    "id": "namespaces",
+                    "path": "/account/namespaces",
+                    "indexing": false,
+                    "title": "page.namespaces.name",
+                    "description": "page.namespaces.description",
+                    "exampleId": "namespaces",
+                    "visible": true
+                },
+                {
+                    "id": "resource",
+                    "path": "/resource",
+                    "indexing": false,
+                    "title": "page.resource.name",
+                    "description": "page.resource.description",
+                    "exampleId": "resource",
+                    "visible": true
+                },
+                {
+                    "id": "publications",
+                    "path": "/account/publications",
+                    "indexing": false,
+                    "title": "page.publications.name",
+                    "description": "page.publications.description",
+                    "exampleId": "publications",
+                    "visible": true
+                }
+            ]
+        }
+    ]
+}

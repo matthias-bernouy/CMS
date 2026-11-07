@@ -4,7 +4,7 @@ import {
     setProviderStatusOutputSchema,
 } from "repository/application/installations/schemas/providers/reads/set-provider-status";
 import { setProviderStatusErrors as errors } from "repository/application/installations/schemas/common/failures";
-import { requiredManagement } from "repository/application/installations/core/requirements";
+import { requiredManagement } from "repository/application/installations/core/gateway/requirements";
 export const setProviderStatus = defineCapability({
     id: "set-provider-status",
     description: "Enable, disable or terminally revoke one provider installation with revision control.",

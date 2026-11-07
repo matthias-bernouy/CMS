@@ -73,6 +73,7 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "site-blocs.archive": "purge",
     },
     "ulvia/cms.installations": {
+        "initialization.apply": "purge",
         "gateway.provider.prepare": "purge",
         "gateway.invocation.issue": "purge",
         "gateway.delegation.issue": "purge",

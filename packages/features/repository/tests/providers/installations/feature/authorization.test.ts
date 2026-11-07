@@ -114,3 +114,40 @@ test("provider administration refuses system actors and unsigned source actors w
     ).toEqual({ items: [] });
     expect(calls).toBe(1);
 });
+
+test("initialization keeps public entry site-scoped and refuses control authority before any domain action", async () => {
+    let calls = 0;
+    const ports = services({
+        initialization: {
+            siteId: "site-a",
+            entry: async () => {
+                calls++;
+                return { pending: true };
+            },
+            plan: async () => {
+                calls++;
+                throw new Error("Unexpected mutation");
+            },
+        },
+        gateway: {
+            identities: { resolve: async () => "local:admin" },
+            administrators: { get: async () => ({ enabled: true }) },
+        },
+    });
+    await expect(execute("initialization.entry", {}, ports, { siteId: "site-b" })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+    });
+    await expect(
+        execute("initialization.plan", { root: null }, ports, { subjectId: "admin", controlAuthority: true }),
+    ).rejects.toMatchObject(denied);
+    await expect(
+        execute("initialization.plan", { root: null }, ports, {
+            subjectId: "admin",
+            sourceInstallationId: "remote",
+            rootRequestId: "verified-root",
+        }),
+    ).rejects.toMatchObject(denied);
+    expect(calls).toBe(0);
+    expect(await execute("initialization.entry", {}, ports)).toEqual({ pending: true });
+    expect(calls).toBe(1);
+});

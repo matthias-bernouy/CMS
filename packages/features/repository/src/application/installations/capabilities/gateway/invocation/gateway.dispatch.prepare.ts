@@ -5,7 +5,7 @@ import {
     gatewayDispatchPrepareOutputSchema,
 } from "repository/application/installations/schemas/gateway/invocation/gateway.dispatch.prepare";
 import { gatewayDispatchPrepareErrors as errors } from "repository/application/installations/schemas/common/failures";
-import { required, requiredGateway, control } from "repository/application/installations/core/requirements";
+import { required, requiredGateway, control } from "repository/application/installations/core/gateway/requirements";
 export const gatewayDispatchPrepare = defineCapability({
     id: "gateway.dispatch.prepare",
     description:

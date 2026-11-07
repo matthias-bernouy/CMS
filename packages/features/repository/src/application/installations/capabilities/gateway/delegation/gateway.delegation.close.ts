@@ -3,7 +3,7 @@ import { gatewayDelegationCloseInputSchema } from "repository/application/instal
 import { gatewayAuditAppendOutputSchema } from "repository/application/installations/schemas/gateway/routing/gateway.audit.append";
 import { gatewayDelegationCloseErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { closeDelegation } from "repository/application/installations/core/gateway/authority";
-import { control } from "repository/application/installations/core/requirements";
+import { control } from "repository/application/installations/core/gateway/requirements";
 export const gatewayDelegationClose = defineCapability({
     id: "gateway.delegation.close",
     description: "Control authority only: close a bounded invocation delegation.",

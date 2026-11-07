@@ -5,7 +5,7 @@ import {
 } from "repository/application/installations/schemas/providers/administration/get-provider-access";
 import { approveProviderConnectionErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { administration } from "repository/application/installations/core/providers/administration";
-import { actor } from "repository/application/installations/core/requirements";
+import { actor } from "repository/application/installations/core/gateway/requirements";
 export const getProviderAccess = defineCapability({
     id: "get-provider-access",
     description: "get provider access",

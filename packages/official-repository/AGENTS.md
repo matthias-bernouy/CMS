@@ -57,8 +57,8 @@
   recipes belong in `bootstrap.json`, not `definition.json`. They propose copies
   of local examples as ordinary Content Pages and run only through an explicit
   initialization operation. Recipe includes pin exact collection versions and
-  digests; scripts, provider URLs and secrets are forbidden. Current runtime
-  profiles still seed Pages until the generic recipe execution flow is mounted.
+  digests; scripts, provider URLs and secrets are forbidden. Current core profiles create no Pages; native setup applies recipes explicitly
+  through `ulvia/cms.installations@1.1.0` after administrator review.
   Site routes and Page SEO belong to Content.
 
 - Examples reuse collection text references. Do not author per-example `texts` overrides or preview `locale`/`themeMode`; only frame dimensions belong to preview definitions.

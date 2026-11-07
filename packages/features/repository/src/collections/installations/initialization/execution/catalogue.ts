@@ -17,12 +17,18 @@ export async function initializationCatalogue(source: CollectionRepositorySource
 }
 
 /** Exact includes and bounded ordinary dependency resolution, without loading any asset bytes. */
-export async function resolveInitializationGraph(source: CollectionRepositorySource, requested: unknown) {
+export async function resolveInitializationGraph(
+    source: CollectionRepositorySource,
+    requested: unknown,
+    signal?: AbortSignal,
+) {
+    signal?.throwIfAborted();
     const root = initializationRoot(requested);
     const catalogue = await initializationCatalogue(source);
     const loaded = new Map<string, VerifiedCollectionReleaseMetadata>();
     let metadataBytes = 0;
     const visit = async (entry: CollectionRepositoryEntry, recipeId?: string): Promise<void> => {
+        signal?.throwIfAborted();
         let metadata = loaded.get(entry.collectionId);
         if (metadata && metadata.digest !== entry.digest) {
             throw initializationError("Conflicting exact initialization releases", 409);

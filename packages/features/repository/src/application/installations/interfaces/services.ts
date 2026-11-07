@@ -1,3 +1,4 @@
+import type { InitializationService } from "repository/application/installations/interfaces/initialization";
 import type { CollectionStore } from "repository/collections/installations/core/CollectionStore";
 import type { CollectionUpgradeService } from "repository/exports/collections/installations";
 import type { AdmittedCollectionRelease } from "repository/collections/interfaces/CollectionAdmission";
@@ -16,6 +17,7 @@ export interface CollectionSourceReader {
     ): Promise<readonly { target: { digest: string; repositoryId: string }; artifact: AdmittedCollectionRelease }[]>;
 }
 export interface InstallationServices {
+    readonly initialization?: InitializationService;
     readonly collections: Pick<
         CollectionStore,
         "listInstalled" | "readInstalled" | "revision" | "getRelease" | "installMany" | "saveConfiguration"

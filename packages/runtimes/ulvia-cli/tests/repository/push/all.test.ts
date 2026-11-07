@@ -54,7 +54,8 @@ test("push all publishes every official artifact kind, then inferred provider an
         expect(f.output.at(-1)).toStartWith("= provider-manifest");
         await f.run(["push", `${collection.collectionId}@${collection.version}`]);
         expect(f.output.at(-1)).toStartWith("= collection");
-        await f.run(["push", "collection", "ulvia/repository@1.0.0"]);
+        const registry = JSON.parse(await readFile(join(source, "collections/repository/definition.json"), "utf8"));
+        await f.run(["push", "collection", `${registry.collectionId}@${registry.version}`]);
         expect(f.output.at(-1)).toStartWith("= collection");
     } finally {
         await f.close();

@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { GatewayCommandAuditEvent } from "@bernouy/cms-gateway/audit";
 import type { InstallationGateway } from "repository/application/installations/interfaces/gateway";
 import type { GatewayIdentityResolveInput } from "repository/application/installations/interfaces/inputs";
-import { parseConfiguration } from "repository/application/installations/core/configuration";
+import { parseConfiguration } from "repository/application/installations/core/collections/configuration";
 import { InstallationError } from "repository/application/installations/core/errors";
 const auditSchema = z.strictObject({
     id: z.string(),

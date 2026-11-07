@@ -3,9 +3,19 @@ import { installationsFeature } from "@bernouy/repository/features/installations
 import type { UlviaProviderFeatureServices } from "../../../../ports/index";
 export const installationsImplementation = implementFeature(installationsFeature, {
     services: (dependencies: UlviaProviderFeatureServices) => {
-        const { collections, collectionUpgrades, gateway, management, sources, documentation, discovery, operations } =
-            dependencies;
+        const {
+            initialization,
+            collections,
+            collectionUpgrades,
+            gateway,
+            management,
+            sources,
+            documentation,
+            discovery,
+            operations,
+        } = dependencies;
         if (
+            !initialization ||
             !collections ||
             !collectionUpgrades ||
             !gateway ||
@@ -16,10 +26,20 @@ export const installationsImplementation = implementFeature(installationsFeature
             !operations
         ) {
             throw new TypeError(
-                "Installations requires injected collections, upgrades, gateway, administration, discovery, documentation and operation queries",
+                "Installations requires injected initialization, collections, upgrades, gateway, administration, discovery, documentation and operation queries",
             );
         }
-        return { collections, collectionUpgrades, gateway, management, sources, documentation, discovery, operations };
+        return {
+            initialization,
+            collections,
+            collectionUpgrades,
+            gateway,
+            management,
+            sources,
+            documentation,
+            discovery,
+            operations,
+        };
     },
     requires: [
         {

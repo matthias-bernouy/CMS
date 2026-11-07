@@ -14,16 +14,33 @@ export function createInstallationOperationQueries(
 ): InstallationOperationQueries {
     const store = operations.store;
     return {
+        async initialization(siteId) {
+            const operation = await store.latest(siteId, CONTRACT_ID, "initialization.apply");
+            const output = operation?.errorOutput;
+            const errorMessage =
+                operation?.status === "failed"
+                    ? output && typeof output === "object" && "message" in output && typeof output.message === "string"
+                        ? output.message
+                        : "Setup stopped. Refresh its status and resume."
+                    : "";
+            return { operationId: operation?.id ?? "", operationStatus: operation?.status ?? "none", errorMessage };
+        },
         async list(siteId, input) {
             const page = await store.list(siteId, CONTRACT_ID, input.cursor, input.limit ?? 20);
             return pageSchema.parse({
-                items: page.items.map((operation) => projectOperation(operation, false)),
+                items: page.items
+                    .filter((operation) => detailSchema.shape.capabilityId.safeParse(operation.capabilityId).success)
+                    .map((operation) => projectOperation(operation, false)),
                 ...(page.nextCursor ? { nextCursor: page.nextCursor } : {}),
             });
         },
         async get(siteId, operationId) {
             const operation = await store.get(siteId, operationId);
-            if (!operation || operation.contractId !== CONTRACT_ID) {
+            if (
+                !operation ||
+                operation.contractId !== CONTRACT_ID ||
+                !detailSchema.shape.capabilityId.safeParse(operation.capabilityId).success
+            ) {
                 throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
             }
             const detail = detailSchema.parse(projectOperation(operation, true));

@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { installStarter } from "../../../../../../tests/integration/instance/repository/initializationClient";
 import { repositoryApi } from "../../../../../../tests/integration/instance/repository/client";
 import { runCli } from "../../../src/cli";
 
@@ -40,6 +43,14 @@ export async function publishSmokeRepository(environment: Record<string, string 
         await runCli(["namespace", "claim", "ulvia.test"], options);
         await runCli(["push", "all"], options);
         await runCli(["repository", "logout"], options);
+        const credentials = JSON.parse(
+            await readFile(join(environment.ULVIA_DATA_DIR!, "instances/registry/runtime.json"), "utf8"),
+        );
+        await installStarter(
+            bridge.url.origin,
+            { email: credentials.adminEmail, password: credentials.adminPassword },
+            "ulvia/repository",
+        );
     } finally {
         bridge.stop(true);
     }

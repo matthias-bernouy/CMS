@@ -5,7 +5,7 @@ import {
 } from "repository/application/installations/schemas/gateway/routing/gateway.audit.append";
 import { gatewayAuditAppendErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { appendAudit } from "repository/application/installations/core/gateway/routing";
-import { requiredGateway, control } from "repository/application/installations/core/requirements";
+import { requiredGateway, control } from "repository/application/installations/core/gateway/requirements";
 export const gatewayAuditAppend = defineCapability({
     id: "gateway.audit.append",
     description: "Edge control connection only. Persist one immutable Gateway command audit event.",

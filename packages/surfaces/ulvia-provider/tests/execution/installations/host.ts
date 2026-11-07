@@ -31,7 +31,12 @@ export class HeldInstallationStore extends MemoryProviderOperationStore {
         return this.held ? Promise.resolve(false) : super.claim(...args);
     }
 }
-export type State = { calls: unknown[]; failure?: unknown };
+export type State = {
+    calls: unknown[];
+    failure?: unknown;
+    administratorEnabled?: boolean;
+    initializationStatus?: "pending" | "completed";
+};
 /** Real official assembly, receiver, signed tokens, host queue and stored read projections. */
 export async function installationHost(store = new HeldInstallationStore(), state: State = { calls: [] }) {
     const build = await loadOfficialFeatures();
@@ -63,9 +68,37 @@ export async function installationHost(store = new HeldInstallationStore(), stat
     const unused = async (): Promise<never> => {
         throw new Error("Unexpected Installation service");
     };
+    const initializationStatus = () => ({
+        status: state.initializationStatus ?? "pending",
+        revision: 1,
+        completedPages: 0,
+        totalPages: 0,
+        planDigest: "",
+        rootJson: "null",
+        locale: "en",
+        redirectPath: "",
+    });
     await registerOfficialProviderCapabilities(
         dispatcher,
         {
+            initialization: {
+                siteId: "site-a",
+                entry: async () => ({ pending: state.initializationStatus !== "completed" }),
+                status: async () => initializationStatus(),
+                list: async () => ({ items: [], cursor: "" }),
+                plan: async (actorId: string) => {
+                    state.calls.push({ name: "plan", actorId });
+                    return { digest };
+                },
+                apply: async (actorId: string) => {
+                    state.calls.push({ name: "initialize", actorId });
+                    if (state.failure) {
+                        throw state.failure;
+                    }
+                    state.initializationStatus = "completed";
+                    return initializationStatus();
+                },
+            },
             collections: { snapshot: unused },
             collectionUpgrades: {
                 apply: execute("apply-collection", "collection"),
@@ -76,6 +109,15 @@ export async function installationHost(store = new HeldInstallationStore(), stat
         } as never,
         {
             siteId: "site-a",
+            identities: {
+                resolve: async (_scope: unknown, alias: string) =>
+                    alias === "admin-a" ? "local:admin" : alias === "member-a" ? "local:member" : null,
+            },
+            administrators: {
+                get: async (sub: string) => ({
+                    enabled: state.administratorEnabled !== false && sub === "local:admin",
+                }),
+            },
             contractUpgrades: {
                 apply: execute("apply-contract", "contracts"),
                 resume: execute("resume-contract", "contracts"),
@@ -114,7 +156,8 @@ export async function installationHost(store = new HeldInstallationStore(), stat
                 return null;
             }
         },
-        authorize: async (claims) => claims.actorKind === "administrator",
+        authorize: async (claims) =>
+            claims.actorKind === "administrator" || claims.capabilityId === "initialization.entry",
     });
     const call = (
         capabilityId: string,
@@ -136,6 +179,11 @@ export async function installationHost(store = new HeldInstallationStore(), stat
             expiresAt: Math.floor(Date.now() / 1000) + 30,
             ...options.claims,
         };
+        for (const [key, value] of Object.entries(claims)) {
+            if (value === undefined) {
+                Reflect.deleteProperty(claims, key);
+            }
+        }
         return receiver(
             new Request("https://provider.test" + binding.path, {
                 method: binding.method,

@@ -4,7 +4,7 @@ import {
     listOperationsOutputSchema,
 } from "repository/application/installations/schemas/operations/list-operations";
 import { capabilitiesDescribeErrors as errors } from "repository/application/installations/schemas/common/failures";
-import { required } from "repository/application/installations/core/requirements";
+import { required } from "repository/application/installations/core/gateway/requirements";
 export const listOperations = defineCapability({
     id: "list-operations",
     access: "admin",

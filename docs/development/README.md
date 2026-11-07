@@ -46,7 +46,7 @@ CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true bun run ulvia -- services start --versio
 ```
 
 In this example, `repository:3000` is a Repository CMS Edge address reachable
-from the Provider containers. Core profiles `ulvia@1.1.0` and `repository@1.1.0`
+from the Provider containers. Core profiles `ulvia@1.2.0` and `repository@1.2.0`
 initialize system APIs and an administrator from bundled artifacts before that
 remote catalogue is available. They create no collections or Pages. Production
 images contain the API-only snapshot; full snapshots with optional starters are
@@ -96,9 +96,9 @@ upgrades process instances in sequence; a later failure can leave earlier
 instances upgraded. Collection, contract, and provider
 manifest releases remain Repository artifacts and do not become Docker images.
 
-The CLI and runtime images use distribution version `1.0.7`; official contracts,
-and collections use the fresh `1.0.0` baseline; core-only instance profiles use
-`1.1.0`. Existing npm
+Distribution versions are independent of official artifacts. Current core-only
+profiles use `1.2.0`; the installations contract, Provider manifest, Mossa and
+Repository collections use `1.1.0`, and other official contracts retain `1.0.0`. Existing npm
 versions and Docker tags are retained rather than reused.
 
 The host CLI is a separate public npm artifact. Its private workspace sources
@@ -228,7 +228,7 @@ remain [open work](../TODO.md#backup-and-operational-recovery).
 | `bun run cli:publish --version <version>` | Publish an unchanged, previously built CLI archive to the public npm registry. |
 | `bun run images:build --version <version> all` | Build all official Cyaxis/Ulvia Docker images locally. |
 | `bun run images:publish --version <version> all` | Publish verified official images to Docker Hub. |
-| `bun test` | Run the test suite. |
+| `bun run test` | Run maintained tests under `quality/`, `tests/` and `packages/`. |
 | `bun run test:edge-smoke` | Exercise a fresh local Edge installation, representative mutations and restart through Chromium. |
 | `bun run clean` | Clean TypeScript build state, then remove every package `dist` and `tsconfig.tsbuildinfo`. |
 
@@ -293,3 +293,14 @@ performance regressions and the optional Cirrus framebuffer mitigation.
 
 [Repository performance](repository-performance.md) documents catalogue timings,
 HTTP/storage work budgets and the isolated official-collection benchmark.
+
+The maintained test command scopes discovery to those three source trees.
+Generated historical copies under `artifacts/` are retained as evidence and are
+not executable inputs to the current suite. Plain `bun test` uses Bun's broader
+automatic discovery and can also execute those archival copies.
+
+Fresh core profiles expose optional native setup at `/.cms/setup`. The full Edge
+smoke explicitly publishes current collections, applies the Repository recipe
+through the API and selects Mossa through the native browser flow. See
+[Provider instance initialization](../architecture/provider-instance-initialization.md)
+for review, authority, limits and recovery guarantees.

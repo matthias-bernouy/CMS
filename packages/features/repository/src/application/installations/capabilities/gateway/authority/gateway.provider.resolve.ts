@@ -5,7 +5,7 @@ import {
 } from "repository/application/installations/schemas/gateway/authority/gateway.provider.resolve";
 import { gatewayProviderResolveErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { resolveProvider } from "repository/application/installations/core/gateway/authority";
-import { control } from "repository/application/installations/core/requirements";
+import { control } from "repository/application/installations/core/gateway/requirements";
 export const gatewayProviderResolve = defineCapability({
     id: "gateway.provider.resolve",
     description: "gateway provider resolve",

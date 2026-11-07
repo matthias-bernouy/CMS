@@ -10,7 +10,9 @@ RUN bun install --frozen-lockfile
 RUN bunx tsc --build packages/runtimes/cms-edge-server
 
 FROM build AS runtime-source
-RUN rm -rf /app/node_modules /app/packages/*/node_modules /app/packages/*/*/node_modules
+RUN rm -rf /app/node_modules /app/packages/*/node_modules /app/packages/*/*/node_modules \
+    /app/packages/official-repository \
+    /app/packages/runtimes/ulvia-cli/dist/bootstrap /app/packages/runtimes/ulvia-cli/dist/bootstrap-core
 
 FROM oven/bun:1.4.4-alpine@sha256:4cf82f5686b196504fe119db3fcd9185b191f82ece82c40680e597228ec6070a AS runtime
 

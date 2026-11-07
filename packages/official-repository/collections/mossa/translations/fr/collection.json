@@ -36,5 +36,7 @@
     "page.observability.name": "Observabilité",
     "page.observability.description": "Rechercher dans les journaux de cette instance.",
     "page.log-detail.name": "Détail du journal",
-    "page.log-detail.description": "Rechercher dans les journaux de cette instance."
+    "page.log-detail.description": "Rechercher dans les journaux de cette instance.",
+    "bootstrap.label": "Administration",
+    "bootstrap.description": "Créer les pages d’administration et de connexion avec Mossa."
 }

@@ -5,7 +5,7 @@ import {
 } from "repository/application/installations/schemas/providers/administration/approve-provider-connection";
 import { approveProviderConnectionErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { administration } from "repository/application/installations/core/providers/administration";
-import { actor } from "repository/application/installations/core/requirements";
+import { actor } from "repository/application/installations/core/gateway/requirements";
 export const approveProviderConnection = defineCapability({
     id: "approve-provider-connection",
     description: "approve provider connection",

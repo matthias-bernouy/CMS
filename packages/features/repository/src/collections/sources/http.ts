@@ -78,8 +78,13 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
         return parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64);
     }
 
-    async get(reference: CollectionRepositoryReference, options?: { readonly maxAssetBytes: number }) {
+    async get(
+        reference: CollectionRepositoryReference,
+        options?: { readonly maxAssetBytes: number; readonly signal?: AbortSignal },
+    ) {
+        options?.signal?.throwIfAborted();
         const metadata = await this.getMetadata(reference);
+        options?.signal?.throwIfAborted();
         const release = options
             ? (await verifyStoredCollectionRelease(metadata, reference.digest)).release
             : parseCollectionRelease(metadata);
@@ -95,6 +100,7 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
         let nextIndex = 0;
         const fetchAsset = async () => {
             while (nextIndex < release.assets.length) {
+                options?.signal?.throwIfAborted();
                 const index = nextIndex++;
                 const asset = release.assets[index]!;
                 const assetBytes = await getRepositoryBytes(
@@ -105,6 +111,7 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
                         maxBytes: Math.min(asset.byteLength, DEFAULT_COLLECTION_LIMITS.maxAssetBytes),
                         accept: asset.mediaType,
                         request: this.request,
+                        signal: options?.signal,
                     },
                 );
                 assets[index] = { id: asset.id, bytes: assetBytes };

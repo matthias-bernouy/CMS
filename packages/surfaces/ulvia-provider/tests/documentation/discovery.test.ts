@@ -51,7 +51,7 @@ test("MCP discovers repository tools and reads a verified uninstalled contract t
                     call.contractId,
                     call.capabilityId,
                     call.input as Record<string, unknown>,
-                    context(),
+                    context("en", admission.release.version),
                 ),
             }),
         },

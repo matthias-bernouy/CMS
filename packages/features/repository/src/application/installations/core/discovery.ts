@@ -1,5 +1,5 @@
 import type { InstallationGateway } from "repository/application/installations/interfaces/gateway";
-import { required } from "repository/application/installations/core/requirements";
+import { required } from "repository/application/installations/core/gateway/requirements";
 import { InstallationError } from "repository/application/installations/core/errors";
 export async function describeCapabilities(gateway: InstallationGateway | undefined, contractId: string) {
     const selected = await required(gateway?.describeContract)(contractId);

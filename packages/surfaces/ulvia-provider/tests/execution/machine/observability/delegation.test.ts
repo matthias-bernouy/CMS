@@ -25,7 +25,7 @@ test("user invocations cannot use Installations to forge a machine identity", as
     };
     const context = {
         requestId: crypto.randomUUID(),
-        contractVersion: "1.0.0",
+        contractVersion: "1.1.0",
         siteId: "default",
         providerId: "ulvia/primary-provider",
     };

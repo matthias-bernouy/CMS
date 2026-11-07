@@ -4,7 +4,7 @@ import {
     repositorySearchOutputSchema,
 } from "repository/application/installations/schemas/discovery/repository.search";
 import { repositoryGetErrors as errors } from "repository/application/installations/schemas/common/failures";
-import { required } from "repository/application/installations/core/requirements";
+import { required } from "repository/application/installations/core/gateway/requirements";
 export const repositorySearch = defineCapability({
     id: "repository.search",
     description:

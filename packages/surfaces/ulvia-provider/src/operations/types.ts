@@ -29,6 +29,7 @@ export interface ProviderOperationPage {
 }
 
 export interface ProviderOperationStore {
+    latest(siteId: string, contractId: string, capabilityId: string): Promise<ProviderOperationSummary | null>;
     createOrGet(record: ProviderOperationRecord): Promise<{ record: ProviderOperationRecord; created: boolean }>;
     get(siteId: string, id: string): Promise<ProviderOperationRecord | null>;
     list(siteId: string, contractId: string, cursor: string | undefined, limit: number): Promise<ProviderOperationPage>;
@@ -51,6 +52,21 @@ export interface ProviderOperationExecutionContext {
     readonly leaseToken: string;
     throwIfLeaseLost(): void;
 }
+
+export type ProviderOperationSummary = Pick<
+    ProviderOperationRecord,
+    | "id"
+    | "siteId"
+    | "contractId"
+    | "capabilityId"
+    | "status"
+    | "revision"
+    | "createdAt"
+    | "updatedAt"
+    | "errorCode"
+    | "errorOutput"
+    | "errorContentLanguage"
+>;
 
 export type ProviderOperationHandler = (
     input: Readonly<Record<string, unknown>>,

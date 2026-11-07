@@ -9,7 +9,11 @@ import {
 import { applyInitializationPages } from "./pages";
 
 /** Multi-step initialization keeps the durable site maintenance fence until explicit completion. */
-export async function executeInitialization(options: InitializationServiceOptions, review: InitializationReview) {
+export async function executeInitialization(
+    options: InitializationServiceOptions,
+    review: InitializationReview,
+    assertExecution: () => void = () => {},
+) {
     const { siteId, digest: id } = review;
     const upgrades = options.upgrades;
     let intent = await upgrades.get<InitializationReview>(siteId, id, "initialization");
@@ -25,7 +29,11 @@ export async function executeInitialization(options: InitializationServiceOption
     if (!(await upgrades.claimMaintenance(siteId, id))) {
         throw initializationError("Initialization is already running", 423);
     }
-    const assertLease = () => upgrades.assertMaintenance(siteId, id);
+    const assertLease = async () => {
+        assertExecution();
+        await upgrades.assertMaintenance(siteId, id);
+        assertExecution();
+    };
     try {
         let record = await readInitialization(options);
         if (intent.status === "prepared") {

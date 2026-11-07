@@ -5,7 +5,7 @@ import {
 } from "repository/application/installations/schemas/gateway/delegation/gateway.delegation.issue";
 import { gatewayDelegationCloseErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { issueDelegation } from "repository/application/installations/core/gateway/authority";
-import { control } from "repository/application/installations/core/requirements";
+import { control } from "repository/application/installations/core/gateway/requirements";
 export const gatewayDelegationIssue = defineCapability({
     id: "gateway.delegation.issue",
     description: "Control authority only: issue a bounded invocation delegation.",

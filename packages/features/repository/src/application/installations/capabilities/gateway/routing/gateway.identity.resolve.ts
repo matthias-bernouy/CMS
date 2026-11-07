@@ -5,7 +5,7 @@ import {
 } from "repository/application/installations/schemas/gateway/routing/gateway.identity.resolve";
 import { gatewayIdentityResolveErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { resolveIdentity } from "repository/application/installations/core/gateway/routing";
-import { requiredGateway, control } from "repository/application/installations/core/requirements";
+import { requiredGateway, control } from "repository/application/installations/core/gateway/requirements";
 export const gatewayIdentityResolve = defineCapability({
     id: "gateway.identity.resolve",
     description:

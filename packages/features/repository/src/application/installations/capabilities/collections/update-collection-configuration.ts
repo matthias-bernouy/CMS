@@ -3,7 +3,7 @@ import { installCollectionOutputSchema } from "repository/application/installati
 import { updateCollectionConfigurationInputSchema } from "repository/application/installations/schemas/collections/update-collection-configuration";
 import { updateCollectionConfigurationErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { projectSnapshot } from "repository/application/installations/core/collections/projection";
-import { parseConfiguration } from "repository/application/installations/core/configuration";
+import { parseConfiguration } from "repository/application/installations/core/collections/configuration";
 export const updateCollectionConfiguration = defineCapability({
     id: "update-collection-configuration",
     access: "admin",

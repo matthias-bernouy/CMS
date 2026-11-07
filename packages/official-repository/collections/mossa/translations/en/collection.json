@@ -36,5 +36,7 @@
     "page.observability.name": "Observability",
     "page.observability.description": "Search the diagnostic journal of this instance.",
     "page.log-detail.name": "Log details",
-    "page.log-detail.description": "Search the diagnostic journal of this instance."
+    "page.log-detail.description": "Search the diagnostic journal of this instance.",
+    "bootstrap.label": "Administration",
+    "bootstrap.description": "Create the administration and sign-in Pages using Mossa."
 }

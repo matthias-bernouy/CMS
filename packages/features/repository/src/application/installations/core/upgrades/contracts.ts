@@ -4,7 +4,7 @@ import type {
     PlanContractUpgradeInput,
     ApplyContractUpgradeInput,
 } from "repository/application/installations/interfaces/inputs";
-import { required } from "repository/application/installations/core/requirements";
+import { required } from "repository/application/installations/core/gateway/requirements";
 import { InstallationError } from "repository/application/installations/core/errors";
 import { authorityReview } from "repository/application/installations/core/upgrades/review";
 export function contractUpgrades(services: InstallationServices) {

@@ -16,13 +16,17 @@ export async function getRepositoryBytes(
         maxBytes?: number;
         accept?: string;
         request?: RepositoryFetch;
+        signal?: AbortSignal;
         query?: Readonly<Record<string, unknown>>;
     } = {},
 ): Promise<Uint8Array> {
+    options.signal?.throwIfAborted();
     const maxBytes = options.maxBytes ?? MAX_REPOSITORY_RESPONSE_BYTES;
     const request = options.request ?? defaultRepositoryFetch;
     const response = await request(new URL(path, base), {
-        signal: AbortSignal.timeout(10_000),
+        signal: options.signal
+            ? AbortSignal.any([options.signal, AbortSignal.timeout(10_000)])
+            : AbortSignal.timeout(10_000),
         redirect: "error",
         headers: {
             Accept: options.accept ?? "application/json",

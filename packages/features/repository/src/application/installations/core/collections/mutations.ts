@@ -7,7 +7,10 @@ import type {
     PlanCollectionUpgradeInput,
 } from "repository/application/installations/interfaces/inputs";
 import { InstallationError } from "repository/application/installations/core/errors";
-import { configurationObject, textOverrides } from "repository/application/installations/core/configuration";
+import {
+    configurationObject,
+    textOverrides,
+} from "repository/application/installations/core/collections/configuration";
 import { projectSnapshot, projectUpgradePlan } from "repository/application/installations/core/collections/projection";
 export async function collectionTargets(
     value: PlanCollectionUpgradeInput["targets"],

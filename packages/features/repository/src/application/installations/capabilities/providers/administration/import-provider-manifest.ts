@@ -5,7 +5,7 @@ import {
 } from "repository/application/installations/schemas/providers/administration/import-provider-manifest";
 import { approveProviderConnectionErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { administration, importManifest } from "repository/application/installations/core/providers/administration";
-import { actor } from "repository/application/installations/core/requirements";
+import { actor } from "repository/application/installations/core/gateway/requirements";
 export const importProviderManifest = defineCapability({
     id: "import-provider-manifest",
     description: "import provider manifest",

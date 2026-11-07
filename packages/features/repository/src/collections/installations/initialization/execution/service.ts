@@ -1,6 +1,6 @@
 import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { initializationDigest } from "../planning/plan";
-import type { InitializationReview, InitializationServiceOptions } from "./interfaces";
+import type { InitializationRecord, InitializationReview, InitializationServiceOptions } from "./interfaces";
 import { readInitialization, initializationError, validateInitializationRecord } from "./state";
 import { prepareInitialization } from "./review";
 import { executeInitialization } from "./apply";
@@ -16,14 +16,17 @@ export class SiteInitializationService {
         const state = await this.options.state.read(this.siteId);
         if (state) {
             validateInitializationRecord(state);
+            if (state.siteId !== this.siteId) {
+                throw initializationError("Initialization scope mismatch", 409);
+            }
         }
-        return { pending: state?.status === "pending" || state?.status === "running" };
+        return { pending: !!state && (state.status !== "completed" || (await this.completionPending(state))) };
     }
     async status() {
         const state = await this.options.state.read(this.siteId);
         if (!state) {
             return {
-                status: "unavailable",
+                status: "unavailable" as const,
                 revision: 0,
                 completedPages: 0,
                 totalPages: 0,
@@ -34,15 +37,46 @@ export class SiteInitializationService {
             };
         }
         validateInitializationRecord(state);
+        if (state.siteId !== this.siteId) {
+            throw initializationError("Initialization scope mismatch", 409);
+        }
+        let review = state.review;
+        let prepared = false;
+        if (state.status === "pending") {
+            const active = await this.options.upgrades.getActive(this.siteId);
+            if (active?.kind === "initialization") {
+                const intent = await this.options.upgrades.get<InitializationReview>(
+                    this.siteId,
+                    active.id,
+                    "initialization",
+                );
+                if (
+                    !intent ||
+                    intent.payload.instanceId !== this.options.instanceId ||
+                    intent.payload.siteId !== this.siteId
+                ) {
+                    throw initializationError("Initialization intent scope mismatch", 409);
+                }
+                review = intent.payload;
+                validateInitializationRecord({ ...state, status: "running", review });
+                prepared = true;
+            }
+        }
+        const status =
+            state.status === "completed" && (await this.completionPending(state))
+                ? "running"
+                : prepared
+                  ? "running"
+                  : state.status;
         return {
-            status: state.status,
+            status,
             revision: state.revision,
             completedPages: state.completedPages.length,
-            totalPages: state.review?.plan.pages.length ?? 0,
-            planDigest: state.review?.digest ?? "",
-            rootJson: canonicalizeIJson(state.review?.plan.root ?? null),
-            locale: state.review?.plan.locale ?? "en",
-            redirectPath: state.status === "completed" ? redirectPath(state.review!) : "",
+            totalPages: review?.plan.pages.length ?? 0,
+            planDigest: review?.digest ?? "",
+            rootJson: canonicalizeIJson(review?.plan.root ?? null),
+            locale: review?.plan.locale ?? "en",
+            redirectPath: status === "completed" ? redirectPath(review!) : "",
         };
     }
     async list(cursor?: string, locale?: string) {
@@ -52,11 +86,24 @@ export class SiteInitializationService {
         }
         return this.exclusive(() => discoverInitializationRecipes(this.options.source, cursor, locale));
     }
-    plan(actorId: string, root: unknown, locale?: string) {
-        return this.exclusive(async () => (await prepareInitialization(this.options, actorId, root, locale)).review);
+    plan(actorId: string, root: unknown, locale?: string, signal?: AbortSignal) {
+        return this.exclusive(
+            async () => (await prepareInitialization(this.options, actorId, root, locale, signal)).review,
+        );
     }
-    apply(actorId: string, root: unknown, planDigest: string, locale?: string) {
+    apply(
+        actorId: string,
+        root: unknown,
+        planDigest: string,
+        locale?: string,
+        guard?: { readonly signal: AbortSignal; assertHeld(): void },
+    ) {
         return this.exclusive(async () => {
+            const assertExecution = () => {
+                guard?.signal.throwIfAborted();
+                guard?.assertHeld();
+            };
+            assertExecution();
             const existing = await this.options.upgrades.get<InitializationReview>(
                 this.siteId,
                 planDigest,
@@ -75,14 +122,16 @@ export class SiteInitializationService {
                     throw initializationError("Initialization retry changed its reviewed scope", 409);
                 }
             } else {
-                const prepared = await prepareInitialization(this.options, actorId, root, locale);
+                const prepared = await prepareInitialization(this.options, actorId, root, locale, guard?.signal);
                 review = prepared.review;
                 if (review.digest !== planDigest) {
                     throw initializationError("Initialization review is stale", 409);
                 }
                 for (const artifact of prepared.artifacts) {
+                    assertExecution();
                     await this.options.collections.importAdmittedRelease(artifact);
                 }
+                assertExecution();
                 await this.options.upgrades.begin({
                     id: planDigest,
                     siteId: this.siteId,
@@ -96,9 +145,13 @@ export class SiteInitializationService {
                     createdAt: new Date().toISOString(),
                 });
             }
-            await executeInitialization(this.options, review);
+            await executeInitialization(this.options, review, assertExecution);
             return this.status();
         });
+    }
+    private async completionPending(state: InitializationRecord) {
+        const active = await this.options.upgrades.getActive(this.siteId);
+        return active?.kind === "initialization" && active.id === state.review?.digest;
     }
     private async exclusive<T>(operation: () => Promise<T>): Promise<T> {
         if (this.busy) {

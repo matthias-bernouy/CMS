@@ -1,3 +1,8 @@
+import { initializationApply } from "repository/application/installations/capabilities/initialization/apply";
+import { initializationEntry } from "repository/application/installations/capabilities/initialization/entry";
+import { initializationList } from "repository/application/installations/capabilities/initialization/list";
+import { initializationPlan } from "repository/application/installations/capabilities/initialization/plan";
+import { initializationStatus } from "repository/application/installations/capabilities/initialization/status";
 import { defineFeature } from "@bernouy/ulvia-sdk";
 import { mapInstallationError } from "repository/application/installations/capabilities/policy/mapError";
 import { gatewayAuditAppend } from "repository/application/installations/capabilities/gateway/routing/gateway.audit.append";
@@ -47,12 +52,18 @@ export const installationsFeature = defineFeature({
     name: "CMS Installations",
     description:
         "Inspect and administer the collection installations, provider installations and contract selections of one CMS instance.",
-    version: "1.0.0",
+    version: "1.1.0",
     publisherId: "ulvia",
     catalogue: { icon: "installations", categories: ["administration", "content", "infrastructure"] },
     documents: new URL("../../../docs/installations/", import.meta.url),
     mapError: mapInstallationError,
     capabilities: [
+        initializationApply,
+        initializationEntry,
+        initializationList,
+        initializationPlan,
+        initializationStatus,
+
         gatewayAuditAppend,
         applyCollectionUpgrade,
         applyContractUpgrade,

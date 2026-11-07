@@ -1,3 +1,4 @@
+import { CollectionValidationError } from "repository/collections/core/errors";
 import type { FeatureErrorMapper } from "@bernouy/ulvia-sdk";
 import { InstallationError } from "repository/application/installations/core/errors";
 import { DocumentationError } from "@bernouy/documentation";
@@ -38,6 +39,19 @@ export const mapInstallationError: FeatureErrorMapper = (cause, capability) => {
         (capability.id.startsWith("repository.") && cause instanceof RepositoryDiscoveryError)
     ) {
         code = cause.code;
+    } else if (capability.id.startsWith("initialization.")) {
+        code =
+            status === 409
+                ? "REVISION_CONFLICT"
+                : status === 423
+                  ? "UPGRADE_IN_PROGRESS"
+                  : status === 404
+                    ? "NOT_FOUND"
+                    : cause instanceof CollectionValidationError
+                      ? "RELEASE_MISMATCH"
+                      : cause instanceof TypeError || cause instanceof RangeError || status === 400 || status === 422
+                        ? "INVALID_INPUT"
+                        : "CORE_UNAVAILABLE";
     } else if (providerCommands.has(capability.id)) {
         if (status === 403 || reason === "not_authorized") {
             code = "FORBIDDEN";

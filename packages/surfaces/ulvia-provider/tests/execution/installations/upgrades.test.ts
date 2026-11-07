@@ -6,7 +6,7 @@ import { parseUlviaSchema, validateSchemaValue } from "@bernouy/ulvia-contracts/
 const context = {
     siteId: "site:one",
     requestId: "00000000-0000-4000-8000-000000000001",
-    contractVersion: "1.0.0",
+    contractVersion: "1.1.0",
     providerId: "ulvia/primary-provider",
 };
 const digest = `sha256:${"a".repeat(64)}`;

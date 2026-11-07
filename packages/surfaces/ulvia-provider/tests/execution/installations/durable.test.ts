@@ -7,12 +7,14 @@ const operations = {
     "apply-contract-upgrade": { selections: [selection], planDigest: digest },
     "resume-contract-upgrade": { upgradeId: digest },
 };
-test("official Installations derives all four durable workers and recovers exact terminal DTOs without duplicate receipts", async () => {
+test("official Installations derives all five durable workers and recovers exact terminal DTOs without duplicate receipts", async () => {
     const first = await installationHost();
     let recovered: Awaited<ReturnType<typeof installationHost>> | undefined;
     try {
-        expect(first.workers).toHaveBeenCalledTimes(4);
-        expect(first.workers.mock.calls.map(([, id]) => id).sort()).toEqual(Object.keys(operations).sort());
+        expect(first.workers).toHaveBeenCalledTimes(5);
+        expect(first.workers.mock.calls.map(([, id]) => id).sort()).toEqual(
+            [...Object.keys(operations), "initialization.apply"].sort(),
+        );
         const handles: Record<string, string> = {};
         for (const [id, input] of Object.entries(operations)) {
             const response = await first.call(id, input);

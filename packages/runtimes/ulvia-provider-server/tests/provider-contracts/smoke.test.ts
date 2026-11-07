@@ -28,6 +28,7 @@ test("all administration capability areas dispatch outputs matching their offici
         throw new Error("Unexpected smoke service call");
     };
     const core = {
+        initialization: { siteId: "default", entry: unused, status: unused, list: unused, plan: unused, apply: unused },
         documentation: { get: unused, search: unused },
         repositoryDiscovery: { get: unused, search: unused },
         repo: { getSystem: async () => system, getSystemRevision: async () => 0 },

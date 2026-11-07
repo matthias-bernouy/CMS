@@ -11,7 +11,7 @@ const context = {
     requestId: crypto.randomUUID(),
     siteId: "site-a",
     providerId: "ulvia/provider-a",
-    contractVersion: "1.0.0",
+    contractVersion: "1.1.0",
 };
 
 test("Provider actors cannot approve installations or look up other Providers' credentials", async () => {

@@ -5,7 +5,7 @@ import {
 } from "repository/application/installations/schemas/gateway/authority/gateway.provider.authorize";
 import { gatewayProviderResolveErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { authorizeProvider } from "repository/application/installations/core/gateway/authority";
-import { control } from "repository/application/installations/core/requirements";
+import { control } from "repository/application/installations/core/gateway/requirements";
 export const gatewayProviderAuthorize = defineCapability({
     id: "gateway.provider.authorize",
     description: "gateway provider authorize",

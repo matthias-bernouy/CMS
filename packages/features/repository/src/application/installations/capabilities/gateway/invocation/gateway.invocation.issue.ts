@@ -4,7 +4,7 @@ import {
     gatewayInvocationIssueOutputSchema,
 } from "repository/application/installations/schemas/gateway/invocation/gateway.invocation.issue";
 import { gatewayInvocationIssueErrors as errors } from "repository/application/installations/schemas/common/failures";
-import { requiredGateway, control } from "repository/application/installations/core/requirements";
+import { requiredGateway, control } from "repository/application/installations/core/gateway/requirements";
 export const gatewayInvocationIssue = defineCapability({
     id: "gateway.invocation.issue",
     description:

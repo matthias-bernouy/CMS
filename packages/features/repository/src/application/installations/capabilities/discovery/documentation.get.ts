@@ -4,7 +4,7 @@ import {
     documentationGetOutputSchema,
 } from "repository/application/installations/schemas/discovery/documentation.get";
 import { documentationGetErrors as errors } from "repository/application/installations/schemas/common/failures";
-import { required } from "repository/application/installations/core/requirements";
+import { required } from "repository/application/installations/core/gateway/requirements";
 export const documentationGet = defineCapability({
     id: "documentation.get",
     description:

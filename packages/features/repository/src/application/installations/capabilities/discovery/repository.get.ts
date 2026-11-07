@@ -4,7 +4,7 @@ import {
     repositoryGetOutputSchema,
 } from "repository/application/installations/schemas/discovery/repository.get";
 import { repositoryGetErrors as errors } from "repository/application/installations/schemas/common/failures";
-import { required } from "repository/application/installations/core/requirements";
+import { required } from "repository/application/installations/core/gateway/requirements";
 export const repositoryGet = defineCapability({
     id: "repository.get",
     description:

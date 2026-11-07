@@ -1,7 +1,7 @@
 import type { InstallationServices } from "repository/application/installations/interfaces/services";
 import type { ProviderAdministration } from "repository/application/installations/interfaces/management";
 import type { ImportProviderManifestInput } from "repository/application/installations/interfaces/inputs";
-import { required } from "repository/application/installations/core/requirements";
+import { required } from "repository/application/installations/core/gateway/requirements";
 export function administration(services: InstallationServices) {
     return required(services.management?.administration);
 }

@@ -4,7 +4,7 @@ import {
     documentationSearchOutputSchema,
 } from "repository/application/installations/schemas/discovery/documentation.search";
 import { documentationSearchErrors as errors } from "repository/application/installations/schemas/common/failures";
-import { required } from "repository/application/installations/core/requirements";
+import { required } from "repository/application/installations/core/gateway/requirements";
 export const documentationSearch = defineCapability({
     id: "documentation.search",
     description:

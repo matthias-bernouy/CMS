@@ -5,7 +5,7 @@ import {
 } from "repository/application/installations/schemas/gateway/delegation/gateway.delegation.check";
 import { gatewayDelegationCloseErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { checkDelegation } from "repository/application/installations/core/gateway/authority";
-import { control } from "repository/application/installations/core/requirements";
+import { control } from "repository/application/installations/core/gateway/requirements";
 export const gatewayDelegationCheck = defineCapability({
     id: "gateway.delegation.check",
     description: "Control authority only: check a bounded invocation delegation.",

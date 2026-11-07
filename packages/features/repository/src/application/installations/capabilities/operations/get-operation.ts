@@ -4,7 +4,7 @@ import {
     getOperationOutputSchema,
 } from "repository/application/installations/schemas/operations/get-operation";
 import { getOperationErrors as errors } from "repository/application/installations/schemas/common/failures";
-import { required } from "repository/application/installations/core/requirements";
+import { required } from "repository/application/installations/core/gateway/requirements";
 export const getOperation = defineCapability({
     id: "get-operation",
     access: "admin",

@@ -19,6 +19,17 @@ export async function runEdgeSmoke(
     credentials: { adminEmail: string; adminPassword: string },
     edgeOrigin: string,
 ): Promise<void> {
+    await stage("native initialization", async () => {
+        await page.goto(`${edgeOrigin}/.cms/setup`);
+        await page.getByLabel("Email address").fill(credentials.adminEmail);
+        await page.getByLabel("Password", { exact: true }).fill(credentials.adminPassword);
+        await page.getByRole("button", { name: "Continue", exact: false }).click();
+        await page.getByRole("button", { name: "Use a starter", exact: false }).click();
+        await page.getByRole("button", { name: /^Administration / }).click();
+        await page.getByRole("checkbox").check();
+        await page.getByRole("button", { name: "Confirm and install", exact: false }).click();
+        await page.getByRole("heading", { name: "Your workspace is ready." }).waitFor({ timeout: 120_000 });
+    });
     await stage("sign in", () => signIn(page, credentials, edgeOrigin));
     await stage("admin routes", () => inspectAdminRoutes(page, edgeOrigin));
     await stage("responsive administration", () => inspectResponsiveAdministration(page, edgeOrigin));

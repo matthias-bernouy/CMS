@@ -71,7 +71,7 @@ collections.
 The Provider advertises exact profile references without reading optional
 collection resources. It loads only the selected profile from its bundled
 admitted snapshot when provisioning or recovering an unfinished transition.
-The default `ulvia@1.1.0` and explicit `repository@1.1.0` profiles initialize
+The default `ulvia@1.2.0` and explicit `repository@1.2.0` profiles initialize
 system APIs and the administrator with zero collections and zero Pages. Their
 collection initialization step makes no collection source or content-store calls.
 A Repository can start before its own Edge or public catalogue exists; API
@@ -79,13 +79,59 @@ authentication and publication then work without a browser login Page.
 
 Production images generate `bun run generate:official-bootstrap --core-only`
 and omit authored collections and starter assets. There is no required ZIP.
-The full generator remains available for authoring and example tests. Exact
-`ulvia@1.0.0` and `repository@1.0.0` starter profiles retain their original
-Mossa/Repository Page recipes; provisioning them requires an explicit snapshot
-containing those resources. Missing resources refuse the operation rather than
+The full generator includes the current Mossa and Repository `1.1.0` releases
+for explicit publication, authoring and example tests. Historical profile references
+remain advertised, but provisioning an old profile requires an explicit snapshot
+with its exact original manifest, contracts and optional collection resources. Missing resources refuse the operation rather than
 falling back to the network. They do not prevent ready instances from restarting.
-Collection `bootstrap.json` recipes are optional release data; their admission
-format is implemented, but a general recipe application workflow is not mounted.
+Current profiles select the official Provider manifest and `ulvia/cms.installations`
+contract at `1.1.0`. Profile versions are independent from artifact versions.
+
+## Optional Site Setup
+
+New instances persist an explicit `ulvia-site-initialization/v1` marker during
+provisioning. A missing marker is unavailable: reads never infer initialization
+from zero Pages or backfill old instances. The Edge redirects a missing home Page
+to `/.cms/setup` only while the admitted `initialization.entry` capability reports
+pending. Existing successful Pages and non-home routes add no Gateway calls;
+a missing home Page adds one bounded entry query.
+
+The native HTML/CSS/module screens belong to Edge and require no collection.
+Login uses ordinary `ulvia/cms.access` session effects. Status, recipe discovery,
+review and application use `ulvia/cms.installations` through the same Gateway as
+other contract calls. Only a currently authorized local administrator can read
+or change setup; the public entry query reveals only the pending boolean.
+
+The administrator chooses an empty site or an exact collection bootstrap.
+Empty completion needs no Repository, collection or Page. Starter discovery uses
+the configured Repository, four latest stable collections per page and at most
+64 recipe cards. Mossa's `administration` recipe creates ordinary editable admin
+Pages. Repository's `repository` recipe includes the exact Mossa recipe, omits its
+login Page and supplies its own login and public catalogue Pages. Ordinary
+collection installation or upgrade never executes a bootstrap.
+
+Review resolves exact dependency pins and includes, checks selected capabilities,
+route conflicts and browser-code risks, then simulates Pages against disposable
+Content stores. It makes no durable business changes. The digest binds the
+instance, administrator, execution fingerprint, revisions and complete plan.
+Application recomputes that evidence before mutation. Limits include 16 collections,
+32 recipes, 256 Pages, include depth eight, 32 MiB metadata and 32 MiB aggregate
+assets, with a 60-second preparation deadline and bounded transport requests.
+
+Application is an idempotent asynchronous operation. Its durable site intent holds
+a maintenance fence while collections and Pages are written; receipts checkpoint
+completed Pages. A resumed application uses already imported verified local
+artifacts, including when the Repository is offline. It does not overwrite
+completed Pages. The UI polls one status capability per second, reporting actual
+Page counts and the latest operation outcome. A completed marker survives restart
+and prevents the empty-site choice from reopening setup indefinitely.
+
+The browser journey in
+`tests/integration/instance/repository/initialization.docker.test.ts` covers native
+login, Mossa review and application, mobile overflow, cross-instance review refusal,
+offline empty completion and restart. Domain fault-injection tests cover persisted
+checkpoints and local recovery. These are local validation flows, not evidence of
+a deployment to a public site.
 
 Ready instances reopen their approved persisted manifest, observed implementation
 pins, exact contract admissions and selections. The runtime checks each digest

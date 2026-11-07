@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { containerCluster } from "./cluster";
 import { docker, waitForHttp } from "../docker";
 import { provisionInstance } from "../provision";
+import { scratchSite } from "./scratchSite";
 
 /** Start the first Repository before any public Repository or collection exists. */
 export async function scratchRepository(images: { provider: string; edge: string }) {
@@ -69,7 +70,7 @@ export async function scratchRepository(images: { provider: string; edge: string
             url,
             administrator,
             "http://repository:3000",
-            { id: "repository", version: "1.1.0" },
+            { id: "repository", version: "1.2.0" },
         );
         await run(edgeName, "repository", images.edge, [
             "--publish",
@@ -86,6 +87,9 @@ export async function scratchRepository(images: { provider: string; edge: string
             url,
             administrator,
             providerName,
+            edgeName,
+            createSite: (alias: string) =>
+                scratchSite(cluster, images.edge, providerUrl, operatorToken, administrator, alias),
             close: () => cluster.close(),
             async restart() {
                 await docker(["restart", providerName]);

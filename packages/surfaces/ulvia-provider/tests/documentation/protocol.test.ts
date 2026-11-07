@@ -37,7 +37,7 @@ test("HTTP and MCP expose exact selected documentation with discoverable lightwe
                     call.contractId,
                     call.capabilityId,
                     call.input as Record<string, unknown>,
-                    context(),
+                    context("en", admission.release.version),
                 ),
             }),
         },

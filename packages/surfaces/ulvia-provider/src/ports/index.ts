@@ -1,4 +1,3 @@
-import type { SiteInitializationService } from "@bernouy/repository/collections/installations";
 import type {
     InstallationServices,
     InstallationGateway,
@@ -28,7 +27,7 @@ export interface CmsContentDependencies
 }
 
 export interface CmsCollectionDependencies {
-    readonly initialization?: SiteInitializationService;
+    readonly initialization?: InstallationServices["initialization"];
     readonly documentation?: InstallationServices["documentation"];
     readonly repositoryDiscovery?: InstallationServices["discovery"];
     readonly authoring?: AuthoringService;

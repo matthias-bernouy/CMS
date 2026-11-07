@@ -15,6 +15,7 @@ import type { ProviderInstallationStore } from "repository/providers/installatio
 import type { ContractSelectionStore } from "repository/providers/selections/interfaces/ContractSelectionStore";
 import type { ContractUpgradeService } from "repository/exports/providers/selections";
 export interface InstallationGateway {
+    readonly administrators?: { get(sub: string): Promise<{ readonly enabled: boolean }> };
     readonly describeContract?: (contractId: string) => Promise<CatalogueContractRelease | null>;
     readonly siteId: string;
     readonly contractUpgrades?: ContractUpgradeService;

@@ -17,7 +17,7 @@ test("Installations pins and durable adapter are preflighted before service proj
     const options = { providerId: "ulvia/primary-provider", scope: { siteId: "default", instanceId: "instance-a" } };
     for (const claims of [
         [{ ...claim, digest: "sha256:" + "0".repeat(64) }],
-        [{ ...claim, version: "1.1.0" }],
+        [{ ...claim, version: "99.0.0" }],
         [claim, claim],
         [{ ...claim, contractId: "example/unknown" }],
     ]) {
@@ -50,6 +50,7 @@ test("a selected Installations claim refuses missing domain integrations without
     const claim = build.implementations.find(({ contractId }) => contractId === "ulvia/cms.installations")!;
     const full = installationFixturePorts();
     const required = [
+        "initialization",
         "collections",
         "collectionUpgrades",
         "gateway",

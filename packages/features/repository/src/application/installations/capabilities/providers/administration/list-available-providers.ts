@@ -3,7 +3,7 @@ import { emptyInputSchema } from "repository/application/installations/schemas/c
 import { listAvailableProvidersOutputSchema } from "repository/application/installations/schemas/providers/administration/list-available-providers";
 import { approveProviderConnectionErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { administration, availableProviders } from "repository/application/installations/core/providers/administration";
-import { actor } from "repository/application/installations/core/requirements";
+import { actor } from "repository/application/installations/core/gateway/requirements";
 export const listAvailableProviders = defineCapability({
     id: "list-available-providers",
     description: "list available providers",

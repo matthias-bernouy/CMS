@@ -68,7 +68,7 @@ behavior.
   receipts, leases, instance retention, recovery and shutdown draining. Exact-version
   declared errors may be supplied by an explicit registration reader.
 
-- `ulvia/cms.installations` is mounted only from the SDK inventory; its four durable
+- `ulvia/cms.installations` is mounted only from the SDK inventory; its five durable
   workers are derived from the selected definition. Never restore family registrars
   or unselected routes. Inject collections/upgrades, gateway/admin, documentation,
   discovery and operation-read ports before mounting. `createInstallationOperationQueries`
@@ -78,3 +78,9 @@ behavior.
 - Provider metadata in `exports/provider/definition.json` has no implementation claims.
   `compileOfficialManifest` consumes all exact claims/dependencies from the same SDK
   inventory used for runtime artifacts and mounting.
+
+- Installations 1.1 adds native initialization; its default worker uses the same SDK queue.
+  Resolve verified aliases and current administrator grants before receipt access and
+  again in recovered workers. Inject the structural initialization service; never
+  restore the old registrar. Upgrade-operation queries retain their declared DTO's
+  capability-ID set; initialization progress uses one scoped metadata-only latest read.

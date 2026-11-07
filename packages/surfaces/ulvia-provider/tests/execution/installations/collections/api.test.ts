@@ -12,7 +12,7 @@ import type { CollectionRepositorySource } from "@bernouy/repository/collections
 
 const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
-    contractVersion: "1.0.0",
+    contractVersion: "1.1.0",
     siteId: "default",
     providerId: "ulvia/primary-provider",
 };

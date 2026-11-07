@@ -22,7 +22,7 @@
     "text.revoke.label": "Revoke",
     "text.claim.label": "Claim namespace",
     "text.namespace.label": "Namespace",
-    "text.loading.label": "Loading\u2026",
+    "text.loading.label": "Loading…",
     "text.failed.label": "The request could not be completed. Check your access and try again.",
     "text.next.label": "Next page",
     "text.query.label": "Search resources",
@@ -72,5 +72,7 @@
     "text.release-channel.label": "Release channel",
     "text.stable.label": "Stable",
     "text.beta.label": "Beta",
-    "text.all-releases.label": "All releases"
+    "text.all-releases.label": "All releases",
+    "bootstrap.label": "Repository",
+    "bootstrap.description": "Create the public catalogue, account Pages and Mossa administration."
 }

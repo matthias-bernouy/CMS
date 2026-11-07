@@ -5,7 +5,7 @@ import {
 } from "repository/application/installations/schemas/providers/administration/pair-provider-connection";
 import { approveProviderConnectionErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { administration } from "repository/application/installations/core/providers/administration";
-import { actor } from "repository/application/installations/core/requirements";
+import { actor } from "repository/application/installations/core/gateway/requirements";
 export const pairProviderConnection = defineCapability({
     id: "pair-provider-connection",
     description:
