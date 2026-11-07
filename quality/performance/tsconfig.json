@@ -23,7 +23,7 @@
                 "../../packages/features/cms-files/src/*"
             ],
             "cms-gateway/*": [
-                "../../packages/features/cms-gateway/src/*"
+                "../../packages/platform/gateway/src/*"
             ],
             "cms-repository/*": [
                 "../../packages/features/cms-repository/src/*"
@@ -75,6 +75,12 @@
             ],
             "cms-documentation/*": [
                 "../../packages/features/cms-documentation/src/*"
+            ],
+            "ulvia-contracts/*": [
+                "../../packages/platform/contracts/src/*"
+            ],
+            "ulvia-providers/*": [
+                "../../packages/platform/providers/src/*"
             ]
         }
     },

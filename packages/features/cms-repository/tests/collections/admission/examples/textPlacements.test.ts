@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { parseCollectionRelease } from "../../../../src/exports/collections/index";
+import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
 import { exampleCollection } from "./fixture";
 
 test.each(["textarea", "setting"])(

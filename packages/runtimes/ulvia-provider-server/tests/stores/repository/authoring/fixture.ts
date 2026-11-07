@@ -1,4 +1,4 @@
-import { resourceRuntimeNamespace } from "@bernouy/cms-repository/contracts/protocol";
+import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 import { join } from "node:path";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";

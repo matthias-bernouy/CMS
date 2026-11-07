@@ -1,5 +1,5 @@
-import { isResourceId, resourcePublisher, resourceName } from "cms-repository/exports/contracts/protocol";
-import { documentationPath } from "cms-repository/exports/contracts/documentation";
+import { isResourceId, resourcePublisher, resourceName } from "@bernouy/ulvia-contracts/protocol";
+import { documentationPath } from "@bernouy/ulvia-contracts/documentation";
 import { RepositoryRequestError } from "../../core/errors";
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import { stat } from "node:fs/promises";
 import { ensureDurableDirectory } from "../core/durable";
 import { listDirectories, writeImmutableFile } from "../core/immutableFiles";
-import { isRepositoryIdentifier } from "cms-repository/exports/contracts/compatibility";
+import { isRepositoryIdentifier } from "@bernouy/ulvia-contracts/compatibility";
 
 export type ArtifactType = "contracts" | "providers";
 export type StoredArtifact = {

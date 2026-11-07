@@ -1,4 +1,4 @@
-import { isResourceId, resourceName, resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
+import { isResourceId, resourceName, resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 import { invalid } from "./errors";
 import { string } from "./values";
 

@@ -1,6 +1,6 @@
-import { resourcePublisher } from "@bernouy/cms-repository/contracts/protocol";
+import { resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
 import { sha256Digest } from "@bernouy/binary-media";
-import { admitContractBundle } from "@bernouy/cms-repository/contracts";
+import { admitContractBundle } from "@bernouy/ulvia-contracts";
 import type { DocumentationEmbeddings, DocumentationSource } from "@bernouy/cms-documentation";
 
 export async function fixture(

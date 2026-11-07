@@ -1,6 +1,6 @@
 import { mcpUpload } from "./uploads";
 import { CapabilityMcpBinding, createCapabilityMcpHttpHandler } from "@bernouy/cms-gateway/mcp";
-import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import type { McpInvocationContext } from "@bernouy/cms-gateway/mcp";
 import { authorizationPage, connectionsPage } from "./pages";
 import { accessCall, mcpActor, boundedText, form, json, McpHttpError, type CmsMcpHost } from "./protocol";

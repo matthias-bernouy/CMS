@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { ProviderExecutionSupport } from "../../../../src/runtime/instances/profiles/execution/support";
-import { parseContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { apiSignature } from "./apiSignature";
 import previous from "./previous-apis.json";
 

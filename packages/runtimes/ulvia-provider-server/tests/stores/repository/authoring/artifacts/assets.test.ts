@@ -7,7 +7,7 @@ import { artifactFixture, contractSnapshot, contractId } from "./fixtures";
 const bytes = new Uint8Array(
     await Bun.file(
         new URL(
-            "../../../../../../../features/cms-repository/fixtures/contracts/protocol-v1/mock-assets/receipt.svg",
+            "../../../../../../../platform/contracts/fixtures/protocol-v1/mock-assets/receipt.svg",
             import.meta.url,
         ),
     ).arrayBuffer(),

@@ -1,15 +1,18 @@
 import type { NamespaceInventoryQuery, NamespaceInventoryPage } from "./namespaces";
 import { join } from "node:path";
 import { RepositorySourceClient } from "../sources/client";
-import { CollectionAuthoringValidationError } from "cms-repository/exports/collections/build";
+import { CollectionAuthoringValidationError } from "cms-repository/collections/tooling/authoring/source";
 import { prepareRemoteCollection, type AuthoringHost } from "./preparations/prepare";
 import { CollectionPreparationError } from "./preparations/errors";
 import { collectionPreflight } from "./preflight";
 import { publishPreparedCollection } from "./publication/publish";
 import { RepositoryRequestError } from "../core/errors";
 import { NamespaceAccessError } from "./namespaces";
-export { CollectionPreparationError, CollectionPublicationRecoveryError } from "./preparations/errors";
-import type { RepositoryNamespaceCredential } from "cms-repository/exports/repository/namespaces";
+export {
+    CollectionPreparationError,
+    CollectionPublicationRecoveryError,
+} from "cms-repository/repository/authoring/preparations/errors";
+import type { RepositoryNamespaceCredential } from "cms-repository/repository/publication/transport/credentials";
 import { discardPreparationWorkspace } from "./preparations/workspace";
 
 export interface RepositoryConnectionStatus {

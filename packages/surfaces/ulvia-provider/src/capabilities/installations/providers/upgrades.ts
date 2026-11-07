@@ -1,8 +1,8 @@
 import type { ContractUpgradePlan } from "@bernouy/cms-repository/providers/selections";
-import { parseCapabilityGrants } from "@bernouy/cms-repository/providers/selections";
+import { parseCapabilityGrants } from "@bernouy/ulvia-providers/selections";
 import type { ProviderCapabilityRegistry } from "../../../dispatch/registry";
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
-import type { UlviaProviderGateway } from "../../../ports";
+import type { UlviaProviderGateway } from "../../../ports/index";
 import type { ProviderOperationExecutor } from "../../../operations/ProviderOperationExecutor";
 import { collectionCommand, requiredText } from "../support";
 

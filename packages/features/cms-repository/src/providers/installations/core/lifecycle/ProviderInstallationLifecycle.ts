@@ -1,23 +1,28 @@
 import { checkProviderRetention } from "./retention";
-import { deepFreeze } from "cms-repository/exports/contracts/protocol";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
-import { rejectUnknownKeys } from "cms-repository/providers/manifests/core/protocol/values";
+import { rejectUnknownKeys } from "@bernouy/ulvia-providers/validation";
 import type {
     ProviderInstallationChanges,
     ProviderInstallationPreparation,
 } from "../../interfaces/ProviderInstallationPreparation";
 import type {
     ProviderInstallationClock,
-    ProviderInstallationScope,
     ProviderInstallationStore,
     ProviderInstallationWorkflowOptions,
-} from "../../interfaces/ProviderInstallationStore";
-import { parseInstallationDocument } from "../parsing/documents";
-import { parseProviderRuntimeReport } from "../reports/parseProviderRuntimeReport";
+} from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
+import type { ProviderInstallationScope } from "@bernouy/ulvia-providers/installations";
+import { parseInstallationDocument } from "@bernouy/ulvia-providers/validation";
+import { parseProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 import { candidateFromInstallation } from "./candidates";
-import { ProviderInstallationWorkflowError } from "./errors";
+import { ProviderInstallationWorkflowError } from "@bernouy/ulvia-providers/installations";
 import { validateProposal, workflowOptions } from "./preparations";
-import { assertActive, assertCurrentTimestamp, assertFreshPreparation, assertRevision } from "./state";
+import {
+    assertActive,
+    assertCurrentTimestamp,
+    assertFreshPreparation,
+    assertRevision,
+} from "cms-repository/providers/installations/core/lifecycle/state";
 
 /**
  * Pure domain workflow: no HTTP, credential persistence, registration or grants.

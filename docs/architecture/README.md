@@ -1,16 +1,17 @@
 # Workspace Architecture
 
 CmsCore is a Bun and TypeScript workspace. The root `package.json` declares
-four reusable CMS package layers, with dependencies permitted toward lower layers:
+five reusable CMS package layers, with dependencies permitted toward lower layers:
 
 ```text
-runtimes -> surfaces -> features -> foundation
+runtimes -> surfaces -> features -> platform -> foundation
 ```
 
 | Layer | Responsibility |
 | --- | --- |
 | `foundation/` | Generic building blocks without CMS-domain knowledge. |
-| `features/` | CMS contracts, validation, domain behavior and optional adapters or handlers. |
+| `platform/` | Ulvia contracts, Provider models, read ports and generic capability execution. |
+| `features/` | CMS domain behavior, persistent catalogues, administrative workflows and optional adapters. |
 | `surfaces/` | HTTP applications assembled from injected feature dependencies. |
 | `runtimes/` | Executable composition roots that choose adapters, read configuration and start listeners. |
 
@@ -77,9 +78,14 @@ capability references and instance-scoped hybrid discovery over HTTP and MCP.
 See [Instance MCP V1](instance-mcp.md) for delegated connections, collection
 authoring and the HTTP-only Repository boundary.
 
-`cms-repository` owns immutable contract releases and provider manifests,
-site installation and selection models, revisioned storage, and authored
-collection admission. It does not call providers.
+`@bernouy/ulvia-contracts` owns immutable contract definitions, admission, bindings
+and compatibility. `@bernouy/ulvia-providers` owns manifest admission, execution
+models, selection validation and read ports. These Platform packages contain no
+business capability implementations or persistent catalogues.
+
+`cms-repository` owns persistent contract/manifest catalogues, installation and
+selection mutation workflows, revisioned storage and authored collection admission.
+It does not call business capability providers.
 
 `cms-gateway` owns `invocation` and `identity`. It resolves exact
 selections, checks readiness and authorization, executes admitted transport

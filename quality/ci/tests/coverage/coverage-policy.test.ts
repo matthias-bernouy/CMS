@@ -1,11 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    assertBaselineUpdateAllowed,
-    assertEveryPackageHasTests,
-    isCoverageRuntimeMigration,
-    normalizeCoverageReference,
-    resolveCoverageReference,
-} from "../../coverage/ratchet";
+import { assertBaselineUpdateAllowed, assertEveryPackageHasTests, isCoverageRuntimeMigration, normalizeCoverageReference, resolveCoverageReference } from "../../coverage/ratchet";
 
 describe("coverage policy", () => {
     test("requires every workspace package to own a test directory", () => {

@@ -4,8 +4,8 @@ import { resolve } from "node:path";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { CmsFilesService } from "@bernouy/cms-files";
 import { InMemoryCmsFilesStore } from "@bernouy/cms-files/memory";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
-import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
+import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { CmsFileWorkspace } from "../../src/runtime/stores/CmsFileWorkspace";
 

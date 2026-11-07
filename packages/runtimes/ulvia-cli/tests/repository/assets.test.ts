@@ -17,10 +17,7 @@ test("remote contract transfer preserves and re-verifies declared fixture bytes"
     try {
         await server.connect(sourceData);
         await mkdir(join(directory, "fixtures"), { recursive: true });
-        const fixtureRoot = resolve(
-            import.meta.dir,
-            "../../../../features/cms-repository/fixtures/contracts/protocol-v1",
-        );
+        const fixtureRoot = resolve(import.meta.dir, "../../../../platform/contracts/fixtures/protocol-v1");
         const definition = await readFile(join(fixtureRoot, "mock.contract.json"));
         const asset = await readFile(join(fixtureRoot, "mock-assets", "receipt.svg"));
         await writeAuthoredContractFixture(directory, definition);

@@ -1,4 +1,4 @@
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { DEFAULT_COLLECTION_LIMITS } from "cms-repository/collections/core/limits";
 import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
 import { repositoryBaseUrl } from "cms-repository/repository-http/baseUrl";
@@ -14,7 +14,11 @@ import type {
     CollectionRepositoryReference,
     CollectionRepositorySource,
 } from "./interfaces";
-import { parseCollectionCataloguePage, validCollectionReference, validCollectionRepositoryId } from "./parseCatalogue";
+import {
+    parseCollectionCataloguePage,
+    validCollectionReference,
+    validCollectionRepositoryId,
+} from "cms-repository/collections/sources/parseCatalogue";
 
 const ASSET_FETCH_CONCURRENCY = 4;
 const CATALOGUE_PAGE_SIZE = 256;

@@ -1,4 +1,4 @@
-import { deepFreeze } from "@bernouy/cms-repository/contracts/protocol";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
 
 type Entry<T> = { value: T; bytes: number };

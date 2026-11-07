@@ -5,7 +5,7 @@ import type {
     BindingQueryCapabilityResolver,
 } from "@bernouy/cms-content/page-document";
 import { ContentValidationError, type SvgCapabilityValidator } from "@bernouy/cms-content";
-import { compileContractBindings, matchPathTemplate } from "@bernouy/cms-repository/contracts/bindings";
+import { compileContractBindings, matchPathTemplate } from "@bernouy/ulvia-contracts/bindings";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 

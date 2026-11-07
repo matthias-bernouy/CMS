@@ -1,6 +1,6 @@
 import { ProviderCapabilityDispatchError } from "@bernouy/cms-gateway/provider/server";
-import type { ErrorMessageKey } from "./catalogue";
-import { ERROR_MESSAGES } from "./catalogue";
+import type { ErrorMessageKey } from "./catalogue/index";
+import { ERROR_MESSAGES } from "./catalogue/index";
 
 export type FailureReason = Readonly<{
     code: string;

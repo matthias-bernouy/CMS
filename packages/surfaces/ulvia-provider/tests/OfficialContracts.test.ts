@@ -11,12 +11,12 @@ import {
     type UlviaProviderDependencies,
     type CmsFileWorkspace,
 } from "@bernouy/ulvia-provider";
-import { admitContractBundleJson, parseContractReleaseJson, resolveContract } from "@bernouy/cms-repository/contracts";
-import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
+import { admitContractBundleJson, parseContractReleaseJson, resolveContract } from "@bernouy/ulvia-contracts";
+import type { ProviderManifestDigest } from "@bernouy/ulvia-providers";
 import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
-import { UlviaProvider } from "../src";
+import { UlviaProvider } from "../src/index";
 import type { CmsFilesService } from "@bernouy/cms-files";
 import { CmsSecrets } from "@bernouy/cms-secrets";
 import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";

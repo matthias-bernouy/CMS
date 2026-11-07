@@ -1,4 +1,4 @@
-import { satisfiesVersionRange } from "@bernouy/cms-repository/contracts/compatibility";
+import { satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
 import type { GatewayHttpInvoker } from "@bernouy/cms-gateway/http";
 import { queryContract } from "../support/queryContract";
 import { expect, test } from "bun:test";

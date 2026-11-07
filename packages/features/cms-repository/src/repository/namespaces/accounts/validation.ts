@@ -1,5 +1,8 @@
 import { RepositoryRequestError } from "../../core/errors";
-import type { RepositoryNamespaceView, RepositoryOwnedNamespace } from "./interfaces";
+import type {
+    RepositoryNamespaceView,
+    RepositoryOwnedNamespace,
+} from "cms-repository/repository/namespaces/accounts/interfaces";
 
 export const MAX_ACCOUNT_NAMESPACES = 32;
 

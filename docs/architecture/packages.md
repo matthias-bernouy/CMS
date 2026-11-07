@@ -6,7 +6,7 @@ files explain implementation invariants.
 
 ## Publication Policy
 
-All workspace packages use the repository MIT license. Foundation, feature, and
+All workspace packages use the repository MIT license. Foundation, Platform, feature, and
 surface packages are publishable libraries unless their manifest explicitly sets
 `"private": true`. The CLI source package `@bernouy/ulvia-cli` stays private;
 the release toolchain bundles it into the public `@cyaxis/ulvia` command-line
@@ -35,6 +35,18 @@ already been published to a registry.
 | `@bernouy/text-embeddings` | Explicit local E5/ONNX subprocess adapter with native telemetry disabled; owns Transformers.js and its native dependencies. |
 | `@bernouy/logging` | Structured diagnostics, bounded attributes, central redaction, Node sinks and test loggers. |
 
+## Platform
+
+| Directory | Package | Responsibility |
+| --- | --- | --- |
+| `platform/contracts` | `@bernouy/ulvia-contracts` | Contract schemas, parsing, validation, admission, bindings, compatibility and release read ports. |
+| `platform/providers` | `@bernouy/ulvia-providers` | Manifest admission, Provider execution models, selection validation, readiness and read ports. |
+| `platform/gateway` | `@bernouy/cms-gateway` | Authorized generic capability invocation, HTTP/MCP transports, Provider SDK, authority, identities and audit. |
+
+Platform depends only on Platform and Foundation. Catalogue publication, installation
+approval and selection replacement remain feature-owned. Edge and the official
+Provider remain surfaces; documentation search remains a feature.
+
 ## Features
 
 | Package | Responsibility |
@@ -43,8 +55,7 @@ already been published to a registry.
 | `@bernouy/cms-content` | Provider-neutral Pages, routes, Blocs, settings, themes, metadata, structured data, indexing, sitemap snapshots, rendering and generic contribution inputs. |
 | `@bernouy/cms-observability` | Instance-scoped journal validation, bounded collection, query and retention services; explicit memory and Mongo adapters. |
 | `@bernouy/cms-files` | Official provider implementation for namespaces, credentials, uploads, immutable files, private signatures and image representations. |
-| `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues, authored collection admission, content projections, reviewed release upgrades and the explicit collection build toolchain. |
-| `@bernouy/cms-gateway` | Authorized provider-neutral capability invocation, identities and streaming binary transport. |
+| `@bernouy/cms-repository` | Persistent release catalogues, publication, installation/selection workflows, authored collection admission, content projections, upgrades and build tooling. |
 | `@bernouy/cms-secrets` | Credential-scoped secret namespaces, metadata and lifecycle over an injected generic encrypted secret store. |
 | `@bernouy/cms-emailer` | Provider-neutral outbound email delivery interface. |
 | `@bernouy/cms-smtp-emailer` | SMTP-specific administration, secret-backed configuration and the official Nodemailer implementation. |

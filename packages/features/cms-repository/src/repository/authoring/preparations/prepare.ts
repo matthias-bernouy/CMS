@@ -1,15 +1,26 @@
-import { isResourceId, resourceName } from "cms-repository/exports/contracts/protocol";
+import { isResourceId, resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { writePreparation, sourceDigest } from "./record";
 import type { PublicationPreflight } from "../preflight";
-import type { AdmittedCollectionRelease } from "cms-repository/exports/collections/index";
-import { prepareCollectionRelease } from "cms-repository/exports/collections/build";
-import { parseSourceSnapshot, canonicalSourceSnapshot, type SourceAsset } from "../snapshot";
+import type { AdmittedCollectionRelease } from "cms-repository/collections/interfaces/CollectionAdmission";
+import { prepareCollectionRelease } from "cms-repository/collections/tooling/authoring/source";
+import {
+    parseSourceSnapshot,
+    canonicalSourceSnapshot,
+    type SourceAsset,
+} from "cms-repository/repository/authoring/snapshot";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { collectionBrowserRisk, collectionBrowserRiskDigest } from "cms-repository/exports/collections/index";
+import {
+    collectionBrowserRisk,
+    collectionBrowserRiskDigest,
+} from "cms-repository/collections/core/validation/browserCapabilities";
 import { randomUUID } from "node:crypto";
-import { reservePreparationWorkspace, commitPreparationWorkspace, discardPreparationWorkspace } from "./workspace";
+import {
+    reservePreparationWorkspace,
+    commitPreparationWorkspace,
+    discardPreparationWorkspace,
+} from "cms-repository/repository/authoring/preparations/workspace";
 
 export interface AuthoringHost {
     readonly root: string;

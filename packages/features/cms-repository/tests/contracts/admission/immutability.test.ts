@@ -1,8 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { admitContractRelease, computeReleaseDigest } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { deepFreeze } from "@bernouy/cms-repository/contracts/protocol";
-import { capabilityDocument, contractDocument, objectSchema, stringSchema } from "../support/fixtures";
+import { admitContractRelease, computeReleaseDigest } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
+import {
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+    stringSchema,
+} from "../../../../../platform/contracts/tests/support/fixtures";
 
 describe("release snapshot ownership", () => {
     test("admission and publication own frozen copies without freezing caller mock data", async () => {

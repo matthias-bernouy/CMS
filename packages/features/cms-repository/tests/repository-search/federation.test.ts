@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { RepositoryDiscovery } from "@bernouy/cms-repository/repository/search";
-import type { RepositoryDiscoverySource } from "@bernouy/cms-repository/repository/search";
+import { RepositoryDiscovery } from "cms-repository/repository/search/client/discovery";
+import type { RepositoryDiscoverySource } from "cms-repository/repository/search/interfaces";
 import { row } from "./fixture";
 
 function remote(id: string, fail = false): RepositoryDiscoverySource {

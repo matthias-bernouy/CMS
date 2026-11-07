@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { randomUUID } from "node:crypto";
-import { isResourceId, resourceName, parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { isResourceId, resourceName, parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import type { CollectionPublisher } from "../CollectionAuthoring";
 import type { AuthoringHost } from "../preparations/prepare";
 import {

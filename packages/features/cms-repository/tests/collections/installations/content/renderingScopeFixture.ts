@@ -2,8 +2,9 @@ import { collectionFixture } from "../../admission/examples/buildFixture";
 import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
 import type { BlocListItemResponse } from "@bernouy/cms-content";
 import { createContentReader } from "@bernouy/cms-content/rendering";
-import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
+import { withInstalledCollections } from "cms-repository/collections/integration/content/installedRepository";
+import { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+import { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
 
 export class RenderingStorage extends MemoryCollectionStorage {
     siteReads = 0;

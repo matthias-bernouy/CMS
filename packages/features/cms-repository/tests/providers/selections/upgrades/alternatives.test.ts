@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { validateCapabilityUsage } from "@bernouy/cms-repository/providers/selections";
-import type { CapabilityUsageEvidence } from "@bernouy/cms-repository/providers/selections";
+import { validateCapabilityUsage } from "cms-repository/providers/selections/core/upgrades/requirements";
+import type { CapabilityUsageEvidence } from "cms-repository/providers/selections/interfaces/ContractUpgrade";
 import { graphFixture } from "../fixtures";
 
 test("a host adapter's declared alternatives migrate without changing a page's explicit legacy references", async () => {

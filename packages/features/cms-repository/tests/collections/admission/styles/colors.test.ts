@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
+import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
 import { colorCollection } from "./fixture";
 
 test.each([

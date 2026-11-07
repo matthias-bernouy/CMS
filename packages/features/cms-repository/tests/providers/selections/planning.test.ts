@@ -1,9 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import {
-    DEFAULT_CONTRACT_SELECTION_LIMITS,
-    planContractSelections,
-} from "@bernouy/cms-repository/providers/selections";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { DEFAULT_CONTRACT_SELECTION_LIMITS, planContractSelections } from "@bernouy/ulvia-providers/selections";
 import { graphFixture, siteId } from "./fixtures";
 import { contractDocument } from "../support/fixtures";
 

@@ -1,4 +1,4 @@
-import type { AdmittedContractRelease, ReleaseDigest } from "@bernouy/cms-repository/contracts";
+import type { AdmittedContractRelease, ReleaseDigest } from "@bernouy/ulvia-contracts";
 
 export interface DocumentationReference {
     readonly contractId: string;

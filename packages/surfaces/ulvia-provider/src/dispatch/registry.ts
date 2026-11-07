@@ -14,7 +14,7 @@ import {
     ProviderCapabilityDispatchError,
 } from "@bernouy/cms-gateway/provider/server";
 import type { ProviderCapabilityHandler } from "@bernouy/cms-gateway/provider/server";
-import type { ResolvedContract } from "@bernouy/cms-repository/contracts";
+import type { ResolvedContract } from "@bernouy/ulvia-contracts";
 import { localizeOfficialError } from "./errors/localize";
 
 /** Official copy is separate from the provider-neutral SDK and contract schemas. */

@@ -1,13 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
-import {
-    CatalogueSelectionDependencies,
-    planContractSelections,
-    type ContractSelection,
-} from "@bernouy/cms-repository/providers/selections";
+import { InMemoryProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import type { ProviderInstallationStore } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
+import { CatalogueSelectionDependencies } from "cms-repository/providers/selections/default-implementation/CatalogueSelectionDependencies";
+import { planContractSelections, type ContractSelection } from "@bernouy/ulvia-providers/selections";
 import { contractDocument, implementation, releaseCatalogue, requirement } from "../support/fixtures";
 import { graphFixture, installationFor, siteId } from "./fixtures";
 

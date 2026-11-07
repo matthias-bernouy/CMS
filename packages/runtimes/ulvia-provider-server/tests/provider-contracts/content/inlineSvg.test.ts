@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { resolveSvgSources } from "../../../src/runtime/content/inlineSvg";
-import { gatewayRoute } from "../../../../../features/cms-gateway/tests/fixtures";
+import { gatewayRoute } from "../../../../../../tests/integration/gateway/fixtures";
 const SVG = '<svg viewBox="0 0 24 24"><path d="M0 0"></path></svg>';
 test("immutable SVG resolution uses the Provider client and caches a public query once", async () => {
     const route = await gatewayRoute({ binary: true });

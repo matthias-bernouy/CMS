@@ -6,7 +6,7 @@ import {
     admitContractReleaseJson,
     parseContractReleaseJson,
     type AdmittedContractRelease,
-} from "cms-repository/exports/contracts/index";
+} from "@bernouy/ulvia-contracts";
 import {
     assertUniqueSourceIds,
     compareOrdinal,

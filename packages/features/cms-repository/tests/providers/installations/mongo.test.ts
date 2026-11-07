@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { Db } from "mongodb";
-import { MongoProviderInstallationStore } from "@bernouy/cms-repository/providers/mongo";
+import { MongoProviderInstallationStore } from "cms-repository/providers/installations/default-implementation/mongo/MongoProviderInstallationStore";
 import { installationSelectionRevision } from "cms-repository/providers/installations/core/selectionRevision";
 import { installationDocument } from "cms-repository/providers/installations/default-implementation/mongo/record";
 import { installationWorkflow } from "./lifecycle/fixtures";

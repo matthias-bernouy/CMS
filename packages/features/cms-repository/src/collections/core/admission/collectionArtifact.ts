@@ -1,13 +1,20 @@
-import { canonicalizeIJson, parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { canonicalizeIJson, parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import type {
     AdmittedCollectionRelease,
     CollectionDigest,
     VerifiedCollectionReleaseMetadata,
 } from "../../interfaces/CollectionAdmission";
-import type { CollectionBundleAsset, VerifiedCollectionAsset } from "../../interfaces/CollectionAssets";
+import type {
+    CollectionBundleAsset,
+    VerifiedCollectionAsset,
+} from "cms-repository/collections/interfaces/CollectionAssets";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { CollectionValidationError, translateCollectionError } from "../errors";
-import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../limits";
+import {
+    DEFAULT_COLLECTION_LIMITS,
+    normalizeCollectionLimits,
+    type CollectionLimits,
+} from "cms-repository/collections/core/limits";
 import { parseCollectionRelease } from "../parsing/parseCollectionRelease";
 import { snapshotCollectionAssets, verifyCollectionAssets } from "./assets";
 

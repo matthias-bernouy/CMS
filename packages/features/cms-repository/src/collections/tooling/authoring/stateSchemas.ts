@@ -1,5 +1,5 @@
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { DEFAULT_RELEASE_LIMITS } from "cms-repository/exports/contracts/index";
+import { DEFAULT_RELEASE_LIMITS } from "@bernouy/ulvia-contracts";
 
 /** Authoring-only references are materialized from exact admitted outputs, never published. */
 export async function materializeStateSchemas(states: unknown, contracts?: ReleaseCatalogue): Promise<unknown> {

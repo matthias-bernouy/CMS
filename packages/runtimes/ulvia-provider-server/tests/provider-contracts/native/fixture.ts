@@ -1,8 +1,8 @@
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
-import type { ProviderExecutionState } from "@bernouy/cms-repository/providers/selections";
+import type { ProviderExecutionState } from "@bernouy/ulvia-providers/selections";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { gatewayRoute } from "../../../../../features/cms-gateway/tests/fixtures";
-import { specializedRoute } from "../../../../../features/cms-gateway/tests/invocation/specialization/fixture";
+import { gatewayRoute } from "../../../../../../tests/integration/gateway/fixtures";
+import { specializedRoute } from "../../../../../../tests/integration/gateway/invocation/specialization/fixture";
 import { createNativeInvocationAuthorizer } from "../../../src/runtime/gateway/native/authorizeInvocation";
 
 export async function nativeFixture(options: { specialized?: boolean; control?: boolean } = {}) {

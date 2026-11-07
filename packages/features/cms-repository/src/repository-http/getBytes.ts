@@ -1,4 +1,8 @@
-import { repositoryErrorBody, RepositoryHttpError, RepositoryResponseTooLargeError } from "./errors";
+import {
+    repositoryErrorBody,
+    RepositoryHttpError,
+    RepositoryResponseTooLargeError,
+} from "cms-repository/repository-http/errors";
 export const MAX_REPOSITORY_RESPONSE_BYTES = 8 * 1024 * 1024;
 
 export type RepositoryFetch = (url: URL, init: RequestInit) => Promise<Response>;

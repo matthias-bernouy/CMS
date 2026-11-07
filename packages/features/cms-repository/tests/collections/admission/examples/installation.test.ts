@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
-import { CollectionStore, MemoryCollectionStorage } from "../../../../src/exports/collections/installations";
-import { withInstalledCollections } from "../../../../src/exports/collections/integration/content";
+import { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+import { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
+import { withInstalledCollections } from "cms-repository/collections/integration/content/installedRepository";
 import { InMemoryContentRepository, getCmsEditorCatalogue } from "@bernouy/cms-content";
 import { exampleCollection } from "./fixture";
 

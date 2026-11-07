@@ -30,11 +30,7 @@ export {
     MUTATION_RESET_ATTR,
     SYNC_ATTR,
 } from "./core/attrs";
-export {
-    readSyncValue,
-    subscribeSyncValue,
-    writeSyncValue,
-} from "./state/SyncState";
+export { readSyncValue, subscribeSyncValue, writeSyncValue } from "./state/SyncState";
 export type { FormSubmitResult } from "./form/formSubmit";
 export { mutationFormRequest, MutationFormError } from "./runtime/mutation/programmaticRequest";
 

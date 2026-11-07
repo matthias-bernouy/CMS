@@ -9,8 +9,9 @@ import type {
     DelegationContext,
 } from "@bernouy/cms-gateway/access/delegation";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
-import { getProviderInstallationReadiness } from "@bernouy/cms-repository/providers/installations";
-import { capabilityGranted, type ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
+import { getProviderInstallationReadiness } from "@bernouy/ulvia-providers/installations";
+import { capabilityGranted } from "@bernouy/ulvia-providers/selections";
+import { type ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 import { signProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import type { GatewayRoute, GatewayRouteResolver } from "@bernouy/cms-gateway";
 import type { ProviderAccess } from "@bernouy/cms-gateway/access/providers";

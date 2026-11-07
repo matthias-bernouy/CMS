@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { createCollectionMaintenanceGuard } from "@bernouy/cms-repository/collections/http";
-import { MemorySiteUpgradeStorage } from "@bernouy/cms-repository/upgrades";
+import { createCollectionMaintenanceGuard } from "cms-repository/collections/http/maintenance";
+import { MemorySiteUpgradeStorage } from "cms-repository/site-upgrades/memory";
 
 test("maintenance permits authenticated recovery transports while ordinary writes stay blocked", async () => {
     const storage = new MemorySiteUpgradeStorage();

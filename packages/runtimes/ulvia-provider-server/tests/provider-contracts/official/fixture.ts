@@ -2,9 +2,9 @@ import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
-import { admitContractBundleJson, parseContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractBundleJson, parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
-import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
+import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
 import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
 
 const ROOT = resolve(import.meta.dir, "../../../../ulvia-cli/dist/bootstrap");

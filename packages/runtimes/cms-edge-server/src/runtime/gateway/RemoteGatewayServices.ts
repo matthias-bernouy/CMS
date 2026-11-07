@@ -1,7 +1,7 @@
 import type { GatewayRoute, GatewayRouteResolver } from "@bernouy/cms-gateway";
 import type { GatewayCommandAuditEvent, GatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 import type { ProviderIdentityScope, ProviderIdentityService } from "@bernouy/cms-gateway/identity";
-import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import type { ControlProviderClient } from "./ControlProviderClient";
 
 export class ControlGatewayRouteResolver implements GatewayRouteResolver {

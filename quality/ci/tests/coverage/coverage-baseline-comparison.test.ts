@@ -1,11 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    compareCoverageBaselines,
-    compareExactPackageCoverage,
-    parseRemovedOrRenamedPaths,
-    parseRenamedSourcesByDestination,
-    type CoverageBaseline,
-} from "../../coverage/ratchet";
+import { compareCoverageBaselines, compareExactPackageCoverage, parseRemovedOrRenamedPaths, parseRenamedSourcesByDestination, type CoverageBaseline } from "../../coverage/ratchet";
 import { packageCoverage } from "./coverage-fixtures";
 
 describe("coverage baseline comparison", () => {

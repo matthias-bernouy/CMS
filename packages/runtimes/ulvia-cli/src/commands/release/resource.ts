@@ -1,8 +1,8 @@
-import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
+import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { basename, join } from "node:path";
-import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { admitProviderManifestJson, type AdmittedProviderManifest } from "@bernouy/cms-repository/providers";
+import { admitProviderManifestJson, type AdmittedProviderManifest } from "@bernouy/ulvia-providers";
 import type { AdmittedCollectionRelease } from "@bernouy/cms-repository/collections";
 import {
     LocalArtifactFiles,

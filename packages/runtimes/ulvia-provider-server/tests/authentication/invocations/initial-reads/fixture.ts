@@ -7,8 +7,8 @@ import {
 } from "@bernouy/cms-gateway";
 import { HttpGatewayTransport, invocationAuthority } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
-import type { ProviderExecutionState } from "@bernouy/cms-repository/providers/selections";
-import { gatewayRoute } from "../../../../../../features/cms-gateway/tests/fixtures";
+import type { ProviderExecutionState } from "@bernouy/ulvia-providers/selections";
+import { gatewayRoute } from "../../../../../../../tests/integration/gateway/fixtures";
 import { createInvocationIssuer } from "../../../../src/runtime/gateway/providers/authority/issueInvocation";
 
 export async function initialReadsFixture() {

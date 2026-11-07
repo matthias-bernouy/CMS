@@ -3,7 +3,7 @@ import { CollectionPublicationRecoveryError } from "@bernouy/cms-repository/repo
 import type { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import { RepositoryRequestError } from "@bernouy/cms-repository/repository/publication";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerAuthoringCapabilities } from "../../../src/capabilities/installations/authoring";
+import { registerAuthoringCapabilities } from "../../../src/capabilities/installations/authoring/index";
 import { resolvedContract, invokeHttp } from "../messages/fixtures";
 
 const id = "c9ddc861-4e76-48cb-8188-7cfa4a94a11d";

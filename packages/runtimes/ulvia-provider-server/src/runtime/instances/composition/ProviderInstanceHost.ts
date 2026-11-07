@@ -23,9 +23,9 @@ import { mkdir } from "node:fs/promises";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import { ProviderManagement } from "@bernouy/cms-repository/providers/management";
-import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
-import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
-import type { ReleaseDigest } from "@bernouy/cms-repository/contracts";
+import type { ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
+import type { ProviderManifestDigest } from "@bernouy/ulvia-providers";
+import type { ReleaseDigest } from "@bernouy/ulvia-contracts";
 import {
     CollectionSources,
     DefaultProviderCapabilityDispatcher,

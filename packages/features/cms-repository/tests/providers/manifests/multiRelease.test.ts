@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
 import {
     capabilityTransition,
     contractDocument,

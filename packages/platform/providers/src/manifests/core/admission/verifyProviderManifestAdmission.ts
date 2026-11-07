@@ -1,0 +1,40 @@
+import { assertIJson } from "@bernouy/ulvia-contracts/protocol";
+import { translateContractError } from "../protocol/contractErrors";
+import { ProviderManifestValidationError } from "../protocol/errors";
+import {
+    DEFAULT_PROVIDER_MANIFEST_LIMITS,
+    normalizeProviderManifestLimits,
+    type ProviderManifestLimits,
+} from "../protocol/limits";
+import { parseProviderManifest } from "../parsing/parseProviderManifest";
+import { expectRecord, expectString, rejectUnknownKeys } from "../protocol/values";
+import type { AdmittedProviderManifest } from "./admitProviderManifest";
+import { sealProviderManifest } from "./sealProviderManifest";
+
+/** Verify bounded structure and artifact integrity; current reference availability is checked at publication. */
+export async function verifyProviderManifestAdmission(
+    admission: AdmittedProviderManifest,
+    limits: Readonly<ProviderManifestLimits> = DEFAULT_PROVIDER_MANIFEST_LIMITS,
+): Promise<AdmittedProviderManifest> {
+    const bounded = normalizeProviderManifestLimits(limits);
+    try {
+        assertIJson(admission, bounded.maxJsonDepth + 1);
+    } catch (error) {
+        translateContractError(error);
+    }
+    const record = expectRecord(admission, "$");
+    rejectUnknownKeys(record, ["kind", "manifest", "canonicalJson", "digest"], "$");
+    if (record.kind !== "admitted-provider-manifest") {
+        throw new ProviderManifestValidationError("invalid_manifest", "expected an admitted provider manifest");
+    }
+    const canonicalJson = expectString(record.canonicalJson, "$.canonicalJson", bounded.maxDocumentBytes);
+    const digest = expectString(record.digest, "$.digest", 71);
+    const verified = await sealProviderManifest(parseProviderManifest(record.manifest, bounded), bounded);
+    if (verified.canonicalJson !== canonicalJson || verified.digest !== digest) {
+        throw new ProviderManifestValidationError(
+            "invalid_manifest",
+            "admitted manifest artifact failed integrity verification",
+        );
+    }
+    return verified;
+}

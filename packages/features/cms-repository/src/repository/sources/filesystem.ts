@@ -1,4 +1,8 @@
-import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../filesystem/core/durable";
+import {
+    durableWriteFile,
+    ensureDurableDirectory,
+    syncDirectory,
+} from "cms-repository/repository/filesystem/core/durable";
 import { RepositoryRequestError } from "../core/errors";
 import { readFile, link, rm } from "node:fs/promises";
 import { join, dirname } from "node:path";
@@ -9,7 +13,7 @@ import {
     isResourceId,
     resourcePublisher,
     resourceName,
-} from "cms-repository/exports/contracts/protocol";
+} from "@bernouy/ulvia-contracts/protocol";
 import type { RepositorySourceSnapshot, RepositorySourceStore } from "./interfaces";
 import type { ArtifactSourceKind } from "./interfaces";
 

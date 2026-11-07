@@ -1,8 +1,8 @@
 import {
     collectionBrowserRisk,
     collectionBrowserRiskDigest,
-    resolveCollectionTranslation,
-} from "cms-repository/exports/collections/index";
+} from "cms-repository/collections/core/validation/browserCapabilities";
+import { resolveCollectionTranslation } from "cms-repository/collections/core/texts/translationCatalogue";
 import { LocalCollectionRepository } from "./artifacts/collections";
 import { LocalArtifactFiles } from "./artifacts/files";
 import { LocalContractReleases } from "./contracts";

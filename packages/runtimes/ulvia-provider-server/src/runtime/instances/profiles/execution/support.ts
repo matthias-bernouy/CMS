@@ -1,4 +1,4 @@
-import { deepFreeze } from "@bernouy/cms-repository/contracts/protocol";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
 import supported from "./supported-releases.json";
 
 export type ExecutionRelease = Readonly<{ contractId: string; version: string; digest: string }>;

@@ -1,8 +1,8 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { OwnedPublicationUploadManifest } from "@bernouy/cms-repository/repository/publication";
-import { FilesystemRepositoryPublicationUploadStore } from "@bernouy/cms-repository/repository/filesystem";
+import type { OwnedPublicationUploadManifest } from "cms-repository/repository/publication/types";
+import { FilesystemRepositoryPublicationUploadStore } from "cms-repository/repository/filesystem/mutations/uploadStore";
 
 export function manifest(patch: Partial<OwnedPublicationUploadManifest> = {}): OwnedPublicationUploadManifest {
     return {

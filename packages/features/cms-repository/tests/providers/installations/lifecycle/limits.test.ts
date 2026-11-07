@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { DEFAULT_PROVIDER_INSTALLATION_LIMITS } from "cms-repository/providers/installations/core/limits";
+import { DEFAULT_PROVIDER_INSTALLATION_LIMITS } from "@bernouy/ulvia-providers/installations";
 import { installationWorkflow } from "./fixtures";
 
 describe("installation approval document budgets", () => {

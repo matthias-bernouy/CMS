@@ -7,7 +7,12 @@ import {
     readQueuedUpload,
     UPLOAD_MAINTENANCE_BATCH,
 } from "./uploadQueueRecords";
-import { discardUploadQueuePages, readUploadQueue, sameUploadPosition, writeUploadQueue } from "./uploadQueueState";
+import {
+    discardUploadQueuePages,
+    readUploadQueue,
+    sameUploadPosition,
+    writeUploadQueue,
+} from "cms-repository/repository/filesystem/mutations/uploadQueueState";
 import type { UploadQueueState } from "./uploadQueueState";
 
 export { UPLOAD_MAINTENANCE_BATCH } from "./uploadQueueRecords";

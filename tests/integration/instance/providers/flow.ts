@@ -1,7 +1,7 @@
 import { expect } from "bun:test";
 import { resolve } from "node:path";
 import type { Page } from "playwright";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { GatewayProviderClient } from "@bernouy/cms-gateway/provider/node";
 import { createConnectedProviderLogger } from "@bernouy/ulvia-provider/sdk/node";
 import type { mcpContainers } from "../containers";

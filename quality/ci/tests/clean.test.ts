@@ -11,6 +11,22 @@ afterEach(async () => {
 });
 
 describe("workspace build cleanup", () => {
+    test("cleans build outputs from Platform packages", async () => {
+        const root = await mkdtemp(join(tmpdir(), "cms-clean-platform-"));
+        temporaryRoots.push(root);
+        const directory = join(root, "packages/platform/contracts");
+        await mkdir(join(directory, "dist"), { recursive: true });
+        await writeFile(join(directory, "package.json"), "{}");
+        await writeFile(join(directory, "dist/output.js"), "generated");
+        await writeFile(join(directory, "tsconfig.tsbuildinfo"), "generated");
+        await writeFile(join(directory, "source.ts"), "export {};");
+
+        expect(await cleanWorkspaceBuildOutputs(root)).toHaveLength(2);
+        expect(await Bun.file(join(directory, "dist/output.js")).exists()).toBeFalse();
+        expect(await Bun.file(join(directory, "tsconfig.tsbuildinfo")).exists()).toBeFalse();
+        expect(await Bun.file(join(directory, "source.ts")).exists()).toBeTrue();
+    });
+
     test("removes only build outputs from real workspace packages", async () => {
         const root = await mkdtemp(join(tmpdir(), "cms-clean-"));
         temporaryRoots.push(root);

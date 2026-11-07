@@ -1,9 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { ProviderInstallationValidationError } from "cms-repository/providers/installations/core/errors";
-import {
-    parseProviderRuntimeReport,
-    parseProviderRuntimeReportJson,
-} from "cms-repository/providers/installations/core/reports/parseProviderRuntimeReport";
+import { ProviderInstallationValidationError } from "@bernouy/ulvia-providers/installations";
+import { parseProviderRuntimeReport, parseProviderRuntimeReportJson } from "@bernouy/ulvia-providers/installations";
 import { reportDocument } from "./fixtures";
 
 describe("provider runtime report parsing", () => {

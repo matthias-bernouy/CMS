@@ -1,4 +1,7 @@
-import type { CollectionCapabilityRequirement, CollectionResourceKind } from "../../../interfaces/CollectionRelease";
+import type {
+    CollectionCapabilityRequirement,
+    CollectionResourceKind,
+} from "cms-repository/collections/interfaces/CollectionRelease";
 
 export type ResourceUse = Readonly<{
     type: "resource";

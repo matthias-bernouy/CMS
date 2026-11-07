@@ -6,8 +6,8 @@ import {
     parseProviderManifest,
     parseProviderManifestJson,
     parseVersionRange,
-} from "@bernouy/cms-repository/providers";
-import { validateProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
+} from "@bernouy/ulvia-providers";
+import { validateProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 import { contractDocument, implementation, manifestDocument, releaseCatalogue } from "../support/fixtures";
 
 async function manifestWithBuildRange(buildVersionRange: string) {

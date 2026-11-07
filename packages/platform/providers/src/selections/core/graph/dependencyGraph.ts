@@ -1,0 +1,157 @@
+import { satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
+import type { ContractSelectionDependency } from "../../interfaces/ContractSelectionPlan";
+import { ContractSelectionValidationError } from "../errors";
+import {
+    findResolvedImplementation,
+    type ResolvedSelection,
+} from "ulvia-providers/selections/core/graph/resolveSelections";
+
+const MAX_SELECTION_DEPENDENCY_DEPTH = 8;
+
+export function selectionDependencies(
+    resolved: ReadonlyMap<string, ResolvedSelection>,
+    maximum: number,
+): readonly ContractSelectionDependency[] {
+    const dependencies: ContractSelectionDependency[] = [];
+    const add = (dependency: Omit<ContractSelectionDependency, "present">) => {
+        if (dependencies.length >= maximum) {
+            throw new ContractSelectionValidationError("limit_exceeded", "too many selection dependencies");
+        }
+        dependencies.push({
+            ...dependency,
+            present: findResolvedImplementation(resolved, dependency.contractId) !== null,
+        });
+    };
+    const installations = new Set<string>();
+    for (const [contractId, node] of resolved) {
+        if (!installations.has(node.selection.installationId)) {
+            installations.add(node.selection.installationId);
+            for (const requirement of node.providerRequires) {
+                add({
+                    ...requirement,
+                    source: "provider",
+                    fromContractId: contractId,
+                    fromInstallationId: node.selection.installationId,
+                });
+            }
+        }
+        for (const requirement of node.implementation.requires) {
+            add({ ...requirement, source: "implementation", fromContractId: contractId });
+        }
+    }
+    return dependencies;
+}
+
+export function validateSelectionGraph(
+    resolved: ReadonlyMap<string, ResolvedSelection>,
+    dependencies: readonly ContractSelectionDependency[],
+): void {
+    const edges = new Map<string, ContractSelectionDependency[]>();
+    for (const dependency of dependencies) {
+        if (dependency.source === "provider") {
+            const target = findResolvedImplementation(resolved, dependency.contractId);
+            if (
+                (!target && !dependency.optional) ||
+                (target &&
+                    (!target.release.capabilities.some(({ id }) => id === dependency.capabilityId) ||
+                        !satisfiesVersionRange(target.release.version, dependency.versionRange)))
+            ) {
+                throw new ContractSelectionValidationError(
+                    target ? "incompatible_dependency" : "missing_dependency",
+                    "Provider global requirement is not satisfied",
+                );
+            }
+            continue;
+        }
+        const list = edges.get(dependency.fromContractId) ?? [];
+        list.push(dependency);
+        edges.set(dependency.fromContractId, list);
+    }
+    const active = new Set<string>();
+    const visited = new Set<string>();
+    const walk = (contractId: string, ancestors: readonly string[]) => {
+        const path = [...ancestors, contractId];
+        if (active.has(contractId)) {
+            throw new ContractSelectionValidationError(
+                "dependency_cycle",
+                "selection graph contains a cycle",
+                "$",
+                path,
+            );
+        }
+        if (visited.has(contractId)) {
+            return;
+        }
+        active.add(contractId);
+        for (const dependency of edges.get(contractId) ?? []) {
+            const target = findResolvedImplementation(resolved, dependency.contractId);
+            if (!target && dependency.optional) {
+                continue;
+            }
+            const dependencyPath = [...path, `${dependency.contractId}:${dependency.capabilityId}`];
+            if (!target) {
+                throw new ContractSelectionValidationError(
+                    "missing_dependency",
+                    `required capability ${dependency.capabilityId} has no selected contract`,
+                    "$",
+                    dependencyPath,
+                );
+            }
+            if (
+                !target.release.capabilities.some((capability) => capability.id === dependency.capabilityId) ||
+                !satisfiesVersionRange(target.release.version, dependency.versionRange)
+            ) {
+                throw new ContractSelectionValidationError(
+                    "incompatible_dependency",
+                    `selected ${target.release.version} must provide ${dependency.capabilityId} in ${dependency.versionRange}`,
+                    "$",
+                    dependencyPath,
+                );
+            }
+            walk(target.node.selection.contractId, path);
+        }
+        active.delete(contractId);
+        visited.add(contractId);
+    };
+    for (const contractId of resolved.keys()) {
+        walk(contractId, []);
+    }
+    assertMaximumDependencyDepth(resolved, edges);
+}
+
+function assertMaximumDependencyDepth(
+    resolved: ReadonlyMap<string, ResolvedSelection>,
+    edges: ReadonlyMap<string, readonly ContractSelectionDependency[]>,
+): void {
+    const paths = new Map<string, readonly string[]>();
+    const longestPathFrom = (contractId: string): readonly string[] => {
+        const cached = paths.get(contractId);
+        if (cached) {
+            return cached;
+        }
+        let longest: readonly string[] = [contractId];
+        for (const dependency of edges.get(contractId) ?? []) {
+            const target = findResolvedImplementation(resolved, dependency.contractId);
+            if (!target) {
+                continue;
+            }
+            const candidate = [contractId, ...longestPathFrom(target.node.selection.contractId)];
+            if (candidate.length > longest.length) {
+                longest = candidate;
+            }
+        }
+        paths.set(contractId, longest);
+        return longest;
+    };
+    for (const contractId of resolved.keys()) {
+        const path = longestPathFrom(contractId);
+        if (path.length > MAX_SELECTION_DEPENDENCY_DEPTH) {
+            throw new ContractSelectionValidationError(
+                "dependency_depth_exceeded",
+                `selection dependency path exceeds ${MAX_SELECTION_DEPENDENCY_DEPTH} contracts`,
+                "$",
+                path,
+            );
+        }
+    }
+}

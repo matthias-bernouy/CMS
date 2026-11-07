@@ -1,9 +1,12 @@
-import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
+import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 import { parseHTML } from "linkedom";
 import { collectCmsMutationBindings, collectCmsQueryBindings } from "@bernouy/cms-content";
 import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 import type { UsageReference } from "./interfaces";
-import { replaceCollectionTextExpressions, replaceCollectionAssetExpressions } from "../../../core/texts/expressions";
+import {
+    replaceCollectionTextExpressions,
+    replaceCollectionAssetExpressions,
+} from "cms-repository/collections/core/texts/expressions";
 
 /** Collect declared identities, retaining every diagnostic location. Never execute authored source. */
 export function documentReferences(

@@ -3,7 +3,7 @@ import {
     compareVersionRanges,
     isVersionRangeSubset,
     satisfiesVersionRange,
-} from "@bernouy/cms-repository/contracts/compatibility";
+} from "@bernouy/ulvia-contracts/compatibility";
 
 describe("range prerelease inclusion", () => {
     test("preserves tuple opt-in even when the stable range grows", () => {

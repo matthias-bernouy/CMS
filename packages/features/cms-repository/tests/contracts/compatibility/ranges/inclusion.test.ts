@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { compareVersionRanges, isVersionRangeSubset } from "@bernouy/cms-repository/contracts/compatibility";
+import { compareVersionRanges, isVersionRangeSubset } from "@bernouy/ulvia-contracts/compatibility";
 
 describe("semantic version range inclusion", () => {
     test.each([

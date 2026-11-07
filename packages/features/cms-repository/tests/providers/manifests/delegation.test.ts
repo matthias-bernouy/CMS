@@ -1,6 +1,6 @@
-import { compareProviderManifests } from "@bernouy/cms-repository/providers/compatibility";
+import { compareProviderManifests } from "@bernouy/ulvia-providers/compatibility";
 import { expect, test } from "bun:test";
-import { admitProviderManifest, parseProviderManifest, delegationAllows } from "@bernouy/cms-repository/providers";
+import { admitProviderManifest, parseProviderManifest, delegationAllows } from "@bernouy/ulvia-providers";
 import { contractDocument, implementation, manifestDocument, releaseCatalogue } from "../support/fixtures";
 
 const rule = { contractId: "*", capabilityId: "*", effect: "query", sensitive: false };

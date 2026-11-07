@@ -1,12 +1,12 @@
-import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
-import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
-import { ERROR_MESSAGES } from "../../../src/dispatch/errors/catalogue";
+import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
+import { ERROR_MESSAGES } from "../../../src/dispatch/errors/catalogue/index";
 import { errorMessage } from "../../../src/dispatch/errors/localize";
 import { messageLanguage } from "../../../src/dispatch/errors/locale";
 import { bootstrap } from "./fixtures";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 
 test("all official errors have complete French and English message outputs in their selected release", async () => {
     const index = await Bun.file(resolve(bootstrap, "index.json")).json();

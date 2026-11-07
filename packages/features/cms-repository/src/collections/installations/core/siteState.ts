@@ -1,11 +1,15 @@
 import { isSha256Digest } from "@bernouy/binary-media";
-import { canonicalIJsonBytes } from "cms-repository/exports/contracts/protocol";
-import { validateSchemaValue } from "cms-repository/exports/contracts/schema";
+import { canonicalIJsonBytes } from "@bernouy/ulvia-contracts/protocol";
+import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import { parseCollectionNamespace } from "../../core/namespace";
 import { parseCollectionTextOverrides } from "../../core/texts/parseCollectionTexts";
 import { array, identifier, keys, record } from "../../core/values";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
-import type { CollectionInstallation, CollectionSiteState, CollectionStorage } from "../interfaces/store";
+import type {
+    CollectionInstallation,
+    CollectionSiteState,
+    CollectionStorage,
+} from "cms-repository/collections/installations/interfaces/store";
 
 const MAX_INSTALLATIONS = 256;
 const MAX_STATE_BYTES = 2 * 1024 * 1024;

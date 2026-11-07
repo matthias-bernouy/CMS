@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { materializeStateSchemas } from "../../../../src/collections/tooling/authoring/stateSchemas";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
 import { contractDocument } from "../../../providers/support/fixtures";
 
 test("state schema references copy only the output of an exact admitted capability", async () => {

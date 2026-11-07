@@ -5,8 +5,8 @@ export {
     type UlviaProviderInstanceRuntime,
     type UlviaProviderOptions,
 } from "./transport/UlviaProvider";
-export { registerOfficialProviderCapabilities } from "./capabilities";
-export { CollectionSources } from "./capabilities/installations/sources";
+export { registerOfficialProviderCapabilities } from "./capabilities/index";
+export { CollectionSources } from "./capabilities/installations/sources/index";
 export type {
     CmsAccessDependencies,
     CmsCollectionDependencies,
@@ -15,7 +15,7 @@ export type {
     UlviaProviderDependencies,
     UlviaProviderGateway,
     UlviaProviderManagement,
-} from "./ports";
+} from "./ports/index";
 export {
     ProviderCapabilityDispatchError,
     ProviderCapabilityResponse,

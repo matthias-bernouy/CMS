@@ -1,5 +1,8 @@
 import { parseRequirements } from "../../parsing/requirements";
-import type { CollectionExample, CollectionExamplePreview } from "../../../interfaces/CollectionExample";
+import type {
+    CollectionExample,
+    CollectionExamplePreview,
+} from "cms-repository/collections/interfaces/CollectionExample";
 import type { CollectionLimits } from "../../limits";
 import { invalid } from "../../errors";
 import { array, identifier, integer, keys, record, string, unique } from "../../values";

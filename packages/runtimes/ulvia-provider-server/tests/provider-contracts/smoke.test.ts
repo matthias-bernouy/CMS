@@ -1,4 +1,4 @@
-import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
+import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -9,8 +9,8 @@ import {
     MemoryProviderOperationStore,
     registerOfficialProviderCapabilities,
 } from "@bernouy/ulvia-provider";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
-import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
+import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { CmsFilesService } from "@bernouy/cms-files";
 import { InMemoryCmsFilesStore } from "@bernouy/cms-files/memory";

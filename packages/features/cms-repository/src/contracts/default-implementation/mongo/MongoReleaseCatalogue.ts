@@ -1,24 +1,27 @@
 import { MongoDocumentationAssets } from "./documentation";
-import { verifyStoredContractReleaseJson } from "../../core/admission/admitContractRelease";
-import { VerifiedArtifactCache } from "cms-repository/contracts/core/catalogue/VerifiedArtifactCache";
+import { verifyStoredContractReleaseJson } from "@bernouy/ulvia-contracts";
+import { VerifiedArtifactCache } from "@bernouy/ulvia-contracts/catalogue";
 import type { Db } from "mongodb";
 import { MongoServerError } from "mongodb";
-import type { AdmittedContractRelease } from "../../core/admission/admitContractRelease";
-import type { ReleaseDigest } from "../../core/admission/digest";
-import { verifyAdmission } from "../../core/admission/verifyAdmission";
-import { verifyEvolution } from "../../core/catalogue/verifyEvolution";
-import { compareSemVer } from "../../core/compatibility/semver";
-import { verifySpecialization } from "../../core/compatibility/lineage/verifySpecialization";
-import { ReleaseValidationError } from "../../core/protocol/errors";
-import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../../core/protocol/limits";
-import { catalogueRevision } from "../../core/protocol/revision";
-import { normalizeReleaseDeprecation, normalizeReleaseYank } from "../memory/normalizeReleaseMetadata";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
+import type { ReleaseDigest } from "@bernouy/ulvia-contracts";
+import { verifyAdmission } from "@bernouy/ulvia-contracts/validation";
+import { verifyEvolution } from "@bernouy/ulvia-contracts/validation";
+import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
+import { verifySpecialization } from "@bernouy/ulvia-contracts/catalogue";
+import { ReleaseValidationError } from "@bernouy/ulvia-contracts";
+import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "@bernouy/ulvia-contracts";
+import { catalogueRevision } from "@bernouy/ulvia-contracts/protocol";
+import {
+    normalizeReleaseDeprecation,
+    normalizeReleaseYank,
+} from "cms-repository/contracts/default-implementation/memory/normalizeReleaseMetadata";
 import type {
     CatalogueContractRelease,
     ContractReleaseDeprecation,
     ContractReleaseYank,
-    ReleaseCatalogue,
-} from "../../interfaces/ReleaseCatalogue";
+} from "@bernouy/ulvia-contracts/catalogue";
+import type { ReleaseCatalogue } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
 import {
     type ReleaseArtifact,
     type ReleaseHead,

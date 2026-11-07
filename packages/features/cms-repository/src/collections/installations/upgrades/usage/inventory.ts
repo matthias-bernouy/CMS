@@ -1,12 +1,20 @@
-import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
+import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
-import type { UsageContributor, UsageInventory, UsageReference } from "./interfaces";
+import type {
+    UsageContributor,
+    UsageInventory,
+    UsageReference,
+} from "cms-repository/collections/installations/upgrades/usage/interfaces";
 import type { ContentRepository } from "@bernouy/cms-content";
 import type { CollectionStore } from "../../core/CollectionStore";
 import { collectionUsageInventory } from "./catalogue";
 import { documentBlocIds, documentReferences } from "./scan";
 import { localBlocDocuments } from "./localDocuments";
-import { readUsageSnapshot, usageDigest, type UsageSnapshot } from "./snapshot";
+import {
+    readUsageSnapshot,
+    usageDigest,
+    type UsageSnapshot,
+} from "cms-repository/collections/installations/upgrades/usage/snapshot";
 
 export async function siteUsageInventory(
     repository: ContentRepository,

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
-import { delegationFixture } from "../../../../../features/cms-gateway/tests/providers/delegation/fixtures";
+import { delegationFixture } from "../../../../../../tests/integration/gateway/providers/delegation/fixtures";
 import { createDispatchPreparer } from "../../../src/runtime/gateway/providers/authority/prepareDispatch";
 import { createInvocationIssuer } from "../../../src/runtime/gateway/providers/authority/issueInvocation";
 

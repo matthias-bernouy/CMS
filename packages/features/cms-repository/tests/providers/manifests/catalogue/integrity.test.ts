@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { DEFAULT_PROVIDER_MANIFEST_LIMITS, type AdmittedProviderManifest } from "@bernouy/cms-repository/providers";
-import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
+import { DEFAULT_PROVIDER_MANIFEST_LIMITS, type AdmittedProviderManifest } from "@bernouy/ulvia-providers";
+import { InMemoryProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
 import { manifestCatalogueFixture } from "./fixtures";
 
 describe("provider catalogue integrity and bounds", () => {

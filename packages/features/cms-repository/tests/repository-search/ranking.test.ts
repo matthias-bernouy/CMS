@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { MemoryVectorStore } from "@bernouy/text-search";
-import { RepositorySearch } from "@bernouy/cms-repository/repository/search";
+import { RepositorySearch } from "cms-repository/repository/search/core/service";
 import { row, source } from "./fixture";
 
 test("exact resource IDs lead, versions collapse before filtering, and cursors are revision-bound", async () => {

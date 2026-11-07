@@ -12,14 +12,16 @@ Package instructions override or specialize the rules below.
 
 ## Workspace Shape
 
-Reusable CMS packages live under four layers:
+Reusable CMS packages live under five layers:
 
 ```text
-runtimes -> surfaces -> features -> foundation
+runtimes -> surfaces -> features -> platform -> foundation
 ```
 
 - `foundation/` contains generic utilities with no CMS-domain knowledge.
-- `features/` contains CMS domain modules, contracts, validation, default
+- `platform/` contains the Ulvia contract language, Provider models and generic
+  capability execution. It depends only on Platform and Foundation packages.
+- `features/` contains CMS domain modules, validation, default
   implementations, and optional HTTP handlers or registrars.
 - `surfaces/` mounts features into HTTP applications. Surfaces receive
   dependencies through constructors or config; they do not pick production
@@ -39,16 +41,18 @@ configuration. The local CLI launches `ulvia-provider-server` and
 `cms-edge-server` as independent processes. Each server owns its concrete
 adapter wiring; do not hide process ownership in a shared aggregate runtime.
 
-Never introduce dependencies against the direction above. Feature-to-feature
-dependencies are allowed only through the published package exports.
+Never introduce dependencies against the direction above. Same-layer dependencies use published package exports. Platform must never
+import features, surfaces or runtimes.
 New environment reads belong in runtimes. Existing `process.env.MODE` exceptions
 are recorded in `quality/architecture/repository/repositoryPolicy.ts`; do not
 expand that baseline to bypass dependency injection.
 
 `cms-content` owns the content persistence facade named `ContentRepository`,
 metadata, structured data, dynamic indexing and sitemap snapshots.
-`cms-repository` owns contract/provider artifacts, site installation/selection
-models, collection admission and the explicit collection build toolchain.
+`ulvia-contracts` owns contract definitions, validation, bindings, admission and
+compatibility. `ulvia-providers` owns immutable Provider models, common selection
+rules and read ports. `cms-repository` owns persistent contract/provider catalogues,
+installation/selection mutation workflows, collection admission and build tooling.
 `cms-gateway` owns provider-neutral live invocation and provider-wide identities.
 `cms-files` owns namespaces, file credentials, uploads, immutable generations,
 access signatures, storage metadata and image representations. Generic secret

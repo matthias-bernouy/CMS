@@ -1,4 +1,4 @@
-import { parseMutation } from "../../../src/blocs/core/markup/bindings";
+import { parseMutation } from "../../../src/blocs/core/markup/bindings/index";
 import { parseRepeat } from "../../../src/browser/binding/render/repeat";
 import { describe, test, expect } from "bun:test";
 import { lookup, type Scope } from "../../../src/browser/binding/core/scope";

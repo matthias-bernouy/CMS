@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
-import { validateBloc } from "@bernouy/cms-repository/collections/build";
+import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
+import { validateBloc } from "cms-repository/collections/tooling/validateBloc";
 import { colorCollection } from "./fixture";
 
 const style = `:scope { --atlas-dofficial--atlas--panel-tone: var(--atlas-dofficial--atlas--accent);

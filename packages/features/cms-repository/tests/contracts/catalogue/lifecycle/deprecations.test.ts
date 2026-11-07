@@ -1,9 +1,10 @@
 import { expect, test } from "bun:test";
-import { admitContractRelease, resolveContract } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue, planContractPublications } from "@bernouy/cms-repository/contracts/catalogue";
-import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
+import { admitContractRelease, resolveContract } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { planContractPublications } from "cms-repository/contracts/core/catalogue/planPublications";
+import { MongoReleaseCatalogue } from "cms-repository/contracts/default-implementation/mongo/MongoReleaseCatalogue";
 import { fakeCatalogueDb } from "../../../support/fakeCatalogueDb";
-import { capabilityDocument, contractDocument } from "../../support/fixtures";
+import { capabilityDocument, contractDocument } from "../../../../../../platform/contracts/tests/support/fixtures";
 
 test.each(["memory", "mongo"])(
     "%s supports deprecation toward an inherited replacement before major removal",

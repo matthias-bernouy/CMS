@@ -1,8 +1,16 @@
 import { mkdtemp, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assertValidJavaScriptArtifact, materializeSourceBundle, resolveSourceEntryPath, runBuild } from "./buildFiles";
-import { blocRuntimeExternalsPlugin, collectionSourceBoundaryPlugin } from "./blocRuntimeExternalsPlugin";
+import {
+    assertValidJavaScriptArtifact,
+    materializeSourceBundle,
+    resolveSourceEntryPath,
+    runBuild,
+} from "cms-repository/collections/tooling/buildFiles";
+import {
+    blocRuntimeExternalsPlugin,
+    collectionSourceBoundaryPlugin,
+} from "cms-repository/collections/tooling/blocRuntimeExternalsPlugin";
 import { validateBloc } from "./validateBloc";
 import { writeViewRegistrationEntry } from "./viewRegistrationEntry";
 import { CMS_BROWSER_RUNTIME_ABI, type CmsBrowserRuntimeAbi } from "@bernouy/cms-content/runtime-abi";

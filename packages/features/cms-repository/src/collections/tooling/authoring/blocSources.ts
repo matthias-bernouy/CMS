@@ -2,7 +2,10 @@ import { stat } from "node:fs/promises";
 import { join } from "node:path";
 import { buildCollectionBloc } from "cms-repository/collections/tooling/buildCollectionBloc";
 import { compileBlocStyle } from "cms-repository/collections/core/validation/styles/compile";
-import { discoverCollectionBlocSources, type BlocSource } from "./blocDiscovery";
+import {
+    discoverCollectionBlocSources,
+    type BlocSource,
+} from "cms-repository/collections/tooling/authoring/blocDiscovery";
 import { readSourceEntries, scanFileSourceTree } from "cms-repository/repository/authoring/sourceTree";
 
 /** Discover recursively grouped Bloc folders and compile them without path-derived identity. */

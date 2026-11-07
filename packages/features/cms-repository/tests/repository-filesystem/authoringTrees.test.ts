@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { scanJsonSourceTree } from "@bernouy/cms-repository/repository/authoring";
+import { scanJsonSourceTree } from "cms-repository/repository/authoring/sourceTree";
 
 test("shared source traversal preserves exclusions and rejects links, non-JSON files and excessive depth", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-source-tree-"));

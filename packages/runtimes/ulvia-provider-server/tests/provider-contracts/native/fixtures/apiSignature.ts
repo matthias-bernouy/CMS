@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
-import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
+import type { CapabilityDefinition } from "@bernouy/ulvia-contracts";
 
 /** Test evidence excludes documentation only; access, behavior, schemas, tools and HTTP mappings remain exact. */
 export function apiSignature(capability: CapabilityDefinition): string {

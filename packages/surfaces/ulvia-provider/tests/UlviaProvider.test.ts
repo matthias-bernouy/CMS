@@ -3,8 +3,8 @@ import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
 import { createMemoryLogger } from "@bernouy/logging/testing";
-import { MAX_CAPABILITY_JSON_BYTES } from "@bernouy/cms-repository/contracts/protocol";
-import { UlviaProvider } from "../src";
+import { MAX_CAPABILITY_JSON_BYTES } from "@bernouy/ulvia-contracts/protocol";
+import { UlviaProvider } from "../src/index";
 import {
     contractRelease,
     forgedAuthorityHeaders,

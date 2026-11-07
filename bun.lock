@@ -17,9 +17,12 @@
         "@bernouy/image-processing": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
+        "@bernouy/resource-identity": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/ulvia-cli": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
+        "@bernouy/ulvia-providers": "workspace:*",
         "@biomejs/biome": "2.6.4",
         "@types/bun": "1.4.4",
         "@typescript/typescript6": "6.0.2",
@@ -70,8 +73,8 @@
       "version": "1.0.0",
       "dependencies": {
         "@bernouy/binary-media": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
         "@bernouy/text-search": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
       },
       "devDependencies": {
         "@bernouy/text-embeddings": "workspace:*",
@@ -102,20 +105,6 @@
         "typescript": "^7.0.2",
       },
     },
-    "packages/features/cms-gateway": {
-      "name": "@bernouy/cms-gateway",
-      "version": "1.0.0",
-      "dependencies": {
-        "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/http-runner": "workspace:*",
-        "@bernouy/logging": "workspace:*",
-        "@bernouy/resource-identity": "workspace:*",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^7.0.2",
-      },
-    },
     "packages/features/cms-observability": {
       "name": "@bernouy/cms-observability",
       "version": "1.0.0",
@@ -135,15 +124,13 @@
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
-        "@bernouy/resource-identity": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/text-search": "workspace:*",
-        "canonicalize": "^5.1.0",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-providers": "workspace:*",
         "css-tree": "^3.2.1",
         "htmlparser2": "^12.0.0",
-        "jsonc-parser": "^3.3.1",
         "linkedom": "^0.18.15",
-        "marked": "^18.1.3",
       },
       "devDependencies": {
         "@bernouy/text-embeddings": "workspace:*",
@@ -271,17 +258,51 @@
         "typescript": "^7.0.2",
       },
     },
+    "packages/platform/contracts": {
+      "name": "@bernouy/ulvia-contracts",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/binary-media": "workspace:*",
+        "@bernouy/resource-identity": "workspace:*",
+        "canonicalize": "^5.1.0",
+        "jsonc-parser": "^3.3.1",
+        "marked": "^18.1.3",
+      },
+    },
+    "packages/platform/gateway": {
+      "name": "@bernouy/cms-gateway",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*",
+        "@bernouy/resource-identity": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-providers": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^7.0.2",
+      },
+    },
+    "packages/platform/providers": {
+      "name": "@bernouy/ulvia-providers",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/binary-media": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+      },
+    },
     "packages/runtimes/cms-edge-server": {
       "name": "@bernouy/cms-edge-server",
       "version": "1.0.0",
       "dependencies": {
-        "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-edge": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-observability": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-providers": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^7.0.2",
@@ -291,13 +312,14 @@
       "name": "@bernouy/ulvia-cli",
       "version": "1.0.0",
       "dependencies": {
-        "@bernouy/binary-media": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-observability": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-providers": "workspace:*",
         "playwright": "^1.64.1",
       },
       "peerDependencies": {
@@ -326,7 +348,9 @@
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/text-embeddings": "workspace:*",
         "@bernouy/text-search": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
+        "@bernouy/ulvia-providers": "workspace:*",
         "mongodb": "^7.8.0",
       },
       "peerDependencies": {
@@ -338,9 +362,9 @@
       "version": "1.0.0",
       "dependencies": {
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "1.4.4",
@@ -367,6 +391,8 @@
         "@bernouy/cms-smtp-emailer": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-providers": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^7.0.2",
@@ -392,7 +418,7 @@
 
     "@bernouy/cms-files": ["@bernouy/cms-files@workspace:packages/features/cms-files"],
 
-    "@bernouy/cms-gateway": ["@bernouy/cms-gateway@workspace:packages/features/cms-gateway"],
+    "@bernouy/cms-gateway": ["@bernouy/cms-gateway@workspace:packages/platform/gateway"],
 
     "@bernouy/cms-observability": ["@bernouy/cms-observability@workspace:packages/features/cms-observability"],
 
@@ -422,9 +448,13 @@
 
     "@bernouy/ulvia-cli": ["@bernouy/ulvia-cli@workspace:packages/runtimes/ulvia-cli"],
 
+    "@bernouy/ulvia-contracts": ["@bernouy/ulvia-contracts@workspace:packages/platform/contracts"],
+
     "@bernouy/ulvia-provider": ["@bernouy/ulvia-provider@workspace:packages/surfaces/ulvia-provider"],
 
     "@bernouy/ulvia-provider-server": ["@bernouy/ulvia-provider-server@workspace:packages/runtimes/ulvia-provider-server"],
+
+    "@bernouy/ulvia-providers": ["@bernouy/ulvia-providers@workspace:packages/platform/providers"],
 
     "@biomejs/biome": ["@biomejs/biome@2.6.4", "", { "optionalDependencies": { "@biomejs/cli-android-arm64": "2.6.4", "@biomejs/cli-android-x64": "2.6.4", "@biomejs/cli-darwin-arm64": "2.6.4", "@biomejs/cli-darwin-x64": "2.6.4", "@biomejs/cli-linux-arm64": "2.6.4", "@biomejs/cli-linux-arm64-musl": "2.6.4", "@biomejs/cli-linux-x64": "2.6.4", "@biomejs/cli-linux-x64-musl": "2.6.4", "@biomejs/cli-win32-arm64": "2.6.4", "@biomejs/cli-win32-x64": "2.6.4" }, "bin": { "biome": "bin/biome" } }, "sha512-8sKKwaNW4ot22awZ3lBjwWLHnUFXgXnrBPYS2gNlBAXRbDC++7kqjK2H7dR/FgCDtPvO1xfKpgEhJkGxAKYkxA=="],
 

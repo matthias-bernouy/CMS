@@ -14,31 +14,37 @@
     ],
     "references": [
         {
-            "path": "../../foundation/logging"
-        },
-        {
-            "path": "../../foundation/http-runner"
-        },
-        {
-            "path": "../../foundation/binary-media"
-        },
-        {
-            "path": "../cms-edge-server"
-        },
-        {
-            "path": "../ulvia-provider-server"
-        },
-        {
-            "path": "../../features/cms-repository"
-        },
-        {
             "path": "../../features/cms-content"
         },
         {
             "path": "../../features/cms-observability"
         },
         {
-            "path": "../../features/cms-gateway"
+            "path": "../../features/cms-repository"
+        },
+        {
+            "path": "../../foundation/binary-media"
+        },
+        {
+            "path": "../../foundation/http-runner"
+        },
+        {
+            "path": "../../foundation/logging"
+        },
+        {
+            "path": "../../platform/contracts"
+        },
+        {
+            "path": "../../platform/gateway"
+        },
+        {
+            "path": "../../platform/providers"
+        },
+        {
+            "path": "../cms-edge-server"
+        },
+        {
+            "path": "../ulvia-provider-server"
         }
     ]
 }

@@ -1,6 +1,6 @@
-import { isResourceId, resourcePublisher } from "cms-repository/exports/contracts/protocol";
+import { isResourceId, resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
 import { RepositoryDiscoveryError } from "./errors";
-import { isRepositoryIdentifier, isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
+import { isRepositoryIdentifier, isCanonicalSemVer } from "@bernouy/ulvia-contracts/compatibility";
 import type { RepositorySearchQuery, RepositoryResourceReference } from "../interfaces";
 
 export function object(value: unknown, keys: readonly string[]): Record<string, unknown> {

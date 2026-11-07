@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
-import type { ProviderManifestYank } from "@bernouy/cms-repository/providers/catalogue";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
+import type { ProviderManifestYank } from "@bernouy/ulvia-providers/catalogue";
 import { manifestCatalogueFixture } from "./fixtures";
 
 describe("provider catalogue history", () => {

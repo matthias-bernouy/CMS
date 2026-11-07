@@ -4,7 +4,7 @@ import {
     LocalRepositoryYanks,
 } from "@bernouy/cms-repository/repository/filesystem";
 import { planContractPublications } from "@bernouy/cms-repository/contracts/catalogue";
-import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
+import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
 import type { ResourceSource } from "./discovery";
 import {
     prepareContractResource,

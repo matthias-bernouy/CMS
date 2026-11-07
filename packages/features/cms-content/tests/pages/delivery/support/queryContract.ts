@@ -1,4 +1,4 @@
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
 
 export function queryContract() {
     return admitContractRelease({

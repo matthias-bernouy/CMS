@@ -1,7 +1,9 @@
 import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
-import { admitCollectionRelease, parseCollectionRelease } from "../../../src/exports/collections";
-import { parseCollectionTexts, resolveCollectionTexts } from "../../../src/exports/collections/texts";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
+import { parseCollectionTexts } from "cms-repository/collections/core/texts/parseCollectionTexts";
+import { resolveCollectionTexts } from "cms-repository/collections/core/texts/resolveCollectionTexts";
 import { collectionDocument, textDefinition } from "../fixtures";
 
 const definitions = [

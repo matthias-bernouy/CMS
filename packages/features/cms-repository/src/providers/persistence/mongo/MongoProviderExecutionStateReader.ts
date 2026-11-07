@@ -1,15 +1,11 @@
 import type { Db } from "mongodb";
-import type { ProviderExecutionStateReader } from "cms-repository/providers/selections/interfaces/ProviderExecutionStateReader";
-import type {
-    ContractSelectionStore,
-    StoredContractSelections,
-} from "cms-repository/providers/selections/interfaces/ContractSelectionStore";
-import type {
-    ProviderInstallationStore,
-    StoredProviderInstallation,
-} from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
-import { parseSelectionSiteId } from "cms-repository/providers/selections/core/graph/parseContractSelections";
-import { parseOpaqueId } from "cms-repository/providers/installations/core/parsing/fields";
+import type { ProviderExecutionStateReader } from "@bernouy/ulvia-providers/selections";
+import type { ContractSelectionStore } from "cms-repository/providers/selections/interfaces/ContractSelectionStore";
+import type { StoredContractSelections } from "@bernouy/ulvia-providers/selections";
+import type { ProviderInstallationStore } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
+import type { StoredProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import { parseSelectionSiteId } from "@bernouy/ulvia-providers/selections";
+import { parseOpaqueId } from "@bernouy/ulvia-providers/validation";
 import { RevisionedRecordReader } from "./RevisionedRecordReader";
 
 interface Headers {

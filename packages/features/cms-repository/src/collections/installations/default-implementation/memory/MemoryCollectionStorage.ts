@@ -1,9 +1,17 @@
 import { collectionReleaseSummary } from "../../core/releaseSummary";
 import { verifyStoredCollectionArtifact } from "../../../core/admission/collectionArtifact";
 import { assertBlobRange, type BlobRange } from "@bernouy/blob-store";
-import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../../../core/limits";
+import {
+    DEFAULT_COLLECTION_LIMITS,
+    normalizeCollectionLimits,
+    type CollectionLimits,
+} from "cms-repository/collections/core/limits";
 import { parseCollectionSiteState } from "../../core/siteState";
-import type { CollectionStorage, CollectionSiteState, StoredCollectionRelease } from "../../interfaces/store";
+import type {
+    CollectionStorage,
+    CollectionSiteState,
+    StoredCollectionRelease,
+} from "cms-repository/collections/installations/interfaces/store";
 export class MemoryCollectionStorage implements CollectionStorage {
     private readonly releases = new Map<string, StoredCollectionRelease>();
     private readonly sites = new Map<string, CollectionSiteState>();

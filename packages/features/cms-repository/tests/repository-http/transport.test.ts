@@ -1,5 +1,6 @@
-import { repositoryUrl, RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
-import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
+import { repositoryUrl } from "cms-repository/repository/publication/transport/index";
+import { RemoteRepositoryClient } from "cms-repository/repository/publication/client";
+import { RepositoryNamespaceClient } from "cms-repository/repository/namespaces/transport/client";
 import { expect, test } from "bun:test";
 import { repositoryBaseUrl } from "../../src/repository-http/baseUrl";
 import { getRepositoryBytes, MAX_REPOSITORY_RESPONSE_BYTES } from "../../src/repository-http/getBytes";

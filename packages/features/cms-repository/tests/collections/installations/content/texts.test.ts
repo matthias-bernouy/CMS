@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import { renderCollectionTexts, type CollectionTextSource } from "@bernouy/cms-repository/collections/content";
+import { renderCollectionTexts, type CollectionTextSource } from "cms-repository/collections/integration/content/texts";
 
 const source: CollectionTextSource = {
     collection: {

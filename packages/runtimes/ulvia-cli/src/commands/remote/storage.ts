@@ -1,10 +1,6 @@
-import { contractAssetDefinitions } from "@bernouy/cms-repository/contracts/documentation";
-import {
-    admitContractBundleJson,
-    admitContractReleaseJson,
-    parseContractReleaseJson,
-} from "@bernouy/cms-repository/contracts";
-import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
+import { contractAssetDefinitions } from "@bernouy/ulvia-contracts/documentation";
+import { admitContractBundleJson, admitContractReleaseJson, parseContractReleaseJson } from "@bernouy/ulvia-contracts";
+import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
 import {

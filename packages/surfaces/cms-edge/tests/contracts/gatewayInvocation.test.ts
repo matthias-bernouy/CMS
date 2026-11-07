@@ -1,4 +1,4 @@
-import { handlerContract } from "../../../../features/cms-gateway/tests/http/handlerContract.fixture";
+import { handlerContract } from "../../../../../tests/integration/gateway/http/handlerContract.fixture";
 import { expect, test } from "bun:test";
 import { createContentReader, InMemoryContentRepository } from "@bernouy/cms-content";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";

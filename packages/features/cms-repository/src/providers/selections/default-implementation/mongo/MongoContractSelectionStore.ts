@@ -1,18 +1,16 @@
 import { RevisionedRecordReader } from "cms-repository/providers/persistence/mongo/RevisionedRecordReader";
-import { parseCapabilityGrants } from "../../core/grants";
-import type { CapabilityGrantPolicy } from "../../interfaces/ContractSelectionStore";
+import { parseCapabilityGrants } from "@bernouy/ulvia-providers/selections";
+import type { CapabilityGrantPolicy } from "@bernouy/ulvia-providers/selections";
 import type { Db } from "mongodb";
 import { MongoServerError } from "mongodb";
-import { assertIJson, deepFreeze } from "cms-repository/exports/contracts/protocol";
-import { ContractSelectionValidationError } from "../../core/errors";
-import { DEFAULT_CONTRACT_SELECTION_LIMITS, type ContractSelectionLimits, selectionLimits } from "../../core/limits";
-import { parseContractSelections, parseSelectionSiteId } from "../../core/graph/parseContractSelections";
-import { planContractSelections } from "../../core/graph/planContractSelections";
-import type {
-    ContractSelectionDependencySource,
-    ContractSelectionStore,
-    StoredContractSelections,
-} from "../../interfaces/ContractSelectionStore";
+import { assertIJson, deepFreeze } from "@bernouy/ulvia-contracts/protocol";
+import { ContractSelectionValidationError } from "@bernouy/ulvia-providers/selections";
+import { DEFAULT_CONTRACT_SELECTION_LIMITS, type ContractSelectionLimits } from "@bernouy/ulvia-providers/selections";
+import { selectionLimits } from "@bernouy/ulvia-providers/validation";
+import { parseContractSelections, parseSelectionSiteId } from "@bernouy/ulvia-providers/selections";
+import { planContractSelections } from "@bernouy/ulvia-providers/selections";
+import type { ContractSelectionDependencySource, StoredContractSelections } from "@bernouy/ulvia-providers/selections";
+import type { ContractSelectionStore } from "cms-repository/providers/selections/interfaces/ContractSelectionStore";
 
 interface SelectionDocument extends StoredContractSelections {
     readonly _id: string;

@@ -3,7 +3,7 @@ import { CapabilityMcpBinding, capabilityToolName } from "@bernouy/cms-gateway/m
 import type { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import { CollectionPublicationRecoveryError } from "@bernouy/cms-repository/repository/authoring";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerAuthoringCapabilities } from "../../../src/capabilities/installations/authoring";
+import { registerAuthoringCapabilities } from "../../../src/capabilities/installations/authoring/index";
 import { officialContract, resolvedContract, invokeHttp } from "../messages/fixtures";
 
 const preparationId = "c9ddc861-4e76-48cb-8188-7cfa4a94a11d";

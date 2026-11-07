@@ -1,9 +1,9 @@
-import { admitContractBundle } from "@bernouy/cms-repository/contracts";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
-import { capabilityDocument, contractDocument } from "../contracts/support/fixtures";
+import { admitContractBundle } from "@bernouy/ulvia-contracts";
+import { RemoteRepositoryClient } from "cms-repository/repository/publication/client";
+import { capabilityDocument, contractDocument } from "../../../../platform/contracts/tests/support/fixtures";
 import { expect, test } from "bun:test";
 import { dependencyReader } from "cms-repository/repository/authoring/resources/dependencies/transport";
-import type { CollectionPublisher } from "@bernouy/cms-repository/repository/authoring";
+import type { CollectionPublisher } from "cms-repository/repository/authoring/CollectionAuthoring";
 
 const publisher = { repositoryUrl: "http://127.0.0.1" } as CollectionPublisher;
 test("preparation dependency reads bound concurrency and release all slots after failure", async () => {

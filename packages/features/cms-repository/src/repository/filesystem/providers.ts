@@ -2,10 +2,10 @@ import { createHash } from "node:crypto";
 import {
     admitProviderManifestJson,
     type AdmittedProviderManifest,
-    InMemoryProviderManifestCatalogue,
     type ProviderManifestDigest,
     verifyStoredProviderManifestJson,
-} from "cms-repository/exports/providers/index";
+} from "@bernouy/ulvia-providers";
+import { InMemoryProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
 import { LocalArtifactFiles } from "./artifacts/files";
 import { LocalContractReleases } from "./contracts";
 import { LocalRepositoryYanks } from "./yanks";

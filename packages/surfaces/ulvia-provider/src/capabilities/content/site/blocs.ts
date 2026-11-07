@@ -11,7 +11,7 @@ import {
     setCmsSiteBlocArchived,
 } from "@bernouy/cms-content";
 import { type ProviderCapabilityHandler, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
-import type { CmsContentDependencies } from "../../../ports";
+import type { CmsContentDependencies } from "../../../ports/index";
 
 export function registerSiteBlocCapabilities(
     dispatcher: ProviderCapabilityRegistry,

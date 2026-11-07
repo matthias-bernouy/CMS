@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buildCollectionBloc } from "@bernouy/cms-repository/collections/build";
+import { buildCollectionBloc } from "cms-repository/collections/tooling/buildCollectionBloc";
 
 describe("binding Bloc external", () => {
     test("maps the supported form mutation helpers to window.cmsRuntime", async () => {

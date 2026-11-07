@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { encodePublicationUpload, parsePublicationUpload } from "@bernouy/cms-repository/repository/publication";
+import { encodePublicationUpload, parsePublicationUpload } from "cms-repository/repository/publication/protocol";
 import { jsonRequest, assetRequest, RecordingRegistry, ownerFixture } from "./publicationFixtures";
 
 const directories: string[] = [];

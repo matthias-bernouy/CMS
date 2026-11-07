@@ -2,8 +2,8 @@ import { expect, spyOn, test } from "bun:test";
 import { mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { LocalCollectionRepository } from "cms-repository/repository/filesystem/artifacts/collections";
 
 async function fixture() {
     const bytes = new Uint8Array([1, 2, 3]);

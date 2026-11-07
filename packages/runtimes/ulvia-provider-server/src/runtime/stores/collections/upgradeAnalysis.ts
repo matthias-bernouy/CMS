@@ -4,10 +4,8 @@ import type {
     CapabilityUse,
     UpgradeIssue,
 } from "@bernouy/cms-repository/collections/installations";
-import type {
-    ContractSelectionStore,
-    ContractSelectionDependencySource,
-} from "@bernouy/cms-repository/providers/selections";
+import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
+import type { ContractSelectionDependencySource } from "@bernouy/ulvia-providers/selections";
 import { type ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 
 /** Explicit Edge/Provider consumers; catalogue-only demonstrations add no execution grant. */

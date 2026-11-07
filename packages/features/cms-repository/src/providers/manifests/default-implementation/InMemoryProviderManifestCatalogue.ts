@@ -1,26 +1,17 @@
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { compareSemVer, semVerReleaseTarget } from "cms-repository/exports/contracts/compatibility";
-import { deepFreeze } from "cms-repository/exports/contracts/protocol";
-import type {
-    AdmittedProviderManifest,
-    ProviderManifestDigest,
-} from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
-import { verifyStoredProviderManifestJson } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
-import { validateProviderManifestReferences } from "cms-repository/providers/manifests/core/admission/validateProviderManifest";
-import { verifyProviderManifestAdmission } from "cms-repository/providers/manifests/core/admission/verifyProviderManifestAdmission";
-import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/protocol/errors";
-import { normalizeManifestYank } from "cms-repository/providers/manifests/core/admission/normalizeManifestYank";
-import {
-    DEFAULT_PROVIDER_MANIFEST_LIMITS,
-    normalizeProviderManifestLimits,
-    type ProviderManifestLimits,
-} from "cms-repository/providers/manifests/core/protocol/limits";
-import { compareOrdinal } from "cms-repository/providers/manifests/core/protocol/values";
-import type {
-    CatalogueProviderManifest,
-    ProviderManifestCatalogue,
-    ProviderManifestYank,
-} from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
+import { compareSemVer, semVerReleaseTarget } from "@bernouy/ulvia-contracts/compatibility";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
+import type { AdmittedProviderManifest, ProviderManifestDigest } from "@bernouy/ulvia-providers";
+import { verifyStoredProviderManifestJson } from "@bernouy/ulvia-providers";
+import { validateProviderManifestReferences } from "@bernouy/ulvia-providers/validation";
+import { verifyProviderManifestAdmission } from "@bernouy/ulvia-providers/validation";
+import { ProviderManifestValidationError } from "@bernouy/ulvia-providers";
+import { normalizeManifestYank } from "@bernouy/ulvia-providers/validation";
+import { DEFAULT_PROVIDER_MANIFEST_LIMITS, type ProviderManifestLimits } from "@bernouy/ulvia-providers";
+import { normalizeProviderManifestLimits } from "@bernouy/ulvia-providers/validation";
+import { compareOrdinal } from "@bernouy/ulvia-providers/validation";
+import type { CatalogueProviderManifest, ProviderManifestYank } from "@bernouy/ulvia-providers/catalogue";
+import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 
 export class InMemoryProviderManifestCatalogue implements ProviderManifestCatalogue {
     readonly #byKey = new Map<string, CatalogueProviderManifest>();

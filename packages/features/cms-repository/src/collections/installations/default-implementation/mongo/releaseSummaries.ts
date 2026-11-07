@@ -1,6 +1,6 @@
 import type { Db } from "mongodb";
 import { isSha256Digest } from "@bernouy/binary-media";
-import { isCanonicalSemVer, isRepositoryIdentifier } from "cms-repository/exports/contracts/compatibility";
+import { isCanonicalSemVer, isRepositoryIdentifier } from "@bernouy/ulvia-contracts/compatibility";
 import { isCollectionNamespace } from "../../../core/namespace";
 import type { CollectionReleaseSummary } from "../../interfaces/store";
 

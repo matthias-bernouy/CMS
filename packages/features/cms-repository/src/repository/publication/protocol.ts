@@ -1,6 +1,6 @@
 import { RepositoryRequestError } from "../core/errors";
 import { isSha256Digest } from "@bernouy/binary-media";
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { MAX_REPOSITORY_RESPONSE_BYTES } from "cms-repository/repository-http/getBytes";
 import type { PublicationUploadManifest, RepositoryArtifactKind } from "./types";
 

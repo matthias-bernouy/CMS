@@ -1,5 +1,5 @@
-import { firstSchemaSubsetViolation } from "cms-repository/exports/contracts/compatibility";
-import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
+import { firstSchemaSubsetViolation } from "@bernouy/ulvia-contracts/compatibility";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { settingsSchema } from "../../core/parsing/blocs/settingSchema";
 import type {
     CollectionComponentSettings,

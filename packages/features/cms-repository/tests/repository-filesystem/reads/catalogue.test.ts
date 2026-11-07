@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalRepositoryYanks } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalRepositoryYanks } from "cms-repository/repository/filesystem/yanks";
 import { expect, test } from "bun:test";
 import { cataloguePage, CatalogueInputError } from "../../../src/repository/filesystem/core/catalogue";
 import type { RepositoryCatalogueReader } from "../../../src/repository/filesystem/catalogueIndex";

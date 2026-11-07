@@ -1,10 +1,10 @@
 import type { ProviderCapabilityRegistry } from "../../dispatch/registry";
-import type { CmsContentDependencies } from "../../ports";
+import type { CmsContentDependencies } from "../../ports/index";
 import { registerLocalizationCapabilities } from "./localization";
-import { registerPageCapabilities } from "./pages";
-import { registerSiteCapabilities } from "./site";
+import { registerPageCapabilities } from "./pages/index";
+import { registerSiteCapabilities } from "./site/index";
 import { registerThemeCapabilities } from "./theme";
-import { registerContentDeliveryCapabilities } from "./delivery";
+import { registerContentDeliveryCapabilities } from "./delivery/index";
 import { registerSiteBlocCapabilities } from "./site/blocs";
 
 export function registerContentCapabilities(

@@ -1,7 +1,4 @@
-import {
-    parseProviderRuntimeReportJson,
-    type ProviderRuntimeReport,
-} from "@bernouy/cms-repository/providers/installations";
+import { parseProviderRuntimeReportJson, type ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 import type { InstallationsProviderTransport } from "./InstallationsProviderTransport";
 
 export const INSTALLATIONS_CONTRACT = {

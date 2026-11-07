@@ -1,5 +1,9 @@
-import { compareSemVer, releaseChannel } from "cms-repository/exports/contracts/compatibility";
-import type { RepositoryResourceReference, RepositorySearchSnapshot, RepositorySearchSource } from "../interfaces";
+import { compareSemVer, releaseChannel } from "@bernouy/ulvia-contracts/compatibility";
+import type {
+    RepositoryResourceReference,
+    RepositorySearchSnapshot,
+    RepositorySearchSource,
+} from "cms-repository/repository/search/interfaces";
 
 /** Select complete latest releases, retaining every row belonging to each selected release. */
 export function latestReleaseRows<T extends { readonly reference: RepositoryResourceReference }>(

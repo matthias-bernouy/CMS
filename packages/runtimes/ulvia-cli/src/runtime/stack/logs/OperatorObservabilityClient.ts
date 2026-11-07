@@ -1,9 +1,9 @@
-import { isCanonicalSemVer, satisfiesVersionRange } from "@bernouy/cms-repository/contracts/compatibility";
-import { parseProviderRuntimeReportJson } from "@bernouy/cms-repository/providers/installations";
+import { isCanonicalSemVer, satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
+import { parseProviderRuntimeReportJson } from "@bernouy/ulvia-providers/installations";
 import type { GatewayRoute } from "@bernouy/cms-gateway";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
-import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import type { LogDetail, LogQuery, LogSummary } from "@bernouy/cms-observability";
 
 type ReadCapability = "logs.query" | "logs.get";

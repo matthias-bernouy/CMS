@@ -24,14 +24,14 @@ test("contract and provider releases use explicit kinds and exact local contract
         await mkdir(providerFolder, { recursive: true });
         const fixture = resolve(
             import.meta.dir,
-            "../../../../features/cms-repository/fixtures/contracts/protocol-v1/representative.contract.json",
+            "../../../../platform/contracts/fixtures/protocol-v1/representative.contract.json",
         );
         const contract = JSON.parse(await readFile(fixture, "utf8")) as Record<string, unknown>;
         contract.catalogue = { icon: "mail", categories: ["communication"] };
         await writeAuthoredContractFixture(contractFolder, contract);
         const providerFixture = resolve(
             import.meta.dir,
-            "../../../../features/cms-repository/fixtures/providers/protocol-v1/example.provider-manifest.json",
+            "../../../../platform/providers/fixtures/protocol-v1/example.provider-manifest.json",
         );
         const provider = JSON.parse(await readFile(providerFixture, "utf8")) as Record<string, unknown>;
         const implementation = (provider.implementations as Record<string, unknown>[])[0]!;
@@ -43,14 +43,14 @@ test("contract and provider releases use explicit kinds and exact local contract
         await runCli(["release", contractFolder], options);
         const bundleFixture = resolve(
             import.meta.dir,
-            "../../../../features/cms-repository/fixtures/contracts/protocol-v1/mock.contract.json",
+            "../../../../platform/contracts/fixtures/protocol-v1/mock.contract.json",
         );
         await writeAuthoredContractFixture(bundleFolder, await readFile(bundleFixture));
         await expect(runCli(["release", bundleFolder], options)).rejects.toThrow();
         await mkdir(join(bundleFolder, "fixtures"));
         const assetFixture = resolve(
             import.meta.dir,
-            "../../../../features/cms-repository/fixtures/contracts/protocol-v1/mock-assets/receipt.svg",
+            "../../../../platform/contracts/fixtures/protocol-v1/mock-assets/receipt.svg",
         );
         await writeFile(join(bundleFolder, "fixtures", "receipt.svg"), await readFile(assetFixture));
         await runCli(["release", bundleFolder], options);

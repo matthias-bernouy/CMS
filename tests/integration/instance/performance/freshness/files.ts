@@ -1,5 +1,5 @@
 import { expect } from "bun:test";
-import { resourceRuntimeNamespace } from "@bernouy/cms-repository/contracts/protocol";
+import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 import { cachedPage, publishPage, type Connection } from "./context";
 export async function exerciseFileFreshness(connection: Connection, cmsUrl: string, collectionId: string) {
     const call = (capability: string, input: Record<string, unknown> = {}) =>

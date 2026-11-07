@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { MongoSiteUpgradeStorage } from "@bernouy/cms-repository/upgrades/mongo";
+import { MongoSiteUpgradeStorage } from "cms-repository/site-upgrades/mongo";
 import type { Db } from "mongodb";
 import { FakeContentDb } from "../../../../../../cms-content/tests/application/mongo/contentMongoFixture";
 

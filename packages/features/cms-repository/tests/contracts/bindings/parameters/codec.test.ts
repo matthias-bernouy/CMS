@@ -4,9 +4,9 @@ import {
     decodeHttpParameter,
     encodeHttpFieldParameter,
     encodeHttpParameter,
-} from "@bernouy/cms-repository/contracts/bindings";
-import { parseUlviaSchema } from "@bernouy/cms-repository/contracts/schema";
-import type { UlviaScalarSchema } from "@bernouy/cms-repository/contracts/schema";
+} from "@bernouy/ulvia-contracts/bindings";
+import { parseUlviaSchema } from "@bernouy/ulvia-contracts/schema";
+import type { UlviaScalarSchema } from "@bernouy/ulvia-contracts/schema";
 
 const text: UlviaScalarSchema = { type: "string", nullable: true, maxLength: 128 };
 const number: UlviaScalarSchema = { type: "number" };

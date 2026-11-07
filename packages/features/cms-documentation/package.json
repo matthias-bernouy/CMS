@@ -10,8 +10,8 @@
     },
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/text-search": "workspace:*"
+        "@bernouy/text-search": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*"
     },
     "peerDependencies": {
         "mongodb": "^7.6.0",

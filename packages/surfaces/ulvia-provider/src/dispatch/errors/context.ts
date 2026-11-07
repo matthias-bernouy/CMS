@@ -1,4 +1,4 @@
-import type { ErrorMessageKey } from "./catalogue";
+import type { ErrorMessageKey } from "./catalogue/index";
 
 /** These are provider copy choices, not additional contract error codes. */
 export function contextualMessage(contractId: string, capabilityId: string, code: string): ErrorMessageKey | undefined {

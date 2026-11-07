@@ -1,13 +1,12 @@
-import type { ProviderManifestDigest } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
-import type { ProviderManifestLimits } from "cms-repository/providers/manifests/core/protocol/limits";
-import type { ProviderInstallationLimits } from "../core/limits";
-import type { ProviderInstallation, ProviderInstallationStatus } from "./ProviderInstallation";
-import type { ProviderRuntimeObservation } from "./ProviderRuntimeReport";
-
-export interface ProviderInstallationScope {
-    readonly installationId: string;
-    readonly siteId: string;
-}
+import type {
+    ProviderInstallationReader,
+    ProviderInstallationScope,
+    StoredProviderInstallation,
+} from "@bernouy/ulvia-providers/installations";
+import type { ProviderManifestDigest } from "@bernouy/ulvia-providers";
+import type { ProviderManifestLimits } from "@bernouy/ulvia-providers";
+import type { ProviderInstallationLimits } from "@bernouy/ulvia-providers/installations";
+import type { ProviderInstallationStatus } from "@bernouy/ulvia-providers/installations";
 
 export interface ProviderInstallationCandidate {
     readonly id: string;
@@ -20,13 +19,6 @@ export interface ProviderInstallationCandidate {
     readonly providerTokenRef: string;
     readonly gatewayTokenRef?: string;
     readonly configuration: Readonly<Record<string, unknown>>;
-}
-
-export interface StoredProviderInstallation {
-    readonly installation: ProviderInstallation;
-    /** Changes on every mutation, including a new observation. */
-    readonly revision: number;
-    readonly observation?: ProviderRuntimeObservation;
 }
 
 export interface ProviderInstallationApprovalCommand {
@@ -68,13 +60,7 @@ export type ProviderInstallationClock = () => string;
  * Parsing an installation, possessing a preparation, or knowing an actor ID is not authorization.
  * Adapters must enforce validation, CAS, terminal revocation and immutable connection identity.
  */
-export interface ProviderInstallationStore {
-    /** Optional site-scoped token that changes on every installation mutation. */
-    revision?(siteId: string): Promise<string>;
-    /** Optional token for approved installation state; observations do not change it. */
-    selectionRevision?(siteId: string): Promise<string>;
-    get(scope: ProviderInstallationScope): Promise<StoredProviderInstallation | null>;
-    list(siteId: string): Promise<readonly StoredProviderInstallation[]>;
+export interface ProviderInstallationStore extends ProviderInstallationReader {
     approve(command: ProviderInstallationApprovalCommand): Promise<StoredProviderInstallation>;
     reapprove(
         scope: ProviderInstallationScope,

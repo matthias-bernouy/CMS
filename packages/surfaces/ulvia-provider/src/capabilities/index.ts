@@ -4,16 +4,16 @@ import type {
     UlviaProviderDependencies,
     UlviaProviderGateway,
     UlviaProviderManagement,
-} from "../ports";
-import { registerObservabilityCapabilities } from "./observability";
-import { registerAccessCapabilities } from "./access";
-import { registerContentCapabilities } from "./content";
+} from "../ports/index";
+import { registerObservabilityCapabilities } from "./observability/index";
+import { registerAccessCapabilities } from "./access/index";
+import { registerContentCapabilities } from "./content/index";
 import { registerFileCapabilities } from "./storage/files";
 import { registerSmtpEmailerCapabilities } from "./emailer";
-import { registerAuthoringCapabilities } from "./installations/authoring";
-import { registerInstallationCapabilities } from "./installations";
-import { registerSecretCapabilities } from "./storage/secrets";
-import type { CollectionSources } from "./installations/sources";
+import { registerAuthoringCapabilities } from "./installations/authoring/index";
+import { registerInstallationCapabilities } from "./installations/index";
+import { registerSecretCapabilities } from "./storage/secrets/index";
+import type { CollectionSources } from "./installations/sources/index";
 import type { ProviderOperationExecutor } from "../operations/ProviderOperationExecutor";
 import type { CmsFilesService } from "@bernouy/cms-files";
 
@@ -71,10 +71,10 @@ export {
     registerCollectionInstallationCapabilities,
     registerCollectionOperationCapabilities,
     registerProviderInstallationCapabilities,
-} from "./installations";
+} from "./installations/index";
 export type {
     CmsFileWorkspace,
     UlviaProviderDependencies,
     UlviaProviderGateway,
     UlviaProviderManagement,
-} from "../ports";
+} from "../ports/index";

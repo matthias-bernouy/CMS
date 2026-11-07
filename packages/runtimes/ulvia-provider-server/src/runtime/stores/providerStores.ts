@@ -40,7 +40,7 @@ import {
     MongoProviderManifestCatalogue,
 } from "@bernouy/cms-repository/providers/mongo";
 import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/providers/selections";
-import type { StoredContractSelections } from "@bernouy/cms-repository/providers/selections";
+import type { StoredContractSelections } from "@bernouy/ulvia-providers/selections";
 import { selectedCapabilityResolver, selectedPublicSvgCapabilityValidator } from "./selections/capabilities";
 import type { Logger } from "@bernouy/logging";
 import { CmsSecrets } from "@bernouy/cms-secrets";

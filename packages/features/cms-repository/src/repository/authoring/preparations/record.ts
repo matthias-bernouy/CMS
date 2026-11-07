@@ -4,7 +4,7 @@ import { parseSourceSnapshot } from "../snapshot";
 import { createHash, randomUUID } from "node:crypto";
 import { readFile, open, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { RepositoryRequestError } from "../../core/errors";
 
 export interface PreparedCollection {

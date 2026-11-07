@@ -1,6 +1,6 @@
 import { GatewayError } from "@bernouy/cms-gateway";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
-import type { UlviaProviderGateway } from "../../../ports";
+import type { UlviaProviderGateway } from "../../../ports/index";
 import type { DelegationSource, DelegationTarget } from "@bernouy/cms-gateway/access/delegation";
 
 export function registerDelegationCapabilities(dispatcher: ProviderCapabilityRegistry, gateway?: UlviaProviderGateway) {

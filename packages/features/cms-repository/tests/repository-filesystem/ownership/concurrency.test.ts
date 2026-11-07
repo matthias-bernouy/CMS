@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
-import { RepositoryNamespaces } from "@bernouy/cms-repository/repository/namespaces";
-import { MongoRepositoryNamespaces } from "@bernouy/cms-repository/repository/namespaces/mongo";
-import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem";
+import { RepositoryNamespaces } from "cms-repository/repository/namespaces/accounts/RepositoryNamespaces";
+import { MongoRepositoryNamespaces } from "cms-repository/repository/namespaces/accounts/mongo";
+import { withRepositoryWriteLock } from "cms-repository/repository/filesystem/core/lock";
 import { join } from "node:path";
 import { deferred, mongo, ownershipFixture } from "./fixture";
 

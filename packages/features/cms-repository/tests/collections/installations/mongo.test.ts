@@ -1,9 +1,9 @@
 import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { Binary } from "mongodb";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import { CollectionStore } from "@bernouy/cms-repository/collections/installations";
-import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+import { MongoCollectionStorage } from "cms-repository/collections/installations/default-implementation/mongo/MongoCollectionStorage";
 import { fakeCatalogueDb } from "../../support/fakeCatalogueDb";
 import { collectionDocument } from "../fixtures";
 import { COLLECTION_ASSET_CHUNK_BYTES } from "../../../src/collections/installations/default-implementation/mongo/assetChunks";

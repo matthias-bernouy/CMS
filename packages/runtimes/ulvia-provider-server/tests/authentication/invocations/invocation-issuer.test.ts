@@ -1,6 +1,6 @@
 import { GatewayAuthorityReads } from "@bernouy/cms-gateway";
 import { expect, test } from "bun:test";
-import { gatewayRoute } from "../../../../../features/cms-gateway/tests/fixtures";
+import { gatewayRoute } from "../../../../../../tests/integration/gateway/fixtures";
 import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { createInvocationIssuer } from "../../../src/runtime/gateway/providers/authority/issueInvocation";
 

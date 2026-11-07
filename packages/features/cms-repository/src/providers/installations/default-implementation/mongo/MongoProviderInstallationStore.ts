@@ -2,30 +2,40 @@ import { RevisionedRecordReader } from "cms-repository/providers/persistence/mon
 import type { Db } from "mongodb";
 import { MongoServerError } from "mongodb";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
-import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
-import { approvedInstallation, candidateFromInstallation } from "../../core/lifecycle/candidates";
-import { ProviderInstallationWorkflowError } from "../../core/lifecycle/errors";
-import { validateApprovalCommand, validateProposal, workflowOptions } from "../../core/lifecycle/preparations";
+import { catalogueRevision } from "@bernouy/ulvia-contracts/protocol";
+import {
+    approvedInstallation,
+    candidateFromInstallation,
+} from "cms-repository/providers/installations/core/lifecycle/candidates";
+import { ProviderInstallationWorkflowError } from "@bernouy/ulvia-providers/installations";
+import {
+    validateApprovalCommand,
+    validateProposal,
+    workflowOptions,
+} from "cms-repository/providers/installations/core/lifecycle/preparations";
 import {
     assertActive,
     assertCurrentTimestamp,
     assertIdentity,
     assertRevision,
     installationScope,
-    timestamp,
-} from "../../core/lifecycle/state";
-import { parseProviderInstallation } from "../../core/parsing/parseProviderInstallation";
-import { parseOpaqueId } from "../../core/parsing/fields";
-import type { ProviderInstallationStatus } from "../../interfaces/ProviderInstallation";
+} from "cms-repository/providers/installations/core/lifecycle/state";
+import { timestamp } from "@bernouy/ulvia-providers/validation";
+import { parseProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import { parseOpaqueId } from "@bernouy/ulvia-providers/validation";
+import type { ProviderInstallationStatus } from "@bernouy/ulvia-providers/installations";
 import type {
     ProviderInstallationApprovalCommand,
     ProviderInstallationClock,
-    ProviderInstallationScope,
     ProviderInstallationStore,
     ProviderInstallationWorkflowOptions,
-    StoredProviderInstallation,
-} from "../../interfaces/ProviderInstallationStore";
-import { installationDocument, type InstallationDocument, readInstallationDocument } from "./record";
+} from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
+import type { ProviderInstallationScope, StoredProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import {
+    installationDocument,
+    type InstallationDocument,
+    readInstallationDocument,
+} from "cms-repository/providers/installations/default-implementation/mongo/record";
 import { mongoInstallationSelectionRevision } from "./selectionMetadata";
 
 /** Durable site-scoped installation state. Mongo's revision predicate fences concurrent writers. */

@@ -1,14 +1,14 @@
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
+import { catalogueRevision } from "@bernouy/ulvia-contracts/protocol";
 import type { ProviderInstallationStore } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
 import { installationSelectionRevision } from "cms-repository/providers/installations/core/selectionRevision";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
-import { ContractSelectionValidationError } from "../core/errors";
-import { parseSelectionSiteId } from "../core/graph/parseContractSelections";
+import { ContractSelectionValidationError } from "@bernouy/ulvia-providers/selections";
+import { parseSelectionSiteId } from "@bernouy/ulvia-providers/selections";
 import type {
     ContractSelectionDependencySnapshot,
     ContractSelectionDependencySource,
-} from "../interfaces/ContractSelectionStore";
+} from "@bernouy/ulvia-providers/selections";
 
 type CatalogueRecords = Awaited<ReturnType<CatalogueSelectionDependencies["read"]>>;
 

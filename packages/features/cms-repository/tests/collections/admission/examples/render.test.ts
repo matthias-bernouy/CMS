@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { admitCollectionRelease } from "../../../../src/exports/collections/index";
-import { renderCollectionExamples } from "../../../../src/exports/collections/build";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { renderCollectionExamples } from "cms-repository/collections/tooling/examples/render";
 import { exampleCollection } from "./fixture";
 
 test("one immutable example renders collection texts in different contexts while keeping its frames", async () => {

@@ -1,4 +1,4 @@
-import type { AdmittedContractRelease } from "cms-repository/contracts/core/admission/admitContractRelease";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import type { ReleaseCatalogue } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
 import { planContractPublications } from "./planPublications";
 

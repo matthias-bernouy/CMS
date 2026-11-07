@@ -1,5 +1,5 @@
-import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
-import type { ProviderInstallation } from "../interfaces/ProviderInstallation";
+import { catalogueRevision } from "@bernouy/ulvia-contracts/protocol";
+import type { ProviderInstallation } from "@bernouy/ulvia-providers/installations";
 
 /** Tracks installation configuration without treating runtime observations as selection changes. */
 export async function installationSelectionRevision(

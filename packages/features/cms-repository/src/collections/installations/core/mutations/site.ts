@@ -1,4 +1,4 @@
-import { validateSchemaValue } from "cms-repository/exports/contracts/schema";
+import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import type { CollectionStorage } from "../../interfaces/store";
 import { writeCollectionSiteState } from "../siteState";
 

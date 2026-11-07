@@ -28,10 +28,7 @@ export {
     type AssetsManifest,
     type PageAssetContext,
 } from "cms-content/blocs/core/assets/resolvePageAssets";
-export {
-    expandCompositions,
-    type CompositionDefinition,
-} from "cms-content/blocs/core/composition/expandCompositions";
+export { expandCompositions, type CompositionDefinition } from "cms-content/blocs/core/composition/expandCompositions";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
 export {
     collectionBlocStyleCacheKey,
@@ -39,10 +36,7 @@ export {
     generateBlocStyleGroupEntry,
     groupBlocStylesByCollection,
 } from "cms-content/blocs/core/assets/generateBlocStyleGroupEntry";
-export {
-    collectCmsMutationBindings,
-    collectCmsQueryBindings,
-} from "cms-content/pages/core/indexing/operationBindings";
+export { collectCmsMutationBindings, collectCmsQueryBindings } from "cms-content/pages/core/indexing/operationBindings";
 export {
     projectResolvedIndexingEntity,
     projectIndexingDiscoveryPage,

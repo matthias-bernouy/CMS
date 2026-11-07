@@ -5,7 +5,7 @@ import {
     ProviderCapabilityDispatchError,
     type ProviderCapabilityRegistry,
 } from "../../dispatch/registry";
-import type { CmsAccessDependencies, UlviaProviderGateway } from "../../ports";
+import type { CmsAccessDependencies, UlviaProviderGateway } from "../../ports/index";
 import {
     accessCommand,
     actorSubject,

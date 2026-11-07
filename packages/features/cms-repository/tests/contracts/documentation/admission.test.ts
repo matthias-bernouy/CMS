@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
-import { admitContractBundle, admitContractRelease, parseContractRelease } from "@bernouy/cms-repository/contracts";
-import { compareContractReleases } from "@bernouy/cms-repository/contracts/compatibility";
-import { parseDocumentationMarkdown } from "@bernouy/cms-repository/contracts/documentation";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
+import { admitContractBundle, admitContractRelease, parseContractRelease } from "@bernouy/ulvia-contracts";
+import { compareContractReleases } from "@bernouy/ulvia-contracts/compatibility";
+import { parseDocumentationMarkdown } from "@bernouy/ulvia-contracts/documentation";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { MongoReleaseCatalogue } from "cms-repository/contracts/default-implementation/mongo/MongoReleaseCatalogue";
 import { fakeCatalogueDb } from "../../support/fakeCatalogueDb";
 import { documented } from "./fixtures";
 

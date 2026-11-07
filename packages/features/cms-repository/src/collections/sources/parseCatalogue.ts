@@ -1,8 +1,8 @@
-import { resourcePublisher } from "cms-repository/exports/contracts/protocol";
+import { resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
 import { isSha256Digest } from "@bernouy/binary-media";
 import type { CollectionRepositoryEntry } from "./interfaces";
 import { isCollectionNamespace } from "../core/namespace";
-import { isCanonicalSemVer, isRepositoryIdentifier } from "cms-repository/exports/contracts/compatibility";
+import { isCanonicalSemVer, isRepositoryIdentifier } from "@bernouy/ulvia-contracts/compatibility";
 import { isPlainRecord, isRepositoryCatalogueCursor } from "cms-repository/repository-http/catalogueValues";
 
 export type CollectionCataloguePage = Readonly<{

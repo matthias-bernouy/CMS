@@ -3,7 +3,7 @@ import { RepositoryDiscoveryError } from "../core/errors";
 import { repositoryBaseUrl } from "cms-repository/repository-http/baseUrl";
 import { getRepositoryBytes } from "cms-repository/repository-http/getBytes";
 import type { RepositoryFetch } from "cms-repository/repository-http/getBytes";
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { searchPage } from "../core/page";
 import { resourceReference, searchQuery, text } from "../core/input";
 import type {

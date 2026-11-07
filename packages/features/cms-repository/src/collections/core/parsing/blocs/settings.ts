@@ -1,11 +1,20 @@
 import { resourceMetadata } from "../../validation/lifecycle/metadata";
-import type { CollectionComponentSettings, CollectionSettingItem } from "../../../interfaces/CollectionBloc";
+import type {
+    CollectionComponentSettings,
+    CollectionSettingItem,
+} from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, keys, record, string, unique } from "../../values";
 import { parseConfiguration } from "../configuration";
-import { parseSettingControl, settingControlValues } from "./settingControls";
-import { assertVisibilityAcyclic, parseSettingVisibility } from "./visibility";
+import {
+    parseSettingControl,
+    settingControlValues,
+} from "cms-repository/collections/core/parsing/blocs/settingControls";
+import {
+    assertVisibilityAcyclic,
+    parseSettingVisibility,
+} from "cms-repository/collections/core/parsing/blocs/visibility";
 
 const DEFAULT_MAX_LENGTH = 256;
 

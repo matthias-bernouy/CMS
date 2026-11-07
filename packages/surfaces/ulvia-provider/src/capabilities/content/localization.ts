@@ -1,6 +1,6 @@
 import { readSystemSnapshot } from "@bernouy/cms-content";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
-import type { CmsContentDependencies } from "../../ports";
+import type { CmsContentDependencies } from "../../ports/index";
 import { projectTextCatalogue } from "./projections/localization";
 import { configurationCommand, language, languages, optionalText, requiredText, revision } from "./support";
 

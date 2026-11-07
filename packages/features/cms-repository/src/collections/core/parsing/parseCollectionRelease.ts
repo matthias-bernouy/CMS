@@ -1,10 +1,14 @@
-import { resourcePublisher } from "cms-repository/exports/contracts/protocol";
+import { resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
 import { validateCollectionLifecycles } from "../validation/lifecycle/validate";
-import { canonicalIJsonBytes, deepFreeze, parseStrictJson } from "cms-repository/exports/contracts/protocol";
-import { satisfiesVersionRange } from "cms-repository/exports/contracts/compatibility";
+import { canonicalIJsonBytes, deepFreeze, parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
+import { satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { CollectionValidationError, invalid, translateCollectionError } from "../errors";
-import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../limits";
+import {
+    DEFAULT_COLLECTION_LIMITS,
+    normalizeCollectionLimits,
+    type CollectionLimits,
+} from "cms-repository/collections/core/limits";
 import { identifier, keys, record, string } from "../values";
 import { collectionThemeTokenId, parseCollectionNamespace } from "../namespace";
 import { isThemeToken, parseCollectionTheme } from "./theme";
@@ -16,12 +20,16 @@ import { parseConfiguration } from "./configuration";
 import { validateCollectionTextReferences } from "../validation/markup/texts";
 import { parseCollectionTranslations } from "../texts/translationCatalogue";
 import { validateCollectionTranslationReferences } from "../texts/translationReferences";
-import { parseCollectionDependencies, parseCollectionExports, validateCollectionExports } from "./requirements";
+import {
+    parseCollectionDependencies,
+    parseCollectionExports,
+    validateCollectionExports,
+} from "cms-repository/collections/core/parsing/requirements";
 import { validateCollectionAssetReferences } from "../validation/markup/assets";
 import { parseCollectionExamples } from "../validation/examples/parse";
 import { validateCollectionExamples } from "../validation/examples/validate";
 import { parseCollectionStates } from "./states";
-import { validateCollectionStateBindings } from "../validation/markup/state";
+import { validateCollectionStateBindings } from "cms-repository/collections/core/validation/markup/state/index";
 import { validateBlocStyles } from "../validation/styles/validate";
 import { parseCollectionBootstraps } from "../validation/bootstraps/parse";
 

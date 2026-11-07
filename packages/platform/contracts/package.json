@@ -1,0 +1,25 @@
+{
+    "name": "@bernouy/ulvia-contracts",
+    "version": "1.0.0",
+    "description": "Ulvia contract definitions, validation, admission, bindings and compatibility.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./bindings": "./src/exports/bindings.ts",
+        "./catalogue": "./src/exports/catalogue.ts",
+        "./compatibility": "./src/exports/compatibility.ts",
+        "./documentation": "./src/exports/documentation.ts",
+        "./protocol": "./src/exports/protocol.ts",
+        "./schema": "./src/exports/schema.ts",
+        "./validation": "./src/exports/validation.ts"
+    },
+    "dependencies": {
+        "@bernouy/binary-media": "workspace:*",
+        "@bernouy/resource-identity": "workspace:*",
+        "canonicalize": "^5.1.0",
+        "jsonc-parser": "^3.3.1",
+        "marked": "^18.1.3"
+    }
+}

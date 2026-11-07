@@ -1,6 +1,6 @@
 import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { expect, test } from "bun:test";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
 import { createAuthoringResources } from "cms-edge/http/mcp/resources";
 import type { CmsMcpHost } from "cms-edge/http/mcp/protocol";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";

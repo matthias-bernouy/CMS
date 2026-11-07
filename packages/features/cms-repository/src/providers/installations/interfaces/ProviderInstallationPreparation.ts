@@ -1,4 +1,4 @@
-import type { ProviderRuntimeObservation } from "./ProviderRuntimeReport";
+import type { ProviderRuntimeObservation } from "@bernouy/ulvia-providers/installations";
 import type { ProviderInstallationCandidate } from "./ProviderInstallationStore";
 
 export type ProviderInstallationChanges = Partial<

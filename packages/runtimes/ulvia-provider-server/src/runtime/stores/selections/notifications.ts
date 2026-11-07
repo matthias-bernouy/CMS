@@ -1,4 +1,5 @@
-import type { ContractSelectionStore, StoredContractSelections } from "@bernouy/cms-repository/providers/selections";
+import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
+import type { StoredContractSelections } from "@bernouy/ulvia-providers/selections";
 import type { Logger } from "@bernouy/logging";
 
 /** Notify only after a validated CAS commit; optional observers cannot fail the committed operation. */

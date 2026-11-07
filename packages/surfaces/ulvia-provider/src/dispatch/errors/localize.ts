@@ -1,7 +1,7 @@
 import { ProviderCapabilityDispatchError } from "@bernouy/cms-gateway/provider/server";
 import type { ProviderCapabilityInvocationContext } from "@bernouy/cms-gateway/provider/server";
-import { ERROR_MESSAGES } from "./catalogue";
-import type { ErrorMessageKey } from "./catalogue";
+import { ERROR_MESSAGES } from "./catalogue/index";
+import type { ErrorMessageKey } from "./catalogue/index";
 import { contextualMessage } from "./context";
 import { failureReason } from "./failure";
 import type { FailureReason } from "./failure";

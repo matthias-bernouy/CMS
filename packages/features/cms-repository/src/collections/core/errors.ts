@@ -1,4 +1,4 @@
-import { ReleaseValidationError } from "cms-repository/exports/contracts/index";
+import { ReleaseValidationError } from "@bernouy/ulvia-contracts";
 
 export type CollectionValidationCode =
     | "invalid_collection"

@@ -1,5 +1,5 @@
-import { isResourceId, isResourceNamespace, resourcePublisher } from "cms-repository/exports/contracts/protocol";
-import { isVersionRangeSubset, parseVersionRange } from "cms-repository/exports/contracts/compatibility";
+import { isResourceId, isResourceNamespace, resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
+import { isVersionRangeSubset, parseVersionRange } from "@bernouy/ulvia-contracts/compatibility";
 import type {
     CollectionCapabilityRequirement,
     CollectionDependency,
@@ -10,7 +10,11 @@ import type {
 import { invalid } from "../errors";
 import type { CollectionLimits } from "../limits";
 import { array, identifier, keys, ordinal, record, string, unique } from "../values";
-import { collectionThemeTokenId, parseCollectionBlocTag, parseCollectionNamespace } from "../namespace";
+import {
+    collectionThemeTokenId,
+    parseCollectionBlocTag,
+    parseCollectionNamespace,
+} from "cms-repository/collections/core/namespace";
 import { textIdentifier } from "../texts/validation";
 import { parseAssetId } from "./assets";
 

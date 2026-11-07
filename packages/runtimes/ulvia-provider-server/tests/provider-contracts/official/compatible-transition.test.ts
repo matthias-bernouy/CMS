@@ -1,6 +1,6 @@
 import { beforeAll, expect, test } from "bun:test";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import type { ContractRelease } from "@bernouy/cms-repository/contracts";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import type { ContractRelease } from "@bernouy/ulvia-contracts";
 import type { ProviderInstallationCandidate } from "@bernouy/cms-repository/providers/installations";
 import type { ProviderManagementGateway } from "@bernouy/cms-repository/providers/management";
 import { compatibleTransitionRetention } from "../../../src/runtime/stores/collections/compatibleRetention";

@@ -3,7 +3,7 @@ import type { Pat } from "@bernouy/cms-auth";
 import { officialFailure } from "../../dispatch/errors/failure";
 import { ProviderCapabilityDispatchError } from "../../dispatch/registry";
 import type { ProviderCapabilityRegistry, ProviderCapabilityInvocationContext } from "../../dispatch/registry";
-import type { CmsAccessDependencies, UlviaProviderGateway } from "../../ports";
+import type { CmsAccessDependencies, UlviaProviderGateway } from "../../ports/index";
 import { accessCommand, actorSubject, requiredGateway, requiredText } from "./support";
 
 export function registerPersonalAccessCapabilities(

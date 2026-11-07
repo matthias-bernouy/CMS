@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { compareSemVer, versionBump } from "@bernouy/cms-repository/contracts/compatibility";
+import { compareSemVer, versionBump } from "@bernouy/ulvia-contracts/compatibility";
 
 describe("SemVer comparison", () => {
     test("preserves arbitrary numeric core precision", () => {

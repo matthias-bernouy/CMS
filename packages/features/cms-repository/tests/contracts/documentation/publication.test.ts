@@ -2,11 +2,12 @@ import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { admitContractBundleJson } from "@bernouy/cms-repository/contracts";
-import { LocalContractReleases, LocalArtifactFiles } from "@bernouy/cms-repository/repository/filesystem";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
-import { loadDocumentedContract } from "@bernouy/cms-repository/providers/sources";
-import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
+import { admitContractBundleJson } from "@bernouy/ulvia-contracts";
+import { LocalContractReleases } from "cms-repository/repository/filesystem/contracts";
+import { LocalArtifactFiles } from "cms-repository/repository/filesystem/artifacts/files";
+import { RemoteRepositoryClient } from "cms-repository/repository/publication/client";
+import { loadDocumentedContract } from "cms-repository/providers/sources/documentation/load";
+import { HttpProviderRepository } from "cms-repository/providers/sources/http";
 import { ownerFixture } from "../../repository-http/publicationFixtures";
 import { documented } from "./fixtures";
 

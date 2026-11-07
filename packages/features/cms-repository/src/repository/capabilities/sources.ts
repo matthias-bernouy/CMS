@@ -1,6 +1,6 @@
 import { RepositoryRequestError } from "../core/errors";
 import type { RepositoryCapabilityPorts } from "./interfaces";
-import { isResourceId, resourcePublisher } from "cms-repository/exports/contracts/protocol";
+import { isResourceId, resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
 
 export async function invokeRepositorySource(
     ports: RepositoryCapabilityPorts,

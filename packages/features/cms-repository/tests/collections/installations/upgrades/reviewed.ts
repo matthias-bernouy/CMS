@@ -1,7 +1,7 @@
 import { InMemoryContentRepository } from "@bernouy/cms-content";
 import { CollectionUpgradeService } from "../../../../src/collections/installations/upgrades/runtime/CollectionUpgradeService";
 import { MemorySiteUpgradeStorage } from "../../../../src/site-upgrades/memory";
-import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
+import type { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
 export async function reviewedUpgrade(
     store: CollectionStore,
     siteId: string,

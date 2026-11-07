@@ -1,15 +1,15 @@
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
-import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
+import { InMemoryProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
+import { importRepositoryArtifact } from "cms-repository/providers/sources/importRepositoryArtifact";
+import { importProviderManifest } from "cms-repository/providers/sources/importProviderManifest";
 import {
-    importRepositoryArtifact,
-    importProviderManifest,
     type ProviderRepositorySource,
     type RepositoryArtifactEntry,
     type RepositoryArtifactKind,
     type RepositoryArtifactReference,
-} from "@bernouy/cms-repository/providers/sources";
+} from "cms-repository/providers/sources/interfaces";
 import { describe, expect, test } from "bun:test";
 import { contractDocument, implementation, manifestDocument } from "../support/fixtures";
 

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { parseUlviaSchema, validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { parseUlviaSchema, validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import { registerContractUpgradeCapabilities } from "../../src/capabilities/installations/providers/upgrades";
 import { registerCollectionInstallationCapabilities } from "../../src/capabilities/installations/collections";
 

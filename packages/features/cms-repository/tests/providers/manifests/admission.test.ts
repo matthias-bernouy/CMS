@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { admitProviderManifest, admitProviderManifestJson } from "@bernouy/cms-repository/providers";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { admitProviderManifest, admitProviderManifestJson } from "@bernouy/ulvia-providers";
 import { contractDocument, implementation, manifestDocument, releaseCatalogue, requirement } from "../support/fixtures";
 
 const contractFixture = new URL(
-    "../../../fixtures/contracts/protocol-v1/representative.contract.json",
+    "../../../../../platform/contracts/fixtures/protocol-v1/representative.contract.json",
     import.meta.url,
 );
 const manifestFixture = new URL(
-    "../../../fixtures/providers/protocol-v1/example.provider-manifest.json",
+    "../../../../../platform/providers/fixtures/protocol-v1/example.provider-manifest.json",
     import.meta.url,
 );
 

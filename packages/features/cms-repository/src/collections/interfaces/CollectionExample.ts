@@ -1,5 +1,8 @@
 import type { PageDocument } from "@bernouy/cms-content/page-document";
-import type { CollectionCapabilityRequirement, CollectionTranslationKey } from "./CollectionRelease";
+import type {
+    CollectionCapabilityRequirement,
+    CollectionTranslationKey,
+} from "cms-repository/collections/interfaces/CollectionRelease";
 
 export type { PageDocument } from "@bernouy/cms-content/page-document";
 

@@ -11,16 +11,13 @@
     ],
     "references": [
         {
-            "path": "../../foundation/blob-store"
-        },
-        {
-            "path": "../../foundation/http-runner"
-        },
-        {
             "path": "../../features/cms-auth"
         },
         {
             "path": "../../features/cms-content"
+        },
+        {
+            "path": "../../features/cms-documentation"
         },
         {
             "path": "../../features/cms-emailer"
@@ -29,7 +26,7 @@
             "path": "../../features/cms-files"
         },
         {
-            "path": "../../features/cms-gateway"
+            "path": "../../features/cms-observability"
         },
         {
             "path": "../../features/cms-repository"
@@ -41,10 +38,22 @@
             "path": "../../features/cms-smtp-emailer"
         },
         {
-            "path": "../../features/cms-observability"
+            "path": "../../foundation/blob-store"
         },
         {
-            "path": "../../features/cms-documentation"
+            "path": "../../foundation/http-runner"
+        },
+        {
+            "path": "../../foundation/logging"
+        },
+        {
+            "path": "../../platform/contracts"
+        },
+        {
+            "path": "../../platform/gateway"
+        },
+        {
+            "path": "../../platform/providers"
         }
     ]
 }

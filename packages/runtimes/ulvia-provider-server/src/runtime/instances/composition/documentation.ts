@@ -1,7 +1,7 @@
 import { CmsDocumentation } from "@bernouy/cms-documentation";
 import type { DocumentationEmbeddings, DocumentationScope } from "@bernouy/cms-documentation";
 import { MongoDocumentationVectors } from "@bernouy/cms-documentation/mongo";
-import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import type { ProviderStores } from "../../stores/providerStores";
 
 export async function createInstanceDocumentation(

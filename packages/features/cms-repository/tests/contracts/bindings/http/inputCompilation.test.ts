@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { compileHttpBinding } from "@bernouy/cms-repository/contracts/bindings";
-import { capability, objectSchema, stringSchema } from "../../support/fixtures";
+import { compileHttpBinding } from "@bernouy/ulvia-contracts/bindings";
+import { capability, objectSchema, stringSchema } from "../../../../../../platform/contracts/tests/support/fixtures";
 
 describe("HTTP input binding compilation", () => {
     test("accounts for path, query, header, and body properties exactly once", () => {

@@ -1,7 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { parseContractRelease } from "@bernouy/cms-repository/contracts";
-import { compareContractReleases } from "@bernouy/cms-repository/contracts/compatibility";
-import { capabilityDocument, contractDocument, objectSchema, stringSchema } from "../support/fixtures";
+import { parseContractRelease } from "@bernouy/ulvia-contracts";
+import { compareContractReleases } from "@bernouy/ulvia-contracts/compatibility";
+import {
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+    stringSchema,
+} from "../../../../../platform/contracts/tests/support/fixtures";
 
 function compare(previousCapability: Record<string, unknown>, nextCapability: Record<string, unknown>) {
     const previous = parseContractRelease(

@@ -1,7 +1,7 @@
 import { basename, join } from "node:path";
 import { open } from "node:fs/promises";
 import { constants } from "node:fs";
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { DEFAULT_COLLECTION_LIMITS } from "../../core/limits";
 import { readSourceEntries, scanJsonSourceTree } from "cms-repository/repository/authoring/sourceTree";
 

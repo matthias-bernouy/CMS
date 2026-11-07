@@ -1,21 +1,29 @@
-# Provider manifests and site state
+# Provider administration and persistence
 
-`@bernouy/cms-repository/providers` defines immutable provider claims and the
+`@bernouy/ulvia-providers` defines immutable provider claims and the
 local domain workflows for connecting a CMS to a provider hub. Business setup happens
 on the hub; connecting a CMS must not recreate it. Providers consume the
-[contracts domain](../contracts/README.md) through its export facade.
+[contracts domain](../../../../platform/contracts/src/README.md) through its export facade.
+
+Administrative workflows and persistent catalogues remain in this feature;
+shared models and read ports live in Platform.
 
 ## Public entry points
 
 | Export | Current responsibility |
 | --- | --- |
-| `@bernouy/cms-repository/providers` | Immutable manifest parsing, reference validation, admission, and digest |
-| `@bernouy/cms-repository/providers/catalogue` | Immutable manifest publication, ownership, lookup and yank metadata; memory adapter |
-| `@bernouy/cms-repository/providers/compatibility` | Deterministic descriptive manifest comparison and approval requirement |
-| `@bernouy/cms-repository/providers/installations` | Parsers, preparation/approval lifecycle, observations, readiness and revisioned memory store |
-| `@bernouy/cms-repository/providers/selections` | Strict parsing, full-site explicit graph planning and revisioned memory store |
-| `@bernouy/cms-repository/providers/sources` | Repository catalogue transport and exact repository/custom-manifest import |
-| `@bernouy/cms-repository/providers/http` | HTTP repository source contract |
+| `@bernouy/ulvia-providers` | Immutable manifest parsing, admission and digest |
+| `@bernouy/ulvia-providers/catalogue` | Manifest metadata and read port |
+| `@bernouy/ulvia-providers/compatibility` | Descriptive manifest comparison |
+| `@bernouy/ulvia-providers/installations` | Execution models, parsing, consistency checks, readiness and read port |
+| `@bernouy/ulvia-providers/selections` | Selection models, graph validation, grants and read port |
+| `@bernouy/cms-repository/providers/catalogue` | Publication, ownership, lookup and yank metadata; memory adapter |
+| `@bernouy/cms-repository/providers/installations` | Preparation/approval lifecycle and mutation store |
+| `@bernouy/cms-repository/providers/selections` | Selection replacement, dependency capture and reviewed upgrades |
+| `@bernouy/cms-repository/providers/management` | Administrative connection and activation workflows |
+| `@bernouy/cms-repository/providers/sources` | Exact Repository and custom-manifest import |
+| `@bernouy/cms-repository/providers/http` | Bounded Provider repository HTTP client |
+| `@bernouy/cms-repository/providers/mongo` | Persistent manifest, installation and selection adapters |
 
 `parse*` functions validate structure and return independent, deeply frozen
 snapshots. `validateProviderInstallation` and `validateProviderRuntimeReport`
@@ -81,7 +89,7 @@ gateway callbacks are needed. Its presence alone grants no access. Manifest
 `credentialSlots` remain declarative; this slice does not implement slot
 binding or additional connection authentication schemes.
 
-See the [connection protocol and executable fixtures](../../fixtures/providers/protocol-v1/connection/README.md)
+See the [connection protocol and executable fixtures](../../../../platform/providers/fixtures/protocol-v1/connection/README.md)
 for wire shapes, intended sequencing, and remaining transport obligations.
 
 ## Implemented workflows and remaining runtime work

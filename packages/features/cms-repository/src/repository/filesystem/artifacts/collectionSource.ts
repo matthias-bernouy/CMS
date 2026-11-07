@@ -7,7 +7,7 @@ import type {
     CollectionRepositorySource,
     CollectionRepositoryEntry,
     CollectionRepositoryReference,
-} from "cms-repository/exports/collections/sources";
+} from "cms-repository/collections/sources/interfaces";
 import { FilesystemRepositoryCatalogueIndex } from "../catalogueIndex";
 import { LocalCollectionRepository } from "./collections";
 

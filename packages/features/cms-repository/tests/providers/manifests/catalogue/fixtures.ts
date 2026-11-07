@@ -1,5 +1,5 @@
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
-import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
+import { InMemoryProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
 import { contractDocument, implementation, manifestDocument, releaseCatalogue } from "../../support/fixtures";
 
 export async function manifestCatalogueFixture() {

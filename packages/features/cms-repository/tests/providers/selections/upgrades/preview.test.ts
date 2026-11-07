@@ -1,8 +1,8 @@
-import { grantedAuthority } from "../../../../src/providers/selections/core/authority/grants";
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
+import { grantedAuthority } from "@bernouy/ulvia-providers/validation";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
 import { expect, test } from "bun:test";
-import { planContractSelections } from "@bernouy/cms-repository/providers/selections";
-import { previewProviderAuthority } from "../../../../src/providers/selections/core/authority/preview";
+import { planContractSelections } from "@bernouy/ulvia-providers/selections";
+import { previewProviderAuthority } from "@bernouy/ulvia-providers/validation";
 import { graphFixture, siteId } from "../fixtures";
 
 test("connection preview excludes denied source and target capabilities", async () => {

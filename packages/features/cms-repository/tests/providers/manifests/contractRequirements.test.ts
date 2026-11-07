@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { admitProviderManifest, parseProviderManifest } from "@bernouy/cms-repository/providers";
+import { admitProviderManifest, parseProviderManifest } from "@bernouy/ulvia-providers";
 import { contractDocument, implementation, manifestDocument, releaseCatalogue, requirement } from "../support/fixtures";
 
 describe("provider-owned requirements", () => {

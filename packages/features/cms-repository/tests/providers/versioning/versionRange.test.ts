@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseVersionRange, satisfiesVersionRange } from "@bernouy/cms-repository/providers";
+import { parseVersionRange, satisfiesVersionRange } from "@bernouy/ulvia-providers";
 
 describe("provider version ranges", () => {
     test("supports exact, caret, tilde, and comparator ranges", () => {

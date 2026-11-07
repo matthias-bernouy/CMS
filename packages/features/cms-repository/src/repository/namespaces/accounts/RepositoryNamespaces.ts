@@ -6,7 +6,12 @@ import type {
     RepositoryNamespaceView,
     RepositoryOwnedNamespace,
 } from "./interfaces";
-import { MAX_ACCOUNT_NAMESPACES, namespaceAccountId, namespaceRevision, namespaceView } from "./validation";
+import {
+    MAX_ACCOUNT_NAMESPACES,
+    namespaceAccountId,
+    namespaceRevision,
+    namespaceView,
+} from "cms-repository/repository/namespaces/accounts/validation";
 
 /** Account ownership is independent of credentials; every call receives a verified account identity. */
 export class RepositoryNamespaces {

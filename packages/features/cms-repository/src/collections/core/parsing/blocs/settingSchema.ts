@@ -1,4 +1,4 @@
-import type { UlviaObjectSchema } from "cms-repository/exports/contracts/schema";
+import type { UlviaObjectSchema } from "@bernouy/ulvia-contracts/schema";
 import type { CollectionComponentSettings } from "../../../interfaces/CollectionBloc";
 import { settingControlValues } from "./settingControls";
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { EditablePageDocument } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/document";
+import { EditablePageDocument } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/document/index";
 import type { EditorCatalogueItem } from "../../../packages/official-repository/collections/mossa/blocs/admin/pages/ulvia--mossa--page-editor/runtime/model";
 import { heading } from "./fixtures";
 

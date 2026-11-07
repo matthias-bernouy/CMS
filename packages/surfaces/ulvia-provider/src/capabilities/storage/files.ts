@@ -1,7 +1,7 @@
 import { officialFailure } from "../../dispatch/errors/failure";
 import { CmsFilesError, type CmsFilesService } from "@bernouy/cms-files";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
-import type { CmsFileWorkspace } from "../../ports";
+import type { CmsFileWorkspace } from "../../ports/index";
 
 export function registerFileCapabilities(
     dispatcher: ProviderCapabilityRegistry,

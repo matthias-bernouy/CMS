@@ -1,7 +1,7 @@
 import { readdir, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
-const PACKAGE_LAYERS = ["foundation", "features", "surfaces", "runtimes"] as const;
+const PACKAGE_LAYERS = ["foundation", "platform", "features", "surfaces", "runtimes"] as const;
 
 export async function cleanWorkspaceBuildOutputs(repositoryRoot: string): Promise<string[]> {
     const packagesRoot = resolve(repositoryRoot, "packages");

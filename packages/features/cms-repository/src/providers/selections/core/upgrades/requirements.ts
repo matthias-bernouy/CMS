@@ -1,17 +1,17 @@
-import { compileContractBindings, matchPathTemplate } from "cms-repository/exports/contracts/bindings";
-import {
-    effectiveLineageCapabilities,
-    resolveContractLineage,
-    type ReleaseCatalogue,
-} from "cms-repository/exports/contracts/catalogue";
-import { compareContractReleases, satisfiesVersionRange } from "cms-repository/exports/contracts/compatibility";
-import type { ContractSelection } from "../../interfaces/ContractSelection";
-import type { CapabilityUsageEvidence, ContractUpgradeIssue } from "../../interfaces/ContractUpgrade";
-import type { CapabilityGrantPolicy } from "../../interfaces/ContractSelectionStore";
-import { capabilityGranted } from "../grants";
-import type { ContractSelectionDependency } from "../../interfaces/ContractSelectionPlan";
+import { compileContractBindings, matchPathTemplate } from "@bernouy/ulvia-contracts/bindings";
+import { effectiveLineageCapabilities, resolveContractLineage } from "@bernouy/ulvia-contracts";
+import type { ContractReleaseReader } from "@bernouy/ulvia-contracts/catalogue";
+import { compareContractReleases, satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
+import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
+import type {
+    CapabilityUsageEvidence,
+    ContractUpgradeIssue,
+} from "cms-repository/providers/selections/interfaces/ContractUpgrade";
+import type { CapabilityGrantPolicy } from "@bernouy/ulvia-providers/selections";
+import { capabilityGranted } from "@bernouy/ulvia-providers/selections";
+import type { ContractSelectionDependency } from "@bernouy/ulvia-providers/selections";
 
-async function selectedContractNodes(selections: readonly ContractSelection[], releases: ReleaseCatalogue) {
+async function selectedContractNodes(selections: readonly ContractSelection[], releases: ContractReleaseReader) {
     return Promise.all(
         selections.map(async (selection) => {
             const entry = await releases.get(selection.contractId, selection.version);
@@ -32,7 +32,7 @@ export async function validateCapabilityUsage(
     source: readonly ContractSelection[],
     grants: CapabilityGrantPolicy,
     dependencies: readonly ContractSelectionDependency[],
-    releases: ReleaseCatalogue,
+    releases: ContractReleaseReader,
 ): Promise<ContractUpgradeIssue[]> {
     const nodes = await selectedContractNodes(selections, releases);
     const before = await selectedContractNodes(source, releases);

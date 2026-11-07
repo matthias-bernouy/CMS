@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
-import { compareProviderManifests } from "@bernouy/cms-repository/providers/compatibility";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
+import { compareProviderManifests } from "@bernouy/ulvia-providers/compatibility";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
 import { contractDocument, implementation, requirement } from "../../support/fixtures";
 import { manifestCatalogueFixture } from "../catalogue/fixtures";
 

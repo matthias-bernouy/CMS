@@ -1,8 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { parseContractRelease } from "@bernouy/cms-repository/contracts";
-import { compareContractReleases } from "@bernouy/cms-repository/contracts/compatibility";
-import { projectSchemaValue } from "@bernouy/cms-repository/contracts/schema";
-import { capabilityDocument, contractDocument, objectSchema, stringSchema } from "../support/fixtures";
+import { parseContractRelease } from "@bernouy/ulvia-contracts";
+import { compareContractReleases } from "@bernouy/ulvia-contracts/compatibility";
+import { projectSchemaValue } from "@bernouy/ulvia-contracts/schema";
+import {
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+    stringSchema,
+} from "../../../../../platform/contracts/tests/support/fixtures";
 
 function release(output: unknown, version: string) {
     return parseContractRelease(contractDocument({ version, capabilities: [capabilityDocument({ output })] }));

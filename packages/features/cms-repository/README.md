@@ -1,48 +1,40 @@
 # @bernouy/cms-repository
 
-CMS repository formats, admission rules and pure validation in one feature
-package. The contracts domain defines provider-neutral releases; the providers
-domain defines immutable manifests and separate CMS-owned
-installation, runtime-report and contract-selection models. The collections
-domain starts with authored bundles, assets and Light DOM compositions.
+Feature-owned catalogue storage, publication, installation/selection workflows,
+authored collection admission and build tooling.
 
-Contract releases and provider manifests are immutable, versioned publications.
-Installations and selections are state for a particular site, with exact pins to
-those publications. Runtime reports are observations of a provider, never an
-authority to change an approved manifest, gateway permissions or site selections.
+The contract language lives in `@bernouy/ulvia-contracts`. Generic Provider models,
+manifest admission, selection validation and read ports live in
+`@bernouy/ulvia-providers`. This feature implements their mutation and persistence
+boundaries. Reports remain observations, never authority to approve new releases.
 
 ## Layout
 
-The package separates `contracts/`, `providers/`, `collections/`, `repository/`
-and `upgrades/`. `repository/` owns publication, account namespace authority,
-resource discovery and filesystem storage; it is not an executable HTTP server.
-`repository-http/` holds bounded client reads. `exports/` defines the public
-facades. Tests and fixtures follow their owning domains. Consult `package.json`
-for the complete current export map rather than treating this overview as an
-exhaustive directory listing.
-
-Contracts do not depend on providers or installation state. Providers consume
-the contracts export facade. Collections consume that same facade without
-depending on providers. Their authored-bundle admission is not renderer
-compilation, site installation or execution authorization.
+- `contracts/`: catalogue publication, write interface and memory/Mongo adapters.
+- `providers/`: persistent stores, administrative workflows, discovery and upgrades.
+- `collections/`: authored releases, resources, installation, projection and build tooling.
+- `repository/`: namespaces, staged publication, storage and source preparation.
+- `site-upgrades/`: durable release-switch intents and site write fencing.
+- `repository-http/`: bounded client transport for Repository discovery.
+- `exports/`: declared public entry points.
 
 ## Principal Public Entry Points
 
 | Export | Current responsibility |
 | --- | --- |
-| `@bernouy/cms-repository` | Type-only entry point for principal domain models |
-| `@bernouy/cms-repository/contracts` | Release parsing, admission, canonicalization, digests and mocks |
-| `@bernouy/cms-repository/contracts/schema` | Bounded schema vocabulary, parsing and value validation |
-| `@bernouy/cms-repository/contracts/bindings` | Explicit HTTP/MCP binding types, exposure selection, HTTP plans and pure scalar codecs |
-| `@bernouy/cms-repository/contracts/compatibility` | Release evolution and consumer-compatibility checks |
-| `@bernouy/cms-repository/contracts/catalogue` | Release catalogue port and deterministic in-memory implementation |
+| `@bernouy/cms-repository` | Repository-owned collection release type |
+| `@bernouy/ulvia-contracts` | Release parsing, admission, canonicalization, digests and mocks |
+| `@bernouy/ulvia-contracts/schema` | Bounded schema vocabulary, parsing and value validation |
+| `@bernouy/ulvia-contracts/bindings` | Explicit HTTP/MCP binding types, exposure selection, HTTP plans and pure scalar codecs |
+| `@bernouy/ulvia-contracts/compatibility` | Release evolution and consumer-compatibility checks |
+| `@bernouy/cms-repository/contracts/catalogue` | Mutable release catalogue and deterministic in-memory implementation |
 | `@bernouy/cms-repository/contracts/mongo` | Mongo release artifacts and revisioned publication metadata |
-| `@bernouy/cms-repository/contracts/protocol` | Strict I-JSON parsing, canonicalization and freezing primitives |
-| `@bernouy/cms-repository/providers` | Manifest parsing, reference validation, admission and digest |
+| `@bernouy/ulvia-contracts/protocol` | Strict I-JSON parsing, canonicalization and freezing primitives |
+| `@bernouy/ulvia-providers` | Manifest parsing, reference validation, admission and digest |
 | `@bernouy/cms-repository/providers/catalogue` | Immutable manifest catalogue port and memory implementation |
-| `@bernouy/cms-repository/providers/compatibility` | Descriptive manifest changes and exact-digest approval requirements |
-| `@bernouy/cms-repository/providers/installations` | Parsers, local preparation/approval lifecycle, observations, readiness and revisioned memory store |
-| `@bernouy/cms-repository/providers/selections` | Bounded full-site graph planning, revisioned memory store and catalogue dependency source |
+| `@bernouy/ulvia-providers/compatibility` | Descriptive manifest changes and exact-digest approval requirements |
+| `@bernouy/cms-repository/providers/installations` | Administrative preparation/approval lifecycle and revisioned memory store |
+| `@bernouy/cms-repository/providers/selections` | Revisioned selection store, dependency source and reviewed upgrades |
 | `@bernouy/cms-repository/providers/sources` | Exact remote manifest and contract-release sources used by provider discovery |
 | `@bernouy/cms-repository/providers/http` | Provider repository HTTP route registration and bounded wire decoding |
 | `@bernouy/cms-repository/providers/mongo` | Mongo manifest catalogue, installation and selection stores with revision-checked writes |
@@ -63,7 +55,7 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/repository/namespaces` | Account ownership, transfers, suspension, deletion fences and bounded namespace client |
 | `@bernouy/cms-repository/repository/namespaces/mongo` | Durable namespace ownership and account quotas |
 | `@bernouy/cms-repository/repository/capabilities` | Transport-independent registry capability service and injected ports |
-| `@bernouy/cms-repository/contracts/documentation` | Immutable Markdown metadata and verified document assets |
+| `@bernouy/ulvia-contracts/documentation` | Immutable Markdown metadata and verified document assets |
 | `@bernouy/cms-repository/repository/search` | Bounded public resource search, inspection and injected embedding ports |
 | `@bernouy/cms-repository/repository/search/filesystem` | Derived search index over immutable registry metadata |
 | `@bernouy/cms-repository/repository/search/http` | Bounded remote search and inspection client |
@@ -100,7 +92,7 @@ global catalogues. Admission and graph planning validate artifacts and proposed
 choices; they do not establish live readiness or certify provider behavior. Host
 authorization and production snapshot consistency remain composition responsibilities.
 
-See the [contract guide](src/contracts/README.md) for release evolution, schema
+See the [contract guide](../../platform/contracts/src/README.md) for release evolution, schema
 and transport profiles and dependency requirements. The
 [provider guide](src/providers/README.md) explains immutable claims, site state
 and the implemented V1 connection protocol. [Provider workflows](src/providers/workflows.md)

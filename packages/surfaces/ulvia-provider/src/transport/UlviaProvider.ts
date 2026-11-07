@@ -1,7 +1,7 @@
 import type { HttpMethod, Runner } from "@bernouy/http-runner";
 import type { Logger } from "@bernouy/logging";
-import type { ResolvedContract } from "@bernouy/cms-repository/contracts";
-import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
+import type { ResolvedContract } from "@bernouy/ulvia-contracts";
+import type { ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { ProviderCapabilityRegistry } from "../dispatch/registry";
 import { createProviderContractRelay } from "./relay";

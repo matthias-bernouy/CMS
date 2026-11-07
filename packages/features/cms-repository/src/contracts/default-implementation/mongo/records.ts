@@ -1,16 +1,16 @@
-import { verifyStoredContractReleaseJson } from "../../core/admission/admitContractRelease";
+import { verifyStoredContractReleaseJson } from "@bernouy/ulvia-contracts";
 import type { Collection } from "mongodb";
-import type { AdmittedContractRelease } from "../../core/admission/admitContractRelease";
-import type { ReleaseDigest } from "../../core/admission/digest";
-import { verifyAdmission } from "../../core/admission/verifyAdmission";
-import type { ReleaseLimits } from "../../core/protocol/limits";
-import { ReleaseValidationError } from "../../core/protocol/errors";
-import { deepFreeze } from "../../core/protocol/values";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
+import type { ReleaseDigest } from "@bernouy/ulvia-contracts";
+import { verifyAdmission } from "@bernouy/ulvia-contracts/validation";
+import type { ReleaseLimits } from "@bernouy/ulvia-contracts";
+import { ReleaseValidationError } from "@bernouy/ulvia-contracts";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
 import type {
     CatalogueContractRelease,
     ContractReleaseDeprecation,
     ContractReleaseYank,
-} from "../../interfaces/ReleaseCatalogue";
+} from "@bernouy/ulvia-contracts/catalogue";
 
 export interface ReleaseVersionEntry {
     readonly version: string;

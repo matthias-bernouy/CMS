@@ -1,12 +1,12 @@
 import { CollectionPublicationError } from "../errors";
-import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
+import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 import {
     isVersionRangeSubset,
     versionBump,
     isSemVerPrerelease,
     semVerReleaseTarget,
-} from "cms-repository/exports/contracts/compatibility";
-import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
+} from "@bernouy/ulvia-contracts/compatibility";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { collectionUpgradeBreakingResources } from "../../installations/core/upgradeCompatibility";
 import type {
     CollectionCapabilityRequirement,

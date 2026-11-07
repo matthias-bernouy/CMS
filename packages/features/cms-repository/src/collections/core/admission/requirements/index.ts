@@ -2,12 +2,18 @@ import { parseMutation, parseQuery } from "@bernouy/cms-content/bindings";
 import { validateDocumentBindings } from "@bernouy/cms-content/page-document";
 import type { BindingQueryCapability } from "@bernouy/cms-content/page-document";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { satisfiesVersionRange } from "cms-repository/exports/contracts/compatibility";
+import { satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
 import type { CollectionBloc } from "../../../interfaces/CollectionBloc";
-import type { CollectionCapabilityRequirement, CollectionRelease } from "../../../interfaces/CollectionRelease";
+import type {
+    CollectionCapabilityRequirement,
+    CollectionRelease,
+} from "cms-repository/collections/interfaces/CollectionRelease";
 import { CollectionValidationError } from "../../errors";
 import { parseHTML } from "linkedom";
-import { mergeMutationCapabilities, mergeQueryCapabilities } from "./mergeCapabilities";
+import {
+    mergeMutationCapabilities,
+    mergeQueryCapabilities,
+} from "cms-repository/collections/core/admission/requirements/mergeCapabilities";
 import { validateSynchronizedProducerSchemas } from "./syncProducers";
 
 type BindingTarget = {

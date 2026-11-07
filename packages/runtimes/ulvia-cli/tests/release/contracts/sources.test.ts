@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/cms-repository/repository/filesystem";
 import { runCli } from "../../../src/cli";
 import { compileContractSource } from "@bernouy/cms-repository/repository/authoring/build";

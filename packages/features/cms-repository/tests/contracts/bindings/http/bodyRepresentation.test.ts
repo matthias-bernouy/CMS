@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { compileHttpBinding } from "@bernouy/cms-repository/contracts/bindings";
-import { capability, objectSchema } from "../../support/fixtures";
+import { compileHttpBinding } from "@bernouy/ulvia-contracts/bindings";
+import { capability, objectSchema } from "../../../../../../platform/contracts/tests/support/fixtures";
 
 describe("HTTP body representation", () => {
     test("emits an explicit JSON representation", () => {

@@ -1,9 +1,13 @@
 import { loadDocumentedContract } from "../documentation/load";
-import type { AdmittedContractRelease } from "cms-repository/exports/contracts";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/protocol/errors";
-import type { ProviderManifest } from "cms-repository/providers/manifests/interfaces/ProviderManifest";
-import type { ProviderRepositorySource, RepositoryArtifactEntry, RepositoryArtifactReference } from "../interfaces";
+import { ProviderManifestValidationError } from "@bernouy/ulvia-providers";
+import type { ProviderManifest } from "@bernouy/ulvia-providers";
+import type {
+    ProviderRepositorySource,
+    RepositoryArtifactEntry,
+    RepositoryArtifactReference,
+} from "cms-repository/providers/sources/interfaces";
 
 export async function loadImplementedContracts(
     sources: readonly ProviderRepositorySource[],

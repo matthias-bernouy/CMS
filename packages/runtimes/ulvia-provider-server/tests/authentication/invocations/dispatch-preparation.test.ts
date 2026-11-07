@@ -1,6 +1,6 @@
 import type { DelegationSource, PreparedDelegation } from "@bernouy/cms-gateway/access/delegation";
 import { expect, test } from "bun:test";
-import { gatewayRoute } from "../../../../../features/cms-gateway/tests/fixtures";
+import { gatewayRoute } from "../../../../../../tests/integration/gateway/fixtures";
 import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { createDispatchPreparer } from "../../../src/runtime/gateway/providers/authority/prepareDispatch";
 import { createInvocationIssuer } from "../../../src/runtime/gateway/providers/authority/issueInvocation";

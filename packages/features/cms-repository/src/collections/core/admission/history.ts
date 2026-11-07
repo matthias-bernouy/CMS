@@ -4,10 +4,13 @@ import {
     isSemVerPrerelease,
     semVerMajor,
     semVerReleaseTarget,
-} from "cms-repository/exports/contracts/compatibility";
+} from "@bernouy/ulvia-contracts/compatibility";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { collectionUpgradeBreakingResources } from "../../installations/core/upgradeCompatibility";
-import { collectionRequirementBreaks, verifyCollectionPublicationEvolution } from "./evolution";
+import {
+    collectionRequirementBreaks,
+    verifyCollectionPublicationEvolution,
+} from "cms-repository/collections/core/admission/evolution";
 
 /** Preview ordering and stable resource guarantees are independent publication gates. */
 export async function verifyCollectionPublicationHistory(

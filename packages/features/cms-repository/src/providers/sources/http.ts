@@ -1,5 +1,5 @@
-import { documentationPath } from "cms-repository/exports/contracts/documentation";
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { documentationPath } from "@bernouy/ulvia-contracts/documentation";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { repositoryBaseUrl } from "cms-repository/repository-http/baseUrl";
 import { registryCataloguePage } from "cms-repository/repository-http/catalogueValues";
 import { readCataloguePages } from "cms-repository/repository-http/cataloguePages";
@@ -14,7 +14,11 @@ import type {
     RepositoryArtifactKind,
     RepositoryArtifactReference,
 } from "./interfaces";
-import { parseProviderCataloguePage, validProviderReference, validProviderRepositoryId } from "./parseCatalogue";
+import {
+    parseProviderCataloguePage,
+    validProviderReference,
+    validProviderRepositoryId,
+} from "cms-repository/providers/sources/parseCatalogue";
 
 const CATALOGUE_PAGE_SIZE = 256;
 

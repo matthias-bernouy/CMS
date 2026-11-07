@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
 import { manifestCatalogueFixture } from "./fixtures";
 
 describe("provider manifest catalogue publication", () => {

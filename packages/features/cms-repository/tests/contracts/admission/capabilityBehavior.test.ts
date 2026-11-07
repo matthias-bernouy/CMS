@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { parseContractRelease } from "@bernouy/cms-repository/contracts";
-import { capabilityDocument, contractDocument } from "../support/fixtures";
+import { parseContractRelease } from "@bernouy/ulvia-contracts";
+import { capabilityDocument, contractDocument } from "../../../../../platform/contracts/tests/support/fixtures";
 
 function parseBehavior(behavior: Record<string, unknown>) {
     return parseContractRelease(contractDocument({ capabilities: [capabilityDocument({ behavior })] })).capabilities[0]!

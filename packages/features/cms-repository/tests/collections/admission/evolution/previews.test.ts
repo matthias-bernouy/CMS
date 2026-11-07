@@ -1,10 +1,11 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { LocalCollectionRepository } from "cms-repository/repository/filesystem/artifacts/collections";
 import { expect, test } from "bun:test";
-import { parseCollectionRelease, verifyCollectionPublicationHistory } from "@bernouy/cms-repository/collections";
+import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
+import { verifyCollectionPublicationHistory } from "cms-repository/collections/core/admission/history";
 import { collectionDocument, component } from "../../fixtures";
 import { collectionFixture } from "../examples/buildFixture";
 

@@ -1,6 +1,6 @@
 import { ContentValidationError } from "@bernouy/cms-content";
 import { collectionExampleDocument, resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
-import type { CmsContentDependencies } from "../../../ports";
+import type { CmsContentDependencies } from "../../../ports/index";
 
 export async function listExamples(
     dependencies: CmsContentDependencies,

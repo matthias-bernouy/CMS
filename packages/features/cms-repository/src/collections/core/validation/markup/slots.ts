@@ -1,6 +1,12 @@
 import type { CollectionBloc } from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../../errors";
-import { elements, isElement, type MarkupElement, type MarkupTree, offeredSlots } from "./tree";
+import {
+    elements,
+    isElement,
+    type MarkupElement,
+    type MarkupTree,
+    offeredSlots,
+} from "cms-repository/collections/core/validation/markup/tree";
 
 export interface BlocMarkup {
     readonly fixed: MarkupTree;

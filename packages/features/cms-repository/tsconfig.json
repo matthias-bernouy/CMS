@@ -14,16 +14,19 @@
     ],
     "references": [
         {
+            "path": "../../features/cms-content"
+        },
+        {
             "path": "../../foundation/binary-media"
         },
         {
             "path": "../../foundation/blob-store"
         },
         {
-            "path": "../../features/cms-content"
+            "path": "../../foundation/http-runner"
         },
         {
-            "path": "../../foundation/http-runner"
+            "path": "../../foundation/resource-identity"
         },
         {
             "path": "../../foundation/secret-store"
@@ -32,7 +35,10 @@
             "path": "../../foundation/text-search"
         },
         {
-            "path": "../../foundation/resource-identity"
+            "path": "../../platform/contracts"
+        },
+        {
+            "path": "../../platform/providers"
         }
     ]
 }

@@ -4,10 +4,10 @@ import { registerCapabilityDescription } from "./providers/describe";
 import { registerContractUpgradeCapabilities } from "./providers/upgrades";
 import type { ProviderCapabilityRegistry } from "../../dispatch/registry";
 import type { ProviderOperationExecutor } from "../../operations/ProviderOperationExecutor";
-import type { CmsCollectionDependencies, UlviaProviderGateway, UlviaProviderManagement } from "../../ports";
+import type { CmsCollectionDependencies, UlviaProviderGateway, UlviaProviderManagement } from "../../ports/index";
 import { registerCollectionInstallationCapabilities } from "./collections";
-import { registerProviderInstallationCapabilities } from "./providers";
-import type { CollectionSources } from "./sources";
+import { registerProviderInstallationCapabilities } from "./providers/index";
+import type { CollectionSources } from "./sources/index";
 
 export function registerInstallationCapabilities(
     dispatcher: ProviderCapabilityRegistry,
@@ -27,5 +27,5 @@ export function registerInstallationCapabilities(
 
 export { registerCollectionInstallationCapabilities } from "./collections";
 export { registerCollectionOperationCapabilities } from "./operations";
-export { registerProviderInstallationCapabilities } from "./providers";
-export { CollectionSources } from "./sources";
+export { registerProviderInstallationCapabilities } from "./providers/index";
+export { CollectionSources } from "./sources/index";

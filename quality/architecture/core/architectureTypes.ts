@@ -1,4 +1,4 @@
-export const WORKSPACE_LAYERS = ["foundation", "features", "surfaces", "runtimes"] as const;
+export const WORKSPACE_LAYERS = ["foundation", "platform", "features", "surfaces", "runtimes"] as const;
 
 export type WorkspaceLayer = (typeof WORKSPACE_LAYERS)[number];
 

@@ -2,13 +2,11 @@ import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import {
-    FilesystemCollectionRepository,
-    FilesystemProviderRepository,
-    FilesystemRepositoryCatalogueIndex,
-    LocalCollectionRepository,
-} from "@bernouy/cms-repository/repository/filesystem";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { FilesystemCollectionRepository } from "cms-repository/repository/filesystem/artifacts/collectionSource";
+import { FilesystemProviderRepository } from "cms-repository/repository/filesystem/artifacts/providerSource";
+import { FilesystemRepositoryCatalogueIndex } from "cms-repository/repository/filesystem/catalogueIndex";
+import { LocalCollectionRepository } from "cms-repository/repository/filesystem/artifacts/collections";
 import { collectionDocument } from "../../collections/fixtures";
 
 test("local source ports verify exact references and return independent collection metadata", async () => {

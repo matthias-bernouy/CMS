@@ -2,9 +2,9 @@ import {
     admitContractReleaseJson,
     parseContractReleaseJson,
     type AdmittedContractRelease,
-} from "@bernouy/cms-repository/contracts";
+} from "@bernouy/ulvia-contracts";
 import { InMemoryReleaseCatalogue, planContractPublications } from "@bernouy/cms-repository/contracts/catalogue";
-import { compareContractReleases, satisfiesVersionRange } from "@bernouy/cms-repository/contracts/compatibility";
+import { compareContractReleases, satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
 import { assertMaximum, benchmark, printResults } from "../benchmark";
 import { officialContractAdmissions, officialContractDocuments } from "../officialContracts";
 

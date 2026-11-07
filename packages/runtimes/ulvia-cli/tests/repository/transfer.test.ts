@@ -1,4 +1,4 @@
-import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
+import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -7,7 +7,7 @@ import { runCli } from "../../src/cli";
 import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { startTestRepository } from "./fixture";
 import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
-import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 
 test("CLI push and pull preserve every official artifact kind through a remote repository", async () => {

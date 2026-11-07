@@ -1,7 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { computeReleaseDigest, DEFAULT_RELEASE_LIMITS, parseContractRelease } from "@bernouy/cms-repository/contracts";
-import { compareContractReleases } from "@bernouy/cms-repository/contracts/compatibility";
-import { capabilityDocument, contractDocument, objectSchema, stringSchema } from "../support/fixtures";
+import { computeReleaseDigest, DEFAULT_RELEASE_LIMITS, parseContractRelease } from "@bernouy/ulvia-contracts";
+import { compareContractReleases } from "@bernouy/ulvia-contracts/compatibility";
+import {
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+    stringSchema,
+} from "../../../../../platform/contracts/tests/support/fixtures";
 
 const input = { recipient: "reader@example.com", templateId: "welcome" };
 const success = { id: "sent", input, outcome: { kind: "success", output: { messageId: "message-1" } } };

@@ -1,5 +1,5 @@
 import { sha256Digest } from "@bernouy/binary-media";
-import { parseDocumentationMarkdown } from "@bernouy/cms-repository/contracts/documentation";
+import { parseDocumentationMarkdown } from "@bernouy/ulvia-contracts/documentation";
 import type { DocumentationChunk, DocumentationScope, DocumentationSource } from "../interfaces/Documentation";
 import { DocumentationError } from "./input";
 

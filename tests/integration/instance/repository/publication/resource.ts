@@ -1,5 +1,5 @@
 import { sha256Digest } from "@bernouy/binary-media";
-import { admitContractBundleJson } from "@bernouy/cms-repository/contracts";
+import { admitContractBundleJson } from "@bernouy/ulvia-contracts";
 import { encodePublicationUpload } from "@bernouy/cms-repository/repository/publication";
 
 export async function sampleContract(namespace: string, version = "1.0.0") {

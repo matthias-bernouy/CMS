@@ -1,6 +1,6 @@
 import { parseHttpUrl, parseBoolean, parsePort, requiredEnv, type RuntimeEnvSource } from "./runtimeEnvParsing";
 import { parseRuntimeKekConfig, type RuntimeKekConfig } from "./runtimeEnvKek";
-import { assertProviderConnectionToken } from "@bernouy/cms-repository/providers/installations";
+import { assertProviderConnectionToken } from "@bernouy/ulvia-providers/installations";
 import { isAbsolute } from "node:path";
 
 export type ProviderRuntimeEnv = Readonly<{

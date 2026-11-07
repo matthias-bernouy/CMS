@@ -1,5 +1,5 @@
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
-import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import { GatewayError } from "@bernouy/cms-gateway";
 
 /** Discover the effective surface while preserving the declaring contract's exact identity. */

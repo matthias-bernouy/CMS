@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import type { StoredProviderInstallation } from "@bernouy/cms-repository/providers/installations";
+import type { StoredProviderInstallation } from "@bernouy/ulvia-providers/installations";
 import { providerInstallationFingerprint } from "@bernouy/cms-gateway/access/providers";
-import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { secretKeyToRef } from "@bernouy/secret-store";
 import type { ProviderStores } from "../../../stores/providerStores";
 

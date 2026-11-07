@@ -1,15 +1,13 @@
-import { FilesystemRepositorySearchSource } from "@bernouy/cms-repository/repository/search/filesystem";
+import { FilesystemRepositorySearchSource } from "cms-repository/repository/search/sources/filesystem";
 import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import {
-    FilesystemRepositoryCatalogueIndex,
-    LocalCollectionRepository,
-    LocalRepositoryYanks,
-} from "@bernouy/cms-repository/repository/filesystem";
-import { RepositorySearch } from "@bernouy/cms-repository/repository/search";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { FilesystemRepositoryCatalogueIndex } from "cms-repository/repository/filesystem/catalogueIndex";
+import { LocalCollectionRepository } from "cms-repository/repository/filesystem/artifacts/collections";
+import { LocalRepositoryYanks } from "cms-repository/repository/filesystem/yanks";
+import { RepositorySearch } from "cms-repository/repository/search/core/service";
 import { collectionDocument } from "../collections/fixtures";
 
 test("filesystem discovery reuses snapshots, omits hidden Blocs, and invalidates after publication or yank", async () => {

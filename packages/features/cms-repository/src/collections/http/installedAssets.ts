@@ -1,4 +1,4 @@
-import { isResourceId } from "cms-repository/exports/contracts/protocol";
+import { isResourceId } from "@bernouy/ulvia-contracts/protocol";
 import { ifNoneMatchMatches, ifRangeAllowsPartial, parseSingleByteRange, securityHeaders } from "@bernouy/http-runner";
 import { collectionAssetRepresentationVersion } from "cms-repository/collections/core/admission/assets";
 import {

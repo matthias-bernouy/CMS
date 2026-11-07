@@ -5,8 +5,9 @@ import { compress, InMemoryCache } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS, defaultSystem, type ContentReader, type TPage } from "@bernouy/cms-content";
 import { blocRuntimeCacheKey } from "@bernouy/cms-content/runtime-assets";
 import { collectionBlocStyleCacheKey, resolvePageAssets } from "@bernouy/cms-content/rendering";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import { resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/assets";
+import { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+import { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
+import { resolveInstalledCollectionAssets } from "cms-repository/collections/integration/assets/installedAssets";
 
 test("resolves collection asset expressions inside immutable Bloc CSS bundles", async () => {
     const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');

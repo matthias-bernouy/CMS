@@ -1,27 +1,33 @@
-import { deepFreeze } from "cms-repository/exports/contracts/protocol";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
-import type { ProviderInstallationStatus } from "../../interfaces/ProviderInstallation";
+import type { ProviderInstallationStatus } from "@bernouy/ulvia-providers/installations";
 import type {
     ProviderInstallationApprovalCommand,
     ProviderInstallationClock,
-    ProviderInstallationScope,
     ProviderInstallationStore,
     ProviderInstallationWorkflowOptions,
-    StoredProviderInstallation,
-} from "../../interfaces/ProviderInstallationStore";
-import { approvedInstallation, candidateFromInstallation } from "../../core/lifecycle/candidates";
-import { ProviderInstallationWorkflowError } from "../../core/lifecycle/errors";
-import { validateApprovalCommand, validateProposal, workflowOptions } from "../../core/lifecycle/preparations";
+} from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
+import type { ProviderInstallationScope, StoredProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import {
+    approvedInstallation,
+    candidateFromInstallation,
+} from "cms-repository/providers/installations/core/lifecycle/candidates";
+import { ProviderInstallationWorkflowError } from "@bernouy/ulvia-providers/installations";
+import {
+    validateApprovalCommand,
+    validateProposal,
+    workflowOptions,
+} from "cms-repository/providers/installations/core/lifecycle/preparations";
 import {
     assertActive,
     assertCurrentTimestamp,
     assertIdentity,
     assertRevision,
     installationScope,
-    timestamp,
-} from "../../core/lifecycle/state";
-import { parseProviderInstallation } from "../../core/parsing/parseProviderInstallation";
-import { parseOpaqueId } from "../../core/parsing/fields";
+} from "cms-repository/providers/installations/core/lifecycle/state";
+import { timestamp } from "@bernouy/ulvia-providers/validation";
+import { parseProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import { parseOpaqueId } from "@bernouy/ulvia-providers/validation";
 import { installationSelectionRevision } from "../../core/selectionRevision";
 
 /** Deterministic command adapter. Authorization belongs to the calling CMS host. */

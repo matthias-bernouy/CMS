@@ -14,13 +14,16 @@
     ],
     "references": [
         {
-            "path": "../cms-repository"
-        },
-        {
             "path": "../../foundation/binary-media"
         },
         {
             "path": "../../foundation/text-search"
+        },
+        {
+            "path": "../../platform/contracts"
+        },
+        {
+            "path": "../cms-repository"
         }
     ]
 }

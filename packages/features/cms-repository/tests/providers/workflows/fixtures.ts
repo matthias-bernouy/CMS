@@ -1,12 +1,10 @@
-import { admitContractRelease, type AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { admitProviderManifest, type AdmittedProviderManifest } from "@bernouy/cms-repository/providers";
-import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
-import {
-    InMemoryProviderInstallationStore,
-    ProviderInstallationLifecycle,
-} from "@bernouy/cms-repository/providers/installations";
-import { InMemoryContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
+import { admitContractRelease, type AdmittedContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { admitProviderManifest, type AdmittedProviderManifest } from "@bernouy/ulvia-providers";
+import { InMemoryProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
+import { InMemoryProviderInstallationStore } from "cms-repository/providers/installations/default-implementation/memory/InMemoryProviderInstallationStore";
+import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
+import { InMemoryContractSelectionStore } from "cms-repository/providers/selections/default-implementation/InMemoryContractSelectionStore";
 import { contractDocument, implementation, manifestDocument, requirement } from "../support/fixtures";
 
 export const siteId = "site:SHOP";

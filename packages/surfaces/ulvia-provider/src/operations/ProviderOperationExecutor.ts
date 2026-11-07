@@ -2,7 +2,7 @@ import { randomUUIDv7 } from "bun";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityInvocationContext } from "../dispatch/registry";
 import type { ProviderOperationHandler, ProviderOperationRecord, ProviderOperationStore } from "./types";
 import { reportFailure, runProviderOperation, type ProviderOperationFailureObservation } from "./execution";
-import type { CapabilityErrorDefinition, ResolvedContract } from "@bernouy/cms-repository/contracts";
+import type { CapabilityErrorDefinition, ResolvedContract } from "@bernouy/ulvia-contracts";
 import { validatedOperationHandler } from "./handler";
 
 export type { ProviderOperationFailureObservation } from "./execution";

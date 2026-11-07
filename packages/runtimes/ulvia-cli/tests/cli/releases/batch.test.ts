@@ -62,10 +62,7 @@ test("recursive release prepares the official contracts, provider and collection
 test("recursive release preserves verified contract fixture bytes", async () => {
     const f = await batchFixture();
     try {
-        const fixtures = resolve(
-            import.meta.dir,
-            "../../../../../features/cms-repository/fixtures/contracts/protocol-v1",
-        );
+        const fixtures = resolve(import.meta.dir, "../../../../../platform/contracts/fixtures/protocol-v1");
         const directory = join(f.source, "communication.receipt");
         await writeAuthoredContractFixture(directory, await readFile(join(fixtures, "mock.contract.json")));
         const asset = await readFile(join(fixtures, "mock-assets/receipt.svg"));

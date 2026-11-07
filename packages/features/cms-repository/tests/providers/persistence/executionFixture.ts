@@ -1,8 +1,8 @@
 import type { Db } from "mongodb";
-import { deepFreeze } from "@bernouy/cms-repository/contracts/protocol";
-import { planContractSelections, type StoredContractSelections } from "@bernouy/cms-repository/providers/selections";
-import type { StoredProviderInstallation } from "@bernouy/cms-repository/providers/installations";
-import { MongoProviderExecutionStateReader } from "@bernouy/cms-repository/providers/mongo";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
+import { planContractSelections, type StoredContractSelections } from "@bernouy/ulvia-providers/selections";
+import type { StoredProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import { MongoProviderExecutionStateReader } from "cms-repository/providers/persistence/mongo/MongoProviderExecutionStateReader";
 import { graphFixture, siteId } from "../selections/fixtures";
 
 export async function executionFixture() {

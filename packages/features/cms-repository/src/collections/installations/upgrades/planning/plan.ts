@@ -1,15 +1,26 @@
 import type { ContentRepository } from "@bernouy/cms-content";
 import type { CollectionStore } from "../../core/CollectionStore";
-import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
+import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
 import { assertCollectionResourceIsolation } from "../../core/resourceIsolation";
 import { validateStoredCollectionInstallation } from "../../core/siteState";
 import type { CollectionInstallation } from "../../interfaces/store";
-import type { CollectionUpgradePlan, CollectionUpgradeTarget, UpgradeIssue } from "../interfaces";
-import type { UsageContributor, CapabilityUse, BindingUse } from "../usage/interfaces";
+import type {
+    CollectionUpgradePlan,
+    CollectionUpgradeTarget,
+    UpgradeIssue,
+} from "cms-repository/collections/installations/upgrades/interfaces";
+import type {
+    UsageContributor,
+    CapabilityUse,
+    BindingUse,
+} from "cms-repository/collections/installations/upgrades/usage/interfaces";
 import { inventoryFromSnapshot } from "../usage/inventory";
 import { readUsageSnapshot, usageDigest } from "../usage/snapshot";
 import { verifyCollectionPublicationEvolution } from "../../../core/admission/evolution";
-import { resourceChanges, validateResourceUses } from "./resources";
+import {
+    resourceChanges,
+    validateResourceUses,
+} from "cms-repository/collections/installations/upgrades/planning/resources";
 import { validateUpgradeContent } from "./content";
 
 export type CollectionUpgradeAnalysis = Readonly<{

@@ -8,7 +8,7 @@ import {
     parseProviderGatewayRegistrationResponse,
     parseProviderGatewayRegistrationResponseJson,
     PROVIDER_CONNECTION_PROTOCOL,
-} from "@bernouy/cms-repository/providers/installations";
+} from "@bernouy/ulvia-providers/installations";
 import { registrationDocument } from "./fixtures";
 
 describe("provider connection protocol", () => {

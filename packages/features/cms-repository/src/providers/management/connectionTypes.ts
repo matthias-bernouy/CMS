@@ -1,8 +1,8 @@
-import type { ProviderDelegationSelector } from "cms-repository/providers/manifests/interfaces/ProviderManifest";
+import type { ProviderDelegationSelector } from "@bernouy/ulvia-providers";
 import type { ProviderConnectionDraftStore } from "./connectionDrafts";
 import type { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
 import type { ProviderInstallationPreparation } from "cms-repository/providers/installations/interfaces/ProviderInstallationPreparation";
-import type { ProviderRuntimeReport } from "cms-repository/providers/installations/interfaces/ProviderRuntimeReport";
+import type { ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 
 export type ProviderConnectionPreviewInput = {
     providerId: string;

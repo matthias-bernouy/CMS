@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { compileHttpBinding } from "@bernouy/cms-repository/contracts/bindings";
-import { capability } from "../support/fixtures";
+import { compileHttpBinding } from "@bernouy/ulvia-contracts/bindings";
+import { capability } from "../../../../../platform/contracts/tests/support/fixtures";
 
 describe("HTTP error response binding compilation", () => {
     test("requires one valid HTTP status for every declared error", () => {

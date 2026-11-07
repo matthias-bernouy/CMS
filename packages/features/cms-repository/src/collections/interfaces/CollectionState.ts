@@ -1,5 +1,5 @@
 import type { CollectionResourceDeprecation } from "./CollectionRelease";
-import type { UlviaSchema } from "cms-repository/exports/contracts/schema";
+import type { UlviaSchema } from "@bernouy/ulvia-contracts/schema";
 
 export type CollectionStateScope = "param" | "page" | "session" | "persistent";
 

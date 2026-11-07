@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdtemp, rm, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { runCheckCli } from "../../check-all";
+import { runCheckCli } from "../../check-all/index";
 
 test("failed change detection still runs checks, records complete evidence and returns failure", async () => {
     const root = await mkdtemp(join(tmpdir(), "guardrail-report-"));

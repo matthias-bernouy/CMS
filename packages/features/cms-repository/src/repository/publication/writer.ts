@@ -1,7 +1,15 @@
 import { createHash } from "node:crypto";
 import { isSha256Digest } from "@bernouy/binary-media";
-import { encodePublicationUpload, type PublicationUploadManifest } from "./protocol";
-import type { PublicationAsset, PublicationEnvelope, PublicationUploadReceipt, RemoteCoordinate } from "./types";
+import {
+    encodePublicationUpload,
+    type PublicationUploadManifest,
+} from "cms-repository/repository/publication/protocol";
+import type {
+    PublicationAsset,
+    PublicationEnvelope,
+    PublicationUploadReceipt,
+    RemoteCoordinate,
+} from "cms-repository/repository/publication/types";
 import { concurrentlyMap } from "./transport/concurrency";
 import { RepositoryConnection } from "./transport/connection";
 import type { RepositoryNamespaceCredential } from "./transport/credentials";

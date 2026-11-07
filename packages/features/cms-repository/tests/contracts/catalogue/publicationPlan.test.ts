@@ -1,11 +1,9 @@
 import { expect, test } from "bun:test";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import {
-    InMemoryReleaseCatalogue,
-    planContractPublications,
-    publishContractSet,
-} from "@bernouy/cms-repository/contracts/catalogue";
-import { capabilityDocument, contractDocument } from "../support/fixtures";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { planContractPublications } from "cms-repository/contracts/core/catalogue/planPublications";
+import { publishContractSet } from "cms-repository/contracts/core/catalogue/publishContractSet";
+import { capabilityDocument, contractDocument } from "../../../../../platform/contracts/tests/support/fixtures";
 
 test("plans exact inheritance and semantic version ordering without provider dependency metadata", async () => {
     const parent = await admitContractRelease(contractDocument({ contractId: "ulvia/example.parent" }));

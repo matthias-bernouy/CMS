@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { MAX_ACCOUNT_NAMESPACES } from "@bernouy/cms-repository/repository/namespaces";
-import { MongoRepositoryNamespaces } from "@bernouy/cms-repository/repository/namespaces/mongo";
+import { MAX_ACCOUNT_NAMESPACES } from "cms-repository/repository/namespaces/accounts/validation";
+import { MongoRepositoryNamespaces } from "cms-repository/repository/namespaces/accounts/mongo";
 import { mongo, ownershipFixture } from "./fixture";
 
 test.skipIf(!mongo)(

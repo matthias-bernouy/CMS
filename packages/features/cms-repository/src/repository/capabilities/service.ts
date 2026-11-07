@@ -1,8 +1,12 @@
 import { RepositoryRequestError } from "../core/errors";
-import { ReleaseValidationError } from "cms-repository/exports/contracts/index";
-import { CollectionValidationError, CollectionPublicationError } from "cms-repository/exports/collections/index";
-import { ProviderManifestValidationError } from "cms-repository/exports/providers/index";
-import type { RepositoryBinaryInput, RepositoryCapabilityContext, RepositoryCapabilityPorts } from "./interfaces";
+import { ReleaseValidationError } from "@bernouy/ulvia-contracts";
+import { CollectionValidationError, CollectionPublicationError } from "cms-repository/collections/core/errors";
+import { ProviderManifestValidationError } from "@bernouy/ulvia-providers";
+import type {
+    RepositoryBinaryInput,
+    RepositoryCapabilityContext,
+    RepositoryCapabilityPorts,
+} from "cms-repository/repository/capabilities/interfaces";
 import type { RemoteCoordinate } from "../publication/types";
 import { invokeRepositoryUpload } from "./uploads";
 import { invokeRepositorySource } from "./sources";

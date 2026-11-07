@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { RepositoryConnection } from "@bernouy/cms-repository/repository/namespaces";
+import { RepositoryConnection } from "cms-repository/repository/publication/transport/connection";
 
 test("publication diagnostics reconstruct only declared safe reasons and resource identities", async () => {
     const connection = new RepositoryConnection("https://repository.example");

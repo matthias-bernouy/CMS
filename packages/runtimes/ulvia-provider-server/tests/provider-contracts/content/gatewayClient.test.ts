@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
 import { contentGatewayClient } from "../../../src/runtime/content/gatewayClient";
-import { gatewayRoute } from "../../../../../features/cms-gateway/tests/fixtures";
+import { gatewayRoute } from "../../../../../../tests/integration/gateway/fixtures";
 
 async function fixture() {
     const requests: { url: string; headers: Headers }[] = [];

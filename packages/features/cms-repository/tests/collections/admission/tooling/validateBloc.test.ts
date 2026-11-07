@@ -1,5 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { compileBlocStyle, validateBloc, validateBlocTag } from "@bernouy/cms-repository/collections/build";
+import { compileBlocStyle } from "cms-repository/collections/core/validation/styles/compile";
+import { validateBloc, validateBlocTag } from "cms-repository/collections/tooling/validateBloc";
 
 describe("validateBlocTag", () => {
     test.each([["my-card"], ["a-b"], ["app-v2"], ["base-card"], ["super-cool-bloc"]])("accepts %p", (tag) => {

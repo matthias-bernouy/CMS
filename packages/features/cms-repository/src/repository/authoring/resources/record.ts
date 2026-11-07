@@ -1,12 +1,7 @@
 import { readFile, stat, open } from "node:fs/promises";
 import { constants } from "node:fs";
 import { join } from "node:path";
-import {
-    isResourceId,
-    resourcePublisher,
-    resourceName,
-    parseStrictJson,
-} from "cms-repository/exports/contracts/protocol";
+import { isResourceId, resourcePublisher, resourceName, parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { RepositoryRequestError } from "../../core/errors";
 import { sourceDigest } from "../preparations/record";
 import { parseSourceSnapshot } from "../snapshot";

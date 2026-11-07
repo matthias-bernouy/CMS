@@ -18,7 +18,7 @@ import {
     updateCmsPageSeo,
 } from "@bernouy/cms-content";
 import { type ProviderCapabilityHandler, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
-import type { CmsContentDependencies } from "../../../ports";
+import type { CmsContentDependencies } from "../../../ports/index";
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
 import { errorMessage } from "../../../dispatch/errors/localize";
 import { messageLanguage } from "../../../dispatch/errors/locale";

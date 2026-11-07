@@ -1,6 +1,13 @@
 import { resourceMetadata } from "../validation/lifecycle/metadata";
 import type { CollectionText, CollectionTextOverrides } from "../../interfaces/CollectionText";
-import { parseTextLocales, TEXT_LIMITS, textIdentifier, textKeys, textLocale, textRecord } from "./validation";
+import {
+    parseTextLocales,
+    TEXT_LIMITS,
+    textIdentifier,
+    textKeys,
+    textLocale,
+    textRecord,
+} from "cms-repository/collections/core/texts/validation";
 
 export function parseCollectionTexts(
     value: unknown,

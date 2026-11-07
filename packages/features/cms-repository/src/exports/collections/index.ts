@@ -15,10 +15,7 @@ export type {
     CollectionResourceKind,
     CollectionResourceDeprecation,
 } from "cms-repository/collections/interfaces/CollectionRelease";
-export type {
-    CollectionState,
-    CollectionStateScope,
-} from "cms-repository/collections/interfaces/CollectionState";
+export type { CollectionState, CollectionStateScope } from "cms-repository/collections/interfaces/CollectionState";
 export type {
     CollectionExample,
     CollectionExamplePreview,

@@ -1,6 +1,6 @@
-import type { CollectionRelease } from "@bernouy/cms-repository/collections";
+import type { CollectionRelease } from "cms-repository/collections/interfaces/CollectionRelease";
 import { renderContentTexts, type ContentTextSource } from "@bernouy/cms-content/rendering";
-import { resolveCollectionTexts } from "@bernouy/cms-repository/collections/texts";
+import { resolveCollectionTexts } from "cms-repository/collections/core/texts/resolveCollectionTexts";
 
 /** Trusted, public catalogue inputs. */
 export interface CollectionTextSource {

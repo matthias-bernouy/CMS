@@ -1,6 +1,6 @@
 import type { ProviderCapabilityRegistry, ProviderCapabilityInvocationContext } from "../../../dispatch/registry";
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
-import type { UlviaProviderManagement } from "../../../ports";
+import type { UlviaProviderManagement } from "../../../ports/index";
 import { collectionCommand, requiredText } from "../support";
 
 export function registerProviderAdministration(

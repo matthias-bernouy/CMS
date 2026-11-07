@@ -1,7 +1,7 @@
 import { parseResolvePathRequest } from "@bernouy/cms-content/public-delivery";
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
 import type { ProviderCapabilityInvocationContext } from "../../../dispatch/registry";
-import type { CmsContentDependencies } from "../../../ports";
+import type { CmsContentDependencies } from "../../../ports/index";
 
 export async function resolveDelivery(
     input: Readonly<Record<string, unknown>>,

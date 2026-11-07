@@ -1,10 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { ProviderInstallationValidationError } from "cms-repository/providers/installations/core/errors";
-import { DEFAULT_PROVIDER_INSTALLATION_LIMITS } from "cms-repository/providers/installations/core/limits";
-import {
-    parseProviderRuntimeReport,
-    parseProviderRuntimeReportJson,
-} from "cms-repository/providers/installations/core/reports/parseProviderRuntimeReport";
+import { ProviderInstallationValidationError } from "@bernouy/ulvia-providers/installations";
+import { DEFAULT_PROVIDER_INSTALLATION_LIMITS } from "@bernouy/ulvia-providers/installations";
+import { parseProviderRuntimeReport, parseProviderRuntimeReportJson } from "@bernouy/ulvia-providers/installations";
 import { reportDocument } from "./fixtures";
 
 describe("provider runtime report input bounds", () => {

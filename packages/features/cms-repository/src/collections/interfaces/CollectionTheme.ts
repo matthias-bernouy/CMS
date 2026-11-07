@@ -1,4 +1,7 @@
-import type { CollectionTranslationKey, CollectionResourceDeprecation } from "./CollectionRelease";
+import type {
+    CollectionTranslationKey,
+    CollectionResourceDeprecation,
+} from "cms-repository/collections/interfaces/CollectionRelease";
 
 export type CollectionThemeTokenType = "color" | "font-family" | "length" | "number" | "shadow" | "value";
 

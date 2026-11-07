@@ -1,6 +1,6 @@
 import { stat } from "node:fs/promises";
 import { basename, join } from "node:path";
-import { DEFAULT_COLLECTION_LIMITS } from "@bernouy/cms-repository/collections";
+import { DEFAULT_COLLECTION_LIMITS } from "cms-repository/collections/core/limits";
 import { readSourceEntries } from "cms-repository/repository/authoring/sourceTree";
 
 const MAX_BLOC_DEPTH = 16;

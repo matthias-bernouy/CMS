@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
 import { compileContractSource } from "@bernouy/cms-repository/repository/authoring/build";
 

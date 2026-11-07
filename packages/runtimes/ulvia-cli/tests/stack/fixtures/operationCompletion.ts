@@ -1,6 +1,6 @@
 import type { Locator } from "playwright";
 import type { Page } from "playwright";
-import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contracts/protocol";
+import { parseCapabilityOperationHandle } from "@bernouy/ulvia-contracts/protocol";
 
 type ProbePage = Pick<Page, "request" | "url" | "waitForTimeout">;
 

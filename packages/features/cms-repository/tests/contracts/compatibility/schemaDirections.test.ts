@@ -1,9 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import { admitContractRelease, parseContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { compareContractReleases } from "@bernouy/cms-repository/contracts/compatibility";
-import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
-import { capabilityDocument, contractDocument, objectSchema, stringSchema } from "../support/fixtures";
+import { admitContractRelease, parseContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { compareContractReleases } from "@bernouy/ulvia-contracts/compatibility";
+import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
+import {
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+    stringSchema,
+} from "../../../../../platform/contracts/tests/support/fixtures";
 
 function compare(
     previousCapability: Record<string, unknown>,

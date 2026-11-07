@@ -1,24 +1,19 @@
 import type { Db } from "mongodb";
 import { MongoServerError } from "mongodb";
-import { VerifiedArtifactCache, type ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
-import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
-import type { AdmittedProviderManifest, ProviderManifestDigest } from "../../core/admission/admitProviderManifest";
-import { validateProviderManifestReferences } from "../../core/admission/validateProviderManifest";
-import { verifyProviderManifestAdmission } from "../../core/admission/verifyProviderManifestAdmission";
-import { ProviderManifestValidationError } from "../../core/protocol/errors";
-import {
-    DEFAULT_PROVIDER_MANIFEST_LIMITS,
-    normalizeProviderManifestLimits,
-    type ProviderManifestLimits,
-} from "../../core/protocol/limits";
-import { normalizeManifestYank } from "../../core/admission/normalizeManifestYank";
-import { compareOrdinal } from "../../core/protocol/values";
-import type {
-    CatalogueProviderManifest,
-    ProviderManifestCatalogue,
-    ProviderManifestYank,
-} from "../../interfaces/ProviderManifestCatalogue";
+import { VerifiedArtifactCache } from "@bernouy/ulvia-contracts/catalogue";
+import { type ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
+import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
+import { catalogueRevision } from "@bernouy/ulvia-contracts/protocol";
+import type { AdmittedProviderManifest, ProviderManifestDigest } from "@bernouy/ulvia-providers";
+import { validateProviderManifestReferences } from "@bernouy/ulvia-providers/validation";
+import { verifyProviderManifestAdmission } from "@bernouy/ulvia-providers/validation";
+import { ProviderManifestValidationError } from "@bernouy/ulvia-providers";
+import { DEFAULT_PROVIDER_MANIFEST_LIMITS, type ProviderManifestLimits } from "@bernouy/ulvia-providers";
+import { normalizeProviderManifestLimits } from "@bernouy/ulvia-providers/validation";
+import { normalizeManifestYank } from "@bernouy/ulvia-providers/validation";
+import { compareOrdinal } from "@bernouy/ulvia-providers/validation";
+import type { CatalogueProviderManifest, ProviderManifestYank } from "@bernouy/ulvia-providers/catalogue";
+import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 import {
     type ManifestArtifact,
     type ManifestHead,

@@ -1,10 +1,10 @@
-import type { ResolvedContract } from "@bernouy/cms-repository/contracts";
+import type { ResolvedContract } from "@bernouy/ulvia-contracts";
 import { RepositoryCapabilityError } from "@bernouy/cms-repository/repository/capabilities";
 import type { RepositoryCapabilityService } from "@bernouy/cms-repository/repository/capabilities";
 import { RepositoryDiscoveryError } from "@bernouy/cms-repository/repository/search";
 import { ProviderCapabilityDispatchError } from "../dispatch/registry";
 import type { ProviderCapabilityRegistry, ProviderBinaryResult } from "../dispatch/registry";
-import type { UlviaProviderGateway } from "../ports";
+import type { UlviaProviderGateway } from "../ports/index";
 import { actorSubject } from "./access/support";
 
 /** Only an explicitly composed Repository profile registers these handlers. */

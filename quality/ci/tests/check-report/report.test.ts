@@ -46,9 +46,7 @@ test("documentation gets a single review line; shared code still gets caller gui
     expect(reviewBlock(["docs/README.md", "AGENTS.md"])).toEqual([
         "Review: documentation only; check accuracy and local links.",
     ]);
-    expect(reviewBlock(["packages/features/cms-gateway/src/access/Cache.ts"]).join("\n")).toContain(
-        "Instance isolation",
-    );
+    expect(reviewBlock(["packages/platform/gateway/src/access/Cache.ts"]).join("\n")).toContain("Instance isolation");
     expect(reviewBlock(["packages/foundation/shared.ts"]).join("\n")).toContain("affected callers");
 });
 

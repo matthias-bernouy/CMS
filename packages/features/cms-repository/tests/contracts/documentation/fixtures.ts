@@ -1,7 +1,7 @@
 import { sha256Digest } from "@bernouy/binary-media";
-import { admitContractBundle, parseContractRelease } from "@bernouy/cms-repository/contracts";
-import { parseDocumentationMarkdown } from "@bernouy/cms-repository/contracts/documentation";
-import { contractDocument, capabilityDocument } from "../support/fixtures";
+import { admitContractBundle, parseContractRelease } from "@bernouy/ulvia-contracts";
+import { parseDocumentationMarkdown } from "@bernouy/ulvia-contracts/documentation";
+import { contractDocument, capabilityDocument } from "../../../../../platform/contracts/tests/support/fixtures";
 
 export async function documented(
     text = "# Send a message\n\nUse the selected schema.\n",

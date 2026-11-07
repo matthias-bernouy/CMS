@@ -1,8 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import type { Runner } from "@bernouy/http-runner";
 import { readBoundedRequestBody, RequestBodyTooLargeError } from "@bernouy/http-runner";
-import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
-import { assertProviderConnectionToken } from "@bernouy/cms-repository/providers/installations";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
+import { assertProviderConnectionToken } from "@bernouy/ulvia-providers/installations";
 import type { CreateProviderInstance, ProviderInstanceLifecycle } from "../instances/lifecycle";
 
 const MAX_BODY_BYTES = 4_096;

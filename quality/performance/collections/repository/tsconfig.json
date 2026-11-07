@@ -12,7 +12,7 @@
                 "../../../../packages/features/cms-auth/src/*"
             ],
             "cms-gateway/*": [
-                "../../../../packages/features/cms-gateway/src/*"
+                "../../../../packages/platform/gateway/src/*"
             ],
             "cms-secrets/*": [
                 "../../../../packages/features/cms-secrets/src/*"
@@ -70,6 +70,12 @@
             ],
             "cms-documentation/*": [
                 "../../../../packages/features/cms-documentation/src/*"
+            ],
+            "ulvia-contracts/*": [
+                "../../../../packages/platform/contracts/src/*"
+            ],
+            "ulvia-providers/*": [
+                "../../../../packages/platform/providers/src/*"
             ]
         }
     },

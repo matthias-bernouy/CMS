@@ -2,7 +2,10 @@ import { isSha256Digest } from "@bernouy/binary-media";
 import { RepositoryRequestError } from "../core/errors";
 import { manifestPublisher } from "../publication/ownership";
 import { parsePublicationUpload, readPublicationMetadata } from "../publication/protocol";
-import type { RepositoryCapabilityPorts, RepositoryBinaryInput } from "./interfaces";
+import type {
+    RepositoryCapabilityPorts,
+    RepositoryBinaryInput,
+} from "cms-repository/repository/capabilities/interfaces";
 
 export async function invokeRepositoryUpload(
     ports: RepositoryCapabilityPorts,

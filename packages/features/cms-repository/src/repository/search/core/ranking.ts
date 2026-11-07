@@ -1,4 +1,4 @@
-import { releaseChannel } from "cms-repository/exports/contracts/compatibility";
+import { releaseChannel } from "@bernouy/ulvia-contracts/compatibility";
 import { fusedRanking, lexicalRanking, semanticRanking } from "@bernouy/text-search";
 import type { RepositorySearchQuery, RepositorySearchRow } from "../interfaces";
 

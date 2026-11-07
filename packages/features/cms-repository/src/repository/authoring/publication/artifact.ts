@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { resourceName } from "cms-repository/exports/contracts/protocol";
+import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { RepositoryRequestError } from "../../core/errors";
 import { RemoteRepositoryClient } from "../../publication/client";
 import { RepositorySourceClient } from "../../sources/client";

@@ -1,8 +1,8 @@
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
-import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
-import { parseProviderInstallation } from "@bernouy/cms-repository/providers/installations";
-import type { ContractSelection, ContractSelectionContext } from "@bernouy/cms-repository/providers/selections";
-import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
+import { InMemoryProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
+import { parseProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import type { ContractSelection, ContractSelectionContext } from "@bernouy/ulvia-providers/selections";
+import type { ReleaseCatalogue } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
 import { installationDocument } from "../installations/fixtures";
 import {
     capabilityTransition,

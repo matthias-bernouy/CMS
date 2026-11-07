@@ -13,7 +13,7 @@ test("repository respects the workspace architecture policy", async () => {
 test("embedding backends are production dependencies only of runtimes that execute inference", async () => {
     const root = resolve(import.meta.dir, "../../..");
     const manifests = new Map<string, { dependencies?: Record<string, string> }>();
-    for (const layer of ["foundation", "features", "surfaces", "runtimes"]) {
+    for (const layer of ["foundation", "platform", "features", "surfaces", "runtimes"]) {
         const directory = resolve(root, "packages", layer);
         for (const entry of await readdir(directory, { withFileTypes: true })) {
             if (!entry.isDirectory()) {

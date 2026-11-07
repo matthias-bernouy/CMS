@@ -1,6 +1,6 @@
 import { collectionFixture } from "./admission/examples/buildFixture";
 import { describe, expect, test } from "bun:test";
-import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
+import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
 import {
     checkDemoBlocs as check,
     collectionDocument,

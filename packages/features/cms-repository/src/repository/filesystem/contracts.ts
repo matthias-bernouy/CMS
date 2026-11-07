@@ -1,4 +1,4 @@
-import { contractAssetDefinitions } from "cms-repository/exports/contracts/documentation";
+import { contractAssetDefinitions } from "@bernouy/ulvia-contracts/documentation";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
@@ -8,11 +8,11 @@ import {
     parseContractReleaseJson,
     type AdmittedContractRelease,
     verifyStoredContractReleaseJson,
-} from "cms-repository/exports/contracts/index";
-import { verifyFixtureAssets } from "cms-repository/contracts/core/admission/verifyFixtureAssets";
-import type { ReleaseDigest } from "cms-repository/contracts/core/admission/digest";
-import { InMemoryReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
+} from "@bernouy/ulvia-contracts";
+import { verifyFixtureAssets } from "@bernouy/ulvia-contracts/validation";
+import type { ReleaseDigest } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
 import { LocalArtifactFiles, type LocalFixtureAsset } from "./artifacts/files";
 import { LocalRepositoryYanks } from "./yanks";
 

@@ -6,8 +6,13 @@ import {
     parseContractRelease,
     parseContractReleaseJson,
     ReleaseValidationError,
-} from "@bernouy/cms-repository/contracts";
-import { capabilityDocument, contractDocument, objectSchema, stringSchema } from "../support/fixtures";
+} from "@bernouy/ulvia-contracts";
+import {
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+    stringSchema,
+} from "../../../../../platform/contracts/tests/support/fixtures";
 
 describe("contract release parsing", () => {
     test("returns a normalized immutable contract release", () => {

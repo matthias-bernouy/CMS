@@ -1,4 +1,7 @@
-import type { CollectionRelease, CollectionTranslations } from "../../interfaces/CollectionRelease";
+import type {
+    CollectionRelease,
+    CollectionTranslations,
+} from "cms-repository/collections/interfaces/CollectionRelease";
 import { invalid } from "../errors";
 import { record, string } from "../values";
 

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { collectionAuthoringDiagnostics } from "@bernouy/cms-repository/collections/build";
-import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
+import { collectionAuthoringDiagnostics } from "cms-repository/collections/tooling/authoring/exampleDiagnostics";
+import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
 import { collectionDocument } from "../../../fixtures";
 
 test("distinct Bloc identities sharing markup and styles produce no design warnings", () => {

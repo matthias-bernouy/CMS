@@ -12,11 +12,11 @@
     "dependencies": {
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
-        "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-edge": "workspace:*",
-        "@bernouy/cms-observability": "workspace:*"
+        "@bernouy/cms-observability": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-providers": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

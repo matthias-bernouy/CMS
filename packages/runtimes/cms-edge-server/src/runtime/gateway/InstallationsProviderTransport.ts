@@ -1,4 +1,4 @@
-import { assertProviderConnectionToken } from "@bernouy/cms-repository/providers/installations";
+import { assertProviderConnectionToken } from "@bernouy/ulvia-providers/installations";
 
 export class InstallationsProviderTransport {
     readonly #endpoint: URL;

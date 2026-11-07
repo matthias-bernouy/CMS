@@ -4,8 +4,8 @@ import {
     admitContractReleaseJson,
     type AdmittedContractRelease,
     type ResolvedContract,
-} from "@bernouy/cms-repository/contracts";
-import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
+} from "@bernouy/ulvia-contracts";
+import type { ProviderManifestDigest } from "@bernouy/ulvia-providers";
 import type {
     DefaultProviderCapabilityDispatcher,
     UlviaProviderInstanceRuntime,

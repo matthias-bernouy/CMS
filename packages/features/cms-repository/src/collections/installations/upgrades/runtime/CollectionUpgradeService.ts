@@ -3,10 +3,19 @@ import { runSiteUpgrade } from "cms-repository/site-upgrades/run";
 import { siteUsageInventory } from "../usage/inventory";
 import type { ContentRepository } from "@bernouy/cms-content";
 import type { CollectionStore } from "../../core/CollectionStore";
-import type { CollectionUpgradeTarget, CollectionUpgradePlan } from "../interfaces";
-import type { UpgradeIntent, CollectionUpgradePayload } from "../storage/interfaces";
+import type {
+    CollectionUpgradeTarget,
+    CollectionUpgradePlan,
+} from "cms-repository/collections/installations/upgrades/interfaces";
+import type {
+    UpgradeIntent,
+    CollectionUpgradePayload,
+} from "cms-repository/collections/installations/upgrades/storage/interfaces";
 import type { SiteUpgradeStorage } from "cms-repository/site-upgrades/interfaces";
-import { prepareCollectionUpgrade, type CollectionUpgradeAnalysis } from "../planning/plan";
+import {
+    prepareCollectionUpgrade,
+    type CollectionUpgradeAnalysis,
+} from "cms-repository/collections/installations/upgrades/planning/plan";
 import { usageDigest } from "../usage/snapshot";
 import { issueUpgradePermit } from "./permit";
 

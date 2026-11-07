@@ -2,7 +2,7 @@ import { createMachinePreparer } from "./providers/authority/prepareMachine";
 import { createDispatchPreparer } from "./providers/authority/prepareDispatch";
 import { gatewayObservability } from "@bernouy/cms-gateway/observability/node";
 import { ContractUpgradeService } from "@bernouy/cms-repository/providers/selections";
-import { capabilityGranted } from "@bernouy/cms-repository/providers/selections";
+import { capabilityGranted } from "@bernouy/ulvia-providers/selections";
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import {
     GatewayAuthorityReads,

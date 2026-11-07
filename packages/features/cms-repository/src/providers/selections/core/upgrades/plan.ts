@@ -1,20 +1,17 @@
-import { delegationKey } from "../authority/inventory";
-import { grantedAuthority } from "../authority/grants";
-import type { SelectionAuthority } from "../../interfaces/SelectionAuthority";
-import type {
-    ContractSelectionStore,
-    ContractSelectionDependencySource,
-    CapabilityGrantPolicy,
-} from "../../interfaces/ContractSelectionStore";
+import { delegationKey } from "@bernouy/ulvia-providers/validation";
+import { grantedAuthority } from "@bernouy/ulvia-providers/validation";
+import type { SelectionAuthority } from "@bernouy/ulvia-providers/selections";
+import type { ContractSelectionStore } from "cms-repository/providers/selections/interfaces/ContractSelectionStore";
+import type { ContractSelectionDependencySource, CapabilityGrantPolicy } from "@bernouy/ulvia-providers/selections";
 import type {
     ContractUpgradeAnalysis,
     ContractUpgradeIssue,
     ContractUpgradePlan,
 } from "../../interfaces/ContractUpgrade";
-import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
-import { parseContractSelections } from "../graph/parseContractSelections";
-import { parseCapabilityGrants } from "../grants";
-import { planContractSelections } from "../graph/planContractSelections";
+import { catalogueRevision } from "@bernouy/ulvia-contracts/protocol";
+import { parseContractSelections } from "@bernouy/ulvia-providers/selections";
+import { parseCapabilityGrants } from "@bernouy/ulvia-providers/selections";
+import { planContractSelections } from "@bernouy/ulvia-providers/selections";
 import { validateCapabilityUsage } from "./requirements";
 
 export async function prepareContractUpgrade(

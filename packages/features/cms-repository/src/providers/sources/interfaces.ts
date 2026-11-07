@@ -1,4 +1,4 @@
-import type { ProviderManifestLinks } from "cms-repository/providers/manifests/interfaces/ProviderManifest";
+import type { ProviderManifestLinks } from "@bernouy/ulvia-providers";
 
 export type RepositoryArtifactKind = "contract" | "provider-manifest";
 

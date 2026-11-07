@@ -1,7 +1,14 @@
-import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
-import type { CollectionInstallation, CollectionUpgradeReplacement, CollectionStorage } from "../../interfaces/store";
+import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
+import type {
+    CollectionInstallation,
+    CollectionUpgradeReplacement,
+    CollectionStorage,
+} from "cms-repository/collections/installations/interfaces/store";
 import { assertCollectionResourceIsolation } from "../resourceIsolation";
-import { validateStoredCollectionInstallation, writeCollectionSiteState } from "../siteState";
+import {
+    validateStoredCollectionInstallation,
+    writeCollectionSiteState,
+} from "cms-repository/collections/installations/core/siteState";
 
 export async function replaceCollectionsForUpgrade(
     storage: CollectionStorage,

@@ -1,8 +1,11 @@
 import type { ProviderInstallationPreparation } from "cms-repository/providers/installations/interfaces/ProviderInstallationPreparation";
-import type { ProviderRuntimeReport } from "cms-repository/providers/installations/interfaces/ProviderRuntimeReport";
-import { assertProviderConnectionToken } from "cms-repository/providers/installations/core/protocol";
+import type { ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
+import { assertProviderConnectionToken } from "@bernouy/ulvia-providers/installations";
 import { secretRefToKey } from "@bernouy/secret-store";
-import type { ProviderConnectionPreview, ProviderConnectionPreviewInput } from "./connectionTypes";
+import type {
+    ProviderConnectionPreview,
+    ProviderConnectionPreviewInput,
+} from "cms-repository/providers/management/connectionTypes";
 
 export function validatePreviewInput(input: ProviderConnectionPreviewInput): void {
     assertProviderConnectionToken(input.token);

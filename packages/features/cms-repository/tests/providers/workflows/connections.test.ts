@@ -1,10 +1,8 @@
 import { expect, spyOn, test } from "bun:test";
 import { InMemorySecretStore } from "@bernouy/secret-store";
-import {
-    ProviderConnectionWorkflow,
-    type PendingProviderConnection,
-    type ProviderConnectionDraftStore,
-} from "@bernouy/cms-repository/providers/management";
+import { ProviderConnectionWorkflow } from "cms-repository/providers/management/ProviderConnectionWorkflow";
+import { type PendingProviderConnection } from "cms-repository/providers/management/connectionTypes";
+import { type ProviderConnectionDraftStore } from "cms-repository/providers/management/connectionDrafts";
 import { providerSite, report, siteId } from "./fixtures";
 
 async function fixture() {

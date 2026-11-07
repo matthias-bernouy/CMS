@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import { DefaultProviderCapabilityDispatcher, ProviderCapabilityDispatchError } from "@bernouy/ulvia-provider";
 import { resolveFixtureContract } from "../../ulviaProviderFixture";
 import { officialContract, invokeHttp } from "./fixtures";

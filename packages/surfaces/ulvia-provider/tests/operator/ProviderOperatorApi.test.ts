@@ -7,8 +7,8 @@ import type {
     ProviderInstanceRecord,
     ProviderInstanceRegistry,
     UpdateProviderInstanceRecord,
-} from "../../src";
-import { OfficialInstanceProfiles, ProviderInstanceLifecycle, ProviderOperatorApi } from "../../src";
+} from "../../src/index";
+import { OfficialInstanceProfiles, ProviderInstanceLifecycle, ProviderOperatorApi } from "../../src/index";
 
 const OPERATOR_TOKEN = "operator-token-that-is-long-enough";
 

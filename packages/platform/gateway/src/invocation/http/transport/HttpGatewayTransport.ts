@@ -1,0 +1,423 @@
+import { RESOURCE_HEADER, decodeResourceMetadata } from "../../resource/metadata";
+import { httpTransportRequest } from "../route/bindings";
+import { validateHttpResponse } from "../response/validate";
+import type {
+    GatewayHttpTransportRequest,
+    GatewayHttpTransportResponse,
+} from "cms-gateway/invocation/http/route/interfaces";
+import { decodeHttpParameter } from "@bernouy/ulvia-contracts/bindings";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
+import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
+import { MAX_GATEWAY_JSON_BYTES } from "cms-gateway/invocation/core/snapshotInvocation";
+import type {
+    GatewayTransport,
+    GatewayTransportRequest,
+    GatewayTransportResponse,
+} from "cms-gateway/invocation/interfaces/Invocation";
+import {
+    buildHttpInvocation,
+    type PreparedHttpInvocation,
+} from "cms-gateway/invocation/http/transport/buildHttpInvocation";
+import { readBounded } from "cms-gateway/invocation/http/transport/readBounded";
+import { withAbort } from "cms-gateway/invocation/http/transport/withAbort";
+import { decodeSessionEffect } from "cms-gateway/protocol/TrustedCapabilityEffects";
+
+export interface GatewayHttpExchange extends PreparedHttpInvocation {
+    /** All admitted input header mappings, including omitted optional properties. */
+    readonly boundHeaderNames?: readonly string[];
+    readonly requestContext?: GatewayTransportRequest["requestContext"];
+    readonly onDispatch?: () => void;
+    readonly authorityReads?: GatewayTransportRequest["authorityReads"];
+    readonly requestId: string;
+    readonly installationId?: string;
+    readonly providerTokenRef: string;
+    readonly authentication:
+        | { readonly kind: "provider-control" }
+        | {
+              readonly kind: "capability";
+              readonly trace?: GatewayTransportRequest["trace"];
+              readonly instanceId: string;
+              readonly contractId: string;
+              readonly contractVersion: string;
+              readonly capabilityId: string;
+              readonly subjectId?: string;
+              readonly actorKind?: GatewayTransportRequest["actorKind"];
+              readonly systemServiceId?: string;
+              readonly sourceInstallationId?: string;
+              readonly sourceCredentialFingerprint?: string;
+              readonly rootRequestId?: string;
+              readonly delegation?: GatewayTransportRequest["delegation"];
+          };
+    readonly delegated?: GatewayTransportRequest["delegated"];
+    readonly idempotencyKey?: string;
+    readonly actorCredential?: GatewayTransportRequest["actorCredential"];
+    readonly signal: AbortSignal;
+    readonly accept?: string;
+}
+
+/** The host network adapter enforces target DNS/IP policy and never follows redirects. */
+export interface GatewayHttpNetwork {
+    exchange(request: GatewayHttpExchange): Promise<Response>;
+}
+
+export interface HttpGatewayTransportOptions {
+    readonly network: GatewayHttpNetwork;
+    readonly maxResponseBytes?: number;
+    readonly maxBinaryResponseBytes?: number;
+    readonly firstByteTimeoutMs?: number;
+    readonly inactivityTimeoutMs?: number;
+}
+
+export class HttpGatewayTransport implements GatewayTransport {
+    readonly #network: GatewayHttpNetwork;
+    readonly #maxResponseBytes: number;
+    readonly #maxBinaryResponseBytes: number;
+    readonly #timeoutMs: number;
+    readonly #inactivityTimeoutMs: number;
+
+    constructor(options: HttpGatewayTransportOptions) {
+        this.#network = options.network;
+        this.#maxResponseBytes = positiveBound(options.maxResponseBytes ?? MAX_GATEWAY_JSON_BYTES, "maxResponseBytes");
+        this.#maxBinaryResponseBytes = positiveBound(
+            options.maxBinaryResponseBytes ?? 10 * 1024 * 1024 * 1024,
+            "maxBinaryResponseBytes",
+        );
+        this.#timeoutMs = positiveBound(options.firstByteTimeoutMs ?? 15_000, "firstByteTimeoutMs");
+        this.#inactivityTimeoutMs = positiveBound(options.inactivityTimeoutMs ?? 15_000, "inactivityTimeoutMs");
+    }
+
+    async send(value: GatewayTransportRequest): Promise<GatewayTransportResponse> {
+        const request = httpTransportRequest(value);
+        const response = await this.exchange(request);
+        try {
+            return validateHttpResponse(request.capability, request.binding, response, request.requestId);
+        } catch (error) {
+            await response.stream?.cancel().catch(() => undefined);
+            throw error;
+        }
+    }
+
+    private async exchange(request: GatewayHttpTransportRequest): Promise<GatewayHttpTransportResponse> {
+        const prepared = buildHttpInvocation(request);
+        const abort = new AbortController();
+        const signal = request.signal ? AbortSignal.any([abort.signal, request.signal]) : abort.signal;
+        const firstByteTimeout = setTimeout(
+            () => abort.abort(new DOMException("Provider first byte timed out", "TimeoutError")),
+            this.#timeoutMs,
+        );
+        const exchange: GatewayHttpExchange = {
+            ...prepared,
+            boundHeaderNames: request.binding.headers.map(({ wireName }) => wireName),
+            ...(request.requestContext ? { requestContext: request.requestContext } : {}),
+            ...(request.onDispatch ? { onDispatch: request.onDispatch } : {}),
+            ...(request.authorityReads ? { authorityReads: request.authorityReads } : {}),
+            requestId: request.requestId,
+            installationId: request.installationId,
+            providerTokenRef: request.providerTokenRef,
+            authentication: {
+                kind: "capability",
+                ...(request.trace ? { trace: request.trace } : {}),
+                instanceId: request.instanceId,
+
+                contractId: request.release.contractId,
+                contractVersion: request.release.version,
+                capabilityId: request.capability.id,
+                ...(request.delegation ? { delegation: request.delegation } : {}),
+                ...(request.rootRequestId ? { rootRequestId: request.rootRequestId } : {}),
+                ...(request.subjectId ? { subjectId: request.subjectId } : {}),
+                ...(request.actorKind ? { actorKind: request.actorKind } : {}),
+                ...(request.systemServiceId ? { systemServiceId: request.systemServiceId } : {}),
+                ...(request.sourceInstallationId
+                    ? {
+                          sourceInstallationId: request.sourceInstallationId,
+                          sourceCredentialFingerprint: request.sourceCredentialFingerprint,
+                      }
+                    : {}),
+            },
+            ...(request.delegated ? { delegated: request.delegated } : {}),
+            ...(request.idempotencyKey ? { idempotencyKey: request.idempotencyKey } : {}),
+            ...(request.actorCredential ? { actorCredential: request.actorCredential } : {}),
+            accept:
+                request.binding.response.kind === "operation-handle"
+                    ? "application/json"
+                    : request.capability.output.type === "binary"
+                      ? "*/*"
+                      : "application/json",
+            signal,
+        };
+        let response: Response;
+        try {
+            response = await withAbort(() => this.#network.exchange(exchange), signal);
+        } catch (error) {
+            clearTimeout(firstByteTimeout);
+            throw error;
+        }
+        try {
+            if (
+                response.status === 304 &&
+                request.capability.behavior.effect === "query" &&
+                request.capability.behavior.execution === "sync" &&
+                (request.capability.output.type !== "binary" || !request.capability.output.resource) &&
+                isRevalidationRequest(
+                    request.binding.method,
+                    new Headers({ ...prepared.headers, ...request.requestContext?.headers }),
+                )
+            ) {
+                await readBounded(response, 0, signal);
+                clearTimeout(firstByteTimeout);
+                return { status: 304, notModified: true, responseHeaders: allowedResponseHeaders(response.headers) };
+            }
+            if (response.redirected || (response.status >= 300 && response.status < 400)) {
+                throw new TypeError("provider redirects are forbidden");
+            }
+            if (response.headers.has("content-encoding") && response.headers.get("content-encoding") !== "identity") {
+                throw new TypeError("Provider ignored identity transfer encoding negotiation");
+            }
+            const contentType = response.headers.get("content-type") ?? undefined;
+            const responseHeaders = allowedResponseHeaders(response.headers);
+            const responseEffect = decodeSessionEffect(response.headers.get("x-ulvia-session-effect"));
+            const maximum =
+                request.binding.response.kind !== "operation-handle" &&
+                request.capability.output.type === "binary" &&
+                request.binding.response.successStatuses.includes(response.status)
+                    ? Math.min(this.#maxBinaryResponseBytes, request.capability.output.maxBytes)
+                    : this.#maxResponseBytes;
+            const isBinarySuccess =
+                request.binding.response.kind !== "operation-handle" &&
+                request.capability.output.type === "binary" &&
+                request.binding.response.successStatuses.includes(response.status);
+            if (isBinarySuccess) {
+                const resource =
+                    request.capability.output.type === "binary" && request.capability.output.resource
+                        ? decodeResourceMetadata(response.headers.get(RESOURCE_HEADER))
+                        : undefined;
+                if (request.capability.output.type === "binary" && request.capability.output.resource && !resource) {
+                    throw new TypeError("Missing resource metadata");
+                }
+                const contentLength = parseContentLength(response.headers.get("content-length"), maximum);
+                const prefetched =
+                    request.binding.method === "HEAD"
+                        ? emptyPrefetch(response.body)
+                        : await prefetchBody(response.body, signal, contentLength);
+                clearTimeout(firstByteTimeout);
+                return {
+                    status: response.status,
+                    ...(resource ? { resource } : {}),
+                    contentType,
+                    stream: boundedStream(prefetched, maximum, abort, this.#inactivityTimeoutMs, signal),
+                    ...(contentLength === undefined ? {} : { contentLength }),
+                    responseHeaders,
+                    ...(responseEffect ? { responseEffect } : {}),
+                };
+            }
+            const bytes = await readBounded(response, maximum, signal);
+            clearTimeout(firstByteTimeout);
+            if (request.binding.response.successStatuses.includes(response.status)) {
+                return {
+                    status: response.status,
+                    contentType,
+                    responseHeaders,
+                    output: bytes.byteLength ? parseStrictJson(bytes, this.#maxResponseBytes, 64) : null,
+                    ...(responseEffect ? { responseEffect } : {}),
+                };
+            }
+            if (request.binding.response.errorEnvelope.kind === "headers") {
+                return {
+                    ...headError(response, request, bytes),
+                    responseHeaders,
+                    ...(responseEffect ? { responseEffect } : {}),
+                };
+            }
+            if (contentType?.split(";", 1)[0]?.trim().toLowerCase() !== "application/json") {
+                throw new TypeError("provider error content type is invalid");
+            }
+            const envelope = bytes.byteLength ? parseStrictJson(bytes, this.#maxResponseBytes, 64) : null;
+            if (!envelope || typeof envelope !== "object" || Array.isArray(envelope) || !("error" in envelope)) {
+                throw new TypeError("provider error envelope is invalid");
+            }
+            const error = envelope.error;
+            if (!error || typeof error !== "object" || Array.isArray(error)) {
+                throw new TypeError("provider error envelope is invalid");
+            }
+            const fields = error as Record<string, unknown>;
+            if (typeof fields.code !== "string") {
+                throw new TypeError("provider error code is invalid");
+            }
+            return {
+                status: response.status,
+                contentType,
+                responseHeaders,
+                errorCode: fields.code,
+                ...(responseEffect ? { responseEffect } : {}),
+                ...(Object.hasOwn(fields, "output") ? { output: fields.output } : {}),
+            };
+        } catch {
+            await response.body?.cancel().catch(() => undefined);
+            clearTimeout(firstByteTimeout);
+            if (signal.aborted) {
+                throw signal.reason;
+            }
+            throw new GatewayError("invalid_provider_response", "provider returned an invalid HTTP response");
+        }
+    }
+}
+
+const allowedResponseHeaders = selectResponseHeaders;
+
+function parseContentLength(value: string | null, maximum: number): number | undefined {
+    if (value === null) {
+        return undefined;
+    }
+    const length = Number(value);
+    if (!/^\d+$/.test(value) || !Number.isSafeInteger(length) || length < 0 || length > maximum) {
+        throw new TypeError("provider content length is invalid");
+    }
+    return length;
+}
+
+function boundedStream(
+    prefetched: PrefetchedBody,
+    maximum: number,
+    abort: AbortController,
+    inactivityTimeoutMs: number,
+    signal: AbortSignal,
+): ReadableStream<Uint8Array> {
+    if (!prefetched.reader) {
+        return new ReadableStream({ start: (controller) => controller.close() });
+    }
+    const reader = prefetched.reader;
+    let length = 0;
+    let first = prefetched.first;
+    const onAbort = () => {
+        void reader.cancel(signal.reason).catch(() => undefined);
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    const cleanup = () => signal.removeEventListener("abort", onAbort);
+    return new ReadableStream<Uint8Array>({
+        async pull(controller) {
+            if (signal.aborted) {
+                cleanup();
+                await reader.cancel(signal.reason).catch(() => undefined);
+                controller.error(signal.reason);
+                return;
+            }
+            try {
+                const next =
+                    first ?? (await withAbort(() => readWithTimeout(reader, inactivityTimeoutMs, abort), signal));
+                first = undefined;
+                const { done, value } = next;
+                if (done) {
+                    cleanup();
+                    controller.close();
+                    return;
+                }
+                length += value.byteLength;
+                if (length > maximum) {
+                    abort.abort(new TypeError("provider response exceeds gateway limit"));
+                    await reader.cancel("response exceeds gateway limit").catch(() => undefined);
+                    controller.error(new TypeError("provider response exceeds gateway limit"));
+                    return;
+                }
+                controller.enqueue(value);
+            } catch (error) {
+                cleanup();
+                await reader.cancel(error).catch(() => undefined);
+                controller.error(error);
+            }
+        },
+        async cancel(reason) {
+            cleanup();
+            abort.abort(reason);
+            await reader.cancel(reason).catch(() => undefined);
+        },
+    });
+}
+
+type PrefetchedBody = {
+    readonly reader?: ReadableStreamDefaultReader<Uint8Array>;
+    readonly first?:
+        | { readonly done: false; readonly value: Uint8Array }
+        | { readonly done: true; readonly value?: Uint8Array };
+};
+
+function emptyPrefetch(body: ReadableStream<Uint8Array> | null): PrefetchedBody {
+    if (body) {
+        void body.cancel();
+    }
+    return {};
+}
+
+async function prefetchBody(
+    body: ReadableStream<Uint8Array> | null,
+    signal: AbortSignal,
+    contentLength: number | undefined,
+): Promise<PrefetchedBody> {
+    if (!body) {
+        if (contentLength && contentLength > 0) {
+            throw new TypeError("provider closed before its first response byte");
+        }
+        return {};
+    }
+    const reader = body.getReader();
+    try {
+        const first = await withAbort(() => reader.read(), signal);
+        if (first.done && contentLength && contentLength > 0) {
+            throw new TypeError("provider closed before its first response byte");
+        }
+        return { reader, first };
+    } catch (error) {
+        await reader.cancel(error).catch(() => undefined);
+        throw error;
+    }
+}
+
+async function readWithTimeout(
+    reader: ReadableStreamDefaultReader<Uint8Array>,
+    timeoutMs: number,
+    abort: AbortController,
+) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+        return await Promise.race([
+            reader.read(),
+            new Promise<never>((_resolve, reject) => {
+                timer = setTimeout(() => {
+                    const error = new DOMException("Provider stream was inactive", "TimeoutError");
+                    abort.abort(error);
+                    reject(error);
+                }, timeoutMs);
+            }),
+        ]);
+    } finally {
+        if (timer !== undefined) {
+            clearTimeout(timer);
+        }
+    }
+}
+
+function headError(
+    response: Response,
+    request: GatewayTransportRequest,
+    bytes: Uint8Array,
+): GatewayHttpTransportResponse {
+    if (bytes.byteLength) {
+        throw new TypeError("HEAD error cannot contain a body");
+    }
+    const stringSchema = { type: "string" as const, maxLength: 128 };
+    const code = decodeHttpParameter(stringSchema, response.headers.get("x-ulvia-error-code") ?? undefined);
+    const requestId = decodeHttpParameter(stringSchema, response.headers.get("x-ulvia-request-id") ?? undefined);
+    if (typeof code !== "string" || requestId !== request.requestId) {
+        throw new TypeError("HEAD error headers are invalid");
+    }
+    return { status: response.status, errorCode: code };
+}
+
+function positiveBound(value: number, name: string): number {
+    if (!Number.isSafeInteger(value) || value <= 0) {
+        throw new TypeError(`${name} must be a positive safe integer`);
+    }
+    return value;
+}
+
+import { selectResponseHeaders } from "cms-gateway/protocol/http/headers";
+import { isRevalidationRequest } from "cms-gateway/protocol/http/conditional";

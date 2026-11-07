@@ -1,11 +1,9 @@
 import { expect, test } from "bun:test";
-import {
-    admitCollectionRelease,
-    collectionExampleDocument,
-    parseCollectionRelease,
-    verifyCollectionPublicationEvolution,
-    DEFAULT_COLLECTION_LIMITS,
-} from "@bernouy/cms-repository/collections";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { collectionExampleDocument } from "cms-repository/collections/core/validation/examples/document";
+import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
+import { verifyCollectionPublicationEvolution } from "cms-repository/collections/core/admission/evolution";
+import { DEFAULT_COLLECTION_LIMITS } from "cms-repository/collections/core/limits";
 import { bootstrapCollection, includedRecipe } from "./fixture";
 
 test("bootstrap recipes remain immutable initialization data without modifying their source examples", async () => {

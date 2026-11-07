@@ -1,5 +1,5 @@
 import type { ProviderInstanceRecord } from "@bernouy/ulvia-provider";
-import { gatewayRoute } from "../../../../../features/cms-gateway/tests/fixtures";
+import { gatewayRoute } from "../../../../../../tests/integration/gateway/fixtures";
 import { ProviderExecutionSupport } from "../../../src/runtime/instances/profiles/execution/support";
 import { readInstalledExecution } from "../../../src/runtime/instances/profiles/execution/installed";
 

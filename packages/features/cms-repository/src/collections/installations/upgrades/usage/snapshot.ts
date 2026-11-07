@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import type { ContentRepository } from "@bernouy/cms-content";
 import type { CollectionStore } from "../../core/CollectionStore";
 import { collectionPageBatches } from "./pageScan";

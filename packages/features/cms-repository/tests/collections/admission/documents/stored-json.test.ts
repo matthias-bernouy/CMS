@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
-import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
+import { DEFAULT_COLLECTION_LIMITS } from "cms-repository/collections/core/limits";
 import {
-    DEFAULT_COLLECTION_LIMITS,
     verifyStoredCollectionRelease,
-    parseCollectionReleaseJson,
     verifyStoredCollectionReleaseJson,
-} from "@bernouy/cms-repository/collections";
+} from "cms-repository/collections/core/admission/collectionArtifact";
+import { parseCollectionReleaseJson } from "cms-repository/collections/core/parsing/parseCollectionRelease";
 
 const source = new URL("../../../../fixtures/collections/v1/atlas.collection.json", import.meta.url);
 const digest = (text: string) => `sha256:${new Bun.CryptoHasher("sha256").update(text).digest("hex")}`;

@@ -1,6 +1,7 @@
 import { collectionFixture } from "../examples/buildFixture";
 import { expect, test } from "bun:test";
-import { parseCollectionRelease, verifyCollectionPublicationEvolution } from "../../../../src/exports/collections";
+import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
+import { verifyCollectionPublicationEvolution } from "cms-repository/collections/core/admission/evolution";
 import { collectionDocument, component } from "../../fixtures";
 
 function release(version: string, update: (source: Record<string, unknown>) => void = () => {}) {

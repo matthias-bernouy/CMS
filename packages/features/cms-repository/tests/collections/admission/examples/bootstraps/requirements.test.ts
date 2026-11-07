@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
 import { bootstrapCollection } from "./fixture";
 
 test("all Pages in one recipe need a joint non-yanked contract witness", async () => {

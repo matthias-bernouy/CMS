@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { resolveContractLineage, verifySpecialization } from "cms-repository/exports/contracts/catalogue";
-import { admitProviderManifestJson } from "cms-repository/exports/providers/index";
+import { resolveContractLineage } from "@bernouy/ulvia-contracts";
+import { verifySpecialization } from "@bernouy/ulvia-contracts/catalogue";
+import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
 import type { PublicationEnvelope } from "../../publication/types";
 import type { CollectionPublisher } from "../CollectionAuthoring";
 import type { AuthoringHost } from "../preparations/prepare";

@@ -3,9 +3,9 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { MongoClient } from "mongodb";
-import { RepositoryNamespaces } from "@bernouy/cms-repository/repository/namespaces";
-import { MongoRepositoryNamespaces } from "@bernouy/cms-repository/repository/namespaces/mongo";
-import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem";
+import { RepositoryNamespaces } from "cms-repository/repository/namespaces/accounts/RepositoryNamespaces";
+import { MongoRepositoryNamespaces } from "cms-repository/repository/namespaces/accounts/mongo";
+import { withRepositoryWriteLock } from "cms-repository/repository/filesystem/core/lock";
 
 export const mongo = process.env.ULVIA_REPOSITORY_TEST_MONGO_URL;
 

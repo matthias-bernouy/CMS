@@ -1,5 +1,5 @@
-import { admitProviderManifestJson } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
-import { parseProviderManifestJson } from "cms-repository/providers/manifests/core/parsing/parseProviderManifest";
+import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
+import { parseProviderManifestJson } from "@bernouy/ulvia-providers";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import type { ProviderRepositorySource } from "./interfaces";

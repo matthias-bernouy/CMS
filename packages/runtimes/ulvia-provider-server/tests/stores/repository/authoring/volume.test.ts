@@ -3,7 +3,7 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
-import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { authoringFixture, sourceSnapshot } from "./fixture";
 
 test("preflight stops loading historical metadata at its byte budget even below the entry limit", async () => {

@@ -1,9 +1,13 @@
 import { RepositoryDiscoveryError, discoveryFailure } from "../core/errors";
 import { sha256Digest } from "@bernouy/binary-media";
-import { compareSemVer, releaseChannel } from "cms-repository/exports/contracts/compatibility";
+import { compareSemVer, releaseChannel } from "@bernouy/ulvia-contracts/compatibility";
 import { object, searchQuery, text } from "../core/input";
 import { RepositoryInspection } from "./inspection";
-import type { RepositoryDiscoverySource, RepositorySearchPage, RepositorySearchResult } from "../interfaces";
+import type {
+    RepositoryDiscoverySource,
+    RepositorySearchPage,
+    RepositorySearchResult,
+} from "cms-repository/repository/search/interfaces";
 
 type LocatedResult = RepositorySearchResult & { repositoryId: string };
 

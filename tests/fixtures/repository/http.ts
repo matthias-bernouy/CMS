@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
-import { admitContractReleaseJson, resolveContract } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson, resolveContract } from "@bernouy/ulvia-contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import {
     compileProviderRoutes,

@@ -1,14 +1,16 @@
 import { collectionFixture } from "../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
-import { renderCollectionTexts, withInstalledCollections } from "@bernouy/cms-repository/collections/content";
+import { renderCollectionTexts } from "cms-repository/collections/integration/content/texts";
+import { withInstalledCollections } from "cms-repository/collections/integration/content/installedRepository";
 import { createHash } from "node:crypto";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
+import { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+import { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
 import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
 import { createContentReader, expandCompositions, generateStyleEntry } from "@bernouy/cms-content/rendering";
 import { parseHTML } from "linkedom";
-import { compileBlocStyle } from "@bernouy/cms-repository/collections/build";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { compileBlocStyle } from "cms-repository/collections/core/validation/styles/compile";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
 
 const release = collectionFixture({
     kind: "collection",

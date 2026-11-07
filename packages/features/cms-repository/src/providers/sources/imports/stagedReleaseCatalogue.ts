@@ -1,10 +1,10 @@
-import type { AdmittedContractRelease } from "cms-repository/exports/contracts";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import type {
     CatalogueContractRelease,
     ContractReleaseDeprecation,
     ContractReleaseYank,
-    ReleaseCatalogue,
-} from "cms-repository/exports/contracts/catalogue";
+} from "@bernouy/ulvia-contracts/catalogue";
+import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 
 const STAGED_AT = "1970-01-01T00:00:00.000Z";
 

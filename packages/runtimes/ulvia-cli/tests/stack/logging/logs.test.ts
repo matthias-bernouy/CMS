@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { showInstanceLogs, readJournalUpdates } from "../../../src/runtime/stack/logs";
+import { showInstanceLogs, readJournalUpdates } from "../../../src/runtime/stack/logs/index";
 import { parseSelection } from "../../../src/runtime/stack/logs/selection";
 
 const item = {

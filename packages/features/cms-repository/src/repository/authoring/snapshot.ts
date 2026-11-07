@@ -1,4 +1,4 @@
-import { parseStrictJson, canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
+import { parseStrictJson, canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import type { RepositoryArtifactKind } from "../publication/types";
 
 export interface SourceAsset {

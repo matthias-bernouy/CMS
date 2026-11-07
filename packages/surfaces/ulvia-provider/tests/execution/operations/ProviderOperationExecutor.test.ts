@@ -1,4 +1,4 @@
-import { parseUlviaSchema, validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { parseUlviaSchema, validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import { expect, test } from "bun:test";
 import {
     DefaultProviderCapabilityDispatcher,

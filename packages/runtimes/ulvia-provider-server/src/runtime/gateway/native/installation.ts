@@ -1,8 +1,5 @@
-import type { ContractSelection } from "@bernouy/cms-repository/providers/selections";
-import type {
-    ProviderRuntimeReport,
-    StoredProviderInstallation,
-} from "@bernouy/cms-repository/providers/installations";
+import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
+import type { ProviderRuntimeReport, StoredProviderInstallation } from "@bernouy/ulvia-providers/installations";
 
 export function nativeInstallationMatches(
     siteId: string,

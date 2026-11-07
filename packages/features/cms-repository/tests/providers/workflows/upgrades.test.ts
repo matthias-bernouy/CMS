@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { compareProviderManifests } from "@bernouy/cms-repository/providers/compatibility";
-import { getProviderInstallationReadiness } from "@bernouy/cms-repository/providers/installations";
+import { compareProviderManifests } from "@bernouy/ulvia-providers/compatibility";
+import { getProviderInstallationReadiness } from "@bernouy/ulvia-providers/installations";
 import { candidate, providerSite, report, scope, siteId } from "./fixtures";
 
 describe("provider approval and site upgrade boundaries", () => {

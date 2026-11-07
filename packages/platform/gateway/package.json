@@ -1,0 +1,43 @@
+{
+    "name": "@bernouy/cms-gateway",
+    "version": "1.0.0",
+    "description": "Provider-neutral capability routing, authorization, and streaming transport for CmsCore.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./access/mongo": "./src/exports/access/mongo.ts",
+        "./audit": "./src/exports/audit/index.ts",
+        "./audit/mongo": "./src/exports/audit/mongo.ts",
+        "./mcp": "./src/exports/protocol/mcp.ts",
+        "./http": "./src/exports/http/index.ts",
+        "./http/handlers": "./src/exports/http/handlers.ts",
+        "./http/node": "./src/exports/http/node.ts",
+        "./identity": "./src/exports/identity/index.ts",
+        "./identity/mongo": "./src/exports/identity/mongo.ts",
+        "./identity/request-scope": "./src/exports/identity/request-scope.ts",
+        "./protocol": "./src/exports/protocol/index.ts",
+        "./access/providers": "./src/exports/access/providers.ts",
+        "./access/providers/mongo": "./src/exports/access/provider-mongo.ts",
+        "./provider": "./src/exports/http/provider.ts",
+        "./provider/server": "./src/exports/http/provider-server.ts",
+        "./provider/node": "./src/exports/http/provider-client.ts",
+        "./access/delegation": "./src/exports/access/delegation.ts",
+        "./access/delegation/mongo": "./src/exports/access/delegation-mongo.ts",
+        "./observability": "./src/exports/observability/index.ts",
+        "./observability/node": "./src/exports/observability/node.ts",
+        "./testing": "./src/exports/testing.ts"
+    },
+    "dependencies": {
+        "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*",
+        "@bernouy/resource-identity": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-providers": "workspace:*"
+    },
+    "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^7.0.2"
+    }
+}

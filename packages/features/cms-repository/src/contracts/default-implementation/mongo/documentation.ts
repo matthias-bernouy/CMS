@@ -1,6 +1,6 @@
 import type { Db } from "mongodb";
-import type { AdmittedContractRelease } from "../../core/admission/admitContractRelease";
-import type { ContractDocumentationDefinition } from "../../interfaces/ContractRelease";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
+import type { ContractDocumentationDefinition } from "@bernouy/ulvia-contracts";
 import { sha256Digest } from "@bernouy/binary-media";
 
 /** Document text is immutable, separately stored, and never hydrated by ordinary release reads. */

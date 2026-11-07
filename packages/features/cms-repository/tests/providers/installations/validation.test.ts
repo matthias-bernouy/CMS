@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { validateProviderInstallation } from "@bernouy/cms-repository/providers/installations";
+import { validateProviderInstallation } from "@bernouy/ulvia-providers/installations";
 import { admittedInstallation } from "./fixtures";
 
 describe("approved provider installation validation", () => {

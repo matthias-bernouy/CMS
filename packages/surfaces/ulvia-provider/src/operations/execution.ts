@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { ProviderCapabilityDispatchError } from "../dispatch/registry";
 import type { ProviderOperationHandler, ProviderOperationRecord, ProviderOperationStore } from "./types";
 import { ProviderOperationLeaseLostError, expiresAt, operationExecution, waitForLeaseRenewal } from "./lease";
-import { canonicalIJsonBytes } from "@bernouy/cms-repository/contracts/protocol";
+import { canonicalIJsonBytes } from "@bernouy/ulvia-contracts/protocol";
 import { hydrateProviderInvocationContext } from "@bernouy/cms-gateway/provider/server";
 
 export type ProviderOperationFailureObservation = Readonly<{

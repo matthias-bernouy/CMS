@@ -1,6 +1,6 @@
-import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
+import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 import { resourceMetadata } from "../validation/lifecycle/metadata";
-import { parseUlviaSchema, type UlviaSchema } from "cms-repository/exports/contracts/schema";
+import { parseUlviaSchema, type UlviaSchema } from "@bernouy/ulvia-contracts/schema";
 import type { CollectionState, CollectionStateScope } from "../../interfaces/CollectionState";
 import { invalid, translateCollectionError } from "../errors";
 import type { CollectionLimits } from "../limits";

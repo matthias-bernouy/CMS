@@ -1,7 +1,11 @@
-import { verifyStoredContractReleaseJson } from "cms-repository/exports/contracts/index";
-import type { CatalogueContractRelease, ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
-import { dependencyReader, AuthoringDependencyError } from "./transport";
+import { verifyStoredContractReleaseJson } from "@bernouy/ulvia-contracts";
+import type { CatalogueContractRelease } from "@bernouy/ulvia-contracts/catalogue";
+import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
+import {
+    dependencyReader,
+    AuthoringDependencyError,
+} from "cms-repository/repository/authoring/resources/dependencies/transport";
 import { resourceReference } from "../../../search/core/input";
 import type { CollectionPublisher } from "../../CollectionAuthoring";
 

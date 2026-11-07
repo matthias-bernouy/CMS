@@ -1,11 +1,8 @@
-import { COLLECTION_PUBLICATION_ISSUES } from "cms-repository/exports/collections/index";
-import type {
-    CollectionPublicationCode,
-    CollectionPublicationResource,
-} from "cms-repository/exports/collections/index";
+import { COLLECTION_PUBLICATION_ISSUES } from "cms-repository/collections/core/errors";
+import type { CollectionPublicationCode, CollectionPublicationResource } from "cms-repository/collections/core/errors";
 import { RepositoryRequestError } from "../../core/errors";
 import { RepositoryHttpError, repositoryErrorBody } from "cms-repository/repository-http/errors";
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { boundedResponseBytes, repositoryUrl } from "./index";
 import type { RepositoryConnectionCredential } from "./credentials";
 

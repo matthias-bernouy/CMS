@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { ProviderInstallationValidationError } from "cms-repository/providers/installations/core/errors";
-import { validateProviderRuntimeReport } from "cms-repository/providers/installations/core/reports/validateProviderRuntimeReport";
+import { ProviderInstallationValidationError } from "@bernouy/ulvia-providers/installations";
+import { validateProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 import { admittedReport, digest, endpoint } from "./fixtures";
 
 describe("provider runtime report validation", () => {

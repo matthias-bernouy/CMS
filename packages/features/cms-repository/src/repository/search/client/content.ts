@@ -1,12 +1,15 @@
 import { RepositoryDiscoveryError } from "../core/errors";
-import { CollectionValidationError } from "cms-repository/exports/collections/index";
-import { ReleaseValidationError } from "cms-repository/exports/contracts/index";
-import { ProviderManifestValidationError } from "cms-repository/exports/providers/index";
-import { verifyStoredCollectionRelease } from "cms-repository/exports/collections/index";
-import { verifyStoredContractReleaseJson } from "cms-repository/exports/contracts/index";
-import { verifyStoredProviderManifestJson } from "cms-repository/exports/providers/index";
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
-import type { RepositoryDiscoverySource, RepositoryResourceReference } from "../interfaces";
+import { CollectionValidationError } from "cms-repository/collections/core/errors";
+import { ReleaseValidationError } from "@bernouy/ulvia-contracts";
+import { ProviderManifestValidationError } from "@bernouy/ulvia-providers";
+import { verifyStoredCollectionRelease } from "cms-repository/collections/core/admission/collectionArtifact";
+import { verifyStoredContractReleaseJson } from "@bernouy/ulvia-contracts";
+import { verifyStoredProviderManifestJson } from "@bernouy/ulvia-providers";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
+import type {
+    RepositoryDiscoverySource,
+    RepositoryResourceReference,
+} from "cms-repository/repository/search/interfaces";
 
 export async function readResourceContent(
     source: RepositoryDiscoverySource,

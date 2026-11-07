@@ -1,12 +1,16 @@
 import { join } from "node:path";
-import { prepareCollectionRelease } from "cms-repository/exports/collections/build";
-import { parseCollectionReleaseJson } from "cms-repository/exports/collections/index";
+import { prepareCollectionRelease } from "cms-repository/collections/tooling/authoring/source";
+import { parseCollectionReleaseJson } from "cms-repository/collections/core/parsing/parseCollectionRelease";
 import { RepositoryRequestError } from "../../core/errors";
 import { RemoteRepositoryClient } from "../../publication/client";
 import { RepositorySourceClient } from "../../sources/client";
 import type { CollectionPublisher } from "../CollectionAuthoring";
 import type { AuthoringHost } from "../preparations/prepare";
-import { readPreparation, writeRecord, verifyPreparedSources } from "../preparations/record";
+import {
+    readPreparation,
+    writeRecord,
+    verifyPreparedSources,
+} from "cms-repository/repository/authoring/preparations/record";
 import { CollectionPublicationRecoveryError } from "../preparations/errors";
 import { readReceipt } from "./receipt";
 import type { PublicationReceipt } from "./receipt";

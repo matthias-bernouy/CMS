@@ -1,6 +1,6 @@
 import { MemoryVectorStore } from "@bernouy/text-search";
 import { TransformersEmbeddings } from "@bernouy/text-embeddings";
-import { RepositorySearch } from "@bernouy/cms-repository/repository/search";
+import { RepositorySearch } from "cms-repository/repository/search/core/service";
 import { searchRow } from "../../src/repository/search/sources/rows";
 import type { RepositorySearchRow } from "../../src/repository/search/interfaces";
 

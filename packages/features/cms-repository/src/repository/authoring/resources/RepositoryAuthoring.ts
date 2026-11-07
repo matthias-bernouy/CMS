@@ -1,4 +1,7 @@
-import { CollectionAuthoring, CollectionPreparationError } from "../CollectionAuthoring";
+import {
+    CollectionAuthoring,
+    CollectionPreparationError,
+} from "cms-repository/repository/authoring/CollectionAuthoring";
 import { NamespaceAccessError } from "../namespaces";
 import { RepositoryRequestError } from "../../core/errors";
 import { RepositorySourceClient } from "../../sources/client";

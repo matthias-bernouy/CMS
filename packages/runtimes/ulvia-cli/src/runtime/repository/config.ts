@@ -1,4 +1,4 @@
-import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { constants } from "node:fs";
 import { chmod, lstat, mkdir, open, rename, rm, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";

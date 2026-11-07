@@ -1,4 +1,4 @@
-import { documentationPath } from "cms-repository/exports/contracts/documentation";
+import { documentationPath } from "@bernouy/ulvia-contracts/documentation";
 import {
     parseProviderCataloguePage,
     validProviderReference,
@@ -8,7 +8,7 @@ import type {
     ProviderRepositorySource,
     RepositoryArtifactKind,
     RepositoryArtifactReference,
-} from "cms-repository/exports/providers/sources";
+} from "cms-repository/providers/sources/interfaces";
 import { FilesystemRepositoryCatalogueIndex } from "../catalogueIndex";
 import { LocalContractReleases } from "../contracts";
 import { LocalProviderReleases } from "../providers";

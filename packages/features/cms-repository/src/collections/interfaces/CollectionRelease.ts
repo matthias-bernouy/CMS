@@ -1,4 +1,4 @@
-import type { UlviaObjectSchema } from "cms-repository/exports/contracts/schema";
+import type { UlviaObjectSchema } from "@bernouy/ulvia-contracts/schema";
 import type { CollectionText } from "./CollectionText";
 import type { CollectionTheme } from "./CollectionTheme";
 import type { CollectionBloc } from "./CollectionBloc";

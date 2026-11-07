@@ -9,7 +9,7 @@ test("the delivery probe counts fetch and the real pinned HTTP transport without
     const preload = join(directory, "probe.ts");
     const log = join(directory, "requests.ndjson");
     const program = join(directory, "request.ts");
-    const transport = resolve("packages/features/cms-gateway/src/invocation/node-http/nodeHttpRequest.ts");
+    const transport = resolve("packages/platform/gateway/src/invocation/node-http/nodeHttpRequest.ts");
     try {
         await writeFile(preload, networkPreloadSource(log, resolve(".")));
         await writeFile(

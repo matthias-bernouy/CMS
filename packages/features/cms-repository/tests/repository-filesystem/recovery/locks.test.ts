@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFile, rename, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { acquireFilesystemLease } from "@bernouy/cms-repository/repository/filesystem";
+import { acquireFilesystemLease } from "cms-repository/repository/filesystem/core/lock";
 import { manifest, uploadFixture } from "./uploadFixtures";
 
 async function holdInChild(path: string) {

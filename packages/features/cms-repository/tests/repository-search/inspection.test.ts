@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import { RepositoryDiscovery } from "@bernouy/cms-repository/repository/search";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { RepositoryDiscovery } from "cms-repository/repository/search/client/discovery";
 import { RepositoryInspection } from "../../src/repository/search/client/inspection";
 import type { RepositoryDiscoverySource } from "../../src/repository/search/interfaces";
 

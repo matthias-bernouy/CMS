@@ -2,8 +2,8 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
-import { DEFAULT_COLLECTION_LIMITS } from "@bernouy/cms-repository/collections";
+import { prepareCollectionRelease } from "cms-repository/collections/tooling/authoring/source";
+import { DEFAULT_COLLECTION_LIMITS } from "cms-repository/collections/core/limits";
 import { loadCollectionBootstraps } from "../../../../../src/collections/tooling/authoring/metadataSources";
 import { parseSourceSnapshot } from "../../../../../src/repository/authoring/snapshot";
 

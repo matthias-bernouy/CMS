@@ -1,14 +1,14 @@
 import type { RenderingResourceReads } from "@bernouy/cms-content/rendering";
 import { collectionExampleDocument } from "../../core/validation/examples/document";
-import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
+import type { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
 import {
     type CollectionComponentSettings,
-    type CollectionRelease,
     type CollectionSettingControl,
     type CollectionSettingItem,
-    documentRequirements,
-    resolveCollectionTranslation,
-} from "@bernouy/cms-repository/collections";
+} from "cms-repository/collections/interfaces/CollectionBloc";
+import { type CollectionRelease } from "cms-repository/collections/interfaces/CollectionRelease";
+import { documentRequirements } from "cms-repository/collections/core/admission/documentRequirements";
+import { resolveCollectionTranslation } from "cms-repository/collections/core/texts/translationCatalogue";
 import {
     type BlocRecord,
     type ContentRepository,

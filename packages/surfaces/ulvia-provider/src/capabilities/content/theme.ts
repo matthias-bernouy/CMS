@@ -1,7 +1,7 @@
 import { readSystemSnapshot, type ThemeMode } from "@bernouy/cms-content";
 import { composeCollectionThemes } from "@bernouy/cms-repository/collections/content";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
-import type { CmsContentDependencies } from "../../ports";
+import type { CmsContentDependencies } from "../../ports/index";
 import { configurationCommand, optionalText, requiredText, revision } from "./support";
 import { projectThemeWorkspace } from "./projections/theme";
 

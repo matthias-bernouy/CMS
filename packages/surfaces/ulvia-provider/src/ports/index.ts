@@ -2,7 +2,7 @@ import type { RepositoryDiscovery } from "@bernouy/cms-repository/repository/sea
 import type { CmsDocumentation } from "@bernouy/cms-documentation";
 import type { ProviderMachinePreparation, PreparedProviderMachine } from "@bernouy/cms-gateway/protocol";
 import type { ProviderDispatchPreparation, PreparedProviderDispatch } from "@bernouy/cms-gateway/protocol";
-import type { CatalogueContractRelease } from "@bernouy/cms-repository/contracts/catalogue";
+import type { CatalogueContractRelease } from "@bernouy/ulvia-contracts/catalogue";
 import type { ProviderCapabilityInvocationContext } from "../dispatch/registry";
 import type { DeliveryActor, ContentDeliveryHost } from "@bernouy/cms-content/public-delivery";
 import type { GatewayDelegationAuthority } from "@bernouy/cms-gateway/access/delegation";
@@ -27,15 +27,10 @@ import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayRouteResolver } from "@bernouy/cms-gateway";
 import type { GatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
-import type {
-    ProviderInstallationStatus,
-    ProviderInstallationStore,
-} from "@bernouy/cms-repository/providers/installations";
-import type {
-    ContractSelection,
-    ContractSelectionStore,
-    ContractUpgradeService,
-} from "@bernouy/cms-repository/providers/selections";
+import type { ProviderInstallationStatus } from "@bernouy/ulvia-providers/installations";
+import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
+import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
+import type { ContractSelectionStore, ContractUpgradeService } from "@bernouy/cms-repository/providers/selections";
 import type { FileReference, NamespaceRecord } from "@bernouy/cms-files";
 import type { CmsSecrets } from "@bernouy/cms-secrets";
 import type { Emailer } from "@bernouy/cms-emailer";

@@ -2,7 +2,7 @@ import { compileProviderRoutes } from "../../../src/transport/routes";
 import { contractRelease, resolveFixtureContract } from "../../ulviaProviderFixture";
 import { ProviderClientError } from "@bernouy/cms-gateway/provider";
 import { createConnectedProviderLogger } from "@bernouy/ulvia-provider/sdk/node";
-import type { ContractRelease } from "@bernouy/cms-repository/contracts";
+import type { ContractRelease } from "@bernouy/ulvia-contracts";
 import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { registerProviderInstallationCapabilities } from "@bernouy/ulvia-provider/capabilities";

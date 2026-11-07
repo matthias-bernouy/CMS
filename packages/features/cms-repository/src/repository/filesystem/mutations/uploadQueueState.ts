@@ -2,7 +2,10 @@ import { randomUUID } from "node:crypto";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import type { UploadQueuePosition } from "./uploadQueueRecords";
-import { readQueueBytes, UPLOAD_QUEUE_PAGE_SIZE } from "./uploadQueueRecords";
+import {
+    readQueueBytes,
+    UPLOAD_QUEUE_PAGE_SIZE,
+} from "cms-repository/repository/filesystem/mutations/uploadQueueRecords";
 import { durableRename, durableWriteFile, syncDirectory } from "../core/durable";
 
 const SCHEMA = "ulvia.upload-queue.v1";

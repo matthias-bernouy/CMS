@@ -3,7 +3,7 @@ import type {
     BindingQueryCapability,
     BindingValueSchema,
 } from "@bernouy/cms-content/page-document";
-import type { CapabilityDefinition } from "cms-repository/exports/contracts/index";
+import type { CapabilityDefinition } from "@bernouy/ulvia-contracts";
 import { CollectionValidationError } from "../../errors";
 
 export function mergeQueryCapabilities(

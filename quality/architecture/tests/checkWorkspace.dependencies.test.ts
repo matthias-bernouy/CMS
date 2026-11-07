@@ -5,6 +5,28 @@ import { createWorkspaceFixture, manifest, ofKind } from "./checkWorkspace.fixtu
 const { createWorkspace } = createWorkspaceFixture();
 
 describe("workspace dependency rules", () => {
+    test("allows feature consumers of Platform and rejects Platform imports of features", async () => {
+        const root = await createWorkspace({
+            "packages/platform/contracts/package.json": manifest("@fixture/contracts", {
+                exports: { ".": "./src/index.ts" },
+            }),
+            "packages/platform/contracts/src/index.ts": "export const contract = true;\n",
+            "packages/features/domain/package.json": manifest("@fixture/domain", {
+                dependencies: { "@fixture/contracts": "workspace:*" },
+                exports: { ".": "./src/index.ts" },
+            }),
+            "packages/features/domain/src/index.ts": "export { contract } from '@fixture/contracts';\n",
+        });
+        expect(await checkWorkspaceArchitecture({ rootDir: root })).toEqual([]);
+        await Bun.write(
+            `${root}/packages/platform/contracts/src/index.ts`,
+            "export { contract } from '@fixture/domain';\n",
+        );
+        const violations = await checkWorkspaceArchitecture({ rootDir: root });
+        expect(ofKind(violations, "reversed-layer-dependency")).toHaveLength(1);
+        expect(ofKind(violations, "reversed-layer-dependency")[0]!.message).toContain("@fixture/domain");
+    });
+
     test("accepts a clean dependency direction and declared public imports", async () => {
         const root = await createWorkspace({
             "packages/foundation/base/package.json": manifest("@fixture/base", {

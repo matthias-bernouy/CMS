@@ -1,8 +1,8 @@
-import { deepFreeze } from "@bernouy/cms-repository/contracts/protocol";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { capabilityGranted, type ProviderExecutionStateReader } from "@bernouy/cms-repository/providers/selections";
+import { capabilityGranted, type ProviderExecutionStateReader } from "@bernouy/ulvia-providers/selections";
 import { providerInvocationIsCurrent, type ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
-import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
+import type { ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 import { prepareNativeContracts } from "./contracts";
 import { nativeInstallationMatches } from "./installation";
 

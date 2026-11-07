@@ -1,8 +1,13 @@
 import { expect, spyOn, test } from "bun:test";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { MongoReleaseCatalogue } from "cms-repository/contracts/default-implementation/mongo/MongoReleaseCatalogue";
 import { fakeCatalogueDb } from "../../support/fakeCatalogueDb";
-import { capabilityDocument, contractDocument, objectSchema, stringSchema } from "../support/fixtures";
+import {
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+    stringSchema,
+} from "../../../../../platform/contracts/tests/support/fixtures";
 
 test("Mongo release catalogue publishes immutable pins across adapter restarts", async () => {
     const db = fakeCatalogueDb();

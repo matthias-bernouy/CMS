@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { CollectionAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
 import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
-import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { authoringFixture, sourceSnapshot } from "./fixture";
 
 test("expired, altered and foreign-instance preparations refuse before remote writes", async () => {

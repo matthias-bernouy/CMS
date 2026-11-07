@@ -27,7 +27,7 @@ test("route compression preserves complete JSON and no-store semantics, honors n
 });
 
 test("a route-compression rejection is caught and journaled by the capability relay", async () => {
-    const { admitContractRelease } = await import("@bernouy/cms-repository/contracts");
+    const { admitContractRelease } = await import("@bernouy/ulvia-contracts");
     const { NOOP_LOGGER } = await import("@bernouy/logging");
     const { contractRelease, resolveFixtureContract } = await import("../../ulviaProviderFixture");
     const { createProviderContractRelay } = await import("../../../src/transport/relay");

@@ -1,5 +1,8 @@
 import type { CollectionResourceDeprecation } from "./CollectionRelease";
-import type { CollectionCapabilityRequirement, CollectionTranslationKey } from "./CollectionRelease";
+import type {
+    CollectionCapabilityRequirement,
+    CollectionTranslationKey,
+} from "cms-repository/collections/interfaces/CollectionRelease";
 import type { CmsBrowserRuntimeAbi } from "@bernouy/cms-content/runtime-abi";
 import type {
     BlocSettingControl,

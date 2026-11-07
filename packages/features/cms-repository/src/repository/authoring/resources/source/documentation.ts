@@ -5,8 +5,8 @@ import {
     documentationPath,
     DOCUMENTATION_LIMITS,
     parseDocumentationMarkdown,
-} from "cms-repository/exports/contracts/documentation";
-import type { ContractDocumentationDefinition } from "cms-repository/exports/contracts/index";
+} from "@bernouy/ulvia-contracts/documentation";
+import type { ContractDocumentationDefinition } from "@bernouy/ulvia-contracts";
 
 export async function readDocumentationSource(directory: string) {
     const documents: ContractDocumentationDefinition[] = [];

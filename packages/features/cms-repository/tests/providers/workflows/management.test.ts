@@ -1,6 +1,6 @@
 import { expect, test, spyOn } from "bun:test";
-import { ProviderManagement } from "@bernouy/cms-repository/providers/management";
-import { InMemoryProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
+import { ProviderManagement } from "cms-repository/providers/management/ProviderManagement";
+import { InMemoryProviderInstallationStore } from "cms-repository/providers/installations/default-implementation/memory/InMemoryProviderInstallationStore";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { candidate, providerSite, providerWorld, report, siteId } from "./fixtures";
 

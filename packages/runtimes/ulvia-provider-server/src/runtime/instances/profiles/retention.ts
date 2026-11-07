@@ -14,7 +14,7 @@ import {
 import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
 import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/providers/selections";
 import { MongoSiteUpgradeStorage } from "@bernouy/cms-repository/upgrades/mongo";
-import type { ContractSelection } from "@bernouy/cms-repository/providers/selections";
+import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
 import { instanceDatabaseName } from "../../stores/storageRoots";
 
 type RequiredRelease = Readonly<{ contractId: string; version: string; digest: string; location: string }>;

@@ -1,5 +1,5 @@
-import { documentationPath } from "@bernouy/cms-repository/contracts/documentation";
-import { isReleaseDigest } from "@bernouy/cms-repository/contracts";
+import { documentationPath } from "@bernouy/ulvia-contracts/documentation";
+import { isReleaseDigest } from "@bernouy/ulvia-contracts";
 import type { DocumentationReference } from "../interfaces/Documentation";
 
 export class DocumentationError extends Error {

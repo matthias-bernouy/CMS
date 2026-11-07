@@ -1,9 +1,12 @@
 import { loadDocumentedContract } from "./documentation/load";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { admitProviderManifestJson } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
-import { parseProviderManifestJson } from "cms-repository/providers/manifests/core/parsing/parseProviderManifest";
+import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
+import { parseProviderManifestJson } from "@bernouy/ulvia-providers";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
-import type { ProviderRepositorySource, RepositoryArtifactReference } from "./interfaces";
+import type {
+    ProviderRepositorySource,
+    RepositoryArtifactReference,
+} from "cms-repository/providers/sources/interfaces";
 import { loadImplementedContracts } from "./imports/implementedContracts";
 import { publishProviderImport } from "./imports/publishProviderImport";
 import { stagedReleaseCatalogue } from "./imports/stagedReleaseCatalogue";

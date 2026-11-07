@@ -3,8 +3,8 @@ import {
     admitProviderManifest,
     DEFAULT_PROVIDER_MANIFEST_LIMITS,
     type AdmittedProviderManifest,
-} from "@bernouy/cms-repository/providers";
-import { compareProviderManifests } from "@bernouy/cms-repository/providers/compatibility";
+} from "@bernouy/ulvia-providers";
+import { compareProviderManifests } from "@bernouy/ulvia-providers/compatibility";
 import { manifestCatalogueFixture } from "../catalogue/fixtures";
 import { contractDocument, implementation, manifestDocument, releaseCatalogue } from "../../support/fixtures";
 

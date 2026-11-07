@@ -1,21 +1,4 @@
 export { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
-export type {
-    CatalogueContractRelease,
-    ContractReleaseDeprecation,
-    ContractReleaseYank,
-    ReleaseCatalogue,
-} from "cms-repository/contracts/interfaces/ReleaseCatalogue";
+export type { ReleaseCatalogue } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
 export { planContractPublications } from "cms-repository/contracts/core/catalogue/planPublications";
 export { publishContractSet } from "cms-repository/contracts/core/catalogue/publishContractSet";
-export {
-    resolveContract,
-    effectiveLineageCapabilities,
-    findImplementedContract,
-    resolveContractLineage,
-} from "cms-repository/contracts/core/compatibility/lineage/resolveLineage";
-
-export type { ResolvedContract, ResolvedCapability } from "cms-repository/contracts/interfaces/ResolvedContract";
-
-export { VerifiedArtifactCache } from "cms-repository/contracts/core/catalogue/VerifiedArtifactCache";
-
-export { verifySpecialization } from "cms-repository/contracts/core/compatibility/lineage/verifySpecialization";

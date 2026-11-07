@@ -1,7 +1,13 @@
-import { verifyCollectionRequirements } from "../../core/admission/requirements";
-import { listInstalledCollections, readInstalledCollection } from "./installedCatalogue";
-import { assertUpgradePermit, type CollectionUpgradePermit } from "../upgrades/runtime/permit";
-import type { ReleaseCatalogue } from "../../../exports/contracts/catalogue";
+import { verifyCollectionRequirements } from "cms-repository/collections/core/admission/requirements/index";
+import {
+    listInstalledCollections,
+    readInstalledCollection,
+} from "cms-repository/collections/installations/core/installedCatalogue";
+import {
+    assertUpgradePermit,
+    type CollectionUpgradePermit,
+} from "cms-repository/collections/installations/upgrades/runtime/permit";
+import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import type { BlobRange } from "@bernouy/blob-store";
 import { admitCollectionRelease } from "../../core/admission/admitCollectionRelease";
 import { parseCollectionTextOverrides } from "../../core/texts/parseCollectionTexts";
@@ -15,9 +21,15 @@ import type {
     InstalledCollectionAssetMetadata,
 } from "../interfaces/store";
 import { installCollections } from "./mutations/install";
-import { saveCollectionConfiguration, uninstallCollection } from "./mutations/site";
+import {
+    saveCollectionConfiguration,
+    uninstallCollection,
+} from "cms-repository/collections/installations/core/mutations/site";
 import { assertCollectionResourceIsolation } from "./resourceIsolation";
-import { validateStoredCollectionInstallation, writeCollectionSiteState } from "./siteState";
+import {
+    validateStoredCollectionInstallation,
+    writeCollectionSiteState,
+} from "cms-repository/collections/installations/core/siteState";
 import { replaceCollectionsForUpgrade } from "./mutations/switch";
 
 export class CollectionStore {

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { OperatorObservabilityClient } from "../../../src/runtime/stack/logs/OperatorObservabilityClient";
 
 test.each(["1.0.0", "1.1.0", "1.2.0"])(

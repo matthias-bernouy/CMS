@@ -1,4 +1,4 @@
-import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "cms-repository/exports/contracts/index";
+import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "@bernouy/ulvia-contracts";
 
 const DEFAULT_COLLECTION_SCHEMA_LIMITS: Readonly<ReleaseLimits> = Object.freeze({
     ...DEFAULT_RELEASE_LIMITS,

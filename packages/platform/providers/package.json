@@ -1,0 +1,20 @@
+{
+    "name": "@bernouy/ulvia-providers",
+    "version": "1.0.0",
+    "description": "Ulvia Provider manifests, execution models, selection rules and read ports.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./catalogue": "./src/exports/catalogue.ts",
+        "./compatibility": "./src/exports/compatibility.ts",
+        "./installations": "./src/exports/installations.ts",
+        "./selections": "./src/exports/selections.ts",
+        "./validation": "./src/exports/validation.ts"
+    },
+    "dependencies": {
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/binary-media": "workspace:*"
+    }
+}

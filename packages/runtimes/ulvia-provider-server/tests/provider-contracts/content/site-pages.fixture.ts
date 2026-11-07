@@ -4,12 +4,12 @@ import { CapabilityGateway } from "@bernouy/cms-gateway";
 import { InMemoryGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 import { createCapabilityHttpHandler } from "@bernouy/cms-gateway/http/handlers";
 import { CapabilityMcpBinding, capabilityToolName } from "@bernouy/cms-gateway/mcp";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
 import { DefaultProviderCapabilityDispatcher, ProviderCapabilityDispatchError } from "@bernouy/ulvia-provider";
 import { registerContentCapabilities } from "@bernouy/ulvia-provider/capabilities";
-import { gatewayRoute, NOW } from "../../../../../features/cms-gateway/tests/fixtures";
+import { gatewayRoute, NOW } from "../../../../../../tests/integration/gateway/fixtures";
 
 export const CONTRACT = "ulvia/cms.content";
 export const PAGE_FIELDS = ["notFound", "forbidden", "serverError", "login"] as const;

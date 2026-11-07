@@ -1,5 +1,5 @@
 import { collectionFixture } from "../examples/buildFixture";
-import { parseCollectionRelease } from "../../../../src/exports/collections";
+import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
 import { collectionDocument, textDefinition } from "../../fixtures";
 
 export const example = {

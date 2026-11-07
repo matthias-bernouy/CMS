@@ -1,7 +1,7 @@
 import { parseCspPolicy } from "./cspPolicy";
 import type { CspExtras } from "@bernouy/http-runner";
 import { parseHttpUrl, parsePort, requiredEnv, type RuntimeEnvSource } from "./runtimeEnvParsing";
-import { assertProviderConnectionToken } from "@bernouy/cms-repository/providers/installations";
+import { assertProviderConnectionToken } from "@bernouy/ulvia-providers/installations";
 
 export { parsePort } from "./runtimeEnvParsing";
 

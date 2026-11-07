@@ -1,5 +1,5 @@
-import { isResourceId, resourcePublisher } from "cms-repository/exports/contracts/protocol";
-import { compareSemVer, releaseChannel, isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
+import { isResourceId, resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
+import { compareSemVer, releaseChannel, isCanonicalSemVer } from "@bernouy/ulvia-contracts/compatibility";
 import { createHash } from "node:crypto";
 
 export function compareCatalogueKeys(left: string, right: string): number {
@@ -15,7 +15,11 @@ export function compareCatalogueKeys(left: string, right: string): number {
     return compared || (left < right ? -1 : left > right ? 1 : 0);
 }
 
-import type { RepositoryCatalogueEntry, RepositoryCatalogueReader, RepositoryCatalogueType } from "../catalogueIndex";
+import type {
+    RepositoryCatalogueEntry,
+    RepositoryCatalogueReader,
+    RepositoryCatalogueType,
+} from "cms-repository/repository/filesystem/catalogueIndex";
 
 export class CatalogueInputError extends TypeError {}
 

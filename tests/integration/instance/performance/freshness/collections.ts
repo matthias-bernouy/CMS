@@ -1,5 +1,5 @@
 import { expect } from "bun:test";
-import { resourceRuntimeNamespace } from "@bernouy/cms-repository/contracts/protocol";
+import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 import { cachedPage, publishPage, type Connection } from "./context";
 function source(namespace: string): string {
     const collectionId = `${namespace}/cache-kit`;

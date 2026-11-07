@@ -1,8 +1,8 @@
-import { ReleaseValidationError } from "../../core/protocol/errors";
-import { expectRecord, expectString, rejectUnknownKeys } from "../../core/protocol/values";
-import { matchesStringFormat } from "../../core/schema/formats";
-import { parseSemVer } from "../../core/parsing/identifiers";
-import type { ContractReleaseDeprecation, ContractReleaseYank } from "../../interfaces/ReleaseCatalogue";
+import { ReleaseValidationError } from "@bernouy/ulvia-contracts";
+import { expectRecord, expectString, rejectUnknownKeys } from "@bernouy/ulvia-contracts/validation";
+import { matchesStringFormat } from "@bernouy/ulvia-contracts/validation";
+import { parseSemVer } from "@bernouy/ulvia-contracts/validation";
+import type { ContractReleaseDeprecation, ContractReleaseYank } from "@bernouy/ulvia-contracts/catalogue";
 
 export function normalizeReleaseDeprecation(
     value: ContractReleaseDeprecation,

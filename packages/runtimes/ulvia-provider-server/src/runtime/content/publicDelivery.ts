@@ -3,7 +3,7 @@ import { contentGatewayClient } from "./gatewayClient";
 import { contentPhaseObserver } from "./observe";
 import { ContentDelivery, PageCapabilityAnalyzer } from "@bernouy/cms-content/public-delivery";
 import { createContentReader } from "@bernouy/cms-content/rendering";
-import { satisfiesVersionRange } from "@bernouy/cms-repository/contracts/compatibility";
+import { satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
 import { resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/assets";
 import { serveInstalledCollectionAsset, collectionMaintenanceResponse } from "@bernouy/cms-repository/collections/http";
 import { InMemoryCache } from "@bernouy/http-runner";

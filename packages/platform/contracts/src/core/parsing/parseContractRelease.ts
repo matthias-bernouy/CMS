@@ -1,0 +1,228 @@
+import { resourcePublisher } from "./resources";
+import { parseDocumentation } from "../../documentation/manifest";
+import { assertIJson, canonicalIJsonBytes } from "../protocol/canonical";
+import { ReleaseValidationError } from "../protocol/errors";
+import { parseStrictJson } from "../protocol/json";
+import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../protocol/limits";
+import {
+    deepFreeze,
+    expectArray,
+    expectRecord,
+    expectString,
+    optionalString,
+    rejectUnknownKeys,
+} from "../protocol/values";
+import type { ContractRelease } from "../../interfaces/ContractRelease";
+import { createSchemaState } from "../schema/context";
+import { parseCapability } from "./parseCapability";
+import {
+    parsePublisherIdentifier,
+    parseResourceIdentifier,
+    parseSemVer,
+} from "ulvia-contracts/core/parsing/identifiers";
+import { parseFixtureAssets } from "./parseFixtureAssets";
+
+export function parseContractRelease(
+    value: unknown,
+    limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
+): ContractRelease {
+    assertIJson(value, limits.maxJsonDepth);
+    const record = expectRecord(value, "$", "invalid_contract");
+    rejectUnknownKeys(
+        record,
+        [
+            "kind",
+            "protocol",
+            "schemaDialect",
+            "contractId",
+            "name",
+            "description",
+            "extends",
+            "version",
+            "publisherId",
+            "catalogue",
+            "capabilities",
+            "fixtureAssets",
+            "documentation",
+        ],
+        "$",
+        "invalid_contract",
+    );
+    expectLiteral(record.kind, "contract", "$.kind");
+    expectLiteral(record.protocol, "ulvia-provider/v1", "$.protocol");
+    expectLiteral(record.schemaDialect, "ulvia-schema/v1", "$.schemaDialect");
+    const source = expectArray(record.capabilities, "$.capabilities", "invalid_contract");
+    if (source.length === 0 || source.length > limits.maxCapabilities) {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            `capabilities must contain between 1 and ${limits.maxCapabilities} entries`,
+            "$.capabilities",
+        );
+    }
+    const documentation = parseDocumentation(record.documentation);
+    const schemaState = createSchemaState(limits);
+    const fixtureAssets = parseFixtureAssets(record.fixtureAssets, limits);
+    const assetsById = new Map(fixtureAssets?.map((asset) => [asset.id, asset]));
+    const referencedAssets = new Set<string>();
+    const capabilities = source.map((capability, index) =>
+        parseCapability(capability, `$.capabilities[${index}]`, limits, schemaState, assetsById, referencedAssets),
+    );
+    const docPaths = new Set(documentation?.map((doc) => doc.path));
+    for (const capability of capabilities) {
+        for (const path of capability.docs ?? []) {
+            if (!docPaths.has(path)) {
+                throw new ReleaseValidationError("invalid_contract", `missing capability documentation: ${path}`);
+            }
+        }
+    }
+    for (const asset of fixtureAssets ?? []) {
+        if (!referencedAssets.has(asset.id)) {
+            throw new ReleaseValidationError("invalid_contract", `unused fixture asset ${asset.id}`, "$.fixtureAssets");
+        }
+    }
+    if (new Set(capabilities.map((capability) => capability.id)).size !== capabilities.length) {
+        throw new ReleaseValidationError("invalid_contract", "contains duplicate capability IDs", "$.capabilities");
+    }
+    const description = optionalString(record.description, "$.description", "invalid_contract", 4096);
+    const catalogue = parseCatalogueMetadata(record.catalogue);
+    const contractId = parseResourceIdentifier(record.contractId, "$.contractId");
+    const parent = parseParentReference(record.extends, contractId);
+    // Parent capabilities are available only when the exact lineage is resolved.
+    validateDeprecationReferences(capabilities, Boolean(parent));
+    const release: ContractRelease = {
+        kind: "contract",
+        protocol: "ulvia-provider/v1",
+        schemaDialect: "ulvia-schema/v1",
+        contractId,
+        name: expectString(record.name, "$.name", "invalid_contract", 128),
+        ...(description ? { description } : {}),
+        ...(parent ? { extends: parent } : {}),
+        version: parseSemVer(record.version, "$.version"),
+        publisherId: parsePublisherIdentifier(record.publisherId, "$.publisherId"),
+        ...(catalogue ? { catalogue } : {}),
+        capabilities,
+        ...(documentation === undefined ? {} : { documentation }),
+        ...(fixtureAssets === undefined ? {} : { fixtureAssets }),
+    };
+    if (resourcePublisher(contractId) !== release.publisherId) {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            "resource namespace must match publisherId",
+            "$.publisherId",
+        );
+    }
+    validateResponseEffectAuthority(release);
+    if (canonicalIJsonBytes(release, limits.maxJsonDepth).byteLength > limits.maxDocumentBytes) {
+        throw new ReleaseValidationError(
+            "body_limit_exceeded",
+            `canonical release exceeds ${limits.maxDocumentBytes} bytes`,
+        );
+    }
+    // Retained mock literals must belong to the release, not freeze or alias caller data.
+    return deepFreeze(structuredClone(release)) as ContractRelease;
+}
+
+function parseParentReference(value: unknown, contractId: string): ContractRelease["extends"] {
+    if (value === undefined) {
+        return undefined;
+    }
+    const record = expectRecord(value, "$.extends", "invalid_contract");
+    rejectUnknownKeys(record, ["contractId", "version", "digest"], "$.extends", "invalid_contract");
+    const parentContractId = parseResourceIdentifier(record.contractId, "$.extends.contractId");
+    if (parentContractId === contractId) {
+        throw new ReleaseValidationError("invalid_contract", "a contract cannot extend itself", "$.extends.contractId");
+    }
+    const digest = expectString(record.digest, "$.extends.digest", "invalid_contract", 71);
+    if (!/^sha256:[0-9a-f]{64}$/u.test(digest)) {
+        throw new ReleaseValidationError("invalid_contract", "must be a SHA-256 release digest", "$.extends.digest");
+    }
+    return {
+        contractId: parentContractId,
+        version: parseSemVer(record.version, "$.extends.version"),
+        digest: digest as `sha256:${string}`,
+    };
+}
+
+function validateResponseEffectAuthority(release: ContractRelease): void {
+    for (const [index, capability] of release.capabilities.entries()) {
+        if (!capability.responseEffects?.includes("session")) {
+            continue;
+        }
+        const path = `$.capabilities[${index}].responseEffects`;
+        if (release.contractId !== "ulvia/cms.access") {
+            throw new ReleaseValidationError(
+                "invalid_contract",
+                "session response effects are reserved to ulvia/cms.access",
+                path,
+            );
+        }
+        if (
+            capability.access !== "public" ||
+            capability.behavior.effect !== "command" ||
+            capability.behavior.execution !== "sync" ||
+            capability.output.type === "binary"
+        ) {
+            throw new ReleaseValidationError(
+                "invalid_contract",
+                "session response effects require a public synchronous structured command",
+                path,
+            );
+        }
+    }
+}
+
+function parseCatalogueMetadata(value: unknown): ContractRelease["catalogue"] {
+    if (value === undefined) {
+        return undefined;
+    }
+    const record = expectRecord(value, "$.catalogue", "invalid_contract");
+    rejectUnknownKeys(record, ["icon", "categories"], "$.catalogue", "invalid_contract");
+    const icon = optionalCatalogueToken(record.icon, "$.catalogue.icon");
+    const categories =
+        record.categories === undefined
+            ? undefined
+            : expectArray(record.categories, "$.catalogue.categories", "invalid_contract").map((category, index) =>
+                  catalogueToken(category, `$.catalogue.categories[${index}]`),
+              );
+    if (categories && (categories.length === 0 || categories.length > 6)) {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            "must contain between 1 and 6 categories",
+            "$.catalogue.categories",
+        );
+    }
+    if (categories && new Set(categories).size !== categories.length) {
+        throw new ReleaseValidationError("invalid_contract", "contains duplicate categories", "$.catalogue.categories");
+    }
+    if (!icon && !categories) {
+        throw new ReleaseValidationError("invalid_contract", "must include icon or categories", "$.catalogue");
+    }
+    return { ...(icon ? { icon } : {}), ...(categories ? { categories: categories.sort() } : {}) };
+}
+
+function optionalCatalogueToken(value: unknown, path: string): string | undefined {
+    return value === undefined ? undefined : catalogueToken(value, path);
+}
+
+function catalogueToken(value: unknown, path: string): string {
+    const token = expectString(value, path, "invalid_contract", 32);
+    if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(token)) {
+        throw new ReleaseValidationError("invalid_contract", "must be a lowercase hyphenated token", path);
+    }
+    return token;
+}
+
+export function parseContractReleaseJson(
+    input: string | Uint8Array,
+    limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
+): ContractRelease {
+    return parseContractRelease(parseStrictJson(input, limits.maxDocumentBytes, limits.maxJsonDepth), limits);
+}
+
+function expectLiteral(value: unknown, literal: string, path: string): void {
+    if (value !== literal) {
+        throw new ReleaseValidationError("invalid_contract", `must be ${JSON.stringify(literal)}`, path);
+    }
+}
+
+import { validateDeprecationReferences } from "./parseDeprecation";

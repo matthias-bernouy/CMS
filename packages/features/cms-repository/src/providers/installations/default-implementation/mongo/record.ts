@@ -1,11 +1,11 @@
 import { isSha256Digest } from "@bernouy/binary-media";
-import { deepFreeze } from "cms-repository/exports/contracts/protocol";
-import { parseDateTime } from "cms-repository/providers/manifests/core/parsing/identifiers";
-import { parseProviderInstallation } from "../../core/parsing/parseProviderInstallation";
-import { parseProviderRuntimeReport } from "../../core/reports/parseProviderRuntimeReport";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
+import { parseDateTime } from "@bernouy/ulvia-providers/validation";
+import { parseProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import { parseProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 import { installationSelectionDigest } from "../../core/selectionRevision";
-import type { ProviderInstallationLimits } from "../../core/limits";
-import type { StoredProviderInstallation } from "../../interfaces/ProviderInstallationStore";
+import type { ProviderInstallationLimits } from "@bernouy/ulvia-providers/installations";
+import type { StoredProviderInstallation } from "@bernouy/ulvia-providers/installations";
 
 export interface InstallationDocument extends StoredProviderInstallation {
     readonly _id: string;

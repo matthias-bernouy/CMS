@@ -1,4 +1,4 @@
-import { admitProviderManifest } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
 import { contractDocument, implementation, manifestDocument, releaseCatalogue } from "../../support/fixtures";
 
 export const endpoint = "https://provider.example.com";

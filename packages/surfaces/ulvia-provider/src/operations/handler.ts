@@ -1,7 +1,7 @@
 import { RESPONSE_HEADERS, snapshotHeaders } from "@bernouy/cms-gateway/protocol";
 import { localizeOfficialError } from "../dispatch/errors/localize";
-import type { CapabilityErrorDefinition } from "@bernouy/cms-repository/contracts";
-import { projectSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import type { CapabilityErrorDefinition } from "@bernouy/ulvia-contracts";
+import { projectSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import { ProviderCapabilityDispatchError } from "../dispatch/registry";
 import type { ProviderOperationHandler } from "./types";
 

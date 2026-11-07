@@ -1,6 +1,6 @@
 import { resourceResponse } from "@bernouy/cms-gateway/provider/server";
 import type { ProviderCapabilityRegistry } from "../../../dispatch/registry";
-import type { CmsContentDependencies } from "../../../ports";
+import type { CmsContentDependencies } from "../../../ports/index";
 import { resolveDelivery, deliveryCacheTags } from "./resolve";
 
 export function registerContentDeliveryCapabilities(

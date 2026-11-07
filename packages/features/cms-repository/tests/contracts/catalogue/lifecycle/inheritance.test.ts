@@ -1,7 +1,13 @@
 import { expect, test } from "bun:test";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
-import { capabilityDocument, contractDocument, objectSchema, stringSchema } from "../../support/fixtures";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { publishContractSet } from "cms-repository/contracts/core/catalogue/publishContractSet";
+import {
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+    stringSchema,
+} from "../../../../../../platform/contracts/tests/support/fixtures";
 
 test("changing an exact parent cannot hide an incompatible inherited capability", async () => {
     const catalogue = new InMemoryReleaseCatalogue();

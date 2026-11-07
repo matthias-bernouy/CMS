@@ -8,7 +8,7 @@ import {
     type ProviderCapabilityRegistry,
     type ProviderCapabilityHandler,
 } from "../../../dispatch/registry";
-import type { UlviaProviderGateway, UlviaProviderManagement } from "../../../ports";
+import type { UlviaProviderGateway, UlviaProviderManagement } from "../../../ports/index";
 import type { GatewayCommandAuditEvent } from "@bernouy/cms-gateway/audit";
 
 export function registerProviderInstallationCapabilities(

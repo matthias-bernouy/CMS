@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { parseContractRelease, computeReleaseDigest } from "@bernouy/cms-repository/contracts";
-import { compareContractReleases } from "@bernouy/cms-repository/contracts/compatibility";
-import { capabilityDocument, contractDocument } from "../support/fixtures";
+import { parseContractRelease, computeReleaseDigest } from "@bernouy/ulvia-contracts";
+import { compareContractReleases } from "@bernouy/ulvia-contracts/compatibility";
+import { capabilityDocument, contractDocument } from "../../../../../platform/contracts/tests/support/fixtures";
 
 describe("capability authority metadata", () => {
     test("rejects removed cross-contract requirements, including empty declarations", () => {

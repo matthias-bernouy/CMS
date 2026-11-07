@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 
-const fixturePath = new URL("../../../fixtures/contracts/protocol-v1/representative.contract.json", import.meta.url);
+const fixturePath = new URL(
+    "../../../../../platform/contracts/fixtures/protocol-v1/representative.contract.json",
+    import.meta.url,
+);
 
 describe("representative Protocol v1 contract fixture", () => {
     test("admits every representative flow and preserves a golden digest", async () => {

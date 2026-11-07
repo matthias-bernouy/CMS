@@ -1,4 +1,4 @@
-import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
+import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
 
 export type OfficialInstanceProfile = Readonly<{
     id: string;

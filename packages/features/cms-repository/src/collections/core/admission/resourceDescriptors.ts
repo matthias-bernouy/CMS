@@ -1,4 +1,4 @@
-import { canonicalIJsonBytes } from "cms-repository/exports/contracts/protocol";
+import { canonicalIJsonBytes } from "@bernouy/ulvia-contracts/protocol";
 import type {
     CollectionRelease,
     CollectionResourceDescriptor,

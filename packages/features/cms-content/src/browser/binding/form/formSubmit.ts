@@ -1,8 +1,4 @@
 export { collectFormData } from "./formControls";
 export { serializeForm } from "./formSerialization";
 export { submitForm } from "./submitRequest";
-export type {
-    AdditionalFormFields,
-    FormSubmitResult,
-    SerializedForm,
-} from "./types";
+export type { AdditionalFormFields, FormSubmitResult, SerializedForm } from "./types";

@@ -72,10 +72,7 @@ test("corrupt fixture assets stop push all before any earlier valid release is u
     const f = await pushFixture();
     try {
         await f.contract("first.example", { version: "0.0.1" });
-        const fixtures = resolve(
-            import.meta.dir,
-            "../../../../../features/cms-repository/fixtures/contracts/protocol-v1",
-        );
+        const fixtures = resolve(import.meta.dir, "../../../../../platform/contracts/fixtures/protocol-v1");
         const directory = join(f.source, "communication.receipt");
         await writeAuthoredContractFixture(directory, await readFile(join(fixtures, "mock.contract.json")));
         await mkdir(join(directory, "fixtures"));

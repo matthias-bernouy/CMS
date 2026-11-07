@@ -10,7 +10,7 @@ import {
     resolveLocalInstancePaths,
     type UlviaPaths,
 } from "../../runtime/paths";
-import { showInstanceLogs } from "../../runtime/stack/logs";
+import { showInstanceLogs } from "../../runtime/stack/logs/index";
 import { OperatorObservabilityClient } from "../../runtime/stack/logs/OperatorObservabilityClient";
 import type { InstallationConfig } from "../../runtime/stack/installation";
 import { releaseInstanceDomain } from "../../runtime/stack/domains";

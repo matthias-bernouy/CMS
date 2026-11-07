@@ -1,4 +1,7 @@
-import type { CollectionStorage, InstalledCollectionSummary } from "../interfaces/store";
+import type {
+    CollectionStorage,
+    InstalledCollectionSummary,
+} from "cms-repository/collections/installations/interfaces/store";
 import { validateStoredCollectionInstallation } from "./siteState";
 
 /** Reads current installation state and narrow release summaries, without revalidating example documents. */

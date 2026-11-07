@@ -1,5 +1,5 @@
-import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
-import { parseContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { resourceName } from "@bernouy/ulvia-contracts/protocol";
+import { parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { dirname } from "node:path";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";

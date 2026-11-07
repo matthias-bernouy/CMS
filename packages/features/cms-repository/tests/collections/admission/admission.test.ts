@@ -1,7 +1,10 @@
 import { collectionFixture } from "./examples/buildFixture";
 import { describe, expect, test } from "bun:test";
-import { admitCollectionRelease, admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
-import { canonicalIJsonBytes } from "@bernouy/cms-repository/contracts/protocol";
+import {
+    admitCollectionRelease,
+    admitCollectionReleaseJson,
+} from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { canonicalIJsonBytes } from "@bernouy/ulvia-contracts/protocol";
 import { collectionDocument } from "../fixtures";
 import { capabilityTransition, contractDocument, releaseCatalogue } from "../../providers/support/fixtures";
 

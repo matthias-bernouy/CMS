@@ -1,0 +1,87 @@
+import type { ReleaseDigest } from "@bernouy/ulvia-contracts";
+import type { UlviaObjectSchema } from "@bernouy/ulvia-contracts/schema";
+import type { VersionRange } from "../core/versioning/versionRange";
+
+export type ProviderCredentialSecretType = "password" | "private-key" | "token";
+
+export interface ProviderManifestProvenance {
+    readonly publishedAt: string;
+    readonly publisherId: string;
+}
+
+export interface ProviderManifestLinks {
+    readonly documentation?: string;
+    readonly setup?: string;
+    readonly support?: string;
+    readonly website?: string;
+}
+
+export interface ProviderEndpointPolicy {
+    readonly allowedOrigins: readonly string[];
+    readonly defaultOrigin?: string;
+}
+
+export interface ProviderCredentialSlot {
+    readonly id: string;
+    readonly label: string;
+    readonly required: boolean;
+    readonly secretType: ProviderCredentialSecretType;
+}
+
+export interface ProviderCapabilityRequirement {
+    readonly capabilityId: string;
+    readonly contractId: string;
+    readonly optional: boolean;
+    readonly versionRange: VersionRange;
+}
+
+export interface ProviderContractImplementation {
+    readonly contractId: string;
+    readonly digest: ReleaseDigest;
+    readonly requires: readonly ProviderCapabilityRequirement[];
+    readonly version: string;
+    readonly delegation?: ProviderDelegationPolicy;
+}
+
+export interface ProviderDelegationPolicy {
+    readonly sources: readonly string[];
+    readonly allow: readonly ProviderDelegationSelector[];
+}
+
+export interface ProviderDelegationSelector {
+    readonly contractId: string;
+    readonly capabilityId: string;
+    readonly effect: "query" | "command" | "*";
+    readonly sensitive?: boolean;
+}
+
+export interface ProviderDataPolicy {
+    readonly residency: readonly string[];
+    readonly retentionPolicyUrl?: string;
+}
+
+export interface ProviderRecoveryPolicy {
+    readonly backupFormatVersion: string;
+    readonly compatibleBuildRange: VersionRange;
+    readonly relocation: boolean;
+    readonly restore: boolean;
+}
+
+export interface ProviderManifest {
+    readonly buildVersionRange: VersionRange;
+    readonly configuration: UlviaObjectSchema;
+    readonly credentialSlots: readonly ProviderCredentialSlot[];
+    readonly dataPolicy?: ProviderDataPolicy;
+    readonly endpoint: ProviderEndpointPolicy;
+    readonly implementations: readonly ProviderContractImplementation[];
+    readonly kind: "provider-manifest";
+    readonly links?: ProviderManifestLinks;
+    readonly name: string;
+    readonly protocol: "ulvia-provider/v1";
+    readonly provenance: ProviderManifestProvenance;
+    readonly providerId: string;
+    readonly recovery?: ProviderRecoveryPolicy;
+    readonly requires: readonly ProviderCapabilityRequirement[];
+    readonly schemaDialect: "ulvia-schema/v1";
+    readonly version: string;
+}

@@ -1,5 +1,8 @@
-import { previewProviderAuthority } from "cms-repository/providers/selections/core/authority/preview";
-import { memoryConnectionDrafts, type ProviderConnectionDraftStore } from "./connectionDrafts";
+import { previewProviderAuthority } from "@bernouy/ulvia-providers/validation";
+import {
+    memoryConnectionDrafts,
+    type ProviderConnectionDraftStore,
+} from "cms-repository/providers/management/connectionDrafts";
 import { randomUUID } from "node:crypto";
 import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
 import type { ProviderInstallationPreparation } from "cms-repository/providers/installations/interfaces/ProviderInstallationPreparation";
@@ -11,7 +14,11 @@ import {
     type ProviderConnectionPreview,
     type ProviderConnectionPreviewInput,
 } from "./connectionTypes";
-import { previewResult, requiredSecretKey, validatePreviewInput } from "./connectionSupport";
+import {
+    previewResult,
+    requiredSecretKey,
+    validatePreviewInput,
+} from "cms-repository/providers/management/connectionSupport";
 
 const PREVIEW_LIFETIME_MS = 5 * 60_000;
 

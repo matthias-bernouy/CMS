@@ -1,8 +1,8 @@
 import { opendir } from "node:fs/promises";
 import { join } from "node:path";
-import { resourceName } from "cms-repository/exports/contracts/protocol";
-import { verifyCollectionPublicationHistory } from "cms-repository/exports/collections/index";
-import type { CollectionRelease } from "cms-repository/exports/collections/index";
+import { resourceName } from "@bernouy/ulvia-contracts/protocol";
+import { verifyCollectionPublicationHistory } from "cms-repository/collections/core/admission/history";
+import type { CollectionRelease } from "cms-repository/collections/interfaces/CollectionRelease";
 import type { LocalCollectionRepository } from "./collections";
 
 /** Preflight inspects one lineage, including yanked releases; incomplete evidence never means compatible. */

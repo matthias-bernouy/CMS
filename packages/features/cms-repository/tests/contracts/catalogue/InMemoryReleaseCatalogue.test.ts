@@ -1,7 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { admitContractRelease, DEFAULT_RELEASE_LIMITS } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { capabilityDocument, contractDocument, objectSchema, stringSchema } from "../support/fixtures";
+import { admitContractRelease, DEFAULT_RELEASE_LIMITS } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import {
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+    stringSchema,
+} from "../../../../../platform/contracts/tests/support/fixtures";
 
 describe("InMemoryReleaseCatalogue", () => {
     test("publishes and resolves only admitted immutable releases", async () => {

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { readdir, readFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 
 const source = resolve(import.meta.dir, "../../../../official-repository/contracts/repository");
 const compiled = resolve(

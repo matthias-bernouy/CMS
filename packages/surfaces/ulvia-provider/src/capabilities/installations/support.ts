@@ -5,7 +5,7 @@ import {
     MAX_CAPABILITY_JSON_BYTES,
     MAX_CAPABILITY_JSON_DEPTH,
     parseStrictJson,
-} from "@bernouy/cms-repository/contracts/protocol";
+} from "@bernouy/ulvia-contracts/protocol";
 
 export function targets(value: unknown): readonly CollectionUpgradeTarget[] {
     if (!Array.isArray(value) || value.length < 1 || value.length > 256) {

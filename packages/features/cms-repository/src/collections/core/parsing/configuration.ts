@@ -1,5 +1,5 @@
 import { resourceMetadata } from "../validation/lifecycle/metadata";
-import { parseUlviaSchema, validateSchemaValue, type UlviaSchema } from "cms-repository/exports/contracts/schema";
+import { parseUlviaSchema, validateSchemaValue, type UlviaSchema } from "@bernouy/ulvia-contracts/schema";
 import type { CollectionConfiguration } from "../../interfaces/CollectionRelease";
 import { invalid, translateCollectionError } from "../errors";
 import type { CollectionLimits } from "../limits";

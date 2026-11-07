@@ -1,5 +1,5 @@
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
-import { parseProviderRuntimeReportJson } from "@bernouy/cms-repository/providers/installations";
+import { parseProviderRuntimeReportJson } from "@bernouy/ulvia-providers/installations";
 
 export async function readRemoteProviderReport(endpoint: string, token: string) {
     const network = new NodeGatewayHttpNetwork({ resolveToken: async () => token, allowPrivateAddresses: true });

@@ -1,4 +1,7 @@
-import type { CollectionCapabilityRequirement, CollectionRelease } from "../../interfaces/CollectionRelease";
+import type {
+    CollectionCapabilityRequirement,
+    CollectionRelease,
+} from "cms-repository/collections/interfaces/CollectionRelease";
 
 export function documentRequirements(
     releases: readonly CollectionRelease[],

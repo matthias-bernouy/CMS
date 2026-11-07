@@ -1,9 +1,9 @@
 import type { ProviderInstanceRecord } from "@bernouy/ulvia-provider";
-import type { ResolvedContract } from "@bernouy/cms-repository/contracts";
-import { resolveContract } from "@bernouy/cms-repository/contracts/catalogue";
-import { deepFreeze } from "@bernouy/cms-repository/contracts/protocol";
-import { validateProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
-import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
+import type { ResolvedContract } from "@bernouy/ulvia-contracts";
+import { resolveContract } from "@bernouy/ulvia-contracts";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
+import { validateProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
+import type { ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 import type { ProviderStores } from "../../../stores/providerStores";
 import type { ExecutionProfile, ProviderExecutionSupport } from "./support";
 

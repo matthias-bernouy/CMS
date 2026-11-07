@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { admitContractRelease, verifyStoredContractReleaseJson } from "@bernouy/cms-repository/contracts";
-import { compareContractReleases } from "@bernouy/cms-repository/contracts/compatibility";
-import { capabilityBindings } from "@bernouy/cms-repository/contracts/bindings";
-import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
-import { capabilityDocument, contractDocument } from "../support/fixtures";
+import { admitContractRelease, verifyStoredContractReleaseJson } from "@bernouy/ulvia-contracts";
+import { compareContractReleases } from "@bernouy/ulvia-contracts/compatibility";
+import { capabilityBindings } from "@bernouy/ulvia-contracts/bindings";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
+import { capabilityDocument, contractDocument } from "../../../../../platform/contracts/tests/support/fixtures";
 
 function document(bindings: unknown) {
     const capability = capabilityDocument();

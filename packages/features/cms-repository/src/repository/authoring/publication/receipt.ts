@@ -1,6 +1,6 @@
 import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { RepositoryRequestError } from "../../core/errors";
 import type { RepositoryNamespaceCredential } from "../../publication/transport/credentials";
 

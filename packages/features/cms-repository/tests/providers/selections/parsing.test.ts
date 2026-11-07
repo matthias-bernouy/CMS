@@ -3,7 +3,7 @@ import {
     DEFAULT_CONTRACT_SELECTION_LIMITS,
     parseContractSelections,
     parseContractSelectionsJson,
-} from "@bernouy/cms-repository/providers/selections";
+} from "@bernouy/ulvia-providers/selections";
 
 const selection = {
     siteId: "site:one",

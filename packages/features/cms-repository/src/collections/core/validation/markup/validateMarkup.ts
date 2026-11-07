@@ -4,7 +4,12 @@ import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { validateManagedNativeDefinition } from "./managedNative";
 import { validateDeclarative } from "./shell";
-import { type BlocMarkup, pageSlots, validatePageSlots, validateSlotTargets } from "./slots";
+import {
+    type BlocMarkup,
+    pageSlots,
+    validatePageSlots,
+    validateSlotTargets,
+} from "cms-repository/collections/core/validation/markup/slots";
 import { elements, markupTree, significantRoots } from "./tree";
 
 function inspect(bloc: CollectionBloc): BlocMarkup {

@@ -17,19 +17,22 @@
     ],
     "references": [
         {
+            "path": "../../features/cms-auth"
+        },
+        {
+            "path": "../../features/cms-repository"
+        },
+        {
             "path": "../../foundation/http-runner"
         },
         {
             "path": "../../foundation/logging"
         },
         {
-            "path": "../../features/cms-gateway"
+            "path": "../../platform/contracts"
         },
         {
-            "path": "../../features/cms-auth"
-        },
-        {
-            "path": "../../features/cms-repository"
+            "path": "../../platform/gateway"
         }
     ]
 }

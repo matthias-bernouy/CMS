@@ -2,10 +2,17 @@ import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogu
 import type { AdmittedCollectionRelease } from "../../interfaces/CollectionAdmission";
 import type { CollectionBundleAsset } from "../../interfaces/CollectionAssets";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
-import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../limits";
-import { parseCollectionRelease, parseCollectionReleaseJson } from "../parsing/parseCollectionRelease";
+import {
+    DEFAULT_COLLECTION_LIMITS,
+    normalizeCollectionLimits,
+    type CollectionLimits,
+} from "cms-repository/collections/core/limits";
+import {
+    parseCollectionRelease,
+    parseCollectionReleaseJson,
+} from "cms-repository/collections/core/parsing/parseCollectionRelease";
 import { createCollectionArtifact } from "./collectionArtifact";
-import { verifyCollectionRequirements } from "./requirements";
+import { verifyCollectionRequirements } from "cms-repository/collections/core/admission/requirements/index";
 
 export interface CollectionAdmissionOptions {
     readonly limits?: Readonly<CollectionLimits>;

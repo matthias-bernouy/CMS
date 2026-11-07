@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    compareVersionRanges,
-    parseVersionRange,
-    satisfiesVersionRange,
-} from "@bernouy/cms-repository/contracts/compatibility";
+import { compareVersionRanges, parseVersionRange, satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
 
 describe("bounded version range parsing", () => {
     test.each([

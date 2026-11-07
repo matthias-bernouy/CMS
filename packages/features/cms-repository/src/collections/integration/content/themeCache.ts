@@ -1,5 +1,5 @@
 import type { ThemeSettings } from "@bernouy/cms-content";
-import type { CollectionRelease } from "@bernouy/cms-repository/collections";
+import type { CollectionRelease } from "cms-repository/collections/interfaces/CollectionRelease";
 import { composeCollectionThemes } from "./theme";
 
 /** Cache pure composition only; callers still read current site settings and collection revisions. */

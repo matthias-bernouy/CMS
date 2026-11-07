@@ -5,15 +5,19 @@ import {
     admitContractRelease,
     computeReleaseDigest,
     parseContractRelease,
-} from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { capabilityDocument, contractDocument, objectSchema } from "../support/fixtures";
+} from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import {
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+} from "../../../../../platform/contracts/tests/support/fixtures";
 
 const input = { recipient: "reader@example.com", templateId: "welcome" };
 const success = { kind: "success", output: { messageId: "message-1" } };
 const assetBytes = new Uint8Array(
     await Bun.file(
-        new URL("../../../fixtures/contracts/protocol-v1/mock-assets/receipt.svg", import.meta.url),
+        new URL("../../../../../platform/contracts/fixtures/protocol-v1/mock-assets/receipt.svg", import.meta.url),
     ).arrayBuffer(),
 );
 const asset = {
@@ -49,7 +53,7 @@ function binaryRelease(overrides: Record<string, unknown> = {}): Record<string, 
 describe("contract mock assets", () => {
     test("admits the authored JSON fixture with its binary file", async () => {
         const json = await Bun.file(
-            new URL("../../../fixtures/contracts/protocol-v1/mock.contract.json", import.meta.url),
+            new URL("../../../../../platform/contracts/fixtures/protocol-v1/mock.contract.json", import.meta.url),
         ).text();
         const admitted = await admitContractBundleJson(json, [{ id: asset.id, bytes: assetBytes }]);
         expect(admitted.digest).toBe("sha256:7d6a20a1d8ebe798945f6693a32f5f801274a5e47af2feb692e1fd823c1337bd");

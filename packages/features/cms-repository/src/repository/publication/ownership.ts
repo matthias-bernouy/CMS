@@ -1,4 +1,4 @@
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { RepositoryRequestError } from "../core/errors";
 import { assertRepositoryNamespace } from "../namespaces/validation";
 import { namespaceAccountId, namespaceRevision } from "../namespaces/accounts/validation";

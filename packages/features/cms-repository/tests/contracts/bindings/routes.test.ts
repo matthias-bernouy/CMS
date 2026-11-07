@@ -1,7 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { parseContractRelease } from "@bernouy/cms-repository/contracts";
-import { compileContractBindings, compileHttpBinding } from "@bernouy/cms-repository/contracts/bindings";
-import { capability, capabilityDocument, contractDocument, objectSchema, stringSchema } from "../support/fixtures";
+import { parseContractRelease } from "@bernouy/ulvia-contracts";
+import { compileContractBindings, compileHttpBinding } from "@bernouy/ulvia-contracts/bindings";
+import {
+    capability,
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+    stringSchema,
+} from "../../../../../platform/contracts/tests/support/fixtures";
 
 describe("HTTP route binding compilation", () => {
     test("requires path mappings to match placeholders exactly", () => {

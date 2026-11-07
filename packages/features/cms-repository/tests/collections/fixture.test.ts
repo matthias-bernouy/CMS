@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
+import { admitCollectionReleaseJson } from "cms-repository/collections/core/admission/admitCollectionRelease";
 
 test("admits the checked-in markup starter collection with its exact asset bytes", async () => {
     const base = new URL("../../fixtures/collections/v1/", import.meta.url);

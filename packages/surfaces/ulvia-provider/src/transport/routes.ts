@@ -1,5 +1,5 @@
 import { compileProviderRoutes as compileGenericRoutes } from "@bernouy/cms-gateway/provider/server";
-import type { ResolvedContract } from "@bernouy/cms-repository/contracts";
+import type { ResolvedContract } from "@bernouy/ulvia-contracts";
 /** The official surface deliberately mounts its own contracts; independent providers use the generic SDK. */
 export function compileProviderRoutes(releases: readonly ResolvedContract[]) {
     if (

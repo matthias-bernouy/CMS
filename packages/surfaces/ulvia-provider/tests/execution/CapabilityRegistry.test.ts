@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { ResolvedContract } from "@bernouy/cms-repository/contracts";
+import type { ResolvedContract } from "@bernouy/ulvia-contracts";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 
 const context = {

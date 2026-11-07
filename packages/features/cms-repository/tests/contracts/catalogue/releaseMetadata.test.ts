@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { contractDocument } from "../support/fixtures";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { contractDocument } from "../../../../../platform/contracts/tests/support/fixtures";
 
 describe("catalogue release metadata", () => {
     test("publishing another version does not deprecate the previous release", async () => {

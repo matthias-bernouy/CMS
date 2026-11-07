@@ -1,4 +1,4 @@
-import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
+import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { createPublicResourceHandler } from "../../../src/runtime/resources/publicResource";
 

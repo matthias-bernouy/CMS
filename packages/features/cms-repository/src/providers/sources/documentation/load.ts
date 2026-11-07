@@ -1,9 +1,8 @@
-import {
-    admitContractBundleJson,
-    admitContractReleaseJson,
-    parseContractReleaseJson,
-} from "cms-repository/exports/contracts";
-import type { ProviderRepositorySource, RepositoryArtifactReference } from "../interfaces";
+import { admitContractBundleJson, admitContractReleaseJson, parseContractReleaseJson } from "@bernouy/ulvia-contracts";
+import type {
+    ProviderRepositorySource,
+    RepositoryArtifactReference,
+} from "cms-repository/providers/sources/interfaces";
 
 /** Fetch bounded immutable documentation only during import, never during live invocation. */
 export async function loadDocumentedContract(

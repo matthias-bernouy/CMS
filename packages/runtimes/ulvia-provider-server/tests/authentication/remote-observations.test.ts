@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { gatewayRoute } from "../../../../features/cms-gateway/tests/fixtures";
+import { gatewayRoute } from "../../../../../tests/integration/gateway/fixtures";
 import { RefreshingProviderRoutes } from "../../src/runtime/gateway/providers/RefreshingProviderRoutes";
 
 async function fixture() {

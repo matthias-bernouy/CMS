@@ -1,5 +1,5 @@
 import { RepositoryHttpError, RepositoryResponseTooLargeError } from "cms-repository/repository-http/errors";
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { RepositoryDiscoveryError } from "../core/errors";
 import type { RepositoryDiscoveryErrorCode } from "../core/errors";
 

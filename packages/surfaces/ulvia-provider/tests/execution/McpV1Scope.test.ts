@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
-import { capabilityBindings } from "@bernouy/cms-repository/contracts/bindings";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
+import { capabilityBindings } from "@bernouy/ulvia-contracts/bindings";
 
 const allowed = new Set([
     "ulvia/cms.authoring",

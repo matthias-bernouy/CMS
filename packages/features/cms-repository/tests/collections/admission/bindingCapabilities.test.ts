@@ -1,6 +1,6 @@
 import { collectionFixture } from "./examples/buildFixture";
 import { expect, test } from "bun:test";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
 import { collectionDocument } from "../fixtures";
 import { contractDocument, releaseCatalogue } from "../../providers/support/fixtures";
 

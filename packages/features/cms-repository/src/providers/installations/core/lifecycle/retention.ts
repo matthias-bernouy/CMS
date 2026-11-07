@@ -1,11 +1,10 @@
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 import type {
     ProviderInstallationCandidate,
-    ProviderInstallationScope,
     ProviderInstallationWorkflowOptions,
-    StoredProviderInstallation,
-} from "../../interfaces/ProviderInstallationStore";
-import { ProviderInstallationWorkflowError } from "./errors";
+} from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
+import type { ProviderInstallationScope, StoredProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import { ProviderInstallationWorkflowError } from "@bernouy/ulvia-providers/installations";
 
 /** A public Repository never infers usage. The owning Provider supplies authoritative site evidence. */
 export async function checkProviderRetention(

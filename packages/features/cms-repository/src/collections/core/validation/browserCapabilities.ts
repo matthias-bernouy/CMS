@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import type { CollectionRelease } from "cms-repository/collections/interfaces/CollectionRelease";
 
 export type CollectionBrowserRiskLevel = "none" | "review" | "high";

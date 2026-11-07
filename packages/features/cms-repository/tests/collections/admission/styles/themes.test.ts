@@ -1,9 +1,10 @@
 import { expect, spyOn, test } from "bun:test";
 import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
 import { createContentReader, generateStyleEntry } from "@bernouy/cms-content/rendering";
-import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
-import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
+import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
+import { withInstalledCollections } from "cms-repository/collections/integration/content/installedRepository";
+import { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+import { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
 import { colorCollection } from "./fixture";
 
 const style = ":scope { color: var(--atlas-dofficial--atlas--accent); }";

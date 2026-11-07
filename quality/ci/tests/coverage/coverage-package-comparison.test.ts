@@ -1,11 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    comparePackageCoverage,
-    isCoverageRegression,
-    isPackageRemovalAllowed,
-    parseRemovedOrRenamedPaths,
-    parseRenamedSourcesByDestination,
-} from "../../coverage/ratchet";
+import { comparePackageCoverage, isCoverageRegression, isPackageRemovalAllowed, parseRemovedOrRenamedPaths, parseRenamedSourcesByDestination } from "../../coverage/ratchet";
 import { packageCoverage } from "./coverage-fixtures";
 
 describe("package coverage comparison", () => {

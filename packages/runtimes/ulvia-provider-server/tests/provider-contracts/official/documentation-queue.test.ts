@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { DocumentationPreparationQueue } from "../../../src/runtime/instances/composition/DocumentationPreparationQueue";
 import { observeSelectionCommits } from "../../../src/runtime/stores/selections/notifications";
-import type { StoredContractSelections } from "@bernouy/cms-repository/providers/selections";
+import type { StoredContractSelections } from "@bernouy/ulvia-providers/selections";
 import { NOOP_LOGGER } from "@bernouy/logging";
 
 function gate() {

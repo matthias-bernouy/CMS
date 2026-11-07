@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { MongoCollectionStorage } from "cms-repository/collections/installations/default-implementation/mongo/MongoCollectionStorage";
 import { fakeCatalogueDb } from "../../../support/fakeCatalogueDb";
 import { collectionDocument } from "../../fixtures";
 

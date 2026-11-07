@@ -3,7 +3,7 @@ import { secretKeyToRef } from "@bernouy/secret-store";
 import { preparePairing, completePairing } from "../../src/runtime/gateway/providers/connections/PairingIntent";
 import type { PairingIntent } from "../../src/runtime/gateway/providers/connections/PairingIntent";
 import type { ProviderStores } from "../../src/runtime/stores/providerStores";
-import type { StoredProviderInstallation } from "@bernouy/cms-repository/providers/installations";
+import type { StoredProviderInstallation } from "@bernouy/ulvia-providers/installations";
 
 function fixture() {
     const documents = new Map<string, PairingIntent>();

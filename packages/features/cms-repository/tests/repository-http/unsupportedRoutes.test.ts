@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { repositoryApplication } from "../../../../../tests/fixtures/repository/application";
-import { parsePublicationUpload } from "@bernouy/cms-repository/repository/publication";
+import { parsePublicationUpload } from "cms-repository/repository/publication/protocol";
 import { RecordingRegistry } from "./publicationFixtures";
 
 const roots: string[] = [];

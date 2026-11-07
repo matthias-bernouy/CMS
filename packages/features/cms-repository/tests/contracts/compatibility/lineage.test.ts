@@ -6,10 +6,11 @@ import {
     parseContractRelease,
     resolveContractLineage,
     resolveContract,
-} from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
-import { compareContractReleases } from "@bernouy/cms-repository/contracts/compatibility";
-import { capabilityDocument, contractDocument } from "../support/fixtures";
+} from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { publishContractSet } from "cms-repository/contracts/core/catalogue/publishContractSet";
+import { compareContractReleases } from "@bernouy/ulvia-contracts/compatibility";
+import { capabilityDocument, contractDocument } from "../../../../../platform/contracts/tests/support/fixtures";
 
 describe("contract specialization", () => {
     test("parses one exact parent reference", () => {

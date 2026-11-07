@@ -1,7 +1,8 @@
 import { reviewedUpgrade } from "./upgrades/reviewed";
 import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
-import { CollectionStore, MemoryCollectionStorage } from "../../../src/exports/collections/installations";
+import { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+import { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
 
 function release(collectionId: string, version = "1.0.0") {
     return collectionFixture({

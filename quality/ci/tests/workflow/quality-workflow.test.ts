@@ -63,7 +63,7 @@ test("quality workflow keeps every G0 check visible", async () => {
         "bun run build:browser && bun run generate:official-bootstrap",
         "docker compose version",
         "bun test packages/features/cms-files/tests",
-        "bun test packages/features/cms-gateway/tests/http packages/features/cms-gateway/tests/invocation",
+        "bun test tests/integration/gateway/http tests/integration/gateway/invocation",
     ]) {
         expect(configuration).toContain(command);
     }
@@ -104,9 +104,7 @@ test("integration CI runs Files and binary gateway contract integration", async 
 
     expect(job).toBeDefined();
     expect(job).toContain("bun test packages/features/cms-files/tests");
-    expect(job).toContain(
-        "bun test packages/features/cms-gateway/tests/http packages/features/cms-gateway/tests/invocation",
-    );
+    expect(job).toContain("bun test tests/integration/gateway/http tests/integration/gateway/invocation");
     expect(qualityGate).toContain("- integration-contracts");
     expect(qualityGate).toContain('test "$INTEGRATION_RESULT" = success');
 });

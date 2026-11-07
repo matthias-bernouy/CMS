@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { snapshotRequestContext } from "@bernouy/cms-gateway/protocol";
 import type { ProviderCapabilityInvocationContext } from "../dispatch/registry";
 import type { ProviderOperationContext } from "./types";

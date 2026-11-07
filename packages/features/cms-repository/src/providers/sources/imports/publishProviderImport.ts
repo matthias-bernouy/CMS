@@ -1,12 +1,11 @@
-import type { AdmittedContractRelease } from "cms-repository/exports/contracts";
-import { planContractPublications, type ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import type { AdmittedProviderManifest } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
-import { validateProviderManifestReferences } from "cms-repository/providers/manifests/core/admission/validateProviderManifest";
-import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/protocol/errors";
-import type {
-    CatalogueProviderManifest,
-    ProviderManifestCatalogue,
-} from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
+import { planContractPublications } from "cms-repository/exports/contracts/catalogue";
+import { type ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
+import type { AdmittedProviderManifest } from "@bernouy/ulvia-providers";
+import { validateProviderManifestReferences } from "@bernouy/ulvia-providers/validation";
+import { ProviderManifestValidationError } from "@bernouy/ulvia-providers";
+import type { CatalogueProviderManifest } from "@bernouy/ulvia-providers/catalogue";
+import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 import { stagedReleaseCatalogue } from "./stagedReleaseCatalogue";
 
 /** Completes every semantic catalogue check before the first publication mutation. */

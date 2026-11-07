@@ -1,5 +1,5 @@
 import { resolveFixtureContract } from "../ulviaProviderFixture";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
 import { compileProviderRoutes } from "../../src/transport/routes";
 import { expect, test } from "bun:test";
 import type { HttpBoundCapability as CapabilityDefinition } from "../../src/transport/routes";

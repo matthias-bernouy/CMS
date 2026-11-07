@@ -1,18 +1,22 @@
 import { collectionFixture } from "./admission/examples/buildFixture";
 import { describe, expect, test } from "bun:test";
+import { DEFAULT_COLLECTION_LIMITS } from "cms-repository/collections/core/limits";
 import {
-    DEFAULT_COLLECTION_LIMITS,
     collectionThemeSourceId,
     collectionThemeTokenId,
+    isCollectionNamespace,
+} from "cms-repository/collections/core/namespace";
+import {
     collectionBrowserRisk,
     collectionBrowserRiskDigest,
-    describeCollectionResources,
-    isCollectionNamespace,
+} from "cms-repository/collections/core/validation/browserCapabilities";
+import { describeCollectionResources } from "cms-repository/collections/core/admission/resourceDescriptors";
+import {
     parseCollectionRelease,
     parseCollectionReleaseJson,
-    resolveCollectionTranslation,
-} from "@bernouy/cms-repository/collections";
-import { canonicalIJsonBytes } from "@bernouy/cms-repository/contracts/protocol";
+} from "cms-repository/collections/core/parsing/parseCollectionRelease";
+import { resolveCollectionTranslation } from "cms-repository/collections/core/texts/translationCatalogue";
+import { canonicalIJsonBytes } from "@bernouy/ulvia-contracts/protocol";
 import { collectionDocument } from "./fixtures";
 
 describe("collection release parsing", () => {

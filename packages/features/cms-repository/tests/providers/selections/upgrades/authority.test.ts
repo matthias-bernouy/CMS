@@ -1,12 +1,10 @@
 import { expect, test } from "bun:test";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
-import {
-    ContractUpgradeService,
-    InMemoryContractSelectionStore,
-    planContractSelections,
-} from "@bernouy/cms-repository/providers/selections";
-import { MemorySiteUpgradeStorage } from "@bernouy/cms-repository/upgrades";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
+import { ContractUpgradeService } from "cms-repository/providers/selections/core/upgrades/ContractUpgradeService";
+import { InMemoryContractSelectionStore } from "cms-repository/providers/selections/default-implementation/InMemoryContractSelectionStore";
+import { planContractSelections } from "@bernouy/ulvia-providers/selections";
+import { MemorySiteUpgradeStorage } from "cms-repository/site-upgrades/memory";
 import { graphFixture, installationFor, siteId } from "../fixtures";
 import { contractDocument, implementation, requirement } from "../../support/fixtures";
 

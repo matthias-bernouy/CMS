@@ -1,6 +1,6 @@
 import type { SiteUpgradeActive } from "@bernouy/cms-repository/upgrades";
 import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
-import type { CmsCollectionDependencies } from "../../ports";
+import type { CmsCollectionDependencies } from "../../ports/index";
 
 export function projectUpgradePlan(
     plan: Awaited<ReturnType<CmsCollectionDependencies["collectionUpgrades"]["plan"]>>,

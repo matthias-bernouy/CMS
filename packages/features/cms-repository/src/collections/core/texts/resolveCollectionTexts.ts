@@ -1,6 +1,9 @@
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import type { ResolvedCollectionText } from "../../interfaces/CollectionText";
-import { parseCollectionTextOverrides, parseCollectionTexts } from "./parseCollectionTexts";
+import {
+    parseCollectionTextOverrides,
+    parseCollectionTexts,
+} from "cms-repository/collections/core/texts/parseCollectionTexts";
 import { textLocale } from "./validation";
 
 /** Regional parents precede the default locale; overrides win within each locale. */

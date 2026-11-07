@@ -1,6 +1,6 @@
 import { isValidRegisteredPagePath } from "@bernouy/cms-content/page-path";
-import { resourcePublisher } from "cms-repository/exports/contracts/protocol";
-import { isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
+import { resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
+import { isCanonicalSemVer } from "@bernouy/ulvia-contracts/compatibility";
 import type {
     CollectionBootstrap,
     CollectionBootstrapPage,

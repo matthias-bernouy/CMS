@@ -1,6 +1,6 @@
 import { CapabilityGateway } from "@bernouy/cms-gateway";
 import { gatewayObservability } from "@bernouy/cms-gateway/observability/node";
-import { gatewayRoute, NOW } from "../../cms-gateway/tests/fixtures";
+import { gatewayRoute, NOW } from "../../../../tests/integration/gateway/fixtures";
 import { CmsObservability, assertLogAcknowledgement } from "@bernouy/cms-observability";
 import { expect, test } from "bun:test";
 import { NOOP_LOGGER } from "@bernouy/logging";

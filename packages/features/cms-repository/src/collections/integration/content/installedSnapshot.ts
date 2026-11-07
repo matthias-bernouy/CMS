@@ -1,4 +1,4 @@
-import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
+import type { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
 
 type InstalledSnapshot = Awaited<ReturnType<CollectionStore["snapshot"]>>;
 

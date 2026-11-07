@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { uploadManifestFingerprint, withUploadResume } from "../../../src/repository/filesystem/mutations/uploadResume";
+import {
+    uploadManifestFingerprint,
+    withUploadResume,
+} from "cms-repository/repository/filesystem/mutations/uploadResume";
 import { manifest, uploadFixture } from "./uploadFixtures";
 
 test("identical owned manifests resume across concurrent stores and restart, but owner/revision/content changes do not", async () => {

@@ -1,7 +1,7 @@
 import { OAuthError, type McpAuthorization } from "@bernouy/cms-auth/oauth";
-import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
-import type { UlviaProviderGateway } from "../../ports";
+import type { UlviaProviderGateway } from "../../ports/index";
 import { actorSubject, requiredGateway, administratorState } from "./support";
 
 export function registerMcpAccessCapabilities(

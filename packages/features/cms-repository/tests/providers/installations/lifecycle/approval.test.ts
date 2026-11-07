@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { DEFAULT_PROVIDER_INSTALLATION_LIMITS } from "cms-repository/providers/installations/core/limits";
-import { getProviderInstallationReadiness } from "cms-repository/providers/installations/core/lifecycle/readiness";
+import { DEFAULT_PROVIDER_INSTALLATION_LIMITS } from "@bernouy/ulvia-providers/installations";
+import { getProviderInstallationReadiness } from "@bernouy/ulvia-providers/installations";
 import { installationWorkflow } from "./fixtures";
 
 describe("provider installation preparation and approval", () => {

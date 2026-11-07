@@ -1,10 +1,7 @@
-import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
-import {
-    collectionThemeSourceId,
-    collectionThemeTokenId,
-    resolveCollectionTranslation,
-    type CollectionRelease,
-} from "@bernouy/cms-repository/collections";
+import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
+import { collectionThemeSourceId, collectionThemeTokenId } from "cms-repository/collections/core/namespace";
+import { resolveCollectionTranslation } from "cms-repository/collections/core/texts/translationCatalogue";
+import { type CollectionRelease } from "cms-repository/collections/interfaces/CollectionRelease";
 import { validateThemeSettings, type ThemeSettings, type ThemeSource } from "@bernouy/cms-content";
 
 export function collectionThemeSource(release: CollectionRelease, locale?: string): ThemeSource | null {

@@ -1,6 +1,6 @@
-import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
+import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { resolve } from "node:path";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { resolveFixtureContract } from "../../ulviaProviderFixture";
 
 export const bootstrap = resolve(import.meta.dir, "../../../../../runtimes/ulvia-cli/dist/bootstrap");

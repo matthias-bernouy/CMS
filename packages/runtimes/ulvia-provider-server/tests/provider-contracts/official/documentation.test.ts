@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { sha256Digest } from "@bernouy/binary-media";
-import { admitContractBundle, admitContractRelease } from "@bernouy/cms-repository/contracts";
+import { admitContractBundle, admitContractRelease } from "@bernouy/ulvia-contracts";
 import { createInstanceDocumentation } from "../../../src/runtime/instances/composition/documentation";
 
 test("the instance documentation scope follows exact ancestors and rejects substituted parent bytes", async () => {

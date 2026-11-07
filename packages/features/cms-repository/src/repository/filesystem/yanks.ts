@@ -4,10 +4,14 @@ import { readFile, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 import type { RepositoryArtifactKind } from "cms-repository/repository/publication/types";
-import { durableRename, durableWriteFile, ensureDurableDirectory } from "./core/durable";
+import {
+    durableRename,
+    durableWriteFile,
+    ensureDurableDirectory,
+} from "cms-repository/repository/filesystem/core/durable";
 import { sha256Digest } from "@bernouy/binary-media";
-import { isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
-import { isResourceId, resourcePublisher, canonicalIJsonBytes } from "cms-repository/exports/contracts/protocol";
+import { isCanonicalSemVer } from "@bernouy/ulvia-contracts/compatibility";
+import { isResourceId, resourcePublisher, canonicalIJsonBytes } from "@bernouy/ulvia-contracts/protocol";
 
 export type { RepositoryArtifactKind } from "cms-repository/repository/publication/types";
 export type RepositoryYank = Readonly<{ reason: string; yankedAt: string }>;

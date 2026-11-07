@@ -1,4 +1,4 @@
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
 import { contractDocument, implementation, manifestDocument, releaseCatalogue } from "../support/fixtures";
 
 export function installationDocument() {

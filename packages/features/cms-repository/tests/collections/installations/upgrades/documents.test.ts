@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test";
 import { InMemoryContentRepository } from "@bernouy/cms-content";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
+import { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+import { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
 import { CollectionUpgradeService } from "../../../../src/collections/installations/upgrades/runtime/CollectionUpgradeService";
-import { MemorySiteUpgradeStorage } from "@bernouy/cms-repository/upgrades";
+import { MemorySiteUpgradeStorage } from "cms-repository/site-upgrades/memory";
 import { prepareCollectionUpgrade } from "../../../../src/collections/installations/upgrades/planning/plan";
 import { collectionDocument } from "../../fixtures";
 import { collectionFixture } from "../../admission/examples/buildFixture";

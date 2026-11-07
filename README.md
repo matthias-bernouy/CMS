@@ -1,9 +1,9 @@
 # CmsCore — Bernouy CMS platform
 
 Bun + TypeScript monorepo (`@bernouy/cms-workspace`). Reusable CMS packages are
-organized in four layers with a one-way dependency rule:
+organized in five layers with a one-way dependency rule:
 
-> **runtimes → surfaces → features → foundation**
+> **runtimes → surfaces → features → platform → foundation**
 
 - **foundation/** — generic, zero CMS knowledge; a non-CMS product could use
   these as-is (no `cms-` prefix).
@@ -51,6 +51,10 @@ CmsCore/
 |   |   |-- secret-store/      @bernouy/secret-store
 |   |   |-- text-search/       @bernouy/text-search
 |   |   `-- text-embeddings/   @bernouy/text-embeddings
+|   |-- platform/
+|   |   |-- contracts/         @bernouy/ulvia-contracts
+|   |   |-- providers/         @bernouy/ulvia-providers
+|   |   `-- gateway/           @bernouy/cms-gateway
 |   |-- features/
 |   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, themes, SEO)
 |   |   |-- cms-auth/          @bernouy/cms-auth
@@ -59,7 +63,6 @@ CmsCore/
 |   |   |-- cms-emailer/       @bernouy/cms-emailer
 |   |   |-- cms-smtp-emailer/  @bernouy/cms-smtp-emailer
 |   |   |-- cms-files/         @bernouy/cms-files
-|   |   |-- cms-gateway/       @bernouy/cms-gateway
 |   |   |-- cms-repository/    @bernouy/cms-repository (including collection build tooling)
 |   |   `-- cms-secrets/       @bernouy/cms-secrets
 |   |-- surfaces/
@@ -82,7 +85,7 @@ CmsCore/
 
 ## Dependency rules
 
-- One direction only: `runtimes → surfaces → features → foundation`. Never
+- One direction only: `runtimes → surfaces → features → platform → foundation`. Never
   upward, never surface→surface (compose through features).
 - Lateral feature→feature edges are allowed when one feature consumes
   another's published contract (e.g. cms-gateway → cms-repository for selected

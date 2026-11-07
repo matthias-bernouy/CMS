@@ -1,6 +1,6 @@
 import { NamespaceAccessError } from "./namespaces";
 import type { RepositoryNamespaceCredential } from "../publication/transport/credentials";
-import type { AdmittedCollectionRelease } from "cms-repository/exports/collections/index";
+import type { AdmittedCollectionRelease } from "cms-repository/collections/interfaces/CollectionAdmission";
 import { RepositoryConnection } from "../publication/transport/connection";
 import { RepositoryRequestError } from "../core/errors";
 import { CollectionPreparationError } from "./preparations/errors";

@@ -29,7 +29,9 @@
         "@bernouy/cms-observability": "workspace:*",
         "@bernouy/cms-documentation": "workspace:*",
         "@bernouy/text-embeddings": "workspace:*",
-        "@bernouy/text-search": "workspace:*"
+        "@bernouy/text-search": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-providers": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

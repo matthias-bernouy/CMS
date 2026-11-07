@@ -1,8 +1,8 @@
-import { resourceName } from "cms-repository/exports/contracts/protocol";
+import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { materializeStateSchemas } from "./stateSchemas";
 import { basename, join, resolve } from "node:path";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { loadCollectionExamples } from "../examples/source";
 import { loadCollectionBlocs } from "./blocSources";
 import {

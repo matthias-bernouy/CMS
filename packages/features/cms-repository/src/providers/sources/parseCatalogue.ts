@@ -1,7 +1,11 @@
-import { isResourceId, resourcePublisher } from "cms-repository/exports/contracts/protocol";
+import { isResourceId, resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
 import { isSha256Digest } from "@bernouy/binary-media";
-import type { RepositoryArtifactEntry, RepositoryArtifactKind, RepositoryArtifactReference } from "./interfaces";
-import { isCanonicalSemVer, isRepositoryIdentifier } from "cms-repository/exports/contracts/compatibility";
+import type {
+    RepositoryArtifactEntry,
+    RepositoryArtifactKind,
+    RepositoryArtifactReference,
+} from "cms-repository/providers/sources/interfaces";
+import { isCanonicalSemVer, isRepositoryIdentifier } from "@bernouy/ulvia-contracts/compatibility";
 import { isPlainRecord, isRepositoryCatalogueCursor } from "cms-repository/repository-http/catalogueValues";
 
 const CATALOGUE_TOKEN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;

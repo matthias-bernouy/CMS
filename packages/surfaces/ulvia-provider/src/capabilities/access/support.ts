@@ -1,7 +1,7 @@
 import { officialFailure } from "../../dispatch/errors/failure";
 import type { TUser } from "@bernouy/cms-auth";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityInvocationContext } from "../../dispatch/registry";
-import type { UlviaProviderGateway } from "../../ports";
+import type { UlviaProviderGateway } from "../../ports/index";
 
 export function projectUser(user: TUser, administrator: { enabled: boolean; revision: number }) {
     return {

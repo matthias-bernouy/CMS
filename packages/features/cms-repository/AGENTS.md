@@ -5,97 +5,24 @@ models and validation for CMS-owned installations and site selections.
 
 ## Layout and boundaries
 
-- `src/contracts/interfaces/` contains release, schema, binding and catalogue
-  types. `src/contracts/core/` owns parsing, validation, binding compilation,
-  admission, compatibility and protocol primitives. Its `catalogue/` directory
-  owns storage-independent evolution and inheritance checks; catalogue
-  implementations delegate them. The in-memory catalogue lives in
-  `src/contracts/default-implementation/memory/`; `mongo/` persists immutable
-  artifacts and revisioned publication metadata.
-- `src/providers/manifests/{interfaces,core}/` owns immutable manifest types,
-  parsing, ranges, reference validation, admission, comparison and limits.
-  Its catalogue port and memory adapter preserve exact artifact keys and publisher ownership.
-  `src/providers/installations/{interfaces,core}/` owns approved installation,
-  runtime-report and bootstrap DTOs, pure parsing, consistency checks and
-  protocol metadata, plus explicit preparation/approval and administrative transitions.
-  `src/providers/selections/` owns full-site explicit graph validation and a
-  revisioned store. Installations and selections have deterministic memory adapters.
-- `src/exports/` defines the stable facade independently of domain internals.
-  The package root is type-only. Executable APIs use explicit `/contracts` and
-  `/providers` and `/collections` subpaths, as listed in [README.md](README.md).
-- Contracts must not depend on providers or installation state. Providers
-  consume contracts through `cms-repository/exports/contracts` and its facade
-  subpaths, never directly through `src/contracts/` internals. External callers
-  use declared `@bernouy/cms-repository/...` exports.
-- `/contracts/schema` exposes the bounded `ulvia-schema/v1` vocabulary;
-  `/contracts/bindings` exposes immutable HTTP execution plans and scalar codecs;
-  `/contracts/compatibility` exposes release evolution checks;
-  `/contracts/catalogue` exposes an adapter-light port and deterministic memory
-  implementation; `/contracts/protocol` exposes strict I-JSON parsing,
-  canonicalization and freezing primitives.
-- HTTP catalogue sources, bounded immutable downloads, account-authorized
-  publication and their storage-independent capability service are implemented
-  here. The official Repository contract is authored in official-repository;
-  runtimes explicitly compose its implementation for the Repository profile. `./repository/filesystem` is the reference local adapter;
-  runtimes choose it or a durable production adapter. This local adapter uses Bun's
-  bundled SQLite native locking with empty exclusive transactions, not a business
-  database. Never unlink a released lock file or restore PID/mtime stale-lock
-  recovery; contenders must retain one inode and crash recovery must be immediate.
-  Upload cleanup uses a bounded durable queue; do not enumerate retained history
-  on each request. Close upload maintenance during instance disposal. The CLI owns commands and
-  environment-derived client credentials. Business
-  HTTP execution and gateway routing remain outside this package; runtimes own
-  environment access and production adapter selection. `./providers/mongo`
-  provides durable manifest, installation and selection stores; `./contracts/mongo`
-  provides durable release publication. Live transport execution
-  remain outside this package. Mongo release publication currently rejects
-  bundles with fixture assets until separate byte storage is implemented.
-- Remote publication is staged: open an authenticated bounded upload manifest,
-  stream each declared asset as a raw body, then commit through the registry
-  exactly once. Bind every stage to the authenticated account, namespace and
-  ownership revision; the caller cannot choose the account in input. Upload stores must verify byte length and SHA-256 before exposing a Blob,
-  retain an idempotent commit receipt, expire abandoned sessions and keep the
-  immutable release invisible until registry publication succeeds. Never restore
-  the whole-bundle base64 request.
-- `./repository/namespaces` owns account-based namespace claims, explicit transfers,
-  suspension and ownership fences. Derive accounts from verified runtime context;
-  hold the namespace fence through protected work and the ownership fence through
-  account deletion. Suspended or orphaned names remain reserved. Its `/mongo`
-  adapter is composed by runtimes. `./repository/capabilities` exposes the domain
-  service; transport adapters inject its ports. Clients pin the Repository origin
-  and identity before resolving ordinary CMS PAT credentials and reject redirects.
-- `src/collections/{interfaces,core}/` owns authored collection release parsing,
-  asset verification and resource-level reference validation, exposed through
-  `./collections`. `./collections/texts` exposes browser-safe text validation,
-  locale resolution and formatting. Translation catalogues are declarative JSON;
-  immutable release texts and mutable site overrides remain separate.
-  Collections consume the contracts facade, not providers or
-  contracts internals. Do not merge immutable releases with per-site state.
-- `./collections/build` is the explicit Bun-based authoring toolchain for
-  validating Bloc source and producing immutable browser runtime bundles. Keep
-  compiler and filesystem dependencies behind this subpath; the package root and
-  normal collection admission must never import the build pipeline.
-- `./collections/content` projects admitted and installed collections into the
-  generic Page, Bloc, text and theme contribution contracts owned by
-  `@bernouy/cms-content`.
-- `./collections/assets` resolves installed immutable asset references into
-  public representation URLs. HTTP request parsing, ranges and response headers
-  remain in `./collections/http`.
-- `./collections/installations` exposes read-only usage inventories, reviewed
-  collection upgrade plans and exact release switches. `./upgrades` owns shared
-  durable site intents and write fencing; its Mongo adapter is exported from
-  `./upgrades/mongo`. Intents contain exact pins and prepared values, never Page
-  snapshots or transformation journals.
-- `src/repository-http/` contains only bounded HTTP transport shared by the
-  collection and provider repository sources. It must not import any domain.
-  Keep catalogue parsing, references and admission in their respective domains.
-- Treat inputs as untrusted. Parse from `unknown` or strict JSON; reject unknown
-  fields, duplicate properties, ambiguous mappings/ranges and limit violations.
-  Apply byte/depth/count limits to object and JSON entry points; reject sparse
-  arrays and invalid UTF-8. Return independent immutable snapshots without
-  freezing caller-owned data. Hash canonical I-JSON bytes with SHA-256 only
-  after structural and semantic validation, never author formatting or a
-  partially validated object.
+- Platform contract definitions, admission, bindings and compatibility live in
+  `@bernouy/ulvia-contracts`; Provider models and generic validation live in
+  `@bernouy/ulvia-providers`. Use their declared exports, never their source trees.
+- `src/contracts/` retains catalogue publication, mutation interfaces and memory/Mongo
+  persistence. Its `ReleaseCatalogue` extends the Platform read-only port.
+- `src/providers/` retains persistent catalogues/stores, connection and approval
+  workflows, discovery clients, selection replacement and reviewed upgrades.
+- `src/collections/` owns authored collection admission, resource validation,
+  content projections, installation and the explicit build toolchain.
+- `src/repository/` owns namespace authority, staged publication, filesystem storage,
+  source retention, discovery and bounded authoring preparations.
+- `src/site-upgrades/` owns durable intents and write fencing for reviewed switches.
+- `src/repository-http/` is bounded transport shared by discovery clients.
+- Runtime composition chooses adapters and configuration. No business Provider
+  invocation or environment reads belong in this package.
+- Treat all inputs as untrusted; retain strict parsing, byte/depth/count limits,
+  immutable snapshots, ownership fences and artifact-last publication visibility.
+- The package root is type-only. Executable APIs use declared explicit subpaths.
 
 ## Contract rules
 
@@ -121,7 +48,7 @@ models and validation for CMS-owned installations and site selections.
   compatibility comparison and reviewed delegation expansion.
 - Object schemas are closed; dynamic string-keyed objects use `map`. String and
   map-key lengths use UTF-16 code units. The format profile follows
-  `src/contracts/core/schema/formats.ts`, not a full JSON Schema dialect. Reject
+  the `@bernouy/ulvia-contracts` format validators, not a full JSON Schema dialect. Reject
   known impossible format-length and map-key/count combinations without claiming
   a general proof that every schema has a value.
 - Compatibility is directional: old inputs remain valid for the new release;
@@ -162,7 +89,7 @@ models and validation for CMS-owned installations and site selections.
   `HEAD` is derived only from binary `GET`. HEAD errors encode their code and
   request ID in reserved `x-ulvia-error-code` and `x-ulvia-request-id`
   response headers, never a body. See the
-  [HTTP profile](fixtures/contracts/protocol-v1/http-parameters.md).
+  [HTTP profile](../../platform/contracts/fixtures/protocol-v1/http-parameters.md).
 - Capability mocks are validated examples, not executable provider responses.
   Binary mock leaves reference declared fixture assets by ID. Bundle admission
   verifies immutable bytes against declared size and SHA-256 before publication;

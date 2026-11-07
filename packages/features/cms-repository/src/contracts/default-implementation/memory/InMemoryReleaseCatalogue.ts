@@ -1,20 +1,23 @@
-import { ReleaseValidationError } from "../../core/protocol/errors";
-import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../../core/protocol/limits";
-import { deepFreeze } from "../../core/protocol/values";
-import type { ReleaseDigest } from "../../core/admission/digest";
-import type { AdmittedContractRelease } from "../../core/admission/admitContractRelease";
-import { compareSemVer } from "../../core/compatibility/semver";
+import { ReleaseValidationError } from "@bernouy/ulvia-contracts";
+import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "@bernouy/ulvia-contracts";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
+import type { ReleaseDigest } from "@bernouy/ulvia-contracts";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
+import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
 import type {
     CatalogueContractRelease,
     ContractReleaseDeprecation,
     ContractReleaseYank,
-    ReleaseCatalogue,
-} from "../../interfaces/ReleaseCatalogue";
-import { verifyAdmission } from "cms-repository/contracts/core/admission/verifyAdmission";
-import { verifyStoredContractReleaseJson } from "cms-repository/contracts/core/admission/admitContractRelease";
-import { normalizeReleaseDeprecation, normalizeReleaseYank } from "./normalizeReleaseMetadata";
-import { verifyEvolution } from "cms-repository/contracts/core/catalogue/verifyEvolution";
-import { verifySpecialization } from "cms-repository/contracts/core/compatibility/lineage/verifySpecialization";
+} from "@bernouy/ulvia-contracts/catalogue";
+import type { ReleaseCatalogue } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
+import { verifyAdmission } from "@bernouy/ulvia-contracts/validation";
+import { verifyStoredContractReleaseJson } from "@bernouy/ulvia-contracts";
+import {
+    normalizeReleaseDeprecation,
+    normalizeReleaseYank,
+} from "cms-repository/contracts/default-implementation/memory/normalizeReleaseMetadata";
+import { verifyEvolution } from "@bernouy/ulvia-contracts/validation";
+import { verifySpecialization } from "@bernouy/ulvia-contracts/catalogue";
 
 export class InMemoryReleaseCatalogue implements ReleaseCatalogue {
     readonly #byDigest = new Map<ReleaseDigest, CatalogueContractRelease>();

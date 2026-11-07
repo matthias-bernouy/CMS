@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { DEFAULT_RELEASE_LIMITS } from "cms-repository/exports/contracts/index";
-import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { DEFAULT_RELEASE_LIMITS } from "@bernouy/ulvia-contracts";
+import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { scanJsonSourceTree, type SourceFile } from "cms-repository/repository/authoring/sourceTree";
 
 export type JsonSourceRecord = Readonly<{

@@ -1,7 +1,7 @@
 import { validatePageReference, readSystemSnapshot } from "@bernouy/cms-content";
 import type { ContentRepository, TSystem } from "@bernouy/cms-content";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
-import type { CmsContentDependencies } from "../../../ports";
+import type { CmsContentDependencies } from "../../../ports/index";
 import { configurationCommand, requiredText, revision } from "../support";
 
 const PAGE_FIELDS = ["notFound", "forbidden", "serverError", "login"] as const;

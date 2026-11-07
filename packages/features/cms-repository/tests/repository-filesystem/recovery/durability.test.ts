@@ -3,11 +3,9 @@ import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-    FilesystemRepositoryPublicationUploadStore,
-    recoverRepositoryStorage,
-    withRepositoryWriteLock,
-} from "@bernouy/cms-repository/repository/filesystem";
+import { FilesystemRepositoryPublicationUploadStore } from "cms-repository/repository/filesystem/mutations/uploadStore";
+import { recoverRepositoryStorage } from "cms-repository/repository/filesystem/core/recovery";
+import { withRepositoryWriteLock } from "cms-repository/repository/filesystem/core/lock";
 
 const roots: string[] = [];
 const stores: FilesystemRepositoryPublicationUploadStore[] = [];

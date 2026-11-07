@@ -1,11 +1,12 @@
-import type { AdmittedContractRelease } from "../admission/admitContractRelease";
-import { verifyAdmission } from "../admission/verifyAdmission";
-import { compareSemVer } from "../compatibility/semver";
-import { ReleaseValidationError } from "../protocol/errors";
-import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../protocol/limits";
-import type { CatalogueContractRelease, ReleaseCatalogue } from "../../interfaces/ReleaseCatalogue";
-import { verifyEvolution } from "./verifyEvolution";
-import { verifySpecialization } from "../compatibility/lineage/verifySpecialization";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
+import { verifyAdmission } from "@bernouy/ulvia-contracts/validation";
+import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
+import { ReleaseValidationError } from "@bernouy/ulvia-contracts";
+import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "@bernouy/ulvia-contracts";
+import type { CatalogueContractRelease } from "@bernouy/ulvia-contracts/catalogue";
+import type { ReleaseCatalogue } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
+import { verifyEvolution } from "@bernouy/ulvia-contracts/validation";
+import { verifySpecialization } from "@bernouy/ulvia-contracts/catalogue";
 
 const PLANNED_AT = "1970-01-01T00:00:00.000Z";
 

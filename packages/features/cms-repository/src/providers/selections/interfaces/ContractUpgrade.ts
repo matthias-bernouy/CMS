@@ -1,6 +1,6 @@
-import type { SelectionAuthority } from "./SelectionAuthority";
-import type { ContractSelection } from "./ContractSelection";
-import type { CapabilityGrantPolicy } from "./ContractSelectionStore";
+import type { SelectionAuthority } from "@bernouy/ulvia-providers/selections";
+import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
+import type { CapabilityGrantPolicy } from "@bernouy/ulvia-providers/selections";
 
 export type CapabilityUsageEvidence = Readonly<{
     complete: boolean;

@@ -34,12 +34,7 @@ export {
     isPresentationImageBytes,
     blocThumbnailFromSource,
 } from "cms-content/blocs/core/presentationImage";
-export type {
-    PageIndexingConfiguration,
-    PageRoute,
-    TPage,
-    TPageRef,
-} from "cms-content/pages/interfaces/pages";
+export type { PageIndexingConfiguration, PageRoute, TPage, TPageRef } from "cms-content/pages/interfaces/pages";
 export type { PageDocument } from "cms-content/pages/interfaces/document";
 export { pageDocument } from "cms-content/pages/interfaces/pages";
 export { MAX_PAGE_CONTENT_LENGTH } from "cms-content/application/core/validation/fields";
@@ -253,10 +248,7 @@ export {
     findPagesReferencingText,
 } from "cms-content/pages/core/queries/pagesReferencing";
 export type { PageContentReference } from "cms-content/pages/core/queries/contentReferences";
-export {
-    pageContentReferenceKey,
-    pageContentReferenceKeys,
-} from "cms-content/pages/core/queries/contentReferences";
+export { pageContentReferenceKey, pageContentReferenceKeys } from "cms-content/pages/core/queries/contentReferences";
 export { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
 export { findUsedBlocTags } from "cms-content/blocs/core/usage/findUsedBlocTags";
 export {
@@ -308,11 +300,7 @@ export { hardenStoredHtml } from "cms-content/blocs/core/markup/security/hardenS
 export { validatePageSeo } from "cms-content/pages/core/validation/seo";
 export { validatePageIndexingConfiguration } from "cms-content/pages/core/validation/indexing";
 export { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
-export {
-    validatePagePath,
-    validatePageTitle,
-    validatePagePatch,
-} from "cms-content/pages/core/validation/page";
+export { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/pages/core/validation/page";
 export { canonicalSiteBaseUrl, validateSettingsPatch } from "cms-content/settings/core/validation";
 export {
     PAGE_METADATA_PLATFORM_VARIABLES,

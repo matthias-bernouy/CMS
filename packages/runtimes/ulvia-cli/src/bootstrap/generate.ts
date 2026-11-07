@@ -1,9 +1,9 @@
-import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
+import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
-import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
+import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
 import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
 import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
 import { bootstrapOfficialRepository } from "../commands/bootstrap";

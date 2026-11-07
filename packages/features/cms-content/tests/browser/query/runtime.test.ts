@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { mutationFormRequest } from "../../../src/browser";
+import { mutationFormRequest } from "../../../src/browser/index";
 import { BindingRuntime } from "../../../src/browser/binding/runtime/BindingRuntime";
 import { collectFormData } from "../../../src/browser/binding/form/formSubmit";
 import { Query } from "../../../src/browser/binding/runtime/query/Query";

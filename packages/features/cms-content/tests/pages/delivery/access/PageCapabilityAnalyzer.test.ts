@@ -1,4 +1,4 @@
-import { satisfiesVersionRange } from "@bernouy/cms-repository/contracts/compatibility";
+import { satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
 import { expect, test } from "bun:test";
 import type { TPage } from "@bernouy/cms-content/rendering";
 import { PageCapabilityAnalyzer, pageRequiresCapabilityAnalysis } from "@bernouy/cms-content/public-delivery";

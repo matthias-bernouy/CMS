@@ -1,10 +1,7 @@
-import {
-    resolveContract,
-    type ReleaseCatalogue,
-    type ResolvedContract,
-} from "@bernouy/cms-repository/contracts/catalogue";
-import type { ContractSelection } from "@bernouy/cms-repository/providers/selections";
-import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
+import { resolveContract, type ResolvedContract } from "@bernouy/ulvia-contracts";
+import { type ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
+import type { ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 
 /** These exact admitted artifacts describe executable code, never current site authority. */

@@ -1,12 +1,10 @@
 import { expect, test } from "bun:test";
 import { InMemoryContentRepository } from "@bernouy/cms-content";
-import {
-    CollectionStore,
-    MemoryCollectionStorage,
-    collectionUsageInventory,
-    siteUsageInventory,
-} from "@bernouy/cms-repository/collections/installations";
-import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
+import { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+import { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
+import { collectionUsageInventory } from "cms-repository/collections/installations/upgrades/usage/catalogue";
+import { siteUsageInventory } from "cms-repository/collections/installations/upgrades/usage/inventory";
+import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
 import { documentReferences } from "../../../../src/collections/installations/upgrades/usage/scan";
 import { collectionPageBatches } from "../../../../src/collections/installations/upgrades/usage/pageScan";
 import { collectionDocument } from "../../fixtures";

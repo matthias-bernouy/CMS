@@ -1,10 +1,8 @@
 import { expect, test } from "bun:test";
-import {
-    ContractUpgradeService,
-    InMemoryContractSelectionStore,
-    capabilityGranted,
-} from "@bernouy/cms-repository/providers/selections";
-import { MemorySiteUpgradeStorage } from "@bernouy/cms-repository/upgrades";
+import { ContractUpgradeService } from "cms-repository/providers/selections/core/upgrades/ContractUpgradeService";
+import { InMemoryContractSelectionStore } from "cms-repository/providers/selections/default-implementation/InMemoryContractSelectionStore";
+import { capabilityGranted } from "@bernouy/ulvia-providers/selections";
+import { MemorySiteUpgradeStorage } from "cms-repository/site-upgrades/memory";
 import { graphFixture, siteId } from "../fixtures";
 
 async function fixture() {

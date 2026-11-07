@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { computeReleaseDigest, parseContractRelease } from "@bernouy/cms-repository/contracts";
-import { capabilityDocument, contractDocument } from "../support/fixtures";
+import { computeReleaseDigest, parseContractRelease } from "@bernouy/ulvia-contracts";
+import { capabilityDocument, contractDocument } from "../../../../../platform/contracts/tests/support/fixtures";
 
 describe("capability deprecation", () => {
     test("requires at least one piece of guidance before admission or hashing", async () => {

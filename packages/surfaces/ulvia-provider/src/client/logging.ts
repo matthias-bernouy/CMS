@@ -1,4 +1,4 @@
-import type { ContractRelease } from "@bernouy/cms-repository/contracts";
+import type { ContractRelease } from "@bernouy/ulvia-contracts";
 import { type ProviderCapabilityClient, ProviderClientError } from "@bernouy/cms-gateway/provider";
 import { assertLogAcknowledgement } from "@bernouy/cms-observability";
 import { createObservabilityLogger, LogDeliveryError } from "@bernouy/cms-observability/logging";

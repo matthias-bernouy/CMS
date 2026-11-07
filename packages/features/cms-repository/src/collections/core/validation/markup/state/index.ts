@@ -1,4 +1,4 @@
-import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
+import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 import { parseHTML } from "linkedom";
 import {
     parseQuery,

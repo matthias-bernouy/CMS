@@ -6,11 +6,23 @@ import {
     verifyStoredCollectionRelease,
 } from "../../../core/admission/collectionArtifact";
 import { parseAssets } from "../../../core/parsing/assets";
-import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../../../core/limits";
+import {
+    DEFAULT_COLLECTION_LIMITS,
+    normalizeCollectionLimits,
+    type CollectionLimits,
+} from "cms-repository/collections/core/limits";
 import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 import { parseCollectionSiteState } from "../../core/siteState";
-import type { CollectionStorage, CollectionSiteState, StoredCollectionRelease } from "../../interfaces/store";
-import { readAssetChunks, storeAssetChunks, type AssetChunkDocument } from "./assetChunks";
+import type {
+    CollectionStorage,
+    CollectionSiteState,
+    StoredCollectionRelease,
+} from "cms-repository/collections/installations/interfaces/store";
+import {
+    readAssetChunks,
+    storeAssetChunks,
+    type AssetChunkDocument,
+} from "cms-repository/collections/installations/default-implementation/mongo/assetChunks";
 import { assertMongoBsonDocumentSize } from "./bsonSize";
 
 type ReleaseDocument = {

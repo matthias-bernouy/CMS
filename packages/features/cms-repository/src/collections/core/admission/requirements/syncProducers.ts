@@ -1,9 +1,9 @@
-import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
+import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 import { parseSyncTarget } from "@bernouy/cms-content/bindings";
 import { resolveSyncProducerSchemas } from "@bernouy/cms-content/page-document";
 import type { BindingQueryCapability, BindingValueSchema } from "@bernouy/cms-content/page-document";
-import { firstSchemaSubsetViolation } from "cms-repository/exports/contracts/compatibility";
-import type { UlviaSchema } from "cms-repository/exports/contracts/schema";
+import { firstSchemaSubsetViolation } from "@bernouy/ulvia-contracts/compatibility";
+import type { UlviaSchema } from "@bernouy/ulvia-contracts/schema";
 import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 import { CollectionValidationError } from "../../errors";
 

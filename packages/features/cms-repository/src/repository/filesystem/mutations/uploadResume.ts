@@ -1,8 +1,15 @@
 import { createHash, randomUUID } from "node:crypto";
 import { open, rm } from "node:fs/promises";
 import { join } from "node:path";
-import type { OwnedPublicationUploadManifest, PublicationUploadReceipt } from "../../publication/types";
-import { durableRename, durableWriteFile, ensureDurableDirectory } from "../core/durable";
+import type {
+    OwnedPublicationUploadManifest,
+    PublicationUploadReceipt,
+} from "cms-repository/repository/publication/types";
+import {
+    durableRename,
+    durableWriteFile,
+    ensureDurableDirectory,
+} from "cms-repository/repository/filesystem/core/durable";
 import { withRepositoryWriteLock } from "../core/lock";
 
 const UPLOAD_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;

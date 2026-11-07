@@ -1,11 +1,11 @@
-import { resourceRuntimeNamespace } from "cms-repository/exports/contracts/protocol";
+import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 import { collectionExampleDocument } from "../../core/validation/examples/document";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { collectionThemeTokenId } from "../../core/namespace";
-import { validateCollectionStateBindings } from "../../core/validation/markup/state";
+import { validateCollectionStateBindings } from "cms-repository/collections/core/validation/markup/state/index";
 import { DEFAULT_COLLECTION_LIMITS } from "../../core/limits";
 import { validateMarkup } from "../../core/validation/markup/validateMarkup";
-import { satisfiesVersionRange } from "../../../exports/contracts/compatibility";
+import { satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
 import { validateExpandedPageDocument, validatePageDocument } from "@bernouy/cms-content/page-document";
 import { collectionDocumentDefinitions } from "../../core/parsing/documents/definitions";
 import { validateInstalledCollectionSvgReferences } from "../../core/validation/markup/assets";

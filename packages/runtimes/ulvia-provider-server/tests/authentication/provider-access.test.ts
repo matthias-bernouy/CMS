@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import { providerSite, siteId } from "../../../../features/cms-repository/tests/providers/workflows/fixtures";
 import { contractDocument } from "../../../../features/cms-repository/tests/providers/support/fixtures";
 import { providerAdministration } from "../../src/runtime/gateway/providers/administration";

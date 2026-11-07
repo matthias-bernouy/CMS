@@ -1,11 +1,11 @@
 import { parseSourceSnapshot } from "../../../../src/repository/authoring/snapshot";
 import { describe, expect, test } from "bun:test";
+import { admitCollectionRelease } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { collectionExampleDocument } from "cms-repository/collections/core/validation/examples/document";
 import {
-    admitCollectionRelease,
-    collectionExampleDocument,
     parseCollectionRelease,
     parseCollectionReleaseJson,
-} from "../../../../src/exports/collections/index";
+} from "cms-repository/collections/core/parsing/parseCollectionRelease";
 import { exampleCollection } from "./fixture";
 import { collectionDocument } from "../../fixtures";
 

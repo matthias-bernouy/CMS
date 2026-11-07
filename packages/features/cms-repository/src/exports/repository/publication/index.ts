@@ -1,7 +1,4 @@
-export {
-    RemoteRepositoryClient,
-    type RepositoryAssetDownloadSink,
-} from "cms-repository/repository/publication/client";
+export { RemoteRepositoryClient, type RepositoryAssetDownloadSink } from "cms-repository/repository/publication/client";
 export {
     encodePublicationUpload,
     MAX_PUBLICATION_ASSET_BYTES,

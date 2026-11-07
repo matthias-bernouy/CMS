@@ -1,8 +1,9 @@
 import { collectionFixture } from "../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
-import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
+import { withInstalledCollections } from "cms-repository/collections/integration/content/installedRepository";
 import { createHash } from "node:crypto";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
+import { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+import { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
 import { InMemoryContentRepository } from "@bernouy/cms-content";
 
 class CountingStorage extends MemoryCollectionStorage {

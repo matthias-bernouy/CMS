@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { InMemoryContentRepository } from "@bernouy/cms-content";
-import type { CollectionRelease } from "@bernouy/cms-repository/collections";
+import type { CollectionRelease } from "cms-repository/collections/interfaces/CollectionRelease";
 import { createCollectionThemeComposer } from "cms-repository/collections/integration/content/themeCache";
 
 function collection(label: string): CollectionRelease {

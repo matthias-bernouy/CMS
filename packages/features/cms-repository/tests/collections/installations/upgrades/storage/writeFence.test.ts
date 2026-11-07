@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import { MemorySiteUpgradeStorage, withSiteWriteFence } from "@bernouy/cms-repository/upgrades";
+import { MemorySiteUpgradeStorage } from "cms-repository/site-upgrades/memory";
+import { withSiteWriteFence } from "cms-repository/site-upgrades/writeFence";
 
 test("fenced adapters preserve private-field receivers for reads, getters and writes", async () => {
     class Adapter {

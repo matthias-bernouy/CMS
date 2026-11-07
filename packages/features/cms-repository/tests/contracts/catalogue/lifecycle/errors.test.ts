@@ -1,10 +1,16 @@
 import { expect, test } from "bun:test";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { compareContractReleases } from "@bernouy/cms-repository/contracts/compatibility";
-import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
-import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { compareContractReleases } from "@bernouy/ulvia-contracts/compatibility";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { publishContractSet } from "cms-repository/contracts/core/catalogue/publishContractSet";
+import { MongoReleaseCatalogue } from "cms-repository/contracts/default-implementation/mongo/MongoReleaseCatalogue";
 import { fakeCatalogueDb } from "../../../support/fakeCatalogueDb";
-import { capabilityDocument, contractDocument, objectSchema, stringSchema } from "../../support/fixtures";
+import {
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+    stringSchema,
+} from "../../../../../../platform/contracts/tests/support/fixtures";
 
 const message = objectSchema({ message: stringSchema(100) }, ["message"]);
 const extended = objectSchema(

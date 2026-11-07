@@ -2,20 +2,22 @@ import { RepositoryRequestError } from "../../core/errors";
 import { createHash, randomUUID } from "node:crypto";
 import { link, readFile, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
-import {
-    isCollectionNamespace,
-    CollectionPublicationError,
-    type AdmittedCollectionRelease,
-    DEFAULT_COLLECTION_LIMITS,
-    verifyCollectionPublicationHistory,
-    verifyStoredCollectionReleaseJson,
-} from "cms-repository/exports/collections/index";
-import { resourceName, resourcePublisher, deepFreeze } from "cms-repository/exports/contracts/protocol";
+import { isCollectionNamespace } from "cms-repository/collections/core/namespace";
+import { CollectionPublicationError } from "cms-repository/collections/core/errors";
+import { type AdmittedCollectionRelease } from "cms-repository/collections/interfaces/CollectionAdmission";
+import { DEFAULT_COLLECTION_LIMITS } from "cms-repository/collections/core/limits";
+import { verifyCollectionPublicationHistory } from "cms-repository/collections/core/admission/history";
+import { verifyStoredCollectionReleaseJson } from "cms-repository/collections/core/admission/collectionArtifact";
+import { resourceName, resourcePublisher, deepFreeze } from "@bernouy/ulvia-contracts/protocol";
 import { snapshotCollectionAssets, verifyCollectionAssets } from "cms-repository/collections/core/admission/assets";
 import type { CollectionAssetDefinition } from "cms-repository/collections/interfaces/CollectionAssets";
 import type { VerifiedCollectionReleaseMetadata } from "cms-repository/collections/interfaces/CollectionAdmission";
-import { isRepositoryIdentifier } from "cms-repository/exports/contracts/compatibility";
-import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
+import { isRepositoryIdentifier } from "@bernouy/ulvia-contracts/compatibility";
+import {
+    durableWriteFile,
+    ensureDurableDirectory,
+    syncDirectory,
+} from "cms-repository/repository/filesystem/core/durable";
 import { listDirectories, writeImmutableFile } from "../core/immutableFiles";
 import { pruneRepository } from "../core/recovery";
 import { assetFileName } from "../core/assetFiles";

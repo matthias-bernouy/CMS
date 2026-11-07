@@ -9,13 +9,26 @@ import type {
     RepositoryPublicationResult,
     RepositoryPublicationUploadStore,
 } from "cms-repository/repository/publication/types";
-import { digestUploadFile, readUploadResult, writeUploadResult, writeUploadStream } from "./uploadFiles";
-import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
+import {
+    digestUploadFile,
+    readUploadResult,
+    writeUploadResult,
+    writeUploadStream,
+} from "cms-repository/repository/filesystem/mutations/uploadFiles";
+import {
+    durableWriteFile,
+    ensureDurableDirectory,
+    syncDirectory,
+} from "cms-repository/repository/filesystem/core/durable";
 import { acquireFilesystemLease, FilesystemLeaseBusyError } from "../core/lock";
 import { assetFileName } from "../core/assetFiles";
 import { uploadOwner } from "../../publication/ownership";
 
-import { isPublicationUploadId, uploadManifestFingerprint, withUploadResume } from "./uploadResume";
+import {
+    isPublicationUploadId,
+    uploadManifestFingerprint,
+    withUploadResume,
+} from "cms-repository/repository/filesystem/mutations/uploadResume";
 import { UploadMaintenance } from "./uploadMaintenance";
 
 const SCHEMA = "ulvia.repository-upload.v1";

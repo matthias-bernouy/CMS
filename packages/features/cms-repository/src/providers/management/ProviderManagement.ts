@@ -1,5 +1,5 @@
 import type { ProviderConnectionDraftStore } from "./connectionDrafts";
-import { verifyStoredProviderManifestJson } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
+import { verifyStoredProviderManifestJson } from "@bernouy/ulvia-providers";
 import type { ProviderReleaseRetention } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
 import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
 import { importProviderManifest } from "cms-repository/providers/sources/importProviderManifest";

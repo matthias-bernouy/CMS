@@ -1,4 +1,4 @@
-import { releaseChannel } from "@bernouy/cms-repository/contracts/compatibility";
+import { releaseChannel } from "@bernouy/ulvia-contracts/compatibility";
 import type {
     CollectionRepositoryEntry,
     CollectionRepositorySource,
@@ -11,7 +11,7 @@ import {
     type AdmittedCollectionRelease,
 } from "@bernouy/cms-repository/collections";
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
-import type { CmsCollectionDependencies } from "../../../ports";
+import type { CmsCollectionDependencies } from "../../../ports/index";
 import { CollectionSourceCache } from "./cache";
 import { verifiedCatalogueEntry, releaseAction } from "./catalogue";
 import { parseReference, sameRelease } from "./references";

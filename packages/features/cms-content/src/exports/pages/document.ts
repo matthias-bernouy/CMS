@@ -70,18 +70,9 @@ export {
     BLOC_FRAME_SANDBOX_PERMISSIONS,
     validateBlocBrowserCapabilities,
 } from "cms-content/blocs/core/markup/validation/documents/browserCapabilities";
-export type {
-    BlocBrowserCapabilities,
-    BlocFrameSandboxPermission,
-} from "cms-content/blocs/interfaces/blocs";
-export {
-    parseInlineSvgAsset,
-    type InlineSvgAsset,
-} from "cms-content/blocs/core/markup/security/inlineSvg";
-export {
-    CMS_SVG_ATTRIBUTE,
-    svgReferenceIssue,
-} from "cms-content/blocs/core/markup/security/svgReference";
+export type { BlocBrowserCapabilities, BlocFrameSandboxPermission } from "cms-content/blocs/interfaces/blocs";
+export { parseInlineSvgAsset, type InlineSvgAsset } from "cms-content/blocs/core/markup/security/inlineSvg";
+export { CMS_SVG_ATTRIBUTE, svgReferenceIssue } from "cms-content/blocs/core/markup/security/svgReference";
 export {
     parseCollectionAssetExpression,
     parseCollectionAssetReference,

@@ -1,8 +1,5 @@
 export { CmsSecrets } from "cms-secrets/core/CmsSecrets";
-export {
-    CmsSecretNamespaceStore,
-    type CmsSecretNamespaceCredentials,
-} from "cms-secrets/core/CmsSecretNamespaceStore";
+export { CmsSecretNamespaceStore, type CmsSecretNamespaceCredentials } from "cms-secrets/core/CmsSecretNamespaceStore";
 export { CmsSecretConflict, CmsSecretNotAuthorized, CmsSecretNotFound } from "cms-secrets/core/errors";
 export {
     publicSecretMetadata,

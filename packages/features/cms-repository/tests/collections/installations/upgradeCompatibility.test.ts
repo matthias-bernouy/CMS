@@ -3,11 +3,11 @@ import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import {
     assertCompatibleCollectionUpgrade,
-    CollectionStore,
     collectionUpgradeBreakingResources,
-    MemoryCollectionStorage,
-} from "../../../src/exports/collections/installations";
-import type { CollectionRelease } from "../../../src/exports/collections";
+} from "cms-repository/collections/installations/core/upgradeCompatibility";
+import { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+import { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
+import type { CollectionRelease } from "cms-repository/collections/interfaces/CollectionRelease";
 import { collectionDocument } from "../fixtures";
 
 function release(version: string) {

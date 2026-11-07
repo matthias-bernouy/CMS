@@ -1,6 +1,9 @@
 import { assertCollectionResourceIsolation } from "../resourceIsolation";
 import { writeCollectionSiteState } from "../siteState";
-import type { CollectionInstallRequest, CollectionStorage } from "../../interfaces/store";
+import type {
+    CollectionInstallRequest,
+    CollectionStorage,
+} from "cms-repository/collections/installations/interfaces/store";
 
 /** Install one exact dependency graph atomically; request order is irrelevant. */
 export async function installCollections(

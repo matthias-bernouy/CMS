@@ -1,12 +1,11 @@
 import { collectionFixture } from "../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import {
-    collectionAssetRepresentationVersion,
-    resolveInstalledCollectionAssets,
-} from "@bernouy/cms-repository/collections/assets";
-import { serveInstalledCollectionAsset } from "@bernouy/cms-repository/collections/http";
+import { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+import { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
+import { collectionAssetRepresentationVersion } from "cms-repository/collections/core/admission/assets";
+import { resolveInstalledCollectionAssets } from "cms-repository/collections/integration/assets/installedAssets";
+import { serveInstalledCollectionAsset } from "cms-repository/collections/http/installedAssets";
 
 test("serves installed collection assets publicly through immutable digest URLs", async () => {
     const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');

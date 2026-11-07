@@ -1,11 +1,11 @@
-import { deepFreeze } from "cms-repository/exports/contracts/protocol";
-import type { AdmittedProviderManifest } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
-import { rejectUnknownKeys } from "cms-repository/providers/manifests/core/protocol/values";
-import type { ProviderInstallation } from "../../interfaces/ProviderInstallation";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
+import type { AdmittedProviderManifest } from "@bernouy/ulvia-providers";
+import { rejectUnknownKeys } from "@bernouy/ulvia-providers/validation";
+import type { ProviderInstallation } from "@bernouy/ulvia-providers/installations";
 import type { ProviderInstallationCandidate } from "../../interfaces/ProviderInstallationStore";
-import type { ProviderInstallationLimits } from "../limits";
-import { parseInstallationDocument } from "../parsing/documents";
-import { validateProviderInstallation } from "../validateProviderInstallation";
+import type { ProviderInstallationLimits } from "@bernouy/ulvia-providers/installations";
+import { parseInstallationDocument } from "@bernouy/ulvia-providers/validation";
+import { validateProviderInstallation } from "@bernouy/ulvia-providers/installations";
 
 export function candidateFromInstallation(installation: ProviderInstallation): ProviderInstallationCandidate {
     return deepFreeze({

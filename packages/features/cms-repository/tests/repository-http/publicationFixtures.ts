@@ -2,7 +2,7 @@ import type {
     PublicationEnvelope,
     RemoteCoordinate,
     RepositoryPublicationRegistry,
-} from "@bernouy/cms-repository/repository/publication";
+} from "cms-repository/repository/publication/types";
 import { repositoryApplication } from "../../../../../tests/fixtures/repository/application";
 
 export class RecordingRegistry implements RepositoryPublicationRegistry {

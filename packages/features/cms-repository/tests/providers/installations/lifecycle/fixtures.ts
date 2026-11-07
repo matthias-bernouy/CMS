@@ -1,4 +1,4 @@
-import { admitProviderManifest } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
 import { InMemoryProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
 import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
 import { InMemoryProviderInstallationStore } from "cms-repository/providers/installations/default-implementation/memory/InMemoryProviderInstallationStore";

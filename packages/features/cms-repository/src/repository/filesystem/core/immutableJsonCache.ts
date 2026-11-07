@@ -1,4 +1,4 @@
-import { deepFreeze } from "cms-repository/exports/contracts/protocol";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
 
 type CacheEntry<T> = { canonicalJson: string; value: T; bytes: number };
 

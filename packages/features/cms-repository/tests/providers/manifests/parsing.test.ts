@@ -3,7 +3,7 @@ import {
     DEFAULT_PROVIDER_MANIFEST_LIMITS,
     parseProviderManifest,
     parseProviderManifestJson,
-} from "@bernouy/cms-repository/providers";
+} from "@bernouy/ulvia-providers";
 import { implementation, manifestDocument, requirement } from "../support/fixtures";
 
 const digest = `sha256:${"a".repeat(64)}`;

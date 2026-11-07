@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { CmsObservability, type LogQuery } from "@bernouy/cms-observability";
 import { InMemoryJournalStore } from "@bernouy/cms-observability/memory";
-import { readJournalUpdates, showInstanceLogs } from "../../../src/runtime/stack/logs";
+import { readJournalUpdates, showInstanceLogs } from "../../../src/runtime/stack/logs/index";
 
 for (const offset of [-3_600_000, 60_000]) {
     test(`follow includes producer clock skew ${offset} once, behind a full new page`, async () => {

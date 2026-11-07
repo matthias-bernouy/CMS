@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { UlviaSchema } from "@bernouy/cms-repository/contracts/schema";
+import type { UlviaSchema } from "@bernouy/ulvia-contracts/schema";
 import {
     MemoryProviderOperationStore,
     ProviderOperationExecutor,

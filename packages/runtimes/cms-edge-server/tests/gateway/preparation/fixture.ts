@@ -1,6 +1,6 @@
 import { expect } from "bun:test";
 import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
-import { gatewayRoute } from "../../../../../features/cms-gateway/tests/fixtures";
+import { gatewayRoute } from "../../../../../../tests/integration/gateway/fixtures";
 import { ControlProviderClient } from "../../../src/runtime/gateway/ControlProviderClient";
 import { InstallationsProviderTransport } from "../../../src/runtime/gateway/InstallationsProviderTransport";
 import { INSTALLATIONS_CONTRACT } from "../../../src/runtime/gateway/fetchProviderReport";

@@ -47,7 +47,7 @@
             "path": "packages/features/cms-repository"
         },
         {
-            "path": "packages/features/cms-gateway"
+            "path": "packages/platform/gateway"
         },
         {
             "path": "packages/features/cms-secrets"
@@ -78,6 +78,12 @@
         },
         {
             "path": "packages/foundation/text-embeddings"
+        },
+        {
+            "path": "packages/platform/contracts"
+        },
+        {
+            "path": "packages/platform/providers"
         }
     ]
 }

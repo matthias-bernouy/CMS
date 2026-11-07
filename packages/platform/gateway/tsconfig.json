@@ -1,0 +1,35 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "cms-gateway/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../../foundation/http-runner"
+        },
+        {
+            "path": "../../foundation/image-processing"
+        },
+        {
+            "path": "../../foundation/logging"
+        },
+        {
+            "path": "../../foundation/resource-identity"
+        },
+        {
+            "path": "../contracts"
+        },
+        {
+            "path": "../providers"
+        }
+    ]
+}

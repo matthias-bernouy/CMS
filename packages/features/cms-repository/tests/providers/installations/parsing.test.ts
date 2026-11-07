@@ -4,7 +4,7 @@ import {
     parseProviderInstallation,
     parseProviderInstallationJson,
     ProviderInstallationValidationError,
-} from "@bernouy/cms-repository/providers/installations";
+} from "@bernouy/ulvia-providers/installations";
 import { installationDocument } from "./fixtures";
 
 describe("provider installation parsing", () => {

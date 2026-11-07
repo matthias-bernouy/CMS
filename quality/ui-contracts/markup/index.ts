@@ -3,7 +3,7 @@ import { markupFinding } from "./findings";
 import { inspectForms } from "./forms";
 import { markupTags } from "./html";
 import { BINDING_OWNERS } from "./owners";
-import { scriptMarkup } from "./script";
+import { scriptMarkup } from "./script/index";
 import type { MarkupTag } from "./types";
 
 export function inspectMarkup(source: UiSource): UiFinding[] {

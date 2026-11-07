@@ -1,5 +1,5 @@
 import { dirname, resolve } from "node:path";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { CmsDocumentation } from "@bernouy/cms-documentation";
 import { TransformersEmbeddings } from "@bernouy/text-embeddings";
 

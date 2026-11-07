@@ -1,21 +1,10 @@
-import { parseDateTime } from "cms-repository/providers/manifests/core/parsing/identifiers";
-import type {
-    ProviderInstallationCandidate,
-    ProviderInstallationScope,
-    StoredProviderInstallation,
-} from "../../interfaces/ProviderInstallationStore";
-import { ProviderInstallationWorkflowError } from "./errors";
+import { timestamp, assertMaxAge } from "@bernouy/ulvia-providers/validation";
+import type { ProviderInstallationCandidate } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
+import type { ProviderInstallationScope, StoredProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import { ProviderInstallationWorkflowError } from "@bernouy/ulvia-providers/installations";
 
 export function installationScope(record: StoredProviderInstallation): ProviderInstallationScope {
     return { installationId: record.installation.id, siteId: record.installation.siteId };
-}
-
-export function timestamp(value: string): number {
-    const result = Date.parse(parseDateTime(value, "$.timestamp"));
-    if (!Number.isFinite(result)) {
-        throw new ProviderInstallationWorkflowError("stale_timestamp", "The CMS clock must produce a valid timestamp");
-    }
-    return result;
 }
 
 export function assertFreshPreparation(preparedAt: string, now: string, maxAgeMs: number): void {
@@ -26,12 +15,6 @@ export function assertFreshPreparation(preparedAt: string, now: string, maxAgeMs
             "stale_timestamp",
             "Preparation is stale or ahead of the CMS clock",
         );
-    }
-}
-
-export function assertMaxAge(maxAgeMs: number): void {
-    if (!Number.isSafeInteger(maxAgeMs) || maxAgeMs <= 0) {
-        throw new TypeError("Maximum observation/preparation age must be a positive safe integer");
     }
 }
 

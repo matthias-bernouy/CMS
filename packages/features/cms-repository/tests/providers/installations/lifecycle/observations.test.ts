@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getProviderInstallationReadiness } from "cms-repository/providers/installations/core/lifecycle/readiness";
+import { getProviderInstallationReadiness } from "@bernouy/ulvia-providers/installations";
 import { installationWorkflow } from "./fixtures";
 
 describe("CMS-owned runtime observations", () => {

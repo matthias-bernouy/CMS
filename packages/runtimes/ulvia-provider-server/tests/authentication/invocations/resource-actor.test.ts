@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { gatewayRoute } from "../../../../../features/cms-gateway/tests/fixtures";
+import { gatewayRoute } from "../../../../../../tests/integration/gateway/fixtures";
 import { createInvocationIssuer } from "../../../src/runtime/gateway/providers/authority/issueInvocation";
 import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 async function fixture() {

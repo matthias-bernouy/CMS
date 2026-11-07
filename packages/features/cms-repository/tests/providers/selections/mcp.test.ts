@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { planContractSelections } from "@bernouy/cms-repository/providers/selections";
-import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
+import { planContractSelections } from "@bernouy/ulvia-providers/selections";
+import { InMemoryProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
 import { installationFor, siteId } from "./fixtures";
 import { contractDocument, implementation, releaseCatalogue } from "../support/fixtures";
 

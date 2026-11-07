@@ -3,8 +3,8 @@ import type { ProviderReleaseRetention } from "@bernouy/cms-repository/providers
 import type { ProviderManagementGateway } from "@bernouy/cms-repository/providers/management";
 import type { SiteUpgradeStorage } from "@bernouy/cms-repository/upgrades";
 
-import { catalogueRevision } from "@bernouy/cms-repository/contracts/protocol";
-import type { ContractSelection } from "@bernouy/cms-repository/providers/selections";
+import { catalogueRevision } from "@bernouy/ulvia-contracts/protocol";
+import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
 
 export function createProviderRetention(
     gateway: ProviderManagementGateway,

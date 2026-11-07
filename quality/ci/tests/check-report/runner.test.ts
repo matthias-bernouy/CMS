@@ -6,7 +6,7 @@ import {
     runChecks,
     type CheckDefinition,
     type CheckExecution,
-} from "../../check-all";
+} from "../../check-all/index";
 
 const checks: CheckDefinition[] = [
     { id: "first", label: "First check", args: ["run", "first"] },

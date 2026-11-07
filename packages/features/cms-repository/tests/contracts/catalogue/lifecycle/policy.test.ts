@@ -1,13 +1,16 @@
 import { expect, test } from "bun:test";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import {
-    InMemoryReleaseCatalogue,
-    planContractPublications,
-    publishContractSet,
-} from "@bernouy/cms-repository/contracts/catalogue";
-import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
+import { planContractPublications } from "cms-repository/contracts/core/catalogue/planPublications";
+import { publishContractSet } from "cms-repository/contracts/core/catalogue/publishContractSet";
+import { MongoReleaseCatalogue } from "cms-repository/contracts/default-implementation/mongo/MongoReleaseCatalogue";
 import { fakeCatalogueDb } from "../../../support/fakeCatalogueDb";
-import { capabilityDocument, contractDocument, objectSchema, stringSchema } from "../../support/fixtures";
+import {
+    capabilityDocument,
+    contractDocument,
+    objectSchema,
+    stringSchema,
+} from "../../../../../../platform/contracts/tests/support/fixtures";
 
 const oldId = "email.message.send";
 const newId = "email.message.deliver";

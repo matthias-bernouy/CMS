@@ -1,6 +1,6 @@
 import { expect, spyOn, test } from "bun:test";
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
-import { MongoProviderManifestCatalogue } from "@bernouy/cms-repository/providers/mongo";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
+import { MongoProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/mongo/MongoProviderManifestCatalogue";
 import { fakeCatalogueDb } from "../../../support/fakeCatalogueDb";
 import { manifestCatalogueFixture } from "./fixtures";
 

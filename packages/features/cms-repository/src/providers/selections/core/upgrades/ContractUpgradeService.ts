@@ -1,13 +1,10 @@
-import { parseContractSelections } from "../graph/parseContractSelections";
-import type {
-    ContractSelectionStore,
-    ContractSelectionDependencySource,
-    CapabilityGrantPolicy,
-} from "../../interfaces/ContractSelectionStore";
+import { parseContractSelections } from "@bernouy/ulvia-providers/selections";
+import type { ContractSelectionStore } from "cms-repository/providers/selections/interfaces/ContractSelectionStore";
+import type { ContractSelectionDependencySource, CapabilityGrantPolicy } from "@bernouy/ulvia-providers/selections";
 import type { ContractUpgradeAnalysis } from "../../interfaces/ContractUpgrade";
-import type { ContractSelection } from "../../interfaces/ContractSelection";
+import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
 import type { SiteUpgradeStorage, SiteUpgradeIntent } from "cms-repository/site-upgrades/interfaces";
-import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
+import { catalogueRevision } from "@bernouy/ulvia-contracts/protocol";
 import { runSiteUpgrade } from "cms-repository/site-upgrades/run";
 import { prepareContractUpgrade } from "./plan";
 

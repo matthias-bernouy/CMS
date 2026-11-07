@@ -1,12 +1,10 @@
 import { createHash } from "node:crypto";
-import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { checkCollectionHistory } from "../artifacts/collectionHistory";
 import { RepositoryRequestError } from "../../core/errors";
-import {
-    admitCollectionReleaseJson,
-    parseCollectionReleaseJson,
-    CollectionPublicationError,
-} from "cms-repository/exports/collections/index";
+import { admitCollectionReleaseJson } from "cms-repository/collections/core/admission/admitCollectionRelease";
+import { parseCollectionReleaseJson } from "cms-repository/collections/core/parsing/parseCollectionRelease";
+import { CollectionPublicationError } from "cms-repository/collections/core/errors";
 import type {
     PublicationEnvelope,
     RemoteCoordinate,

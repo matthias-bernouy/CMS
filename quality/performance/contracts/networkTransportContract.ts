@@ -1,7 +1,7 @@
 import type { GatewayRoute } from "@bernouy/cms-gateway";
-import { admitContractReleaseJson, type AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson, type AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
 
 export const NETWORK_TOKEN = "performance-provider-token-that-is-long-enough";
 export const NETWORK_INSTANCE_ID = "instance:performance";

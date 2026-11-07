@@ -2,22 +2,24 @@ import { describe, expect, test } from "bun:test";
 
 describe("repository public entry points", () => {
     test.each([
-        ["contracts", "admitContractRelease"],
-        ["contracts/schema", "parseUlviaSchema"],
-        ["contracts/bindings", "compileContractBindings"],
-        ["contracts/compatibility", "compareContractReleases"],
-        ["contracts/catalogue", "InMemoryReleaseCatalogue"],
-        ["contracts/protocol", "parseStrictJson"],
-        ["providers", "admitProviderManifest"],
-        ["providers/catalogue", "InMemoryProviderManifestCatalogue"],
-        ["providers/compatibility", "compareProviderManifests"],
-        ["providers/installations", "validateProviderInstallation"],
-        ["providers/selections", "planContractSelections"],
-        ["providers/mongo", "MongoProviderInstallationStore"],
-        ["collections", "admitCollectionRelease"],
-        ["collections/build", "buildCollectionBloc"],
-    ])("loads %s independently through its declared package export", async (subpath, entryPoint) => {
-        const module = await import(`@bernouy/cms-repository/${subpath}`);
+        ["@bernouy/ulvia-contracts", "admitContractRelease"],
+        ["@bernouy/ulvia-contracts/schema", "parseUlviaSchema"],
+        ["@bernouy/ulvia-contracts/bindings", "compileContractBindings"],
+        ["@bernouy/ulvia-contracts/compatibility", "compareContractReleases"],
+        ["@bernouy/ulvia-contracts/protocol", "parseStrictJson"],
+        ["@bernouy/cms-repository/contracts/catalogue", "InMemoryReleaseCatalogue"],
+        ["@bernouy/ulvia-providers", "admitProviderManifest"],
+        ["@bernouy/ulvia-providers/compatibility", "compareProviderManifests"],
+        ["@bernouy/ulvia-providers/installations", "validateProviderInstallation"],
+        ["@bernouy/ulvia-providers/selections", "planContractSelections"],
+        ["@bernouy/cms-repository/providers/catalogue", "InMemoryProviderManifestCatalogue"],
+        ["@bernouy/cms-repository/providers/installations", "ProviderInstallationLifecycle"],
+        ["@bernouy/cms-repository/providers/selections", "ContractUpgradeService"],
+        ["@bernouy/cms-repository/providers/mongo", "MongoProviderInstallationStore"],
+        ["@bernouy/cms-repository/collections", "admitCollectionRelease"],
+        ["@bernouy/cms-repository/collections/build", "buildCollectionBloc"],
+    ])("loads %s independently through its declared package export", async (specifier, entryPoint) => {
+        const module = await import(specifier);
         expect(typeof module[entryPoint]).toBe("function");
     });
 

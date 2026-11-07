@@ -1,0 +1,55 @@
+# @bernouy/cms-gateway
+
+This Platform package implements provider-neutral capability invocation. It consumes
+contract and Provider read ports from Platform, plus site-owned selections; it does not
+publish releases or choose providers.
+
+## Layout
+
+- `src/invocation/` owns route resolution, authorization, response validation,
+  HTTP handlers, and transport implementations.
+- `src/access/` owns durable administrative grants selected by the runtime.
+- `src/identity/` owns provider-wide authority aliases, their contracts, and
+  memory, Mongo, and request-scoped implementations.
+- `src/exports/` is the public facade. The package root exposes invocation;
+  optional HTTP and identity APIs use their named subpaths.
+
+- Keep untrusted request parsing, authenticated actor creation, and secret
+  resolution in explicit host or adapter boundaries. Never accept a provider's
+  identity or permission claims as CMS authority.
+- Resolve one exact selected contract release and approved installation before
+  invoking a capability. Recheck administrative status and fresh observations
+  at call time.
+- Execute only binding plans admitted by `@bernouy/ulvia-contracts`; do not
+  interpret raw author binding documents in runtime code.
+- Reuse the CMS authority-alias store for one user alias per provider ID,
+  independent of sites and installations. Keep CMS subject IDs out of provider
+  requests. Installation revocation must not delete provider-wide aliases.
+- Deny execution paths without complete validation or authorization. In
+  particular, keyed commands need durable idempotency before activation.
+- Treat the contract capability access and the trusted actor as the complete
+  browser-call authorization inputs. Do not infer authority from a Page,
+  `Referer`, caller-supplied origin or runtime execution pin.
+- Keep the gateway independent of file, image, MIME, namespace, visibility,
+  signature and representation semantics. Binary response headers come from the provider.
+- Runtime adapters select HTTP, persistence, DNS policy, secret storage and
+  worker implementations. Keep optional adapters in explicit domain subpaths.
+- Core invocation validates domain inputs/outcomes, access and audit without
+  requiring HTTP bindings or statuses. HTTP routing and wire validation belong
+  in the HTTP adapter; protocol adapters pass the selected binding ID/protocol
+  so the exact selected release can enforce exposure before dispatch.
+- `./mcp` projects explicitly declared MCP bindings into tools and delegates execution to
+  the existing Gateway invoker. Host context supplies actor/site authority;
+  tool arguments never do. Binary resource resolution is an injected host policy.
+
+Use `cms-gateway/...` aliases inside this package and declared
+`@bernouy/cms-gateway/...` exports outside it.
+
+Native resources are synchronous binary query outputs with `resource: true`.
+They opt into signed actor context, preserve streams and use a closed resource
+metadata envelope. Protocol-neutral invocation observations must never include
+input/output payloads or change authorization, command audit or stream outcomes.
+
+Platform imports only Platform and Foundation. Business capability implementations,
+catalogue publication, installation approval and selection mutation remain in features.
+Integration tests that compose Repository stores live in `tests/integration/gateway/`.

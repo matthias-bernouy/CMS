@@ -1,5 +1,5 @@
 import { dirname, resolve } from "node:path";
-import { parseContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
 

@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import { installationWorkflow } from "./fixtures";
 import { contractDocument, implementation } from "../../support/fixtures";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { admitProviderManifest } from "@bernouy/cms-repository/providers";
-import type { ProviderReleaseRetention } from "@bernouy/cms-repository/providers/installations";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
+import type { ProviderReleaseRetention } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
 
 async function fixture(retention?: ProviderReleaseRetention) {
     const f = await installationWorkflow({ retention });

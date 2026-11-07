@@ -1,4 +1,4 @@
-import { canonicalIJsonBytes, canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
+import { canonicalIJsonBytes, canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import type { SiteUpgradeIntent } from "./interfaces";
 
 export function validateUpgradeIntent(intent: SiteUpgradeIntent<unknown>): void {

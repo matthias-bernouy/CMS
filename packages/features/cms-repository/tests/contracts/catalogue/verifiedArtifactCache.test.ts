@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { VerifiedArtifactCache } from "cms-repository/contracts/core/catalogue/VerifiedArtifactCache";
+import { VerifiedArtifactCache } from "@bernouy/ulvia-contracts/catalogue";
 
 test("verified immutable cache shares pending reads, retries failures and stays within LRU entry/byte budgets", async () => {
     const cache = new VerifiedArtifactCache<{ canonicalJson: string }>(2, 12);

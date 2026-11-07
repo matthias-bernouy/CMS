@@ -1,6 +1,6 @@
 import { resourceName } from "@bernouy/resource-identity";
-import { admitContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { admitContractRelease } from "@bernouy/ulvia-contracts";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
 
 export function contractDocument(contractId: string, capabilityId: string, version = "1.0.0"): Record<string, unknown> {
     return {

@@ -9,25 +9,31 @@
     ],
     "references": [
         {
+            "path": "../../features/cms-auth"
+        },
+        {
+            "path": "../../features/cms-observability"
+        },
+        {
+            "path": "../../features/cms-repository"
+        },
+        {
             "path": "../../foundation/http-runner"
         },
         {
             "path": "../../foundation/logging"
         },
         {
-            "path": "../../features/cms-auth"
+            "path": "../../platform/contracts"
         },
         {
-            "path": "../../features/cms-repository"
+            "path": "../../platform/gateway"
         },
         {
-            "path": "../../features/cms-gateway"
+            "path": "../../platform/providers"
         },
         {
             "path": "../../surfaces/cms-edge"
-        },
-        {
-            "path": "../../features/cms-observability"
         }
     ]
 }

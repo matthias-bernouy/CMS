@@ -4,7 +4,7 @@ import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
-import { resolveContract, type AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
+import { resolveContract, type AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import {
     DefaultProviderCapabilityDispatcher,
     UlviaProvider,

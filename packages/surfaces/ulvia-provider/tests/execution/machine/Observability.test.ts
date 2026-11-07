@@ -1,9 +1,9 @@
-import { resourceName } from "@bernouy/cms-repository/contracts/protocol";
+import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import { CmsObservability } from "@bernouy/cms-observability";
 import { InMemoryJournalStore } from "@bernouy/cms-observability/memory";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { signProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";

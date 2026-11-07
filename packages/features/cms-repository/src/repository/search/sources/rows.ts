@@ -1,7 +1,7 @@
-import type { CollectionRelease } from "cms-repository/exports/collections/index";
-import { resolveCollectionTranslation } from "cms-repository/exports/collections/index";
-import type { ContractRelease } from "cms-repository/exports/contracts/index";
-import type { ProviderManifest } from "cms-repository/exports/providers/index";
+import type { CollectionRelease } from "cms-repository/collections/interfaces/CollectionRelease";
+import { resolveCollectionTranslation } from "cms-repository/collections/core/texts/translationCatalogue";
+import type { ContractRelease } from "@bernouy/ulvia-contracts";
+import type { ProviderManifest } from "@bernouy/ulvia-providers";
 import type { RepositorySearchRow, RepositoryResourceReference } from "../interfaces";
 
 export function searchRow(

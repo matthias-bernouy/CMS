@@ -1,5 +1,5 @@
 import type { ProviderManagementGateway } from "./types";
-import { resolveContractLineage } from "cms-repository/exports/contracts/catalogue";
+import { resolveContractLineage } from "@bernouy/ulvia-contracts";
 
 /** Pin one contract release to one approved provider account. */
 export async function activateProviderContract(

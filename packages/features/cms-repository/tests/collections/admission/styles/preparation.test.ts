@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue } from "cms-repository/contracts/default-implementation/memory/InMemoryReleaseCatalogue";
 import { prepareRemoteCollection } from "cms-repository/repository/authoring/preparations/prepare";
 
 test("remote preparation reports the Bloc and property and leaves no publishable preparation", async () => {

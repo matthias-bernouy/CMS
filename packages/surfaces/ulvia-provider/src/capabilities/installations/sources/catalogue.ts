@@ -4,8 +4,8 @@ import {
     collectionBrowserRiskDigest,
     resolveCollectionTranslation,
 } from "@bernouy/cms-repository/collections";
-import { compareSemVer, releaseChannel } from "@bernouy/cms-repository/contracts/compatibility";
-import type { CmsCollectionDependencies } from "../../../ports";
+import { compareSemVer, releaseChannel } from "@bernouy/ulvia-contracts/compatibility";
+import type { CmsCollectionDependencies } from "../../../ports/index";
 
 export function verifiedCatalogueEntry(
     repositoryId: string,

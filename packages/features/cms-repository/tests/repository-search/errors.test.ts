@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
-import { RepositoryDiscovery, RepositoryDiscoveryError } from "@bernouy/cms-repository/repository/search";
-import { HttpRepositoryDiscovery } from "@bernouy/cms-repository/repository/search/http";
+import { RepositoryDiscovery } from "cms-repository/repository/search/client/discovery";
+import { RepositoryDiscoveryError } from "cms-repository/repository/search/core/errors";
+import { HttpRepositoryDiscovery } from "cms-repository/repository/search/sources/http";
 import { row } from "./fixture";
 
 function client(status: number, body?: unknown) {

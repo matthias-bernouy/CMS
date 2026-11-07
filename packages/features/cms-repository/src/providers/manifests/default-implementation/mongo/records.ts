@@ -1,10 +1,10 @@
 import type { Collection } from "mongodb";
-import { deepFreeze } from "cms-repository/exports/contracts/protocol";
-import type { AdmittedProviderManifest, ProviderManifestDigest } from "../../core/admission/admitProviderManifest";
-import { verifyProviderManifestAdmission } from "../../core/admission/verifyProviderManifestAdmission";
-import { ProviderManifestValidationError } from "../../core/protocol/errors";
-import type { ProviderManifestLimits } from "../../core/protocol/limits";
-import type { CatalogueProviderManifest, ProviderManifestYank } from "../../interfaces/ProviderManifestCatalogue";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
+import type { AdmittedProviderManifest, ProviderManifestDigest } from "@bernouy/ulvia-providers";
+import { verifyProviderManifestAdmission } from "@bernouy/ulvia-providers/validation";
+import { ProviderManifestValidationError } from "@bernouy/ulvia-providers";
+import type { ProviderManifestLimits } from "@bernouy/ulvia-providers";
+import type { CatalogueProviderManifest, ProviderManifestYank } from "@bernouy/ulvia-providers/catalogue";
 
 export interface ManifestVersionEntry {
     readonly version: string;

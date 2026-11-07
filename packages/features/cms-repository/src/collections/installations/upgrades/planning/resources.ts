@@ -1,6 +1,9 @@
 import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 import { collectionLifecycleResources } from "../../../core/validation/lifecycle/resources";
-import type { CollectionResourceChange, UpgradeIssue } from "../interfaces";
+import type {
+    CollectionResourceChange,
+    UpgradeIssue,
+} from "cms-repository/collections/installations/upgrades/interfaces";
 import type { UsageInventory } from "../usage/interfaces";
 
 export function resourceChanges(
