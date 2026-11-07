@@ -2,11 +2,15 @@
 
 Typed authoring and Provider assembly SDK. Depend only on Platform and Foundation.
 
-- Emailer/SMTP is the production migration pilot. Keep other feature families
+- Emailer/SMTP and Secrets are the production migration pilots. Keep other feature families
   outside the SDK until their migration is explicitly requested. Release discovery
   and publication remain CLI/infrastructure responsibilities.
 - Root definitions perform no filesystem, network, environment or runtime initialization.
-  `./build` admits artifacts; it does not publish or approve them.
+  `./build` admits artifacts and emits `ulvia-sdk-runtime/v1` metadata; it does
+  not publish or approve them. `./provider` attaches matching default/alternative
+  executors with `loadImplementations`, without scanning source assets or converting
+  Zod schemas. Treat runtime artifacts as trusted build output shipped with its code,
+  never as executable support supplied by an installed catalogue.
 - `capabilitiesFor<Services>()` creates only a typed capability definer.
   `defineFeature` is the single authored source for identity, version, parent,
   capabilities, documents, fixtures and default execution. Contracts are generated
@@ -58,3 +62,14 @@ Typed authoring and Provider assembly SDK. Depend only on Platform and Foundatio
   Validate every version/digest and duplicate before service projection or registry
   writes. Mount no unselected capabilities and require durable adapters only for
   selected keyed commands. `createProvider` always mounts its complete manifest.
+
+- Capture code identity, lineage, policy and factories before asynchronous artifact
+  verification. Reject corrupt/noncanonical contracts, duplicate coordinates,
+  mismatched lineage/coverage/claims and oversized metadata before service projection.
+- A default capability's optional `authorize` hook runs with the same captured
+  services as `execute`, before every invocation and before durable receipt access.
+  Preserve error ownership/presentation and refuse denied replays without a receipt
+  lookup or business mutation. HTTP authentication/authorization remain host-owned.
+  Alternative implementations own their complete authorization behavior.
+- `contractString` preserves literal enum unions and explicit v1 bounds. Zod
+  readonly wrappers preserve JSON acceptance and do not add contract fields.

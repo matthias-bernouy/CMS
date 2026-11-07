@@ -5,6 +5,7 @@ export { implementFeature } from "ulvia-sdk/definitions/implementFeature";
 export type { FeatureDefinition, FeatureServices } from "ulvia-sdk/interfaces/features";
 export type {
     CapabilityExecutor,
+    CapabilityAuthorization,
     CapabilityExecutionContext,
     CapabilityServices,
     CapabilityServiceRequirement,

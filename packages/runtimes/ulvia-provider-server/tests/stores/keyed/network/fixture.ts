@@ -38,14 +38,14 @@ export async function runningEmailer(configured = true) {
     if (configured) {
         await emailer.updateConfiguration(configuration);
     }
-    const { build, manifest, releases, buildVersion } = await preparedEmailer();
+    const { contracts, manifest, releases, buildVersion } = await preparedEmailer();
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     await registerOfficialFeatures(dispatcher, { emailer }, releases, {
         ...scope,
         scope,
         executeKeyed: receipt.executor().execute,
     });
-    const server = emailerServer(build.implementedContracts, dispatcher, manifest, buildVersion);
+    const server = emailerServer(contracts, dispatcher, manifest, buildVersion);
     return {
         ...server,
         receipt,
@@ -53,6 +53,6 @@ export async function runningEmailer(configured = true) {
         stores,
         releases,
         manifest,
-        request: smtpRequests(server.origin, build.implementedContracts),
+        request: smtpRequests(server.origin, contracts),
     };
 }

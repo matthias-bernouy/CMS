@@ -1,4 +1,3 @@
-import { compileOfficialFeatures } from "@bernouy/ulvia-provider/build";
 import { expect, test } from "bun:test";
 import { ConfiguredSmtpEmailer, type SmtpSendMailInput } from "@bernouy/email-smtp/nodemailer";
 import { InMemorySecretStore } from "@bernouy/secret-store";
@@ -21,12 +20,7 @@ test("Emailer capabilities configure secret-backed SMTP delivery without returni
         transportFactory: async () => ({ sendMail: async (input) => sent.push(input) }),
     });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    await registerOfficialFeatures(
-        dispatcher,
-        { emailer },
-        (await compileOfficialFeatures()).implementations,
-        smtpOptions(),
-    );
+    await registerOfficialFeatures(dispatcher, { emailer }, await emailReleases(), smtpOptions());
 
     const configuration = await invoke<Record<string, unknown>>(dispatcher, "smtp.configuration.update", {
         enabled: true,
@@ -63,4 +57,4 @@ function invoke<T = unknown>(
     return dispatcher.invoke("ulvia/cms.emailer.smtp", capabilityId, input, context) as Promise<T>;
 }
 
-import { smtpOptions } from "./fixture";
+import { emailReleases, smtpOptions } from "./fixture";

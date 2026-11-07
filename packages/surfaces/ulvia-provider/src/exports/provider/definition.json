@@ -135,11 +135,6 @@
             ]
         },
         {
-            "contractId": "ulvia/cms.secrets",
-            "version": "1.0.0",
-            "requires": []
-        },
-        {
             "contractId": "ulvia/cms.authoring",
             "version": "1.0.0",
             "requires": []

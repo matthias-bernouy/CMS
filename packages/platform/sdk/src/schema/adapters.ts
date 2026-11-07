@@ -32,8 +32,14 @@ function adapter<Value>(definition: UlviaSchema): z.ZodType<Value, Value> {
 }
 
 /** Keeps the v1 UTF-16 and format semantics without changing existing releases. */
-export function contractString(definition: Omit<UlviaStringSchema, "type" | "nullable">): z.ZodType<string, string> {
-    return adapter<string>({ ...definition, type: "string" });
+type StringValue<Definition> = Definition extends { readonly enum: readonly (infer Value extends string)[] }
+    ? Value
+    : string;
+
+export function contractString<const Definition extends Omit<UlviaStringSchema, "type" | "nullable">>(
+    definition: Definition,
+): z.ZodType<StringValue<Definition>, StringValue<Definition>> {
+    return adapter<StringValue<Definition>>({ ...definition, type: "string" });
 }
 
 export function contractBinary(

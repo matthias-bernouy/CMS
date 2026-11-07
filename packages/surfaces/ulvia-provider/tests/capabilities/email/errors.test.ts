@@ -1,11 +1,10 @@
-import { compileOfficialFeatures } from "@bernouy/ulvia-provider/build";
 import { expect, test } from "bun:test";
 import { ConfiguredSmtpEmailer } from "@bernouy/email-smtp/nodemailer";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { registerOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
 import { invokeHttp, resolvedContract } from "../../execution/messages/fixtures";
-import { smtpOptions } from "./fixture";
+import { emailReleases, smtpOptions } from "./fixture";
 
 const configuration = {
     enabled: true,
@@ -21,12 +20,7 @@ test("feature-owned SMTP failures retain official domain reasons and isolated re
     await emailer.updateConfiguration(configuration);
     const before = await secrets.get("SMTP_EMAILER_CONFIGURATION");
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    await registerOfficialFeatures(
-        dispatcher,
-        { emailer },
-        (await compileOfficialFeatures()).implementations,
-        smtpOptions("default"),
-    );
+    await registerOfficialFeatures(dispatcher, { emailer }, await emailReleases(), smtpOptions("default"));
     const feature = await resolvedContract("ulvia/cms.emailer.smtp");
     const responses = await Promise.all(
         ["fr", "en"].map((language) =>
@@ -69,12 +63,7 @@ test("unexpected feature-port failures expose only safe localized contract data"
         },
     };
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    await registerOfficialFeatures(
-        dispatcher,
-        { emailer },
-        (await compileOfficialFeatures()).implementations,
-        smtpOptions("default"),
-    );
+    await registerOfficialFeatures(dispatcher, { emailer }, await emailReleases(), smtpOptions("default"));
     const response = await invokeHttp(
         await resolvedContract("ulvia/cms.emailer.smtp"),
         dispatcher,

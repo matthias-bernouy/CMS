@@ -23,7 +23,7 @@ behavior.
 
 - SDK-migrated features own feature metadata, capability IDs, access, behavior and
   bindings through their `./feature` export. Import these definitions instead of
-  redeclaring their API in the Provider. Emailer/SMTP operations own their default
+  redeclaring their API in the Provider. Emailer/SMTP and Secrets capabilities own their default
   `execute`; select the complete feature with `implementFeature`, retain manifest
   requirements and supply official localized failure presentation.
   Keep other feature adapters here until their migration is requested. Retain
@@ -32,11 +32,18 @@ behavior.
   select implementations and generate manifest claims. Do not select a partial
   capability list while announcing the same contract.
 
-- `src/capabilities/features/build.ts` is the single SDK implementation inventory.
-  `compileOfficialFeatures` shares one immutable compilation per process between
-  release preparation, manifest claims and mounting. Add a migrated feature there;
-  never add a family-specific registrar or second compilation cache.
+- `src/capabilities/features/inventory.ts` is the single SDK implementation inventory.
+  `compileOfficialFeatures` is build-only. Bootstrap emits the runtime artifact at
+  `src/capabilities/features/generated/runtime.json`; do not edit it by hand.
+  `loadOfficialFeatures` verifies and attaches that shipped metadata once per process.
+  Runtime mounting must not import the build entry or require authored docs/fixtures.
+  Add a migrated feature to the inventory, without a family-specific registrar.
 - `registerOfficialFeatures` receives exact approved implementation pins from the
   runtime profile. Ignore other families handled by the legacy adapters; reject any
   selected SDK family with an unsupported version/digest or missing service. Do not
   silently skip a claimed feature because its runtime service is unavailable.
+
+- Secrets owns namespace credential checks, permission rules and error classification.
+  Its keyed create/rotate capabilities reauthorize before durable receipt access.
+  Keep official error localization and Provider HTTP authorization in the surface;
+  keep namespaced store construction, adapters and durable receipts in runtimes.

@@ -1,12 +1,13 @@
+import { publicSecretMetadata } from "cms-secrets/core/metadata";
 import { resolveNamedSecret } from "cms-secrets/core/resolveNamedSecret";
 import type { CmsSecretResolutionReader } from "cms-secrets/interfaces/CmsSecretResolutionReader";
 import type { SecretStore } from "@bernouy/secret-store";
 import { SecretNamespaceAuthority } from "cms-secrets/core/SecretNamespaceAuthority";
 import { CmsSecretConflict, CmsSecretNotFound } from "cms-secrets/core/errors";
-import {
-    publicSecretMetadata,
-    type PublicSecretMetadata,
-    type SecretNamespacePermission,
+import type {
+    PublicSecretMetadata,
+    RotatedSecretMetadata,
+    SecretNamespacePermission,
 } from "cms-secrets/interfaces/CmsSecret";
 import type { CmsSecretMetadataStore } from "cms-secrets/interfaces/CmsSecretMetadataStore";
 
@@ -23,6 +24,15 @@ export class CmsSecrets {
         } = {},
     ) {
         this.namespaces = new SecretNamespaceAuthority(metadata, this.now);
+    }
+
+    /** Fresh domain authorization for invocation guards, including durable receipt replay. */
+    async authorizeNamespace(
+        namespaceId: string,
+        namespaceKey: string,
+        permission: SecretNamespacePermission,
+    ): Promise<void> {
+        await this.namespaces.authorizeFor(namespaceId, namespaceKey, permission);
     }
 
     createNamespace(input: { name: string; createdBy: { kind: "administrator" | "provider" | "system"; id: string } }) {
@@ -125,7 +135,7 @@ export class CmsSecrets {
         id: string,
         expectedVersion: number,
         value: string,
-    ): Promise<PublicSecretMetadata> {
+    ): Promise<RotatedSecretMetadata> {
         await this.namespaces.authorizeFor(namespaceId, namespaceKey, "secrets.write");
         const current = await this.required(namespaceId, id);
         if (current.version !== expectedVersion) {

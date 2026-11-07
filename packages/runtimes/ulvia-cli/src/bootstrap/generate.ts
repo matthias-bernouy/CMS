@@ -1,3 +1,6 @@
+import { compileOfficialFeatures } from "@bernouy/ulvia-provider/build";
+import { createImplementationArtifact } from "@bernouy/ulvia-sdk/build";
+import type { ImplementationArtifact } from "@bernouy/ulvia-sdk/build";
 import { prepareOfficialResources } from "./resources";
 import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -5,6 +8,7 @@ import { dirname, join, resolve } from "node:path";
 import { bootstrapOfficialRepository } from "../commands/bootstrap";
 
 export type OfficialBootstrapArtifacts = Readonly<{
+    runtimeArtifact: ImplementationArtifact;
     contracts: Readonly<Record<string, string>>;
     contractAssets: readonly { contractId: string; id: string; bytes: Uint8Array }[];
     provider: string;
@@ -48,6 +52,7 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
     }
 
     return {
+        runtimeArtifact: createImplementationArtifact(await compileOfficialFeatures()),
         contracts,
         contractAssets,
         provider: provider.canonicalJson,
@@ -95,6 +100,7 @@ export async function writeOfficialBootstrapArtifacts(
         join(root, "index.json"),
         `${JSON.stringify({ contracts: contractPaths, provider, collections }, null, 4)}\n`,
     );
+    await writeArtifact(root, "feature-runtime.json", JSON.stringify(artifacts.runtimeArtifact, null, 4));
     await bootstrapOfficialRepository(join(root, "repository"), root);
 }
 

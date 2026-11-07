@@ -28,6 +28,9 @@ export async function executeCapability<const Capability extends ExecutableCapab
     }
     const input = capability.input.parse(execution.input);
     const execute = capability.execute as (context: unknown) => unknown;
-    const output = await execute({ ...execution, input, fail: capabilityFailure(capability) });
+    const call = { ...execution, input, fail: capabilityFailure(capability) };
+    const authorize = capability.authorize as ((context: unknown) => unknown) | undefined;
+    await authorize?.(call);
+    const output = await execute(call);
     return capability.output.parse(output) as Awaited<ReturnType<ProviderCapabilityHandler<Capability>>>;
 }

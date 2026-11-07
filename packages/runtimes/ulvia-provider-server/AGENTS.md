@@ -32,3 +32,11 @@ Production runtime for the official Ulvia Provider.
   implicitly or forward a PAT across origins or redirects.
 
 - Bind observability stores to the authenticated instance during composition. Keep host-wide diagnostics operator-owned, and suppress receiver self-collection. Local direct ingestion must use the same feature service as the contract adapter.
+
+- SDK implementations attach the surface's shipped runtime artifact; never compile
+  authored Zod definitions or read feature Markdown/fixture directories at startup.
+  The artifact is code-owned execution evidence, independent of installation kits.
+  Installed releases must still match exact approved pins and build support.
+- Durable Secrets creation/rotation persist hashes and metadata outcomes only.
+  Recheck namespace credentials before receipt access; revoked/expired/foreign keys
+  cannot reuse a completed receipt. Never persist secret values or namespace keys.

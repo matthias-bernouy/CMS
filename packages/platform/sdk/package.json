@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/ulvia-sdk",
     "version": "1.0.0",
-    "description": "Typed authoring SDK for Ulvia operations and contract releases.",
+    "description": "Typed authoring and runtime assembly SDK for Ulvia capabilities and contract releases.",
     "license": "MIT",
     "type": "module",
     "main": "./src/exports/index.ts",

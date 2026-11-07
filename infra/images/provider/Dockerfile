@@ -11,7 +11,7 @@ FROM oven/bun:1.4.4-debian@sha256:93d5032fe06d163427822dc1598f420363759bb18155c9
 
 WORKDIR /app
 COPY package.json bun.lock tsconfig.base.json tsconfig.json build.ts ./
-COPY infra/bootstrap.ts ./infra/bootstrap.ts
+COPY infra/bootstrap.ts infra/execution-support.ts ./infra/
 COPY packages/ ./packages/
 
 RUN bun install --frozen-lockfile

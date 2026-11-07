@@ -1,15 +1,8 @@
+import { secretNamespacePermissions } from "cms-secrets/schemas/fields";
 import { authorizeNamespaceKey, credentialId, credentialVerifier, newCredential } from "cms-secrets/core/credentials";
 import { CmsSecretNotFound } from "cms-secrets/core/errors";
 import type { SecretNamespaceKeyRecord, SecretNamespacePermission } from "cms-secrets/interfaces/CmsSecret";
 import type { CmsSecretMetadataStore } from "cms-secrets/interfaces/CmsSecretMetadataStore";
-
-const ALL_PERMISSIONS: readonly SecretNamespacePermission[] = [
-    "secrets.metadata.read",
-    "secrets.resolve",
-    "secrets.write",
-    "secrets.delete",
-    "namespace.manage",
-];
 
 export class SecretNamespaceAuthority {
     constructor(
@@ -30,7 +23,7 @@ export class SecretNamespaceAuthority {
                 id: credential.id,
                 namespaceId,
                 verifier: await credentialVerifier(credential.value),
-                permissions: ALL_PERMISSIONS,
+                permissions: secretNamespacePermissions,
                 createdAt,
             },
         );
@@ -54,7 +47,10 @@ export class SecretNamespaceAuthority {
     }): Promise<{ keyId: string; namespaceKey: string }> {
         await this.authorizeFor(input.namespaceId, input.namespaceKey, "namespace.manage");
         const permissions = [...new Set(input.permissions)];
-        if (permissions.length === 0 || permissions.some((permission) => !ALL_PERMISSIONS.includes(permission))) {
+        if (
+            permissions.length === 0 ||
+            permissions.some((permission) => !secretNamespacePermissions.includes(permission))
+        ) {
             throw new TypeError("invalid secret namespace permissions");
         }
         const credential = newCredential("snk");

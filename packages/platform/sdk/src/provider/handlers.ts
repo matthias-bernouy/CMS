@@ -1,3 +1,4 @@
+import { handlerAuthorization } from "ulvia-sdk/definitions/authorization";
 import type {
     ProviderCapabilityHandler,
     ProviderCapabilityInvocationContext,
@@ -56,12 +57,13 @@ export function bindHandler<Dependencies>(
         input: Readonly<Record<string, unknown>>,
         context: ProviderCapabilityInvocationContext,
     ) => unknown;
+    const authorize = handlerAuthorization(handler);
     return async (input, context) => {
         const lease = binaryInputLease(entry.capability, context);
         try {
-            const invoke = async () => {
+            const invoke = async (execute = handler) => {
                 try {
-                    return await handler(input, lease.context);
+                    return await execute(input, lease.context);
                 } catch (error) {
                     if (!(error instanceof CapabilityFailure) || error.capability !== entry.source) {
                         throw error;
@@ -76,6 +78,9 @@ export function bindHandler<Dependencies>(
                     throw presentCapabilityFailure(error, entry.capability, route, options, context);
                 }
             };
+            if (authorize) {
+                await invoke(authorize);
+            }
             const behavior = entry.capability.behavior;
             const output =
                 behavior.effect === "command" && behavior.idempotency === "keyed"

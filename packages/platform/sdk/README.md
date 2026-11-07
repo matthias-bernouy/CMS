@@ -4,7 +4,7 @@ Define typed feature capabilities, expose contracts, assemble a Provider and com
 its exact manifest from the same handler table. The optional `./provider` adapter
 mounts that build through the existing Gateway HTTP receiver.
 
-The Emailer/SMTP pilot uses the SDK in the official Provider and bootstrap. Other
+The Emailer/SMTP and Secrets pilots use the SDK in the official Provider and bootstrap. Other
 feature families retain their existing adapters. Release orchestration lives in
 the CLI and infrastructure. Root authoring performs no IO; `./build` discovers
 Markdown only below explicitly declared directories and never publishes releases.
@@ -23,6 +23,8 @@ Markdown only below explicitly declared directories and never publishes releases
 | `.` → `ContractHandlers`, `ProviderCapabilityHandler` | Infer inherited handlers, streaming inputs and operation handles. |
 | `./build` → `compileSchema`, `compileContract`, `compileContracts` | Produce validated schemas and immutable contract admissions. |
 | `./build` → `compileImplementations` | Compile a partial surface with exact claims and a captured handler plan. |
+| `./build` → `createImplementationArtifact` | Emit bounded, serializable runtime metadata without executors or asset bytes. |
+| `./provider` → `loadImplementations` | Verify trusted runtime metadata and attach matching code without source compilation. |
 | `./build` → `compileProvider` | Generate exact manifest claims and a captured runtime handler plan. |
 | `./provider` → `registerProviderHandlers` | Mount a partial build in an authenticated host registry with explicit scope and durable keyed execution. |
 | `./provider` → `createProvider` | Inject dependencies, authentication, authorization and scope; return a Fetch-compatible receiver. |
@@ -248,3 +250,30 @@ additional per-request lookup or IO.
 
 `createProvider` assembles a complete standalone Provider and always mounts all its
 manifest implementations. Its runtime options do not accept a partial selection.
+
+## Build output and runtime attachment
+
+Build with `compileImplementations`, then emit `createImplementationArtifact(build)`.
+Ship that `ulvia-sdk-runtime/v1` object with the same executor code. A runtime calls
+`loadImplementations(implementations, artifact)` and passes the loaded plan to
+`registerProviderHandlers`. Loading verifies canonical contract bytes/digests, exact
+lineage, capability coverage, access/behavior/error codes and implementation claims.
+It captures factories before awaits and constructs no services until mounting.
+
+The artifact contains canonical contract metadata and exact implementation claims;
+documentation/fixture bytes remain separately published assets. Loading neither scans
+Markdown nor converts Zod schemas. Metadata limits are 512 contracts/implementations,
+1 MiB per contract and 64 MiB total UTF-8 contract bytes. Artifact fields are mandatory;
+unknown formats, duplicate coordinates and stale claims refuse. An installed catalogue
+cannot grant executable support: the runtime artifact must be trusted build output.
+
+`defineCapability` also accepts `authorize({ input, services, context, fail })` alongside
+`execute`. Default implementations invoke that guard before every call and before
+any durable receipt access. Both callbacks share their mounted service projection.
+A denied guard maps its declared failure normally and cannot read a cached outcome.
+The hook is not published contract data. Hosts still authenticate and authorize every
+HTTP request; alternative implementations own their full domain authorization.
+
+Use readonly Zod wrappers for readonly port results; they preserve emitted schemas.
+`contractString({ enum: ["read", "write"], maxLength: 32 })` retains both the literal
+union and the explicit v1 length bound.

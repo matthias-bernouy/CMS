@@ -1,9 +1,8 @@
-export type SecretNamespacePermission =
-    | "secrets.metadata.read"
-    | "secrets.resolve"
-    | "secrets.write"
-    | "secrets.delete"
-    | "namespace.manage";
+import type { z } from "zod";
+import type { namespacePermissionSchema } from "cms-secrets/schemas/fields";
+import type { secretMetadataSchema, rotatedSecretMetadataSchema } from "cms-secrets/schemas/secrets";
+
+export type SecretNamespacePermission = z.infer<typeof namespacePermissionSchema>;
 
 export type SecretNamespaceRecord = Readonly<{
     id: string;
@@ -35,22 +34,5 @@ export type CmsSecretMetadata = Readonly<{
     rotatedAt?: Date;
 }>;
 
-export type PublicSecretMetadata = Readonly<{
-    namespaceId: string;
-    secretId: string;
-    name: string;
-    version: number;
-    createdAt: string;
-    rotatedAt: string | null;
-}>;
-
-export function publicSecretMetadata(secret: CmsSecretMetadata): PublicSecretMetadata {
-    return {
-        namespaceId: secret.namespaceId,
-        secretId: secret.id,
-        name: secret.name,
-        version: secret.version,
-        createdAt: secret.createdAt.toISOString(),
-        rotatedAt: secret.rotatedAt?.toISOString() ?? null,
-    };
-}
+export type PublicSecretMetadata = Readonly<z.infer<typeof secretMetadataSchema>>;
+export type RotatedSecretMetadata = Readonly<z.infer<typeof rotatedSecretMetadataSchema>>;

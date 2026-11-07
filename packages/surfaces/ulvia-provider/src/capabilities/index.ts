@@ -12,7 +12,6 @@ import { registerFileCapabilities } from "./storage/files";
 import { registerOfficialFeatures } from "./features";
 import { registerAuthoringCapabilities } from "./installations/authoring/index";
 import { registerInstallationCapabilities } from "./installations/index";
-import { registerSecretCapabilities } from "./storage/secrets/index";
 import type { CollectionSources } from "./installations/sources/index";
 import type { ProviderOperationExecutor } from "../operations/ProviderOperationExecutor";
 import type { CmsFilesService } from "@bernouy/cms-files";
@@ -48,14 +47,13 @@ export async function registerOfficialProviderCapabilities(
     if (files) {
         registerFileCapabilities(dispatcher, files, fileWorkspace);
     }
-    if (dependencies.secrets && enabledContractIds.has("ulvia/cms.secrets")) {
-        registerSecretCapabilities(dispatcher, dependencies.secrets);
-    }
     if (enabledContracts) {
         await registerOfficialFeatures(dispatcher, dependencies, enabledContracts, featureOptions);
     }
     registerAccessCapabilities(dispatcher, dependencies, gateway);
 }
+
+export { loadOfficialFeatures } from "./features";
 
 export {
     registerAccessCapabilities,
@@ -64,7 +62,6 @@ export {
     registerOfficialFeatures,
     registerFileCapabilities,
     registerInstallationCapabilities,
-    registerSecretCapabilities,
 };
 export type { UlviaProviderFeatureServices } from "../ports/index";
 export { registerRepositoryCapabilities } from "./registry";

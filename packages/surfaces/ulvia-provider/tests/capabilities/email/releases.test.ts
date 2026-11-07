@@ -6,7 +6,7 @@ import { prepareContractSource } from "@bernouy/cms-repository/repository/author
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
 
-test("SDK email releases preserve every schema, mock, binding, document byte and parent digest", async () => {
+test("SDK feature releases preserve every schema, mock, binding, document byte and parent digest", async () => {
     const compiled = await compileOfficialFeatures();
     for (const admission of compiled.contracts) {
         const name = admission.release.contractId.slice("ulvia/".length);

@@ -1,7 +1,8 @@
 import { DEFAULT_RELEASE_LIMITS } from "@bernouy/ulvia-contracts";
 import type { FeatureDefinition, FeatureServices } from "ulvia-sdk/interfaces/features";
 import type { CapabilitySource } from "ulvia-sdk/interfaces/capabilities";
-import type { CapabilityExecutor } from "ulvia-sdk/interfaces/execution";
+import { authorizeHandler } from "ulvia-sdk/definitions/authorization";
+import type { CapabilityAuthorization, CapabilityExecutor } from "ulvia-sdk/interfaces/execution";
 import type { ContractImplementation, ImplementationOptions } from "ulvia-sdk/interfaces/providers";
 import { capabilityFailure } from "ulvia-sdk/definitions/errors";
 import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
@@ -37,16 +38,23 @@ export function implementFeature(
             if (Object.hasOwn(handlers, capability.id)) {
                 throw new SdkDefinitionError(`Cannot redeclare inherited capability ${capability.id}`);
             }
-            const execute = (
-                capability as CapabilitySource & { execute?: CapabilityExecutor<CapabilitySource, unknown> }
-            ).execute;
+            const { execute, authorize } = capability as CapabilitySource & {
+                execute?: CapabilityExecutor<CapabilitySource, unknown>;
+                authorize?: CapabilityAuthorization<CapabilitySource, unknown>;
+            };
+            if (authorize !== undefined && typeof authorize !== "function") {
+                throw new SdkDefinitionError(`Invalid authorization hook for ${capability.id}`);
+            }
             if (typeof execute !== "function") {
                 throw new SdkDefinitionError(`Missing execute for ${capability.id}`);
             }
             const fail = capabilityFailure(capability);
             handlers[capability.id] = (dependencies) => {
                 const services = selectServices ? selectServices(dependencies) : dependencies;
-                return (input: never, context: never) => execute({ input, services, context, fail });
+                const handler = (input: never, context: never) => execute({ input, services, context, fail });
+                return authorize
+                    ? authorizeHandler(handler, (input, context) => authorize({ input, services, context, fail }))
+                    : handler;
             };
         }
         current = current.extends;

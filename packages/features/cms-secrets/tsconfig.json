@@ -3,8 +3,21 @@
     "compilerOptions": {
         "outDir": "dist",
         "rootDir": "./src",
-        "paths": { "cms-secrets/*": ["./src/*"] }
+        "paths": {
+            "cms-secrets/*": [
+                "./src/*"
+            ]
+        }
     },
-    "include": ["src/**/*.ts"],
-    "references": [{ "path": "../../foundation/secret-store" }]
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../../foundation/secret-store"
+        },
+        {
+            "path": "../../platform/sdk"
+        }
+    ]
 }

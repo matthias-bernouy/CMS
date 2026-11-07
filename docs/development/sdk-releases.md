@@ -1,6 +1,7 @@
 # SDK release workflow
 
-The Emailer pilot is implemented in `packages/features/email/base` and `smtp`.
+The SDK pilots are Emailer/SMTP in `packages/features/email/base` and `smtp`,
+and Secrets in `packages/features/cms-secrets`.
 Their documentation is authored as ordinary `docs/**/*.md` files and discovered
 during SDK compilation. Reusable Zod data schemas live in `src/schemas/` and the TypeScript
 ports infer their types from those schemas. Each capability declares its stable ID,
@@ -12,10 +13,10 @@ storage are injected by the runtime.
 ## Sources and generated artifacts
 
 `infra/releases/ulvia.release.ts` is the explicit trusted local source entry.
-It prepares SDK Emailer/SMTP contracts, the remaining authored contracts and
+It prepares SDK Emailer/SMTP and Secrets contracts, the remaining authored contracts and
 collections, and a manifest with computed exact contract digests. SDK executor functions are captured during authoring/compilation without being
 invoked. Runtime mounting binds injected service ports; invocations run the executors.
-Older Emailer JSON and the authored manifest remain parity references; the new
+Older pilot JSON and the authored manifest remain parity references; the new
 bootstrap and release entry do not use them as generation inputs. Other feature
 families continue using their authored JSON until their migration is requested.
 
@@ -83,9 +84,10 @@ They are not automatically pruned because expiry would permit duplicate sends.
 Each instance admits at most 128 pending executions in memory; receipts have a
 16 KiB outcome bound. A successful new command uses one insert and one update;
 a replay or conflict uses a duplicate insert attempt and one indexed lookup.
-There is no receipt scan, process cache or extra authentication/authorization pass.
-The synchronous JSON adapter is currently wired only for Emailer send; streamed
-commands and general receipt administration remain outside this pilot.
+SMTP adds no receipt scan, process cache or extra authentication/authorization pass.
+The synchronous JSON adapter covers Emailer send and Secrets creation/rotation.
+Secrets adds a fresh namespace permission check before receipt access, including
+replay. Streamed commands and general receipt administration remain outside these pilots.
 
 ## Feature source layout
 
@@ -107,9 +109,11 @@ invalid UTF-8, missing headings, broken links and dangling capability references
 Only `.md` files are included; other regular files are ignored. Limits are 64 documents,
 128 KiB each, 4 MiB total, 1,024 visited entries and eight nested directory levels.
 The SDK root does no filesystem IO; compilation snapshots exact bytes synchronously
-before asynchronous hashing. Current Provider registration still compiles the source
-once during initialization, so those source documentation directories must be shipped
-alongside the feature modules. Mounting admitted artifacts directly remains future work.
+before asynchronous hashing. Bootstrap also emits `ulvia-sdk-runtime/v1` metadata from the same compilation.
+`infra/bootstrap.ts` stages it at the surface's
+`src/capabilities/features/generated/runtime.json`. Runtime mounting verifies that
+artifact and attaches executors without source asset discovery or Zod conversion.
+See [SDK runtime artifacts](sdk-runtime.md) for the format, trust boundary and guards.
 
 Migrated feature definitions have no `contracts/` directory or public `./contracts`
 entry. `src/feature.ts` declares identity, version, parent and the capability list.
@@ -123,7 +127,7 @@ input. TypeScript inference and build admission validate their payloads and code
 local mock IDs must be unique. Binary fixtures retain their verified asset references.
 
 These changes preserve existing contract versions, canonical bytes and digests.
-Runtime compilation retains its current path. Emailer/SMTP capabilities now own
+Emailer/SMTP and Secrets capabilities own
 `execute({ input, services, context, fail })`. `src/capabilities/define.ts` types
 capabilities once with `capabilitiesFor<Services>()`, which returns `defineCapability`.
 `src/feature.ts` calls the SDK's `defineFeature` directly. It is the single source
@@ -137,9 +141,9 @@ There is no feature-owned handler registry or mandatory `handlers/` directory.
 
 The surface selects the complete defaults with `implementFeature` and retains secret
 capability requirements and official error presentation. Its single inventory is
-`packages/surfaces/ulvia-provider/src/capabilities/features/build.ts`.
-`compileOfficialFeatures` compiles and caches that inventory once per process;
-release preparation and runtime mounting consume the same captured plan. The manifest
+`packages/surfaces/ulvia-provider/src/capabilities/features/inventory.ts`.
+`compileOfficialFeatures` compiles it for release preparation and bootstrap.
+`loadOfficialFeatures` verifies the emitted artifact and attaches matching runtime code. The manifest
 claims and generated current execution support matrix follow that inventory.
 `registerOfficialProviderCapabilities` receives exact profile release pins rather than
 contract IDs alone; `registerOfficialFeatures` mounts the selected SDK families.

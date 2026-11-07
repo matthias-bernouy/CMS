@@ -60,3 +60,7 @@ normalization and enabled-configuration checks. Stored-state validation runs aft
 merging retained credentials. Private validation diagnostics never become public
 error payloads. Runtime compilation remains until direct artifact mounting is
 implemented.
+
+The Provider runtime mounts verified generated contract metadata and matching
+executors. Its startup does not need these source Markdown directories; the build
+still discovers them and publishes their exact bytes as separate assets.

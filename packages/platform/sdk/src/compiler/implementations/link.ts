@@ -1,64 +1,18 @@
-import type { CapabilitySource } from "ulvia-sdk/interfaces/capabilities";
-import { ownCapabilities } from "ulvia-sdk/compiler/contracts/capabilitySources";
 import { resolveContract } from "@bernouy/ulvia-contracts";
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
-import type { FeatureDefinition } from "ulvia-sdk/interfaces/features";
-import type { CompiledImplementations, ContractImplementation } from "ulvia-sdk/interfaces/providers";
+import type { CompiledImplementations } from "ulvia-sdk/interfaces/providers";
 import type { RuntimeCapabilityPlan } from "ulvia-sdk/compiler/plan";
-import { compileContracts } from "ulvia-sdk/compiler/contracts";
+import type { CapturedImplementation } from "ulvia-sdk/compiler/implementations/capture";
 import { buildCatalogue } from "ulvia-sdk/compiler/catalogue";
 import { storeProviderPlan } from "ulvia-sdk/compiler/plan";
+import { assertSourceLineage } from "ulvia-sdk/compiler/implementations/lineage";
 import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 
-function effectiveSources(source: FeatureDefinition): Map<string, CapabilitySource> {
-    const capabilities = new Map<string, CapabilitySource>();
-    const seen = new Set<FeatureDefinition>();
-    let current: FeatureDefinition | undefined = source;
-    while (current) {
-        if (seen.has(current) || seen.size >= 24) {
-            throw new SdkDefinitionError("Cyclic or oversized contract lineage", "$.extends");
-        }
-        seen.add(current);
-        for (const capability of ownCapabilities(current)) {
-            const id = capability.id;
-            if (capabilities.has(id)) {
-                throw new SdkDefinitionError(`Cannot redeclare inherited capability ${id}`);
-            }
-            capabilities.set(id, capability);
-        }
-        current = current.extends;
-    }
-    return capabilities;
-}
-
-/** One static handler table drives both manifest claims and the runtime registration plan. */
-export async function compileImplementations<Dependencies>(
-    sources: readonly ContractImplementation<Dependencies>[],
-    dependencies: readonly FeatureDefinition[] = [],
+export async function linkImplementations<Dependencies>(
+    implementations: readonly CapturedImplementation<Dependencies>[],
+    contracts: readonly AdmittedContractRelease[],
 ): Promise<CompiledImplementations<Dependencies>> {
-    const implementations = sources.map((source) => {
-        const capabilities = new Map([...effectiveSources(source.feature)].map(([id, capability]) => [id, capability]));
-        const handlers = Object.freeze({ ...source.handlers });
-        const expected = [...capabilities.keys()].sort();
-        const actual = Object.keys(handlers).sort();
-        if (
-            expected.length !== actual.length ||
-            expected.some((id, index) => actual[index] !== id) ||
-            actual.some((id) => typeof handlers[id] !== "function")
-        ) {
-            throw new SdkDefinitionError(`Handler table does not match ${source.feature.contractId}`);
-        }
-        return {
-            feature: source.feature,
-            contractId: source.feature.contractId,
-            version: source.feature.version,
-            handlers,
-            capabilities,
-            requires: structuredClone(source.requires ?? []),
-            ...(source.delegation ? { delegation: structuredClone(source.delegation) } : {}),
-        };
-    });
-    const contracts = await compileContracts([...implementations.map((source) => source.feature), ...dependencies]);
     const catalogue = buildCatalogue(contracts);
     const implementedContracts = [];
     const claims = [];
@@ -70,6 +24,7 @@ export async function compileImplementations<Dependencies>(
             throw new SdkDefinitionError("Compiled implementation is missing");
         }
         const view = await resolveContract(catalogue, release.admission);
+        assertSourceLineage(source.lineage, view);
         implementedContracts.push(view);
         claims.push({
             contractId: source.contractId,

@@ -22,18 +22,27 @@ normal gateway used by the site Edge.
 See the [workspace package map](../../../docs/architecture/packages.md). Licensed
 under the repository [MIT License](../../../LICENSE).
 
-## Emailer/SMTP assembly pilot
+## SDK feature assembly
 
-`src/capabilities/features/build.ts` lists the selected SDK implementations once.
+`src/capabilities/features/inventory.ts` lists the selected SDK implementations once.
 SMTP's entry projects the injected Emailer service and declares its Secrets
 requirements. Generated releases include the base Emailer contract and exact SMTP
 parent pin; the manifest claims only the complete SMTP implementation. Its inherited
 send capability serves both concrete and parent invocations.
 
-The same cached compilation feeds build claims and `registerOfficialFeatures`.
+Build-only compilation feeds release claims and the generated runtime artifact.
+`loadOfficialFeatures` verifies that shipped metadata once per process and attaches
+executors without scanning docs or compiling schemas. `registerOfficialFeatures`
+mounts only approved implementation pins.
 The runtime supplies approved `{ contractId, version, digest }` releases, exact
 site/instance scope and durable keyed execution. Unknown SMTP pins and missing
 Emailer services refuse mounting. Disabled SMTP requires neither its service nor
 its execution options. Official error localization belongs to this surface.
 Concrete Nodemailer and namespaced SecretStore wiring stay in the runtime.
 Other feature families retain their current explicit adapters and manifest claims.
+
+Secrets is selected through the same inventory and receives an injected structural
+service port. Its 13 capabilities own their schemas, bindings and execution in the
+feature; the former surface registrars are removed. Keyed creation/rotation verify
+namespace write permission before every receipt lookup, including replay. Namespace
+credential checks are domain-owned; Provider authorization/localization stay here.

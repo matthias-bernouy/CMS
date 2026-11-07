@@ -1,4 +1,3 @@
-import { compileOfficialFeatures } from "@bernouy/ulvia-provider/build";
 import { expect, test } from "bun:test";
 import { ConfiguredSmtpEmailer } from "@bernouy/email-smtp/nodemailer";
 import { InMemorySecretStore } from "@bernouy/secret-store";
@@ -81,7 +80,7 @@ test("send validation describes email data while SMTP configuration retains its 
                 }),
             }),
         },
-        (await compileOfficialFeatures()).implementations,
+        await emailReleases(),
         smtpOptions("default"),
     );
     await expect(
@@ -130,4 +129,4 @@ test("send validation describes email data while SMTP configuration retains its 
     expect(sends).toBe(0);
 });
 
-import { smtpOptions } from "../../capabilities/email/fixture";
+import { emailReleases, smtpOptions } from "../../capabilities/email/fixture";

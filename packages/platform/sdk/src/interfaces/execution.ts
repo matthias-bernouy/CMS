@@ -19,7 +19,14 @@ export type CapabilityExecutor<Capability extends CapabilitySource, Services> = 
     execution: CapabilityExecutionContext<Capability, Services>,
 ) => ReturnType<ProviderCapabilityHandler<Capability>>;
 
-export type ExecutableCapability = CapabilitySource & { readonly execute: (execution: never) => unknown };
+export type CapabilityAuthorization<Capability extends CapabilitySource, Services> = (
+    execution: CapabilityExecutionContext<Capability, Services>,
+) => void | Promise<void>;
+
+export type ExecutableCapability = CapabilitySource & {
+    readonly execute: (execution: never) => unknown;
+    readonly authorize?: (execution: never) => void | Promise<void>;
+};
 
 export type CapabilityServices<Capability extends CapabilitySource> =
     Capability extends CapabilityServiceRequirement<infer Services>

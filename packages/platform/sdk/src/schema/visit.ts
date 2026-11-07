@@ -56,12 +56,13 @@ export class SchemaCompiler {
         let result: SchemaNode;
         switch (def.type) {
             case "optional":
+            case "readonly":
             case "nullable": {
                 schemaChecks(schema, [], path);
                 result = this.visit(def.innerType, path, depth + 1);
                 if (def.type === "optional") {
                     result.optional = true;
-                } else if (result.schema.type !== "null") {
+                } else if (def.type === "nullable" && result.schema.type !== "null") {
                     result.schema = { ...result.schema, nullable: true };
                 }
                 break;
