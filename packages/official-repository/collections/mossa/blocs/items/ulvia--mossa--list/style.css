@@ -28,7 +28,7 @@
     letter-spacing: var(--ulvia--mossa--letter-spacing-wide, 0.025em);
     text-transform: uppercase;
 }
-[part~="header"]:has(slot:not(:has-slotted)) {
+[part~="header"]:empty {
     display: none;
 }
 

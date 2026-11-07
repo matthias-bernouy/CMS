@@ -19,5 +19,10 @@
     "text.ui-provider-none.label": "No outgoing capability access requested.",
     "text.ui-provider-machine-authority.label": "Machine capability access",
     "text.ui-provider-delegated-authority.label": "Delegated capability access",
-    "text.ui-provider-added-authority.label": "New delegated permissions to approve"
+    "text.ui-provider-added-authority.label": "New delegated permissions to approve",
+    "text.ui-release-digest.label": "Release digest",
+    "text.ui-provider-route-current.label": "Current selection",
+    "text.ui-provider-route-setup.label": "Setup required",
+    "text.ui-provider-route-unavailable.label": "Unavailable",
+    "text.ui-provider-route-empty.label": "No routing option is available."
 }

@@ -49,7 +49,8 @@
 :scope:hover:not(:disabled) {
     background: var(--ulvia--mossa--action-background-hover);
 }
-:scope[aria-pressed="true"] {
+:scope[aria-pressed="true"],
+:scope[active]:not([active="false"]) {
     color: var(--ulvia--mossa--action-tone);
     background: var(--ulvia--mossa--action-tone-subtle);
 }

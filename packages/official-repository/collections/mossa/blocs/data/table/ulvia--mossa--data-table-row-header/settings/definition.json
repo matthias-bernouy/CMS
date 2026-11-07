@@ -8,9 +8,38 @@
         "control": {
             "kind": "segmented",
             "options": [
-                { "value": "start", "label": "setting.option.start" },
-                { "value": "center", "label": "setting.option.center" },
-                { "value": "end", "label": "setting.option.end" }
+                {
+                    "value": "start",
+                    "label": "setting.option.start"
+                },
+                {
+                    "value": "center",
+                    "label": "setting.option.center"
+                },
+                {
+                    "value": "end",
+                    "label": "setting.option.end"
+                }
+            ]
+        }
+    },
+    {
+        "id": "content-layout",
+        "label": "setting.content-layout.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "inline",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                {
+                    "value": "inline",
+                    "label": "setting.option.inline"
+                },
+                {
+                    "value": "stack",
+                    "label": "setting.option.table-stack"
+                }
             ]
         }
     }

@@ -41,5 +41,7 @@
     "setting.sidebar-width.label": "Largeur de la barre latérale",
     "setting.snap.label": "Alignement pendant le défilement",
     "setting.sticky-header.label": "En-tête fixe",
-    "setting.text-alignment.label": "Alignement du texte"
+    "setting.text-alignment.label": "Alignement du texte",
+    "setting.shell-typography.label": "Typographie des titres",
+    "setting.option.ui": "Interface"
 }

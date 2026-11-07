@@ -27,7 +27,7 @@
     "ui-updated": "· updated",
     "ui-upload-a-file": "Upload a file",
     "ui-upload-file": "Upload file",
-    "ui-upload-replace-and-organise-author-files-through-stable-cms-identities": "Upload, replace and organise author files through stable CMS identities.",
+    "ui-upload-replace-and-organise-author-files-through-stable-cms-identities": "Manage the site’s files and media.",
     "ui-uploading": "Uploading…",
     "ui-bytes": "bytes",
     "ui-private": "Private",
@@ -42,5 +42,18 @@
     "ui-private-file-could-not-be-opened": "The private file could not be opened.",
     "ui-file-could-not-be-opened": "The file could not be opened.",
     "ui-deleting-a-file-removes-all-of-its-generations": "Deleting this file permanently removes all of its generations.",
-    "ui-permanently-delete": "Permanently delete"
+    "ui-permanently-delete": "Permanently delete",
+    "ui-files-search": "Search this batch",
+    "ui-files-search-placeholder": "File name…",
+    "ui-files-select-title": "File preview",
+    "ui-files-select-description": "Open a file’s details to preview its information and manage it here.",
+    "ui-files-no-matches": "No file matches this search in the displayed batch.",
+    "ui-files-empty-title": "No files in this batch",
+    "ui-files-empty-description": "Upload an image or document using the button above. New files are private by default.",
+    "ui-files-pagination": "File batches",
+    "ui-files-batch-note": "Up to 24 files per batch. Search applies to the displayed batch.",
+    "ui-files-previous": "Previous batch",
+    "ui-files-next": "Next batch",
+    "ui-files-width": "Width (px)",
+    "ui-files-height": "Height (px)"
 }

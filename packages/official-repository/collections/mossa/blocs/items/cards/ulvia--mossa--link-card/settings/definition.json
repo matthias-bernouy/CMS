@@ -1,0 +1,16 @@
+[
+    {
+        "id": "count-position",
+        "label": "setting.count-position.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "end",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "start", "label": "setting.option.start" },
+                { "value": "end", "label": "setting.option.end" }
+            ]
+        }
+    }
+]

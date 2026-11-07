@@ -2,7 +2,7 @@
     "text.ui-content-maintenance.label": "Maintenance du contenu",
     "text.ui-copy.label": "/",
     "text.ui-copy-a137f17a.label": "·",
-    "text.ui-collection-operations.label": "Opérations de collections",
+    "text.ui-collection-operations.label": "Opérations de mise à jour",
     "text.ui-collection-operation-diagnostics-are-unavailable.label": "Les diagnostics des opérations de collections sont indisponibles.",
     "text.ui-live-operational-signals-from-the-selected-cms-contracts.label": "Signaux opérationnels en direct provenant des contrats CMS sélectionnés.",
     "text.ui-maintenance.label": "Maintenance",
@@ -19,5 +19,6 @@
     "text.ui-reading-upgrade-state.label": "Lecture de l’état de la upgrade…",
     "text.ui-reading-provider-state.label": "Lecture de l’état des providers…",
     "text.ui-ready.label": "Prêt",
-    "text.ui-retained-upgrade-records.label": "enregistrements de upgrade conservés"
+    "text.ui-retained-upgrade-records.label": "enregistrements de upgrade conservés",
+    "text.ui-diagnostics-revoked.label": "Révoqué"
 }

@@ -9,6 +9,7 @@ class Controller {
     private input: HTMLInputElement | null = null;
     private clearButton: HTMLButtonElement | null = null;
     private root: Document | null = null;
+    private defaultClearLabel = "";
     private submitTimer: number | undefined;
 
     static get observedAttributes(): string[] {
@@ -21,6 +22,7 @@ class Controller {
 
     connect(): void {
         this.clearButton = this.scope.querySelector<HTMLButtonElement>("[data-search-clear]");
+        this.defaultClearLabel = this.clearButton?.getAttribute("aria-label") ?? "";
         this.root = this.blocRoot.ownerDocument;
         this.blocRoot.addEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.handleControlReady);
         this.root.addEventListener("reset", this.handleReset);
@@ -102,7 +104,10 @@ class Controller {
 
     private syncValue(): void {
         this.clearButton?.toggleAttribute("hidden", !this.input?.value);
-        this.clearButton?.setAttribute("aria-label", this.blocRoot.getAttribute("clear-label") || "Clear search");
+        this.clearButton?.setAttribute(
+            "aria-label",
+            this.blocRoot.getAttribute("clear-label") || this.defaultClearLabel,
+        );
     }
 }
 

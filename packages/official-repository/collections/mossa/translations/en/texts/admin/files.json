@@ -42,5 +42,18 @@
     "text.ui-private-file-could-not-be-opened.label": "Private file could not be opened",
     "text.ui-file-could-not-be-opened.label": "File could not be opened",
     "text.ui-deleting-a-file-removes-all-of-its-generations.label": "Deleting a file removes all generations",
-    "text.ui-permanently-delete.label": "Permanently delete"
+    "text.ui-permanently-delete.label": "Permanently delete",
+    "text.ui-files-search.label": "Search this batch",
+    "text.ui-files-search-placeholder.label": "File name…",
+    "text.ui-files-select-title.label": "File preview",
+    "text.ui-files-select-description.label": "Open a file’s details to preview its information and manage it here.",
+    "text.ui-files-no-matches.label": "No file matches this search in the displayed batch.",
+    "text.ui-files-empty-title.label": "Your library starts here",
+    "text.ui-files-empty-description.label": "Upload an image or document using the button above. New files are private by default.",
+    "text.ui-files-pagination.label": "File batches",
+    "text.ui-files-batch-note.label": "Up to 24 files per batch. Search applies to the displayed batch.",
+    "text.ui-files-previous.label": "Previous batch",
+    "text.ui-files-next.label": "Next batch",
+    "text.ui-files-width.label": "Width (px)",
+    "text.ui-files-height.label": "Height (px)"
 }

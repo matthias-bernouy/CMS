@@ -1,7 +1,7 @@
 {
-    "ui-approved-provider-accounts-and-exact-contract-releases-selected-by-this-cms": "Approved provider accounts and exact contract releases selected by this CMS.",
+    "ui-approved-provider-accounts-and-exact-contract-releases-selected-by-this-cms": "Configure the services connected to your site.",
     "ui-configure-the-site-identity-availability-and-languages": "Configure the site identity, availability and languages.",
-    "ui-install-immutable-releases-configure-collections-and-preview-upgrades-before-applying-them": "Install immutable releases, configure collections and preview upgrades before applying them.",
+    "ui-install-immutable-releases-configure-collections-and-preview-upgrades-before-applying-them": "Install and customize your components.",
     "ui-providers-and-contracts": "Providers & contracts",
     "ui-contract-routing": "Contract routing",
     "ui-choose-an-exact-immutable-release": "Choose an exact immutable release",
@@ -20,7 +20,7 @@
     "ui-technical-details": "Technical details",
     "ui-installation-id": "Installation ID",
     "ui-endpoint": "Endpoint",
-    "ui-available-releases": "available releases",
+    "ui-available-releases": "listed releases",
     "ui-collection-catalogue": "Catalogue",
     "ui-collection-catalogue-unavailable": "The collection catalogue is unavailable.",
     "ui-explore-collections": "Explore collections",
@@ -33,7 +33,7 @@
     "ui-manage": "Manage",
     "ui-upgrade-status": "Upgrade status",
     "ui-no-collection-is-installed": "No collection is installed.",
-    "ui-no-repository-release-is-available": "No repository release is available.",
+    "ui-no-repository-release-is-available": "No release is available from the configured repositories.",
     "ui-plan-upgrade": "Plan upgrade",
     "ui-reading-collection-catalogue": "Reading the collection catalogue…",
     "ui-recent-activity": "Recent activity",
@@ -76,5 +76,12 @@
     "ui-release-channel": "Release channel",
     "ui-release-stable": "Stable",
     "ui-release-beta": "Beta",
-    "ui-release-all": "All releases"
+    "ui-release-all": "All releases",
+    "ui-collections-detail-help": "Explore the installed resources, examples and site overrides.",
+    "ui-examples-locale": "Example language",
+    "ui-locale-english": "English",
+    "ui-locale-french": "French",
+    "ui-examples-first-page": "First page",
+    "ui-show-collection-history": "Show historical releases",
+    "ui-more-operations": "More operations"
 }

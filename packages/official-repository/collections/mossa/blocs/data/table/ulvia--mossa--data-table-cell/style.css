@@ -1,4 +1,6 @@
 :scope {
+    display: var(--ulvia--mossa--data-table-cell-display, table-cell);
+    min-width: 0;
     padding: var(--ulvia--mossa--data-table-cell-padding-block, 0.75rem)
         var(--ulvia--mossa--data-table-cell-padding-inline, 1rem);
     border-bottom: var(--ulvia--mossa--data-table-cell-border, 1px solid var(--ulvia--mossa--border-subtle));

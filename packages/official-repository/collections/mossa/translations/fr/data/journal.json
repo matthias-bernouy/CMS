@@ -1,0 +1,5 @@
+{
+    "setting.journal-detail-path.label": "Chemin de la page de détail du journal",
+    "setting.date-range-from.label": "Depuis (date ISO UTC)",
+    "setting.date-range-to.label": "Jusqu’à (date ISO UTC)"
+}

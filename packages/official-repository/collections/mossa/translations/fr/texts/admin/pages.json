@@ -116,5 +116,10 @@
     "text.ui-group.label": "Groupe",
     "text.ui-create-composition.label": "Créer la composition",
     "text.ui-composition-created.label": "Composition créée",
-    "text.ui-page-referenced.label": "Page référencée"
+    "text.ui-page-referenced.label": "Page référencée",
+    "text.ui-pages-filter-all.label": "Toutes",
+    "text.ui-pages-filter-published.label": "Publiées",
+    "text.ui-pages-filter-drafts.label": "Brouillons",
+    "text.ui-pages-search-placeholder.label": "Rechercher un titre ou un chemin…",
+    "text.ui-edit-short.label": "Modifier"
 }

@@ -14,7 +14,8 @@
         "ulvia--mossa--list",
         "ulvia--mossa--list-item",
         "ulvia--mossa--stack",
-        "ulvia--mossa--surface"
+        "ulvia--mossa--surface",
+        "ulvia--mossa--link-card"
     ],
     "requires": [
         {

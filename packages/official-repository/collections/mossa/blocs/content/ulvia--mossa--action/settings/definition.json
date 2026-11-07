@@ -8,9 +8,18 @@
         "control": {
             "kind": "segmented",
             "options": [
-                { "value": "filled", "label": "setting.option.filled" },
-                { "value": "outline", "label": "setting.option.outline" },
-                { "value": "ghost", "label": "setting.option.ghost" }
+                {
+                    "value": "filled",
+                    "label": "setting.option.filled"
+                },
+                {
+                    "value": "outline",
+                    "label": "setting.option.outline"
+                },
+                {
+                    "value": "ghost",
+                    "label": "setting.option.ghost"
+                }
             ]
         }
     },
@@ -23,14 +32,38 @@
         "control": {
             "kind": "select",
             "options": [
-                { "value": "primary", "label": "setting.option.primary" },
-                { "value": "secondary", "label": "setting.option.secondary" },
-                { "value": "neutral", "label": "setting.option.neutral" },
-                { "value": "inverse", "label": "setting.option.inverse" },
-                { "value": "info", "label": "setting.option.info" },
-                { "value": "success", "label": "setting.option.success" },
-                { "value": "warning", "label": "setting.option.warning" },
-                { "value": "danger", "label": "setting.option.danger" }
+                {
+                    "value": "primary",
+                    "label": "setting.option.primary"
+                },
+                {
+                    "value": "secondary",
+                    "label": "setting.option.secondary"
+                },
+                {
+                    "value": "neutral",
+                    "label": "setting.option.neutral"
+                },
+                {
+                    "value": "inverse",
+                    "label": "setting.option.inverse"
+                },
+                {
+                    "value": "info",
+                    "label": "setting.option.info"
+                },
+                {
+                    "value": "success",
+                    "label": "setting.option.success"
+                },
+                {
+                    "value": "warning",
+                    "label": "setting.option.warning"
+                },
+                {
+                    "value": "danger",
+                    "label": "setting.option.danger"
+                }
             ]
         }
     },
@@ -43,9 +76,18 @@
         "control": {
             "kind": "segmented",
             "options": [
-                { "value": "sm", "label": "setting.option.small" },
-                { "value": "md", "label": "setting.option.medium" },
-                { "value": "lg", "label": "setting.option.large" }
+                {
+                    "value": "sm",
+                    "label": "setting.option.small"
+                },
+                {
+                    "value": "md",
+                    "label": "setting.option.medium"
+                },
+                {
+                    "value": "lg",
+                    "label": "setting.option.large"
+                }
             ]
         }
     },
@@ -55,7 +97,9 @@
         "group": "setting.group.layout",
         "type": "boolean",
         "default": false,
-        "control": { "kind": "toggle" }
+        "control": {
+            "kind": "toggle"
+        }
     },
     {
         "id": "icon-only",
@@ -63,6 +107,18 @@
         "group": "setting.group.layout",
         "type": "boolean",
         "default": false,
-        "control": { "kind": "toggle" }
+        "control": {
+            "kind": "toggle"
+        }
+    },
+    {
+        "id": "active",
+        "label": "setting.active.label",
+        "group": "setting.group.state",
+        "type": "boolean",
+        "default": false,
+        "control": {
+            "kind": "toggle"
+        }
     }
 ]

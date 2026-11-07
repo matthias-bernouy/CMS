@@ -12,7 +12,7 @@
     "ui-collection-value": "Valeur de la Collection",
     "ui-dark": "Sombre",
     "ui-draft-theme": "Thème en brouillon",
-    "ui-edit-collection-text-overrides-help": "Remplacez les textes de la Collection pour un site et une langue sans modifier la release immuable.",
+    "ui-edit-collection-text-overrides-help": "Personnalisez les textes pour ce site et cette langue sans modifier la version publiée.",
     "ui-edit-collection-theme-help": "Consultez les tokens de la Collection et personnalisez leurs valeurs pour chaque profil de thème.",
     "ui-edit-token": "Modifier le token",
     "ui-language-list-placeholder": "Langues séparées par des virgules",

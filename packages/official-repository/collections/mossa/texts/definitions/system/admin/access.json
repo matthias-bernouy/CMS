@@ -106,5 +106,35 @@
         "label": "text.ui-your-own-or-protected-grant-cannot-be-removed.label",
         "category": "text.category.admin",
         "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-search-users",
+        "label": "text.ui-search-users.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-no-users",
+        "label": "text.ui-no-users.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-user-actions",
+        "label": "text.ui-user-actions.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-result-page",
+        "label": "text.ui-result-page.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-more-users-available",
+        "label": "text.ui-more-users-available.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
     }
 ]

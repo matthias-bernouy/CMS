@@ -10,7 +10,6 @@
         <svg cms-svg="{{ cms.asset.ulvia/mossa.icons/controls/chevron-left.svg }}" aria-hidden="true"></svg>
         <span>{{ cms.i18n.ulvia/mossa.ui-pages-9046da16 }}</span>
     </a>
-
     <div cms-bloc="ulvia--mossa--cluster" gap="sm" slot="actions" cms-condition="selected.hasData">
         <div cms-bloc="ulvia--mossa--badge" tone="success" cms-condition="selected.data.visible" slot="items">
             <span slot="label">{{ cms.i18n.ulvia/mossa.ui-published }}</span>
@@ -24,10 +23,10 @@
             variant="filled"
             slot="items"
             href="/admin/pages/edit?ulvia--mossa--page-id={{ selected.data.id | urlencode }}"
-            ><span>{{ cms.i18n.ulvia/mossa.ui-edit-content }}</span></a
         >
+            <span>{{ cms.i18n.ulvia/mossa.ui-edit-content }}</span>
+        </a>
     </div>
-
     <div cms-bloc="ulvia--mossa--route-tabs" size="sm" label="{{ cms.i18n.ulvia/mossa.ui-page-details }}" slot="page-navigation">
         <a cms-bloc="ulvia--mossa--route-tab" slot="items" href="#page-general">
             <span>{{ cms.i18n.ulvia/mossa.ui-general }}</span>
@@ -45,27 +44,26 @@
             <span>{{ cms.i18n.ulvia/mossa.ui-danger-zone }}</span>
         </a>
     </div>
-
     <section id="page-detail" slot="content" aria-label="{{ cms.i18n.ulvia/mossa.ui-page-details }}">
-        <div role="status" aria-live="polite" cms-condition="selected.activity === 'fetching'">
-            <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-loading-page }}</h2>
+        <div role="status" aria-live="polite" cms-condition="selected.activity === &#x27;fetching&#x27;">
+            <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-loading-page }}</h2>
             <p>{{ cms.i18n.ulvia/mossa.ui-the-latest-revision-is-being-read-from-the-provider }}</p>
         </div>
         <div cms-match="selected.outcome.kind">
             <span cms-case='"none"'></span>
             <div cms-case='"error"' cms-match="selected.outcome.code">
                 <div role="alert" cms-case='"NOT_FOUND"'>
-                    <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-page-unavailable }}</h2>
+                    <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-page-unavailable }}</h2>
                     <p>{{ cms.i18n.ulvia/mossa.ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable }}</p>
                 </div>
                 <div role="alert" cms-case='"CORE_UNAVAILABLE"'>
-                    <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-page-unavailable }}</h2>
+                    <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-page-unavailable }}</h2>
                     <p>{{ cms.i18n.ulvia/mossa.ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable }}</p>
                 </div>
             </div>
-            <div cms-bloc="ulvia--mossa--stack" gap="lg" cms-case='"success"'>
-                <div cms-bloc="ulvia--mossa--surface" radius="sm" padding="lg" appearance="outlined" slot="items" id="page-general" role="tabpanel">
-                    <div cms-bloc="ulvia--mossa--stack" gap="xl" slot="content">
+            <div cms-bloc="ulvia--mossa--stack" gap="lg" cms-case='"success"' break-long-words width="md">
+                <div cms-bloc="ulvia--mossa--surface" radius="md" padding="md" appearance="outlined" slot="items" id="page-general" role="tabpanel">
+                    <div cms-bloc="ulvia--mossa--stack" gap="lg" slot="content" break-long-words>
                         <form
                             cms-bloc="ulvia--mossa--stack"
                             gap="md"
@@ -74,10 +72,11 @@
                             cms-sync="@page:ulvia--mossa--page-detail-mutation"
                             cms-sync-select="lastSuccess.requestId"
                             cms-mutation-reset="false"
+                            break-long-words
                         >
                             <input type="hidden" name="id" value="{{ selected.data.id }}" slot="items">
                             <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number" slot="items">
-                            <div cms-bloc="ulvia--mossa--stack" gap="lg" slot="items">
+                            <div cms-bloc="ulvia--mossa--stack" gap="lg" slot="items" break-long-words>
                                 <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
                                     <span slot="label">{{ cms.i18n.ulvia/mossa.ui-title }}</span>
                                     <span slot="description">{{
@@ -103,7 +102,7 @@
                                 </div>
                                 <p slot="items">{{ cms.i18n.ulvia/mossa.ui-page-revision }} {{ selected.data.revision }}</p>
                                 <div cms-bloc="ulvia--mossa--form-actions" actions-align="end" slot="items">
-                                    <p slot="actions" role="status" aria-live="polite" cms-condition="saved.activity === 'submitting'">
+                                    <p slot="actions" role="status" aria-live="polite" cms-condition="saved.activity === &#x27;submitting&#x27;">
                                         {{ cms.i18n.ulvia/mossa.ui-saving }}
                                     </p>
                                     <button cms-bloc="ulvia--mossa--action" tone="primary" variant="filled" slot="actions" type="submit">
@@ -112,26 +111,45 @@
                                 </div>
                                 <div slot="items" cms-match="saved.outcome.kind">
                                     <span cms-case='"none"'></span>
-                                    <p role="status" cms-case='"success"'>{{ cms.i18n.ulvia/mossa.ui-page-information-saved }}</p>
+                                    <span cms-case='"success"'></span>
                                     <div cms-case='"error"' cms-match="saved.outcome.code">
-                                        <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-page-unavailable }}</p>
-                                        <p role="alert" cms-case='"REVISION_CONFLICT"'>
-                                            {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
-                                        </p>
-                                        <p role="alert" cms-case='"INVALID_PAGE"'>
-                                            {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
-                                        </p>
-                                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        <span cms-case='"NOT_FOUND"'></span>
+                                        <span cms-case='"REVISION_CONFLICT"'></span>
+                                        <span cms-case='"INVALID_PAGE"'></span>
+                                        <span cms-case='"CORE_UNAVAILABLE"'></span>
                                     </div>
-                                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                    <span cms-case='"failure"'></span>
                                 </div>
                             </div>
+                            <p
+                                role="alert"
+                                cms-condition="saved.outcome.kind === &#x27;failure&#x27; || (saved.outcome.kind === &#x27;error&#x27; &amp;&amp; saved.outcome.code !== &#x27;REVISION_CONFLICT&#x27; &amp;&amp; saved.outcome.code !== &#x27;INVALID_PAGE&#x27; &amp;&amp; saved.outcome.code !== &#x27;NOT_FOUND&#x27;)"
+                                slot="items"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                            </p>
+                            <p slot="items" role="status" cms-condition="saved.outcome.kind === &#x27;success&#x27;">
+                                {{ cms.i18n.ulvia/mossa.ui-page-information-saved }}
+                            </p>
+                            <p
+                                role="alert"
+                                slot="items"
+                                cms-condition="saved.outcome.kind === &#x27;error&#x27; &amp;&amp; (saved.outcome.code === &#x27;REVISION_CONFLICT&#x27; || saved.outcome.code === &#x27;INVALID_PAGE&#x27;)"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
+                            </p>
+                            <p
+                                role="alert"
+                                slot="items"
+                                cms-condition="saved.outcome.kind === &#x27;error&#x27; &amp;&amp; saved.outcome.code === &#x27;NOT_FOUND&#x27;"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-page-unavailable }}
+                            </p>
                         </form>
                     </div>
                 </div>
-
-                <div cms-bloc="ulvia--mossa--surface" radius="sm" padding="lg" appearance="outlined" slot="items" id="page-routes" role="tabpanel">
-                    <div cms-bloc="ulvia--mossa--stack" gap="lg" slot="content">
+                <div cms-bloc="ulvia--mossa--surface" radius="md" padding="md" appearance="outlined" slot="items" id="page-routes" role="tabpanel">
+                    <div cms-bloc="ulvia--mossa--stack" gap="lg" slot="content" break-long-words>
                         <form
                             cms-bloc="ulvia--mossa--stack"
                             gap="md"
@@ -141,6 +159,7 @@
                             cms-sync="@page:ulvia--mossa--page-detail-mutation"
                             cms-sync-select="lastSuccess.requestId"
                             cms-mutation-reset="false"
+                            break-long-words
                         >
                             <input type="hidden" name="id" value="{{ selected.data.id }}" slot="items">
                             <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number" slot="items">
@@ -173,26 +192,50 @@
                             </div>
                             <div cms-match="mutation.outcome.kind" slot="items">
                                 <span cms-case='"none"'></span>
-                                <p role="status" cms-case='"success"'>{{ cms.i18n.ulvia/mossa.ui-route-saved }}</p>
+                                <span cms-case='"success"'></span>
                                 <div cms-case='"error"' cms-match="mutation.outcome.code">
-                                    <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-page-unavailable }}</p>
-                                    <p role="alert" cms-case='"REVISION_CONFLICT"'>
-                                        {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
-                                    </p>
-                                    <p role="alert" cms-case='"PATH_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-this-route-is-already-used-by-another-page }}</p>
-                                    <p role="alert" cms-case='"INVALID_PAGE"'>{{ cms.i18n.ulvia/mossa.ui-the-route-is-invalid }}</p>
-                                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                    <span cms-case='"NOT_FOUND"'></span>
+                                    <span cms-case='"REVISION_CONFLICT"'></span>
+                                    <span cms-case='"PATH_CONFLICT"'></span>
+                                    <span cms-case='"INVALID_PAGE"'></span>
+                                    <span cms-case='"CORE_UNAVAILABLE"'></span>
                                 </div>
-                                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <span cms-case='"failure"'></span>
                             </div>
+                            <p
+                                role="alert"
+                                cms-condition="mutation.outcome.kind === &#x27;failure&#x27; || (mutation.outcome.kind === &#x27;error&#x27; &amp;&amp; mutation.outcome.code !== &#x27;REVISION_CONFLICT&#x27; &amp;&amp; mutation.outcome.code !== &#x27;INVALID_PAGE&#x27; &amp;&amp; mutation.outcome.code !== &#x27;NOT_FOUND&#x27;)"
+                                slot="items"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                            </p>
+                            <p slot="items" role="status" aria-live="polite" cms-condition="mutation.activity === &#x27;submitting&#x27;">
+                                {{ cms.i18n.ulvia/mossa.ui-working }}
+                            </p>
+                            <p slot="items" role="status" cms-condition="mutation.outcome.kind === &#x27;success&#x27;">
+                                {{ cms.i18n.ulvia/mossa.ui-route-saved }}
+                            </p>
+                            <p
+                                role="alert"
+                                slot="items"
+                                cms-condition="mutation.outcome.kind === &#x27;error&#x27; &amp;&amp; (mutation.outcome.code === &#x27;REVISION_CONFLICT&#x27; || mutation.outcome.code === &#x27;INVALID_PAGE&#x27;)"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
+                            </p>
+                            <p
+                                role="alert"
+                                slot="items"
+                                cms-condition="mutation.outcome.kind === &#x27;error&#x27; &amp;&amp; mutation.outcome.code === &#x27;NOT_FOUND&#x27;"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-page-unavailable }}
+                            </p>
                         </form>
                     </div>
                 </div>
-
-                <div cms-bloc="ulvia--mossa--surface" radius="sm" padding="lg" appearance="outlined" slot="items" id="page-search" role="tabpanel">
-                    <div cms-bloc="ulvia--mossa--stack" gap="lg" slot="content">
+                <div cms-bloc="ulvia--mossa--surface" radius="md" padding="md" appearance="outlined" slot="items" id="page-search" role="tabpanel">
+                    <div cms-bloc="ulvia--mossa--stack" gap="lg" slot="content" break-long-words>
                         <header slot="items">
-                            <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-search-metadata }}</h2>
+                            <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-search-metadata }}</h2>
                             <p>{{ cms.i18n.ulvia/mossa.ui-empty-values-inherit-the-page-title-and-description }}</p>
                         </header>
                         <form
@@ -204,12 +247,13 @@
                             cms-sync="@page:ulvia--mossa--page-detail-mutation"
                             cms-sync-select="lastSuccess.requestId"
                             cms-mutation-reset="false"
+                            break-long-words
                         >
                             <input type="hidden" name="id" value="{{ selected.data.id }}" slot="items">
                             <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number" slot="items">
                             <input type="hidden" name="language" value="{{ entry.language }}" slot="items">
-                            <div cms-bloc="ulvia--mossa--stack" gap="md" slot="items">
-                                <h3 cms-bloc="ulvia--mossa--heading" slot="items">{{ entry.language }}</h3>
+                            <div cms-bloc="ulvia--mossa--stack" gap="md" slot="items" break-long-words>
+                                <h3 cms-bloc="ulvia--mossa--heading" slot="items" size="xs">{{ entry.language }}</h3>
                                 <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
                                     <span slot="label">{{ cms.i18n.ulvia/mossa.ui-search-title }}</span>
                                     <div cms-bloc="ulvia--mossa--input" slot="control">
@@ -242,24 +286,48 @@
                             </div>
                             <div cms-match="mutation.outcome.kind" slot="items">
                                 <span cms-case='"none"'></span>
-                                <p role="status" cms-case='"success"'>{{ cms.i18n.ulvia/mossa.ui-search-metadata-saved }}</p>
+                                <span cms-case='"success"'></span>
                                 <div cms-case='"error"' cms-match="mutation.outcome.code">
-                                    <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-page-unavailable }}</p>
-                                    <p role="alert" cms-case='"REVISION_CONFLICT"'>
-                                        {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
-                                    </p>
-                                    <p role="alert" cms-case='"INVALID_PAGE"'>{{ cms.i18n.ulvia/mossa.ui-the-search-metadata-is-invalid }}</p>
-                                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                    <span cms-case='"NOT_FOUND"'></span>
+                                    <span cms-case='"REVISION_CONFLICT"'></span>
+                                    <span cms-case='"INVALID_PAGE"'></span>
+                                    <span cms-case='"CORE_UNAVAILABLE"'></span>
                                 </div>
-                                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <span cms-case='"failure"'></span>
                             </div>
+                            <p
+                                role="alert"
+                                cms-condition="mutation.outcome.kind === &#x27;failure&#x27; || (mutation.outcome.kind === &#x27;error&#x27; &amp;&amp; mutation.outcome.code !== &#x27;REVISION_CONFLICT&#x27; &amp;&amp; mutation.outcome.code !== &#x27;INVALID_PAGE&#x27; &amp;&amp; mutation.outcome.code !== &#x27;NOT_FOUND&#x27;)"
+                                slot="items"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                            </p>
+                            <p slot="items" role="status" aria-live="polite" cms-condition="mutation.activity === &#x27;submitting&#x27;">
+                                {{ cms.i18n.ulvia/mossa.ui-working }}
+                            </p>
+                            <p slot="items" role="status" cms-condition="mutation.outcome.kind === &#x27;success&#x27;">
+                                {{ cms.i18n.ulvia/mossa.ui-search-metadata-saved }}
+                            </p>
+                            <p
+                                role="alert"
+                                slot="items"
+                                cms-condition="mutation.outcome.kind === &#x27;error&#x27; &amp;&amp; (mutation.outcome.code === &#x27;REVISION_CONFLICT&#x27; || mutation.outcome.code === &#x27;INVALID_PAGE&#x27;)"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
+                            </p>
+                            <p
+                                role="alert"
+                                slot="items"
+                                cms-condition="mutation.outcome.kind === &#x27;error&#x27; &amp;&amp; mutation.outcome.code === &#x27;NOT_FOUND&#x27;"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-page-unavailable }}
+                            </p>
                         </form>
                     </div>
                 </div>
-
-                <div cms-bloc="ulvia--mossa--surface" radius="sm" padding="lg" appearance="outlined" slot="items" id="page-publication" role="tabpanel">
-                    <div cms-bloc="ulvia--mossa--stack" gap="lg" slot="content">
-                        <h2 cms-bloc="ulvia--mossa--heading" slot="items">{{ cms.i18n.ulvia/mossa.ui-publication }}</h2>
+                <div cms-bloc="ulvia--mossa--surface" radius="md" padding="md" appearance="outlined" slot="items" id="page-publication" role="tabpanel">
+                    <div cms-bloc="ulvia--mossa--stack" gap="lg" slot="content" break-long-words>
+                        <h2 cms-bloc="ulvia--mossa--heading" slot="items" size="sm">{{ cms.i18n.ulvia/mossa.ui-publication }}</h2>
                         <form
                             cms-bloc="ulvia--mossa--stack"
                             gap="md"
@@ -268,6 +336,7 @@
                             cms-sync="@page:ulvia--mossa--page-detail-mutation"
                             cms-sync-select="lastSuccess.requestId"
                             slot="items"
+                            break-long-words
                         >
                             <input type="hidden" name="id" value="{{ selected.data.id }}" slot="items">
                             <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number" slot="items">
@@ -281,17 +350,37 @@
                                 <span cms-case='"none"'></span>
                                 <span cms-case='"success"'></span>
                                 <div cms-case='"error"' cms-match="publication.outcome.code">
-                                    <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-page-unavailable }}</p>
-                                    <p role="alert" cms-case='"REVISION_CONFLICT"'>
-                                        {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
-                                    </p>
-                                    <p role="alert" cms-case='"INVALID_PAGE"'>
-                                        {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
-                                    </p>
-                                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                    <span cms-case='"NOT_FOUND"'></span>
+                                    <span cms-case='"REVISION_CONFLICT"'></span>
+                                    <span cms-case='"INVALID_PAGE"'></span>
+                                    <span cms-case='"CORE_UNAVAILABLE"'></span>
                                 </div>
-                                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <span cms-case='"failure"'></span>
                             </div>
+                            <p
+                                role="alert"
+                                cms-condition="publication.outcome.kind === &#x27;failure&#x27; || (publication.outcome.kind === &#x27;error&#x27; &amp;&amp; publication.outcome.code !== &#x27;REVISION_CONFLICT&#x27; &amp;&amp; publication.outcome.code !== &#x27;INVALID_PAGE&#x27; &amp;&amp; publication.outcome.code !== &#x27;NOT_FOUND&#x27;)"
+                                slot="items"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                            </p>
+                            <p slot="items" role="status" aria-live="polite" cms-condition="publication.activity === &#x27;submitting&#x27;">
+                                {{ cms.i18n.ulvia/mossa.ui-working }}
+                            </p>
+                            <p
+                                role="alert"
+                                slot="items"
+                                cms-condition="publication.outcome.kind === &#x27;error&#x27; &amp;&amp; (publication.outcome.code === &#x27;REVISION_CONFLICT&#x27; || publication.outcome.code === &#x27;INVALID_PAGE&#x27;)"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
+                            </p>
+                            <p
+                                role="alert"
+                                slot="items"
+                                cms-condition="publication.outcome.kind === &#x27;error&#x27; &amp;&amp; publication.outcome.code === &#x27;NOT_FOUND&#x27;"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-page-unavailable }}
+                            </p>
                         </form>
                         <form
                             cms-bloc="ulvia--mossa--stack"
@@ -301,6 +390,7 @@
                             cms-sync="@page:ulvia--mossa--page-detail-mutation"
                             cms-sync-select="lastSuccess.requestId"
                             slot="items"
+                            break-long-words
                         >
                             <input type="hidden" name="id" value="{{ selected.data.id }}" slot="items">
                             <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number" slot="items">
@@ -314,26 +404,43 @@
                                 <span cms-case='"none"'></span>
                                 <span cms-case='"success"'></span>
                                 <div cms-case='"error"' cms-match="publication.outcome.code">
-                                    <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-page-unavailable }}</p>
-                                    <p role="alert" cms-case='"REVISION_CONFLICT"'>
-                                        {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
-                                    </p>
-                                    <p role="alert" cms-case='"INVALID_PAGE"'>
-                                        {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
-                                    </p>
-                                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                    <span cms-case='"NOT_FOUND"'></span>
+                                    <span cms-case='"REVISION_CONFLICT"'></span>
+                                    <span cms-case='"INVALID_PAGE"'></span>
+                                    <span cms-case='"CORE_UNAVAILABLE"'></span>
                                 </div>
-                                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <span cms-case='"failure"'></span>
                             </div>
+                            <p
+                                role="alert"
+                                cms-condition="publication.outcome.kind === &#x27;failure&#x27; || (publication.outcome.kind === &#x27;error&#x27; &amp;&amp; publication.outcome.code !== &#x27;REVISION_CONFLICT&#x27; &amp;&amp; publication.outcome.code !== &#x27;INVALID_PAGE&#x27; &amp;&amp; publication.outcome.code !== &#x27;NOT_FOUND&#x27;)"
+                                slot="items"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                            </p>
+                            <p slot="items" role="status" aria-live="polite" cms-condition="publication.activity === &#x27;submitting&#x27;">
+                                {{ cms.i18n.ulvia/mossa.ui-working }}
+                            </p>
+                            <p
+                                role="alert"
+                                slot="items"
+                                cms-condition="publication.outcome.kind === &#x27;error&#x27; &amp;&amp; (publication.outcome.code === &#x27;REVISION_CONFLICT&#x27; || publication.outcome.code === &#x27;INVALID_PAGE&#x27;)"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
+                            </p>
+                            <p
+                                role="alert"
+                                slot="items"
+                                cms-condition="publication.outcome.kind === &#x27;error&#x27; &amp;&amp; publication.outcome.code === &#x27;NOT_FOUND&#x27;"
+                            >
+                                {{ cms.i18n.ulvia/mossa.ui-page-unavailable }}
+                            </p>
                         </form>
                     </div>
                 </div>
-
-                <div cms-bloc="ulvia--mossa--surface" radius="sm" padding="lg" appearance="outlined" slot="items" id="page-danger" role="tabpanel">
-                    <div cms-bloc="ulvia--mossa--stack" gap="md" slot="content">
-                        <h2 cms-bloc="ulvia--mossa--heading" id="delete-page-title" slot="items">
-                            {{ cms.i18n.ulvia/mossa.ui-danger-zone }}
-                        </h2>
+                <div cms-bloc="ulvia--mossa--surface" radius="md" padding="md" appearance="outlined" slot="items" id="page-danger" role="tabpanel">
+                    <div cms-bloc="ulvia--mossa--stack" gap="md" slot="content" break-long-words>
+                        <h2 cms-bloc="ulvia--mossa--heading" id="delete-page-title" slot="items" size="sm">{{ cms.i18n.ulvia/mossa.ui-danger-zone }}</h2>
                         <p slot="items">{{ cms.i18n.ulvia/mossa.ui-deletion-is-revision-checked-and-cannot-silently-remove-a-newer-edit }}</p>
                         <div cms-bloc="ulvia--mossa--form-actions" actions-align="start" slot="items">
                             <button
@@ -353,18 +460,15 @@
                 </div>
             </div>
             <div role="alert" cms-case='"failure"'>
-                <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-page-unavailable }}</h2>
+                <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-page-unavailable }}</h2>
                 <p>{{ cms.i18n.ulvia/mossa.ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable }}</p>
             </div>
         </div>
     </section>
-
     <dialog cms-bloc="ulvia--mossa--dialog" slot="content" aria-labelledby="delete-page-dialog-title" id="delete-page-dialog" cms-condition="selected.hasData">
-        <div slot="content" cms-bloc="ulvia--mossa--surface" radius="sm" padding="md" appearance="outlined">
-            <div cms-bloc="ulvia--mossa--stack" gap="lg" slot="content">
-                <h2 cms-bloc="ulvia--mossa--heading" id="delete-page-dialog-title" slot="items">
-                    {{ cms.i18n.ulvia/mossa.ui-delete-this-page }}
-                </h2>
+        <div slot="content" cms-bloc="ulvia--mossa--surface" radius="md" padding="md" appearance="outlined">
+            <div cms-bloc="ulvia--mossa--stack" gap="lg" slot="content" break-long-words>
+                <h2 cms-bloc="ulvia--mossa--heading" id="delete-page-dialog-title" slot="items" size="sm">{{ cms.i18n.ulvia/mossa.ui-delete-this-page }}</h2>
                 <p slot="items">{{ cms.i18n.ulvia/mossa.ui-this-action-cannot-be-undone }}</p>
                 <form
                     cms-bloc="ulvia--mossa--stack"
@@ -372,6 +476,7 @@
                     slot="items"
                     cms-mutation="ulvia/cms.content:pages.delete as deletion"
                     cms-mutation-redirect="/admin/pages"
+                    break-long-words
                 >
                     <input type="hidden" name="id" value="{{ selected.data.id }}" slot="items">
                     <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number" slot="items">
@@ -395,16 +500,38 @@
                         <span cms-case='"none"'></span>
                         <span cms-case='"success"'></span>
                         <div cms-case='"error"' cms-match="deletion.outcome.code">
-                            <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-page-unavailable }}</p>
-                            <p role="alert" cms-case='"REVISION_CONFLICT"'>
-                                {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
-                            </p>
-                            <p role="alert" cms-case='"PAGE_REFERENCED"'>{{ cms.i18n.ulvia/mossa.ui-page-referenced }}</p>
-                            <p role="alert" cms-case='"INVALID_PAGE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
-                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            <span cms-case='"NOT_FOUND"'></span>
+                            <span cms-case='"REVISION_CONFLICT"'></span>
+                            <span cms-case='"PAGE_REFERENCED"'></span>
+                            <span cms-case='"INVALID_PAGE"'></span>
+                            <span cms-case='"CORE_UNAVAILABLE"'></span>
                         </div>
-                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                        <span cms-case='"failure"'></span>
                     </div>
+                    <p
+                        role="alert"
+                        cms-condition="deletion.outcome.kind === &#x27;failure&#x27; || (deletion.outcome.kind === &#x27;error&#x27; &amp;&amp; deletion.outcome.code !== &#x27;REVISION_CONFLICT&#x27; &amp;&amp; deletion.outcome.code !== &#x27;INVALID_PAGE&#x27; &amp;&amp; deletion.outcome.code !== &#x27;NOT_FOUND&#x27;)"
+                        slot="items"
+                    >
+                        {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                    </p>
+                    <p slot="items" role="status" aria-live="polite" cms-condition="deletion.activity === &#x27;submitting&#x27;">
+                        {{ cms.i18n.ulvia/mossa.ui-working }}
+                    </p>
+                    <p
+                        role="alert"
+                        slot="items"
+                        cms-condition="deletion.outcome.kind === &#x27;error&#x27; &amp;&amp; (deletion.outcome.code === &#x27;REVISION_CONFLICT&#x27; || deletion.outcome.code === &#x27;INVALID_PAGE&#x27;)"
+                    >
+                        {{ cms.i18n.ulvia/mossa.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
+                    </p>
+                    <p
+                        role="alert"
+                        slot="items"
+                        cms-condition="deletion.outcome.kind === &#x27;error&#x27; &amp;&amp; deletion.outcome.code === &#x27;NOT_FOUND&#x27;"
+                    >
+                        {{ cms.i18n.ulvia/mossa.ui-page-unavailable }}
+                    </p>
                 </form>
             </div>
         </div>

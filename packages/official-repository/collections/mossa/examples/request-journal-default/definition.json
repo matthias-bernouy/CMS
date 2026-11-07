@@ -1,0 +1,21 @@
+{
+    "id": "request-journal-default",
+    "label": "bloc.request-journal.label",
+    "description": "bloc.request-journal.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 1000
+            }
+        },
+        {
+            "id": "mobile",
+            "frame": {
+                "width": 390,
+                "height": 1200
+            }
+        }
+    ]
+}

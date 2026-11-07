@@ -2,7 +2,7 @@
     "ui-about-979bddc4": "/about",
     "ui-about-us": "À propos de nous",
     "ui-create-a-page": "Créer une Page",
-    "ui-create-and-organize-your-site-pages": "Créez et organisez les Pages de votre site.",
+    "ui-create-and-organize-your-site-pages": "Créez et organisez le contenu.",
     "ui-create-page": "Créer une Page",
     "ui-create-the-first-page-to-start-building-the-site": "Créez la première Page pour commencer à construire le site.",
     "ui-danger-zone": "Zone dangereuse",
@@ -38,7 +38,7 @@
     "ui-save-metadata": "Enregistrer les métadonnées",
     "ui-save-route": "Enregistrer",
     "ui-saving": "Enregistrement…",
-    "ui-search-description": "Rechercher dans la description",
+    "ui-search-description": "Description pour les moteurs de recherche",
     "ui-search-metadata": "Métadonnées de recherche",
     "ui-search-title": "Titre pour la recherche",
     "ui-the-latest-page-catalogue-is-being-read-from-the-provider": "Lecture du dernier catalogue de Pages depuis le provider.",
@@ -116,5 +116,10 @@
     "ui-group": "Groupe",
     "ui-create-composition": "Créer la composition",
     "ui-composition-created": "Composition créée et publiée.",
-    "ui-page-referenced": "Cette page est liée depuis une autre page. Supprimez ces liens avant de la supprimer."
+    "ui-page-referenced": "Cette page est liée depuis une autre page. Supprimez ces liens avant de la supprimer.",
+    "ui-pages-filter-all": "Toutes",
+    "ui-pages-filter-published": "Publiées",
+    "ui-pages-filter-drafts": "Brouillons",
+    "ui-pages-search-placeholder": "Rechercher un titre ou un chemin…",
+    "ui-edit-short": "Modifier"
 }

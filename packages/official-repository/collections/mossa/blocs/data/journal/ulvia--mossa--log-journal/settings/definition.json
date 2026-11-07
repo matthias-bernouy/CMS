@@ -1,0 +1,12 @@
+[
+    {
+        "id": "detail-path",
+        "label": "setting.journal-detail-path.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "",
+        "control": {
+            "kind": "text"
+        }
+    }
+]

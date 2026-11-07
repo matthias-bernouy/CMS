@@ -19,5 +19,10 @@
     "ui-provider-none": "Aucun accès sortant demandé.",
     "ui-provider-machine-authority": "Accès machine aux capabilities",
     "ui-provider-delegated-authority": "Accès délégué aux capabilities",
-    "ui-provider-added-authority": "Nouvelles autorisations déléguées à approuver"
+    "ui-provider-added-authority": "Nouvelles autorisations déléguées à approuver",
+    "ui-release-digest": "Empreinte de la release",
+    "ui-provider-route-current": "Sélection actuelle",
+    "ui-provider-route-setup": "Configuration requise",
+    "ui-provider-route-unavailable": "Indisponible",
+    "ui-provider-route-empty": "Aucune option de routage disponible."
 }

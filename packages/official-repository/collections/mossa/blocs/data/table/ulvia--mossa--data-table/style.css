@@ -13,6 +13,7 @@
     --ulvia--mossa--data-table-row-hover: color-mix(in srgb, var(--ulvia--mossa--background-subtle) 72%, transparent);
     display: block;
     min-width: 0;
+    container-type: inline-size;
     font-family: var(--ulvia--mossa--font-family-main, inherit);
 }
 
@@ -81,4 +82,35 @@
     clip: rect(0 0 0 0);
     clip-path: inset(50%);
     white-space: nowrap;
+}
+
+@container (max-width: 36rem) {
+    :scope[responsive-layout="stack"] [part~="table"] {
+        display: block;
+        min-width: 0;
+        --ulvia--mossa--data-table-row-display: grid;
+        --ulvia--mossa--data-table-row-padding: var(--ulvia--mossa--spacing-md, 1rem);
+        --ulvia--mossa--data-table-cell-display: block;
+        --ulvia--mossa--data-table-row-header-display: block;
+        --ulvia--mossa--data-table-cell-padding-block: 0;
+        --ulvia--mossa--data-table-cell-padding-inline: 0;
+        --ulvia--mossa--data-table-row-header-padding-block: 0;
+        --ulvia--mossa--data-table-row-header-padding-inline: 0;
+        --ulvia--mossa--data-table-cell-border: 0;
+        --ulvia--mossa--data-table-row-header-border: 0;
+        --ulvia--mossa--data-table-row-divider: 1px solid var(--ulvia--mossa--border-subtle);
+        --ulvia--mossa--data-table-row-gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    }
+    :scope[responsive-layout="stack"] [part~="head"] {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+    :scope[responsive-layout="stack"] [part~="body"] {
+        display: block;
+    }
 }

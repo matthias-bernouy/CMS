@@ -110,7 +110,7 @@ class Controller {
             this.tags.some((tag) => tag.toLocaleLowerCase() === value.toLocaleLowerCase())
         ) {
             this.announce(
-                this.tags.length >= maximum ? `Maximum of ${maximum} tags reached` : `${value} is already added`,
+                this.tags.length >= maximum ? `${this.copy("limit")} ${maximum}` : `${this.copy("duplicate")} ${value}`,
             );
             return;
         }
@@ -119,7 +119,7 @@ class Controller {
             this.input.value = "";
         }
         this.commit();
-        this.announce(`${value} added`);
+        this.announce(`${this.copy("added")} ${value}`);
     }
 
     private removeTag = (event: Event): void => {
@@ -136,7 +136,7 @@ class Controller {
             return;
         }
         this.commit();
-        this.announce(`${removed} removed`);
+        this.announce(`${this.copy("removed")} ${removed}`);
         this.input?.focus();
     }
 
@@ -161,7 +161,7 @@ class Controller {
                 remove.type = "button";
                 remove.dataset.index = String(index);
                 remove.setAttribute("part", "remove");
-                remove.setAttribute("aria-label", `Remove ${tag}`);
+                remove.setAttribute("aria-label", `${this.copy("remove")} ${tag}`);
                 remove.disabled = this.source?.disabled === true;
                 item.append(text, remove);
                 return item;
@@ -173,7 +173,7 @@ class Controller {
     private syncState(): void {
         if (this.input) {
             this.input.placeholder =
-                this.source?.placeholder || this.blocRoot.getAttribute("placeholder") || "Type and press Enter";
+                this.source?.placeholder || this.blocRoot.getAttribute("placeholder") || this.copy("placeholder");
             this.input.disabled = this.source?.disabled === true;
             this.input.setAttribute("aria-label", this.accessibleName());
         }
@@ -245,12 +245,16 @@ class Controller {
         }
     };
 
+    private copy(key: string): string {
+        return this.blocRoot.querySelector(`[data-tag-copy="${key}"]`)?.textContent?.trim() ?? "";
+    }
+
     private accessibleName(): string {
         return (
             this.source?.getAttribute("aria-label")?.trim() ||
             this.source?.labels?.item(0)?.textContent?.trim() ||
             this.blocRoot.getAttribute("placeholder") ||
-            "Add a tag"
+            this.copy("add")
         );
     }
 

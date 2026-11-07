@@ -30,5 +30,11 @@
     "ui-view": "View",
     "ui-we-will-only-use-this-address-to-reply": "We will only use this address to reply.",
     "ui-you-can-unsubscribe-at-any-time": "You can unsubscribe at any time.",
-    "ui-your-changes-have-been-saved": "Your changes have been saved."
+    "ui-your-changes-have-been-saved": "Your changes have been saved.",
+    "ui-tag-add": "Add a value",
+    "ui-tag-placeholder": "Type and press Enter",
+    "ui-tag-added": "Value added:",
+    "ui-tag-removed": "Value removed:",
+    "ui-tag-duplicate": "Value already added:",
+    "ui-tag-limit": "Maximum values:"
 }

@@ -466,5 +466,47 @@
         "label": "text.ui-release-all.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-collections-detail-help",
+        "label": "text.ui-collections-detail-help.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-examples-locale",
+        "label": "text.ui-examples-locale.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-locale-english",
+        "label": "text.ui-locale-english.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-locale-french",
+        "label": "text.ui-locale-french.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-examples-first-page",
+        "label": "text.ui-examples-first-page.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-show-collection-history",
+        "label": "text.ui-show-collection-history.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-more-operations",
+        "label": "text.ui-more-operations.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
     }
 ]

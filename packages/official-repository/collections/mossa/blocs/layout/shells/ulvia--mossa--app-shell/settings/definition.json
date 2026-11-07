@@ -8,10 +8,22 @@
         "control": {
             "kind": "segmented",
             "options": [
-                { "value": "top", "label": "setting.option.top" },
-                { "value": "sidebar", "label": "setting.option.sidebar" },
-                { "value": "dual-sidebar", "label": "setting.option.dual-sidebar" },
-                { "value": "hybrid", "label": "setting.option.hybrid" }
+                {
+                    "value": "top",
+                    "label": "setting.option.top"
+                },
+                {
+                    "value": "sidebar",
+                    "label": "setting.option.sidebar"
+                },
+                {
+                    "value": "dual-sidebar",
+                    "label": "setting.option.dual-sidebar"
+                },
+                {
+                    "value": "hybrid",
+                    "label": "setting.option.hybrid"
+                }
             ]
         }
     },
@@ -24,9 +36,18 @@
         "control": {
             "kind": "segmented",
             "options": [
-                { "value": "contained", "label": "setting.option.contained" },
-                { "value": "wide", "label": "setting.option.wide" },
-                { "value": "full", "label": "setting.option.width-full" }
+                {
+                    "value": "contained",
+                    "label": "setting.option.contained"
+                },
+                {
+                    "value": "wide",
+                    "label": "setting.option.wide"
+                },
+                {
+                    "value": "full",
+                    "label": "setting.option.width-full"
+                }
             ]
         }
     },
@@ -39,9 +60,18 @@
         "control": {
             "kind": "segmented",
             "options": [
-                { "value": "compact", "label": "setting.option.compact" },
-                { "value": "default", "label": "setting.option.default" },
-                { "value": "comfortable", "label": "setting.option.comfortable" }
+                {
+                    "value": "compact",
+                    "label": "setting.option.compact"
+                },
+                {
+                    "value": "default",
+                    "label": "setting.option.default"
+                },
+                {
+                    "value": "comfortable",
+                    "label": "setting.option.comfortable"
+                }
             ]
         }
     },
@@ -51,6 +81,28 @@
         "group": "setting.group.behaviour",
         "type": "boolean",
         "default": true,
-        "control": { "kind": "toggle" }
+        "control": {
+            "kind": "toggle"
+        }
+    },
+    {
+        "id": "typography",
+        "label": "setting.shell-typography.label",
+        "group": "setting.group.typography",
+        "type": "string",
+        "default": "default",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                {
+                    "value": "default",
+                    "label": "setting.option.default"
+                },
+                {
+                    "value": "ui",
+                    "label": "setting.option.ui"
+                }
+            ]
+        }
     }
 ]

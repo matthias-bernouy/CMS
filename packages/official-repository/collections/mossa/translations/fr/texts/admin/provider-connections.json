@@ -19,5 +19,10 @@
     "text.ui-provider-none.label": "Aucun accès sortant demandé.",
     "text.ui-provider-machine-authority.label": "Accès machine aux capabilities",
     "text.ui-provider-delegated-authority.label": "Accès délégué aux capabilities",
-    "text.ui-provider-added-authority.label": "Nouvelles autorisations déléguées à approuver"
+    "text.ui-provider-added-authority.label": "Nouvelles autorisations déléguées à approuver",
+    "text.ui-release-digest.label": "Empreinte de la release",
+    "text.ui-provider-route-current.label": "Sélection actuelle",
+    "text.ui-provider-route-setup.label": "Configuration requise",
+    "text.ui-provider-route-unavailable.label": "Indisponible",
+    "text.ui-provider-route-empty.label": "Aucune option de routage disponible."
 }

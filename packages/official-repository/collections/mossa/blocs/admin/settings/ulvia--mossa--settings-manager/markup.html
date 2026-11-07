@@ -1,4 +1,4 @@
-<div cms-bloc="ulvia--mossa--stack" gap="lg">
+<div cms-bloc="ulvia--mossa--stack" gap="lg" width="md">
     <section
         id="settings-general"
         role="tabpanel"
@@ -16,7 +16,7 @@
                     {{ cms.i18n.ulvia/mossa.ui-request-failed }}
                 </p>
             </div>
-            <div cms-bloc="ulvia--mossa--surface" radius="sm" padding="md" appearance="outlined" cms-case='"success"'>
+            <div cms-bloc="ulvia--mossa--surface" radius="md" padding="lg" appearance="outlined" cms-case='"success"'>
                 <form
                     slot="content"
                     cms-mutation="ulvia/cms.content:site.update as savedSite"
@@ -27,8 +27,7 @@
                     <input type="hidden" name="expectedRevision" value="{{ settingsSite.data.revision }}" cms-form-value-type="number">
                     <div cms-bloc="ulvia--mossa--stack" gap="lg">
                         <header slot="items">
-                            <p>{{ cms.i18n.ulvia/mossa.ui-site }}</p>
-                            <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-general-settings }}</h2>
+                            <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-general-settings }}</h2>
                         </header>
                         <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
                             <span slot="label">
@@ -132,7 +131,7 @@
                     {{ cms.i18n.ulvia/mossa.ui-request-failed }}
                 </p>
             </div>
-            <div cms-bloc="ulvia--mossa--surface" radius="sm" padding="md" appearance="outlined" cms-case='"success"'>
+            <div cms-bloc="ulvia--mossa--surface" radius="md" padding="lg" appearance="outlined" cms-case='"success"'>
                 <form
                     slot="content"
                     cms-mutation="ulvia/cms.content:localization.update as savedLanguages"
@@ -143,8 +142,7 @@
                     <input type="hidden" name="expectedRevision" value="{{ settingsLocalization.data.revision }}" cms-form-value-type="number">
                     <div cms-bloc="ulvia--mossa--stack" gap="lg">
                         <header slot="items">
-                            <p>{{ cms.i18n.ulvia/mossa.ui-localization }}</p>
-                            <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-languages }}</h2>
+                            <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-languages }}</h2>
                             <p>{{ cms.i18n.ulvia/mossa.ui-site-languages-help }}</p>
                         </header>
                         <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
@@ -172,6 +170,7 @@
                             <div cms-bloc="ulvia--mossa--tag-input" add-on-blur="" max-tags="100" separator="," serialization="json" slot="control">
                                 <input
                                     id="settings-available-languages"
+                                    aria-label="{{ cms.i18n.ulvia/mossa.ui-available-languages }}"
                                     type="text"
                                     name="additionalLanguages"
                                     cms-form-value-type="json"
@@ -190,6 +189,7 @@
                             <div cms-bloc="ulvia--mossa--tag-input" add-on-blur="" max-tags="100" separator="," serialization="json" slot="control">
                                 <input
                                     id="settings-active-languages"
+                                    aria-label="{{ cms.i18n.ulvia/mossa.ui-active-languages }}"
                                     type="text"
                                     name="activeLanguages"
                                     cms-form-value-type="json"

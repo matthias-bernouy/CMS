@@ -116,5 +116,10 @@
     "text.ui-group.label": "Group",
     "text.ui-create-composition.label": "Create composition",
     "text.ui-composition-created.label": "Composition created",
-    "text.ui-page-referenced.label": "Page is referenced"
+    "text.ui-page-referenced.label": "Page is referenced",
+    "text.ui-pages-filter-all.label": "All",
+    "text.ui-pages-filter-published.label": "Published",
+    "text.ui-pages-filter-drafts.label": "Drafts",
+    "text.ui-pages-search-placeholder.label": "Search a title or path…",
+    "text.ui-edit-short.label": "Edit"
 }

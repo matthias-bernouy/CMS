@@ -1,4 +1,5 @@
 :scope {
+    --ulvia--mossa--heading-inherited-font-family: var(--ulvia--mossa--font-family-main, inherit);
     --ulvia--mossa--page-editor-accent: var(--ulvia--mossa--primary);
     --ulvia--mossa--page-editor-accent-soft: var(--ulvia--mossa--primary-subtle);
     --ulvia--mossa--page-editor-canvas: var(--ulvia--mossa--background-subtle);
@@ -530,10 +531,6 @@ label,
     [part~="workspace"] {
         grid-template-columns: 13.5rem minmax(0, 1fr) 17rem;
     }
-    [part~="save-state"],
-    [part~="history-actions"] {
-        display: none;
-    }
 }
 @media (max-width: 54rem) {
     :scope {
@@ -578,7 +575,6 @@ label,
         grid-template-rows: auto auto;
     }
     [part~="toolbar-divider"],
-    [part~="page-identity"],
     [part~="preview-language"] > label {
         display: none;
     }
@@ -594,5 +590,43 @@ label,
     }
     [part~="catalogue-list"] {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 72rem) {
+    [part~="toolbar"] {
+        grid-template-columns: minmax(0, 1fr) auto;
+        min-height: 3.75rem;
+        gap: 0.5rem;
+        padding-block: 0.5rem;
+    }
+    [part~="viewport-actions"] {
+        display: none;
+    }
+    [part~="toolbar-end"] {
+        flex-wrap: wrap;
+    }
+    [part~="save-state"] {
+        flex-basis: 100%;
+        text-align: end;
+    }
+}
+@media (max-width: 40rem) {
+    [part~="toolbar"] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    [part~="toolbar-start"] {
+        flex-wrap: wrap;
+    }
+    [part~="page-identity"] {
+        flex: 1;
+    }
+    [part~="toolbar-end"] {
+        justify-content: space-between;
+    }
+    [part~="save-state"] {
+        order: 1;
+        flex-basis: auto;
+        text-align: start;
     }
 }

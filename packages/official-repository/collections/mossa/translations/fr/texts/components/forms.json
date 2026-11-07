@@ -30,5 +30,11 @@
     "text.ui-view.label": "Vue",
     "text.ui-we-will-only-use-this-address-to-reply.label": "Nous utiliserons cette adresse uniquement pour vous répondre.",
     "text.ui-you-can-unsubscribe-at-any-time.label": "Vous pouvez vous désabonner à tout moment.",
-    "text.ui-your-changes-have-been-saved.label": "Vos modifications ont été enregistrées."
+    "text.ui-your-changes-have-been-saved.label": "Vos modifications ont été enregistrées.",
+    "text.ui-tag-add.label": "Ajouter une valeur",
+    "text.ui-tag-placeholder.label": "Saisissez une valeur puis Entrée",
+    "text.ui-tag-added.label": "Valeur ajoutée :",
+    "text.ui-tag-removed.label": "Valeur retirée :",
+    "text.ui-tag-duplicate.label": "Valeur déjà ajoutée :",
+    "text.ui-tag-limit.label": "Nombre maximal de valeurs :"
 }

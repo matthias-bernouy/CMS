@@ -35,6 +35,15 @@
                 }
             ],
             "max": 1
+        },
+        "icon": {
+            "accepts": [
+                {
+                    "kind": "native-element",
+                    "accepts": ["svg"]
+                }
+            ],
+            "max": 1
         }
     },
     "root": {

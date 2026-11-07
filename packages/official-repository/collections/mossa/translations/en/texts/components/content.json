@@ -39,5 +39,6 @@
     "text.ui-what-makes-this-different.label": "What makes this different",
     "text.ui-what-should-visitors-know.label": "What should visitors know?",
     "text.ui-write-a-focused-answer-that-removes-uncertainty.label": "Write a focused answer that removes uncertainty.",
-    "text.ui-write-clear-useful-content-for-this-section.label": "Write clear, useful content for this section."
+    "text.ui-write-clear-useful-content-for-this-section.label": "Write clear, useful content for this section.",
+    "text.ui-example-count.label": "Counter example value"
 }

@@ -244,5 +244,11 @@
         "label": "text.ui-write-clear-useful-content-for-this-section.label",
         "category": "text.category.components",
         "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-example-count",
+        "label": "text.ui-example-count.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
     }
 ]

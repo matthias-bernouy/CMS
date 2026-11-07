@@ -27,7 +27,7 @@
     "ui-updated": "· mis à jour",
     "ui-upload-a-file": "Téléverser un fichier",
     "ui-upload-file": "Téléverser le fichier",
-    "ui-upload-replace-and-organise-author-files-through-stable-cms-identities": "Téléversez, remplacez et organisez les fichiers des auteurs grâce aux identités stables du CMS.",
+    "ui-upload-replace-and-organise-author-files-through-stable-cms-identities": "Gérez les fichiers et médias du site.",
     "ui-uploading": "Téléversement…",
     "ui-bytes": "octets",
     "ui-private": "Privé",
@@ -42,5 +42,18 @@
     "ui-private-file-could-not-be-opened": "Le fichier privé n’a pas pu être ouvert.",
     "ui-file-could-not-be-opened": "Le fichier n’a pas pu être ouvert.",
     "ui-deleting-a-file-removes-all-of-its-generations": "La suppression de ce fichier retire définitivement toutes ses générations.",
-    "ui-permanently-delete": "Supprimer définitivement"
+    "ui-permanently-delete": "Supprimer définitivement",
+    "ui-files-search": "Rechercher dans ce lot",
+    "ui-files-search-placeholder": "Nom du fichier…",
+    "ui-files-select-title": "Aperçu du fichier",
+    "ui-files-select-description": "Ouvrez le détail d’un fichier pour consulter ses informations et le gérer ici.",
+    "ui-files-no-matches": "Aucun fichier ne correspond dans le lot affiché.",
+    "ui-files-empty-title": "Aucun fichier dans ce lot",
+    "ui-files-empty-description": "Ajoutez une image ou un document avec le bouton ci-dessus. Les nouveaux fichiers sont privés par défaut.",
+    "ui-files-pagination": "Lots de fichiers",
+    "ui-files-batch-note": "Jusqu’à 24 fichiers par lot. La recherche porte sur le lot affiché.",
+    "ui-files-previous": "Lot précédent",
+    "ui-files-next": "Lot suivant",
+    "ui-files-width": "Largeur (px)",
+    "ui-files-height": "Hauteur (px)"
 }

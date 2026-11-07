@@ -132,5 +132,20 @@
     "setting.visibility.label": "Visibility",
     "setting.wide.label": "Full width",
     "setting.icon-only.label": "Icon only",
-    "setting.width.label": "Content width"
+    "setting.width.label": "Content width",
+    "bloc.link-card.label": "Link card",
+    "bloc.link-card.description": "A native navigation card with an optional icon and counter",
+    "setting.count-position.label": "Counter position",
+    "bloc.date-range.label": "Date range",
+    "bloc.date-range.description": "Choose a UTC period with presets or exact dates.",
+    "bloc.log-journal.label": "Log journal",
+    "bloc.log-journal.description": "Filter journal entries and expand requests with measured durations.",
+    "bloc.request-journal.label": "Request journal",
+    "bloc.request-journal.description": "Inspect calls, HTTP routes, internal phases and sanitized diagnostic details.",
+    "bloc.operation-status.label": "Operation status",
+    "bloc.operation-status.description": "Follow one asynchronous upgrade with bounded polling and explicit terminal results.",
+    "setting.operation-id.label": "Operation ID",
+    "setting.operation-result-param.label": "Operation query parameter",
+    "setting.operation-tracking-only.label": "Keep only the operation ID in tracking links",
+    "setting.break-long-words.label": "Wrap long text"
 }

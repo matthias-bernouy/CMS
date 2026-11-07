@@ -1,7 +1,17 @@
 {
-    "ui-dashboard-introduction": "Consultez l’état essentiel du contenu, du repository et des providers avant de choisir un espace de travail.",
+    "ui-dashboard-introduction": "Retrouvez votre contenu et les derniers changements.",
     "ui-open-workspace": "Ouvrir l’espace",
     "ui-quick-actions": "Accès rapides",
-    "ui-system-snapshot": "État du système",
-    "ui-system-snapshot-description": "Compteurs en direct fournis par les contrats sélectionnés pour cette instance CMS."
+    "ui-system-snapshot": "Aperçu du site",
+    "ui-system-snapshot-description": "Contenus et services configurés pour ce site.",
+    "ui-recent-operations": "Opérations récentes",
+    "ui-draft-pages": "Brouillons à reprendre",
+    "ui-no-draft-pages": "Aucune page en brouillon à reprendre.",
+    "ui-operation-queued": "En attente",
+    "ui-operation-running": "En cours",
+    "ui-operation-succeeded": "Réussie",
+    "ui-operation-failed": "Échouée",
+    "ui-collection-update": "Mise à jour de collection",
+    "ui-contract-update": "Mise à jour de contrat",
+    "ui-reading-workspace-counts": "Lecture des compteurs des espaces…"
 }

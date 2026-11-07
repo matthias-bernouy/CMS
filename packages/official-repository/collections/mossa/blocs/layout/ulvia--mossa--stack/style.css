@@ -34,3 +34,23 @@
 :scope[items-align="end"] [part~="stack"] {
     align-items: flex-end;
 }
+
+:scope {
+    min-width: 0;
+}
+:scope[width="sm"] {
+    max-inline-size: var(--ulvia--mossa--content-width-sm, 40rem);
+}
+:scope[width="md"] {
+    max-inline-size: var(--ulvia--mossa--content-width-md, 56rem);
+}
+:scope[width="lg"] {
+    max-inline-size: var(--ulvia--mossa--content-width-lg, 72rem);
+}
+:scope[width="xl"] {
+    max-inline-size: var(--ulvia--mossa--content-width-xl, 88rem);
+}
+
+:scope[break-long-words] {
+    overflow-wrap: anywhere;
+}

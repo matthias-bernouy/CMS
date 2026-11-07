@@ -2,7 +2,7 @@
     "ui-about-979bddc4": "/about",
     "ui-about-us": "About us",
     "ui-create-a-page": "Create a Page",
-    "ui-create-and-organize-your-site-pages": "Create and organize your site Pages.",
+    "ui-create-and-organize-your-site-pages": "Create and organize content.",
     "ui-create-page": "Create Page",
     "ui-create-the-first-page-to-start-building-the-site": "Create the first Page to start building the site.",
     "ui-danger-zone": "Danger zone",
@@ -116,5 +116,10 @@
     "ui-group": "Group",
     "ui-create-composition": "Create composition",
     "ui-composition-created": "Composition created and published.",
-    "ui-page-referenced": "This Page is linked from another Page. Remove those links before deleting it."
+    "ui-page-referenced": "This Page is linked from another Page. Remove those links before deleting it.",
+    "ui-pages-filter-all": "All",
+    "ui-pages-filter-published": "Published",
+    "ui-pages-filter-drafts": "Drafts",
+    "ui-pages-search-placeholder": "Search a title or path…",
+    "ui-edit-short": "Edit"
 }

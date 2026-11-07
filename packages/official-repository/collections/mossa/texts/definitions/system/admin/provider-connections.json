@@ -124,5 +124,35 @@
         "label": "text.ui-provider-added-authority.label",
         "category": "text.category.admin",
         "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-release-digest",
+        "label": "text.ui-release-digest.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-route-current",
+        "label": "text.ui-provider-route-current.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-route-setup",
+        "label": "text.ui-provider-route-setup.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-route-unavailable",
+        "label": "text.ui-provider-route-unavailable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-route-empty",
+        "label": "text.ui-provider-route-empty.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
     }
 ]

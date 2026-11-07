@@ -1,8 +1,5 @@
-<div
-    cms-bloc="ulvia--mossa--admin-workspace"
-    cms-queries="@param:ulvia--mossa--pages-query as pageSearch @param:ulvia--mossa--pages-visibility as pageVisibility"
->
-    <h1 cms-bloc="ulvia--mossa--heading" slot="title">{{ cms.i18n.ulvia/mossa.ui-pages-9046da16 }}</h1>
+<div cms-bloc="ulvia--mossa--admin-workspace">
+    <h1 cms-bloc="ulvia--mossa--heading" id="page-catalogue-title" slot="title">{{ cms.i18n.ulvia/mossa.ui-pages-9046da16 }}</h1>
     <button
         cms-bloc="ulvia--mossa--action"
         tone="primary"
@@ -13,11 +10,13 @@
         command="show-modal"
         type="button"
     >
+        <svg cms-svg="{{ cms.asset.ulvia/mossa.icons/actions/plus.svg }}" aria-hidden="true"></svg>
         <span>{{ cms.i18n.ulvia/mossa.ui-create-page }}</span>
     </button>
 
     <section
         id="pages-list"
+        cms-queries="@param:ulvia--mossa--pages-query as pageSearch @param:ulvia--mossa--pages-visibility as pageVisibility"
         slot="content"
         cms-query="ulvia/cms.content:pages.list as pages"
         cms-query-input='{"cursor":{"from":"state","key":"@param:ulvia--mossa--pages-cursor","optional":true},"limit":{"from":"literal","value":50},"query":{"from":"state","key":"@param:ulvia--mossa--pages-query","optional":true},"visibility":{"from":"state","key":"@param:ulvia--mossa--pages-visibility","fallback":"all"}}'
@@ -25,59 +24,85 @@
         aria-labelledby="page-catalogue-title"
     >
         <div cms-bloc="ulvia--mossa--stack" gap="lg">
-            <div cms-bloc="ulvia--mossa--split" ratio="primary-wide" items-align="end" gap="md" slot="items">
-                <div cms-bloc="ulvia--mossa--field" label-position="top" slot="primary">
-                    <span slot="label">{{ cms.i18n.ulvia/mossa.ui-search-pages }}</span>
-                    <div cms-bloc="ulvia--mossa--search-input" slot="control">
-                        <div cms-bloc="ulvia--mossa--input" slot="control">
-                            <input
-                                id="pages-search"
-                                type="search"
-                                name="ulvia--mossa--pages-query"
-                                cms-sync="@param:ulvia--mossa--pages-query"
-                                maxlength="120"
-                                value="{{ pageSearch.data }}"
-                                autocomplete="off"
-                            >
-                        </div>
+            <div cms-bloc="ulvia--mossa--split" ratio="primary-wide" items-align="center" gap="md" slot="items">
+                <div cms-bloc="ulvia--mossa--search-input" slot="primary">
+                    <div cms-bloc="ulvia--mossa--input" slot="control">
+                        <input
+                            id="pages-search"
+                            type="search"
+                            name="ulvia--mossa--pages-query"
+                            cms-sync="@param:ulvia--mossa--pages-query"
+                            maxlength="120"
+                            value="{{ pageSearch.data }}"
+                            autocomplete="off"
+                            aria-label="{{ cms.i18n.ulvia/mossa.ui-search-pages }}"
+                            placeholder="{{ cms.i18n.ulvia/mossa.ui-pages-search-placeholder }}"
+                        >
                     </div>
                 </div>
-                <div cms-bloc="ulvia--mossa--field" label-position="top" slot="secondary">
-                    <span slot="label">{{ cms.i18n.ulvia/mossa.ui-visibility }}</span>
-                    <div cms-bloc="ulvia--mossa--select" slot="control">
-                        <select id="pages-visibility" name="ulvia--mossa--pages-visibility" cms-sync="@param:ulvia--mossa--pages-visibility">
-                            <option value="all" selected="{{ pageVisibility.data === undefined || pageVisibility.data === 'all' }}">
-                                {{ cms.i18n.ulvia/mossa.ui-all-pages }}
-                            </option>
-                            <option value="published" selected="{{ pageVisibility.data === 'published' }}">
-                                {{ cms.i18n.ulvia/mossa.ui-published }}
-                            </option>
-                            <option value="draft" selected="{{ pageVisibility.data === 'draft' }}">
-                                {{ cms.i18n.ulvia/mossa.ui-draft }}
-                            </option>
-                        </select>
-                    </div>
+                <div
+                    cms-bloc="ulvia--mossa--cluster"
+                    justify="end"
+                    gap="none"
+                    slot="secondary"
+                    role="navigation"
+                    aria-label="{{ cms.i18n.ulvia/mossa.ui-visibility }}"
+                >
+                    <a
+                        cms-bloc="ulvia--mossa--action"
+                        variant="ghost"
+                        size="sm"
+                        tone="primary"
+                        active="{{ pageVisibility.data === undefined || pageVisibility.data === null || pageVisibility.data === '' || pageVisibility.data === 'all' }}"
+                        aria-current="{{ pageVisibility.data === undefined || pageVisibility.data === null || pageVisibility.data === '' || pageVisibility.data === 'all' }}"
+                        href="/admin/pages?ulvia--mossa--pages-query={{ pageSearch.data | urlencode }}"
+                        slot="items"
+                        ><span>{{ cms.i18n.ulvia/mossa.ui-pages-filter-all }}</span></a
+                    >
+                    <a
+                        cms-bloc="ulvia--mossa--action"
+                        variant="ghost"
+                        size="sm"
+                        tone="primary"
+                        active="{{ pageVisibility.data === 'published' }}"
+                        aria-current="{{ pageVisibility.data === 'published' }}"
+                        href="/admin/pages?ulvia--mossa--pages-query={{ pageSearch.data | urlencode }}&ulvia--mossa--pages-visibility=published"
+                        slot="items"
+                        ><span>{{ cms.i18n.ulvia/mossa.ui-pages-filter-published }}</span></a
+                    >
+                    <a
+                        cms-bloc="ulvia--mossa--action"
+                        variant="ghost"
+                        size="sm"
+                        tone="primary"
+                        active="{{ pageVisibility.data === 'draft' }}"
+                        aria-current="{{ pageVisibility.data === 'draft' }}"
+                        href="/admin/pages?ulvia--mossa--pages-query={{ pageSearch.data | urlencode }}&ulvia--mossa--pages-visibility=draft"
+                        slot="items"
+                        ><span>{{ cms.i18n.ulvia/mossa.ui-pages-filter-drafts }}</span></a
+                    >
                 </div>
             </div>
 
-            <div role="status" aria-live="polite" cms-condition="pages.activity === 'fetching'" slot="items">
-                <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-loading-pages }}</h2>
-                <p>{{ cms.i18n.ulvia/mossa.ui-the-latest-page-catalogue-is-being-read-from-the-provider }}</p>
-            </div>
+            <output cms-bloc="ulvia--mossa--form-status" tone="info" aria-live="polite" cms-condition="pages.activity === 'fetching'" slot="items">{{
+                cms.i18n.ulvia/mossa.ui-loading-pages
+            }}</output>
 
             <div cms-match="pages.outcome.kind" slot="items">
                 <span cms-case='"none"'></span>
                 <div cms-case='"error"' cms-match="pages.outcome.code">
-                    <div role="alert" cms-case='"CORE_UNAVAILABLE"'>
-                        <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-pages-unavailable }}</h2>
-                        <p>{{ cms.i18n.ulvia/mossa.ui-the-provider-could-not-read-the-page-catalogue-check-the-selected-provider-and-try-again }}</p>
-                    </div>
+                    <output cms-bloc="ulvia--mossa--form-status" tone="danger" aria-live="assertive" cms-case='"CORE_UNAVAILABLE"'>{{
+                        cms.i18n.ulvia/mossa.ui-the-provider-could-not-read-the-page-catalogue-check-the-selected-provider-and-try-again
+                    }}</output>
                 </div>
                 <div cms-case='"success"'>
-                    <h2 cms-bloc="ulvia--mossa--heading" id="page-catalogue-title">
-                        {{ cms.i18n.ulvia/mossa.ui-page-catalogue }}
-                    </h2>
-                    <div cms-bloc="ulvia--mossa--data-table" density="comfortable" caption-visibility="hidden" cms-condition="pages.data.items.length">
+                    <div
+                        cms-bloc="ulvia--mossa--data-table"
+                        density="default"
+                        responsive-layout="stack"
+                        caption-visibility="hidden"
+                        cms-condition="pages.data.items.length"
+                    >
                         <span slot="caption">{{ cms.i18n.ulvia/mossa.ui-site-pages }}</span>
                         <th cms-bloc="ulvia--mossa--data-table-column-header" scope="col" slot="columns">
                             {{ cms.i18n.ulvia/mossa.ui-page }}
@@ -85,11 +110,11 @@
                         <th cms-bloc="ulvia--mossa--data-table-column-header" scope="col" slot="columns">
                             {{ cms.i18n.ulvia/mossa.ui-status }}
                         </th>
-                        <th cms-bloc="ulvia--mossa--data-table-column-header" scope="col" slot="columns">
+                        <th cms-bloc="ulvia--mossa--data-table-column-header" scope="col" text-align="end" slot="columns">
                             {{ cms.i18n.ulvia/mossa.ui-actions }}
                         </th>
                         <tr cms-bloc="ulvia--mossa--data-table-row" cms-repeat="pages.data.items as page" slot="rows">
-                            <th cms-bloc="ulvia--mossa--data-table-row-header" scope="row" slot="cells">
+                            <th cms-bloc="ulvia--mossa--data-table-row-header" scope="row" content-layout="stack" slot="cells">
                                 <a href="/admin/pages/detail?ulvia--mossa--page-id={{ page.id | urlencode }}">{{ page.title }}</a>
                                 <code>{{ page.path }}</code>
                             </th>
@@ -97,38 +122,53 @@
                                 <div cms-bloc="ulvia--mossa--badge" tone="success" cms-condition="page.visible">
                                     <span slot="label">{{ cms.i18n.ulvia/mossa.ui-published }}</span>
                                 </div>
-                                <div cms-bloc="ulvia--mossa--badge" tone="neutral" cms-condition="page.visible === false">
+                                <div cms-bloc="ulvia--mossa--badge" tone="warning" cms-condition="page.visible === false">
                                     <span slot="label">{{ cms.i18n.ulvia/mossa.ui-draft }}</span>
                                 </div>
                             </td>
                             <td cms-bloc="ulvia--mossa--data-table-cell" slot="cells">
-                                <div cms-bloc="ulvia--mossa--cluster" gap="sm">
+                                <div cms-bloc="ulvia--mossa--cluster" justify="end" gap="none">
                                     <a
                                         cms-bloc="ulvia--mossa--action"
                                         size="sm"
-                                        tone="secondary"
-                                        variant="outline"
+                                        tone="primary"
+                                        variant="ghost"
                                         slot="items"
                                         href="/admin/pages/edit?ulvia--mossa--page-id={{ page.id | urlencode }}"
-                                        ><span>{{ cms.i18n.ulvia/mossa.ui-edit-content }}</span></a
+                                        ><span>{{ cms.i18n.ulvia/mossa.ui-edit-short }}</span></a
                                     >
                                     <a
                                         cms-bloc="ulvia--mossa--action"
                                         size="sm"
-                                        tone="secondary"
+                                        tone="primary"
                                         variant="ghost"
+                                        icon-only
+                                        aria-label="{{ cms.i18n.ulvia/mossa.ui-details }} — {{ page.title }}"
                                         slot="items"
                                         href="/admin/pages/detail?ulvia--mossa--page-id={{ page.id | urlencode }}"
-                                        ><span>{{ cms.i18n.ulvia/mossa.ui-details }}</span></a
+                                        ><svg cms-svg="{{ cms.asset.ulvia/mossa.icons/actions/ellipsis.svg }}" aria-hidden="true"></svg></a
                                     >
                                 </div>
                             </td>
                         </tr>
                     </div>
-                    <div cms-bloc="ulvia--mossa--surface" padding="lg" appearance="subtle" cms-condition="pages.data.items.length === 0">
-                        <h3 cms-bloc="ulvia--mossa--heading" slot="content">{{ cms.i18n.ulvia/mossa.ui-no-pages-found }}</h3>
+                    <div cms-bloc="ulvia--mossa--surface" padding="lg" appearance="outlined" cms-condition="pages.data.items.length === 0">
+                        <h2 cms-bloc="ulvia--mossa--heading" size="xs" slot="content">{{ cms.i18n.ulvia/mossa.ui-no-pages-found }}</h2>
                         <p slot="content">{{ cms.i18n.ulvia/mossa.ui-adjust-the-filters-or-create-a-page }}</p>
+                        <button
+                            cms-bloc="ulvia--mossa--action"
+                            variant="ghost"
+                            tone="primary"
+                            size="sm"
+                            slot="content"
+                            type="button"
+                            commandfor="create-page-dialog"
+                            command="show-modal"
+                        >
+                            <span>{{ cms.i18n.ulvia/mossa.ui-create-page }}</span>
+                        </button>
                     </div>
+                    <p>{{ pages.data.items.length }} {{ cms.i18n.ulvia/mossa.ui-pages-in-this-batch }}</p>
                     <a
                         cms-bloc="ulvia--mossa--action"
                         tone="secondary"
@@ -138,10 +178,9 @@
                         ><span>{{ cms.i18n.ulvia/mossa.ui-next-pages }}</span></a
                     >
                 </div>
-                <div role="alert" cms-case='"failure"'>
-                    <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-pages-unavailable }}</h2>
-                    <p>{{ cms.i18n.ulvia/mossa.ui-the-provider-could-not-read-the-page-catalogue-check-the-selected-provider-and-try-again }}</p>
-                </div>
+                <output cms-bloc="ulvia--mossa--form-status" tone="danger" aria-live="assertive" cms-case='"failure"'>{{
+                    cms.i18n.ulvia/mossa.ui-the-provider-could-not-read-the-page-catalogue-check-the-selected-provider-and-try-again
+                }}</output>
             </div>
         </div>
     </section>

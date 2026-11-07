@@ -1,0 +1,22 @@
+[
+    {
+        "id": "from",
+        "label": "setting.date-range-from.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "",
+        "control": {
+            "kind": "text"
+        }
+    },
+    {
+        "id": "to",
+        "label": "setting.date-range-to.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "",
+        "control": {
+            "kind": "text"
+        }
+    }
+]

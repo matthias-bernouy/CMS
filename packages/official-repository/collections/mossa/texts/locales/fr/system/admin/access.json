@@ -16,5 +16,10 @@
     "ui-the-administrator-grant-changed-reload-and-retry": "L’autorisation d’administration a changé. Rechargez la page et réessayez.",
     "ui-total-users": "utilisateurs au total.",
     "ui-users-and-settings-could-not-be-read": "Impossible de lire les utilisateurs et les paramètres.",
-    "ui-your-own-or-protected-grant-cannot-be-removed": "Votre propre autorisation ou une autorisation protégée ne peut pas être retirée."
+    "ui-your-own-or-protected-grant-cannot-be-removed": "Votre propre autorisation ou une autorisation protégée ne peut pas être retirée.",
+    "ui-search-users": "Rechercher des utilisateurs",
+    "ui-no-users": "Aucun utilisateur pour cette recherche ou cette page.",
+    "ui-user-actions": "Gérer les accès",
+    "ui-result-page": "Page de résultats",
+    "ui-more-users-available": "D’autres utilisateurs sont disponibles dans les pages suivantes."
 }

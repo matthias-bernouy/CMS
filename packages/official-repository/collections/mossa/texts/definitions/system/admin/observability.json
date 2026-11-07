@@ -142,5 +142,209 @@
         "label": "text.ui-log-level-fatal.label",
         "category": "text.category.admin",
         "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-period",
+        "label": "text.ui-log-period.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-period-15",
+        "label": "text.ui-log-period-15.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-period-hour",
+        "label": "text.ui-log-period-hour.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-period-day",
+        "label": "text.ui-log-period-day.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-since",
+        "label": "text.ui-log-since.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-until",
+        "label": "text.ui-log-until.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-period-invalid",
+        "label": "text.ui-log-period-invalid.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-apply",
+        "label": "text.ui-log-apply.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-all-levels",
+        "label": "text.ui-log-all-levels.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-group",
+        "label": "text.ui-log-group.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-batch-note",
+        "label": "text.ui-log-batch-note.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-duration-note",
+        "label": "text.ui-log-duration-note.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-events",
+        "label": "text.ui-log-events.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-requests-in-batch",
+        "label": "text.ui-log-requests-in-batch.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-time",
+        "label": "text.ui-log-time.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-level",
+        "label": "text.ui-log-level.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-event-name",
+        "label": "text.ui-log-event-name.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-duration",
+        "label": "text.ui-log-duration.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-http-duration",
+        "label": "text.ui-log-http-duration.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-steps",
+        "label": "text.ui-log-steps.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-operation",
+        "label": "text.ui-log-operation.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-http-request",
+        "label": "text.ui-log-http-request.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-invocation",
+        "label": "text.ui-log-invocation.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-close-detail",
+        "label": "text.ui-log-close-detail.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-detail-loading",
+        "label": "text.ui-log-detail-loading.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-detail-unavailable",
+        "label": "text.ui-log-detail-unavailable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-retry-detail",
+        "label": "text.ui-log-retry-detail.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-phases",
+        "label": "text.ui-log-phases.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-full-detail",
+        "label": "text.ui-log-full-detail.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-http-unavailable",
+        "label": "text.ui-log-http-unavailable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-calls",
+        "label": "text.ui-log-calls.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-execution-duration",
+        "label": "text.ui-log-execution-duration.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-no-calls",
+        "label": "text.ui-log-no-calls.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-calls-note",
+        "label": "text.ui-log-calls-note.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
     }
 ]

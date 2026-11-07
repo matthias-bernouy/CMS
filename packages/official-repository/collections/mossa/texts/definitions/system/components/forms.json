@@ -190,5 +190,41 @@
         "label": "text.ui-your-changes-have-been-saved.label",
         "category": "text.category.components",
         "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-tag-add",
+        "label": "text.ui-tag-add.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-tag-placeholder",
+        "label": "text.ui-tag-placeholder.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-tag-added",
+        "label": "text.ui-tag-added.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-tag-removed",
+        "label": "text.ui-tag-removed.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-tag-duplicate",
+        "label": "text.ui-tag-duplicate.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-tag-limit",
+        "label": "text.ui-tag-limit.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
     }
 ]

@@ -1,0 +1,36 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--operation-status",
+    "label": "bloc.operation-status.label",
+    "description": "bloc.operation-status.description",
+    "order": 680,
+    "catalogue": "listed",
+    "uses": ["ulvia--mossa--action"],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.installations",
+            "capabilityId": "get-operation",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {
+        "action": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["form"]
+                }
+            ],
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.administration"],
+    "examples": ["operation-status-default"],
+    "defaultExample": "operation-status-default"
+}

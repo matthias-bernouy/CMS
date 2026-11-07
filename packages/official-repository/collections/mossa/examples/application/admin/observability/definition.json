@@ -7,11 +7,6 @@
             "contractId": "ulvia/cms.observability",
             "capabilityId": "logs.query",
             "versionRange": "^1.0.0"
-        },
-        {
-            "contractId": "ulvia/cms.observability",
-            "capabilityId": "logs.aggregate",
-            "versionRange": "^1.0.0"
         }
     ],
     "previews": [

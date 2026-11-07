@@ -1,0 +1,16 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--date-range",
+    "label": "bloc.date-range.label",
+    "description": "bloc.date-range.description",
+    "order": 520,
+    "uses": [],
+    "requires": [],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["date-range-default"],
+    "defaultExample": "date-range-default"
+}

@@ -3,5 +3,15 @@
     "text.ui-open-workspace.label": "Open workspace action",
     "text.ui-quick-actions.label": "Quick actions",
     "text.ui-system-snapshot-description.label": "System snapshot description",
-    "text.ui-system-snapshot.label": "System snapshot"
+    "text.ui-system-snapshot.label": "System snapshot",
+    "text.ui-recent-operations.label": "Recent operations",
+    "text.ui-draft-pages.label": "Drafts to continue",
+    "text.ui-no-draft-pages.label": "No draft Pages to continue.",
+    "text.ui-operation-queued.label": "Queued",
+    "text.ui-operation-running.label": "Running",
+    "text.ui-operation-succeeded.label": "Succeeded",
+    "text.ui-operation-failed.label": "Failed",
+    "text.ui-collection-update.label": "Collection update",
+    "text.ui-contract-update.label": "Contract update",
+    "text.ui-reading-workspace-counts.label": "Workspace counts loading message"
 }

@@ -14,13 +14,13 @@
 }
 [part~="header"] {
     display: grid;
-    gap: var(--ulvia--mossa--spacing-2xs, 0.25rem);
+    gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
     padding-block-end: var(--ulvia--mossa--spacing-xs, 0.5rem);
 }
 [part~="heading"] {
     display: flex;
     gap: var(--ulvia--mossa--spacing-lg, 1.5rem);
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
 }
 [part~="title"],
@@ -36,6 +36,11 @@
 }
 [part~="navigation"] {
     min-width: 0;
+}
+[part~="actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
 }
 [part~="footer"] {
     padding-block-start: var(--ulvia--mossa--page-shell-page-spacing);

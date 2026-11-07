@@ -706,5 +706,35 @@
         "label": "text.ui-page-referenced.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-pages-filter-all",
+        "label": "text.ui-pages-filter-all.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-pages-filter-published",
+        "label": "text.ui-pages-filter-published.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-pages-filter-drafts",
+        "label": "text.ui-pages-filter-drafts.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-pages-search-placeholder",
+        "label": "text.ui-pages-search-placeholder.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-edit-short",
+        "label": "text.ui-edit-short.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
     }
 ]

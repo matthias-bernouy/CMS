@@ -5,13 +5,11 @@
 >
     <header part="header">
         <div>
-            <h2 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-site-compositions }}</h2>
+            <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-site-compositions }}</h2>
             <p>{{ cms.i18n.ulvia/mossa.ui-site-compositions-help }}</p>
         </div>
     </header>
-    <p role="status" cms-condition="compositions.activity === 'fetching'">
-        {{ cms.i18n.ulvia/mossa.ui-reading-site-compositions }}
-    </p>
+    <p role="status" cms-condition="compositions.activity === &#x27;fetching&#x27;">{{ cms.i18n.ulvia/mossa.ui-reading-site-compositions }}</p>
     <div cms-match="compositions.outcome.kind">
         <span cms-case='"none"' hidden></span>
         <div cms-case='"error"' cms-match="compositions.outcome.code">
@@ -20,18 +18,10 @@
         <div cms-case='"success"'>
             <div cms-bloc="ulvia--mossa--data-table" density="compact" caption-visibility="hidden" cms-condition="compositions.data.items.length">
                 <span slot="caption">{{ cms.i18n.ulvia/mossa.ui-site-compositions }}</span>
-                <th cms-bloc="ulvia--mossa--data-table-column-header" slot="columns" scope="col">
-                    {{ cms.i18n.ulvia/mossa.ui-name }}
-                </th>
-                <th cms-bloc="ulvia--mossa--data-table-column-header" slot="columns" scope="col">
-                    {{ cms.i18n.ulvia/mossa.ui-group }}
-                </th>
-                <th cms-bloc="ulvia--mossa--data-table-column-header" slot="columns" scope="col">
-                    {{ cms.i18n.ulvia/mossa.ui-status }}
-                </th>
-                <th cms-bloc="ulvia--mossa--data-table-column-header" slot="columns" scope="col">
-                    {{ cms.i18n.ulvia/mossa.ui-actions }}
-                </th>
+                <th cms-bloc="ulvia--mossa--data-table-column-header" slot="columns" scope="col">{{ cms.i18n.ulvia/mossa.ui-name }}</th>
+                <th cms-bloc="ulvia--mossa--data-table-column-header" slot="columns" scope="col">{{ cms.i18n.ulvia/mossa.ui-group }}</th>
+                <th cms-bloc="ulvia--mossa--data-table-column-header" slot="columns" scope="col">{{ cms.i18n.ulvia/mossa.ui-status }}</th>
+                <th cms-bloc="ulvia--mossa--data-table-column-header" slot="columns" scope="col">{{ cms.i18n.ulvia/mossa.ui-actions }}</th>
                 <tr cms-bloc="ulvia--mossa--data-table-row" cms-repeat="compositions.data.items as composition" slot="rows">
                     <th cms-bloc="ulvia--mossa--data-table-row-header" slot="cells" scope="row">
                         <strong>{{ composition.name }}</strong>
@@ -39,16 +29,16 @@
                     </th>
                     <td cms-bloc="ulvia--mossa--data-table-cell" slot="cells">{{ composition.group }}</td>
                     <td cms-bloc="ulvia--mossa--data-table-cell" slot="cells">
-                        <div cms-bloc="ulvia--mossa--badge" tone="success" cms-condition="composition.lifecycle === 'active'">
+                        <div cms-bloc="ulvia--mossa--badge" tone="success" cms-condition="composition.lifecycle === &#x27;active&#x27;">
                             <span slot="label">{{ cms.i18n.ulvia/mossa.ui-active }}</span>
                         </div>
-                        <div cms-bloc="ulvia--mossa--badge" tone="neutral" cms-condition="composition.lifecycle === 'archived'">
+                        <div cms-bloc="ulvia--mossa--badge" tone="neutral" cms-condition="composition.lifecycle === &#x27;archived&#x27;">
                             <span slot="label">{{ cms.i18n.ulvia/mossa.ui-archived }}</span>
                         </div>
                     </td>
                     <td cms-bloc="ulvia--mossa--data-table-cell" slot="cells">
                         <form
-                            cms-condition="composition.lifecycle === 'active'"
+                            cms-condition="composition.lifecycle === &#x27;active&#x27;"
                             cms-mutation="ulvia/cms.content:site-blocs.archive as mutation"
                             cms-sync="@page:ulvia--mossa--site-composition-mutation"
                             cms-sync-select="lastSuccess.requestId"
@@ -71,7 +61,7 @@
                             </div>
                         </form>
                         <form
-                            cms-condition="composition.lifecycle === 'archived'"
+                            cms-condition="composition.lifecycle === &#x27;archived&#x27;"
                             cms-mutation="ulvia/cms.content:site-blocs.restore as mutation"
                             cms-sync="@page:ulvia--mossa--site-composition-mutation"
                             cms-sync-select="lastSuccess.requestId"
@@ -96,7 +86,7 @@
                     </td>
                 </tr>
             </div>
-            <div cms-bloc="ulvia--mossa--surface" padding="lg" appearance="subtle" cms-condition="compositions.data.items.length === 0">
+            <div cms-bloc="ulvia--mossa--surface" padding="md" appearance="subtle" cms-condition="compositions.data.items.length === 0" radius="md">
                 <p slot="content">{{ cms.i18n.ulvia/mossa.ui-no-site-compositions }}</p>
             </div>
         </div>

@@ -16,5 +16,10 @@
     "text.ui-the-administrator-grant-changed-reload-and-retry.label": "The administrator grant changed. Reload and retry.",
     "text.ui-total-users.label": "total users.",
     "text.ui-users-and-settings-could-not-be-read.label": "Users and settings could not be read.",
-    "text.ui-your-own-or-protected-grant-cannot-be-removed.label": "Your own or protected grant cannot be removed."
+    "text.ui-your-own-or-protected-grant-cannot-be-removed.label": "Your own or protected grant cannot be removed.",
+    "text.ui-search-users.label": "Search users",
+    "text.ui-no-users.label": "No users match this search or page.",
+    "text.ui-user-actions.label": "Manage access",
+    "text.ui-result-page.label": "Results page",
+    "text.ui-more-users-available.label": "More users are available on the following pages."
 }

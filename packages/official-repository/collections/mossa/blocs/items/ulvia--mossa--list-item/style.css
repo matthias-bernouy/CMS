@@ -1,6 +1,7 @@
 :scope {
     display: block;
     min-width: 0;
+    overflow-wrap: anywhere;
     border: var(--ulvia--mossa--list-item-border, 0);
     border-radius: var(--ulvia--mossa--list-item-radius, 0);
     color: var(--ulvia--mossa--text-primary);
@@ -41,6 +42,13 @@
 }
 [part~="actions"] {
     grid-area: actions;
+}
+[part~="item"]:has(> [part~="body"]:empty) {
+    row-gap: 0;
+}
+[part~="item"]:has(> [part~="leading"]:empty) {
+    grid-template-areas: "content actions" "body actions";
+    grid-template-columns: minmax(0, 1fr) auto;
 }
 
 [part~="leading"],
@@ -132,5 +140,9 @@
     [part~="actions"] {
         grid-column: 1 / -1;
         justify-content: flex-start;
+    }
+    [part~="item"]:has(> [part~="leading"]:empty) {
+        grid-template-areas: "content" "body" "actions";
+        grid-template-columns: minmax(0, 1fr);
     }
 }

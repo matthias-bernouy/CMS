@@ -124,5 +124,11 @@
         "label": "text.ui-retained-upgrade-records.label",
         "category": "text.category.admin",
         "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-diagnostics-revoked",
+        "label": "text.ui-diagnostics-revoked.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
     }
 ]

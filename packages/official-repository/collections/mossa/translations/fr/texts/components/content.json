@@ -39,5 +39,6 @@
     "text.ui-what-makes-this-different.label": "Ce qui fait la différence",
     "text.ui-what-should-visitors-know.label": "Que doivent savoir les visiteurs ?",
     "text.ui-write-a-focused-answer-that-removes-uncertainty.label": "Rédigez une réponse précise qui lève toute incertitude.",
-    "text.ui-write-clear-useful-content-for-this-section.label": "Rédigez un contenu clair et utile pour cette section."
+    "text.ui-write-clear-useful-content-for-this-section.label": "Rédigez un contenu clair et utile pour cette section.",
+    "text.ui-example-count.label": "Valeur d’exemple du compteur"
 }

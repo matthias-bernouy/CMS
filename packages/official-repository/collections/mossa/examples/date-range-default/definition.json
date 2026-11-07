@@ -1,0 +1,14 @@
+{
+    "id": "date-range-default",
+    "label": "bloc.date-range.label",
+    "description": "bloc.date-range.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 480
+            }
+        }
+    ]
+}

@@ -1,4 +1,6 @@
 :scope {
+    display: var(--ulvia--mossa--data-table-row-header-display, table-cell);
+    min-width: 0;
     padding: var(--ulvia--mossa--data-table-row-header-padding-block, 0.75rem)
         var(--ulvia--mossa--data-table-row-header-padding-inline, 1rem);
     border-bottom: var(--ulvia--mossa--data-table-row-header-border, 1px solid var(--ulvia--mossa--border-subtle));
@@ -16,4 +18,22 @@
 
 :scope[text-align="end"] {
     text-align: end;
+}
+
+:scope[content-layout="stack"] > a {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+:scope[content-layout="stack"] > a:hover {
+    color: var(--ulvia--mossa--primary);
+    text-decoration: underline;
+}
+:scope[content-layout="stack"] > code {
+    display: block;
+    margin-block-start: var(--ulvia--mossa--spacing-2xs, 0.25rem);
+    color: var(--ulvia--mossa--text-secondary);
+    font-family: inherit;
+    font-size: var(--ulvia--mossa--font-size-xs, 0.75rem);
+    font-weight: var(--ulvia--mossa--font-weight-regular, 400);
 }

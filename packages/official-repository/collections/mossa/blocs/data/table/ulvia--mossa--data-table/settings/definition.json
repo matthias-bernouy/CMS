@@ -8,9 +8,18 @@
         "control": {
             "kind": "segmented",
             "options": [
-                { "value": "compact", "label": "setting.option.compact" },
-                { "value": "default", "label": "setting.option.default" },
-                { "value": "comfortable", "label": "setting.option.comfortable" }
+                {
+                    "value": "compact",
+                    "label": "setting.option.compact"
+                },
+                {
+                    "value": "default",
+                    "label": "setting.option.default"
+                },
+                {
+                    "value": "comfortable",
+                    "label": "setting.option.comfortable"
+                }
             ]
         }
     },
@@ -23,8 +32,14 @@
         "control": {
             "kind": "segmented",
             "options": [
-                { "value": "visible", "label": "setting.option.visible" },
-                { "value": "hidden", "label": "setting.option.visually-hidden" }
+                {
+                    "value": "visible",
+                    "label": "setting.option.visible"
+                },
+                {
+                    "value": "hidden",
+                    "label": "setting.option.visually-hidden"
+                }
             ]
         }
     },
@@ -34,6 +49,28 @@
         "group": "setting.group.appearance",
         "type": "boolean",
         "default": false,
-        "control": { "kind": "toggle" }
+        "control": {
+            "kind": "toggle"
+        }
+    },
+    {
+        "id": "responsive-layout",
+        "label": "setting.responsive-layout.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "scroll",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                {
+                    "value": "scroll",
+                    "label": "setting.option.table-scroll"
+                },
+                {
+                    "value": "stack",
+                    "label": "setting.option.table-stack"
+                }
+            ]
+        }
     }
 ]

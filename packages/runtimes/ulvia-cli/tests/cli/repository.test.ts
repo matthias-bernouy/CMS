@@ -107,6 +107,7 @@ test("local repository lists immutable metadata and serves matching release byte
                 "size",
                 "wide",
                 "icon-only",
+                "active",
             ]);
         }
         const heading = release.blocs.find((bloc) => bloc.id === "ulvia--mossa--heading");

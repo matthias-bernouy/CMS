@@ -19,5 +19,10 @@
     "ui-provider-none": "No outgoing capability access requested.",
     "ui-provider-machine-authority": "Machine capability access",
     "ui-provider-delegated-authority": "Delegated capability access",
-    "ui-provider-added-authority": "New delegated permissions to approve"
+    "ui-provider-added-authority": "New delegated permissions to approve",
+    "ui-release-digest": "Release digest",
+    "ui-provider-route-current": "Current selection",
+    "ui-provider-route-setup": "Setup required",
+    "ui-provider-route-unavailable": "Unavailable",
+    "ui-provider-route-empty": "No routing option is available."
 }

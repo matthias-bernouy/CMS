@@ -8,9 +8,18 @@
         "control": {
             "kind": "segmented",
             "options": [
-                { "value": "sm", "label": "setting.option.small" },
-                { "value": "md", "label": "setting.option.medium" },
-                { "value": "lg", "label": "setting.option.large" }
+                {
+                    "value": "sm",
+                    "label": "setting.option.small"
+                },
+                {
+                    "value": "md",
+                    "label": "setting.option.medium"
+                },
+                {
+                    "value": "lg",
+                    "label": "setting.option.large"
+                }
             ]
         }
     },
@@ -19,9 +28,11 @@
         "label": "setting.clear-search-label.label",
         "group": "setting.group.content",
         "type": "string",
-        "default": "Clear search",
+        "default": "",
         "maxLength": 80,
-        "control": { "kind": "text" }
+        "control": {
+            "kind": "text"
+        }
     },
     {
         "id": "auto-submit",
@@ -30,7 +41,9 @@
         "group": "setting.group.behavior",
         "type": "boolean",
         "default": false,
-        "control": { "kind": "toggle" }
+        "control": {
+            "kind": "toggle"
+        }
     },
     {
         "id": "submit-delay",
@@ -40,7 +53,13 @@
         "default": 300,
         "minimum": 0,
         "maximum": 2000,
-        "control": { "kind": "number", "step": 50 },
-        "visibleWhen": { "setting": "auto-submit", "equals": true }
+        "control": {
+            "kind": "number",
+            "step": 50
+        },
+        "visibleWhen": {
+            "setting": "auto-submit",
+            "equals": true
+        }
     }
 ]

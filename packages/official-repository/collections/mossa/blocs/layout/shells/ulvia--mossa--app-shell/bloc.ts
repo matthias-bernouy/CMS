@@ -1,6 +1,6 @@
 import { createBlocScope } from "@bernouy/cms-content/browser";
 
-const COMPACT_BREAKPOINT_REM = 68;
+const COMPACT_BREAKPOINT_REM = 56;
 
 class Controller {
     private readonly scope: ReturnType<typeof createBlocScope>;

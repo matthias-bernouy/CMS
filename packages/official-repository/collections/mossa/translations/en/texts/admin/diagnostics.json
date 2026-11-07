@@ -2,7 +2,7 @@
     "text.ui-content-maintenance.label": "Content maintenance",
     "text.ui-copy.label": "Path separator",
     "text.ui-copy-a137f17a.label": "Middle dot separator",
-    "text.ui-collection-operations.label": "Collection operations",
+    "text.ui-collection-operations.label": "Upgrade operations",
     "text.ui-collection-operation-diagnostics-are-unavailable.label": "Collection operation diagnostics are unavailable.",
     "text.ui-live-operational-signals-from-the-selected-cms-contracts.label": "Live operational signals from the selected CMS contracts.",
     "text.ui-maintenance.label": "Maintenance",
@@ -19,5 +19,6 @@
     "text.ui-reading-upgrade-state.label": "Reading upgrade state…",
     "text.ui-reading-provider-state.label": "Reading provider state…",
     "text.ui-ready.label": "Ready",
-    "text.ui-retained-upgrade-records.label": "retained upgrade records"
+    "text.ui-retained-upgrade-records.label": "retained upgrade records",
+    "text.ui-diagnostics-revoked.label": "Revoked"
 }

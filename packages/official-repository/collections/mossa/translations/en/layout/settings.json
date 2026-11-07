@@ -41,5 +41,7 @@
     "setting.sidebar-width.label": "Sidebar width",
     "setting.snap.label": "Snap while scrolling",
     "setting.sticky-header.label": "Sticky header",
-    "setting.text-alignment.label": "Text alignment"
+    "setting.text-alignment.label": "Text alignment",
+    "setting.shell-typography.label": "Heading typography",
+    "setting.option.ui": "Interface"
 }

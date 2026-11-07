@@ -3,5 +3,15 @@
     "text.ui-open-workspace.label": "Action d’ouverture d’un espace",
     "text.ui-quick-actions.label": "Accès rapides",
     "text.ui-system-snapshot-description.label": "Description de l’état du système",
-    "text.ui-system-snapshot.label": "État du système"
+    "text.ui-system-snapshot.label": "État du système",
+    "text.ui-recent-operations.label": "Opérations récentes",
+    "text.ui-draft-pages.label": "Brouillons à reprendre",
+    "text.ui-no-draft-pages.label": "Aucune page en brouillon à reprendre.",
+    "text.ui-operation-queued.label": "En attente",
+    "text.ui-operation-running.label": "En cours",
+    "text.ui-operation-succeeded.label": "Réussie",
+    "text.ui-operation-failed.label": "Échouée",
+    "text.ui-collection-update.label": "Mise à jour de collection",
+    "text.ui-contract-update.label": "Mise à jour de contrat",
+    "text.ui-reading-workspace-counts.label": "Message de chargement des compteurs"
 }

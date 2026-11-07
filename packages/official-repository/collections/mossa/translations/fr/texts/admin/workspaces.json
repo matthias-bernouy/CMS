@@ -76,5 +76,12 @@
     "text.ui-release-channel.label": "Canal de publication",
     "text.ui-release-stable.label": "Stable",
     "text.ui-release-beta.label": "Bêta",
-    "text.ui-release-all.label": "Toutes les versions"
+    "text.ui-release-all.label": "Toutes les versions",
+    "text.ui-collections-detail-help.label": "Parcourez les ressources installées, les exemples et les personnalisations du site.",
+    "text.ui-examples-locale.label": "Langue des exemples",
+    "text.ui-locale-english.label": "Anglais",
+    "text.ui-locale-french.label": "Français",
+    "text.ui-examples-first-page.label": "Première page",
+    "text.ui-show-collection-history.label": "Afficher les versions historiques",
+    "text.ui-more-operations.label": "Opérations suivantes"
 }

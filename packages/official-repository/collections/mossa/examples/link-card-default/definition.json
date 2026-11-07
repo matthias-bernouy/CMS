@@ -1,0 +1,21 @@
+{
+    "id": "link-card-default",
+    "label": "bloc.link-card.label",
+    "description": "bloc.link-card.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 480,
+                "height": 160
+            }
+        },
+        {
+            "id": "mobile",
+            "frame": {
+                "width": 320,
+                "height": 220
+            }
+        }
+    ]
+}

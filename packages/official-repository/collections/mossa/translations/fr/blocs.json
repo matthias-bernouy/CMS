@@ -132,5 +132,20 @@
     "setting.visibility.label": "Visibilité",
     "setting.wide.label": "Pleine largeur",
     "setting.icon-only.label": "Icône seule",
-    "setting.width.label": "Largeur du contenu"
+    "setting.width.label": "Largeur du contenu",
+    "bloc.link-card.label": "Carte de navigation",
+    "bloc.link-card.description": "Une carte de navigation native avec icône et compteur facultatifs",
+    "setting.count-position.label": "Position du compteur",
+    "bloc.date-range.label": "Période",
+    "bloc.date-range.description": "Choisir une période UTC prédéfinie ou personnalisée.",
+    "bloc.log-journal.label": "Journal de diagnostic",
+    "bloc.log-journal.description": "Filtrer le journal et déplier les requêtes avec leurs durées mesurées.",
+    "bloc.request-journal.label": "Journal des requêtes",
+    "bloc.request-journal.description": "Inspecter les appels, routes HTTP, phases internes et détails de diagnostic.",
+    "bloc.operation-status.label": "Suivi d’opération",
+    "bloc.operation-status.description": "Suivre une mise à jour asynchrone avec un suivi limité et un résultat explicite.",
+    "setting.operation-id.label": "Identifiant de l’opération",
+    "setting.operation-result-param.label": "Paramètre de l’opération",
+    "setting.operation-tracking-only.label": "Ne conserver que l’opération dans les liens de suivi",
+    "setting.break-long-words.label": "Renvoyer les textes longs à la ligne"
 }

@@ -1,0 +1,86 @@
+:scope {
+    display: flex;
+    min-width: 0;
+    box-sizing: border-box;
+    align-items: center;
+    gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    padding: var(--ulvia--mossa--spacing-md, 1rem);
+    border: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+    border-radius: var(--ulvia--mossa--radius-lg, 0.75rem);
+    color: var(--ulvia--mossa--text-primary);
+    background: var(--ulvia--mossa--background-surface);
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+    text-decoration: none;
+    transition: border-color var(--ulvia--mossa--duration-fast, 120ms);
+}
+:scope:hover {
+    border-color: var(--ulvia--mossa--primary);
+}
+:scope:focus-visible {
+    outline: 3px solid var(--ulvia--mossa--focus-ring);
+    outline-offset: 3px;
+}
+[part~="icon"] {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    color: var(--ulvia--mossa--primary);
+}
+[part~="icon"] svg {
+    display: block;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+[part~="content"] {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    gap: var(--ulvia--mossa--spacing-3xs, 0.125rem);
+    overflow-wrap: anywhere;
+}
+[part~="title"] {
+    font-size: var(--ulvia--mossa--font-size-md, 1rem);
+    font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+    line-height: var(--ulvia--mossa--line-height-snug, 1.35);
+}
+[part~="description"] {
+    color: var(--ulvia--mossa--text-secondary);
+    font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+    line-height: var(--ulvia--mossa--line-height-normal, 1.5);
+}
+[part~="indicator"] {
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    margin-inline-start: auto;
+    color: var(--ulvia--mossa--text-muted);
+    transform: rotate(180deg);
+}
+:scope > [part~="count"] {
+    flex-shrink: 0;
+    max-width: 8ch;
+    padding: var(--ulvia--mossa--spacing-3xs, 0.125rem) var(--ulvia--mossa--spacing-xs, 0.5rem);
+    border-radius: var(--ulvia--mossa--radius-full, 999px);
+    color: var(--ulvia--mossa--on-primary-subtle);
+    background: var(--ulvia--mossa--primary-subtle);
+    font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+    font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+:scope > [part~="count"]:not(:has(> :not([hidden]))) {
+    display: none;
+}
+:scope[count-position="start"] > [part~="count"] {
+    order: -1;
+}
+[part~="icon"]:empty,
+[part~="description"]:empty {
+    display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    :scope {
+        transition: none;
+    }
+}

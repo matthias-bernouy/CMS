@@ -42,5 +42,18 @@
     "text.ui-private-file-could-not-be-opened.label": "Le fichier privé n’a pas pu être ouvert",
     "text.ui-file-could-not-be-opened.label": "Le fichier n’a pas pu être ouvert",
     "text.ui-deleting-a-file-removes-all-of-its-generations.label": "Supprimer un fichier retire toutes ses générations",
-    "text.ui-permanently-delete.label": "Supprimer définitivement"
+    "text.ui-permanently-delete.label": "Supprimer définitivement",
+    "text.ui-files-search.label": "Rechercher dans ce lot",
+    "text.ui-files-search-placeholder.label": "Nom du fichier…",
+    "text.ui-files-select-title.label": "Aperçu du fichier",
+    "text.ui-files-select-description.label": "Ouvrez le détail d’un fichier pour consulter ses informations et le gérer ici.",
+    "text.ui-files-no-matches.label": "Aucun fichier ne correspond dans le lot affiché.",
+    "text.ui-files-empty-title.label": "Votre bibliothèque commence ici",
+    "text.ui-files-empty-description.label": "Ajoutez une image ou un document avec le bouton ci-dessus. Les nouveaux fichiers sont privés par défaut.",
+    "text.ui-files-pagination.label": "Lots de fichiers",
+    "text.ui-files-batch-note.label": "Jusqu’à 24 fichiers par lot. La recherche porte sur le lot affiché.",
+    "text.ui-files-previous.label": "Lot précédent",
+    "text.ui-files-next.label": "Lot suivant",
+    "text.ui-files-width.label": "Largeur (px)",
+    "text.ui-files-height.label": "Hauteur (px)"
 }

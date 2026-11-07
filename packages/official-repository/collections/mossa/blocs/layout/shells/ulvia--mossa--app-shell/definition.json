@@ -4,7 +4,7 @@
     "label": "bloc.app-shell.label",
     "description": "bloc.app-shell.description",
     "order": 160,
-    "uses": ["ulvia--mossa--heading"],
+    "uses": ["ulvia--mossa--heading", "ulvia--mossa--stat"],
     "requires": [],
     "slots": {
         "brand": {

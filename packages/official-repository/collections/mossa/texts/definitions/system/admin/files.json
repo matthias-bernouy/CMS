@@ -262,5 +262,83 @@
         "label": "text.ui-permanently-delete.label",
         "category": "text.category.admin",
         "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-search",
+        "label": "text.ui-files-search.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-search-placeholder",
+        "label": "text.ui-files-search-placeholder.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-select-title",
+        "label": "text.ui-files-select-title.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-select-description",
+        "label": "text.ui-files-select-description.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-no-matches",
+        "label": "text.ui-files-no-matches.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-empty-title",
+        "label": "text.ui-files-empty-title.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-empty-description",
+        "label": "text.ui-files-empty-description.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-pagination",
+        "label": "text.ui-files-pagination.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-batch-note",
+        "label": "text.ui-files-batch-note.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-previous",
+        "label": "text.ui-files-previous.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-next",
+        "label": "text.ui-files-next.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-width",
+        "label": "text.ui-files-width.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-height",
+        "label": "text.ui-files-height.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
     }
 ]

@@ -3,30 +3,22 @@
     cms-query-input='{"collectionId":{"from":"state","key":"@param:ulvia--mossa--collection"},"locale":{"from":"state","key":"@param:ulvia--mossa--locale","optional":true},"group":{"from":"state","key":"@param:ulvia--mossa--group","optional":true},"search":{"from":"state","key":"@param:ulvia--mossa--search","optional":true}}'
     cms-query-listen="@param:ulvia--mossa--collection @param:ulvia--mossa--locale @param:ulvia--mossa--group @param:ulvia--mossa--search @page:ulvia--mossa--collection-texts-mutation/lastSuccess/requestId"
 >
-    <p role="status" aria-live="polite" cms-condition="collectionTexts.activity === 'fetching'">
-        {{ cms.i18n.ulvia/mossa.ui-working }}
-    </p>
+    <p role="status" aria-live="polite" cms-condition="collectionTexts.activity === &#x27;fetching&#x27;">{{ cms.i18n.ulvia/mossa.ui-working }}</p>
     <div cms-match="collectionTexts.outcome.kind">
         <span cms-case='"none"' hidden></span>
         <div cms-case='"error"' cms-match="collectionTexts.outcome.code">
-            <p role="alert" cms-case='"NOT_FOUND"'>
-                {{ cms.i18n.ulvia/mossa.ui-request-failed }}
-            </p>
-            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
-                {{ cms.i18n.ulvia/mossa.ui-request-failed }}
-            </p>
+            <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
         </div>
         <div cms-bloc="ulvia--mossa--stack" gap="lg" cms-case='"success"'>
             <header slot="items">
-                <h3 cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/mossa.ui-collection-text-editor }}</h3>
+                <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-collection-text-editor }}</h2>
                 <p>{{ cms.i18n.ulvia/mossa.ui-edit-collection-text-overrides-help }}</p>
             </header>
-            <div cms-bloc="ulvia--mossa--surface" radius="sm" padding="md" appearance="outlined" slot="items">
+            <div cms-bloc="ulvia--mossa--surface" radius="md" padding="md" appearance="outlined" slot="items">
                 <div cms-bloc="ulvia--mossa--grid" gap="md" items-align="end" columns="3" slot="content">
                     <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
-                        <span slot="label">
-                            {{ cms.i18n.ulvia/mossa.ui-translation-language }}
-                        </span>
+                        <span slot="label">{{ cms.i18n.ulvia/mossa.ui-translation-language }}</span>
                         <div cms-bloc="ulvia--mossa--select" slot="control">
                             <select id="collection-text-locale" cms-sync="@param:ulvia--mossa--locale">
                                 <option
@@ -40,9 +32,7 @@
                         </div>
                     </div>
                     <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
-                        <span slot="label">
-                            {{ cms.i18n.ulvia/mossa.ui-text-group }}
-                        </span>
+                        <span slot="label">{{ cms.i18n.ulvia/mossa.ui-text-group }}</span>
                         <div cms-bloc="ulvia--mossa--select" slot="control">
                             <select id="collection-text-group" cms-sync="@param:ulvia--mossa--group">
                                 <option
@@ -56,9 +46,7 @@
                         </div>
                     </div>
                     <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
-                        <span slot="label">
-                            {{ cms.i18n.ulvia/mossa.ui-search-texts }}
-                        </span>
+                        <span slot="label">{{ cms.i18n.ulvia/mossa.ui-search-texts }}</span>
                         <div cms-bloc="ulvia--mossa--input" slot="control">
                             <input
                                 id="collection-text-search"
@@ -74,7 +62,7 @@
             <p slot="items" cms-condition="collectionTexts.data.groups.length === 0">
                 {{ cms.i18n.ulvia/mossa.ui-this-collection-publishes-no-translatable-text-resources }}
             </p>
-            <p slot="items" cms-condition="collectionTexts.data.groups.length > 0 && collectionTexts.data.items.length === 0">
+            <p slot="items" cms-condition="collectionTexts.data.groups.length &gt; 0 &amp;&amp; collectionTexts.data.items.length === 0">
                 {{ cms.i18n.ulvia/mossa.ui-no-text-matches-current-filters }}
             </p>
             <div cms-bloc="ulvia--mossa--list" cms-condition="collectionTexts.data.items.length" slot="items">
@@ -85,7 +73,7 @@
                 </div>
                 <div cms-bloc="ulvia--mossa--list-item" layout="columns" cms-repeat="collectionTexts.data.items as text" slot="items">
                     <div slot="title">
-                        <h4 cms-bloc="ulvia--mossa--heading">{{ text.label }}</h4>
+                        <h3 cms-bloc="ulvia--mossa--heading" size="xs">{{ text.label }}</h3>
                         <p>{{ text.description }}</p>
                     </div>
                     <p slot="body">{{ text.sourceValue }}</p>
@@ -102,9 +90,7 @@
                             <input type="hidden" name="locale" value="{{ collectionTexts.data.locale }}">
                             <input type="hidden" name="textId" value="{{ text.id }}">
                             <div cms-bloc="ulvia--mossa--field" label-position="hidden">
-                                <span slot="label">
-                                    {{ cms.i18n.ulvia/mossa.ui-site-override }}
-                                </span>
+                                <span slot="label">{{ cms.i18n.ulvia/mossa.ui-site-override }}</span>
                                 <div cms-bloc="ulvia--mossa--textarea" slot="control">
                                     <textarea
                                         id="collection-text-{{ text.id }}"
@@ -116,14 +102,11 @@
                                 </div>
                             </div>
                             <div cms-bloc="ulvia--mossa--form-actions" responsive-layout="wrap" actions-align="end">
-                                <p slot="actions" role="status" aria-live="polite" cms-condition="savedText.activity === 'submitting'">
+                                <p slot="actions" role="status" aria-live="polite" cms-condition="savedText.activity === &#x27;submitting&#x27;">
                                     {{ cms.i18n.ulvia/mossa.ui-working }}
                                 </p>
-                                <p slot="actions" role="status" aria-live="polite" cms-condition="savedText.outcome.kind === 'success'">
+                                <p slot="actions" role="status" aria-live="polite" cms-condition="savedText.outcome.kind === &#x27;success&#x27;">
                                     {{ cms.i18n.ulvia/mossa.ui-translation-saved }}
-                                </p>
-                                <p slot="actions" role="alert" cms-condition="(savedText.outcome.kind === 'error' || savedText.outcome.kind === 'failure')">
-                                    {{ cms.i18n.ulvia/mossa.ui-request-failed }}
                                 </p>
                                 <button cms-bloc="ulvia--mossa--action" size="sm" tone="primary" variant="outline" slot="actions" type="submit">
                                     <span>{{ cms.i18n.ulvia/mossa.ui-save-translation }}</span>
@@ -141,13 +124,14 @@
                                 </div>
                                 <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
                             </div>
+                            <p role="alert" cms-condition="savedText.outcome.kind === &#x27;error&#x27; || savedText.outcome.kind === &#x27;failure&#x27;">
+                                {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                            </p>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-        <p role="alert" cms-case='"failure"'>
-            {{ cms.i18n.ulvia/mossa.ui-request-failed }}
-        </p>
+        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
     </div>
 </section>
