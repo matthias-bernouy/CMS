@@ -4,7 +4,7 @@ import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import { encodeRequestContext, REQUEST_CONTEXT_HEADER } from "@bernouy/cms-gateway/protocol";
 import { DefaultProviderCapabilityDispatcher, ProviderCapabilityDispatchError } from "@bernouy/ulvia-provider";
-import { registerContentCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { mountContentForTest } from "../../capabilities/content/mount";
 import { createProviderContractRelay } from "../../../src/transport/relay";
 import { resolvedContract } from "./fixtures";
 
@@ -25,7 +25,7 @@ test("official HTTP errors preserve codes and localized messages, while technica
     const contract = await resolvedContract("ulvia/cms.content");
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     let attempts = 0;
-    registerContentCapabilities(dispatcher, {
+    await mountContentForTest(dispatcher, {
         repo: {
             insertPage: async () => {
                 attempts++;

@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { MemorySiteUpgradeStorage, withSiteWriteFence } from "@bernouy/cms-repository/upgrades";
-import { configurationCommand } from "../../src/capabilities/content/support";
+import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
+import { mountContentForTest } from "./content/mount";
 
 test("configuration writes report the site upgrade fence through the declared wire error", async () => {
     const fence = new MemorySiteUpgradeStorage();
@@ -16,7 +17,21 @@ test("configuration writes report the site upgrade fence through the declared wi
         ["update"],
     );
     await fence.claimMaintenance("site", "upgrade:one");
-    await expect(configurationCommand(() => store.update())).rejects.toMatchObject({
+    const dispatcher = new DefaultProviderCapabilityDispatcher();
+    await mountContentForTest(dispatcher, { repo: { updateSystem: () => store.update() } as never });
+    await expect(
+        dispatcher.invoke(
+            "ulvia/cms.content",
+            "site.update",
+            { expectedRevision: 0, name: "changed" },
+            {
+                requestId: crypto.randomUUID(),
+                contractVersion: "1.0.0",
+                siteId: "default",
+                providerId: "ulvia/primary-provider",
+            },
+        ),
+    ).rejects.toMatchObject({
         code: "UPGRADE_IN_PROGRESS",
         status: 423,
     });

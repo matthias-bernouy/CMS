@@ -1,18 +1,10 @@
+import type { z } from "zod";
+import type { editorCatalogueSchema } from "cms-content/application/schemas/pages/outputs";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 
-export type CmsEditorBloc = Readonly<{
-    id: string;
-    name: string;
-    group: string;
-    description: string;
-    kind: "component" | "composition";
-    ownership: "code-managed" | "site-builder";
-    order: number;
-    defaultContent: string;
-    authoringJson: string;
-}>;
+export type CmsEditorBloc = CmsEditorCatalogue["items"][number];
 
-export type CmsEditorCatalogue = Readonly<{ items: readonly CmsEditorBloc[] }>;
+export type CmsEditorCatalogue = z.output<typeof editorCatalogueSchema>;
 
 export async function getCmsEditorCatalogue(
     repository: Pick<ContentRepository, "getBlocsList">,

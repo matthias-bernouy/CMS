@@ -68,31 +68,6 @@
             ]
         },
         {
-            "contractId": "ulvia/cms.content",
-            "version": "1.0.0",
-            "requires": [
-                {
-                    "contractId": "ulvia/cms.installations",
-                    "capabilityId": "capabilities.describe",
-                    "versionRange": "^1.0.0",
-                    "optional": false
-                }
-            ],
-            "delegation": {
-                "sources": [
-                    "delivery.resolve-resource"
-                ],
-                "allow": [
-                    {
-                        "contractId": "*",
-                        "capabilityId": "*",
-                        "effect": "query",
-                        "sensitive": false
-                    }
-                ]
-            }
-        },
-        {
             "contractId": "ulvia/cms.authoring",
             "version": "1.0.0",
             "requires": []

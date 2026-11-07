@@ -21,6 +21,7 @@ import type { CmsFilesService } from "@bernouy/cms-files";
 import { CmsSecrets } from "@bernouy/cms-secrets";
 import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";
 import { InMemorySecretStore } from "@bernouy/secret-store";
+import { contentPorts } from "./capabilities/content/mount";
 import { accessServices } from "./execution/machine/access/services";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import { ConfiguredSmtpEmailer } from "@bernouy/email-smtp/nodemailer";
@@ -140,6 +141,7 @@ test("the official adapters implement the complete declared capability matrix", 
         {
             ...({} as UlviaProviderDependencies),
             ...accessServices(),
+            ...contentPorts(),
             emailer,
             secrets,
             files: {} as CmsFilesService,

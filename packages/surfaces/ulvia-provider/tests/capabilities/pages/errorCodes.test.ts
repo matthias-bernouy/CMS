@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerContentCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { mountContentForTest } from "../content/mount";
 
 test("example pagination is invalid input while an invalid Page remains INVALID_PAGE, without writes", async () => {
     let writes = 0;
     let collectionReads = 0;
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerContentCapabilities(dispatcher, {
+    await mountContentForTest(dispatcher, {
         repo: {
             insertPage: async () => {
                 writes++;

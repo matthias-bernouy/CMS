@@ -1,22 +1,15 @@
+import type { z } from "zod";
+import type { pagesRenameInputSchema } from "cms-content/application/schemas/pages/inputs";
+import type { pagesRenameOutputSchema } from "cms-content/application/schemas/pages/outputs";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import { PageRevisionConflictError } from "cms-content/application/core/validation/errors";
 import { validatePageTitle } from "cms-content/pages/core/validation/page";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 
-export interface CmsPageRenameInput {
-    readonly id: string;
-    readonly title: string;
-    readonly expectedRevision: number;
-}
+export type CmsPageRenameInput = z.input<typeof pagesRenameInputSchema>;
 
-export interface CmsPageRenameOutput {
-    readonly id: string;
-    readonly revision: number;
-    readonly path: string;
-    readonly title: string;
-    readonly visible: boolean;
-}
+export type CmsPageRenameOutput = z.output<typeof pagesRenameOutputSchema>;
 
 export class CmsPageNotFoundError extends Error {
     constructor(readonly pageId: string) {

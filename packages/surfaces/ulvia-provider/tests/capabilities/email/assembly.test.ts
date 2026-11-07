@@ -18,6 +18,7 @@ test("the surface shares one compiled feature inventory for releases, manifest c
         "ulvia/cms.emailer",
         "ulvia/cms.emailer.smtp",
         "ulvia/cms.access",
+        "ulvia/cms.content",
         "ulvia/cms.secrets",
         "ulvia/cms.files",
         "ulvia/cms.observability",
@@ -25,6 +26,7 @@ test("the surface shares one compiled feature inventory for releases, manifest c
     expect(build.implementations.map(({ contractId }) => contractId)).toEqual([
         "ulvia/cms.emailer.smtp",
         "ulvia/cms.access",
+        "ulvia/cms.content",
         "ulvia/cms.secrets",
         "ulvia/cms.files",
         "ulvia/cms.observability",

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { ConfiguredSmtpEmailer } from "@bernouy/email-smtp/nodemailer";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerContentCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { mountContentForTest } from "../../capabilities/content/mount";
 import { registerOfficialFeatures } from "../../../src/capabilities/features";
 import { context, invokeHttp, resolvedContract } from "./fixtures";
 
@@ -10,7 +10,7 @@ test("unknown examples return a localized input refusal without reading other co
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     let reads = 0;
     let writes = 0;
-    registerContentCapabilities(dispatcher, {
+    await mountContentForTest(dispatcher, {
         repo: {
             insertPage: async () => {
                 writes++;
@@ -42,7 +42,7 @@ test("unknown examples return a localized input refusal without reading other co
 test("schema rejection explains the invalid field before dispatch, without a write", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     let writes = 0;
-    registerContentCapabilities(dispatcher, {
+    await mountContentForTest(dispatcher, {
         repo: {
             insertPage: async () => {
                 writes++;

@@ -1,3 +1,10 @@
+import type { z } from "zod";
+import type {
+    pageDetailsSchema,
+    pageEditingDetailsSchema,
+    pageRouteDetailsSchema,
+    pageSeoDetailsSchema,
+} from "cms-content/application/schemas/pages/outputs";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
@@ -5,35 +12,13 @@ import type { TSystem } from "cms-content/settings/interfaces/settings";
 import type { ContentDiagnostic } from "cms-content/application/interfaces/diagnostics";
 import { CmsPageNotFoundError } from "cms-content/pages/core/contracts/renamePage";
 
-export type CmsPageDetails = Pick<
-    TPage,
-    "id" | "revision" | "path" | "title" | "description" | "content" | "tags" | "visible"
-> & { readonly diagnostics?: readonly ContentDiagnostic[] };
+export type CmsPageDetails = z.output<typeof pageDetailsSchema>;
 
-export type CmsPageEditingDetails = CmsPageDetails & {
-    readonly routes: readonly CmsPageRouteEntry[];
-    readonly seoEntries: readonly CmsPageSeoEntry[];
-};
+export type CmsPageEditingDetails = z.output<typeof pageEditingDetailsSchema>;
 
-export type CmsPageRouteDetails = Pick<CmsPageDetails, "id" | "revision" | "path"> & {
-    readonly routes: readonly CmsPageRouteEntry[];
-};
+export type CmsPageRouteDetails = z.output<typeof pageRouteDetailsSchema>;
 
-export type CmsPageSeoDetails = Pick<CmsPageDetails, "id" | "revision"> & {
-    readonly seoEntries: readonly CmsPageSeoEntry[];
-};
-
-type CmsPageRouteEntry = {
-    readonly language: string;
-    readonly path: string;
-    readonly primary: boolean;
-};
-
-type CmsPageSeoEntry = {
-    readonly language: string;
-    readonly title: string;
-    readonly description: string;
-};
+export type CmsPageSeoDetails = z.output<typeof pageSeoDetailsSchema>;
 
 export async function getCmsPage(
     repository: Pick<ContentRepository, "getPageById" | "getSystem">,

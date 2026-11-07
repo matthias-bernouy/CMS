@@ -30,6 +30,11 @@ test("all administration capability areas dispatch outputs matching their offici
             listInstalled: async () => ({ revision: 0, items: [] }),
             snapshot: async () => ({ revision: 0, collections: [] }),
         },
+        publicDelivery: () => ({
+            resolvePath: async () => {
+                throw new Error("Unexpected delivery call");
+            },
+        }),
         credentials: {},
         pats: {},
         authentication: {},
@@ -111,7 +116,7 @@ test("all administration capability areas dispatch outputs matching their offici
         undefined,
         undefined,
         (await loadOfficialFeatures()).implementations.filter(({ contractId }) =>
-            ["ulvia/cms.files", "ulvia/cms.access"].includes(contractId),
+            ["ulvia/cms.files", "ulvia/cms.access", "ulvia/cms.content"].includes(contractId),
         ),
         { providerId: "ulvia/primary-provider", scope: { siteId: "default", instanceId: "smoke" } },
     );

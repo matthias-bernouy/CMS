@@ -1,3 +1,5 @@
+import type { z } from "zod";
+import type { pagesUpdateInputSchema } from "cms-content/application/schemas/pages/inputs";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
@@ -9,14 +11,7 @@ import {
 } from "cms-content/pages/core/contracts/pageDetails";
 import { CmsPageNotFoundError } from "cms-content/pages/core/contracts/renamePage";
 
-export interface CmsPageUpdateInput {
-    readonly id: string;
-    readonly expectedRevision: number;
-    readonly title?: string;
-    readonly description?: string;
-    readonly content?: string;
-    readonly tags?: readonly string[];
-}
+export type CmsPageUpdateInput = z.input<typeof pagesUpdateInputSchema>;
 
 export async function updateCmsPage(
     repository: Pick<ContentRepository, "updatePage">,

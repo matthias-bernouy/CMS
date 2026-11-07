@@ -1,17 +1,15 @@
+import type { ContentServices } from "@bernouy/cms-content/feature";
 import type { RepositoryDiscovery } from "@bernouy/cms-repository/repository/search";
 import type { CmsDocumentation } from "@bernouy/cms-documentation";
 import type { ProviderMachinePreparation, PreparedProviderMachine } from "@bernouy/cms-gateway/protocol";
 import type { ProviderDispatchPreparation, PreparedProviderDispatch } from "@bernouy/cms-gateway/protocol";
 import type { CatalogueContractRelease } from "@bernouy/ulvia-contracts/catalogue";
-import type { ProviderCapabilityInvocationContext } from "../dispatch/registry";
-import type { DeliveryActor, ContentDeliveryHost } from "@bernouy/cms-content/public-delivery";
 import type { GatewayDelegationAuthority } from "@bernouy/cms-gateway/access/delegation";
 import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
 import type { ProviderAccess } from "@bernouy/cms-gateway/access/providers";
 import type { ProviderAdministration } from "./providers";
 import type { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import type { AccessServices } from "@bernouy/cms-auth/feature";
-import type { ContentRepository } from "@bernouy/cms-content";
 import type { CollectionUpgradeService } from "@bernouy/cms-repository/collections/installations";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayRouteResolver } from "@bernouy/cms-gateway";
@@ -29,22 +27,9 @@ import type { BlobStore } from "@bernouy/blob-store";
 import type { Logger } from "@bernouy/logging";
 import type { ObservabilityServices } from "@bernouy/cms-observability/feature";
 
-export interface CmsContentDependencies {
-    readonly publicDelivery?: (context: ProviderCapabilityInvocationContext) => {
-        resolvePath(
-            input: unknown,
-            actor: DeliveryActor,
-            executeQuery?: ContentDeliveryHost["executeQuery"],
-            context?: { readonly headers?: HeadersInit; readonly signal?: AbortSignal },
-        ): Promise<Response>;
-    };
-    readonly contentQuery?: (
-        context: ProviderCapabilityInvocationContext,
-        contractId: string,
-        capabilityId: string,
-        input: Readonly<Record<string, string | number>>,
-    ) => Promise<Response>;
-    readonly repo: ContentRepository;
+export interface CmsContentDependencies
+    extends Pick<ContentServices, "repo" | "contentQuery">,
+        Partial<Pick<ContentServices, "publicDelivery">> {
     readonly collections: CollectionStore;
     readonly sitemapStore?: BlobStore;
     readonly logger?: Logger;
@@ -60,7 +45,7 @@ export interface CmsCollectionDependencies {
 
 /** Ports supplied by the runtime for SDK feature implementations. */
 export type UlviaProviderFeatureServices = Partial<
-    SmtpEmailerServices & SecretsServices & FilesServices & ObservabilityServices & AccessServices
+    SmtpEmailerServices & SecretsServices & FilesServices & ObservabilityServices & AccessServices & ContentServices
 >;
 
 export type UlviaProviderDependencies = CmsContentDependencies &

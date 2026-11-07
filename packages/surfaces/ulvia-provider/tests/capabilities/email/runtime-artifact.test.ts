@@ -46,6 +46,7 @@ console.log(JSON.stringify(runtime.implementations.map(({contractId}) => contrac
         expect(code).toBe(0);
         expect(JSON.parse(stdout)).toEqual([
             "ulvia/cms.access",
+            "ulvia/cms.content",
             "ulvia/cms.emailer.smtp",
             "ulvia/cms.files",
             "ulvia/cms.observability",

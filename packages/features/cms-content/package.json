@@ -21,7 +21,8 @@
         "./seo": "./src/pages/seo/exports/index.ts",
         "./seo/http": "./src/pages/seo/exports/http.ts",
         "./mongo": "./src/exports/mongo.ts",
-        "./public-delivery": "./src/exports/runtime/public-delivery.ts"
+        "./public-delivery": "./src/exports/runtime/public-delivery.ts",
+        "./feature": "./src/application/feature.ts"
     },
     "scripts": {
         "build:browser": "bun run src/runtime-assets/build.ts"
@@ -36,7 +37,9 @@
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "linkedom": "^0.18.15",
-        "@bernouy/resource-identity": "workspace:*"
+        "@bernouy/resource-identity": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "zod": "4.6.7"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

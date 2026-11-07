@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { createMemoryLogger } from "@bernouy/logging/testing";
-import { registerContentCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { mountContentForTest } from "../../capabilities/content/mount";
 import {
     DefaultProviderCapabilityDispatcher,
     MemoryProviderOperationStore,
@@ -15,7 +15,7 @@ test("HTTP refusals log stable reasons once without request fields, parameters o
     const memory = createMemoryLogger({ service: "provider" });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     let writes = 0;
-    registerContentCapabilities(dispatcher, {
+    await mountContentForTest(dispatcher, {
         repo: {
             insertPage: async () => {
                 writes++;

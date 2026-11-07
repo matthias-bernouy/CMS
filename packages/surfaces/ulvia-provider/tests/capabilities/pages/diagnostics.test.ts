@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerContentCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { mountContentForTest } from "../content/mount";
 import { invokeHttp, resolvedContract } from "../../execution/messages/fixtures";
 
 test("HTTP Page writes carry advisory diagnostics and declared publication failures leave state unchanged", async () => {
@@ -19,7 +19,7 @@ test("HTTP Page writes carry advisory diagnostics and declared publication failu
         ownership: { kind: "code-managed" },
     });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerContentCapabilities(dispatcher, { repo } as never);
+    await mountContentForTest(dispatcher, { repo } as never);
     const contract = await resolvedContract("ulvia/cms.content");
     const created = await invokeHttp(contract, dispatcher, "pages.create", {
         path: "/draft",
@@ -63,7 +63,7 @@ test("publication preserves the expanded HTML error code and its Bloc location",
     await inner.insertPage("/draft", "Draft", '<main cms-bloc="example--test--shell"></main>');
     const page = (await inner.getPage("/draft"))!;
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerContentCapabilities(dispatcher, { repo: new ValidatingContentRepository(inner) } as never);
+    await mountContentForTest(dispatcher, { repo: new ValidatingContentRepository(inner) } as never);
     const response = await invokeHttp(await resolvedContract("ulvia/cms.content"), dispatcher, "pages.publish", {
         id: page.id,
         expectedRevision: page.revision,
@@ -94,7 +94,7 @@ test("the effective-link budget returns a corrective diagnostic without creating
         markupHTML: `<main>${'<a href="/target">Target</a>'.repeat(257)}</main>`,
     });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerContentCapabilities(dispatcher, { repo: new ValidatingContentRepository(inner) } as never);
+    await mountContentForTest(dispatcher, { repo: new ValidatingContentRepository(inner) } as never);
     const response = await invokeHttp(await resolvedContract("ulvia/cms.content"), dispatcher, "pages.create", {
         path: "/link-budget",
         title: "Link budget",

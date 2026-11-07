@@ -9,7 +9,7 @@ import {
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
 import { MemorySiteUpgradeStorage, withSiteWriteFence } from "@bernouy/cms-repository/upgrades";
-import { listExamples, getExample } from "../../../src/capabilities/content/pages/examples";
+import { listExamples, getExample } from "../../../src/capabilities/features/services/content/examples";
 
 async function fixture() {
     const collections = new CollectionStore(new MemoryCollectionStorage());

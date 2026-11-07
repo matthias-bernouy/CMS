@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { ContentValidationError } from "@bernouy/cms-content";
 import { validateExpandedPageDocument } from "@bernouy/cms-content/page-document";
-import { registerContentCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { mountContentForTest } from "../../capabilities/content/mount";
 import { DefaultProviderCapabilityDispatcher, ProviderCapabilityDispatchError } from "@bernouy/ulvia-provider";
 import { officialFailure } from "../../../src/dispatch/errors/failure";
 import { context } from "./fixtures";
@@ -9,7 +9,7 @@ import { context } from "./fixtures";
 test("the same INVALID_PAGE code reports distinct real validation reasons without writes", async () => {
     let writes = 0;
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerContentCapabilities(dispatcher, {
+    await mountContentForTest(dispatcher, {
         repo: {
             insertPage: async () => {
                 writes++;
@@ -54,7 +54,7 @@ test("the same INVALID_PAGE code reports distinct real validation reasons withou
 
 test("unexpected repository TypeErrors stay technical and concurrent languages do not leak", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerContentCapabilities(dispatcher, {
+    await mountContentForTest(dispatcher, {
         repo: {
             insertPage: async () => {
                 throw new TypeError("private database password");

@@ -21,5 +21,16 @@ export function formatOfficialCapabilityFailure(
         failure.capability.id,
         invocation,
     );
-    return { output: localized.output, responseHeaders: localized.responseHeaders, reason: localized.reason };
+    const details = failure.output;
+    const presentation = localized.output;
+    const output =
+        details &&
+        typeof details === "object" &&
+        !Array.isArray(details) &&
+        presentation &&
+        typeof presentation === "object" &&
+        !Array.isArray(presentation)
+            ? { ...details, ...presentation }
+            : presentation;
+    return { output, responseHeaders: localized.responseHeaders, reason: localized.reason };
 }

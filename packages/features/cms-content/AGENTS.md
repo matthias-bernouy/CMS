@@ -5,6 +5,7 @@ bindings, validation, and read models.
 
 ## Boundaries
 
+- `./feature` authors the complete `ulvia/cms.content` SDK feature in `application/`, with grouped capabilities, schemas and package Markdown docs. Default execution receives `ContentServices`; host-owned contribution views keep collection formats out of Content. Public DTOs derive from schemas; persistence records remain distinct. Error classification is domain-owned; localization and transport status remain surface-owned.
 - Root export exposes authoring entity types, `ContentRepository`, in-memory
   repository, validation, and authoring operations.
 - `@bernouy/cms-content/public-delivery` owns `ContentDelivery.resolvePath`,

@@ -1,24 +1,14 @@
+import type { z } from "zod";
+import type { pagesListInputSchema } from "cms-content/application/schemas/pages/inputs";
+import type { pagesListOutputSchema } from "cms-content/application/schemas/pages/outputs";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 
-export interface CmsPagesListInput {
-    readonly cursor?: string;
-    readonly limit?: number;
-    readonly query?: string;
-    readonly visibility?: "all" | "published" | "draft";
-}
+export type CmsPagesListInput = z.input<typeof pagesListInputSchema>;
 
-export interface CmsPageListItem {
-    readonly id: string;
-    readonly path: string;
-    readonly title: string;
-    readonly visible: boolean;
-}
+export type CmsPageListItem = CmsPagesListOutput["items"][number];
 
-export interface CmsPagesListOutput {
-    readonly items: readonly CmsPageListItem[];
-    readonly nextCursor?: string;
-}
+export type CmsPagesListOutput = z.output<typeof pagesListOutputSchema>;
 
 /** Provider-neutral implementation of `ulvia/cms.content/pages.list`. */
 export async function listCmsPages(

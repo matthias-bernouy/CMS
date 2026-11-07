@@ -1,3 +1,9 @@
+import type { z } from "zod";
+import type {
+    siteBlocSchema,
+    siteBlocRevisionInputSchema,
+    siteBlocsCreateInputSchema,
+} from "cms-content/application/schemas/site";
 import { randomUUIDv7 } from "bun";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import { ContentValidationError, SiteBlocNotFoundError } from "cms-content/application/core/validation/errors";
@@ -7,28 +13,11 @@ import { siteBlocStructureFromMarkup } from "cms-content/blocs/core/catalogue/si
 import { validateSiteBlocSnapshot } from "cms-content/blocs/core/validation";
 import type { BlocRecord, SiteBlocDefinition, SiteBlocSnapshot, TBlocWrite } from "cms-content/blocs/interfaces/blocs";
 
-export type SiteBlocCreateInput = Readonly<{
-    tag: string;
-    name: string;
-    group: string;
-    description?: string;
-    content: string;
-    groupId?: string;
-}>;
+export type SiteBlocCreateInput = z.input<typeof siteBlocsCreateInputSchema>;
 
-export type SiteBlocIdentityInput = Readonly<{ tag: string; revision: number }>;
+export type SiteBlocIdentityInput = z.input<typeof siteBlocRevisionInputSchema>;
 
-export type CmsSiteBloc = Readonly<{
-    tag: string;
-    name: string;
-    group: string;
-    description: string;
-    lifecycle: "active" | "archived";
-    draftRevision: number;
-    publishedRevision: number | null;
-    createdAt: string;
-    updatedAt: string;
-}>;
+export type CmsSiteBloc = z.output<typeof siteBlocSchema>;
 
 export async function listCmsSiteBlocs(repository: Pick<ContentRepository, "getBlocRecords">) {
     const records = await repository.getBlocRecords();
