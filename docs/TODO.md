@@ -11,6 +11,11 @@ the [Platform V2 architecture plan](TODO/platform_v2.md). Security and
 performance review guardrails for agents are tracked in the
 [agent guardrails plan](TODO/gardes_fous.md).
 
+Collection reuse, site-versus-collection ownership and authoring feedback from
+the Quentin Bernouy reproduction are tracked in the
+[collection authoring improvement plan](TODO/collection_authoring_reuse.md).
+That plan distinguishes existing instructions from proposed CMS changes.
+
 ## Delivery And Verification
 
 **Status:** static checks, build, ordinary tests, `verify:full` and dedicated
