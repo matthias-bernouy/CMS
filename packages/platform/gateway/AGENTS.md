@@ -53,3 +53,7 @@ input/output payloads or change authorization, command audit or stream outcomes.
 Platform imports only Platform and Foundation. Business capability implementations,
 catalogue publication, installation approval and selection mutation remain in features.
 Integration tests that compose Repository stores live in `tests/integration/gateway/`.
+
+- `./provider/responses` exposes adapter-light typed Provider response envelopes.
+  Generic output types do not alter wire behavior or session authority. Session
+  effects remain outside public JSON and browser cookie application belongs to Edge.

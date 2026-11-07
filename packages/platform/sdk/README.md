@@ -18,6 +18,7 @@ Markdown only below explicitly declared directories and never publishes releases
 | `.` → `contractString`, `contractMap`, `contractBinary` | Zod schemas with exact Ulvia v1 semantics. |
 | `.` → `capabilitiesFor`, `implementFeature` | Type capability services once; select complete default execution. |
 | `.` → `implementContract`, `defineProvider` | Alternative complete implementations and static manifest metadata. |
+| `.` → `capabilityResponse` | Typed public JSON output with an admitted semantic response effect. |
 | `.` → `capabilityError`, `isCapabilityFailure` | Declared, validated business errors without HTTP policy. |
 | `.` → `CapabilityInput`, `CapabilityOutput`, `CapabilityHandler` | Infer domain types from capability schemas. |
 | `.` → `ContractHandlers`, `ProviderCapabilityHandler` | Infer inherited handlers, streaming inputs and operation handles. |
@@ -124,9 +125,24 @@ uses its error policy. The standalone `executeCapability(capability, { input,
 services, context })` form executes a capability independently, without feature policy.
 Both forms validate input and output with the capability's Zod schemas. The caller owns authorization; this does not activate a
 Provider or durable command receipts. Invalid input refuses before business calls.
-Binary streams and asynchronous operation handles use the Provider adapter, and
+Binary streams, declared response effects and asynchronous operation handles use the Provider adapter, and
 are rejected by the local JSON helper before execution. The raw `execute` callback
 is a validated-boundary body; use the helper for unvalidated local data.
+
+## Semantic responses
+
+`capabilityResponse(output, effect?)` preserves the public output type when an
+executor returns a semantic response envelope. The existing Gateway receiver
+validates the body and effect against the admitted capability. Session effects
+remain restricted by the contract language to `ulvia/cms.access`; the helper does
+not grant new authority. Tokens travel in the trusted effect envelope, outside
+public JSON. The Provider never sets a browser cookie; the Edge applies validated
+session effects.
+
+The local JSON helper refuses capabilities declaring response effects before
+calling executors or guards, so a rejected local login cannot mint credentials.
+An effect-free response wrapper is unwrapped and its body is validated normally.
+An undeclared effect is refused by the admitted Provider path.
 
 ## Errors, versions and execution
 

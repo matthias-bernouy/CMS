@@ -1,3 +1,4 @@
+import type { ProviderCapabilityResponse } from "@bernouy/cms-gateway/provider/responses";
 import type { ProviderCapabilityInvocationContext } from "@bernouy/cms-gateway/provider/server";
 import type { CapabilityOperationHandle } from "@bernouy/ulvia-contracts/protocol";
 import type { FeatureDefinition, FeatureCapabilities } from "ulvia-sdk/interfaces/features";
@@ -37,7 +38,7 @@ type HandlerOutput<Capability extends CapabilitySource> = Capability["behavior"]
     ? CapabilityOperationHandle
     : CapabilityOutput<Capability> extends Uint8Array
       ? Uint8Array | Response
-      : CapabilityOutput<Capability>;
+      : CapabilityOutput<Capability> | ProviderCapabilityResponse<CapabilityOutput<Capability>>;
 
 export type ProviderCapabilityHandler<Capability extends CapabilitySource> = (
     input: ProviderInput<Capability>,

@@ -3,8 +3,8 @@ import { expect, test } from "bun:test";
 import { contractBinary, capabilitiesFor, implementFeature, z } from "@bernouy/ulvia-sdk";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { executeCapability } from "@bernouy/ulvia-sdk/provider";
-import { notesProviderDefinition } from "../../../examples/provider";
-import { unitProvider } from "../support/runtime";
+import { notesProviderDefinition } from "../../../../examples/provider";
+import { unitProvider } from "../../support/runtime";
 
 const meta = { contractId: "example/modes", publisherId: "example", version: "1.0.0", name: "Modes" };
 const context = { requestId: "local", contractVersion: "1.0.0", siteId: "site", providerId: "example/provider" };

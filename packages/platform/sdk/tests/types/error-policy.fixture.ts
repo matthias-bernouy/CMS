@@ -1,4 +1,4 @@
-import { capabilitiesFor, defineFeature, z } from "@bernouy/ulvia-sdk";
+import { capabilitiesFor, defineFeature, z, capabilityResponse } from "@bernouy/ulvia-sdk";
 import { executeCapability } from "@bernouy/ulvia-sdk/provider";
 const author = capabilitiesFor<{ notes: { read(): string } }>();
 const read = author({
@@ -48,3 +48,10 @@ executeCapability(declarative, "read", { input: {}, services: { notes: { read: (
 defineFeature({ ...feature, mapError: () => ({ code: 42 }) });
 // @ts-expect-error Feature error classification is synchronous.
 defineFeature({ ...feature, mapError: async () => ({ code: "INVALID_INPUT" }) });
+
+const wrapped = author({ ...read, execute: () => capabilityResponse("one") });
+void wrapped;
+// @ts-expect-error Typed response wrappers must preserve the capability output schema.
+author({ ...read, execute: () => capabilityResponse(42) });
+// @ts-expect-error Session effects cannot invent an operation.
+capabilityResponse("one", { type: "session", operation: "unknown" });

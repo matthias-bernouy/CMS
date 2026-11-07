@@ -27,7 +27,8 @@
         "./access/delegation/mongo": "./src/exports/access/delegation-mongo.ts",
         "./observability": "./src/exports/observability/index.ts",
         "./observability/node": "./src/exports/observability/node.ts",
-        "./testing": "./src/exports/testing.ts"
+        "./testing": "./src/exports/testing.ts",
+        "./provider/responses": "./src/provider/server/dispatch/responses.ts"
     },
     "dependencies": {
         "@bernouy/http-runner": "workspace:*",

@@ -1,17 +1,17 @@
 import type { GatewayResponseEffect } from "cms-gateway/protocol/TrustedCapabilityEffects";
 import type { ResourceMetadata } from "cms-gateway/invocation/resource/metadata";
 
-export class ProviderCapabilityResponse {
+export class ProviderCapabilityResponse<Output = unknown> {
     constructor(
-        readonly output: unknown,
+        readonly output: Output,
         readonly responseEffect?: GatewayResponseEffect,
     ) {}
 }
 
-export function capabilityResponse(
-    output: unknown,
+export function capabilityResponse<const Output>(
+    output: Output,
     responseEffect?: GatewayResponseEffect,
-): ProviderCapabilityResponse {
+): ProviderCapabilityResponse<Output> {
     return new ProviderCapabilityResponse(output, responseEffect);
 }
 

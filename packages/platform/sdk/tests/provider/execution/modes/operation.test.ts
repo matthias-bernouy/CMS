@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { contractBinary, defineCapability, z } from "@bernouy/ulvia-sdk";
-import { notesProviderDefinition } from "../../../examples/provider";
-import { notesFeature } from "../../../examples/notes";
-import { unitProvider } from "../support/runtime";
+import { notesProviderDefinition } from "../../../../examples/provider";
+import { notesFeature } from "../../../../examples/notes";
+import { unitProvider } from "../../support/runtime";
 test("operation handlers return a standard handle instead of the terminal result schema", async () => {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
     for (const output of [z.boolean(), contractBinary({ maxBytes: 4 })]) {

@@ -1,3 +1,5 @@
+import { ProviderCapabilityResponse } from "@bernouy/cms-gateway/provider/responses";
+import type { CapabilityOutput } from "ulvia-sdk/interfaces/capabilities";
 import type { ProviderCapabilityHandler } from "ulvia-sdk/interfaces/handlers";
 import type { ExecutableCapability, CapabilityServices } from "ulvia-sdk/interfaces/execution";
 import { capabilityFailure } from "ulvia-sdk/definitions/errors";
@@ -29,11 +31,11 @@ export function executeCapability<const Feature extends FeatureDefinition, const
     feature: Feature,
     id: Id,
     execution: Execution<ExecutableAt<Feature, Id>>,
-): Promise<Awaited<ReturnType<ProviderCapabilityHandler<EffectiveCapabilities<Feature>[Id]>>>>;
+): Promise<CapabilityOutput<EffectiveCapabilities<Feature>[Id]>>;
 export function executeCapability<const Capability extends ExecutableCapability>(
     capability: Capability,
     execution: Execution<Capability>,
-): Promise<Awaited<ReturnType<ProviderCapabilityHandler<Capability>>>>;
+): Promise<CapabilityOutput<Capability>>;
 export async function executeCapability(
     source: ExecutableCapability | FeatureDefinition,
     idOrExecution: string | Execution<ExecutableCapability>,
@@ -53,12 +55,13 @@ export async function executeCapability(
     if (
         capability.behavior.execution !== "sync" ||
         outputSchema.type === "binary" ||
+        Boolean(capability.responseEffects?.length) ||
         execution.context.binaryBody ||
         (inputSchema.type === "object" &&
             Object.values(inputSchema.properties).some((schema) => schema.type === "binary"))
     ) {
         throw new SdkDefinitionError(
-            "Local execution supports synchronous JSON capabilities; use the Provider adapter for streams and operation handles",
+            "Local execution supports synchronous JSON capabilities; use the Provider adapter for streams, response effects and operation handles",
         );
     }
     const input = capability.input.parse(execution.input);
@@ -69,5 +72,8 @@ export async function executeCapability(
         await executeWithErrorMapping(capability, mapper, () => authorize(call));
     }
     const output = await executeWithErrorMapping(capability, mapper, () => execute(call));
-    return capability.output.parse(output);
+    if (output instanceof ProviderCapabilityResponse && output.responseEffect) {
+        throw new SdkDefinitionError("Local execution cannot apply a response effect; use the Provider adapter");
+    }
+    return capability.output.parse(output instanceof ProviderCapabilityResponse ? output.output : output);
 }

@@ -83,3 +83,8 @@ Typed authoring and Provider assembly SDK. Depend only on Platform and Foundatio
 - Local feature execution receives the feature and capability ID explicitly so
   inheritance and error policy remain unambiguous. Standalone capability calls
   remain independent. Keep Zod input/output validation outside error classification.
+
+- `capabilityResponse` preserves JSON output types through the Platform response
+  envelope. Keep effect authority and wire validation in existing admitted Gateway
+  handling. Local JSON execution refuses declared effects before invoking services;
+  never issue credentials and then reject the local output envelope.
