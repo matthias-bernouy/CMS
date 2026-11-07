@@ -1,4 +1,5 @@
 import type { TraceContext } from "@bernouy/logging";
+import { isResourceId } from "@bernouy/cms-repository/contracts/protocol";
 import type { GatewayInvocation, GatewayResult } from "../interfaces/Invocation";
 import type { InvocationObserver, InvocationObservation } from "./interfaces";
 import { observeStream } from "./observeStream";
@@ -19,8 +20,8 @@ export class InvocationTracker {
             typeof part === "string" && /^[A-Za-z0-9._:-]{1,128}$/u.test(part) ? part : undefined;
         this.fields = {
             requestId: trace.spanId,
-            contractId: id(value?.contractId),
-            capabilityId: id(value?.capabilityId),
+            ...(isResourceId(value?.contractId) ? { contractId: value.contractId } : {}),
+            ...(id(value?.capabilityId) ? { capabilityId: value.capabilityId } : {}),
             actorKind: ["anonymous", "user", "administrator", "provider", "system"].includes(value?.actor?.kind)
                 ? value.actor.kind
                 : "unknown",

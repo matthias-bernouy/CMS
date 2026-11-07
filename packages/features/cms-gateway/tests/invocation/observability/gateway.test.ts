@@ -3,6 +3,7 @@ import { CapabilityGateway, type GatewayInvocation, type GatewayTransportRequest
 import type { InvocationObservation } from "@bernouy/cms-gateway/observability";
 import { currentTraceContext, runWithTraceContext } from "@bernouy/logging/tracing";
 import { gatewayRoute, NOW } from "../../fixtures";
+import { InvocationTracker } from "cms-gateway/invocation/observability/InvocationTracker";
 const invocation: GatewayInvocation = {
     siteId: "site-a",
     contractId: "ulvia/catalog",
@@ -10,6 +11,20 @@ const invocation: GatewayInvocation = {
     input: {},
     actor: { kind: "anonymous" },
 };
+test("observations omit invalid identifiers rather than emitting undefined attributes", () => {
+    const events: InvocationObservation[] = [];
+    const tracker = new InvocationTracker(
+        (event) => {
+            events.push(event);
+        },
+        { traceId: "trace", spanId: "span" },
+        { ...invocation, contractId: "invalid secret", capabilityId: "invalid capability" },
+    );
+    tracker.failed({ code: "invalid_input" });
+    expect(Object.hasOwn(events[0]!, "contractId")).toBe(false);
+    expect(Object.hasOwn(events[0]!, "capabilityId")).toBe(false);
+    expect(JSON.stringify(events)).not.toContain("invalid secret");
+});
 test("observes failures before route resolution without including authored payloads", async () => {
     const events: InvocationObservation[] = [];
     const gateway = new CapabilityGateway({
@@ -26,7 +41,13 @@ test("observes failures before route resolution without including authored paylo
     });
     await expect(gateway.invoke({ ...invocation, input: { token: "secret" } })).rejects.toThrow();
     expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({ outcome: "failed", code: "not_selected", actorKind: "anonymous" });
+    expect(events[0]).toMatchObject({
+        outcome: "failed",
+        code: "not_selected",
+        actorKind: "anonymous",
+        contractId: "ulvia/catalog",
+        capabilityId: "item.list",
+    });
     expect(JSON.stringify(events)).not.toContain("secret");
 });
 test("correlates nested invocations while observer rejection cannot fail delivery", async () => {
@@ -59,6 +80,8 @@ test("correlates nested invocations while observer rejection cannot fail deliver
         spanId: result.requestId,
         outcome: "completed",
         phase: "validation",
+        contractId: "ulvia/catalog",
+        capabilityId: "item.list",
     });
     expect(sent[0]?.trace?.spanId).toBe(result.requestId);
     expect(currentTraceContext()).toBeUndefined();
