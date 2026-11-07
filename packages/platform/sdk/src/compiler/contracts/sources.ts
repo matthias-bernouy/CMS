@@ -1,3 +1,4 @@
+import { ownOperations } from "ulvia-sdk/compiler/contracts/operations";
 import { DEFAULT_RELEASE_LIMITS } from "@bernouy/ulvia-contracts";
 import type { ContractRelease } from "@bernouy/ulvia-contracts";
 import type { ContractDefinition } from "ulvia-sdk/interfaces/contracts";
@@ -41,12 +42,9 @@ export function snapshotContracts(sources: readonly ContractDefinition[]): reado
         active.add(source);
         const parent = source.extends ? visit(source.extends, depth + 1) : undefined;
         const { contractId, name, publisherId, version, description, catalogue } = source;
-        const capabilities = Object.entries(source.capabilities).sort(([left], [right]) =>
-            left < right ? -1 : left > right ? 1 : 0,
+        const operations = ownOperations(source).sort((left, right) =>
+            left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
         );
-        if (capabilities.length > DEFAULT_RELEASE_LIMITS.maxCapabilities) {
-            throw new SdkDefinitionError("Too many contract capabilities", "$.capabilities");
-        }
         const snapshot: ContractSourceSnapshot = {
             release: {
                 ...structuredClone({
@@ -60,7 +58,7 @@ export function snapshotContracts(sources: readonly ContractDefinition[]): reado
                 kind: "contract",
                 protocol: "ulvia-provider/v1",
                 schemaDialect: "ulvia-schema/v1",
-                capabilities: capabilities.map(([id, capability]) => compileCapability(id, capability)),
+                capabilities: operations.map(compileCapability),
             },
             documents: snapshotDocuments(source.documents),
             fixtures: snapshotFixtures(source.fixtures),

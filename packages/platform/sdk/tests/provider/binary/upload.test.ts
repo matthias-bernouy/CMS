@@ -3,7 +3,6 @@ import { contractBinary, defineContract, defineOperation, implementContract, z }
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { notesProviderDefinition } from "../../../examples/provider";
 import { unitProvider } from "../support/runtime";
-
 test("streaming uploads are bounded and invalid bytes leave business state unchanged", async () => {
     let writes = 0;
     const upload = defineContract({
@@ -11,13 +10,11 @@ test("streaming uploads are bounded and invalid bytes leave business state uncha
         name: "Upload",
         publisherId: "example",
         version: "1.0.0",
-        capabilities: {
-            "bytes.put": {
-                operation: defineOperation({
-                    input: z.strictObject({ payload: contractBinary({ maxBytes: 4 }) }),
-                    output: z.int().min(0).max(4),
-                    errors: {},
-                }),
+        operations: [
+            defineOperation({
+                input: z.strictObject({ payload: contractBinary({ maxBytes: 4 }) }),
+                output: z.int().min(0).max(4),
+                errors: {},
                 access: "admin",
                 behavior: { effect: "command", execution: "sync", sensitive: true, idempotency: "natural" },
                 bindings: [
@@ -30,8 +27,9 @@ test("streaming uploads are bounded and invalid bytes leave business state uncha
                         response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
                     },
                 ],
-            },
-        },
+                id: "bytes.put",
+            }),
+        ],
     });
     const base = notesProviderDefinition("http://127.0.0.1:5103");
     const build = await compileProvider({

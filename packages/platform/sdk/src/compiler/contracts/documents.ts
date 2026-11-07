@@ -1,3 +1,4 @@
+import { URL as NodeURL } from "node:url";
 import { sha256Digest } from "@bernouy/binary-media";
 import type { ContractBundleAsset, ContractDocumentationDefinition } from "@bernouy/ulvia-contracts";
 import {
@@ -5,6 +6,8 @@ import {
     documentationPath,
     parseDocumentationMarkdown,
 } from "@bernouy/ulvia-contracts/documentation";
+import { readDocumentDirectory } from "ulvia-sdk/compiler/contracts/documentDirectory";
+import type { ContractDefinition } from "ulvia-sdk/interfaces/contracts";
 import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 
 interface SourceDocument {
@@ -13,8 +16,9 @@ interface SourceDocument {
     readonly bytes: Uint8Array;
 }
 
-export function snapshotDocuments(source: Readonly<Record<string, string>> = {}): readonly SourceDocument[] {
-    const entries = Object.entries(source);
+export function snapshotDocuments(source: ContractDefinition["documents"] = {}): readonly SourceDocument[] {
+    const directory = source instanceof URL || source instanceof NodeURL ? new NodeURL(source.href) : undefined;
+    const entries = Object.entries(directory ? readDocumentDirectory(directory) : source);
     if (entries.length > DOCUMENTATION_LIMITS.documents) {
         throw new SdkDefinitionError("Too many documentation sources", "$.documents");
     }

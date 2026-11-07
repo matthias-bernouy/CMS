@@ -20,3 +20,8 @@ Keep the surface independent from the site Edge implementation. Every
 cross-process operation must use an admitted contract capability: do not add a
 private Edge protocol, browser bypass, or second implementation of domain
 behavior.
+
+- SDK-migrated features own contract identity, operation IDs, access, behavior and
+  bindings through their `./feature` export. Import these definitions instead of
+  redeclaring their API in the Provider. Implementation adapters remain here until
+  their separately requested migration; retain injected dependencies and policies.

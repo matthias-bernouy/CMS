@@ -1,11 +1,12 @@
 # SDK release workflow
 
 The Emailer pilot is implemented in `packages/features/email/base` and `smtp`.
-Their documentation is authored as ordinary `docs/*.md` files and loaded as text
-through `./docs`. Reusable Zod data schemas live in `src/schemas/` and the TypeScript
-ports infer their types from those schemas. `@bernouy/ulvia-provider/build`
-assembles capability identities, access, HTTP bindings, implementations and
-manifest requirements. Nodemailer and durable storage are injected by the runtime.
+Their documentation is authored as ordinary `docs/**/*.md` files and discovered
+during SDK compilation. Reusable Zod data schemas live in `src/schemas/` and the TypeScript
+ports infer their types from those schemas. Each operation declares its stable ID,
+access, behavior and bindings. The `./feature` export owns contract identity,
+version, parent and operation list. `@bernouy/ulvia-provider/build` assembles
+implementations and manifest requirements. Nodemailer and durable storage are injected by the runtime.
 
 ## Sources and generated artifacts
 
@@ -33,7 +34,7 @@ The resource ZIP and removal of collections are separate work.
 
 ## Versions and publication
 
-Versions are explicit source data: contract definitions own their version and
+Versions are explicit source data: each `src/feature.ts` owns its contract version and
 the surface’s `src/exports/provider/definition.json` owns the manifest version/provenance. Compilation never invents
 versions or publication timestamps. Update the corresponding source version
 before releasing changed bytes. The ordinary catalogue checks immutable exact
@@ -86,14 +87,38 @@ commands and general receipt administration remain outside this pilot.
 
 ## Feature source layout
 
-Features expose `./schemas`, `./operations` and `./docs`. Keep reusable Zod data
+Features expose `./schemas`, `./operations` and `./feature`. Keep reusable Zod data
 models under `src/schemas/`; infer port types directly from them. Each operation
 has its own descriptor under `src/operations/`, grouped by domain such as
 `configuration/get.ts`. Read/write/storage projections derive from shared fields;
 private storage schemas remain internal. Business normalization belongs in core.
-Documentation remains ordinary Markdown under `docs/`.
+Documentation remains ordinary Markdown under `docs/`. `src/feature.ts` declares
+`documents: new URL("../docs/", import.meta.url)`; compilation scans recursively.
+IDs are case-preserving relative paths including the extension: `docs/setup/smtp.md`
+becomes `setup/smtp.md`. Titles come from exactly one H1 per file. Operations reference
+these IDs in `docs: [...]`; internal links resolve relative to the document. Moving a
+file changes its ID and requires updating references and links.
 
-Migrated feature definitions have no `contracts/` directory or public `./contracts` entry. Contract
-identity, access, behavior, bindings and specialization stay in the mounting
-surface. Adding a domain folder under schemas, operations or docs does not change
-capability identities or release versions.
+The source directory must exist. Discovery rejects symlinks, invalid document paths,
+invalid UTF-8, missing headings, broken links and dangling operation references.
+Only `.md` files are included; other regular files are ignored. Limits are 64 documents,
+128 KiB each, 4 MiB total, 1,024 visited entries and eight nested directory levels.
+The SDK root does no filesystem IO; compilation snapshots exact bytes synchronously
+before asynchronous hashing. Current Provider registration still compiles the source
+once during initialization, so those source documentation directories must be shipped
+alongside the feature modules. Mounting admitted artifacts directly remains future work.
+
+Migrated feature definitions have no `contracts/` directory or public `./contracts`
+entry. `src/feature.ts` declares identity, version, parent and the operation list.
+Operation descriptors own IDs, access, behavior and HTTP/MCP bindings. Optional
+deprecation and response effects retain ordinary admission rules. The Provider
+selects implementations and enforces mounting/authentication policy.
+
+Named mocks are explicit operation data, optionally imported from `src/mocks/`;
+no directory scan or repeated owner ID is needed. Multiple scenarios may share
+input. TypeScript inference and build admission validate their payloads and codes;
+local mock IDs must be unique. Binary fixtures retain their verified asset references.
+
+These changes preserve existing contract versions, canonical bytes and digests.
+Runtime compilation and Provider handler adapters retain their current paths.
+Adding domain folders does not change operation identities or release versions.

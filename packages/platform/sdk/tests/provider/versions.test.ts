@@ -4,17 +4,24 @@ import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { notesContract } from "../../examples/notes";
 import { notesProviderDefinition } from "../../examples/provider";
 import { unitProvider } from "./support/runtime";
-
-const status = defineOperation({ input: z.strictObject({}), output: z.boolean(), errors: {} });
+const status = defineOperation({
+    id: "test.operation",
+    access: "public",
+    behavior: { effect: "query", execution: "sync", sensitive: false },
+    bindings: [{ id: "mcp", transport: "mcp" }],
+    input: z.strictObject({}),
+    output: z.boolean(),
+    errors: {},
+});
 const child = defineContract({
     contractId: "example/special-notes",
     name: "Specialized notes",
     publisherId: "example",
     version: "1.0.0",
     extends: notesContract,
-    capabilities: {
-        "notes.status": {
-            operation: status,
+    operations: [
+        {
+            ...status,
             access: "public",
             behavior: { effect: "query", execution: "sync", sensitive: false },
             bindings: [
@@ -26,10 +33,10 @@ const child = defineContract({
                     response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
                 },
             ],
+            id: "notes.status",
         },
-    },
+    ],
 });
-
 test("specialized contracts type and mount inherited handlers under concrete and ancestor calls", async () => {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
     const build = await compileProvider({
@@ -53,7 +60,6 @@ test("specialized contracts type and mount inherited handlers under concrete and
     }
     expect(await (await runtime.call("example/special-notes", "notes.status", "/notes-status")).json()).toBe(true);
 });
-
 test("multiple exact versions dispatch only to their matching typed handler", async () => {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
     const newer = defineContract({ ...notesContract, version: "1.1.0" });
@@ -96,16 +102,15 @@ test("multiple exact versions dispatch only to their matching typed handler", as
         }),
     ).rejects.toThrow("Ambiguous inherited");
 });
-
 test("every exact ancestor exposes its effective inherited capabilities through the same handler", async () => {
     const grandchild = defineContract({
         ...child,
         contractId: "example/grandchild",
         name: "Grandchild",
         extends: child,
-        capabilities: {
-            "notes.ready": {
-                ...child.capabilities["notes.status"],
+        operations: [
+            {
+                ...child.operations[0],
                 bindings: [
                     {
                         id: "http",
@@ -115,8 +120,9 @@ test("every exact ancestor exposes its effective inherited capabilities through 
                         response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
                     },
                 ],
+                id: "notes.ready",
             },
-        },
+        ],
     });
     const base = notesProviderDefinition("http://127.0.0.1:5103");
     const build = await compileProvider({

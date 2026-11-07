@@ -3,19 +3,16 @@ import { contractBinary, defineContract, defineOperation, implementContract, z }
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { notesProviderDefinition } from "../../../examples/provider";
 import { unitProvider } from "../support/runtime";
-
 const download = defineContract({
     contractId: "example/bytes",
     name: "Bytes",
     publisherId: "example",
     version: "1.0.0",
-    capabilities: {
-        "bytes.read": {
-            operation: defineOperation({
-                input: z.strictObject({}),
-                output: contractBinary({ maxBytes: 4 }),
-                errors: {},
-            }),
+    operations: [
+        defineOperation({
+            input: z.strictObject({}),
+            output: contractBinary({ maxBytes: 4 }),
+            errors: {},
             access: "public",
             behavior: { effect: "query", execution: "sync", sensitive: false },
             bindings: [
@@ -27,10 +24,10 @@ const download = defineContract({
                     response: { successStatuses: [200], contentTypes: ["application/octet-stream"], errorStatuses: {} },
                 },
             ],
-        },
-    },
+            id: "bytes.read",
+        }),
+    ],
 });
-
 async function binaryRuntime(read: () => Uint8Array | Response) {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
     const build = await compileProvider({
@@ -39,7 +36,6 @@ async function binaryRuntime(read: () => Uint8Array | Response) {
     });
     return unitProvider(build, {});
 }
-
 test("binary handlers can return bounded bytes or stream Responses", async () => {
     let read = () => new Uint8Array([1, 2, 3, 4]) as Uint8Array | Response;
     const runtime = await binaryRuntime(() => read());
@@ -53,7 +49,6 @@ test("binary handlers can return bounded bytes or stream Responses", async () =>
     read = () => new Uint8Array(5);
     expect((await runtime.call("example/bytes", "bytes.read", "/bytes")).status).toBe(503);
 });
-
 test("binary stream overflow and consumer cancellation release the original source", async () => {
     let cancelled = false;
     const runtime = await binaryRuntime(
@@ -83,7 +78,6 @@ test("binary stream overflow and consumer cancellation release the original sour
     await Bun.sleep(0);
     expect(cancelled).toBe(true);
 });
-
 test("declared oversized binary responses cancel without consuming bytes", async () => {
     let cancelled = false;
     const runtime = await binaryRuntime(

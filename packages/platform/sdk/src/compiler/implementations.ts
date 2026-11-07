@@ -1,6 +1,8 @@
+import type { OperationSource } from "ulvia-sdk/interfaces/operations";
+import { ownOperations } from "ulvia-sdk/compiler/contracts/operations";
 import { resolveContract } from "@bernouy/ulvia-contracts";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
-import type { CapabilitySource, ContractDefinition } from "ulvia-sdk/interfaces/contracts";
+import type { ContractDefinition } from "ulvia-sdk/interfaces/contracts";
 import type { CompiledImplementations, ContractImplementation } from "ulvia-sdk/interfaces/providers";
 import type { RuntimeCapabilityPlan } from "ulvia-sdk/compiler/plan";
 import { compileContracts } from "ulvia-sdk/compiler/contracts";
@@ -8,8 +10,8 @@ import { buildCatalogue } from "ulvia-sdk/compiler/catalogue";
 import { storeProviderPlan } from "ulvia-sdk/compiler/plan";
 import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 
-function effectiveSources(source: ContractDefinition): Map<string, CapabilitySource> {
-    const capabilities = new Map<string, CapabilitySource>();
+function effectiveSources(source: ContractDefinition): Map<string, OperationSource> {
+    const capabilities = new Map<string, OperationSource>();
     const seen = new Set<ContractDefinition>();
     let current: ContractDefinition | undefined = source;
     while (current) {
@@ -17,11 +19,12 @@ function effectiveSources(source: ContractDefinition): Map<string, CapabilitySou
             throw new SdkDefinitionError("Cyclic or oversized contract lineage", "$.extends");
         }
         seen.add(current);
-        for (const [id, capability] of Object.entries(current.capabilities)) {
+        for (const operation of ownOperations(current)) {
+            const id = operation.id;
             if (capabilities.has(id)) {
                 throw new SdkDefinitionError(`Cannot redeclare inherited capability ${id}`);
             }
-            capabilities.set(id, capability);
+            capabilities.set(id, operation);
         }
         current = current.extends;
     }
@@ -34,9 +37,7 @@ export async function compileImplementations<Dependencies>(
     dependencies: readonly ContractDefinition[] = [],
 ): Promise<CompiledImplementations<Dependencies>> {
     const implementations = sources.map((source) => {
-        const operations = new Map(
-            [...effectiveSources(source.contract)].map(([id, capability]) => [id, capability.operation]),
-        );
+        const operations = new Map([...effectiveSources(source.contract)].map(([id, operation]) => [id, operation]));
         const handlers = Object.freeze({ ...source.handlers });
         const expected = [...operations.keys()].sort();
         const actual = Object.keys(handlers).sort();

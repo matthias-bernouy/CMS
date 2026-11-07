@@ -6,7 +6,7 @@ export { implementContract, defineProvider } from "ulvia-sdk/definitions/defineP
 export { operationError, isOperationFailure } from "ulvia-sdk/definitions/errors";
 export type { OperationFailure } from "ulvia-sdk/definitions/errors";
 export type {
-    EffectiveCapabilities,
+    EffectiveOperations,
     ProviderOperationContext,
     ProviderOperationHandler,
     ContractHandlers,
@@ -23,6 +23,7 @@ export type {
 export { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 export type {
     OperationDefinition,
+    OperationExposure,
     OperationSource,
     OperationErrors,
     OperationError,
@@ -34,7 +35,6 @@ export type {
 } from "ulvia-sdk/interfaces/operations";
 export type {
     ContractDefinition,
-    ContractCapabilities,
-    CapabilitySource,
+    ContractOperations,
     ContractFixtureSource,
 } from "ulvia-sdk/interfaces/contracts";

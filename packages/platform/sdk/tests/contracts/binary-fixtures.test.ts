@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test";
 import { contractBinary, defineOperation, defineContract, z } from "@bernouy/ulvia-sdk";
 import { compileContract } from "@bernouy/ulvia-sdk/build";
-
 function binaryContract(bytes: Uint8Array) {
     return defineContract({
         contractId: "example/binary",
@@ -9,14 +8,12 @@ function binaryContract(bytes: Uint8Array) {
         publisherId: "example",
         version: "1.0.0",
         fixtures: [{ id: "receipt", mediaType: "application/octet-stream", bytes }],
-        capabilities: {
-            "binary.read": {
-                operation: defineOperation({
-                    input: z.strictObject({}),
-                    output: contractBinary({ maxBytes: 4 }),
-                    errors: {},
-                    mocks: [{ id: "bytes", input: {}, outcome: { kind: "success", output: { assetId: "receipt" } } }],
-                }),
+        operations: [
+            defineOperation({
+                input: z.strictObject({}),
+                output: contractBinary({ maxBytes: 4 }),
+                errors: {},
+                mocks: [{ id: "bytes", input: {}, outcome: { kind: "success", output: { assetId: "receipt" } } }],
                 access: "public",
                 behavior: { effect: "query", execution: "sync", sensitive: false },
                 bindings: [
@@ -32,11 +29,11 @@ function binaryContract(bytes: Uint8Array) {
                         },
                     },
                 ],
-            },
-        },
+                id: "binary.read",
+            }),
+        ],
     });
 }
-
 test("binary mocks reference bounded immutable assets whose metadata is generated and verified", async () => {
     const bytes = new Uint8Array([1, 2, 3, 4]);
     const pending = compileContract(binaryContract(bytes));
@@ -50,7 +47,6 @@ test("binary mocks reference bounded immutable assets whose metadata is generate
     const missing = binaryContract(new Uint8Array(4));
     await expect(compileContract({ ...missing, fixtures: [] })).rejects.toThrow();
 });
-
 test("fixture count and build byte limits refuse oversized sources before hashing", async () => {
     const source = binaryContract(new Uint8Array(4));
     await expect(

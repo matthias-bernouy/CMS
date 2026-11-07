@@ -9,7 +9,7 @@
         ".": "./src/exports/index.ts",
         "./schemas": "./src/exports/schemas.ts",
         "./operations": "./src/exports/operations.ts",
-        "./docs": "./src/exports/docs.ts"
+        "./feature": "./src/feature.ts"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

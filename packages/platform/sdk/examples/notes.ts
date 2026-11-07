@@ -1,8 +1,22 @@
+import { noteMocks } from "./mocks/notes";
 import { contractString, defineContract, defineOperation, operationError, z } from "@bernouy/ulvia-sdk";
 import type { OperationHandler } from "@bernouy/ulvia-sdk";
-
-// Feature-owned operation: no access policy, endpoints, adapters or runtime configuration.
+// Feature-owned API declaration, including its HTTP/MCP bindings; dependencies are injected.
 export const readNote = defineOperation({
+    id: "notes.read",
+    access: "authenticated",
+    behavior: { effect: "query", execution: "sync", sensitive: false },
+    bindings: [
+        {
+            id: "http",
+            transport: "http",
+            method: "GET",
+            path: "/notes/{id}",
+            input: { path: { id: "id" } },
+            response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: { NOT_FOUND: 404 } },
+        },
+        { id: "mcp", transport: "mcp", tool: { name: "notes_read" } },
+    ],
     description: "Read one note by its stable identifier.",
     input: z.strictObject({ id: contractString({ minLength: 1, maxLength: 64 }) }),
     output: z.strictObject({
@@ -13,55 +27,23 @@ export const readNote = defineOperation({
         NOT_FOUND: { retryable: false, output: z.strictObject({ message: contractString({ maxLength: 200 }) }) },
     },
     docs: ["overview.md"],
-    mocks: [
-        {
-            id: "existing",
-            input: { id: "welcome" },
-            outcome: { kind: "success", output: { id: "welcome", text: "Hello" } },
-        },
-        {
-            id: "missing",
-            input: { id: "missing" },
-            outcome: { kind: "error", code: "NOT_FOUND", output: { message: "Note not found" } },
-        },
-    ],
+    mocks: noteMocks,
 });
-
-// Surface-owned exposure: one public contract assembled from feature operations.
+// Feature identity and exact operation list; the Provider chooses an implementation.
 export const notesContract = defineContract({
     contractId: "example/notes",
     name: "Example notes",
     publisherId: "example",
     version: "1.0.0",
     documents: { "overview.md": "# Notes\n\nRead one note by its exact identifier.\n" },
-    capabilities: {
-        "notes.read": {
-            operation: readNote,
-            access: "authenticated",
-            behavior: { effect: "query", execution: "sync", sensitive: false },
-            bindings: [
-                {
-                    id: "http",
-                    transport: "http",
-                    method: "GET",
-                    path: "/notes/{id}",
-                    input: { path: { id: "id" } },
-                    response: {
-                        successStatuses: [200],
-                        contentTypes: ["application/json"],
-                        errorStatuses: { NOT_FOUND: 404 },
-                    },
-                },
-                { id: "mcp", transport: "mcp", tool: { name: "notes_read" } },
-            ],
-        },
-    },
+    operations: [readNote],
 });
-
 export interface ExampleNoteReader {
-    read(id: string): Promise<{ id: string; text: string } | null>;
+    read(id: string): Promise<{
+        id: string;
+        text: string;
+    } | null>;
 }
-
 // A host injects its own implementation. This factory does not open connections during the build.
 export function createReadNoteHandler(reader: ExampleNoteReader): OperationHandler<typeof readNote> {
     return async (input) => {

@@ -3,6 +3,23 @@ import { emailErrorSchema } from "@bernouy/email/schemas";
 import { getSmtpConfigurationInputSchema, smtpConfigurationSchema } from "email-smtp/schemas/configuration";
 
 export const getSmtpConfiguration = defineOperation({
+    id: "smtp.configuration.get",
+    access: "admin",
+    behavior: { effect: "query", execution: "sync", sensitive: true },
+    bindings: [
+        {
+            id: "http",
+            transport: "http",
+            method: "GET",
+            path: "/configuration",
+            response: {
+                successStatuses: [200],
+                contentTypes: ["application/json"],
+                errorStatuses: { CORE_UNAVAILABLE: 503 },
+            },
+        },
+    ],
+
     description: "Read SMTP email delivery configuration without returning credentials.",
     input: getSmtpConfigurationInputSchema,
     output: smtpConfigurationSchema,

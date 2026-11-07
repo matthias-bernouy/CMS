@@ -12,8 +12,8 @@ the CLI and infrastructure; the SDK remains free of filesystem discovery and pub
 
 | Entry | Responsibility |
 | --- | --- |
-| `.` → `z`, `defineOperation` | Typed input/output/errors, documentation references and mock examples. |
-| `.` → `defineContract` | Public identity/version, exposure, parent source and document/fixture sources. |
+| `.` → `z`, `defineOperation` | Stable operation IDs, access, behavior, HTTP/MCP bindings, typed data/errors and named mocks. |
+| `.` → `defineContract` | Contract identity/version, parent, operation list and document/fixture sources. |
 | `.` → `contractString`, `contractMap`, `contractBinary` | Zod schemas with exact Ulvia v1 semantics. |
 | `.` → `implementContract`, `defineProvider` | Typed handler factories and static manifest metadata. |
 | `.` → `operationError`, `isOperationFailure` | Declared, validated business errors without HTTP policy. |
@@ -27,8 +27,10 @@ the CLI and infrastructure; the SDK remains free of filesystem discovery and pub
 
 ## One definition, two stages
 
-A feature defines its operations and business behavior. A surface chooses public
-capability IDs, access, behavior and explicit HTTP/MCP bindings in `defineContract`.
+A feature owns each operation's stable ID, access, behavior, HTTP/MCP bindings,
+data schemas and errors in `defineOperation`. Its `feature.ts` uses `defineContract`
+to declare identity, version, parent and an explicit `operations` list. The Provider
+selects implementations and applies its mounting/authentication policy.
 The [notes example](examples/notes.ts) includes typed mocks, verified Markdown and
 an injected business handler. [Its Provider](examples/provider.ts) assembles it:
 
@@ -38,6 +40,16 @@ const implementation = implementContract(notesContract, {
         createReadNoteHandler(dependencies.notes),
 });
 ```
+
+Operation IDs are declared once. Duplicate IDs within a contract or redeclared
+inherited IDs refuse compilation. Literal IDs and behavior remain inferred across
+package exports, preserving typed inherited handler coverage and execution modes.
+
+`mocks` is an optional array on each operation, not a scanned source directory.
+Scenarios may share input and have different named success/error outcomes. The
+[imported notes mocks](examples/mocks/notes.ts) need no owning capability ID.
+TypeScript checks their inferred shapes; build admission also validates inputs,
+success/error payloads, declared error codes, asset references and unique local IDs.
 
 Handler factories are an explicit table, not a function that discovers handlers
 by running code. Build checks the full effective key set, including inherited
@@ -127,8 +139,22 @@ when the handler returns: finish consuming/validating it before mutating busines
 state, and do not return that borrowed stream as a later response body. The host
 owns admission/concurrency quotas and adapter lifecycle.
 
-Documents are explicit `documents: { "overview.md": markdown }` sources. Titles,
-byte lengths and digests are calculated; references and links are checked.
+Set `documents: new URL("../docs/", import.meta.url)` in `src/feature.ts` to scan
+`docs/**/*.md` during compilation. No Markdown imports, declarations or generated
+source manifest are needed. IDs are case-preserving paths relative to that directory:
+`docs/overview.md` becomes `overview.md`; `docs/setup/smtp.md` becomes
+`setup/smtp.md`. Moving a file changes its ID, so update operation references and
+internal links. The title comes from its single H1; references and links are checked.
+
+The explicit directory must exist and contain regular files without symlinks;
+non-Markdown files are ignored. Discovery allows at most 1,024 entries and eight
+nested directory levels. Contract limits remain 64 documents, 128 KiB per document
+and 4 MiB total. UTF-8 bytes, including line endings, are preserved. Discovery is
+synchronous and bounded so source bytes are captured before asynchronous admission.
+Definitions themselves perform no filesystem IO. Builds from bundled source must
+preserve the directory's location relative to `import.meta.url`, or supply in-memory
+`documents: { "overview.md": markdown }` sources instead. Admitted releases already
+contain verified documentation assets and need no source scan.
 Binary mock values use `{ assetId }` references to `fixtures: [{ id, mediaType,
 bytes }]`. Sources are snapshotted before asynchronous hashing. Fixture metadata
 and separate immutable bytes are verified by ordinary contract admission. SDK

@@ -3,7 +3,7 @@ import { isEmailDeliveryDisabledError } from "@bernouy/email";
 import type { Emailer } from "@bernouy/email";
 import { SmtpEmailConfigurationError } from "@bernouy/email-smtp";
 import type { SmtpEmailerAdministration } from "@bernouy/email-smtp";
-import { smtpEmailerContract } from "./contracts";
+import { smtpEmailerContract } from "@bernouy/email-smtp/feature";
 import { officialFailure } from "../../dispatch/errors/failure";
 import { ProviderCapabilityDispatchError } from "../../dispatch/registry";
 

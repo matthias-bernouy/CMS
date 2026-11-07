@@ -4,19 +4,16 @@ import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { createProvider } from "@bernouy/ulvia-sdk/provider";
 import { notesProviderDefinition } from "../../../examples/provider";
 import { unitProvider } from "../support/runtime";
-
 const command = defineContract({
     contractId: "example/flag",
     name: "Flag",
     publisherId: "example",
     version: "1.0.0",
-    capabilities: {
-        "flag.set": {
-            operation: defineOperation({
-                input: z.strictObject({ flag: z.boolean() }),
-                output: z.boolean(),
-                errors: {},
-            }),
+    operations: [
+        defineOperation({
+            input: z.strictObject({ flag: z.boolean() }),
+            output: z.boolean(),
+            errors: {},
             access: "admin",
             behavior: { effect: "command", execution: "sync", sensitive: false, idempotency: "keyed" },
             bindings: [
@@ -29,10 +26,10 @@ const command = defineContract({
                     response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
                 },
             ],
-        },
-    },
+            id: "flag.set",
+        }),
+    ],
 });
-
 test("keyed commands require an explicit durable execution port before handlers are initialized", async () => {
     let initialized = 0;
     const base = notesProviderDefinition("http://127.0.0.1:5103");
@@ -60,10 +57,15 @@ test("keyed commands require an explicit durable execution port before handlers 
     ).toThrow("durable");
     expect(initialized).toBe(0);
 });
-
 test("trusted keyed execution receives complete scope and refusal leaves business state unchanged", async () => {
     let writes = 0;
-    const receipts = new Map<string, { input: string; result: unknown }>(); // Test double for the required durable host port.
+    const receipts = new Map<
+        string,
+        {
+            input: string;
+            result: unknown;
+        }
+    >(); // Test double for the required durable host port.
     const base = notesProviderDefinition("http://127.0.0.1:5103");
     const build = await compileProvider({
         ...base,
@@ -121,29 +123,19 @@ test("trusted keyed execution receives complete scope and refusal leaves busines
     expect((await call('{"flag":false}', "request-1")).status).toBe(503);
     expect(writes).toBe(1);
 });
-
 test("durable middleware observes the current binding's declared failure before persisting it", async () => {
+    const capability = command.operations[0];
     const operation = defineOperation({
-        input: z.strictObject({ flag: z.boolean() }),
-        output: z.boolean(),
+        ...capability,
         errors: { DISABLED: { retryable: false } },
-    });
-    const capability = command.capabilities["flag.set"];
-    const contract = defineContract({
-        ...command,
-        capabilities: {
-            "flag.set": {
-                ...capability,
-                operation,
-                bindings: [
-                    {
-                        ...capability.bindings[0],
-                        response: { ...capability.bindings[0].response, errorStatuses: { DISABLED: 409 } },
-                    },
-                ],
+        bindings: [
+            {
+                ...capability.bindings[0],
+                response: { ...capability.bindings[0].response, errorStatuses: { DISABLED: 409 } },
             },
-        },
+        ],
     });
+    const contract = defineContract({ ...command, operations: [operation] });
     const build = await compileProvider({
         ...notesProviderDefinition("http://127.0.0.1:5103"),
         implementations: [

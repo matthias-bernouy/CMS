@@ -1,5 +1,12 @@
 import type { z } from "zod";
-import type { CapabilityMockDefinition } from "@bernouy/ulvia-contracts";
+import type {
+    CapabilityAccess,
+    CapabilityBehavior,
+    CapabilityBinding,
+    CapabilityDeprecation,
+    CapabilityResponseEffect,
+    CapabilityMockDefinition,
+} from "@bernouy/ulvia-contracts";
 
 export interface OperationError {
     readonly description?: string;
@@ -32,11 +39,21 @@ export interface OperationMock<Input extends z.ZodObject, Output extends z.ZodTy
     readonly outcome: { readonly kind: "success"; readonly output: MockValue<z.input<Output>> } | ErrorOutcome<Errors>;
 }
 
+/** Public contract exposure authored once alongside the operation's data schemas. */
+export interface OperationExposure {
+    readonly id: string;
+    readonly access: CapabilityAccess;
+    readonly behavior: CapabilityBehavior;
+    readonly bindings: readonly CapabilityBinding[];
+    readonly deprecation?: CapabilityDeprecation;
+    readonly responseEffects?: readonly CapabilityResponseEffect[];
+}
+
 export interface OperationDefinition<
     Input extends z.ZodObject = z.ZodObject,
     Output extends z.ZodType = z.ZodType,
     Errors extends OperationErrors = OperationErrors,
-> {
+> extends OperationExposure {
     readonly description?: string;
     readonly input: Input;
     readonly output: Output;

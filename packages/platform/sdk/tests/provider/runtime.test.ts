@@ -4,15 +4,14 @@ import { defineOperation, operationError, z } from "@bernouy/ulvia-sdk";
 import { notesProviderDefinition } from "../../examples/provider";
 import { notesContract, readNote } from "../../examples/notes";
 import { unitProvider } from "./support/runtime";
-
 test("typed errors follow the selected HTTP alias instead of carrying a hardcoded status", async () => {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
-    const original = notesContract.capabilities["notes.read"];
+    const original = notesContract.operations[0];
     const http = original.bindings[0];
     const contract = {
         ...notesContract,
-        capabilities: {
-            "notes.read": {
+        operations: [
+            {
                 ...original,
                 bindings: [
                     http,
@@ -23,8 +22,9 @@ test("typed errors follow the selected HTTP alias instead of carrying a hardcode
                         response: { ...http.response, errorStatuses: { NOT_FOUND: 410 } },
                     },
                 ],
+                id: "notes.read",
             },
-        },
+        ],
     };
     const build = await compileProvider({
         ...base,
@@ -33,7 +33,7 @@ test("typed errors follow the selected HTTP alias instead of carrying a hardcode
                 contract,
                 handlers: {
                     "notes.read": (_dependencies: {}) => () => {
-                        throw operationError(readNote, "NOT_FOUND", { message: "Missing" });
+                        throw operationError(contract.operations[0]!, "NOT_FOUND", { message: "Missing" });
                     },
                 },
             },
@@ -45,10 +45,13 @@ test("typed errors follow the selected HTTP alias instead of carrying a hardcode
     expect(alternate.status).toBe(410);
     expect(await alternate.json()).toEqual({ error: { code: "NOT_FOUND", output: { message: "Missing" } } });
 });
-
 test("invalid results, unrelated failures and malformed errors never expose implementation details", async () => {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
     const other = defineOperation({
+        id: "test.operation",
+        access: "public",
+        behavior: { effect: "query", execution: "sync", sensitive: false },
+        bindings: [{ id: "mcp", transport: "mcp" }],
         input: z.strictObject({}),
         output: z.boolean(),
         errors: { NOT_FOUND: { retryable: false } },
@@ -78,11 +81,10 @@ test("invalid results, unrelated failures and malformed errors never expose impl
         expect(await response.json()).toEqual({ error: { code: "CORE_UNAVAILABLE" } });
     }
 });
-
 test("error ownership is captured before asynchronous admission", async () => {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
-    const capability = { ...notesContract.capabilities["notes.read"] };
-    const contract = { ...notesContract, capabilities: { "notes.read": capability } };
+    const operations = [readNote];
+    const contract = { ...notesContract, operations };
     const pending = compileProvider({
         ...base,
         implementations: [
@@ -96,7 +98,7 @@ test("error ownership is captured before asynchronous admission", async () => {
             },
         ],
     });
-    capability.operation = { ...readNote };
+    operations[0] = { ...readNote };
     const runtime = unitProvider(await pending, {});
     const response = await runtime.call("example/notes", "notes.read", "/notes/welcome");
     expect(response.status).toBe(404);

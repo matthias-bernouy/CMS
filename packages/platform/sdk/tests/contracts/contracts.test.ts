@@ -4,8 +4,15 @@ import { compileContract, compileContracts } from "@bernouy/ulvia-sdk/build";
 import { defineContract, defineOperation, z } from "@bernouy/ulvia-sdk";
 import type { ContractDefinition } from "@bernouy/ulvia-sdk";
 import { notesContract, readNote, createReadNoteHandler } from "../../examples/notes";
-
-const marker = defineOperation({ input: z.strictObject({}), output: z.boolean(), errors: {} });
+const marker = defineOperation({
+    id: "test.operation",
+    access: "public",
+    behavior: { effect: "query", execution: "sync", sensitive: false },
+    bindings: [{ id: "mcp", transport: "mcp" }],
+    input: z.strictObject({}),
+    output: z.boolean(),
+    errors: {},
+});
 function derived(id: string, parent: ContractDefinition, capabilityId = "notes.available") {
     return defineContract({
         contractId: id,
@@ -13,17 +20,17 @@ function derived(id: string, parent: ContractDefinition, capabilityId = "notes.a
         publisherId: "example",
         version: "1.0.0",
         extends: parent,
-        capabilities: {
-            [capabilityId]: {
-                operation: marker,
+        operations: [
+            {
+                ...marker,
                 access: "public",
                 behavior: { effect: "query", execution: "sync", sensitive: false },
                 bindings: [{ id: "mcp", transport: "mcp" }],
+                id: capabilityId,
             },
-        },
+        ],
     });
 }
-
 test("the fictitious feature compiles to a normal admitted HTTP/MCP contract with verified docs and mocks", async () => {
     const compiled = await compileContract(notesContract);
     expect(compiled.release).toMatchObject({
@@ -45,7 +52,6 @@ test("the fictitious feature compiles to a normal admitted HTTP/MCP contract wit
     const read = createReadNoteHandler({ read: async (id) => ({ id, text: "Hello" }) });
     expect(await read({ id: "welcome" }, undefined)).toEqual({ id: "welcome", text: "Hello" });
 });
-
 test("parent references and digests are generated from exact compiled parent sources", async () => {
     const child = derived("example/special-notes", notesContract);
     const releases = await compileContracts([child, notesContract]);
@@ -59,12 +65,13 @@ test("parent references and digests are generated from exact compiled parent sou
     expect(releases[1]!.release.capabilities).toHaveLength(1);
     expect((await compileContract(child)).digest).toBe(releases[1]!.digest);
 });
-
 test("inheritance cycles, redeclared inherited capabilities and conflicting coordinates are refused", async () => {
     await expect(compileContract(derived("example/special-notes", notesContract, "notes.read"))).rejects.toThrow(
         "redeclare",
     );
-    const cyclic: { extends?: ContractDefinition } & ContractDefinition = { ...notesContract };
+    const cyclic: {
+        extends?: ContractDefinition;
+    } & ContractDefinition = { ...notesContract };
     cyclic.extends = cyclic;
     await expect(compileContract(cyclic)).rejects.toThrow("Cyclic");
     await expect(compileContracts([notesContract, { ...notesContract, name: "Different" }])).rejects.toThrow(
@@ -72,7 +79,6 @@ test("inheritance cycles, redeclared inherited capabilities and conflicting coor
     );
     expect(await compileContracts([notesContract, { ...notesContract }])).toHaveLength(1);
 });
-
 test("documentation references, broken links and malformed mocks are checked by ordinary admission", async () => {
     await expect(compileContract({ ...notesContract, documents: {} })).rejects.toThrow("documentation");
     await expect(
@@ -80,28 +86,24 @@ test("documentation references, broken links and malformed mocks are checked by 
     ).rejects.toThrow();
     await expect(compileContract({ ...notesContract, documents: { "../outside.md": "# Outside" } })).rejects.toThrow();
     await expect(compileContract({ ...notesContract, documents: { "overview.md": "No heading" } })).rejects.toThrow();
-    const exposure = notesContract.capabilities["notes.read"];
     const invalid = {
         ...notesContract,
-        capabilities: {
-            "notes.read": {
-                ...exposure,
-                operation: {
-                    ...readNote,
-                    mocks: [
-                        {
-                            id: "invalid",
-                            input: { id: "welcome" },
-                            outcome: { kind: "success" as const, output: { text: "Missing id" } },
-                        },
-                    ],
-                },
+        operations: [
+            {
+                ...readNote,
+                mocks: [
+                    {
+                        id: "invalid",
+                        input: { id: "welcome" },
+                        outcome: { kind: "success" as const, output: { text: "Missing id" } },
+                    },
+                ],
+                id: "notes.read",
             },
-        },
+        ],
     };
     await expect(compileContract(invalid)).rejects.toThrow();
 });
-
 test("compilation is deterministic and snapshots source values before asynchronous hashing", async () => {
     const input = structuredClone(readNote.mocks![0]!.input);
     const mocks = [
@@ -111,12 +113,13 @@ test("compilation is deterministic and snapshots source values before asynchrono
     const source = {
         ...notesContract,
         documents,
-        capabilities: {
-            "notes.read": {
-                ...notesContract.capabilities["notes.read"],
-                operation: { ...readNote, mocks },
+        operations: [
+            {
+                ...readNote,
+                mocks,
+                id: "notes.read",
             },
-        },
+        ],
     };
     const before = await compileContract(source);
     const pending = compileContract(source);

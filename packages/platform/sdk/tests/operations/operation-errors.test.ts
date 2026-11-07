@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test";
 import { defineOperation, operationError, isOperationFailure, z } from "@bernouy/ulvia-sdk";
 import { readNote } from "../../examples/notes";
-
 test("operation errors validate their own payload and retain operation identity without HTTP policy", () => {
     const failure = operationError(readNote, "NOT_FOUND", { message: "Missing" });
     expect(isOperationFailure(failure)).toBe(true);
@@ -11,6 +10,10 @@ test("operation errors validate their own payload and retain operation identity 
     expect(failure.output).toEqual({ message: "Missing" });
     expect("status" in failure).toBe(false);
     const noPayload = defineOperation({
+        id: "test.operation",
+        access: "public",
+        behavior: { effect: "query", execution: "sync", sensitive: false },
+        bindings: [{ id: "mcp", transport: "mcp" }],
         input: z.strictObject({}),
         output: z.boolean(),
         errors: { DISABLED: { retryable: false } },

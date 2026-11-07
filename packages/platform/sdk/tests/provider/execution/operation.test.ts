@@ -4,11 +4,14 @@ import { contractBinary, defineOperation, z } from "@bernouy/ulvia-sdk";
 import { notesProviderDefinition } from "../../../examples/provider";
 import { notesContract } from "../../../examples/notes";
 import { unitProvider } from "../support/runtime";
-
 test("operation handlers return a standard handle instead of the terminal result schema", async () => {
     const base = notesProviderDefinition("http://127.0.0.1:5103");
     for (const output of [z.boolean(), contractBinary({ maxBytes: 4 })]) {
         const terminal = defineOperation({
+            id: "test.operation",
+            access: "public",
+            behavior: { effect: "query", execution: "sync", sensitive: false },
+            bindings: [{ id: "mcp", transport: "mcp" }],
             input: z.strictObject({ start: z.boolean() }),
             output,
             errors: {},
@@ -17,9 +20,9 @@ test("operation handlers return a standard handle instead of the terminal result
             ...notesContract,
             contractId: "example/operation",
             documents: {},
-            capabilities: {
-                start: {
-                    operation: terminal,
+            operations: [
+                {
+                    ...terminal,
                     access: "admin" as const,
                     behavior: {
                         effect: "command" as const,
@@ -37,8 +40,9 @@ test("operation handlers return a standard handle instead of the terminal result
                             response: { successStatuses: [202], contentTypes: ["application/json"], errorStatuses: {} },
                         },
                     ],
+                    id: "start",
                 },
-            },
+            ],
         };
         const operationId = crypto.randomUUID();
         const build = await compileProvider({
