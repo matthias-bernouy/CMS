@@ -23,7 +23,7 @@ behavior.
 
 - SDK-migrated features own feature metadata, capability IDs, access, behavior and
   bindings through their `./feature` export. Import these definitions instead of
-  redeclaring their API in the Provider. Emailer/SMTP, Secrets and Files capabilities own their default
+  redeclaring their API in the Provider. Emailer/SMTP, Secrets, Files and Observability capabilities own their default
   `execute`; select the complete feature with `implementFeature`, retain manifest
   requirements and supply official localized failure presentation.
   Keep other feature adapters here until their migration is requested. Retain

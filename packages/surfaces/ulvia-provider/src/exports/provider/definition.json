@@ -110,11 +110,6 @@
             "requires": []
         },
         {
-            "contractId": "ulvia/cms.observability",
-            "version": "1.0.0",
-            "requires": []
-        },
-        {
             "contractId": "ulvia/provider.connections",
             "version": "1.0.0",
             "requires": []

@@ -15,6 +15,9 @@
     "references": [
         {
             "path": "../../foundation/logging"
+        },
+        {
+            "path": "../../platform/sdk"
         }
     ]
 }

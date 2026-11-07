@@ -1,21 +1,7 @@
-import type { LogError, LogLevel } from "@bernouy/logging";
-
-export interface LogEntry {
-    readonly id: string;
-    readonly time: string;
-    readonly level: LogLevel;
-    readonly event: string;
-    readonly component?: string;
-    readonly requestId?: string;
-    readonly invocationId?: string;
-    readonly traceId?: string;
-    readonly parentInvocationId?: string;
-    readonly contractId?: string;
-    readonly capabilityId?: string;
-    readonly durationMs?: number;
-    readonly attributes: Readonly<Record<string, string>>;
-    readonly error?: LogError;
-}
+import type { z } from "zod";
+import type { logEntrySchema, logDetailSchema, logSummarySchema } from "cms-observability/schemas/entries";
+import type { logQuerySchema, logGroupSchema } from "cms-observability/schemas/queries";
+export type LogEntry = z.infer<typeof logEntrySchema>;
 
 export interface StoredLogEntry extends LogEntry {
     readonly instanceId: string;
@@ -26,29 +12,10 @@ export interface StoredLogEntry extends LogEntry {
     readonly fingerprint: string;
 }
 
-export type LogSummary = Omit<StoredLogEntry, "attributes" | "error" | "expiresAt" | "fingerprint">;
-export type LogDetail = Omit<StoredLogEntry, "expiresAt" | "fingerprint">;
-export type LogGroup = "level" | "service" | "event" | "component" | "contractId" | "capabilityId";
-
-export interface LogQuery {
-    readonly timeField?: "time" | "receivedAt";
-    readonly from?: string;
-    readonly to?: string;
-    readonly levels?: readonly LogLevel[];
-    readonly minLevel?: LogLevel;
-    readonly service?: string;
-    readonly component?: string;
-    readonly event?: string;
-    readonly eventPrefix?: string;
-    readonly requestId?: string;
-    readonly invocationId?: string;
-    readonly traceId?: string;
-    readonly parentInvocationId?: string;
-    readonly contractId?: string;
-    readonly capabilityId?: string;
-    readonly limit?: number;
-    readonly cursor?: string;
-}
+export type LogSummary = z.infer<typeof logSummarySchema>;
+export type LogDetail = z.infer<typeof logDetailSchema>;
+export type LogGroup = z.infer<typeof logGroupSchema>;
+export type LogQuery = z.infer<typeof logQuerySchema>;
 
 export interface NormalizedLogQuery extends Omit<LogQuery, "from" | "to" | "limit" | "cursor"> {
     readonly from: string;

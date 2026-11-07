@@ -44,7 +44,12 @@ console.log(JSON.stringify(runtime.implementations.map(({contractId}) => contrac
         ]);
         expect(stderr).toBe("");
         expect(code).toBe(0);
-        expect(JSON.parse(stdout)).toEqual(["ulvia/cms.emailer.smtp", "ulvia/cms.files", "ulvia/cms.secrets"]);
+        expect(JSON.parse(stdout)).toEqual([
+            "ulvia/cms.emailer.smtp",
+            "ulvia/cms.files",
+            "ulvia/cms.observability",
+            "ulvia/cms.secrets",
+        ]);
     } finally {
         await rm(root, { recursive: true, force: true });
     }

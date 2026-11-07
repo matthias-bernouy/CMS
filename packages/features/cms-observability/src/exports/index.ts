@@ -10,3 +10,5 @@ export type {
 } from "cms-observability/interfaces/Journal";
 
 export { assertLogAcknowledgement } from "cms-observability/core/acknowledgement";
+
+export type { ObservabilityService, ObservabilityServices } from "cms-observability/interfaces/ObservabilityServices";

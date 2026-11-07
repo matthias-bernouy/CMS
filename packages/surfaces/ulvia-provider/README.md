@@ -54,3 +54,8 @@ executors adapt binary reads to streaming responses, preserving range/cache head
 The surface preserves domain response headers when localizing declared errors,
 including the required `Content-Range` on a `416` response. The former Files registrar
 and handwritten manifest claim are removed. Files has no keyed capabilities.
+
+Observability is selected from the same inventory through a structural journal
+port. Its feature owns the four executors, ingestion machine-context guard,
+Zod-derived DTOs and domain error policy. Read authorization and official failure
+presentation stay in this surface. The legacy diagnostic registrar is removed.

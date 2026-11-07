@@ -1,7 +1,8 @@
 # SDK release workflow
 
 The SDK pilots are Emailer/SMTP in `packages/features/email/base` and `smtp`,
-Secrets in `packages/features/cms-secrets`, and Files in `packages/features/cms-files`.
+Secrets in `packages/features/cms-secrets`, Files in `packages/features/cms-files`,
+and Observability in `packages/features/cms-observability`.
 Their documentation is authored as ordinary `docs/**/*.md` files and discovered
 during SDK compilation. Reusable Zod data schemas live in `src/schemas/` and the TypeScript
 ports infer their types from those schemas. Each capability declares its stable ID,
@@ -13,7 +14,7 @@ storage are injected by the runtime.
 ## Sources and generated artifacts
 
 `infra/releases/ulvia.release.ts` is the explicit trusted local source entry.
-It prepares SDK Emailer/SMTP, Secrets and Files contracts, the remaining authored contracts and
+It prepares SDK Emailer/SMTP, Secrets, Files and Observability contracts, the remaining authored contracts and
 collections, and a manifest with computed exact contract digests. SDK executor functions are captured during authoring/compilation without being
 invoked. Runtime mounting binds injected service ports; invocations run the executors.
 Older pilot JSON and the authored manifest remain parity references; the new
@@ -207,3 +208,18 @@ access. Default service methods retain their own domain authorization checks.
 Inherited Emailer send failures use the Emailer policy; SMTP configuration failures
 use SMTP's own policy. Alternative implementations retain their own error handling.
 For local JSON calls with feature policy, use `executeCapability(feature, id, call)`.
+
+## Observability execution
+
+The same inventory selects all four diagnostic capabilities from
+`@bernouy/cms-observability/feature`. Entry/detail/summary/query/group DTOs derive
+from reusable Zod schemas. Ingestion retains its trusted machine-context guard;
+HTTP/MCP read access and the original contract/document bytes stay unchanged.
+The runtime injects an instance-bound journal service through a structural port.
+
+Signed HTTP tests cover producer-header forgery, foreign instances, redaction,
+duplicate/conflicting entry IDs, all read operations and invalid continuations.
+A limit-one page performs one store query and loads at most two rows; three
+successive pages over three records load five rows in three queries. Foreign or
+changed cursors refuse before any store query. The migration adds no journal
+queries, persistence cache or durable command receipts.

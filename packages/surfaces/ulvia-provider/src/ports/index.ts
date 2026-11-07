@@ -37,7 +37,7 @@ import type { SecretsServices } from "@bernouy/cms-secrets/feature";
 import type { SmtpEmailerServices } from "@bernouy/email-smtp/feature";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { Logger } from "@bernouy/logging";
-import type { CmsObservability } from "@bernouy/cms-observability";
+import type { ObservabilityServices } from "@bernouy/cms-observability/feature";
 
 export interface CmsContentDependencies {
     readonly publicDelivery?: (context: ProviderCapabilityInvocationContext) => {
@@ -91,14 +91,14 @@ export interface CmsAccessDependencies {
 }
 
 /** Ports supplied by the runtime for SDK feature implementations. */
-export type UlviaProviderFeatureServices = Partial<SmtpEmailerServices & SecretsServices & FilesServices>;
+export type UlviaProviderFeatureServices = Partial<
+    SmtpEmailerServices & SecretsServices & FilesServices & ObservabilityServices
+>;
 
 export type UlviaProviderDependencies = CmsContentDependencies &
     CmsCollectionDependencies &
     CmsAccessDependencies &
-    UlviaProviderFeatureServices & {
-        readonly observability?: CmsObservability;
-    };
+    UlviaProviderFeatureServices;
 
 type UlviaProviderAdministratorState = Readonly<{
     sub: string;

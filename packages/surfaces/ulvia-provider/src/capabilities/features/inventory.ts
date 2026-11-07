@@ -1,3 +1,4 @@
+import { observabilityImplementation } from "./implementations/observability";
 import { filesImplementation } from "./implementations/files";
 import { secretsImplementation } from "./implementations/secrets";
 import { smtpEmailerImplementation } from "./implementations/emailer";
@@ -7,4 +8,5 @@ export const officialFeatureImplementations = Object.freeze([
     smtpEmailerImplementation,
     secretsImplementation,
     filesImplementation,
+    observabilityImplementation,
 ]);
