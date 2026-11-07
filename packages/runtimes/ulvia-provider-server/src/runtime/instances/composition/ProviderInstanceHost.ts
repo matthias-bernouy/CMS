@@ -347,6 +347,7 @@ export class ProviderInstanceHost {
                     ]),
                     ...createPublicDelivery(stores, gateway, instance.cmsUrl),
                     authoring,
+                    initialization: stores.createInitialization(this.#collectionSource),
                     emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
                     sitemapStore: stores.sitemapStore,

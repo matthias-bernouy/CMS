@@ -23,6 +23,7 @@ import type {
 } from "@bernouy/cms-auth";
 import type { ContentRepository } from "@bernouy/cms-content";
 import type { CollectionUpgradeService } from "@bernouy/cms-repository/collections/installations";
+import type { SiteInitializationService } from "@bernouy/cms-repository/collections/installations";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayRouteResolver } from "@bernouy/cms-gateway";
 import type { GatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
@@ -66,6 +67,7 @@ export interface CmsContentDependencies {
 }
 
 export interface CmsCollectionDependencies {
+    readonly initialization?: SiteInitializationService;
     readonly documentation?: CmsDocumentation;
     readonly repositoryDiscovery?: RepositoryDiscovery;
     readonly authoring?: RepositoryAuthoring;

@@ -45,8 +45,20 @@ export function createInstanceProvisioningTarget(options: TargetOptions): Offici
             await options.composition.pairOfficialProvider();
             execution.throwIfLeaseLost();
         },
-        installCollection: (profile, execution) =>
-            installOfficialCollections(options.composition, options.collectionSource, profile, execution),
+        installCollection: async (profile, execution) => {
+            await installOfficialCollections(options.composition, options.collectionSource, profile, execution);
+            if (
+                options.composition.runtime.contracts.some(
+                    (contract) =>
+                        contract.release.contractId === "ulvia/cms.installations" &&
+                        contract.capabilities.some(({ definition }) => definition.id === "initialization.entry"),
+                )
+            ) {
+                execution.throwIfLeaseLost();
+                await options.composition.stores.initializationState.initialize("default");
+                execution.throwIfLeaseLost();
+            }
+        },
         initializeAdministrator: (administrator, execution) =>
             initializeOfficialAdministrator(options.composition, administrator, execution),
     };

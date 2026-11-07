@@ -1,4 +1,20 @@
 export { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
+export { SiteInitializationService } from "cms-repository/collections/installations/initialization/execution/service";
+export { applyInitializationPages } from "cms-repository/collections/installations/initialization/execution/pages";
+export type {
+    InitializationServiceOptions,
+    InitializationStateStore,
+    InitializationRecord,
+    InitializationExecution,
+    InitializationReview,
+} from "cms-repository/collections/installations/initialization/execution/interfaces";
+export { planCollectionInitialization } from "cms-repository/collections/installations/initialization/planning/plan";
+export type {
+    CollectionInitializationPlan,
+    InitializationRoot,
+    InitializationOptions,
+    InitializationRelease,
+} from "cms-repository/collections/installations/initialization/interfaces";
 export {
     assertCompatibleCollectionUpgrade,
     collectionUpgradeBreakingResources,
