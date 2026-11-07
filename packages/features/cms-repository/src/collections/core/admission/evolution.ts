@@ -71,6 +71,12 @@ export async function verifyCollectionPublicationEvolution(
         throw new CollectionPublicationError("major_required");
     }
     if (bump === "patch") {
+        if (canonicalizeIJson(previous.bootstraps ?? []) !== canonicalizeIJson(next.bootstraps ?? [])) {
+            throw new CollectionPublicationError(
+                "minor_required",
+                "Bootstrap recipe changes require a minor publication",
+            );
+        }
         const changed =
             before.length !== after.length ||
             before.some(

@@ -58,6 +58,24 @@ Updating an installed release updates every page's fixed assembly while each
 page retains its own slot children.
 Initial content is not inserted into the fixed composition during admission.
 
+## Initialization recipes
+
+An optional source `bootstrap.json` contains `{ "bootstraps": [...] }` and is
+compiled into the immutable release's `bootstraps` field. Recipes propose
+ordinary Pages copied from local admitted examples. They declare translated
+labels and Page metadata, explicit visibility and indexing, optional login Page
+roles, capability requirements, and exact external recipe references with
+version/digest pins. An include may omit named Pages from that exact recipe;
+reference existence and combined route ownership belong to installation planning.
+
+Recipes are initialization data, not live Page declarations, route reservations
+or executable scripts. Ordinary collection installation and upgrades never run
+them. Admission checks local examples, translated metadata, reserved paths,
+unique IDs/routes, bounded aggregate counts and joint contract witnesses for
+all local Pages. Recipe changes require at least a minor collection publication.
+The execution planner, explicit application workflow and initialization ZIP are
+separate work; admitting a recipe alone does not initialize a site.
+
 ## Light DOM invariants
 
 Every Bloc declares a native `root` contract. Retained Blocs keep that native

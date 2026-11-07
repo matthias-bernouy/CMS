@@ -384,6 +384,16 @@ models and validation for CMS-owned installations and site selections.
   options, never authored examples or preview frames. Preview rendering stays behind `/collections/build`;
   browser execution belongs to the CLI and never the Edge or admission.
 
+- Optional collection `bootstraps` are exact-release initialization data, authored
+  in `bootstrap.json`. They never reserve routes, grant invocation authority or
+  run during ordinary installation/upgrade. Admission validates local example and
+  translation references, ordinary Page paths, aggregate recipe limits and joint
+  capability witnesses for each recipe's local Pages. External includes pin a
+  publisher, collection, version, digest and recipe ID; their resolution and
+  combined Page conflicts belong to an explicit initialization plan. Changes to
+  recipe data require a minor release. Keep parsers and authoring support distinct
+  from the not-yet-mounted execution workflow.
+
 - Contract documentation has a generated bounded manifest and separate verified
   `docs/<path>` assets. Mongo stores document text separately from release
   metadata; fixture-byte storage remains unsupported by that adapter. Metadata

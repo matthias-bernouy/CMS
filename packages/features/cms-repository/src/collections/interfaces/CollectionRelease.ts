@@ -67,6 +67,38 @@ export interface CollectionDependency {
     readonly imports: CollectionResourceImportSelection;
 }
 
+/** Exact installation-only recipe dependency; never a network location or live resource import. */
+export interface CollectionBootstrapReference {
+    readonly publisherId: string;
+    readonly collectionId: string;
+    readonly version: string;
+    readonly digest: `sha256:${string}`;
+    readonly bootstrapId: string;
+    readonly omitPages?: readonly string[];
+}
+
+/** Proposed ordinary Page copied from a local example only when explicitly initialized. */
+export interface CollectionBootstrapPage {
+    readonly id: string;
+    readonly exampleId: string;
+    readonly path: string;
+    readonly title: CollectionTranslationKey;
+    readonly description: CollectionTranslationKey;
+    readonly indexing: boolean;
+    readonly visible: boolean;
+    readonly systemRole?: "login";
+}
+
+/** Immutable installation data; installing or upgrading a collection never executes it. */
+export interface CollectionBootstrap {
+    readonly id: string;
+    readonly label: CollectionTranslationKey;
+    readonly description: CollectionTranslationKey;
+    readonly requires: readonly CollectionCapabilityRequirement[];
+    readonly includes: readonly CollectionBootstrapReference[];
+    readonly pages: readonly CollectionBootstrapPage[];
+}
+
 /** Stable collection-local key resolved through the immutable translations catalogue. */
 export type CollectionTranslationKey = string;
 
@@ -96,4 +128,5 @@ export interface CollectionRelease {
     readonly states?: readonly CollectionState[];
     readonly blocs: readonly CollectionBloc[];
     readonly examples?: readonly CollectionExample[];
+    readonly bootstraps?: readonly CollectionBootstrap[];
 }

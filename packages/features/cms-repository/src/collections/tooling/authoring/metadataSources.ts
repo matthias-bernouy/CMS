@@ -1,7 +1,58 @@
 import { basename, join } from "node:path";
+import { open } from "node:fs/promises";
+import { constants } from "node:fs";
+import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { DEFAULT_COLLECTION_LIMITS } from "../../core/limits";
 import { readSourceEntries, scanJsonSourceTree } from "cms-repository/repository/authoring/sourceTree";
 
 type ExportKind = "blocs" | "themeTokens" | "texts" | "assets";
+
+/** Bootstrap sources are ordinary bounded data, never executable build plugins. */
+export async function loadCollectionBootstraps(root: string): Promise<unknown | undefined> {
+    let file;
+    try {
+        file = await open(
+            join(root, "bootstrap.json"),
+            constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK,
+        );
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+            return undefined;
+        }
+        throw error;
+    }
+    try {
+        const maximum = DEFAULT_COLLECTION_LIMITS.maxDocumentBytes;
+        const stat = await file.stat();
+        if (!stat.isFile() || stat.size > maximum) {
+            throw new Error("bootstrap.json must be a bounded regular file");
+        }
+        const buffer = Buffer.alloc(Math.min(stat.size + 1, maximum + 1));
+        let size = 0;
+        while (size < buffer.length) {
+            const { bytesRead } = await file.read(buffer, size, buffer.length - size, null);
+            if (!bytesRead) {
+                break;
+            }
+            size += bytesRead;
+        }
+        if (size > stat.size) {
+            throw new Error("bootstrap.json changed while being read");
+        }
+        const source = parseStrictJson(buffer.subarray(0, size), maximum, DEFAULT_COLLECTION_LIMITS.maxJsonDepth);
+        if (
+            !source ||
+            typeof source !== "object" ||
+            Array.isArray(source) ||
+            Object.keys(source).join(",") !== "bootstraps"
+        ) {
+            throw new Error("bootstrap.json must contain only a bootstraps array");
+        }
+        return (source as { bootstraps: unknown }).bootstraps;
+    } finally {
+        await file.close();
+    }
+}
 
 /** Expand authoring-only wildcards while keeping admitted releases explicit. */
 export function expandCollectionSourceExports(

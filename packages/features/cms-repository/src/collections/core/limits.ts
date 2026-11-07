@@ -13,6 +13,9 @@ export interface CollectionLimits {
     readonly maxTexts: number;
     readonly maxStates: number;
     readonly maxDependencies: number;
+    readonly maxBootstraps: number;
+    readonly maxBootstrapPages: number;
+    readonly maxBootstrapIncludes: number;
     readonly maxThemeCategories: number;
     readonly maxThemeTokens: number;
     readonly maxAssetBytes: number;
@@ -32,6 +35,9 @@ export const DEFAULT_COLLECTION_LIMITS: Readonly<CollectionLimits> = Object.free
     maxTexts: 4_096,
     maxStates: 512,
     maxDependencies: 128,
+    maxBootstraps: 16,
+    maxBootstrapPages: 256,
+    maxBootstrapIncludes: 32,
     maxThemeCategories: 64,
     maxThemeTokens: 4_096,
     maxAssetBytes: 10 * 1024 * 1024,

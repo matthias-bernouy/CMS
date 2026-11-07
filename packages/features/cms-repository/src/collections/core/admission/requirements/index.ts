@@ -26,6 +26,10 @@ export async function verifyCollectionRequirements(
     catalogue?: ReleaseCatalogue,
 ): Promise<void> {
     const blocs = new Map(release.blocs.map((bloc) => [bloc.id, bloc]));
+    const examples = new Map<
+        string,
+        { closure: readonly CollectionCapabilityRequirement[]; targets: readonly BindingTarget[] }
+    >();
     for (const bloc of release.blocs) {
         const used = usedBlocs(bloc, blocs);
         const closure = used.flatMap((item) => item.requires);
@@ -51,14 +55,26 @@ export async function verifyCollectionRequirements(
             return bloc ? usedBlocs(bloc, blocs) : [];
         });
         const closure = [...example.requires, ...used.flatMap((item) => item.requires)];
+        const targets = bindingTargets([example.document.html, ...used.map(blocMarkup)]);
+        examples.set(example.id, { closure, targets });
         const capabilities = await verifyRequirements(
             closure,
-            bindingTargets([example.document.html, ...used.map(blocMarkup)]),
+            targets,
             `$.examples.${example.id}.requires`,
             "this example and its used blocs",
             catalogue,
         );
         validateBindings(release, example.document.html, capabilities, `$.examples.${example.id}.document.html`);
+    }
+    for (const recipe of release.bootstraps ?? []) {
+        const documents = recipe.pages.map(({ exampleId }) => examples.get(exampleId)!);
+        await verifyRequirements(
+            [...recipe.requires, ...documents.flatMap(({ closure }) => closure)],
+            documents.flatMap(({ targets }) => targets),
+            `$.bootstraps.${recipe.id}.requires`,
+            "this bootstrap and all its local Pages",
+            catalogue,
+        );
     }
 }
 

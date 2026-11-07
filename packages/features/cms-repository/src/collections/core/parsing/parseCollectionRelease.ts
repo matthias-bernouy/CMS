@@ -23,6 +23,7 @@ import { validateCollectionExamples } from "../validation/examples/validate";
 import { parseCollectionStates } from "./states";
 import { validateCollectionStateBindings } from "../validation/markup/state";
 import { validateBlocStyles } from "../validation/styles/validate";
+import { parseCollectionBootstraps } from "../validation/bootstraps/parse";
 
 export function parseCollectionRelease(
     value: unknown,
@@ -54,6 +55,7 @@ export function parseCollectionRelease(
                 "blocs",
                 "states",
                 "examples",
+                "bootstraps",
             ],
             "$",
         );
@@ -174,7 +176,21 @@ export function parseCollectionRelease(
             ...(states.length ? { states } : {}),
             blocs,
             examples: parseCollectionExamples(source.examples ?? [], limits),
+            ...(source.bootstraps === undefined
+                ? {}
+                : { bootstraps: parseCollectionBootstraps(source.bootstraps, collectionId, limits) }),
         };
+        const exampleIds = new Set(release.examples?.map(({ id }) => id));
+        for (const recipe of release.bootstraps ?? []) {
+            for (const page of recipe.pages) {
+                if (!exampleIds.has(page.exampleId)) {
+                    invalid(
+                        "must reference a local admitted example",
+                        `$.bootstraps.${recipe.id}.pages.${page.id}.exampleId`,
+                    );
+                }
+            }
+        }
         validateCollectionLifecycles(release);
         validateCollectionExamples(release, limits);
         validateCollectionStateBindings(release);

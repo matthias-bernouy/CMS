@@ -119,7 +119,9 @@ function sourcePath(path: string, kind: RepositoryArtifactKind) {
         path.split("/").length > 20 ||
         !/^[a-zA-Z0-9][a-zA-Z0-9_./-]*$/u.test(path) ||
         path.split("/").some((part) => !part || part.startsWith(".")) ||
-        (path !== "definition.json" && !directories.includes(path.split("/")[0]!))
+        (path !== "definition.json" &&
+            !(kind === "collection" && path === "bootstrap.json") &&
+            !directories.includes(path.split("/")[0]!))
     ) {
         throw new Error("Invalid authoring source path");
     }

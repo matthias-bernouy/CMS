@@ -69,6 +69,15 @@ function collectReferences(release: CollectionRelease): Reference[] {
         references.push(reference(example.label, `$.examples[${i}].label`, 120));
         references.push(reference(example.description, `$.examples[${i}].description`, 4096));
     }
+    for (const [i, recipe] of (release.bootstraps ?? []).entries()) {
+        const at = `$.bootstraps[${i}]`;
+        references.push(reference(recipe.label, `${at}.label`, 120));
+        references.push(reference(recipe.description, `${at}.description`, 4096));
+        for (const [j, page] of recipe.pages.entries()) {
+            references.push(reference(page.title, `${at}.pages[${j}].title`, 70));
+            references.push(reference(page.description, `${at}.pages[${j}].description`, 200));
+        }
+    }
     return references;
 }
 

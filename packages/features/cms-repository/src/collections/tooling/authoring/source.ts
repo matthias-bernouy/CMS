@@ -5,7 +5,12 @@ import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { loadCollectionExamples } from "../examples/source";
 import { loadCollectionBlocs } from "./blocSources";
-import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
+import {
+    expandCollectionSourceExports,
+    loadCollectionTheme,
+    loadCollectionTranslations,
+    loadCollectionBootstraps,
+} from "./metadataSources";
 import { loadCollectionTexts } from "./textSources";
 import { readSourceEntries } from "cms-repository/repository/authoring/sourceTree";
 import { loadCollectionAssets } from "./assetSources";
@@ -28,6 +33,10 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
     const translations = await loadCollectionTranslations(join(collectionRoot, "translations"));
     const blocs = await loadCollectionBlocs(join(collectionRoot, "blocs"));
     const examples = await loadCollectionExamples(join(collectionRoot, "examples"));
+    if (Object.hasOwn(definition, "bootstraps")) {
+        throw new Error("Bootstraps must be authored in bootstrap.json");
+    }
+    const bootstraps = await loadCollectionBootstraps(collectionRoot);
     if (examples.length && definition.protocol !== "ulvia-collection/v1") {
         throw new Error("Example sources require collection v1");
     }
@@ -58,6 +67,7 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         assets: assets.definitions,
         blocs,
         examples,
+        ...(bootstraps === undefined ? {} : { bootstraps }),
         ...(texts.length ? { texts } : {}),
         ...(theme === undefined ? {} : { theme }),
     };

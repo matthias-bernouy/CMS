@@ -53,6 +53,12 @@
   for reusable official example copy. Frame dimensions are authored data;
   generated captures stay outside immutable source releases.
 
-- Collections never declare Pages or reserve paths. Runtime profiles may copy examples into ordinary Content Pages once; site routes and Page SEO belong to Content.
+- Collections never declare live Pages or reserve paths. Optional initialization
+  recipes belong in `bootstrap.json`, not `definition.json`. They propose copies
+  of local examples as ordinary Content Pages and run only through an explicit
+  initialization operation. Recipe includes pin exact collection versions and
+  digests; scripts, provider URLs and secrets are forbidden. Current runtime
+  profiles still seed Pages until the generic recipe execution flow is mounted.
+  Site routes and Page SEO belong to Content.
 
 - Examples reuse collection text references. Do not author per-example `texts` overrides or preview `locale`/`themeMode`; only frame dimensions belong to preview definitions.
