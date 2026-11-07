@@ -2,6 +2,7 @@ import { SiteInitializationService } from "@bernouy/cms-repository/collections/i
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import type { MongoInitializationStateStore } from "@bernouy/cms-repository/collections/mongo";
 import type { ContentRepository } from "@bernouy/cms-content";
+import type { CollectionVerifier } from "@bernouy/cms-repository/collections/sources";
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
 import type {
     ContractSelectionStore,
@@ -21,6 +22,7 @@ export function initializationFactory(
     selections: ContractSelectionStore,
     executionState: ProviderExecutionStateReader,
     releases: ReleaseCatalogue,
+    verifier?: CollectionVerifier,
 ) {
     return (source: CollectionRepositorySource) =>
         new SiteInitializationService({
@@ -31,7 +33,8 @@ export function initializationFactory(
             collections,
             upgrades,
             source,
+            verifier,
             execution: initializationExecution("default", selections, executionState, releases),
-            validateCandidate: previewInitialization(repository, selections, releases),
+            validateCandidate: previewInitialization(repository, selections, releases, verifier),
         });
 }

@@ -48,6 +48,8 @@ import { CmsFileWorkspace } from "../../stores/CmsFileWorkspace";
 import { createInstanceProvisioningTarget } from "../instanceProvisioning";
 import type { OfficialBootstrapSources } from "../profiles/bootstrap";
 import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from "../InstanceResourcePool";
+import { CollectionVerificationPool } from "../verification/CollectionVerificationPool";
+import { CollectionSourceCaches } from "@bernouy/ulvia-provider";
 import type { Logger } from "@bernouy/logging";
 import { correlatedRepositoryFetch } from "../../gateway/repositoryFetch";
 import { createInstanceDiagnostics, connectInstanceDiagnostics } from "./diagnostics";
@@ -82,6 +84,8 @@ export type InstanceComposition = Readonly<{
 }>;
 
 export class ProviderInstanceHost {
+    readonly #verification = new CollectionVerificationPool();
+    readonly #collectionCaches = new CollectionSourceCaches();
     readonly #documentation: ProviderDocumentation;
     readonly #instances: InstanceResourcePool<InstanceComposition>;
     readonly #providerSource: HttpProviderRepository;
@@ -115,6 +119,7 @@ export class ProviderInstanceHost {
             allowInsecureHttp: env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
         });
         this.#collectionSource = new HttpCollectionRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL, {
+            verifier: this.#verification,
             request: correlatedRepositoryFetch,
             allowInsecureHttp: env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
         });
@@ -176,6 +181,7 @@ export class ProviderInstanceHost {
                 }
             }
         } finally {
+            await this.#verification.close();
             this.#registryVectors.clear();
         }
     }
@@ -241,6 +247,7 @@ export class ProviderInstanceHost {
             },
             instanceLogger,
             () => this.#documentation.request(instance, true),
+            this.#verification,
         );
         const storesMs = performance.now() - storesStartedAt;
         let operations: ProviderOperationExecutor | undefined;
@@ -373,7 +380,12 @@ export class ProviderInstanceHost {
                     ...createProtectedProviderManagement(management, instance, profile),
                     administration: providerAdministration(stores, gateway, management, instance.gatewayUrl),
                 },
-                new CollectionSources(stores.collections, [this.#collectionSource]),
+                new CollectionSources(
+                    stores.collections,
+                    [this.#collectionSource],
+                    this.#verification,
+                    this.#collectionCaches,
+                ),
                 stores.providerFiles,
                 fileWorkspace,
                 new Set(profile.contracts.map(({ contractId }) => contractId)),

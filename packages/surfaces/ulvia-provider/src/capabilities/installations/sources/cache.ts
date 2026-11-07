@@ -1,13 +1,31 @@
 import { deepFreeze } from "@bernouy/cms-repository/contracts/protocol";
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
+import type { AdmittedCollectionRelease } from "@bernouy/cms-repository/collections";
+import type { verifiedCatalogueEntry } from "./catalogue";
+
+/** Host-owned public immutable evidence; never contains site configuration or authorization. */
+export class CollectionSourceCaches {
+    readonly metadata = new CollectionSourceCache<ReturnType<typeof verifiedCatalogueEntry>>(
+        256,
+        4 * 1024 * 1024,
+        (value) => JSON.stringify(value).length * 2,
+    );
+    readonly admitted = new CollectionSourceCache<AdmittedCollectionRelease>(
+        8,
+        32 * 1024 * 1024,
+        (value) => value.canonicalJson.length * 2 + value.assets.reduce((sum, asset) => sum + asset.bytes.size, 0),
+    );
+}
 
 type Entry<T> = { value: T; bytes: number };
+type Pending<T> = { promise: Promise<T>; controller: AbortController; users: number; settled: boolean };
 
-/** Per-instance immutable results; pending work and retained payloads have independent limits. */
+/** Immutable public results; pending work and retained payloads have independent limits. */
 export class CollectionSourceCache<T> {
     private readonly entries = new Map<string, Entry<T>>();
-    private readonly pending = new Map<string, Promise<T>>();
+    private readonly pending = new Map<string, Pending<T>>();
     private bytes = 0;
+    private readonly loads = new Set<Pending<T>>();
 
     constructor(
         private readonly maxEntries: number,
@@ -20,7 +38,10 @@ export class CollectionSourceCache<T> {
         }
     }
 
-    load(key: string, loader: () => Promise<T>): Promise<T> {
+    load(key: string, loader: (signal: AbortSignal) => Promise<T>, signal?: AbortSignal): Promise<T> {
+        if (signal?.aborted) {
+            return Promise.reject(signal.reason);
+        }
         const existing = this.entries.get(key);
         if (existing) {
             this.entries.delete(key);
@@ -29,14 +50,21 @@ export class CollectionSourceCache<T> {
         }
         const pending = this.pending.get(key);
         if (pending) {
-            return pending;
+            return this.wait(key, pending, signal);
         }
-        if (this.pending.size >= this.maxPending) {
+        if (this.loads.size >= this.maxPending) {
             return Promise.reject(new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503));
         }
+        const entry: Pending<T> = {
+            promise: undefined as unknown as Promise<T>,
+            controller: new AbortController(),
+            users: 0,
+            settled: false,
+        };
         const work = Promise.resolve()
-            .then(loader)
+            .then(() => loader(entry.controller.signal))
             .then((value) => {
+                entry.controller.signal.throwIfAborted();
                 const bytes = this.weight(value);
                 if (!Number.isSafeInteger(bytes) || bytes < 0) {
                     throw new TypeError("Invalid collection cache weight");
@@ -54,9 +82,50 @@ export class CollectionSourceCache<T> {
                 return value;
             })
             .finally(() => {
-                this.pending.delete(key);
+                entry.settled = true;
+                this.loads.delete(entry);
+                if (this.pending.get(key) === entry) {
+                    this.pending.delete(key);
+                }
             });
-        this.pending.set(key, work);
-        return work;
+        this.loads.add(entry);
+        entry.promise = work;
+        this.pending.set(key, entry);
+        return this.wait(key, entry, signal);
+    }
+
+    private wait(key: string, entry: Pending<T>, signal?: AbortSignal): Promise<T> {
+        entry.users++;
+        return new Promise((resolve, reject) => {
+            let finished = false;
+            const finish = (error: unknown, value?: T): void => {
+                if (finished) {
+                    return;
+                }
+                finished = true;
+                signal?.removeEventListener("abort", abort);
+                entry.users--;
+                if (!entry.settled && entry.users === 0) {
+                    entry.controller.abort(error);
+                    if (this.pending.get(key) === entry) {
+                        this.pending.delete(key);
+                    }
+                }
+                if (error !== undefined) {
+                    reject(error);
+                } else {
+                    resolve(value!);
+                }
+            };
+            const abort = () => finish(signal!.reason);
+            signal?.addEventListener("abort", abort, { once: true });
+            if (signal?.aborted) {
+                abort();
+            }
+            entry.promise.then(
+                (value) => finish(undefined, value),
+                (error) => finish(error),
+            );
+        });
     }
 }

@@ -1,6 +1,6 @@
 import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
 import { planCollectionInitialization, initializationDigest } from "../planning/plan";
-import { verifyStoredCollectionArtifact } from "../../../core/admission/collectionArtifact";
+import { inlineCollectionVerifier } from "../../../sources/verification";
 import type { AdmittedCollectionRelease } from "../../../interfaces/CollectionAdmission";
 import type { InitializationReview, InitializationServiceOptions } from "./interfaces";
 import {
@@ -30,9 +30,12 @@ export async function prepareInitialization(
     const snapshot = await assertEmptyInitialization(options);
     const execution = await options.execution();
     const graph =
-        root === null ? { root: null, metadata: [] } : await resolveInitializationGraph(options.source, root, signal);
+        root === null
+            ? { root: null, metadata: [] }
+            : await resolveInitializationGraph(options.source, root, signal, options.verifier);
     const plan = await planCollectionInitialization(graph.root, graph.metadata, {
         selected: execution.selected,
+        verifier: options.verifier,
         denied: execution.denied,
         locale,
         signal,
@@ -45,7 +48,12 @@ export async function prepareInitialization(
     let remainingBytes = DEFAULT_INITIALIZATION_LIMITS.maxDeclaredAssetBytes;
     for (const pin of plan.collections) {
         const bundle = await options.source.get(pin, { maxAssetBytes: remainingBytes, signal });
-        const artifact = await verifyStoredCollectionArtifact(bundle.release, bundle.assets, pin.digest);
+        const artifact = await (options.verifier ?? inlineCollectionVerifier).artifact(
+            bundle.release,
+            bundle.assets,
+            pin.digest,
+            signal,
+        );
         remainingBytes -= artifact.assets.reduce((sum, asset) => sum + asset.bytes.size, 0);
         if (remainingBytes < 0) {
             throw initializationError("Initialization asset budget exceeded");

@@ -70,7 +70,7 @@ export function registerCollectionInstallationCapabilities(
         if (channel !== "stable" && channel !== "beta" && channel !== "all") {
             throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
         }
-        return sources.catalogue(context.siteId, channel);
+        return sources.catalogue(context.siteId, channel, context.signal);
     });
     dispatcher.register("ulvia/cms.installations", "install-collection", async (input, context) =>
         collectionCommand(async () => {
@@ -102,7 +102,7 @@ export function registerCollectionInstallationCapabilities(
     );
     dispatcher.register("ulvia/cms.installations", "plan-collection-upgrade", async (input, context) =>
         collectionCommand(async () => {
-            const prepared = await sources?.prepare(input.targets);
+            const prepared = await sources?.prepare(input.targets, context.signal);
             const staged = await collectionTargets(
                 input.targets,
                 sources,

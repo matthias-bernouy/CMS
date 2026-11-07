@@ -1,6 +1,6 @@
 import { compareSemVer, releaseChannel } from "cms-repository/exports/contracts/compatibility";
 import { canonicalIJsonBytes } from "cms-repository/exports/contracts/protocol";
-import { verifyStoredCollectionRelease } from "../../../core/admission/collectionArtifact";
+import { inlineCollectionVerifier, type CollectionVerifier } from "../../../sources/verification";
 import { resolveCollectionTranslation } from "../../../core/texts/translationCatalogue";
 import type { CollectionRepositorySource } from "../../../sources/interfaces";
 import { initializationCatalogue } from "./catalogue";
@@ -8,7 +8,12 @@ import { initializationError } from "./state";
 import { initializationDigest } from "../planning/plan";
 
 /** Four latest stable collections per page, metadata only; no executable bundle hydration. */
-export async function discoverInitializationRecipes(source: CollectionRepositorySource, cursor = "", locale?: string) {
+export async function discoverInitializationRecipes(
+    source: CollectionRepositorySource,
+    cursor = "",
+    locale?: string,
+    verifier: CollectionVerifier = inlineCollectionVerifier,
+) {
     const catalogue = (await initializationCatalogue(source))
         .filter(({ version }) => releaseChannel(version) === "stable")
         .sort((a, b) =>
@@ -35,7 +40,7 @@ export async function discoverInitializationRecipes(source: CollectionRepository
     }
     const items = [];
     for (const entry of latest.slice(offset, offset + 4)) {
-        const artifact = await verifyStoredCollectionRelease(await source.getMetadata(entry), entry.digest);
+        const artifact = await verifier.metadata(await source.getMetadata(entry), entry.digest);
         if (
             artifact.release.collectionId !== entry.collectionId ||
             artifact.release.publisherId !== entry.publisherId ||

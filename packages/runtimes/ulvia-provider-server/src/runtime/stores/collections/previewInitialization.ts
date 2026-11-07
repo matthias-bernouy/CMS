@@ -1,3 +1,4 @@
+import type { CollectionVerifier } from "@bernouy/cms-repository/collections/sources";
 import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
 import type { ContentRepository } from "@bernouy/cms-content";
 import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
@@ -16,9 +17,10 @@ export function previewInitialization(
     repository: ContentRepository,
     selections: ContractSelectionStore,
     releases: ReleaseCatalogue,
+    verifier?: CollectionVerifier,
 ): InitializationServiceOptions["validateCandidate"] {
     return async (plan, artifacts) => {
-        const collections = new CollectionStore(new MemoryCollectionStorage());
+        const collections = new CollectionStore(new MemoryCollectionStorage(undefined, verifier));
         for (const artifact of artifacts) {
             await collections.importAdmittedRelease(artifact);
         }

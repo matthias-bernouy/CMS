@@ -44,11 +44,16 @@ test("pending work is shared and bounded, failures release capacity and can be r
                 finish = resolve;
             }),
     );
-    expect(cache.load("a", async () => "unexpected")).toBe(first);
+    let duplicateLoads = 0;
+    const shared = cache.load("a", async () => {
+        duplicateLoads++;
+        return "unexpected";
+    });
     await expect(cache.load("b", async () => "b")).rejects.toMatchObject({ code: "CORE_UNAVAILABLE" });
     await Promise.resolve();
     finish("a");
-    expect(await first).toBe("a");
+    expect(await Promise.all([first, shared])).toEqual(["a", "a"]);
+    expect(duplicateLoads).toBe(0);
     await expect(
         cache.load("bad", async () => {
             throw new Error("unavailable");
