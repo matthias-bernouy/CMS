@@ -76,7 +76,7 @@
     "ui-release-channel": "Release channel",
     "ui-release-stable": "Stable",
     "ui-release-beta": "Beta",
-    "ui-release-all": "All releases",
+    "ui-release-all": "All channels",
     "ui-collections-detail-help": "Explore the installed resources, examples and site overrides.",
     "ui-examples-locale": "Example language",
     "ui-locale-english": "English",

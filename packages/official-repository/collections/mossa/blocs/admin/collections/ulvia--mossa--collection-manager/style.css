@@ -63,9 +63,9 @@
 }
 
 [part~="catalogue-filter"] {
-    display: grid;
-    gap: 0.5rem;
-    max-inline-size: 16rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia--mossa--spacing-sm);
     margin-block-end: 1.5rem;
 }
 [part~="releases"] {
@@ -106,10 +106,4 @@
     display: grid;
     gap: 0.5rem;
     margin-block-start: auto;
-}
-
-[part~="catalogue-filter"] {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--ulvia--mossa--spacing-sm);
 }
