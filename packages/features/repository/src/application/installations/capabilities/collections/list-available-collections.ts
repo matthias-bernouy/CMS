@@ -36,5 +36,6 @@ export const listAvailableCollections = defineCapability({
     input: listAvailableCollectionsInputSchema,
     output: listAvailableCollectionsOutputSchema,
     errors,
-    execute: async ({ services, input, context }) => availableCollections(services, context.siteId, input.channel),
+    execute: async ({ services, input, context }) =>
+        availableCollections(services, context.siteId, input.channel, context.signal),
 });

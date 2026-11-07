@@ -1,4 +1,5 @@
 import { readReleaseSummaries } from "./releaseSummaries";
+import type { CollectionVerifier } from "../../../sources/verification";
 import type { Db } from "mongodb";
 import { assertBlobRange, type BlobRange } from "@bernouy/blob-store";
 import {
@@ -40,6 +41,7 @@ export class MongoCollectionStorage implements CollectionStorage {
     constructor(
         private readonly db: Db,
         limits: Readonly<CollectionLimits> = DEFAULT_COLLECTION_LIMITS,
+        private readonly verifier?: CollectionVerifier,
     ) {
         this.limits = normalizeCollectionLimits(limits);
     }
@@ -61,12 +63,7 @@ export class MongoCollectionStorage implements CollectionStorage {
         return this.db.collection<AssetChunkDocument>("collection_asset_chunks");
     }
     async putRelease(artifact: StoredCollectionRelease) {
-        const verified = await verifyStoredCollectionArtifact(
-            artifact.release,
-            artifact.assets,
-            artifact.digest,
-            this.limits,
-        );
+        const verified = await this.verifyArtifact(artifact.release, artifact.assets, artifact.digest, this.limits);
         const existing = await this.releases.findOne({ _id: verified.digest });
         if (existing?.state !== "pending") {
             if (existing) {
@@ -91,7 +88,7 @@ export class MongoCollectionStorage implements CollectionStorage {
             }
         } else {
             assertStoredDocumentIdentity(existing, verified.digest);
-            await verifyStoredCollectionRelease(existing.release, verified.digest, this.limits);
+            await this.verifyMetadata(existing.release, verified.digest, this.limits);
         }
         for (const asset of verified.assets) {
             await storeAssetChunks(
@@ -130,7 +127,7 @@ export class MongoCollectionStorage implements CollectionStorage {
                 return { id: declaration.id, bytes };
             }),
         );
-        const verified = await verifyStoredCollectionArtifact(metadata.release, assets, metadata.digest, this.limits);
+        const verified = await this.verifyArtifact(metadata.release, assets, metadata.digest, this.limits);
         return {
             digest: verified.digest,
             release: verified.release,
@@ -203,13 +200,22 @@ export class MongoCollectionStorage implements CollectionStorage {
         }
     }
 
+    private readonly verifyMetadata: typeof verifyStoredCollectionRelease = (value, digest, limits) =>
+        this.verifier
+            ? this.verifier.metadata(value, digest, undefined, limits)
+            : verifyStoredCollectionRelease(value, digest, limits);
+    private readonly verifyArtifact: typeof verifyStoredCollectionArtifact = (value, assets, digest, limits) =>
+        this.verifier
+            ? this.verifier.artifact(value, assets, digest, undefined, limits)
+            : verifyStoredCollectionArtifact(value, assets, digest, limits);
+
     private async reconcilePendingReleases(): Promise<void> {
         const pending = await this.releases.find({ state: "pending" }).toArray();
         for (const document of pending) {
             const digest = document._id;
             assertStoredDocumentIdentity(document, digest);
             try {
-                const metadata = await verifyStoredCollectionRelease(document.release, digest, this.limits);
+                const metadata = await this.verifyMetadata(document.release, digest, this.limits);
                 const assets: { id: string; bytes: Uint8Array }[] = [];
                 let complete = true;
                 for (const declaration of metadata.release.assets) {
@@ -221,7 +227,7 @@ export class MongoCollectionStorage implements CollectionStorage {
                     assets.push({ id: declaration.id, bytes });
                 }
                 if (complete) {
-                    await verifyStoredCollectionArtifact(metadata.release, assets, digest, this.limits);
+                    await this.verifyArtifact(metadata.release, assets, digest, this.limits);
                     await this.releases.updateOne(
                         { _id: document._id, state: "pending" },
                         { $set: { state: "ready", assetManifest: assetManifest(metadata.release) } },

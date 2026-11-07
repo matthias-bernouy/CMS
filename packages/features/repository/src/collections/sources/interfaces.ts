@@ -31,10 +31,10 @@ export interface CollectionRepositorySource {
     readonly id: string;
     list(): Promise<CollectionRepositoryEntry[]>;
     /** Untrusted release JSON without assets; consumers verify its exact digest before using it. */
-    getMetadata(reference: CollectionRepositoryReference): Promise<unknown>;
+    getMetadata(reference: CollectionRepositoryReference, signal?: AbortSignal): Promise<unknown>;
     get(
         reference: CollectionRepositoryReference,
-        options?: { readonly maxAssetBytes: number; readonly signal?: AbortSignal },
+        options?: { readonly maxAssetBytes?: number; readonly signal?: AbortSignal },
     ): Promise<CollectionRepositoryBundle>;
 }
 import type { CollectionBundleAsset } from "../interfaces/CollectionAssets";

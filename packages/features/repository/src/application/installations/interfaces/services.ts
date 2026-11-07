@@ -10,10 +10,15 @@ import type { InstallationOperationQueries } from "repository/application/instal
 import type { ListAvailableCollectionsOutput } from "repository/application/installations/interfaces/outputs";
 import type { InstallCollectionInput } from "repository/application/installations/interfaces/inputs";
 export interface CollectionSourceReader {
-    catalogue(siteId: string, channel: "stable" | "beta" | "all"): Promise<ListAvailableCollectionsOutput>;
+    catalogue(
+        siteId: string,
+        channel: "stable" | "beta" | "all",
+        signal?: AbortSignal,
+    ): Promise<ListAvailableCollectionsOutput>;
     stage(targets: InstallCollectionInput["targets"]): Promise<readonly { digest: string; repositoryId: string }[]>;
     prepare(
         targets: InstallCollectionInput["targets"],
+        signal?: AbortSignal,
     ): Promise<readonly { target: { digest: string; repositoryId: string }; artifact: AdmittedCollectionRelease }[]>;
 }
 export interface InstallationServices {

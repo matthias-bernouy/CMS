@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import type { Db } from "mongodb";
 import type { ProviderOperationRecord } from "@bernouy/ulvia-provider";
-import { MongoProviderOperationStore } from "../../src/runtime/provider-operations/MongoProviderOperationStore";
+import { MongoProviderOperationStore } from "../../../src/runtime/provider-operations/MongoProviderOperationStore";
 
 /** Minimal document port exercising the durable adapter's state and lease fences. */
 function database() {

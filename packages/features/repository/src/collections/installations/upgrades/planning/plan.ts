@@ -24,6 +24,7 @@ import {
 import { validateUpgradeContent } from "./content";
 
 export type CollectionUpgradeAnalysis = Readonly<{
+    verifyEvolution?: typeof verifyCollectionPublicationEvolution;
     contributors: readonly UsageContributor[];
     requiredConsumers: readonly string[];
     validateCapabilities(references: readonly (CapabilityUse | BindingUse)[]): Promise<readonly UpgradeIssue[]>;
@@ -77,7 +78,10 @@ export async function prepareCollectionUpgrade(
             });
         }
         try {
-            await verifyCollectionPublicationEvolution(previous.release, artifact.release);
+            await (analysis.verifyEvolution ?? verifyCollectionPublicationEvolution)(
+                previous.release,
+                artifact.release,
+            );
         } catch (error) {
             issues.push({
                 code: "invalid-dependency",

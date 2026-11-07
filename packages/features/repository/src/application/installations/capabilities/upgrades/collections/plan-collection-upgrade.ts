@@ -41,5 +41,6 @@ export const planCollectionUpgrade = defineCapability({
     input: planCollectionUpgradeInputSchema,
     output: planCollectionUpgradeOutputSchema,
     errors,
-    execute: async ({ services, input, context }) => planCollections(services, context.siteId, input.targets),
+    execute: async ({ services, input, context }) =>
+        planCollections(services, context.siteId, input.targets, context.signal),
 });

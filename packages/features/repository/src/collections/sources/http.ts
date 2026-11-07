@@ -1,7 +1,7 @@
-import { verifyStoredCollectionRelease } from "repository/collections/core/admission/collectionArtifact";
 import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { DEFAULT_COLLECTION_LIMITS } from "repository/collections/core/limits";
-import { parseCollectionRelease } from "repository/collections/core/parsing/parseCollectionRelease";
+import { inlineCollectionVerifier } from "./verification";
+import type { CollectionVerifier } from "./verification";
 import { repositoryBaseUrl } from "repository/repository-http/baseUrl";
 import { registryCataloguePage } from "repository/repository-http/catalogueValues";
 import { readCataloguePages } from "repository/repository-http/cataloguePages";
@@ -25,6 +25,7 @@ const ASSET_FETCH_CONCURRENCY = 4;
 const CATALOGUE_PAGE_SIZE = 256;
 
 export type HttpCollectionRepositoryOptions = Readonly<{
+    verifier?: CollectionVerifier;
     request?: RepositoryFetch;
     allowInsecureHttp?: boolean;
 }>;
@@ -40,9 +41,11 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
         this.id = id;
         this.base = repositoryBaseUrl(baseUrl, "Collection", options);
         this.request = options.request;
+        this.verifier = options.verifier ?? inlineCollectionVerifier;
     }
 
     private readonly request?: RepositoryFetch;
+    private readonly verifier: CollectionVerifier;
 
     async list(): Promise<CollectionRepositoryEntry[]> {
         return readCataloguePages(
@@ -65,7 +68,7 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
         );
     }
 
-    async getMetadata(reference: CollectionRepositoryReference) {
+    async getMetadata(reference: CollectionRepositoryReference, signal?: AbortSignal) {
         if (!validCollectionReference(reference)) {
             throw new TypeError("Invalid repository reference");
         }
@@ -73,26 +76,24 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
             this.base,
             `v1/releases/collection/${encodeURIComponent(reference.publisherId)}/${encodeURIComponent(reference.collectionId)}/${encodeURIComponent(reference.version)}`,
             "Collection",
-            { request: this.request },
+            { request: this.request, signal },
         );
         return parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64);
     }
 
     async get(
         reference: CollectionRepositoryReference,
-        options?: { readonly maxAssetBytes: number; readonly signal?: AbortSignal },
+        options?: { readonly maxAssetBytes?: number; readonly signal?: AbortSignal },
     ) {
         options?.signal?.throwIfAborted();
-        const metadata = await this.getMetadata(reference);
+        const metadata = await this.getMetadata(reference, options?.signal);
         options?.signal?.throwIfAborted();
-        const release = options
-            ? (await verifyStoredCollectionRelease(metadata, reference.digest)).release
-            : parseCollectionRelease(metadata);
+        const release = (await this.verifier.metadata(metadata, reference.digest, options?.signal)).release;
+        const maxAssetBytes = options?.maxAssetBytes ?? DEFAULT_COLLECTION_LIMITS.maxBundleBytes;
         if (
-            options &&
-            (!Number.isSafeInteger(options.maxAssetBytes) ||
-                options.maxAssetBytes < 0 ||
-                release.assets.reduce((sum, asset) => sum + asset.byteLength, 0) > options.maxAssetBytes)
+            !Number.isSafeInteger(maxAssetBytes) ||
+            maxAssetBytes < 0 ||
+            release.assets.reduce((sum, asset) => sum + asset.byteLength, 0) > maxAssetBytes
         ) {
             throw new TypeError("Collection asset download exceeds its aggregate byte limit");
         }

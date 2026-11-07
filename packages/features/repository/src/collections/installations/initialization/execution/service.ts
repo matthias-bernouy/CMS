@@ -84,7 +84,9 @@ export class SiteInitializationService {
         if (state.status !== "pending") {
             throw initializationError("Initialization was already started", 409);
         }
-        return this.exclusive(() => discoverInitializationRecipes(this.options.source, cursor, locale));
+        return this.exclusive(() =>
+            discoverInitializationRecipes(this.options.source, cursor, locale, this.options.verifier),
+        );
     }
     plan(actorId: string, root: unknown, locale?: string, signal?: AbortSignal) {
         return this.exclusive(

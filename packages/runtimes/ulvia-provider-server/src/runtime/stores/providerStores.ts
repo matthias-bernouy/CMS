@@ -1,5 +1,6 @@
 import { MongoInitializationStateStore } from "@bernouy/repository/collections/mongo";
 import { initializationFactory } from "./collections/initialization";
+import type { CollectionVerifier } from "@bernouy/repository/collections/sources";
 import { observeSelectionCommits } from "./selections/notifications";
 import { createCollectionUpgradeAnalysis } from "./collections/upgradeAnalysis";
 import { CollectionStore } from "@bernouy/repository/collections/installations";
@@ -68,6 +69,7 @@ export async function createProviderStores(
     env: ProviderStoreConfig,
     logger: Logger,
     onSelectionsCommitted?: (state: StoredContractSelections) => void,
+    collectionVerifier?: CollectionVerifier,
 ) {
     const mongo = new MongoClient(env.MONGO_URL);
     await mongo.connect();
@@ -110,7 +112,7 @@ export async function createProviderStores(
 
     const innerRepo = new MongoContentRepository(db);
     await innerRepo.init();
-    const collectionStorage = new MongoCollectionStorage(db);
+    const collectionStorage = new MongoCollectionStorage(db, undefined, collectionVerifier);
     await collectionStorage.init();
     const rawCollections = new CollectionStore(collectionStorage, releases);
     const upgradeCollections = rawCollections;
@@ -124,12 +126,10 @@ export async function createProviderStores(
         },
     );
     const upgradeRepo = validatedRepo;
-    const collectionUpgrades = new CollectionUpgradeService(
-        upgradeRepo,
-        upgradeCollections,
-        upgradeStorage,
-        createCollectionUpgradeAnalysis(SCOPE_ID, selections, releases, selectionDependencies),
-    );
+    const collectionUpgrades = new CollectionUpgradeService(upgradeRepo, upgradeCollections, upgradeStorage, {
+        ...createCollectionUpgradeAnalysis(SCOPE_ID, selections, releases, selectionDependencies),
+        ...(collectionVerifier ? { verifyEvolution: collectionVerifier.evolution } : {}),
+    });
     const repo = withSiteWriteFence(upgradeRepo, upgradeStorage, SCOPE_ID, CMS_REPOSITORY_FENCED_MUTATIONS);
     const initializationState = new MongoInitializationStateStore(db);
     const createInitialization = initializationFactory(
@@ -141,6 +141,7 @@ export async function createProviderStores(
         selections,
         executionState,
         releases,
+        collectionVerifier,
     );
     const collections = withSiteWriteFence(
         upgradeCollections,

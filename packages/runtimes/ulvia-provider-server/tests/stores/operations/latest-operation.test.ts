@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { Collection } from "mongodb";
-import { latestOperation } from "../../src/runtime/provider-operations/latestOperation";
+import { latestOperation } from "../../../src/runtime/provider-operations/latestOperation";
 
 test("setup polling performs one indexed scoped metadata read and never projects inputs, results or request context", async () => {
     const reads: unknown[] = [];

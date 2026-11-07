@@ -56,8 +56,9 @@ export async function planCollections(
     services: InstallationServices,
     siteId: string,
     targets: PlanCollectionUpgradeInput["targets"],
+    signal?: AbortSignal,
 ) {
-    const prepared = await services.sources?.prepare(targets);
+    const prepared = await services.sources?.prepare(targets, signal);
     const staged = await collectionTargets(
         targets,
         services.sources,

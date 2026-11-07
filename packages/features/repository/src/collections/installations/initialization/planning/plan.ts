@@ -1,7 +1,7 @@
 import type { VerifiedCollectionReleaseMetadata } from "../../../interfaces/CollectionAdmission";
 import { createHash } from "node:crypto";
 import { canonicalIJsonBytes, canonicalizeIJson, deepFreeze } from "@bernouy/ulvia-contracts/protocol";
-import { verifyStoredCollectionRelease } from "../../../core/admission/collectionArtifact";
+import { inlineCollectionVerifier } from "../../../sources/verification";
 import { collectionBrowserRisk, collectionBrowserRiskDigest } from "../../../core/validation/browserCapabilities";
 import { assertCollectionResourceIsolation } from "../../core/resourceIsolation";
 import { invalid } from "../../../core/errors";
@@ -32,7 +32,11 @@ export async function planCollectionInitialization(
     let assetBytes = 0;
     for (const input of inputs) {
         options.signal?.throwIfAborted();
-        const entry = await verifyStoredCollectionRelease(input.release, input.digest);
+        const entry = await (options.verifier ?? inlineCollectionVerifier).metadata(
+            input.release,
+            input.digest,
+            options.signal,
+        );
         if (entries.has(entry.release.collectionId)) {
             invalid("duplicate initialization collection", "$.collections");
         }

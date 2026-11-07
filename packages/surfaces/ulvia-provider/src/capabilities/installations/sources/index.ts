@@ -3,13 +3,14 @@ import type { CollectionRepositoryEntry, CollectionRepositorySource } from "@ber
 import {
     collectionBrowserRisk,
     collectionBrowserRiskDigest,
-    verifyStoredCollectionRelease,
-    verifyStoredCollectionArtifact,
     type AdmittedCollectionRelease,
 } from "@bernouy/repository/collections";
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
 import type { CmsCollectionDependencies } from "../../../ports/index";
-import { CollectionSourceCache } from "./cache";
+import { CollectionSourceCaches } from "./cache";
+export { CollectionSourceCaches } from "./cache";
+import { inlineCollectionVerifier } from "@bernouy/repository/collections/sources";
+import type { CollectionVerifier } from "@bernouy/repository/collections/sources";
 import { verifiedCatalogueEntry, releaseAction } from "./catalogue";
 import { parseReference, sameRelease } from "./references";
 
@@ -18,20 +19,12 @@ type CatalogueEntry = ReturnType<typeof verifiedCatalogueEntry>;
 
 export class CollectionSources {
     private readonly byId: ReadonlyMap<string, CollectionRepositorySource>;
-    private readonly metadata = new CollectionSourceCache<CatalogueEntry>(
-        256,
-        4 * 1024 * 1024,
-        (value) => JSON.stringify(value).length * 2,
-    );
-    private readonly admitted = new CollectionSourceCache<AdmittedCollectionRelease>(
-        8,
-        32 * 1024 * 1024,
-        (value) => value.canonicalJson.length * 2 + value.assets.reduce((sum, asset) => sum + asset.bytes.size, 0),
-    );
 
     constructor(
         private readonly store: CmsCollectionDependencies["collections"],
         sources: readonly CollectionRepositorySource[],
+        private readonly verifier: CollectionVerifier = inlineCollectionVerifier,
+        private readonly caches = new CollectionSourceCaches(),
     ) {
         this.byId = new Map(sources.map((source) => [source.id, source]));
         if (this.byId.size !== sources.length) {
@@ -39,7 +32,7 @@ export class CollectionSources {
         }
     }
 
-    async catalogue(siteId: string, channel: "stable" | "beta" | "all" = "stable") {
+    async catalogue(siteId: string, channel: "stable" | "beta" | "all" = "stable", signal?: AbortSignal) {
         const [snapshot, listedReleases] = await Promise.all([
             this.store.listInstalled(siteId),
             Promise.all([...this.byId.values()].map((source) => source.list())).then((items) => items.flat()),
@@ -57,17 +50,21 @@ export class CollectionSources {
                 throw new ProviderCapabilityDispatchError("RELEASE_MISMATCH", 409);
             }
             releases.push(
-                await this.metadata.load(releaseKey(source, listed), async () => {
-                    const input = await source.getMetadata(listed);
-                    let artifact;
-                    try {
-                        artifact = await verifyStoredCollectionRelease(input, listed.digest);
-                    } catch {
-                        throw new ProviderCapabilityDispatchError("RELEASE_MISMATCH", 409);
-                    }
-                    assertSameRelease(artifact, listed);
-                    return verifiedCatalogueEntry(source.id, artifact);
-                }),
+                await this.caches.metadata.load(
+                    releaseKey(source, listed),
+                    async (sharedSignal) => {
+                        const input = await source.getMetadata(listed, sharedSignal);
+                        let artifact;
+                        try {
+                            artifact = await this.verifier.metadata(input, listed.digest, sharedSignal);
+                        } catch {
+                            throw new ProviderCapabilityDispatchError("RELEASE_MISMATCH", 409);
+                        }
+                        assertSameRelease(artifact, listed);
+                        return verifiedCatalogueEntry(source.id, artifact);
+                    },
+                    signal,
+                ),
             );
         }
         const installed = new Map(snapshot.items.map((item) => [item.collectionId, item]));
@@ -100,7 +97,7 @@ export class CollectionSources {
         );
     }
 
-    async prepare(value: unknown) {
+    async prepare(value: unknown, signal?: AbortSignal) {
         if (!Array.isArray(value) || value.length < 1 || value.length > 256) {
             throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
         }
@@ -129,16 +126,21 @@ export class CollectionSources {
                     if (!listed) {
                         throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
                     }
-                    const artifact = await this.admitted.load(releaseKey(source, listed), async () => {
-                        const bundle = await source.get(listed);
-                        const admitted = await verifyStoredCollectionArtifact(
-                            bundle.release,
-                            bundle.assets,
-                            listed.digest,
-                        );
-                        assertSameRelease(admitted, listed);
-                        return admitted;
-                    });
+                    const artifact = await this.caches.admitted.load(
+                        releaseKey(source, listed),
+                        async (sharedSignal) => {
+                            const bundle = await source.get(listed, { signal: sharedSignal });
+                            const admitted = await this.verifier.artifact(
+                                bundle.release,
+                                bundle.assets,
+                                listed.digest,
+                                sharedSignal,
+                            );
+                            assertSameRelease(admitted, listed);
+                            return admitted;
+                        },
+                        signal,
+                    );
                     await this.store.validateReleaseRequirements(artifact);
                     const risk = collectionBrowserRiskDigest(collectionBrowserRisk(artifact.release));
                     if (risk !== reference.approvedBrowserRiskDigest) {

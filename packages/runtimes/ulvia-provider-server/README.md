@@ -47,3 +47,27 @@ instances with no marker are never silently initialized or backfilled. See
 ```bash
 bun --no-macros run packages/runtimes/ulvia-provider-server/src/index.ts
 ```
+
+## Collection verification
+
+One lazy CPU worker is shared across all open instances for collection metadata,
+asset verification and publication-evolution checks used by the installation
+surfaces, durable collection storage and initialization planner. Gateway dispatch,
+credentials, authority checks and business writes remain on their owning paths.
+The worker receives no environment credentials and never executes authored JavaScript.
+It admits one active job and at most eight queued jobs, retaining at most 64 MiB
+of input payloads. Each active job has a 30-second deadline; cancellation, worker
+failure and shutdown release resources before a successor worker starts.
+
+The host shares only immutable verified public evidence: 256 metadata summaries
+within 4 MiB and eight admitted bundles within 32 MiB. Each cache bounds pending
+loads to 16; canceled but unfinished loaders still occupy that capacity. Site
+configuration, selected capabilities, browser approvals and installation actions
+are rechecked separately and never cached as authority. Exact coordinate/digest
+keys isolate releases, and failed loads can be retried.
+
+The worker pool deliberately keeps queue, cancellation and lifecycle ownership in
+one cohesive controller despite the file-size advisory; transport conversion and
+wire types are separate modules. Responsiveness tests compare the host heartbeat
+while verifying the same official Mossa artifact inline and in the worker. This
+covers collection verification, not every authoring/compiler or documentation task.

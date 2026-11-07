@@ -1,6 +1,7 @@
 import { compareSemVer, releaseChannel, satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
 import { canonicalIJsonBytes } from "@bernouy/ulvia-contracts/protocol";
-import { verifyStoredCollectionRelease } from "../../../core/admission/collectionArtifact";
+import { inlineCollectionVerifier } from "../../../sources/verification";
+import type { CollectionVerifier } from "../../../sources/verification";
 import type { VerifiedCollectionReleaseMetadata } from "../../../interfaces/CollectionAdmission";
 import type { CollectionRepositoryEntry, CollectionRepositorySource } from "../../../sources/interfaces";
 import type { InitializationRoot } from "../interfaces";
@@ -21,6 +22,7 @@ export async function resolveInitializationGraph(
     source: CollectionRepositorySource,
     requested: unknown,
     signal?: AbortSignal,
+    verifier: CollectionVerifier = inlineCollectionVerifier,
 ) {
     signal?.throwIfAborted();
     const root = initializationRoot(requested);
@@ -37,12 +39,12 @@ export async function resolveInitializationGraph(
             if (loaded.size >= LIMITS.maxCollections) {
                 throw initializationError("Initialization collection limit exceeded");
             }
-            const input = await source.getMetadata(entry);
+            const input = await source.getMetadata(entry, signal);
             metadataBytes += canonicalIJsonBytes(input, 64).byteLength;
             if (metadataBytes > LIMITS.maxMetadataBytes) {
                 throw initializationError("Initialization metadata limit exceeded");
             }
-            metadata = await verifyStoredCollectionRelease(input, entry.digest);
+            metadata = await verifier.metadata(input, entry.digest, signal);
             if (
                 metadata.release.collectionId !== entry.collectionId ||
                 metadata.release.version !== entry.version ||

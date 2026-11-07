@@ -1,3 +1,4 @@
+import type { CollectionVerifier } from "../../../sources/verification";
 import { collectionReleaseSummary } from "../../core/releaseSummary";
 import { verifyStoredCollectionArtifact } from "../../../core/admission/collectionArtifact";
 import { assertBlobRange, type BlobRange } from "@bernouy/blob-store";
@@ -17,17 +18,17 @@ export class MemoryCollectionStorage implements CollectionStorage {
     private readonly sites = new Map<string, CollectionSiteState>();
     private readonly limits: Readonly<CollectionLimits>;
 
-    constructor(limits: Readonly<CollectionLimits> = DEFAULT_COLLECTION_LIMITS) {
+    constructor(
+        limits: Readonly<CollectionLimits> = DEFAULT_COLLECTION_LIMITS,
+        private readonly verifier?: CollectionVerifier,
+    ) {
         this.limits = normalizeCollectionLimits(limits);
     }
 
     async putRelease(artifact: StoredCollectionRelease) {
-        const verified = await verifyStoredCollectionArtifact(
-            artifact.release,
-            artifact.assets,
-            artifact.digest,
-            this.limits,
-        );
+        const verified = this.verifier
+            ? await this.verifier.artifact(artifact.release, artifact.assets, artifact.digest, undefined, this.limits)
+            : await verifyStoredCollectionArtifact(artifact.release, artifact.assets, artifact.digest, this.limits);
         const previous = [...this.releases.values()].find(
             ({ release }) =>
                 release.collectionId === verified.release.collectionId &&

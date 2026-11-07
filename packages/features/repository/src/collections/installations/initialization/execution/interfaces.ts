@@ -1,3 +1,4 @@
+import type { CollectionVerifier } from "../../../sources/verification";
 import type { ContentRepository } from "@bernouy/content";
 import type { AdmittedCollectionRelease } from "../../../interfaces/CollectionAdmission";
 import type { CollectionRepositorySource } from "../../../sources/interfaces";
@@ -45,6 +46,7 @@ export interface InitializationStateStore {
 export interface InitializationServiceOptions {
     readonly instanceId: string;
     readonly siteId: string;
+    readonly verifier?: CollectionVerifier;
     readonly state: InitializationStateStore;
     readonly repository: ContentRepository;
     readonly collections: CollectionStore;

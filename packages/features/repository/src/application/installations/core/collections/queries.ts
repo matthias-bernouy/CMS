@@ -50,9 +50,10 @@ export async function availableCollections(
     services: InstallationServices,
     siteId: string,
     channel: "stable" | "beta" | "all" = "stable",
+    signal?: AbortSignal,
 ) {
     return services.sources
-        ? services.sources.catalogue(siteId, channel)
+        ? services.sources.catalogue(siteId, channel, signal)
         : { revision: await services.collections.revision(siteId), repositories: [], releases: [], installed: [] };
 }
 export async function siteUpgradeStatus(

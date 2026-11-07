@@ -1,3 +1,4 @@
+import type { CollectionVerifier } from "@bernouy/repository/collections/sources";
 import { SiteInitializationService } from "@bernouy/repository/collections/installations";
 import type { CollectionStore } from "@bernouy/repository/collections/installations";
 import type { MongoInitializationStateStore } from "@bernouy/repository/collections/mongo";
@@ -19,6 +20,7 @@ export function initializationFactory(
     selections: ContractSelectionStore,
     executionState: ProviderExecutionStateReader,
     releases: ReleaseCatalogue,
+    verifier?: CollectionVerifier,
 ) {
     return (source: CollectionRepositorySource) =>
         new SiteInitializationService({
@@ -29,7 +31,8 @@ export function initializationFactory(
             collections,
             upgrades,
             source,
+            verifier,
             execution: initializationExecution("default", selections, executionState, releases),
-            validateCandidate: previewInitialization(repository, selections, releases),
+            validateCandidate: previewInitialization(repository, selections, releases, verifier),
         });
 }

@@ -1,3 +1,4 @@
+import type { CollectionVerifier } from "../../sources/verification";
 import type { ContractParentReference, ResolvedContract } from "@bernouy/ulvia-contracts";
 import type {
     CollectionBootstrapPage,
@@ -29,6 +30,7 @@ export interface InitializationLimits {
 export interface InitializationOptions {
     /** Current host-selected exact execution views; a recipe cannot select or invent providers. */
     readonly selected: readonly ResolvedContract[];
+    readonly verifier?: CollectionVerifier;
     readonly denied?: readonly Readonly<{ contractId: string; capabilityId: string }>[];
     readonly locale?: string;
     readonly limits?: Readonly<InitializationLimits>;
