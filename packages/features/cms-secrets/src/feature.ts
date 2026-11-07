@@ -1,3 +1,4 @@
+import { mapSecretsError } from "cms-secrets/capabilities/mapError";
 import { defineFeature } from "@bernouy/ulvia-sdk";
 import { createNamespaceKey } from "cms-secrets/capabilities/namespaces/keys/create";
 import { createNamespace } from "cms-secrets/capabilities/namespaces/create";
@@ -24,6 +25,7 @@ export const secretsFeature = defineFeature({
         categories: ["administration", "infrastructure"],
     },
     documents: new URL("../docs/", import.meta.url),
+    mapError: mapSecretsError,
     capabilities: [
         createNamespaceKey,
         createNamespace,

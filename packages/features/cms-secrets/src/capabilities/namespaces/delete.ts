@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { defineCapability } from "cms-secrets/capabilities/define";
-import { secretCall } from "cms-secrets/capabilities/support";
 import { namespaceErrors as errors } from "cms-secrets/schemas/errors";
 import { namespaceCredentialsSchema } from "cms-secrets/schemas/fields";
 
@@ -44,9 +43,8 @@ export const deleteNamespace = defineCapability({
     input: namespaceCredentialsSchema,
     output: z.null(),
     errors,
-    execute: ({ input, services, fail }) =>
-        secretCall(errors, fail, async () => {
-            await services.secrets.deleteNamespace(input.namespaceId, input.namespaceKey);
-            return null;
-        }),
+    execute: async ({ input, services }) => {
+        await services.secrets.deleteNamespace(input.namespaceId, input.namespaceKey);
+        return null;
+    },
 });

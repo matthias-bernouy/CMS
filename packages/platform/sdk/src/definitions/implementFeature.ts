@@ -1,3 +1,4 @@
+import { executeWithErrorMapping, featureErrorMapper } from "ulvia-sdk/definitions/errorPolicy";
 import { DEFAULT_RELEASE_LIMITS } from "@bernouy/ulvia-contracts";
 import type { FeatureDefinition, FeatureServices } from "ulvia-sdk/interfaces/features";
 import type { CapabilitySource } from "ulvia-sdk/interfaces/capabilities";
@@ -34,6 +35,7 @@ export function implementFeature(
         ) {
             throw new SdkDefinitionError("Feature capabilities must be a bounded list");
         }
+        const mapper = featureErrorMapper(current);
         for (const capability of current.capabilities) {
             if (Object.hasOwn(handlers, capability.id)) {
                 throw new SdkDefinitionError(`Cannot redeclare inherited capability ${capability.id}`);
@@ -51,9 +53,14 @@ export function implementFeature(
             const fail = capabilityFailure(capability);
             handlers[capability.id] = (dependencies) => {
                 const services = selectServices ? selectServices(dependencies) : dependencies;
-                const handler = (input: never, context: never) => execute({ input, services, context, fail });
+                const handler = (input: never, context: never) =>
+                    executeWithErrorMapping(capability, mapper, () => execute({ input, services, context, fail }));
                 return authorize
-                    ? authorizeHandler(handler, (input, context) => authorize({ input, services, context, fail }))
+                    ? authorizeHandler(handler, (input, context) =>
+                          executeWithErrorMapping(capability, mapper, () =>
+                              authorize({ input, services, context, fail }),
+                          ),
+                      )
                     : handler;
             };
         }

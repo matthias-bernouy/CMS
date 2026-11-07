@@ -2,7 +2,12 @@ export { z } from "zod";
 export { defineCapability } from "ulvia-sdk/definitions/defineCapability";
 export { createCapabilityDefiner as capabilitiesFor } from "ulvia-sdk/definitions/capabilityDefiner";
 export { implementFeature } from "ulvia-sdk/definitions/implementFeature";
-export type { FeatureDefinition, FeatureServices } from "ulvia-sdk/interfaces/features";
+export type {
+    FeatureDefinition,
+    FeatureServices,
+    FeatureErrorMapper,
+    FeatureErrorMapping,
+} from "ulvia-sdk/interfaces/features";
 export type {
     CapabilityExecutor,
     CapabilityAuthorization,

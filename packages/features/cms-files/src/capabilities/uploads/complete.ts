@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { completeUploadInputSchema } from "cms-files/schemas/uploads";
 import { fileReferenceSchema } from "cms-files/schemas/values";
 import { completeUploadErrors as errors } from "cms-files/schemas/errors";
@@ -34,8 +33,6 @@ export const completeUpload = defineCapability({
     input: completeUploadInputSchema,
     output: fileReferenceSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, () =>
-            services.files.completeUpload(input.namespaceId, input.namespaceKey, input.uploadId),
-        ),
+    execute: ({ input, services }) =>
+        services.files.completeUpload(input.namespaceId, input.namespaceKey, input.uploadId),
 });

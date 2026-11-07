@@ -1,3 +1,4 @@
+import { mapEmailError } from "email/capabilities/mapError";
 import { defineFeature } from "@bernouy/ulvia-sdk";
 import { sendEmail } from "email/capabilities/send";
 
@@ -9,6 +10,7 @@ export const emailerFeature = defineFeature({
     publisherId: "ulvia",
     catalogue: { icon: "mail", categories: ["administration", "infrastructure"] },
     documents: new URL("../docs/", import.meta.url),
+    mapError: mapEmailError,
     capabilities: [sendEmail],
 });
 

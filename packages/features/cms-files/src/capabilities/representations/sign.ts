@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { signRepresentationsInputSchema, signRepresentationsOutputSchema } from "cms-files/schemas/representations";
 import { credentialErrors as errors } from "cms-files/schemas/errors";
 
@@ -34,14 +33,12 @@ export const signRepresentations = defineCapability({
     input: signRepresentationsInputSchema,
     output: signRepresentationsOutputSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, () =>
-            services.files.signRepresentations({
-                namespaceId: input.namespaceId,
-                namespaceKey: input.namespaceKey,
-                fileId: input.fileId,
-                generation: input.generation,
-                expiresInSeconds: input.expiresIn,
-            }),
-        ),
+    execute: ({ input, services }) =>
+        services.files.signRepresentations({
+            namespaceId: input.namespaceId,
+            namespaceKey: input.namespaceKey,
+            fileId: input.fileId,
+            generation: input.generation,
+            expiresInSeconds: input.expiresIn,
+        }),
 });

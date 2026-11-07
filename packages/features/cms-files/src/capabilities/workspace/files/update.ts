@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { updateWorkspaceFileInputSchema } from "cms-files/schemas/workspace";
 import { workspaceErrors as errors } from "cms-files/schemas/errors";
 
@@ -35,9 +34,8 @@ export const updateWorkspaceFile = defineCapability({
     input: updateWorkspaceFileInputSchema,
     output: z.null(),
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, async () => {
-            await services.workspace.updateFile(input.fileId, input.name);
-            return null;
-        }),
+    execute: async ({ input, services }) => {
+        await services.workspace.updateFile(input.fileId, input.name);
+        return null;
+    },
 });

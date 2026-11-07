@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { defineCapability } from "cms-secrets/capabilities/define";
-import { secretCall } from "cms-secrets/capabilities/support";
 import { namespaceErrors as errors } from "cms-secrets/schemas/errors";
 import { namespaceKeyInputSchema } from "cms-secrets/schemas/keys";
 
@@ -45,9 +44,8 @@ export const revokeNamespaceKey = defineCapability({
     input: namespaceKeyInputSchema,
     output: z.null(),
     errors,
-    execute: ({ input, services, fail }) =>
-        secretCall(errors, fail, async () => {
-            await services.secrets.revokeNamespaceKey(input.namespaceId, input.namespaceKey, input.keyId);
-            return null;
-        }),
+    execute: async ({ input, services }) => {
+        await services.secrets.revokeNamespaceKey(input.namespaceId, input.namespaceKey, input.keyId);
+        return null;
+    },
 });

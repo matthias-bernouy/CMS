@@ -8,7 +8,7 @@ never grants executable support by itself.
 
 `compileOfficialFeatures` compiles the surface's single implementation inventory.
 `createImplementationArtifact` emits `ulvia-sdk-runtime/v1`: canonical contract JSON,
-exact digests and complete implementation claims. Executable callbacks, service
+exact digests and complete implementation claims. Executable callbacks (including feature error policies), service
 instances and document/fixture bytes are absent.
 
 The CLI bootstrap generator emits `dist/bootstrap/feature-runtime.json` from the

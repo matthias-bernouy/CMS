@@ -1,7 +1,5 @@
-import { z } from "@bernouy/ulvia-sdk";
 import { defineCapability } from "email/capabilities/define";
 import { prepareOutboundEmail } from "email/core/delivery";
-import { EmailDeliveryInputError, isEmailDeliveryDisabledError } from "email/core/EmailDeliveryError";
 import { sendEmailInputSchema, sendEmailOutputSchema } from "email/schemas/delivery";
 import { emailErrorSchema } from "email/schemas/errors";
 
@@ -33,18 +31,8 @@ export const sendEmail = defineCapability({
         CORE_UNAVAILABLE: { retryable: true, output: emailErrorSchema },
     },
     docs: ["overview.md"],
-    execute: async ({ input, services, fail }) => {
-        try {
-            await services.emailer.send(prepareOutboundEmail(input));
-            return { sent: true };
-        } catch (cause) {
-            if (cause instanceof z.ZodError || cause instanceof EmailDeliveryInputError) {
-                throw fail("INVALID_INPUT", { message: "Email data or configuration is invalid." }, { cause });
-            }
-            if (isEmailDeliveryDisabledError(cause)) {
-                throw fail("EMAIL_DISABLED", { message: "Email delivery is disabled." }, { cause });
-            }
-            throw fail("CORE_UNAVAILABLE", { message: "Email delivery is unavailable." }, { cause });
-        }
+    execute: async ({ input, services }) => {
+        await services.emailer.send(prepareOutboundEmail(input));
+        return { sent: true };
     },
 });

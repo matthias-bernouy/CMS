@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { binaryResponse } from "cms-files/capabilities/files/access/binary";
 import { readFileInputSchema, readFileOutputSchema } from "cms-files/schemas/files";
 import { readFileErrors as errors } from "cms-files/schemas/errors";
@@ -39,15 +38,13 @@ export const readFile = defineCapability({
     input: readFileInputSchema,
     output: readFileOutputSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, async () =>
-            binaryResponse(
-                await services.files.readFile({
-                    ...input,
-                    access: input.access ?? undefined,
-                    range: input.range ?? undefined,
-                    ifRange: input.ifRange ?? undefined,
-                }),
-            ),
+    execute: async ({ input, services }) =>
+        binaryResponse(
+            await services.files.readFile({
+                ...input,
+                access: input.access ?? undefined,
+                range: input.range ?? undefined,
+                ifRange: input.ifRange ?? undefined,
+            }),
         ),
 });

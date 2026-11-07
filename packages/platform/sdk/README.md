@@ -14,7 +14,7 @@ Markdown only below explicitly declared directories and never publishes releases
 | Entry | Responsibility |
 | --- | --- |
 | `.` → `z`, `defineCapability` | Stable capability IDs, access, behavior, HTTP/MCP bindings, typed data/errors and named mocks. |
-| `.` → `defineFeature` | Contract identity/version, parent, capability list and document/fixture sources. |
+| `.` → `defineFeature` | Contract identity/version, parent, capability list, document/fixture sources and optional domain error policy. |
 | `.` → `contractString`, `contractMap`, `contractBinary` | Zod schemas with exact Ulvia v1 semantics. |
 | `.` → `capabilitiesFor`, `implementFeature` | Type capability services once; select complete default execution. |
 | `.` → `implementContract`, `defineProvider` | Alternative complete implementations and static manifest metadata. |
@@ -118,15 +118,34 @@ the SDK does not parse JSON DTOs a second time in the executor bridge. Dependenc
 factories or feature service projections run once per mounted effective capability. The captured plan cannot be replaced by mutating the
 source table after compilation.
 
-For direct local synchronous JSON calls, `executeCapability(capability, { input,
-services, context })` from `./provider` validates both input and output with the
-capability's Zod schemas. The caller owns authorization; this does not activate a
+For direct local synchronous JSON calls, `executeCapability(feature, capabilityId,
+{ input, services, context })` from `./provider` resolves the declaring feature and
+uses its error policy. The standalone `executeCapability(capability, { input,
+services, context })` form executes a capability independently, without feature policy.
+Both forms validate input and output with the capability's Zod schemas. The caller owns authorization; this does not activate a
 Provider or durable command receipts. Invalid input refuses before business calls.
 Binary streams and asynchronous operation handles use the Provider adapter, and
 are rejected by the local JSON helper before execution. The raw `execute` callback
 is a validated-boundary body; use the helper for unvalidated local data.
 
 ## Errors, versions and execution
+
+
+A feature may declare `mapError(cause, capability)`, returning `{ code, output? }`
+or `undefined` to leave an exception unmapped. This synchronous domain classifier
+replaces per-executor try/catch wrappers. The SDK verifies the mapped code and
+payload against the executing capability and retains the original cause privately.
+The mapping cannot choose HTTP status, headers or localization. Those remain host
+presentation policy. Payload-free errors return only `{ code }`.
+
+Default execution and its optional `authorize` hook share this error boundary.
+Inherited capabilities retain their declaring feature's policy; the child does not
+replace it. Explicit `fail(...)` errors keep their exact owner and skip classification.
+Complete alternative implementations keep their own error handling.
+The mapper is captured with the executor before awaits and never runs during
+compilation or mounting. It is absent from published contracts and runtime metadata.
+Local input/output validation errors remain validation errors and are not remapped.
+
 
 Inside a default executor use `throw fail(code, payload)`. Explicit alternative
 handlers can use `throw capabilityError(capability, code, payload)`. Code

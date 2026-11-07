@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { listRepresentationsInputSchema, listRepresentationsOutputSchema } from "cms-files/schemas/representations";
 import { listRepresentationsErrors as errors } from "cms-files/schemas/errors";
 
@@ -30,12 +29,10 @@ export const listRepresentations = defineCapability({
     input: listRepresentationsInputSchema,
     output: listRepresentationsOutputSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, () =>
-            services.files.listRepresentations({
-                ...input,
-                access: input.access ?? undefined,
-                namespaceKey: input.namespaceKey ?? undefined,
-            }),
-        ),
+    execute: ({ input, services }) =>
+        services.files.listRepresentations({
+            ...input,
+            access: input.access ?? undefined,
+            namespaceKey: input.namespaceKey ?? undefined,
+        }),
 });

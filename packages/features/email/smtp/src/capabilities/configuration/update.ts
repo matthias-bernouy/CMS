@@ -1,4 +1,3 @@
-import { SmtpEmailConfigurationError } from "email-smtp/core/SmtpEmailConfigurationError";
 import { defineCapability } from "email-smtp/capabilities/define";
 import { emailErrorSchema } from "@bernouy/email";
 import { smtpConfigurationSchema, smtpConfigurationUpdateSchema } from "email-smtp/schemas/configuration";
@@ -30,14 +29,5 @@ export const updateSmtpConfiguration = defineCapability({
         CORE_UNAVAILABLE: { retryable: true, output: emailErrorSchema },
     },
     docs: ["overview.md"],
-    execute: async ({ input, services, fail }) => {
-        try {
-            return await services.emailer.updateConfiguration(input);
-        } catch (cause) {
-            if (cause instanceof SmtpEmailConfigurationError) {
-                throw fail("INVALID_INPUT", { message: "Email configuration is invalid." }, { cause });
-            }
-            throw fail("CORE_UNAVAILABLE", { message: "Email configuration is unavailable." }, { cause });
-        }
-    },
+    execute: ({ input, services }) => services.emailer.updateConfiguration(input),
 });

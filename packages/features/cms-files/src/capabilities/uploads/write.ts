@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { CmsFilesError } from "cms-files/core/credentials";
 import { writeUploadInputSchema } from "cms-files/schemas/uploads";
 import { writeUploadErrors as errors } from "cms-files/schemas/errors";
@@ -37,12 +36,11 @@ export const writeUpload = defineCapability({
     input: writeUploadInputSchema,
     output: z.null(),
     errors,
-    execute: ({ input, services, context, fail }) =>
-        fileCall(errors, fail, async () => {
-            if (!context.binaryBody) {
-                throw new CmsFilesError("INVALID_INPUT", 422, {}, { code: "file.binary" });
-            }
-            await services.files.writeUpload(input.uploadId, input.uploadToken, context.binaryBody.stream);
-            return null;
-        }),
+    execute: async ({ input, services, context }) => {
+        if (!context.binaryBody) {
+            throw new CmsFilesError("INVALID_INPUT", 422, {}, { code: "file.binary" });
+        }
+        await services.files.writeUpload(input.uploadId, input.uploadToken, context.binaryBody.stream);
+        return null;
+    },
 });

@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-secrets/capabilities/define";
-import { secretCall } from "cms-secrets/capabilities/support";
 import { namespaceErrors as errors } from "cms-secrets/schemas/errors";
 import { secretReferenceSchema, resolvedSecretSchema } from "cms-secrets/schemas/secrets";
 
@@ -37,6 +36,5 @@ export const resolveSecret = defineCapability({
     input: secretReferenceSchema,
     output: resolvedSecretSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        secretCall(errors, fail, () => services.secrets.resolve(input.namespaceId, input.namespaceKey, input.secretId)),
+    execute: ({ input, services }) => services.secrets.resolve(input.namespaceId, input.namespaceKey, input.secretId),
 });

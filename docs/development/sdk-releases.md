@@ -191,3 +191,19 @@ Range and If-Range metadata. The SDK enforces admitted binary bounds and propaga
 cancellation; it does not collect a complete file in memory. Namespace credentials,
 quotas and ownership checks remain in Files. No Files capability uses keyed receipts,
 so this migration adds no durable execution policy or pre-receipt authorization hook.
+
+## Feature-owned error classification
+
+Emailer/SMTP, Secrets and Files declare a synchronous `mapError` policy in their
+feature source. Default capability bodies call their injected services directly;
+they no longer wrap every call in a domain-specific error helper. The SDK applies
+the declaring feature's policy to executor and guard exceptions, checks the mapped
+code/payload, and preserves the original cause privately for surface localization.
+Explicit capability failures retain their owner and bypass classification.
+
+The Provider derives HTTP status from the admitted binding and formats official
+messages/headers. A mapped authorization refusal is presented before durable receipt
+access. Default service methods retain their own domain authorization checks.
+Inherited Emailer send failures use the Emailer policy; SMTP configuration failures
+use SMTP's own policy. Alternative implementations retain their own error handling.
+For local JSON calls with feature policy, use `executeCapability(feature, id, call)`.

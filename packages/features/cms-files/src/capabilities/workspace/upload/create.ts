@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { boundedText } from "cms-files/core/validation";
 import { createWorkspaceUploadInputSchema, createWorkspaceUploadOutputSchema } from "cms-files/schemas/workspace";
 import { createWorkspaceUploadErrors as errors } from "cms-files/schemas/errors";
@@ -41,13 +40,11 @@ export const createWorkspaceUpload = defineCapability({
     input: createWorkspaceUploadInputSchema,
     output: createWorkspaceUploadOutputSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, () =>
-            services.workspace.createUpload({
-                ...input,
-                contentType: typeof input.contentType === "string" ? boundedText(input.contentType, 255) : undefined,
-                imageProfile: input.imageProfile ?? undefined,
-                fileId: typeof input.fileId === "string" ? boundedText(input.fileId, 128) : undefined,
-            }),
-        ),
+    execute: ({ input, services }) =>
+        services.workspace.createUpload({
+            ...input,
+            contentType: typeof input.contentType === "string" ? boundedText(input.contentType, 255) : undefined,
+            imageProfile: input.imageProfile ?? undefined,
+            fileId: typeof input.fileId === "string" ? boundedText(input.fileId, 128) : undefined,
+        }),
 });

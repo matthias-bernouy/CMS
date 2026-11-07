@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { fileCredentialsSchema } from "cms-files/schemas/files";
 import { credentialErrors as errors } from "cms-files/schemas/errors";
 
@@ -32,9 +31,8 @@ export const deleteFile = defineCapability({
     input: fileCredentialsSchema,
     output: z.null(),
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, async () => {
-            await services.files.deleteFile(input.namespaceId, input.namespaceKey, input.fileId);
-            return null;
-        }),
+    execute: async ({ input, services }) => {
+        await services.files.deleteFile(input.namespaceId, input.namespaceKey, input.fileId);
+        return null;
+    },
 });

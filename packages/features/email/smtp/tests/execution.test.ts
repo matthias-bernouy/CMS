@@ -4,6 +4,7 @@ import { ConfiguredSmtpEmailer } from "@bernouy/email-smtp/nodemailer";
 import { executeCapability } from "@bernouy/ulvia-sdk/provider";
 import { getSmtpConfiguration } from "email-smtp/capabilities/configuration/get";
 import { updateSmtpConfiguration } from "email-smtp/capabilities/configuration/update";
+import { smtpEmailerFeature } from "email-smtp/feature";
 import { emailerFeature } from "@bernouy/email/feature";
 const [sendEmail] = emailerFeature.capabilities;
 import { SmtpEmailConfigurationError } from "@bernouy/email-smtp";
@@ -29,19 +30,23 @@ test("operation executions configure the injected service and reuse base Emailer
         }),
     });
     const dependencies = { emailer };
-    const result = await executeCapability(updateSmtpConfiguration, {
+    const result = await executeCapability(smtpEmailerFeature, updateSmtpConfiguration.id, {
         input: configuration,
         services: dependencies,
         context,
     });
-    expect(await executeCapability(getSmtpConfiguration, { input: {}, services: dependencies, context })).toEqual(
-        result,
-    );
+    expect(
+        await executeCapability(smtpEmailerFeature, getSmtpConfiguration.id, {
+            input: {},
+            services: dependencies,
+            context,
+        }),
+    ).toEqual(result);
     expect(JSON.stringify(result)).not.toContain("private-password");
     expect(await secrets.get("SMTP_EMAILER_CONFIGURATION")).toContain('"password":"private-password"');
     expect(configuration.smtp.password).toBe(" private-password ");
     expect(
-        await executeCapability(sendEmail, {
+        await executeCapability(smtpEmailerFeature, sendEmail.id, {
             input: { toEmail: "ada@example.test", subject: "Hello", text: "Body" },
             services: dependencies,
             context,
@@ -70,7 +75,11 @@ test("invalid configuration refuses without changing stored credentials or invok
         { ...configuration, fromEmail: "invalid" },
     ]) {
         await expect(
-            executeCapability(updateSmtpConfiguration, { input, services: { emailer }, context }),
+            executeCapability(smtpEmailerFeature, updateSmtpConfiguration.id, {
+                input,
+                services: { emailer },
+                context,
+            }),
         ).rejects.toMatchObject({ code: "INVALID_INPUT" });
         expect(await secrets.get("SMTP_EMAILER_CONFIGURATION")).toBe(before);
     }
@@ -96,7 +105,7 @@ test("SMTP domain errors flow through inherited execution while retaining the or
         },
     };
     await expect(
-        executeCapability(sendEmail, {
+        executeCapability(smtpEmailerFeature, sendEmail.id, {
             input: { toEmail: "ada@example.test", subject: "Hello", text: "Body" },
             services: dependencies,
             context,
@@ -107,7 +116,7 @@ test("SMTP domain errors flow through inherited execution while retaining the or
         cause,
     });
     await expect(
-        executeCapability(getSmtpConfiguration, { input: {}, services: dependencies, context }),
+        executeCapability(smtpEmailerFeature, getSmtpConfiguration.id, { input: {}, services: dependencies, context }),
     ).rejects.toMatchObject({
         code: "CORE_UNAVAILABLE",
         cause,

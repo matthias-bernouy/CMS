@@ -1,3 +1,4 @@
+import { mapFilesError } from "cms-files/capabilities/mapError";
 import { defineFeature } from "@bernouy/ulvia-sdk";
 import { createNamespace } from "cms-files/capabilities/namespaces/create";
 import { getNamespace } from "cms-files/capabilities/namespaces/get";
@@ -35,6 +36,7 @@ export const filesFeature = defineFeature({
     publisherId: "ulvia",
     catalogue: { "icon": "media", "categories": ["administration", "content"] },
     documents: new URL("../docs/", import.meta.url),
+    mapError: mapFilesError,
     capabilities: [
         createNamespace,
         getNamespace,

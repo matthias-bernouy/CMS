@@ -73,3 +73,13 @@ Typed authoring and Provider assembly SDK. Depend only on Platform and Foundatio
   Alternative implementations own their complete authorization behavior.
 - `contractString` preserves literal enum unions and explicit v1 bounds. Zod
   readonly wrappers preserve JSON acceptance and do not add contract fields.
+
+- Optional `defineFeature.mapError` is a synchronous domain classifier returning
+  `{ code, output? }` or undefined. Apply it to default execution and guards using
+  the declaring feature's captured policy. Validate against the actual capability,
+  retain original causes privately and never reassign explicit or foreign failures.
+  Alternative implementations own their own classification. Never run or serialize
+  mappers during compilation/attachment. HTTP presentation remains host-owned.
+- Local feature execution receives the feature and capability ID explicitly so
+  inheritance and error policy remain unambiguous. Standalone capability calls
+  remain independent. Keep Zod input/output validation outside error classification.

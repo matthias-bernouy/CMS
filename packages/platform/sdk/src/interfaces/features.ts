@@ -16,6 +16,7 @@ export type FeatureCapabilities<Capabilities extends readonly CapabilitySource[]
 export interface FeatureDefinition<Capabilities extends readonly CapabilitySource[] = readonly CapabilitySource[]>
     extends Pick<ContractRelease, "contractId" | "name" | "publisherId" | "version" | "description" | "catalogue"> {
     readonly capabilities: Capabilities;
+    readonly mapError?: FeatureErrorMapper;
     readonly extends?: FeatureDefinition;
     readonly documents?: Readonly<Record<string, string>> | URL;
     readonly fixtures?: readonly FeatureFixtureSource[];
@@ -49,3 +50,13 @@ export type FeatureServiceCompatibility<Feature extends FeatureDefinition> = Fea
         ? unknown
         : { readonly extends: never }
     : unknown;
+
+/** A heterogeneous feature policy is checked against the actual capability at execution. */
+export interface FeatureErrorMapping {
+    readonly code: string;
+    readonly output?: unknown;
+}
+export type FeatureErrorMapper = (
+    cause: unknown,
+    capability: Pick<CapabilitySource, "id" | "errors">,
+) => FeatureErrorMapping | undefined;

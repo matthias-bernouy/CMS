@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { fileCredentialsSchema } from "cms-files/schemas/files";
 import { fileReferenceSchema } from "cms-files/schemas/values";
 import { credentialErrors as errors } from "cms-files/schemas/errors";
@@ -38,5 +37,5 @@ export const getFile = defineCapability({
     input: fileCredentialsSchema,
     output: fileReferenceSchema,
     errors,
-    execute: ({ input, services, fail }) => fileCall(errors, fail, () => services.files.getFile(input)),
+    execute: ({ input, services }) => services.files.getFile(input),
 });

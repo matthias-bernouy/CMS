@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { completeWorkspaceUploadInputSchema } from "cms-files/schemas/workspace";
 import { completeWorkspaceUploadErrors as errors } from "cms-files/schemas/errors";
 
@@ -42,9 +41,8 @@ export const completeWorkspaceUpload = defineCapability({
     input: completeWorkspaceUploadInputSchema,
     output: z.null(),
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, async () => {
-            await services.workspace.completeUpload(input.uploadId);
-            return null;
-        }),
+    execute: async ({ input, services }) => {
+        await services.workspace.completeUpload(input.uploadId);
+        return null;
+    },
 });

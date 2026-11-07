@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { createNamespaceInputSchema, createNamespaceOutputSchema } from "cms-files/schemas/namespaces";
 import { createNamespaceErrors as errors } from "cms-files/schemas/errors";
 
@@ -26,15 +25,13 @@ export const createNamespace = defineCapability({
     input: createNamespaceInputSchema,
     output: createNamespaceOutputSchema,
     errors,
-    execute: ({ input, services, context, fail }) =>
-        fileCall(errors, fail, () =>
-            services.files.createNamespace({
-                name: input.name,
-                defaultVisibility: input.defaultVisibility,
-                createdBy: {
-                    kind: context.subjectId ? "administrator" : "system",
-                    id: context.subjectId ?? "cms-gateway",
-                },
-            }),
-        ),
+    execute: ({ input, services, context }) =>
+        services.files.createNamespace({
+            name: input.name,
+            defaultVisibility: input.defaultVisibility,
+            createdBy: {
+                kind: context.subjectId ? "administrator" : "system",
+                id: context.subjectId ?? "cms-gateway",
+            },
+        }),
 });

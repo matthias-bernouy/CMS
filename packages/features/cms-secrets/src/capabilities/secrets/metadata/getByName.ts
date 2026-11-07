@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-secrets/capabilities/define";
-import { secretCall } from "cms-secrets/capabilities/support";
 import { namedSecretErrors as errors } from "cms-secrets/schemas/errors";
 import { secretNameInputSchema, secretMetadataSchema } from "cms-secrets/schemas/secrets";
 
@@ -36,6 +35,5 @@ export const getSecretMetadataByName = defineCapability({
     input: secretNameInputSchema,
     output: secretMetadataSchema.nullable(),
     errors,
-    execute: ({ input, services, fail }) =>
-        secretCall(errors, fail, () => services.secrets.getByName(input.namespaceId, input.namespaceKey, input.name)),
+    execute: ({ input, services }) => services.secrets.getByName(input.namespaceId, input.namespaceKey, input.name),
 });

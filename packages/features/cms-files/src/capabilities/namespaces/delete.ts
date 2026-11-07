@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { namespaceCredentialsSchema } from "cms-files/schemas/namespaces";
 import { credentialErrors as errors } from "cms-files/schemas/errors";
 
@@ -32,9 +31,8 @@ export const deleteNamespace = defineCapability({
     input: namespaceCredentialsSchema,
     output: z.null(),
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, async () => {
-            await services.files.deleteNamespace(input.namespaceId, input.namespaceKey);
-            return null;
-        }),
+    execute: async ({ input, services }) => {
+        await services.files.deleteNamespace(input.namespaceId, input.namespaceKey);
+        return null;
+    },
 });

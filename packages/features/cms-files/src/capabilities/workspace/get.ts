@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { getWorkspaceInputSchema, getWorkspaceOutputSchema } from "cms-files/schemas/workspace";
 import { createNamespaceErrors as errors } from "cms-files/schemas/errors";
 
@@ -35,5 +34,5 @@ export const getWorkspace = defineCapability({
     input: getWorkspaceInputSchema,
     output: getWorkspaceOutputSchema,
     errors,
-    execute: ({ input, services, fail }) => fileCall(errors, fail, () => services.workspace.get(input)),
+    execute: ({ input, services }) => services.workspace.get(input),
 });

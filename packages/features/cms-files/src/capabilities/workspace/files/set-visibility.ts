@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { setWorkspaceFileVisibilityInputSchema } from "cms-files/schemas/workspace";
 import { workspaceErrors as errors } from "cms-files/schemas/errors";
 
@@ -35,9 +34,8 @@ export const setWorkspaceFileVisibility = defineCapability({
     input: setWorkspaceFileVisibilityInputSchema,
     output: z.null(),
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, async () => {
-            await services.workspace.setFileVisibility(input.fileId, input.visibility);
-            return null;
-        }),
+    execute: async ({ input, services }) => {
+        await services.workspace.setFileVisibility(input.fileId, input.visibility);
+        return null;
+    },
 });

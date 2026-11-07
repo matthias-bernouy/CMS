@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { namespaceKeyTargetSchema, createNamespaceKeyOutputSchema } from "cms-files/schemas/namespaces";
 import { credentialErrors as errors } from "cms-files/schemas/errors";
 
@@ -34,8 +33,6 @@ export const rotateNamespaceKey = defineCapability({
     input: namespaceKeyTargetSchema,
     output: createNamespaceKeyOutputSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, () =>
-            services.files.rotateNamespaceKey(input.namespaceId, input.namespaceKey, input.keyId),
-        ),
+    execute: ({ input, services }) =>
+        services.files.rotateNamespaceKey(input.namespaceId, input.namespaceKey, input.keyId),
 });

@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-secrets/capabilities/define";
-import { secretCall } from "cms-secrets/capabilities/support";
 import { secretDeletionErrors as errors } from "cms-secrets/schemas/errors";
 import { secretMutationInputSchema, deleteSecretOutputSchema } from "cms-secrets/schemas/secrets";
 
@@ -47,13 +46,12 @@ export const deleteSecret = defineCapability({
     input: secretMutationInputSchema,
     output: deleteSecretOutputSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        secretCall(errors, fail, async () => ({
-            deleted: await services.secrets.delete(
-                input.namespaceId,
-                input.namespaceKey,
-                input.secretId,
-                input.expectedVersion,
-            ),
-        })),
+    execute: async ({ input, services }) => ({
+        deleted: await services.secrets.delete(
+            input.namespaceId,
+            input.namespaceKey,
+            input.secretId,
+            input.expectedVersion,
+        ),
+    }),
 });

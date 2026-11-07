@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { createNamespaceKeyInputSchema, createNamespaceKeyOutputSchema } from "cms-files/schemas/namespaces";
 import { credentialErrors as errors } from "cms-files/schemas/errors";
 
@@ -34,8 +33,6 @@ export const createNamespaceKey = defineCapability({
     input: createNamespaceKeyInputSchema,
     output: createNamespaceKeyOutputSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, () =>
-            services.files.createNamespaceKey({ ...input, expiresAt: input.expiresAt ?? undefined }),
-        ),
+    execute: ({ input, services }) =>
+        services.files.createNamespaceKey({ ...input, expiresAt: input.expiresAt ?? undefined }),
 });

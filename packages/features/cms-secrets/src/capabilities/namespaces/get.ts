@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-secrets/capabilities/define";
-import { secretCall } from "cms-secrets/capabilities/support";
 import { namespaceErrors as errors } from "cms-secrets/schemas/errors";
 import { namespaceCredentialsSchema } from "cms-secrets/schemas/fields";
 import { namespaceMetadataSchema } from "cms-secrets/schemas/namespaces";
@@ -38,9 +37,8 @@ export const getNamespace = defineCapability({
     input: namespaceCredentialsSchema,
     output: namespaceMetadataSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        secretCall(errors, fail, async () => {
-            const result = await services.secrets.getNamespace(input.namespaceId, input.namespaceKey);
-            return { ...result, createdAt: result.createdAt.toISOString() };
-        }),
+    execute: async ({ input, services }) => {
+        const result = await services.secrets.getNamespace(input.namespaceId, input.namespaceKey);
+        return { ...result, createdAt: result.createdAt.toISOString() };
+    },
 });

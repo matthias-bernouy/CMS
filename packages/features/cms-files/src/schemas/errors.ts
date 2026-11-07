@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { contractString } from "@bernouy/ulvia-sdk";
 
-export const fileErrorSchema = z.strictObject({ message: contractString({ minLength: 1, maxLength: 2048 }) });
+const fileErrorSchema = z.strictObject({ message: contractString({ minLength: 1, maxLength: 2048 }) });
 const refused = { retryable: false, output: fileErrorSchema };
 const unavailable = { retryable: true, output: fileErrorSchema };
 

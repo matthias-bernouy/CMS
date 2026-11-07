@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { namespaceMetadataSchema } from "cms-files/schemas/values";
 import { namespaceCredentialsSchema } from "cms-files/schemas/namespaces";
 import { credentialErrors as errors } from "cms-files/schemas/errors";
@@ -35,12 +34,11 @@ export const getNamespace = defineCapability({
     input: namespaceCredentialsSchema,
     output: namespaceMetadataSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, async () => {
-            const { id, name, defaultVisibility, createdAt, quota } = await services.files.getNamespace(
-                input.namespaceId,
-                input.namespaceKey,
-            );
-            return { id, name, defaultVisibility, createdAt, quota };
-        }),
+    execute: async ({ input, services }) => {
+        const { id, name, defaultVisibility, createdAt, quota } = await services.files.getNamespace(
+            input.namespaceId,
+            input.namespaceKey,
+        );
+        return { id, name, defaultVisibility, createdAt, quota };
+    },
 });

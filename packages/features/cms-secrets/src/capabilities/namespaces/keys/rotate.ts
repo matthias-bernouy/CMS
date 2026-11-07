@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-secrets/capabilities/define";
-import { secretCall } from "cms-secrets/capabilities/support";
 import { namespaceErrors as errors } from "cms-secrets/schemas/errors";
 import { namespaceKeyInputSchema } from "cms-secrets/schemas/keys";
 import { namespaceCredentialSchema } from "cms-secrets/schemas/namespaces";
@@ -45,8 +44,6 @@ export const rotateNamespaceKey = defineCapability({
     input: namespaceKeyInputSchema,
     output: namespaceCredentialSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        secretCall(errors, fail, () =>
-            services.secrets.rotateNamespaceKey(input.namespaceId, input.namespaceKey, input.keyId),
-        ),
+    execute: ({ input, services }) =>
+        services.secrets.rotateNamespaceKey(input.namespaceId, input.namespaceKey, input.keyId),
 });

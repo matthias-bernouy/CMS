@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-secrets/capabilities/define";
-import { secretCall } from "cms-secrets/capabilities/support";
 import { namespaceErrors as errors } from "cms-secrets/schemas/errors";
 import { listSecretsInputSchema, listSecretsOutputSchema } from "cms-secrets/schemas/secrets";
 
@@ -37,8 +36,7 @@ export const listSecrets = defineCapability({
     input: listSecretsInputSchema,
     output: listSecretsOutputSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        secretCall(errors, fail, async () => ({
-            items: await services.secrets.list(input.namespaceId, input.namespaceKey, input.limit ?? 100),
-        })),
+    execute: async ({ input, services }) => ({
+        items: await services.secrets.list(input.namespaceId, input.namespaceKey, input.limit ?? 100),
+    }),
 });

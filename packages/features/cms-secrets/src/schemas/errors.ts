@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { contractString } from "@bernouy/ulvia-sdk";
 
-export const secretErrorSchema = z.strictObject({ message: contractString({ minLength: 1, maxLength: 2048 }) });
+const secretErrorSchema = z.strictObject({ message: contractString({ minLength: 1, maxLength: 2048 }) });
 const refused = { retryable: false, output: secretErrorSchema };
 const unavailable = { retryable: true, output: secretErrorSchema };
 export const namespaceCreationErrors = { INVALID_INPUT: refused, CORE_UNAVAILABLE: unavailable };

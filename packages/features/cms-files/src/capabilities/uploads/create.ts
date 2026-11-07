@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { uploadOptions } from "cms-files/capabilities/uploads/options";
 import { createUploadInputSchema } from "cms-files/schemas/uploads";
 import { uploadReceiptSchema } from "cms-files/schemas/values";
@@ -34,12 +33,10 @@ export const createUpload = defineCapability({
     input: createUploadInputSchema,
     output: uploadReceiptSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, () =>
-            services.files.createUpload({
-                namespaceId: input.namespaceId,
-                namespaceKey: input.namespaceKey,
-                ...uploadOptions(input),
-            }),
-        ),
+    execute: ({ input, services }) =>
+        services.files.createUpload({
+            namespaceId: input.namespaceId,
+            namespaceKey: input.namespaceKey,
+            ...uploadOptions(input),
+        }),
 });

@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-secrets/capabilities/define";
-import { secretCall } from "cms-secrets/capabilities/support";
 import { secretMutationErrors as errors } from "cms-secrets/schemas/errors";
 import { rotateSecretInputSchema, rotatedSecretMetadataSchema } from "cms-secrets/schemas/secrets";
 
@@ -45,18 +44,14 @@ export const rotateSecret = defineCapability({
     input: rotateSecretInputSchema,
     output: rotatedSecretMetadataSchema,
     errors,
-    authorize: ({ input, services, fail }) =>
-        secretCall(errors, fail, () =>
-            services.secrets.authorizeNamespace(input.namespaceId, input.namespaceKey, "secrets.write"),
-        ),
-    execute: ({ input, services, fail }) =>
-        secretCall(errors, fail, () =>
-            services.secrets.rotate(
-                input.namespaceId,
-                input.namespaceKey,
-                input.secretId,
-                input.expectedVersion,
-                input.value,
-            ),
+    authorize: ({ input, services }) =>
+        services.secrets.authorizeNamespace(input.namespaceId, input.namespaceKey, "secrets.write"),
+    execute: ({ input, services }) =>
+        services.secrets.rotate(
+            input.namespaceId,
+            input.namespaceKey,
+            input.secretId,
+            input.expectedVersion,
+            input.value,
         ),
 });

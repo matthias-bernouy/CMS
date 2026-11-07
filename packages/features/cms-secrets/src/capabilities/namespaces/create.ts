@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-secrets/capabilities/define";
-import { secretCall } from "cms-secrets/capabilities/support";
 import { namespaceCreationErrors as errors } from "cms-secrets/schemas/errors";
 import { createNamespaceInputSchema, createNamespaceOutputSchema } from "cms-secrets/schemas/namespaces";
 
@@ -36,14 +35,12 @@ export const createNamespace = defineCapability({
     input: createNamespaceInputSchema,
     output: createNamespaceOutputSchema,
     errors,
-    execute: ({ input, services, fail, context }) =>
-        secretCall(errors, fail, () =>
-            services.secrets.createNamespace({
-                name: input.name,
-                createdBy: {
-                    kind: context.subjectId ? "administrator" : "system",
-                    id: context.subjectId ?? "cms-gateway",
-                },
-            }),
-        ),
+    execute: ({ input, services, context }) =>
+        services.secrets.createNamespace({
+            name: input.name,
+            createdBy: {
+                kind: context.subjectId ? "administrator" : "system",
+                id: context.subjectId ?? "cms-gateway",
+            },
+        }),
 });

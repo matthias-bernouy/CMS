@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-secrets/capabilities/define";
-import { secretCall } from "cms-secrets/capabilities/support";
 import { namespaceErrors as errors } from "cms-secrets/schemas/errors";
 import { createNamespaceKeyInputSchema, futureNamespaceExpirationSchema } from "cms-secrets/schemas/keys";
 import { namespaceCredentialSchema } from "cms-secrets/schemas/namespaces";
@@ -44,15 +43,13 @@ export const createNamespaceKey = defineCapability({
     input: createNamespaceKeyInputSchema,
     output: namespaceCredentialSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        secretCall(errors, fail, () =>
-            services.secrets.createNamespaceKey({
-                namespaceId: input.namespaceId,
-                namespaceKey: input.namespaceKey,
-                permissions: input.permissions,
-                ...(input.expiresAt === undefined
-                    ? {}
-                    : { expiresAt: futureNamespaceExpirationSchema.parse(input.expiresAt) }),
-            }),
-        ),
+    execute: ({ input, services }) =>
+        services.secrets.createNamespaceKey({
+            namespaceId: input.namespaceId,
+            namespaceKey: input.namespaceKey,
+            permissions: input.permissions,
+            ...(input.expiresAt === undefined
+                ? {}
+                : { expiresAt: futureNamespaceExpirationSchema.parse(input.expiresAt) }),
+        }),
 });

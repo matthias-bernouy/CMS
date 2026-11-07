@@ -25,11 +25,5 @@ export const getSmtpConfiguration = defineCapability({
     output: smtpConfigurationSchema,
     errors: { CORE_UNAVAILABLE: { retryable: true, output: emailErrorSchema } },
     docs: ["overview.md"],
-    execute: async ({ services, fail }) => {
-        try {
-            return await services.emailer.getConfiguration();
-        } catch (cause) {
-            throw fail("CORE_UNAVAILABLE", { message: "Email configuration is unavailable." }, { cause });
-        }
-    },
+    execute: ({ services }) => services.emailer.getConfiguration(),
 });

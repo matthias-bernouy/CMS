@@ -1,3 +1,4 @@
+import { mapSmtpError } from "email-smtp/capabilities/mapError";
 import { defineFeature } from "@bernouy/ulvia-sdk";
 import { emailerFeature } from "@bernouy/email/feature";
 import { getSmtpConfiguration } from "email-smtp/capabilities/configuration/get";
@@ -12,6 +13,7 @@ export const smtpEmailerFeature = defineFeature({
     catalogue: { icon: "mail", categories: ["administration", "infrastructure"] },
     extends: emailerFeature,
     documents: new URL("../docs/", import.meta.url),
+    mapError: mapSmtpError,
     capabilities: [getSmtpConfiguration, updateSmtpConfiguration],
 });
 

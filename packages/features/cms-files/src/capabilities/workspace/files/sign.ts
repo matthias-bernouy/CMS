@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { signFileOutputSchema } from "cms-files/schemas/files";
 import { signWorkspaceFileInputSchema } from "cms-files/schemas/workspace";
 import { workspaceErrors as errors } from "cms-files/schemas/errors";
@@ -36,6 +35,5 @@ export const signWorkspaceFile = defineCapability({
     input: signWorkspaceFileInputSchema,
     output: signFileOutputSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, () => services.workspace.signFile(input.fileId, input.generation, input.expiresIn)),
+    execute: ({ input, services }) => services.workspace.signFile(input.fileId, input.generation, input.expiresIn),
 });

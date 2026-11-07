@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { namespaceKeyTargetSchema } from "cms-files/schemas/namespaces";
 import { credentialErrors as errors } from "cms-files/schemas/errors";
 
@@ -35,9 +34,8 @@ export const revokeNamespaceKey = defineCapability({
     input: namespaceKeyTargetSchema,
     output: z.null(),
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, async () => {
-            await services.files.revokeNamespaceKey(input.namespaceId, input.namespaceKey, input.keyId);
-            return null;
-        }),
+    execute: async ({ input, services }) => {
+        await services.files.revokeNamespaceKey(input.namespaceId, input.namespaceKey, input.keyId);
+        return null;
+    },
 });

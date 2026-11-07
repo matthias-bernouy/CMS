@@ -1,5 +1,4 @@
 import { defineCapability } from "cms-files/capabilities/define";
-import { fileCall } from "cms-files/capabilities/support";
 import { signFileInputSchema, signFileOutputSchema } from "cms-files/schemas/files";
 import { credentialErrors as errors } from "cms-files/schemas/errors";
 
@@ -34,14 +33,12 @@ export const signFile = defineCapability({
     input: signFileInputSchema,
     output: signFileOutputSchema,
     errors,
-    execute: ({ input, services, fail }) =>
-        fileCall(errors, fail, () =>
-            services.files.signFile({
-                namespaceId: input.namespaceId,
-                namespaceKey: input.namespaceKey,
-                fileId: input.fileId,
-                generation: input.generation,
-                expiresInSeconds: input.expiresIn,
-            }),
-        ),
+    execute: ({ input, services }) =>
+        services.files.signFile({
+            namespaceId: input.namespaceId,
+            namespaceKey: input.namespaceKey,
+            fileId: input.fileId,
+            generation: input.generation,
+            expiresInSeconds: input.expiresIn,
+        }),
 });
