@@ -17,7 +17,10 @@ export async function installOfficialCollections(
     execution: ProviderInstanceTransitionExecution,
 ): Promise<void> {
     execution.throwIfLeaseLost();
-    const entries = await source.list();
+    if (!profile.collections.length && !profile.initialPages.length) {
+        return;
+    }
+    const entries = profile.collections.length ? await source.list() : [];
     const targets = [];
     for (const pin of profile.collections) {
         const entry = entries.find(

@@ -20,7 +20,9 @@ export type OfficialBootstrapArtifacts = Readonly<{
     }>[];
 }>;
 
-export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstrapArtifacts> {
+export async function buildOfficialBootstrapArtifacts(
+    options: { includeCollections?: boolean } = {},
+): Promise<OfficialBootstrapArtifacts> {
     const root = resolve(import.meta.dir, "../../../../official-repository");
     const catalogue = new InMemoryReleaseCatalogue();
     const contracts: Record<string, string> = {};
@@ -48,7 +50,7 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
         catalogue,
     );
     const collections = [];
-    for (const id of await directories(join(root, "collections"))) {
+    for (const id of options.includeCollections === false ? [] : await directories(join(root, "collections"))) {
         const collection = await prepareCollectionRelease(join(root, "collections", id), catalogue);
         if (resourceName(collection.release.collectionId) !== id) {
             throw new Error(`Official collection folder differs from its identity: ${id}`);
@@ -135,5 +137,13 @@ async function directories(root: string): Promise<string[]> {
 }
 
 if (import.meta.main) {
-    await writeOfficialBootstrapArtifacts();
+    const args = Bun.argv.slice(2);
+    if (args.some((arg) => arg !== "--core-only") || args.length > 1) {
+        throw new Error("Usage: generate:bootstrap [--core-only]");
+    }
+    const coreOnly = args.includes("--core-only");
+    await writeOfficialBootstrapArtifacts(
+        coreOnly ? resolve(import.meta.dir, "../../dist/bootstrap-core") : undefined,
+        coreOnly ? await buildOfficialBootstrapArtifacts({ includeCollections: false }) : undefined,
+    );
 }

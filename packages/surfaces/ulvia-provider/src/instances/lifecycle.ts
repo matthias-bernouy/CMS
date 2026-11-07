@@ -1,5 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import type { OfficialInstanceProfileSource, OfficialInstanceProfile } from "./officialProfile";
+import type { OfficialInstanceProfileSource, OfficialProfileListing } from "./officialProfile";
 import type { OfficialInstanceProvisioner, ProviderInstanceAdministrator } from "./provisioning";
 import type { ProviderInstanceRegistry } from "./registry";
 import type { ProviderInstanceProfile, ProviderInstanceRecord } from "./types";
@@ -48,7 +48,7 @@ export class ProviderInstanceLifecycle {
 
     async describeProfiles() {
         const profiles = await this.profiles.describe();
-        const reference = ({ id, version }: OfficialInstanceProfile) => ({ id, version });
+        const reference = ({ id, version }: OfficialProfileListing["defaultProfile"]) => ({ id, version });
         return {
             defaultProfile: reference(profiles.defaultProfile),
             profiles: profiles.profiles.map(reference),

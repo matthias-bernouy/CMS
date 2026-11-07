@@ -89,7 +89,7 @@ function parseBootstrapIndex(value: unknown): BootstrapIndex {
 }
 
 function isCollectionIndex(value: unknown): value is BootstrapIndex["collections"] {
-    if (!Array.isArray(value) || value.length === 0 || value.length > 32) {
+    if (!Array.isArray(value) || value.length > 32) {
         return false;
     }
     const paths = new Set<string>();

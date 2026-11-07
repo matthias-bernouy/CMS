@@ -6,12 +6,34 @@ import { join } from "node:path";
 import { validatePageDocument } from "@bernouy/cms-content/page-document";
 import { buildOfficialBootstrapArtifacts, writeOfficialBootstrapArtifacts } from "../../src/bootstrap/generate";
 import { parseCollectionReleaseJson } from "@bernouy/cms-repository/collections";
+import {
+    FilesystemCollectionRepository,
+    FilesystemProviderRepository,
+} from "@bernouy/cms-repository/repository/filesystem";
 
 let compiled: ReturnType<typeof buildOfficialBootstrapArtifacts> | undefined;
 function officialArtifacts() {
     compiled ??= buildOfficialBootstrapArtifacts();
     return compiled;
 }
+
+test("core-only bootstrap retains the exact system APIs with an explicitly empty collection index", async () => {
+    const artifacts = await buildOfficialBootstrapArtifacts({ includeCollections: false });
+    expect(artifacts.collections).toEqual([]);
+    expect(Object.keys(artifacts.contracts)).toHaveLength(12);
+    const root = await mkdtemp(join(tmpdir(), "ulvia-bootstrap-core-"));
+    try {
+        await writeOfficialBootstrapArtifacts(root, artifacts);
+        expect((await Bun.file(join(root, "index.json")).json()).collections).toEqual([]);
+        const repository = join(root, "repository");
+        expect(await new FilesystemCollectionRepository("core", repository).list()).toEqual([]);
+        const providers = new FilesystemProviderRepository("core", repository);
+        expect(await providers.list("contract")).toHaveLength(12);
+        expect(await providers.list("provider-manifest")).toHaveLength(1);
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});
 
 test("the official collection passes its source quality contract", async () => {
     const artifact = {

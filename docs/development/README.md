@@ -42,8 +42,11 @@ CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true bun run ulvia -- services start --versio
 ```
 
 In this example, `repository:3000` is a Repository CMS Edge address reachable
-from the Provider containers. The instance profile bootstraps from bundled
-artifacts before that remote catalogue is available.
+from the Provider containers. Core profiles `ulvia@1.1.0` and `repository@1.1.0`
+initialize system APIs and an administrator from bundled artifacts before that
+remote catalogue is available. They create no collections or Pages. Production
+images contain the API-only snapshot; full snapshots with optional starters are
+generated separately for authoring tests.
 
 The connection is persisted in `services/installation.json` independently of
 network exposure and client PAT connections. The Edge smoke supplies this
@@ -90,7 +93,8 @@ instances upgraded. Collection, contract, and provider
 manifest releases remain Repository artifacts and do not become Docker images.
 
 The CLI and runtime images use distribution version `1.0.7`; official contracts,
-collections and instance profiles use the fresh `1.0.0` baseline. Existing npm
+and collections use the fresh `1.0.0` baseline; core-only instance profiles use
+`1.1.0`. Existing npm
 versions and Docker tags are retained rather than reused.
 
 The host CLI is a separate public npm artifact. Its private workspace sources

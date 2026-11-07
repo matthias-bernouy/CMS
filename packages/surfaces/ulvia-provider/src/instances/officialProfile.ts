@@ -24,8 +24,8 @@ export type OfficialInstanceProfile = Readonly<{
 }>;
 
 export type OfficialProfileListing = Readonly<{
-    profiles: readonly OfficialInstanceProfile[];
-    defaultProfile: OfficialInstanceProfile;
+    profiles: readonly Pick<OfficialInstanceProfile, "id" | "version">[];
+    defaultProfile: Pick<OfficialInstanceProfile, "id" | "version">;
 }>;
 
 export interface OfficialInstanceProfileSource {

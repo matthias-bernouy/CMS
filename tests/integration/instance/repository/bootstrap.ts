@@ -3,7 +3,12 @@ import { parseContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
 
-export async function publishBundledReleases(url: string, providerUrl: string, token: string) {
+export async function publishBundledReleases(
+    url: string,
+    providerUrl: string,
+    token: string,
+    includeCollections = true,
+) {
     const root = resolve(import.meta.dir, "../../../../packages/runtimes/ulvia-cli/dist/bootstrap");
     const index = await Bun.file(resolve(root, "index.json")).json();
     const repositoryId = await new RepositoryNamespaceClient(url).identity();
@@ -33,7 +38,7 @@ export async function publishBundledReleases(url: string, providerUrl: string, t
         throw new Error("Documentation Provider must use an origin admitted by the bundled manifest");
     }
     await client.push({ kind: "provider-manifest", canonicalJson: JSON.stringify(manifest), assets: [] });
-    for (const collection of index.collections) {
+    for (const collection of includeCollections ? index.collections : []) {
         await client.push({
             kind: "collection",
             canonicalJson: await Bun.file(resolve(root, collection.release)).text(),
