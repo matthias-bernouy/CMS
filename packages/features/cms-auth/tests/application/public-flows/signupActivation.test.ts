@@ -6,7 +6,7 @@ import {
     signupLocalUser,
     type PublicAuthFlowConfig,
 } from "@bernouy/cms-auth";
-import { InMemoryEmailer } from "@bernouy/cms-emailer";
+import { InMemoryEmailer } from "@bernouy/email";
 import { prepareSignupLocalUser } from "cms-auth/application/core/public-flows/flows";
 
 describe("signup activation", () => {

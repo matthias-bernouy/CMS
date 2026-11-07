@@ -42,7 +42,7 @@ already been published to a registry.
 | `platform/contracts` | `@bernouy/ulvia-contracts` | Contract schemas, parsing, validation, admission, bindings, compatibility and release read ports. |
 | `platform/providers` | `@bernouy/ulvia-providers` | Manifest admission, Provider execution models, selection validation, readiness and read ports. |
 | `platform/gateway` | `@bernouy/cms-gateway` | Authorized generic capability invocation, HTTP/MCP transports, Provider SDK, authority, identities and audit. |
-| `platform/sdk` | `@bernouy/ulvia-sdk` | Typed operations/contracts, static Provider assembly, generated manifests and an explicit Gateway HTTP receiver adapter; standalone. |
+| `platform/sdk` | `@bernouy/ulvia-sdk` | Typed operations/contracts, static Provider assembly, generated manifests and an explicit Gateway HTTP receiver adapter used by the Emailer pilot. |
 
 Platform depends only on Platform and Foundation. Catalogue publication, installation
 approval and selection replacement remain feature-owned. Edge and the official
@@ -58,8 +58,8 @@ Provider remain surfaces; documentation search remains a feature.
 | `@bernouy/cms-files` | Official provider implementation for namespaces, credentials, uploads, immutable files, private signatures and image representations. |
 | `@bernouy/cms-repository` | Persistent release catalogues, publication, installation/selection workflows, authored collection admission, content projections, upgrades and build tooling. |
 | `@bernouy/cms-secrets` | Credential-scoped secret namespaces, metadata and lifecycle over an injected generic encrypted secret store. |
-| `@bernouy/cms-emailer` | Provider-neutral outbound email delivery interface. |
-| `@bernouy/cms-smtp-emailer` | SMTP-specific administration, secret-backed configuration and the official Nodemailer implementation. |
+| `@bernouy/email` (`features/email/base`) | Provider-neutral outbound email delivery interface. |
+| `@bernouy/email-smtp` (`features/email/smtp`) | SMTP-specific administration, secret-backed configuration and the official Nodemailer implementation. |
 | `@bernouy/cms-auth` | Provider-owned accounts, local credentials, PATs, persistent opaque sessions, account lifecycle and authentication email composition. It exposes no HTTP routes. |
 
 Collections own reusable examples, not live Pages or routes. Runtime profiles
@@ -81,7 +81,9 @@ The removed `cms-source` transport grammar is not accepted.
 ## Official Products
 
 `packages/official-repository` contains the authored official contract releases,
-the `ulvia` provider manifest and official collections. It has
+the retained manifest reference and official collections. Emailer schemas/types/docs
+live in `features/email`; the Provider surface generates its contracts and manifest
+claims through the [SDK release workflow](../development/sdk-releases.md). It has
 no runtime adapters or routes. The official Provider implements Registry operations
 for explicitly enabled CMS instances, exposed through their independent Edge.
 

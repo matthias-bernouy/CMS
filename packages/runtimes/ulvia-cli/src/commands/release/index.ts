@@ -1,4 +1,5 @@
-import { resolve } from "node:path";
+import { existsSync } from "node:fs";
+import { join, resolve } from "node:path";
 import {
     withRepositoryWriteLock,
     LocalArtifactFiles,
@@ -11,7 +12,9 @@ import { prepareResource, storeResource } from "./resource";
 
 const HELP = `Usage: ulvia release <resource-directory> [--recursive]
 
-Prepare immutable releases in the local cache. --recursive discovers authored
+Prepare immutable releases in the local cache. Trusted local ulvia.release.ts
+modules prepare SDK releases; versions come from their declared sources.
+--recursive discovers authored
 resource roots and orders contracts before provider manifests and collections.
 Use push separately to publish an exact coordinate to a remote Repository.`;
 
@@ -32,7 +35,8 @@ export async function releaseCommand(
     }
     const directory = resolve(cwd, directories[0]!);
     // Discover before taking the cache lock; discovery never mutates the Repository.
-    const resources = recursive ? await discoverResources(directory) : undefined;
+    const resources =
+        recursive || existsSync(join(directory, "ulvia.release.ts")) ? await discoverResources(directory) : undefined;
     await withRepositoryWriteLock(repositoryRoot, async () => {
         if (resources) {
             await releaseBatch(resources, repositoryRoot, log);

@@ -45,6 +45,12 @@
         },
         {
             "path": "../ulvia-provider-server"
+        },
+        {
+            "path": "../../surfaces/ulvia-provider"
+        },
+        {
+            "path": "../../platform/sdk"
         }
     ]
 }

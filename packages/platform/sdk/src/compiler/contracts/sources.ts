@@ -41,7 +41,9 @@ export function snapshotContracts(sources: readonly ContractDefinition[]): reado
         active.add(source);
         const parent = source.extends ? visit(source.extends, depth + 1) : undefined;
         const { contractId, name, publisherId, version, description, catalogue } = source;
-        const capabilities = Object.entries(source.capabilities);
+        const capabilities = Object.entries(source.capabilities).sort(([left], [right]) =>
+            left < right ? -1 : left > right ? 1 : 0,
+        );
         if (capabilities.length > DEFAULT_RELEASE_LIMITS.maxCapabilities) {
             throw new SdkDefinitionError("Too many contract capabilities", "$.capabilities");
         }

@@ -2,7 +2,10 @@ import { lstat, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { readOptionalJsonSourceRecord } from "@bernouy/cms-repository/repository/authoring/build";
 
-export type ResourceSource = Readonly<{ directory: string; kind: "contract" | "provider-manifest" | "collection" }>;
+export type ResourceSource = Readonly<{
+    directory: string;
+    kind: "contract" | "provider-manifest" | "collection" | "sdk";
+}>;
 const MAX_RESOURCES = 256;
 const MAX_DIRECTORIES = 4096;
 const MAX_DEPTH = 32;
@@ -18,6 +21,36 @@ export async function discoverResources(root: string): Promise<readonly Resource
         const metadata = await lstat(directory);
         if (!metadata.isDirectory() || metadata.isSymbolicLink()) {
             throw new Error(`Release source must be a real directory: ${directory}`);
+        }
+        const modulePath = join(directory, "ulvia.release.ts");
+        const module = await lstat(modulePath).catch((error: NodeJS.ErrnoException) => {
+            if (error.code === "ENOENT") {
+                return null;
+            }
+            throw error;
+        });
+        if (module) {
+            if (!module.isFile() || module.isSymbolicLink()) {
+                throw new Error(`Release module must be a regular file: ${modulePath}`);
+            }
+            if (
+                await lstat(join(directory, "definition.json")).then(
+                    () => true,
+                    (error: NodeJS.ErrnoException) => {
+                        if (error.code === "ENOENT") {
+                            return false;
+                        }
+                        throw error;
+                    },
+                )
+            ) {
+                throw new Error("A release root cannot contain both definition.json and ulvia.release.ts");
+            }
+            resources.push({ directory, kind: "sdk" });
+            if (resources.length > MAX_RESOURCES) {
+                throw new Error(`Recursive release must contain at most ${MAX_RESOURCES} resources`);
+            }
+            return;
         }
         const definitionPath = join(directory, "definition.json");
         const entry = await lstat(definitionPath).catch((error: NodeJS.ErrnoException) => {

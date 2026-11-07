@@ -180,8 +180,15 @@ explicit separate command.
 
 ```bash
 ulvia release packages/official-repository/contracts --recursive
-ulvia release packages/official-repository --recursive
+bun run release:official
+# Equivalent SDK source entry:
+ulvia release infra/releases
 ```
+
+The official build uses a trusted local `ulvia.release.ts` entry so migrated
+Emailer/SMTP sources and the bootstrap share the same compiler. See the
+[SDK workflow](../../../docs/development/sdk-releases.md) for explicit versions,
+source-module rules and the remaining JSON migration boundary.
 
 Contract fixture assets declared in `definition.json` are read from
 `fixtures/<asset-id>` and verified by digest. Releasing the same coordinate with

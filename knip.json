@@ -53,6 +53,11 @@
             "entry": [
                 "tests/types/definitions.fixture.ts"
             ]
+        },
+        ".": {
+            "entry": [
+                "infra/**/ulvia.release.ts"
+            ]
         }
     },
     "ignoreFiles": [

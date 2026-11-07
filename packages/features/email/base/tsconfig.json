@@ -1,0 +1,20 @@
+{
+    "extends": "../../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "email/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../../../platform/sdk"
+        }
+    ]
+}

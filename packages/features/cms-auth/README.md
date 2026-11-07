@@ -10,7 +10,7 @@ tokens, persistent sessions, public account flows, and membership persistence.
 - `/management` contains administration operations.
 - `/mongo` contains composition-root persistence adapters.
 
-Delivery transports belong to `@bernouy/cms-emailer`. Authentication only
+Delivery transports belong to `@bernouy/email`. Authentication only
 composes account-specific messages and sends them through the Emailer port.
 
 The package exposes no HTTP routes. Provider surfaces map its operations to an

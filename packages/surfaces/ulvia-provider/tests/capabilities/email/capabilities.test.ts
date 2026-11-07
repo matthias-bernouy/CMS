@@ -1,0 +1,60 @@
+import { expect, test } from "bun:test";
+import { ConfiguredSmtpEmailer, type SmtpSendMailInput } from "@bernouy/email-smtp/nodemailer";
+import { InMemorySecretStore } from "@bernouy/secret-store";
+import { DefaultProviderCapabilityDispatcher, type ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";
+import { registerSmtpEmailerCapabilities } from "@bernouy/ulvia-provider/capabilities";
+
+const context: ProviderCapabilityInvocationContext = {
+    requestId: "00000000-0000-4000-8000-000000000001",
+    contractVersion: "1.0.0",
+    invocation: { contractId: "ulvia/cms.emailer.smtp", instanceId: "instance-a" },
+    idempotencyKey: "send-1",
+    siteId: "site-a",
+    providerId: "ulvia/primary-provider",
+};
+
+test("Emailer capabilities configure secret-backed SMTP delivery without returning its password", async () => {
+    const sent: SmtpSendMailInput[] = [];
+    const emailer = new ConfiguredSmtpEmailer({
+        secrets: new InMemorySecretStore(),
+        transportFactory: async () => ({ sendMail: async (input) => sent.push(input) }),
+    });
+    const dispatcher = new DefaultProviderCapabilityDispatcher();
+    await registerSmtpEmailerCapabilities(dispatcher, { emailer }, smtpOptions());
+
+    const configuration = await invoke<Record<string, unknown>>(dispatcher, "smtp.configuration.update", {
+        enabled: true,
+        fromEmail: "no-reply@example.test",
+        fromName: "Example",
+        replyTo: "support@example.test",
+        smtp: {
+            host: "smtp.example.test",
+            port: 587,
+            secure: false,
+            username: "postmaster@example.test",
+            password: "secret-value",
+        },
+    });
+
+    expect(configuration).toMatchObject({ smtp: { passwordConfigured: true } });
+    expect(JSON.stringify(configuration)).not.toContain("secret-value");
+    expect(await invoke<Record<string, unknown>>(dispatcher, "smtp.configuration.get", {})).toEqual(configuration);
+    expect(
+        await invoke<{ sent: boolean }>(dispatcher, "emailer.send", {
+            toEmail: "member@example.test",
+            subject: "Welcome",
+            text: "Hello",
+        }),
+    ).toEqual({ sent: true });
+    expect(sent).toHaveLength(1);
+});
+
+function invoke<T = unknown>(
+    dispatcher: DefaultProviderCapabilityDispatcher,
+    capabilityId: string,
+    input: Record<string, unknown>,
+): Promise<T> {
+    return dispatcher.invoke("ulvia/cms.emailer.smtp", capabilityId, input, context) as Promise<T>;
+}
+
+import { smtpOptions } from "./fixture";

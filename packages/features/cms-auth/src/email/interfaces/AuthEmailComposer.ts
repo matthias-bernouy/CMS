@@ -1,4 +1,4 @@
-import type { EmailRecipient, OutboundEmail } from "@bernouy/cms-emailer";
+import type { EmailRecipient, OutboundEmail } from "@bernouy/email";
 
 export type AuthEmailKind = "email_verification" | "password_reset";
 

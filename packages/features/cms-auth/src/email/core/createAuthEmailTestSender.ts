@@ -1,6 +1,6 @@
 import { DefaultAuthEmailComposer } from "cms-auth/email/default-implementation/DefaultAuthEmailComposer";
 import type { AuthEmailComposer } from "cms-auth/email/interfaces/AuthEmailComposer";
-import type { Emailer } from "@bernouy/cms-emailer";
+import type { Emailer } from "@bernouy/email";
 
 export type AuthEmailTestSenderConfig = {
     emailer: Emailer;

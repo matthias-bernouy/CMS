@@ -10,7 +10,7 @@ import {
     type ProviderInstanceRecord,
     type ProviderInstanceRegistry,
     type UpdateProviderInstanceRecord,
-} from "../src/index";
+} from "../src/exports/index";
 
 const OFFICIAL_INSTANCE_PROFILE = Object.freeze({
     id: "ulvia",

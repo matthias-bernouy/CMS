@@ -1,6 +1,6 @@
 import type { AuthEmailComposer } from "cms-auth/email/interfaces/AuthEmailComposer";
 import type { AuthTokenStore } from "cms-auth/tokens/one-time/interfaces/AuthTokenStore";
-import type { Emailer } from "@bernouy/cms-emailer";
+import type { Emailer } from "@bernouy/email";
 import type { LocalCredentialStore } from "cms-auth/providers/interfaces/LocalCredentialStore";
 import type { UsersRepository } from "cms-auth/accounts/interfaces/UsersRepository";
 

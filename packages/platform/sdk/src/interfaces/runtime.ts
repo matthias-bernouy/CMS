@@ -14,10 +14,14 @@ export interface KeyedExecution {
     readonly context: ProviderCapabilityInvocationContext;
 }
 
-export interface ProviderRuntimeOptions {
+export interface ProviderRegistrationOptions {
+    readonly providerId: string;
     readonly scope: { readonly siteId: string; readonly instanceId: string };
     /** Host-owned durable deduplication, including input equivalence and crash recovery. */
     readonly executeKeyed?: (invocation: KeyedExecution, execute: () => Promise<unknown>) => Promise<unknown>;
+}
+
+export interface ProviderRuntimeOptions extends Omit<ProviderRegistrationOptions, "providerId"> {
     readonly logger?: ProviderHandlerOptions["logger"];
     readonly authenticate: ProviderHandlerOptions["authenticate"];
     /** Explicit host policy is required; verified credentials alone do not grant execution. */

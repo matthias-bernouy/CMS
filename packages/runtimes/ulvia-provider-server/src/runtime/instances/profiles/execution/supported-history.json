@@ -1,0 +1,17 @@
+[
+    {
+        "version": "1.0.0",
+        "digest": "sha256:a147034f2a4d1d80f6ca47b76600c0f416f8ecb4226e03c207d04dacbb9f6bb0",
+        "contractId": "ulvia/cms.authoring"
+    },
+    {
+        "version": "1.0.0",
+        "digest": "sha256:48dac5e0805df0c3f669cd981f135980ca8d5cf6dc74a3bb5eea7c943212dd52",
+        "contractId": "ulvia/cms.content"
+    },
+    {
+        "version": "1.0.0",
+        "digest": "sha256:7ed2f7729e9010ef6cb055ed48580f20c8b19475724f182a80f5cdfb9f35ec0a",
+        "contractId": "ulvia/repository"
+    }
+]

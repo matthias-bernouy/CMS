@@ -333,7 +333,16 @@ export class ProviderInstanceHost {
                 this.#documentation.request(instance),
             );
             const instanceDocumentation = documentation;
-            registerOfficialProviderCapabilities(
+            const keyedExecution = new DurableKeyedExecution(
+                new MongoKeyedReceiptStore(stores.db),
+                {
+                    providerId: profile.manifest.providerId,
+                    siteId: SITE_ID,
+                    instanceId: instance.id,
+                },
+                lifetime.retain,
+            );
+            await registerOfficialProviderCapabilities(
                 dispatcher,
                 {
                     ...stores,
@@ -376,6 +385,11 @@ export class ProviderInstanceHost {
                 stores.providerFiles,
                 fileWorkspace,
                 new Set(profile.contracts.map(({ contractId }) => contractId)),
+                {
+                    providerId: profile.manifest.providerId,
+                    scope: { siteId: SITE_ID, instanceId: instance.id },
+                    executeKeyed: keyedExecution.execute,
+                },
             );
             if (registry && registryPin) {
                 const contract = contracts.find(
@@ -536,3 +550,6 @@ function providerReport(
 function compositionKey(instance: ProviderInstanceRecord): string {
     return `${instance.id}\0${instance.profile.id}\0${instance.profile.version}`;
 }
+
+import { DurableKeyedExecution } from "../../provider-operations/keyed/DurableKeyedExecution";
+import { MongoKeyedReceiptStore } from "../../provider-operations/keyed/MongoKeyedReceiptStore";

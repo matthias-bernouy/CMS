@@ -5,7 +5,7 @@ import {
     InMemoryLocalCredentialStore,
     InMemoryUsersRepository,
 } from "@bernouy/cms-auth";
-import { InMemoryEmailer } from "@bernouy/cms-emailer";
+import { InMemoryEmailer } from "@bernouy/email";
 
 test("public auth exposes only account lifecycle operations used by Access", () => {
     const config = {

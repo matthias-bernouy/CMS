@@ -1,9 +1,14 @@
 import {
     LocalArtifactFiles,
     LocalContractReleases,
+    LocalProviderReleases,
     LocalRepositoryYanks,
 } from "@bernouy/cms-repository/repository/filesystem";
 import { planContractPublications } from "@bernouy/cms-repository/contracts/catalogue";
+import { prepareReleaseModule } from "./module";
+import { admitContractBundleJson } from "@bernouy/ulvia-contracts";
+import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
+import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
 import type { ResourceSource } from "./discovery";
 import {
@@ -32,6 +37,9 @@ export async function releaseBatch(
             throw new Error(`Duplicate authored release coordinate: ${coordinate}`);
         }
         coordinates.add(coordinate);
+        if (coordinates.size > 256) {
+            throw new Error("Release batch exceeds its 256-resource limit");
+        }
         bytes += Buffer.byteLength(resource.admission.canonicalJson);
         if (resource.kind === "contract") {
             bytes += [
@@ -50,6 +58,21 @@ export async function releaseBatch(
         include(resource);
         candidates.push({ directory: source.directory, resource });
     }
+    const modules: PreparedResource[] = [];
+    for (const source of sources.filter((source) => source.kind === "sdk")) {
+        for (const resource of await prepareReleaseModule(source.directory)) {
+            include(resource);
+            if (resource.kind === "contract") {
+                const admission = await admitContractBundleJson(resource.admission.canonicalJson, [
+                    ...(resource.admission.documentationAssets ?? []),
+                    ...(resource.admission.fixtureAssets ?? []),
+                ]);
+                candidates.push({ directory: source.directory, resource: { kind: "contract", admission } });
+            } else {
+                modules.push(resource);
+            }
+        }
+    }
     const ordered = await planContractPublications(
         catalogue,
         candidates.map(({ resource }) => resource.admission),
@@ -64,7 +87,22 @@ export async function releaseBatch(
         ...candidates.filter(({ resource }) => !planned.has(resource.admission.digest)).map(({ resource }) => resource),
     ];
     const remaining: PreparedResource[] = [];
-    for (const source of sources.filter((source) => source.kind !== "contract")) {
+    for (const resource of modules) {
+        if (resource.kind === "provider-manifest") {
+            remaining.push({
+                kind: "provider-manifest",
+                admission: await admitProviderManifestJson(resource.admission.canonicalJson, catalogue),
+            });
+        } else if (resource.kind === "collection") {
+            remaining.push({
+                kind: "collection",
+                admission: await admitCollectionRelease(resource.admission.release, resource.admission.assets, {
+                    contracts: catalogue,
+                }),
+            });
+        }
+    }
+    for (const source of sources.filter((source) => source.kind !== "contract" && source.kind !== "sdk")) {
         const resource = await prepareResource(source.directory, catalogue);
         include(resource);
         remaining.push(resource);
@@ -83,9 +121,25 @@ export async function releaseBatch(
               ? -1
               : 1;
     });
+    const previousManifests = await new LocalProviderReleases(
+        new LocalArtifactFiles(root),
+        contracts,
+        new LocalRepositoryYanks(root),
+    ).catalogue();
+    const manifests = new InMemoryProviderManifestCatalogue(catalogue);
+    for (const previous of await previousManifests.list()) {
+        await manifests.restore(previous.admission.canonicalJson, previous.admission.digest, previous.publishedAt);
+    }
+    for (const resource of remaining) {
+        if (resource.kind === "provider-manifest") {
+            await manifests.publish(resource.admission);
+        }
+    }
     // Every source has been admitted before the first write. Storage failures can still leave a partial batch.
     for (const resource of [...resources, ...remaining]) {
         await storeResource(resource, root, log);
     }
     log(`Prepared ${coordinates.size} local releases.`);
 }
+
+import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers";

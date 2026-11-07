@@ -2,8 +2,9 @@
 
 Typed authoring and Provider assembly SDK. Depend only on Platform and Foundation.
 
-- Keep this SDK standalone until a separate migration is requested. Production
-  features, authored official releases and bootstraps retain their existing paths.
+- Emailer/SMTP is the production migration pilot. Keep other feature families
+  outside the SDK until their migration is explicitly requested. Release discovery
+  and publication remain CLI/infrastructure responsibilities.
 - Root definitions perform no filesystem, network, environment or runtime initialization.
   `./build` admits artifacts; it does not publish or approve them.
 - One static typed handler-factory table drives manifest claims and runtime registration.

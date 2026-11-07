@@ -12,7 +12,7 @@
         "./oauth": "./src/exports/oauth.ts"
     },
     "dependencies": {
-        "@bernouy/cms-emailer": "workspace:*",
+        "@bernouy/email": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*"
     },

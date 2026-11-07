@@ -1,11 +1,7 @@
+import { prepareOfficialResources } from "./resources";
 import { resourceName } from "@bernouy/ulvia-contracts/protocol";
-import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
-import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
-import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
-import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
-import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
 import { bootstrapOfficialRepository } from "../commands/bootstrap";
 
 export type OfficialBootstrapArtifacts = Readonly<{
@@ -21,49 +17,36 @@ export type OfficialBootstrapArtifacts = Readonly<{
 }>;
 
 export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstrapArtifacts> {
-    const root = resolve(import.meta.dir, "../../../../official-repository");
-    const catalogue = new InMemoryReleaseCatalogue();
+    const resources = await prepareOfficialResources();
     const contracts: Record<string, string> = {};
     const contractAssets: { contractId: string; id: string; bytes: Uint8Array }[] = [];
-    const admissions = new Map<string, AdmittedContractRelease>();
-    const contractIds = await directories(join(root, "contracts"));
-    for (const id of contractIds) {
-        const directory = join(root, "contracts", id);
-        const { admission } = await prepareContractSource(directory);
-        admissions.set(`${admission.release.contractId}@${admission.release.version}`, admission);
-        for (const asset of admission.documentationAssets ?? []) {
-            contractAssets.push({
-                contractId: admission.release.contractId,
-                id: asset.id,
-                bytes: new Uint8Array(await asset.bytes.arrayBuffer()),
+    const collections = [];
+    const provider = resources.find((resource) => resource.kind === "provider-manifest")!.admission;
+    for (const resource of resources) {
+        if (resource.kind === "contract") {
+            const { admission } = resource;
+            contracts[admission.release.contractId] = admission.canonicalJson;
+            for (const asset of [...(admission.documentationAssets ?? []), ...(admission.fixtureAssets ?? [])]) {
+                contractAssets.push({
+                    contractId: admission.release.contractId,
+                    id: asset.id,
+                    bytes: new Uint8Array(await asset.bytes.arrayBuffer()),
+                });
+            }
+        } else if (resource.kind === "collection") {
+            collections.push({
+                id: resource.admission.release.collectionId,
+                canonicalJson: resource.admission.canonicalJson,
+                assets: await Promise.all(
+                    resource.admission.assets.map(async ({ id, bytes }) => ({
+                        id,
+                        bytes: new Uint8Array(await bytes.arrayBuffer()),
+                    })),
+                ),
             });
         }
     }
-    const publicationOrder = await publishContractSet(catalogue, [...admissions.values()]);
-    for (const admission of publicationOrder) {
-        contracts[admission.release.contractId] = admission.canonicalJson;
-    }
-    const provider = await admitProviderManifestJson(
-        await readFile(join(root, "providers", "primary-provider", "definition.json"), "utf8"),
-        catalogue,
-    );
-    const collections = [];
-    for (const id of await directories(join(root, "collections"))) {
-        const collection = await prepareCollectionRelease(join(root, "collections", id), catalogue);
-        if (resourceName(collection.release.collectionId) !== id) {
-            throw new Error(`Official collection folder differs from its identity: ${id}`);
-        }
-        collections.push({
-            id: collection.release.collectionId,
-            canonicalJson: collection.canonicalJson,
-            assets: await Promise.all(
-                collection.assets.map(async ({ id, bytes }) => ({
-                    id,
-                    bytes: new Uint8Array(await bytes.arrayBuffer()),
-                })),
-            ),
-        });
-    }
+
     return {
         contracts,
         contractAssets,
@@ -125,13 +108,6 @@ async function writeBytes(root: string, path: string, bytes: Uint8Array): Promis
     const target = join(root, path);
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, bytes);
-}
-
-async function directories(root: string): Promise<string[]> {
-    return (await readdir(root, { withFileTypes: true }))
-        .filter((entry) => entry.isDirectory())
-        .map((entry) => entry.name)
-        .sort();
 }
 
 if (import.meta.main) {

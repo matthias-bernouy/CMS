@@ -39,7 +39,7 @@
       "name": "@bernouy/cms-auth",
       "version": "1.0.0",
       "dependencies": {
-        "@bernouy/cms-emailer": "workspace:*",
+        "@bernouy/email": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
       },
@@ -81,13 +81,6 @@
       },
       "peerDependencies": {
         "mongodb": "^7.6.0",
-        "typescript": "^7.0.2",
-      },
-    },
-    "packages/features/cms-emailer": {
-      "name": "@bernouy/cms-emailer",
-      "version": "1.0.0",
-      "peerDependencies": {
         "typescript": "^7.0.2",
       },
     },
@@ -152,13 +145,26 @@
         "typescript": "^7.0.2",
       },
     },
-    "packages/features/cms-smtp-emailer": {
-      "name": "@bernouy/cms-smtp-emailer",
+    "packages/features/email/base": {
+      "name": "@bernouy/email",
       "version": "1.0.0",
       "dependencies": {
-        "@bernouy/cms-emailer": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "zod": "4.6.7",
+      },
+      "peerDependencies": {
+        "typescript": "^7.0.2",
+      },
+    },
+    "packages/features/email/smtp": {
+      "name": "@bernouy/email-smtp",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/email": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
         "nodemailer": "^10.3.1",
+        "zod": "4.6.7",
       },
       "peerDependencies": {
         "typescript": "^7.0.2",
@@ -330,7 +336,9 @@
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-provider": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
         "playwright": "^1.64.1",
       },
       "peerDependencies": {
@@ -350,7 +358,7 @@
         "@bernouy/cms-observability": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-smtp-emailer": "workspace:*",
+        "@bernouy/email-smtp": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
@@ -362,6 +370,7 @@
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
         "mongodb": "^7.8.0",
       },
       "peerDependencies": {
@@ -393,17 +402,18 @@
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-documentation": "workspace:*",
-        "@bernouy/cms-emailer": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-observability": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-smtp-emailer": "workspace:*",
+        "@bernouy/email": "workspace:*",
+        "@bernouy/email-smtp": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^7.0.2",
@@ -425,8 +435,6 @@
 
     "@bernouy/cms-edge-server": ["@bernouy/cms-edge-server@workspace:packages/runtimes/cms-edge-server"],
 
-    "@bernouy/cms-emailer": ["@bernouy/cms-emailer@workspace:packages/features/cms-emailer"],
-
     "@bernouy/cms-files": ["@bernouy/cms-files@workspace:packages/features/cms-files"],
 
     "@bernouy/cms-gateway": ["@bernouy/cms-gateway@workspace:packages/platform/gateway"],
@@ -437,7 +445,9 @@
 
     "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
 
-    "@bernouy/cms-smtp-emailer": ["@bernouy/cms-smtp-emailer@workspace:packages/features/cms-smtp-emailer"],
+    "@bernouy/email": ["@bernouy/email@workspace:packages/features/email/base"],
+
+    "@bernouy/email-smtp": ["@bernouy/email-smtp@workspace:packages/features/email/smtp"],
 
     "@bernouy/envelope-crypto": ["@bernouy/envelope-crypto@workspace:packages/foundation/envelope-crypto"],
 

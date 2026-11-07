@@ -53,9 +53,13 @@ export interface ProviderDefinition<Dependencies>
 }
 
 declare const compiledProvider: unique symbol;
-export interface CompiledProvider<Dependencies> {
+export interface CompiledImplementations<Dependencies> {
     readonly [compiledProvider]: Dependencies;
-    readonly manifest: AdmittedProviderManifest;
+    readonly implementations: ProviderManifest["implementations"];
     readonly contracts: readonly AdmittedContractRelease[];
     readonly implementedContracts: readonly ResolvedContract[];
+}
+
+export interface CompiledProvider<Dependencies> extends CompiledImplementations<Dependencies> {
+    readonly manifest: AdmittedProviderManifest;
 }

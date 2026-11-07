@@ -4,8 +4,9 @@ Define typed feature operations, expose contracts, assemble a Provider and compi
 its exact manifest from the same handler table. The optional `./provider` adapter
 mounts that build through the existing Gateway HTTP receiver.
 
-The SDK is standalone. No production feature, official release, Provider runtime,
-Gateway flow or bootstrap definition has been migrated to it.
+The Emailer/SMTP pilot uses the SDK in the official Provider and bootstrap. Other
+feature families retain their existing adapters. Release orchestration lives in
+the CLI and infrastructure; the SDK remains free of filesystem discovery and publication.
 
 ## Public API
 
@@ -19,7 +20,9 @@ Gateway flow or bootstrap definition has been migrated to it.
 | `.` → `OperationInput`, `OperationOutput`, `OperationHandler` | Infer domain types from operation schemas. |
 | `.` → `ContractHandlers`, `ProviderOperationHandler` | Infer inherited handlers, streaming inputs and operation handles. |
 | `./build` → `compileSchema`, `compileContract`, `compileContracts` | Produce validated schemas and immutable contract admissions. |
+| `./build` → `compileImplementations` | Compile a partial surface with exact claims and a captured handler plan. |
 | `./build` → `compileProvider` | Generate exact manifest claims and a captured runtime handler plan. |
+| `./provider` → `registerProviderHandlers` | Mount a partial build in an authenticated host registry with explicit scope and durable keyed execution. |
 | `./provider` → `createProvider` | Inject dependencies, authentication, authorization and scope; return a Fetch-compatible receiver. |
 
 ## One definition, two stages
@@ -131,9 +134,11 @@ bytes }]`. Sources are snapshotted before asynchronous hashing. Fixture metadata
 and separate immutable bytes are verified by ordinary contract admission. SDK
 fixture limits are 16 MiB per asset and 64 MiB total per contract.
 
-No filesystem scanning, release orchestrator or publication command is included.
 The root and compiler do not read environment, initialize adapters or listen.
-Production bootstrap migration and the replacement resource ZIP remain separate.
+The CLI discovers explicit trusted `ulvia.release.ts` entry modules, checks release
+evolution against its local catalogue and reuses ordinary artifact publication.
+See [the release workflow](../../../docs/development/sdk-releases.md). The replacement
+resource ZIP and migration of other feature families remain separate.
 
 ## Validation
 

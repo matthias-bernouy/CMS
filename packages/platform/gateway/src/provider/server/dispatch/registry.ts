@@ -20,6 +20,8 @@ export interface ProviderCapabilityInvocationContext {
     readonly rootRequestId?: string;
     readonly requestId: string;
     readonly contractVersion: string;
+    /** Present on authenticated HTTP invocations; never parsed from application headers. */
+    readonly invocation?: Readonly<{ contractId: string; instanceId: string }>;
     readonly siteId: string;
     readonly providerId: string;
     readonly subjectId?: string;

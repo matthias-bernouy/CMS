@@ -569,16 +569,16 @@
                 "total": 1687
             }
         },
-        "@bernouy/cms-emailer": {
-            "path": "packages/features/cms-emailer",
+        "@bernouy/email": {
+            "path": "packages/features/email/base",
             "coveredSourceFiles": [
-                "packages/features/cms-emailer/src/core/EmailDeliveryError.ts",
-                "packages/features/cms-emailer/src/default-implementation/ConsoleEmailer.ts",
-                "packages/features/cms-emailer/src/default-implementation/memory/InMemoryEmailer.ts",
-                "packages/features/cms-emailer/src/exports/index.ts"
+                "packages/features/email/base/src/core/EmailDeliveryError.ts",
+                "packages/features/email/base/src/default-implementation/ConsoleEmailer.ts",
+                "packages/features/email/base/src/default-implementation/memory/InMemoryEmailer.ts",
+                "packages/features/email/base/src/exports/index.ts"
             ],
             "uncoveredSourceFiles": [
-                "packages/features/cms-emailer/src/interfaces/Emailer.ts"
+                "packages/features/email/base/src/interfaces/Emailer.ts"
             ],
             "files": {
                 "covered": 4,
@@ -1288,17 +1288,17 @@
                 "total": 381
             }
         },
-        "@bernouy/cms-smtp-emailer": {
-            "path": "packages/features/cms-smtp-emailer",
+        "@bernouy/email-smtp": {
+            "path": "packages/features/email/smtp",
             "coveredSourceFiles": [
-                "packages/features/cms-smtp-emailer/src/core/SmtpEmailConfigurationError.ts",
-                "packages/features/cms-smtp-emailer/src/default-implementation/ConfiguredSmtpEmailer.ts",
-                "packages/features/cms-smtp-emailer/src/default-implementation/SmtpEmailer.ts",
-                "packages/features/cms-smtp-emailer/src/exports/nodemailer.ts"
+                "packages/features/email/smtp/src/core/SmtpEmailConfigurationError.ts",
+                "packages/features/email/smtp/src/default-implementation/ConfiguredSmtpEmailer.ts",
+                "packages/features/email/smtp/src/default-implementation/SmtpEmailer.ts",
+                "packages/features/email/smtp/src/exports/nodemailer.ts"
             ],
             "uncoveredSourceFiles": [
-                "packages/features/cms-smtp-emailer/src/exports/index.ts",
-                "packages/features/cms-smtp-emailer/src/interfaces/SmtpEmailerConfiguration.ts"
+                "packages/features/email/smtp/src/exports/index.ts",
+                "packages/features/email/smtp/src/interfaces/SmtpEmailerConfiguration.ts"
             ],
             "files": {
                 "covered": 4,

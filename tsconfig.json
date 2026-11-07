@@ -29,10 +29,10 @@
             "path": "packages/features/cms-auth"
         },
         {
-            "path": "packages/features/cms-emailer"
+            "path": "packages/features/email/base"
         },
         {
-            "path": "packages/features/cms-smtp-emailer"
+            "path": "packages/features/email/smtp"
         },
         {
             "path": "packages/foundation/secret-store"

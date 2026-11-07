@@ -1,0 +1,26 @@
+{
+    "extends": "../../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "email-smtp/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../base"
+        },
+        {
+            "path": "../../../foundation/secret-store"
+        },
+        {
+            "path": "../../../platform/sdk"
+        }
+    ]
+}

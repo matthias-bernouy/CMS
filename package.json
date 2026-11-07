@@ -10,6 +10,7 @@
         "packages/foundation/*",
         "packages/platform/*",
         "packages/features/*",
+        "packages/features/email/*",
         "packages/surfaces/*",
         "packages/runtimes/*"
     ],
@@ -42,7 +43,8 @@
         "check:ui-contracts": "bun run quality/ui-contracts/check.ts",
         "test:performance:delivery": "bun run tests/performance/delivery/run.ts",
         "test:documentation:agent": "bun run tests/integration/instance/documentation/evaluation/host.ts",
-        "test:documentation:client": "bun run tests/integration/instance/documentation/evaluation/client.ts"
+        "test:documentation:client": "bun run tests/integration/instance/documentation/evaluation/client.ts",
+        "release:official": "bun --no-macros run packages/runtimes/ulvia-cli/src/index.ts release infra/releases"
     },
     "devDependencies": {
         "@bernouy/binary-media": "workspace:*",

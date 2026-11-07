@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { defineContract, defineOperation, implementContract, z } from "@bernouy/ulvia-sdk";
+import { defineContract, defineOperation, implementContract, operationError, z } from "@bernouy/ulvia-sdk";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { createProvider } from "@bernouy/ulvia-sdk/provider";
 import { notesProviderDefinition } from "../../../examples/provider";
@@ -120,4 +120,60 @@ test("trusted keyed execution receives complete scope and refusal leaves busines
     expect(writes).toBe(1);
     expect((await call('{"flag":false}', "request-1")).status).toBe(503);
     expect(writes).toBe(1);
+});
+
+test("durable middleware observes the current binding's declared failure before persisting it", async () => {
+    const operation = defineOperation({
+        input: z.strictObject({ flag: z.boolean() }),
+        output: z.boolean(),
+        errors: { DISABLED: { retryable: false } },
+    });
+    const capability = command.capabilities["flag.set"];
+    const contract = defineContract({
+        ...command,
+        capabilities: {
+            "flag.set": {
+                ...capability,
+                operation,
+                bindings: [
+                    {
+                        ...capability.bindings[0],
+                        response: { ...capability.bindings[0].response, errorStatuses: { DISABLED: 409 } },
+                    },
+                ],
+            },
+        },
+    });
+    const build = await compileProvider({
+        ...notesProviderDefinition("http://127.0.0.1:5103"),
+        implementations: [
+            implementContract(contract, {
+                "flag.set": () => () => {
+                    throw operationError(operation, "DISABLED");
+                },
+            }),
+        ],
+    });
+    let observed: unknown;
+    const runtime = unitProvider(
+        build,
+        {},
+        {
+            executeKeyed: async (_invocation, execute) => {
+                try {
+                    return await execute();
+                } catch (error) {
+                    observed = error;
+                    throw error;
+                }
+            },
+        },
+    );
+    const response = await runtime.call("example/flag", "flag.set", "/flag", {
+        method: "POST",
+        body: '{"flag":true}',
+        headers: { "content-type": "application/json", "idempotency-key": "disabled-1" },
+    });
+    expect(response.status).toBe(409);
+    expect(observed).toMatchObject({ code: "DISABLED", status: 409 });
 });

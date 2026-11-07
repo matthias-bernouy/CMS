@@ -1,3 +1,4 @@
+import { groupedPackageRoots } from "./groupedPackages";
 import { readFile, readdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import * as ts from "@typescript/typescript6";
@@ -17,21 +18,16 @@ export async function discoverWorkspacePackages(
     const packages: WorkspacePackage[] = [];
     for (const layer of WORKSPACE_LAYERS) {
         const layerRoot = join(rootDir, "packages", layer);
-        let entries;
+        let roots: string[];
         try {
-            entries = await readdir(layerRoot, { withFileTypes: true });
+            roots = await groupedPackageRoots(layerRoot);
         } catch (error) {
             if (isMissingPathError(error)) {
                 continue;
             }
             throw error;
         }
-
-        for (const entry of entries) {
-            if (!entry.isDirectory()) {
-                continue;
-            }
-            const packageRoot = join(layerRoot, entry.name);
+        for (const packageRoot of roots) {
             const relativeRoot = toRelativePath(rootDir, packageRoot);
             if (isIgnored(relativeRoot, ignoredPaths)) {
                 continue;

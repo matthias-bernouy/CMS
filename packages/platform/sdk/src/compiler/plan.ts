@@ -1,5 +1,5 @@
 import type { CapabilityDefinition } from "@bernouy/ulvia-contracts";
-import type { CompiledProvider } from "ulvia-sdk/interfaces/providers";
+import type { CompiledImplementations } from "ulvia-sdk/interfaces/providers";
 import type { OperationSource } from "ulvia-sdk/interfaces/operations";
 import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 
@@ -15,14 +15,14 @@ export interface RuntimeCapabilityPlan<Dependencies> {
 const plans = new WeakMap<object, unknown>();
 
 export function storeProviderPlan<Dependencies>(
-    build: CompiledProvider<Dependencies>,
+    build: CompiledImplementations<Dependencies>,
     plan: readonly RuntimeCapabilityPlan<Dependencies>[],
 ): void {
     plans.set(build, Object.freeze([...plan]));
 }
 
 export function providerPlan<Dependencies>(
-    build: CompiledProvider<Dependencies>,
+    build: CompiledImplementations<Dependencies>,
 ): readonly RuntimeCapabilityPlan<Dependencies>[] {
     const plan = plans.get(build);
     if (!plan) {

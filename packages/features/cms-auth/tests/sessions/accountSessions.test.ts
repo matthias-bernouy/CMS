@@ -11,7 +11,7 @@ import {
     confirmPasswordReset,
 } from "@bernouy/cms-auth";
 import { deleteUserCompletely, changeOwnPassword } from "@bernouy/cms-auth/management";
-import { InMemoryEmailer } from "@bernouy/cms-emailer";
+import { InMemoryEmailer } from "@bernouy/email";
 
 async function fixture() {
     let now = Date.now();

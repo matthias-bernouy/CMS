@@ -16,13 +16,13 @@ import type { ProviderManifestDigest } from "@bernouy/ulvia-providers";
 import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
-import { UlviaProvider } from "../src/index";
+import { UlviaProvider } from "../src/exports/index";
 import type { CmsFilesService } from "@bernouy/cms-files";
 import { CmsSecrets } from "@bernouy/cms-secrets";
 import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { NOOP_LOGGER } from "@bernouy/logging";
-import { ConfiguredSmtpEmailer } from "@bernouy/cms-smtp-emailer/nodemailer";
+import { ConfiguredSmtpEmailer } from "@bernouy/email-smtp/nodemailer";
 
 const TOKEN = "official-contract-matrix-token";
 const ROUTES = [
@@ -134,7 +134,7 @@ test("the official adapters implement the complete declared capability matrix", 
     const operations = new ProviderOperationExecutor(new MemoryProviderOperationStore());
     const secrets = new CmsSecrets(new InMemoryCmsSecretMetadataStore(), new InMemorySecretStore());
     const emailer = new ConfiguredSmtpEmailer({ secrets: new InMemorySecretStore() });
-    registerOfficialProviderCapabilities(
+    await registerOfficialProviderCapabilities(
         dispatcher,
         { ...({} as UlviaProviderDependencies), emailer, secrets },
         undefined,
@@ -144,6 +144,7 @@ test("the official adapters implement the complete declared capability matrix", 
         {} as CmsFilesService,
         {} as CmsFileWorkspace,
         new Set(contracts.map(({ release }) => release.contractId)),
+        smtpOptions(),
     );
 
     expect(() => dispatcher.seal(contracts.map(({ resolved }) => resolved))).not.toThrow();
@@ -216,3 +217,5 @@ function requestHeaders(
 function digest(character: string): ProviderManifestDigest {
     return `sha256:${character.repeat(64)}` as ProviderManifestDigest;
 }
+
+import { smtpOptions } from "./capabilities/email/fixture";

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { InMemoryEmailer } from "@bernouy/cms-emailer";
+import { InMemoryEmailer } from "@bernouy/email";
 import { createAuthEmailTestSender } from "@bernouy/cms-auth/management";
 
 test("admin test emails preserve relative URLs and compose without account or token stores", async () => {

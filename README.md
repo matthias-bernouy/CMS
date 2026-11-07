@@ -61,8 +61,9 @@ CmsCore/
 |   |   |-- cms-auth/          @bernouy/cms-auth
 |   |   |-- cms-documentation/ @bernouy/cms-documentation
 |   |   |-- cms-observability/ @bernouy/cms-observability
-|   |   |-- cms-emailer/       @bernouy/cms-emailer
-|   |   |-- cms-smtp-emailer/  @bernouy/cms-smtp-emailer
+|   |   |-- email/
+|   |   |   |-- base/          @bernouy/email
+|   |   |   `-- smtp/          @bernouy/email-smtp
 |   |   |-- cms-files/         @bernouy/cms-files
 |   |   |-- cms-repository/    @bernouy/cms-repository (including collection build tooling)
 |   |   `-- cms-secrets/       @bernouy/cms-secrets
@@ -89,7 +90,7 @@ CmsCore/
 - One direction only: `runtimes → surfaces → features → platform → foundation`. Never
   upward, never surface→surface (compose through features).
 - Lateral feature→feature edges are allowed when one feature consumes
-  another's published contract (e.g. cms-smtp-emailer → cms-emailer for outbound
+  another's published contract (e.g. email-smtp → email for outbound
   delivery). Features may consume generic Foundation contracts such as
   `@bernouy/secret-store` for `SecretReader`.
 - Network adapters are only imported by runtimes (`./mongo`, `./s3`

@@ -1,5 +1,5 @@
 import type { AuthEmailComposeInput, AuthEmailComposer } from "cms-auth/email/interfaces/AuthEmailComposer";
-import type { OutboundEmail } from "@bernouy/cms-emailer";
+import type { OutboundEmail } from "@bernouy/email";
 
 export class DefaultAuthEmailComposer implements AuthEmailComposer {
     async compose(input: AuthEmailComposeInput): Promise<OutboundEmail> {

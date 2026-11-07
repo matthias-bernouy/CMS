@@ -1,5 +1,5 @@
 import type { AuthEmailComposer } from "cms-auth/email/interfaces/AuthEmailComposer";
-import { isEmailDeliveryDisabledError } from "@bernouy/cms-emailer";
+import { isEmailDeliveryDisabledError } from "@bernouy/email";
 import { DefaultAuthEmailComposer } from "cms-auth/email/default-implementation/DefaultAuthEmailComposer";
 import type { PublicAuthFlowConfig, VerificationTarget } from "cms-auth/application/core/public-flows/types";
 

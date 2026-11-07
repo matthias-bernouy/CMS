@@ -4,7 +4,7 @@ import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
 import { createMemoryLogger } from "@bernouy/logging/testing";
 import { MAX_CAPABILITY_JSON_BYTES } from "@bernouy/ulvia-contracts/protocol";
-import { UlviaProvider } from "../src/index";
+import { UlviaProvider } from "../src/exports/index";
 import {
     contractRelease,
     forgedAuthorityHeaders,

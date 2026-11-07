@@ -1,0 +1,171 @@
+{
+    "kind": "provider-manifest",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "providerId": "ulvia/primary-provider",
+    "name": "Ulvia Provider",
+    "version": "1.0.0",
+    "provenance": {
+        "publisherId": "ulvia",
+        "publishedAt": "2026-10-30T00:00:00Z"
+    },
+    "buildVersionRange": ">=1.0.0 <2.0.0",
+    "endpoint": {
+        "allowedOrigins": [
+            "http://127.0.0.1:5103",
+            "http://ulvia-provider:5103"
+        ],
+        "defaultOrigin": "http://127.0.0.1:5103"
+    },
+    "configuration": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    },
+    "credentialSlots": [
+        {
+            "id": "provider-token",
+            "label": "Provider token",
+            "required": true,
+            "secretType": "token"
+        }
+    ],
+    "implementations": [
+        {
+            "contractId": "ulvia/cms.access",
+            "version": "1.0.0",
+            "requires": [
+                {
+                    "contractId": "ulvia/cms.emailer",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "emailer.send",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "contractId": "ulvia/cms.installations",
+            "version": "1.0.0",
+            "requires": [
+                {
+                    "contractId": "ulvia/cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.get-metadata-by-name",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia/cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.resolve",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia/cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.create",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia/cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.rotate",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia/cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.delete",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "version": "1.0.0",
+            "requires": [
+                {
+                    "contractId": "ulvia/cms.installations",
+                    "capabilityId": "capabilities.describe",
+                    "versionRange": "^1.0.0",
+                    "optional": false
+                }
+            ],
+            "delegation": {
+                "sources": [
+                    "delivery.resolve-resource"
+                ],
+                "allow": [
+                    {
+                        "contractId": "*",
+                        "capabilityId": "*",
+                        "effect": "query",
+                        "sensitive": false
+                    }
+                ]
+            }
+        },
+        {
+            "contractId": "ulvia/cms.files",
+            "version": "1.0.0",
+            "requires": [
+                {
+                    "contractId": "ulvia/cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.get-metadata-by-name",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia/cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.resolve",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia/cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.create",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia/cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.rotate",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "contractId": "ulvia/cms.secrets",
+            "version": "1.0.0",
+            "requires": []
+        },
+        {
+            "contractId": "ulvia/cms.authoring",
+            "version": "1.0.0",
+            "requires": []
+        },
+        {
+            "contractId": "ulvia/cms.observability",
+            "version": "1.0.0",
+            "requires": []
+        },
+        {
+            "contractId": "ulvia/provider.connections",
+            "version": "1.0.0",
+            "requires": []
+        },
+        {
+            "contractId": "ulvia/repository",
+            "version": "1.0.0",
+            "requires": []
+        }
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.observability",
+            "capabilityId": "logs.append",
+            "versionRange": "^1.0.0",
+            "optional": true
+        }
+    ]
+}

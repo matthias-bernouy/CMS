@@ -10,7 +10,7 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
-        { "path": "../cms-emailer" },
+        { "path": "../email/base" },
         { "path": "../../foundation/http-runner" },
         { "path": "../../foundation/logging" },
         { "path": "../../foundation/envelope-crypto" },

@@ -38,7 +38,7 @@ test("recursive release respects semantic version order across grouped sources",
 
 test("recursive release prepares the official contracts, provider and collection without descending into owned sources", async () => {
     const f = await batchFixture();
-    const source = resolve(import.meta.dir, "../../../../../official-repository");
+    const source = resolve(import.meta.dir, "../../../../../../infra/releases");
     try {
         await f.run(["release", source, "--recursive"]);
         expect(await f.files.list("contracts")).toHaveLength(12);

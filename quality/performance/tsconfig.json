@@ -40,8 +40,8 @@
             "secret-store/*": [
                 "../../packages/foundation/secret-store/src/*"
             ],
-            "cms-emailer/*": [
-                "../../packages/features/cms-emailer/src/*"
+            "email/*": [
+                "../../packages/features/email/base/src/*"
             ],
             "cms-observability/*": [
                 "../../packages/features/cms-observability/src/*"
@@ -49,8 +49,8 @@
             "cms-secrets/*": [
                 "../../packages/features/cms-secrets/src/*"
             ],
-            "cms-smtp-emailer/*": [
-                "../../packages/features/cms-smtp-emailer/src/*"
+            "email-smtp/*": [
+                "../../packages/features/email/smtp/src/*"
             ],
             "envelope-crypto/*": [
                 "../../packages/foundation/envelope-crypto/src/*"
@@ -81,6 +81,9 @@
             ],
             "ulvia-providers/*": [
                 "../../packages/platform/providers/src/*"
+            ],
+            "ulvia-sdk/*": [
+                "../../packages/platform/sdk/src/*"
             ]
         }
     },

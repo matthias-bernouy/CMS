@@ -70,3 +70,19 @@ test("scoped guidance only inspects real package trees and the quality tree", ()
         { path: "quality/ci/wide", currentEntries: 9, severity: "error" },
     ]);
 });
+
+test("grouped package roots are inspected without imposing fanout limits on their grouping folders", () => {
+    const paths = [
+        "packages/features/email/base/package.json",
+        ...files("packages/features/email/base/src/wide", 9),
+        ...files("packages/features/email/grouping", 10),
+    ];
+    const entries = collectScopedDirectoryEntries(paths);
+    expect(findDirectoryFanoutScopeRoots(paths)).toContain("packages/features/email/base");
+    expect(entries.has("packages/features/email")).toBe(false);
+    expect(findDirectoryFanoutFindings(entries)).toContainEqual({
+        path: "packages/features/email/base/src/wide",
+        currentEntries: 9,
+        severity: "error",
+    });
+});

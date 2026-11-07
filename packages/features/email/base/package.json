@@ -1,0 +1,21 @@
+{
+    "name": "@bernouy/email",
+    "version": "1.0.0",
+    "description": "Provider-neutral outbound email delivery interface and in-memory implementations.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./schemas": "./src/exports/schemas.ts",
+        "./operations": "./src/exports/operations.ts",
+        "./docs": "./src/exports/docs.ts"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    },
+    "dependencies": {
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "zod": "4.6.7"
+    }
+}

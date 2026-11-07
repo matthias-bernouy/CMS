@@ -8,10 +8,8 @@ export function findDirectoryFanoutScopeRoots(paths: Iterable<string>): string[]
     for (const path of paths) {
         const segments = path.split("/").filter(Boolean);
 
-        if (segments.length === 4 && segments[0] === "packages" && segments[3] === "package.json") {
-            roots.add(segments.slice(0, 3).join("/"));
-        } else if (segments.length === 3 && segments[0] === "packages" && segments[2] === "package.json") {
-            roots.add(segments.slice(0, 2).join("/"));
+        if (segments.length >= 3 && segments[0] === "packages" && segments.at(-1) === "package.json") {
+            roots.add(segments.slice(0, -1).join("/"));
         }
     }
 

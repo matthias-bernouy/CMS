@@ -1,6 +1,6 @@
 import { tmpdir } from "node:os";
 import { existsSync, readFileSync } from "node:fs";
-import { basename, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 
 type CommandResult = {
     readonly exitCode: number;
@@ -8,8 +8,15 @@ type CommandResult = {
 };
 
 const repositoryRoot = resolve(import.meta.dir, "../..");
-const packageConfigGlob = new Bun.Glob("packages/*/*/tsconfig.json");
-const packageConfigs = [...packageConfigGlob.scanSync({ cwd: repositoryRoot, absolute: true })].sort();
+const packageConfigGlob = new Bun.Glob("packages/**/tsconfig.json");
+const packageConfigs = [...packageConfigGlob.scanSync({ cwd: repositoryRoot, absolute: true })]
+    .filter(
+        (path) =>
+            !path.includes("/node_modules/") &&
+            !path.includes("/dist/") &&
+            existsSync(join(dirname(path), "package.json")),
+    )
+    .sort();
 
 async function run(args: readonly string[]): Promise<CommandResult> {
     const child = Bun.spawn([process.execPath, ...args], {

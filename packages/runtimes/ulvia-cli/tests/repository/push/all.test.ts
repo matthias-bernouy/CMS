@@ -35,7 +35,7 @@ test("push all publishes every official artifact kind, then inferred provider an
     const f = await pushFixture();
     const source = resolve(import.meta.dir, "../../../../../official-repository");
     try {
-        await f.run(["release", source, "--recursive"]);
+        await f.run(["release", resolve(import.meta.dir, "../../../../../../infra/releases")]);
         f.output.length = 0;
         await f.run(["push", "all"]);
         expect(await f.remoteFiles.list("contracts")).toHaveLength(12);

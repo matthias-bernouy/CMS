@@ -95,7 +95,7 @@ test("all administration capability areas dispatch outputs matching their offici
         publicBaseUrl: "https://cms.example",
         now: () => now,
     });
-    registerOfficialProviderCapabilities(
+    await registerOfficialProviderCapabilities(
         dispatcher,
         core as never,
         gateway as never,

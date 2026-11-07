@@ -26,9 +26,9 @@ the exact same operation.
   in-memory stores and public account action composition. Management mutations
   use `@bernouy/cms-auth/management`.
 - `@bernouy/cms-auth/mongo` exposes Mongo repositories for composition roots.
-- Outbound delivery belongs to `@bernouy/cms-emailer`; this package authors
+- Outbound delivery belongs to `@bernouy/email`; this package authors
   authentication messages through its published `Emailer` port.
-- This package may depend on `@bernouy/cms-emailer`,
+- This package may depend on `@bernouy/email`,
   `@bernouy/envelope-crypto`, and `@bernouy/rate-limiter`; it must not import
   HTTP runners, surfaces or runtimes.
 

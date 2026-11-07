@@ -17,7 +17,7 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-smtp-emailer": "workspace:*",
+        "@bernouy/email-smtp": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
@@ -31,7 +31,8 @@
         "@bernouy/text-embeddings": "workspace:*",
         "@bernouy/text-search": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
-        "@bernouy/ulvia-providers": "workspace:*"
+        "@bernouy/ulvia-providers": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

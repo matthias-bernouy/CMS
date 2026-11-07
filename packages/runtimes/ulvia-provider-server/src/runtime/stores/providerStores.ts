@@ -49,7 +49,7 @@ import { EncryptedProviderConnections } from "../gateway/providers/connections/E
 import { EncryptedConnectionDrafts } from "../gateway/providers/connections/EncryptedConnectionDrafts";
 import { MongoCmsSecretResolutionReader } from "./secrets/MongoCmsSecretResolutionReader";
 import { createContractSecretStores } from "./secrets/contractSecretStores";
-import { ConfiguredSmtpEmailer } from "@bernouy/cms-smtp-emailer/nodemailer";
+import { ConfiguredSmtpEmailer } from "@bernouy/email-smtp/nodemailer";
 
 const SCOPE_ID = "default";
 

@@ -17,7 +17,7 @@ import type { CollectionSources } from "./installations/sources/index";
 import type { ProviderOperationExecutor } from "../operations/ProviderOperationExecutor";
 import type { CmsFilesService } from "@bernouy/cms-files";
 
-export function registerOfficialProviderCapabilities(
+export async function registerOfficialProviderCapabilities(
     dispatcher: ProviderCapabilityRegistry,
     dependencies: UlviaProviderDependencies,
     gateway: UlviaProviderGateway | undefined,
@@ -27,7 +27,8 @@ export function registerOfficialProviderCapabilities(
     files?: CmsFilesService,
     fileWorkspace?: CmsFileWorkspace,
     enabledContractIds?: ReadonlySet<string>,
-): void {
+    smtpOptions?: ProviderRegistrationOptions,
+): Promise<void> {
     if (enabledContractIds?.has("ulvia/cms.authoring")) {
         registerAuthoringCapabilities(dispatcher, dependencies.authoring);
     }
@@ -50,7 +51,10 @@ export function registerOfficialProviderCapabilities(
         registerSecretCapabilities(dispatcher, dependencies.secrets);
     }
     if (dependencies.emailer && enabledContractIds?.has("ulvia/cms.emailer.smtp")) {
-        registerSmtpEmailerCapabilities(dispatcher, { emailer: dependencies.emailer });
+        if (!smtpOptions) {
+            throw new TypeError("SMTP registration requires exact scope and durable keyed execution");
+        }
+        await registerSmtpEmailerCapabilities(dispatcher, { emailer: dependencies.emailer }, smtpOptions);
     }
     registerAccessCapabilities(dispatcher, dependencies, gateway);
 }
@@ -78,3 +82,5 @@ export type {
     UlviaProviderGateway,
     UlviaProviderManagement,
 } from "../ports/index";
+
+import type { ProviderRegistrationOptions } from "@bernouy/ulvia-sdk/provider";

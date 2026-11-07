@@ -39,6 +39,7 @@ export function providerInvocationContext(
             : {}),
         ...(claims.rootRequestId ? { rootRequestId: claims.rootRequestId } : {}),
         contractVersion: claims.contractVersion,
+        invocation: { contractId: claims.contractId, instanceId: claims.instanceId },
         siteId: scope.siteId,
         ...(claims.connectionId ? { connectionId: claims.connectionId } : {}),
         providerId: scope.providerId,

@@ -17,8 +17,8 @@
             "cms-secrets/*": [
                 "../../../../packages/features/cms-secrets/src/*"
             ],
-            "cms-smtp-emailer/*": [
-                "../../../../packages/features/cms-smtp-emailer/src/*"
+            "email-smtp/*": [
+                "../../../../packages/features/email/smtp/src/*"
             ],
             "cms-repository/*": [
                 "../../../../packages/features/cms-repository/src/*"
@@ -29,8 +29,8 @@
             "cms-files/*": [
                 "../../../../packages/features/cms-files/src/*"
             ],
-            "cms-emailer/*": [
-                "../../../../packages/features/cms-emailer/src/*"
+            "email/*": [
+                "../../../../packages/features/email/base/src/*"
             ],
             "cms-content/*": [
                 "../../../../packages/features/cms-content/src/*"
@@ -76,6 +76,9 @@
             ],
             "ulvia-providers/*": [
                 "../../../../packages/platform/providers/src/*"
+            ],
+            "ulvia-sdk/*": [
+                "../../../../packages/platform/sdk/src/*"
             ]
         }
     },

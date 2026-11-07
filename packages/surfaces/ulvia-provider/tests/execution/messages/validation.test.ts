@@ -66,29 +66,44 @@ test("schema rejection explains the invalid field before dispatch, without a wri
 test("send validation describes email data while SMTP configuration retains its own explanation", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     let sends = 0;
-    registerSmtpEmailerCapabilities(dispatcher, {
-        emailer: {
-            send: async () => {
-                sends++;
+    await registerSmtpEmailerCapabilities(
+        dispatcher,
+        {
+            emailer: {
+                send: async () => {
+                    sends++;
+                },
             },
-        },
-    } as never);
+        } as never,
+        smtpOptions("default"),
+    );
     await expect(
         dispatcher.invoke(
             "ulvia/cms.emailer.smtp",
             "emailer.send",
             { toEmail: "user@example.com", subject: " ", text: "Body" },
-            context("fr"),
+            {
+                ...context("fr"),
+                invocation: { contractId: "ulvia/cms.emailer.smtp", instanceId: "instance-a" },
+                idempotencyKey: "send-1",
+            },
         ),
     ).rejects.toMatchObject({
         code: "INVALID_INPUT",
         output: { message: "Certaines informations fournies sont invalides." },
     });
     await expect(
-        dispatcher.invoke("ulvia/cms.emailer.smtp", "smtp.configuration.update", {}, context("fr")),
+        dispatcher.invoke(
+            "ulvia/cms.emailer.smtp",
+            "smtp.configuration.update",
+            { smtp: { password: " " } },
+            { ...context("fr"), invocation: { contractId: "ulvia/cms.emailer.smtp", instanceId: "instance-a" } },
+        ),
     ).rejects.toMatchObject({
         code: "INVALID_INPUT",
         output: { message: "La configuration SMTP contient des informations invalides." },
     });
     expect(sends).toBe(0);
 });
+
+import { smtpOptions } from "../../capabilities/email/fixture";

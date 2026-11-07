@@ -1,0 +1,25 @@
+{
+    "name": "@bernouy/email-smtp",
+    "version": "1.0.0",
+    "description": "Secret-backed SMTP specialization of the CMS Emailer interface.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./nodemailer": "./src/exports/nodemailer.ts",
+        "./schemas": "./src/exports/schemas.ts",
+        "./operations": "./src/exports/operations.ts",
+        "./docs": "./src/exports/docs.ts"
+    },
+    "dependencies": {
+        "@bernouy/email": "workspace:*",
+        "@bernouy/secret-store": "workspace:*",
+        "nodemailer": "^10.3.1",
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "zod": "4.6.7"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    }
+}

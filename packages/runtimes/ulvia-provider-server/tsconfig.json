@@ -19,7 +19,7 @@
             "path": "../../features/cms-documentation"
         },
         {
-            "path": "../../features/cms-emailer"
+            "path": "../../features/email/base"
         },
         {
             "path": "../../features/cms-files"
@@ -34,7 +34,7 @@
             "path": "../../features/cms-secrets"
         },
         {
-            "path": "../../features/cms-smtp-emailer"
+            "path": "../../features/email/smtp"
         },
         {
             "path": "../../foundation/blob-store"
@@ -74,6 +74,9 @@
         },
         {
             "path": "../../surfaces/ulvia-provider"
+        },
+        {
+            "path": "../../platform/sdk"
         }
     ]
 }

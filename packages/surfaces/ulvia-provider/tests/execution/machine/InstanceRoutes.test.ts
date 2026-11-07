@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
 import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
-import { DefaultProviderCapabilityDispatcher, UlviaProvider } from "../../../src/index";
+import { DefaultProviderCapabilityDispatcher, UlviaProvider } from "../../../src/exports/index";
 import { contractRelease, invocationHeaders, providerOptions } from "../../ulviaProviderFixture";
 
 test("one listener uses each authenticated instance's exact bindings and input bounds", async () => {

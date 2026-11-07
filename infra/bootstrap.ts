@@ -14,6 +14,7 @@ const destination = resolve("packages/runtimes/ulvia-provider-server/dist/bootst
 await rm(destination, { recursive: true, force: true });
 await cp(source, destination, { recursive: true });
 await makePublicSnapshotReadable(destination);
+await writeExecutionSupport();
 
 /** Shipped releases are public data; Compose may run under an arbitrary host UID. */
 async function makePublicSnapshotReadable(root: string): Promise<void> {
@@ -29,3 +30,5 @@ async function makePublicSnapshotReadable(root: string): Promise<void> {
         }
     }
 }
+
+import { writeExecutionSupport } from "./execution-support";

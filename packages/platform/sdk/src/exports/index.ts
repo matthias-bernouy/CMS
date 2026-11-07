@@ -18,6 +18,7 @@ export type {
     ImplementationOptions,
     HandlerFactories,
     CompiledProvider,
+    CompiledImplementations,
 } from "ulvia-sdk/interfaces/providers";
 export { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 export type {

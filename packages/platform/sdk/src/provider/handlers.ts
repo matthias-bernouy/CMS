@@ -5,7 +5,7 @@ import type {
     ProviderRoute,
 } from "@bernouy/cms-gateway/provider/server";
 import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
-import type { ProviderRuntimeOptions } from "ulvia-sdk/interfaces/runtime";
+import type { ProviderRegistrationOptions } from "ulvia-sdk/interfaces/runtime";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { RuntimeCapabilityPlan } from "ulvia-sdk/compiler/plan";
 import { OperationFailure } from "ulvia-sdk/definitions/errors";
@@ -17,7 +17,7 @@ function selectedRoute(
     contractId: string,
     capabilityId: string,
     context: ProviderCapabilityInvocationContext,
-    claims: ProviderInvocationClaims,
+    claims: Pick<ProviderInvocationClaims, "contractId" | "contractVersion">,
 ) {
     const request = context.http?.transportRequest;
     if (!request) {
@@ -42,8 +42,10 @@ export function bindHandler<Dependencies>(
     entry: RuntimeCapabilityPlan<Dependencies>,
     dependencies: Dependencies,
     routes: readonly ProviderRoute[],
-    claimsFor: (context: ProviderCapabilityInvocationContext) => ProviderInvocationClaims,
-    options: ProviderRuntimeOptions,
+    claimsFor: (
+        context: ProviderCapabilityInvocationContext,
+    ) => Pick<ProviderInvocationClaims, "contractId" | "contractVersion">,
+    options: ProviderRegistrationOptions,
     providerId: string,
 ): ProviderCapabilityHandler {
     const created = entry.createHandler(dependencies);
@@ -57,7 +59,36 @@ export function bindHandler<Dependencies>(
     return async (input, context) => {
         const lease = binaryInputLease(entry.capability, context);
         try {
-            const invoke = async () => handler(input, lease.context);
+            const invoke = async () => {
+                try {
+                    return await handler(input, lease.context);
+                } catch (error) {
+                    if (!(error instanceof OperationFailure) || error.operation !== entry.operation) {
+                        throw error;
+                    }
+                    const declaration = entry.capability.errors.find((candidate) => candidate.code === error.code);
+                    if (!declaration) {
+                        throw new TypeError("Handler threw an undeclared operation error");
+                    }
+                    if (declaration.output) {
+                        validateSchemaValue(declaration.output, error.output);
+                    } else if (error.output !== undefined) {
+                        throw new TypeError("Undeclared operation error payload");
+                    }
+                    const route = selectedRoute(
+                        routes,
+                        entry.contractId,
+                        entry.capability.id,
+                        context,
+                        claimsFor(context),
+                    );
+                    const status = route.capability.binding.response.errorStatuses[error.code];
+                    if (status === undefined) {
+                        throw new TypeError("Operation error has no admitted HTTP status");
+                    }
+                    throw new ProviderCapabilityDispatchError(error.code, status, error.code, {}, error.output);
+                }
+            };
             const behavior = entry.capability.behavior;
             const output =
                 behavior.effect === "command" && behavior.idempotency === "keyed"
@@ -90,25 +121,6 @@ export function bindHandler<Dependencies>(
                 route.capability.binding.response.successStatuses,
                 context.signal,
             );
-        } catch (error) {
-            if (!(error instanceof OperationFailure) || error.operation !== entry.operation) {
-                throw error;
-            }
-            const declaration = entry.capability.errors.find((candidate) => candidate.code === error.code);
-            if (!declaration) {
-                throw new TypeError("Handler threw an undeclared operation error");
-            }
-            if (declaration.output) {
-                validateSchemaValue(declaration.output, error.output);
-            } else if (error.output !== undefined) {
-                throw new TypeError("Undeclared operation error payload");
-            }
-            const route = selectedRoute(routes, entry.contractId, entry.capability.id, context, claimsFor(context));
-            const status = route.capability.binding.response.errorStatuses[error.code];
-            if (status === undefined) {
-                throw new TypeError("Operation error has no admitted HTTP status");
-            }
-            throw new ProviderCapabilityDispatchError(error.code, status, error.code, {}, error.output);
         } finally {
             lease.close();
         }
