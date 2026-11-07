@@ -80,6 +80,9 @@ their exact approved manifests and selected releases; replacing an image does no
 implicitly adopt these releases. Upgrade the Repository API before using its new
 latest-collection route, then explicitly adopt the new installations API and
 Mossa `1.2.0` on consuming sites.
+For an existing Mossa site, create the ordinary Content Page at
+`/admin/collections/releases` from the `application/admin/collection-releases`
+example. A collection upgrade does not replay its bootstrap recipe or add Pages.
 
 Latest discovery indexes coordinate heads from filenames, excluding yanked and
 out-of-channel releases before pagination. It reads JSON only for the requested

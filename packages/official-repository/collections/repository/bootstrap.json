@@ -10,7 +10,7 @@
                     "publisherId": "ulvia",
                     "collectionId": "ulvia/mossa",
                     "version": "1.2.0",
-                    "digest": "sha256:90bb70087084083f84988aaad639719fd6ea1bd78853f4ab7765c986849c73fe",
+                    "digest": "sha256:b018ae8304ff831c151dc7c1dcc8b0d63e139a1f79db2f0c1f39e5b58935f1b5",
                     "bootstrapId": "administration",
                     "omitPages": ["login"]
                 }
