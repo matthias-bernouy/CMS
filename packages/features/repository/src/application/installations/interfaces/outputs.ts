@@ -1,3 +1,6 @@
+import type { listCollectionReleasesOutputSchema } from "repository/application/installations/schemas/collections/discovery/list-collection-releases";
+import type { listCollectionCatalogueOutputSchema } from "repository/application/installations/schemas/collections/discovery/list-collection-catalogue";
+import type { getCollectionReleaseOutputSchema } from "repository/application/installations/schemas/collections/discovery/get-collection-release";
 import type { z } from "zod";
 import type { getCollectionInstallationOutputSchema } from "repository/application/installations/schemas/collections/get-collection-installation";
 import type { installCollectionOutputSchema } from "repository/application/installations/schemas/collections/install-collection";
@@ -76,3 +79,9 @@ export type PlanCollectionUpgradeOutput = z.output<typeof planCollectionUpgradeO
 export type PlanContractUpgradeOutput = z.output<typeof planContractUpgradeOutputSchema>;
 export type RepositoryGetOutput = z.output<typeof repositoryGetOutputSchema>;
 export type RepositorySearchOutput = z.output<typeof repositorySearchOutputSchema>;
+
+export type GetCollectionReleaseOutput = z.output<typeof getCollectionReleaseOutputSchema>;
+
+export type ListCollectionCatalogueOutput = z.output<typeof listCollectionCatalogueOutputSchema>;
+
+export type ListCollectionReleasesOutput = z.output<typeof listCollectionReleasesOutputSchema>;

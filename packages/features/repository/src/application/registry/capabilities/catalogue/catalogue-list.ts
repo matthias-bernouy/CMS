@@ -28,5 +28,5 @@ export const catalogueList = defineCapability({
     input: catalogueListInputSchema,
     output: catalogueListOutputSchema,
     errors,
-    execute: ({ services, input }) => services.repository.reads.catalogue(input),
+    execute: ({ services, input, context }) => services.repository.reads.catalogue(input, context.signal),
 });

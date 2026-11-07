@@ -71,7 +71,7 @@ collections.
 The Provider advertises exact profile references without reading optional
 collection resources. It loads only the selected profile from its bundled
 admitted snapshot when provisioning or recovering an unfinished transition.
-The default `ulvia@1.2.0` and explicit `repository@1.2.0` profiles initialize
+The default `ulvia@1.3.0` and explicit `repository@1.3.0` profiles initialize
 system APIs and the administrator with zero collections and zero Pages. Their
 collection initialization step makes no collection source or content-store calls.
 A Repository can start before its own Edge or public catalogue exists; API
@@ -79,13 +79,13 @@ authentication and publication then work without a browser login Page.
 
 Production images generate `bun run generate:official-bootstrap --core-only`
 and omit authored collections and starter assets. There is no required ZIP.
-The full generator includes the current Mossa and Repository `1.1.0` releases
+The full generator includes the current Mossa and Repository `1.2.0` releases
 for explicit publication, authoring and example tests. Historical profile references
 remain advertised, but provisioning an old profile requires an explicit snapshot
 with its exact original manifest, contracts and optional collection resources. Missing resources refuse the operation rather than
 falling back to the network. They do not prevent ready instances from restarting.
 Current profiles select the official Provider manifest and `ulvia/cms.installations`
-contract at `1.1.0`. Profile versions are independent from artifact versions.
+contract at `1.2.0`. Profile versions are independent from artifact versions.
 
 ## Optional Site Setup
 

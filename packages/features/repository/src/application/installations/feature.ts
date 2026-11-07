@@ -1,3 +1,6 @@
+import { listCollectionReleases } from "repository/application/installations/capabilities/collections/discovery/list-collection-releases";
+import { listCollectionCatalogue } from "repository/application/installations/capabilities/collections/discovery/list-collection-catalogue";
+import { getCollectionRelease } from "repository/application/installations/capabilities/collections/discovery/get-collection-release";
 import { initializationApply } from "repository/application/installations/capabilities/initialization/apply";
 import { initializationEntry } from "repository/application/installations/capabilities/initialization/entry";
 import { initializationList } from "repository/application/installations/capabilities/initialization/list";
@@ -52,12 +55,15 @@ export const installationsFeature = defineFeature({
     name: "CMS Installations",
     description:
         "Inspect and administer the collection installations, provider installations and contract selections of one CMS instance.",
-    version: "1.1.0",
+    version: "1.2.0",
     publisherId: "ulvia",
     catalogue: { icon: "installations", categories: ["administration", "content", "infrastructure"] },
     documents: new URL("../../../docs/installations/", import.meta.url),
     mapError: mapInstallationError,
     capabilities: [
+        listCollectionReleases,
+        listCollectionCatalogue,
+        getCollectionRelease,
         initializationApply,
         initializationEntry,
         initializationList,

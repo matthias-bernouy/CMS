@@ -1,0 +1,15 @@
+{
+    "id": "ulvia--mossa--collection-history-default",
+    "label": "bloc.collection-history.label",
+    "description": "bloc.collection-history.description",
+    "requires": [],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1200,
+                "height": 800
+            }
+        }
+    ]
+}

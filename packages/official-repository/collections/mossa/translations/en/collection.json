@@ -38,5 +38,7 @@
     "page.log-detail.name": "Log details",
     "page.log-detail.description": "Search the diagnostic journal of this instance.",
     "bootstrap.label": "Administration",
-    "bootstrap.description": "Create the administration and sign-in Pages using Mossa."
+    "bootstrap.description": "Create the administration and sign-in Pages using Mossa.",
+    "page.collection-releases.name": "Collection releases",
+    "page.collection-releases.description": "Browse the paginated release history of one collection."
 }

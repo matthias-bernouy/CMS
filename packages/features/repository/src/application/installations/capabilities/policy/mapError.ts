@@ -4,6 +4,7 @@ import { InstallationError } from "repository/application/installations/core/err
 import { DocumentationError } from "@bernouy/documentation";
 import { RepositoryDiscoveryError } from "repository/repository/search/core/errors";
 const collectionCommands = new Set([
+    "get-collection-release",
     "list-site-usage",
     "install-collection",
     "update-collection-configuration",
@@ -73,7 +74,9 @@ export const mapInstallationError: FeatureErrorMapper = (cause, capability) => {
     } else if (capability.id.startsWith("gateway.delegation.") && reason === "not_authorized") {
         code = "FORBIDDEN";
     } else if (collectionCommands.has(capability.id) || administrationCommands.has(capability.id)) {
-        if (status === 404) {
+        if (status === 503) {
+            code = "CORE_UNAVAILABLE";
+        } else if (status === 404) {
             code = "NOT_FOUND";
         } else if (status === 409) {
             code = "REVISION_CONFLICT";

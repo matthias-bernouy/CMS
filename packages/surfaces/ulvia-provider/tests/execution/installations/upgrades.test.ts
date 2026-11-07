@@ -1,3 +1,4 @@
+import { installationsFeature } from "@bernouy/repository/features/installations";
 import { mountInstallations } from "./mount";
 import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
@@ -6,7 +7,7 @@ import { parseUlviaSchema, validateSchemaValue } from "@bernouy/ulvia-contracts/
 const context = {
     siteId: "site:one",
     requestId: "00000000-0000-4000-8000-000000000001",
-    contractVersion: "1.1.0",
+    contractVersion: installationsFeature.version,
     providerId: "ulvia/primary-provider",
 };
 const digest = `sha256:${"a".repeat(64)}`;

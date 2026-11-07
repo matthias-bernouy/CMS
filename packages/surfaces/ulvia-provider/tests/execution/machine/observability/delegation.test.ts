@@ -1,3 +1,4 @@
+import { installationsFeature } from "@bernouy/repository/features/installations";
 import { mountInstallations } from "../../installations/mount";
 import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
@@ -25,7 +26,7 @@ test("user invocations cannot use Installations to forge a machine identity", as
     };
     const context = {
         requestId: crypto.randomUUID(),
-        contractVersion: "1.1.0",
+        contractVersion: installationsFeature.version,
         siteId: "default",
         providerId: "ulvia/primary-provider",
     };

@@ -1,3 +1,4 @@
+import { installationsFeature } from "@bernouy/repository/features/installations";
 import { mountInstallations } from "../mount";
 import { expect, spyOn, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
@@ -12,7 +13,7 @@ import type { CollectionRepositorySource } from "@bernouy/repository/collections
 
 const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
-    contractVersion: "1.1.0",
+    contractVersion: installationsFeature.version,
     siteId: "default",
     providerId: "ulvia/primary-provider",
 };

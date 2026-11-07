@@ -55,7 +55,7 @@ smoke(
                 environment,
                 log: (message) => (output += `${message}\n`),
             });
-            await runCli(["instance", "create", "registry", "--profile", "repository@1.2.0"], {
+            await runCli(["instance", "create", "registry", "--profile", "repository@1.3.0"], {
                 environment,
                 log: (message) => (output += `${message}\n`),
             });

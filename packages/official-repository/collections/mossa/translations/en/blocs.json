@@ -147,5 +147,7 @@
     "setting.operation-id.label": "Operation ID",
     "setting.operation-result-param.label": "Operation query parameter",
     "setting.operation-tracking-only.label": "Keep only the operation ID in tracking links",
-    "setting.break-long-words.label": "Wrap long text"
+    "setting.break-long-words.label": "Wrap long text",
+    "bloc.collection-history.label": "Collection history",
+    "bloc.collection-history.description": "Browse and review the versions of one collection"
 }

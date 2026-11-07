@@ -1,0 +1,28 @@
+{
+    "kind": "component",
+    "id": "ulvia--mossa--collection-history",
+    "label": "bloc.collection-history.label",
+    "description": "bloc.collection-history.description",
+    "catalogue": "listed",
+    "order": 605,
+    "uses": ["ulvia--mossa--action", "ulvia--mossa--badge"],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.installations",
+            "capabilityId": "list-collection-releases",
+            "versionRange": "^1.2.0"
+        },
+        {
+            "contractId": "ulvia/cms.installations",
+            "capabilityId": "install-collection",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "categories": ["bloc.category.administration"],
+    "examples": ["ulvia--mossa--collection-history-default"],
+    "defaultExample": "ulvia--mossa--collection-history-default"
+}

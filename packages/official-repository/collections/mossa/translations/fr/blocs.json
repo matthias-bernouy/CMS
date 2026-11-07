@@ -147,5 +147,7 @@
     "setting.operation-id.label": "Identifiant de l’opération",
     "setting.operation-result-param.label": "Paramètre de l’opération",
     "setting.operation-tracking-only.label": "Ne conserver que l’opération dans les liens de suivi",
-    "setting.break-long-words.label": "Renvoyer les textes longs à la ligne"
+    "setting.break-long-words.label": "Renvoyer les textes longs à la ligne",
+    "bloc.collection-history.label": "Historique de collection",
+    "bloc.collection-history.description": "Parcourir et vérifier les versions d’une collection"
 }

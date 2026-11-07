@@ -48,3 +48,32 @@ test("Repository public error classification preserves declared refusals and con
         expect(text).not.toContain("private-path-or-token");
     }
 });
+
+test("the public SDK collection catalogue forwards a bounded query and its signal without resolving an account", async () => {
+    const controller = new AbortController();
+    const calls: unknown[] = [];
+    const call = await repositoryTransport(
+        repositoryServices({
+            reads: {
+                collectionCatalogue: async (input, signal) => {
+                    calls.push(input);
+                    expect(signal).toBe(controller.signal);
+                    return { releases: [] };
+                },
+            },
+        }),
+        async () => {
+            throw new Error("Public catalogue cannot resolve account authority");
+        },
+    );
+    const response = await call(
+        "collection-catalogue",
+        { limit: 25, channel: "stable" },
+        { signal: controller.signal, claims: { actorKind: "anonymous", subjectId: undefined } },
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ releases: [] });
+    expect(calls).toEqual([{ limit: 25, channel: "stable" }]);
+    expect((await call("collection-catalogue", { limit: 257 })).status).toBe(400);
+    expect(calls).toHaveLength(1);
+});

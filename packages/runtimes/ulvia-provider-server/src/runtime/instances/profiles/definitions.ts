@@ -51,10 +51,20 @@ const EMPTY_REPOSITORY_PROFILE: ProfileDefinition = Object.freeze({
 });
 
 /** System initialization capabilities are selected explicitly by the new core profile. */
-export const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
+const SETUP_PROFILE: ProfileDefinition = Object.freeze({
     ...EMPTY_PROFILE,
     version: "1.2.0",
     manifest: Object.freeze({ providerId: "ulvia/primary-provider", version: "1.1.0" }),
+});
+const SETUP_REPOSITORY_PROFILE: ProfileDefinition = Object.freeze({
+    ...SETUP_PROFILE,
+    id: "repository",
+    repository: true,
+});
+export const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
+    ...SETUP_PROFILE,
+    version: "1.3.0",
+    manifest: Object.freeze({ providerId: "ulvia/primary-provider", version: "1.2.0" }),
 });
 const REPOSITORY_PROFILE: ProfileDefinition = Object.freeze({ ...CURRENT_PROFILE, id: "repository", repository: true });
 export const CURRENT_PROFILES = Object.freeze([CURRENT_PROFILE, REPOSITORY_PROFILE]);
@@ -63,5 +73,7 @@ export const SUPPORTED_PROFILES = Object.freeze([
     REPOSITORY_EXAMPLE_PROFILE,
     EMPTY_PROFILE,
     EMPTY_REPOSITORY_PROFILE,
+    SETUP_PROFILE,
+    SETUP_REPOSITORY_PROFILE,
     ...CURRENT_PROFILES,
 ]);

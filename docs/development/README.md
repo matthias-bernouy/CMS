@@ -97,8 +97,9 @@ instances upgraded. Collection, contract, and provider
 manifest releases remain Repository artifacts and do not become Docker images.
 
 Distribution versions are independent of official artifacts. Current core-only
-profiles use `1.2.0`; the installations contract, Provider manifest, Mossa and
-Repository collections use `1.1.0`, and other official contracts retain `1.0.0`. Existing npm
+profiles use `1.3.0`; the installations contract, Provider manifest, Mossa and
+Repository collections use `1.2.0`; `ulvia/repository` uses `1.1.0`, and other
+official contracts retain `1.0.0`. Existing npm
 versions and Docker tags are retained rather than reused.
 
 The host CLI is a separate public npm artifact. Its private workspace sources

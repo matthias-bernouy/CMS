@@ -1,3 +1,4 @@
+import { installationsFeature } from "@bernouy/repository/features/installations";
 import { mountInstallations } from "../installations/mount";
 import { parseUlviaSchema, validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import { expect, test } from "bun:test";
@@ -10,7 +11,7 @@ import { ProviderOperationExecutor, MemoryProviderOperationStore } from "@bernou
 
 const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
-    contractVersion: "1.1.0",
+    contractVersion: installationsFeature.version,
     siteId: "default",
     providerId: "ulvia/primary-provider",
     subjectId: "00000000-0000-4000-8000-000000000002",

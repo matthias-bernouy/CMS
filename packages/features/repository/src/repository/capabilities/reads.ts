@@ -1,7 +1,9 @@
+import type { CollectionCatalogueOutput } from "repository/application/registry/interfaces/outputs";
 import { RepositoryRequestError } from "../core/errors";
 import type { RepositoryCapabilityPorts } from "./interfaces";
 import type {
     CatalogueListInput,
+    CollectionCatalogueInput,
     CatalogueSearchInput,
     NamespaceGetInput,
     PublicationStateInput,
@@ -17,8 +19,17 @@ export function repositoryReads(ports: RepositoryCapabilityPorts) {
         async namespace(input: NamespaceGetInput) {
             return ports.namespaces.get(input.namespace);
         },
-        async catalogue(input: CatalogueListInput) {
-            return ports.catalogue(input);
+        async catalogue(input: CatalogueListInput, signal?: AbortSignal) {
+            return ports.catalogue(input, signal);
+        },
+        async collectionCatalogue(
+            input: CollectionCatalogueInput,
+            signal?: AbortSignal,
+        ): Promise<CollectionCatalogueOutput> {
+            return ports.catalogue(
+                { ...input, kind: "collection", channel: input.channel ?? "stable", latestPerResource: true },
+                signal,
+            );
         },
         async search(input: CatalogueSearchInput) {
             if (!ports.search) {

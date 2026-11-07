@@ -16,7 +16,10 @@ export interface RepositoryCapabilityPorts {
     readonly namespaces: RepositoryNamespaces;
     readonly registry: RepositoryPublicationRegistry;
     readonly uploads: RepositoryPublicationUploadStore;
-    readonly catalogue: (input: CatalogueListInput) => Promise<CatalogueListOutput>;
+    readonly catalogue: (
+        input: CatalogueListInput & { readonly latestPerResource?: boolean },
+        signal?: AbortSignal,
+    ) => Promise<CatalogueListOutput>;
     readonly release: (coordinate: RemoteCoordinate) => Promise<{
         stream: ReadableStream<Uint8Array>;
         contentType: string;

@@ -1,3 +1,4 @@
+import type { CollectionVerifier } from "@bernouy/repository/collections/sources";
 import type { Embeddings, VectorStore } from "@bernouy/text-search";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
@@ -25,6 +26,7 @@ export async function createInstanceRepository(
     instanceId: string,
     model: Embeddings,
     vectors: VectorStore,
+    verifier?: CollectionVerifier,
 ) {
     const root = join(filesDirectory, "repository");
     await recoverRepositoryStorage(root);
@@ -39,8 +41,8 @@ export async function createInstanceRepository(
     const namespaces = new RepositoryNamespaces(namespaceStore, {
         exists: async (accountId) => Boolean(await stores.users.getBySub(accountId)),
     });
-    const index = new FilesystemRepositoryCatalogueIndex(root);
-    const reads = new FilesystemRegistryReads(root, index);
+    const index = new FilesystemRepositoryCatalogueIndex(root, verifier);
+    const reads = new FilesystemRegistryReads(root, index, verifier);
     const uploads = new FilesystemRepositoryPublicationUploadStore(root);
     try {
         await uploads.recover();
@@ -56,7 +58,7 @@ export async function createInstanceRepository(
         search,
         sources: new FilesystemRepositorySourceStore(root),
         registry: new FilesystemRepositoryPublicationRegistry(root, index),
-        catalogue: (input) => reads.catalogue(input),
+        catalogue: (input, signal) => reads.catalogue(input, signal),
         release: (coordinate) => reads.release(coordinate),
         asset: (coordinate, assetId) => reads.asset(coordinate, assetId),
     });

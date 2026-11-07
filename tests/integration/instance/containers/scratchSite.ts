@@ -22,7 +22,7 @@ export async function scratchSite(
         url,
         administrator,
         `http://${alias}:3000`,
-        { id: "ulvia", version: "1.2.0" },
+        { id: "ulvia", version: "1.3.0" },
     );
     await cluster.run(name, alias, image, [
         "--publish",

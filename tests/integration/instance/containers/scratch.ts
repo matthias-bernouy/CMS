@@ -70,7 +70,7 @@ export async function scratchRepository(images: { provider: string; edge: string
             url,
             administrator,
             "http://repository:3000",
-            { id: "repository", version: "1.2.0" },
+            { id: "repository", version: "1.3.0" },
         );
         await run(edgeName, "repository", images.edge, [
             "--publish",
@@ -91,6 +91,15 @@ export async function scratchRepository(images: { provider: string; edge: string
             createSite: (alias: string) =>
                 scratchSite(cluster, images.edge, providerUrl, operatorToken, administrator, alias),
             close: () => cluster.close(),
+            async probeProvider() {
+                const started = performance.now();
+                const response = await fetch(`${providerUrl}/ulvia/operator/instances`, {
+                    headers: { Authorization: `Bearer ${operatorToken}` },
+                    signal: AbortSignal.timeout(5_000),
+                });
+                await response.body?.cancel();
+                return { status: response.status, durationMs: performance.now() - started };
+            },
             async restart() {
                 await docker(["restart", providerName]);
                 await waitForProvider();

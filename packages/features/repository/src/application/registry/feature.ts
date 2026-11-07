@@ -1,3 +1,4 @@
+import { collectionCatalogue } from "repository/application/registry/capabilities/catalogue/collection-catalogue";
 import { defineFeature } from "@bernouy/ulvia-sdk";
 import { mapRepositoryError } from "repository/application/registry/capabilities/mapError";
 import { namespaceClaim } from "repository/application/registry/capabilities/namespaces/namespace-claim";
@@ -26,11 +27,12 @@ export const repositoryFeature = defineFeature({
     contractId: "ulvia/repository",
     name: "Ulvia Repository",
     description: "Public discovery and account-owned namespaces for immutable contracts, providers and collections.",
-    version: "1.0.0",
+    version: "1.1.0",
     publisherId: "ulvia",
     documents: new URL("../../../docs/repository/", import.meta.url),
     mapError: mapRepositoryError,
     capabilities: [
+        collectionCatalogue,
         namespaceClaim,
         namespaceSuspend,
         namespaceTransfer,

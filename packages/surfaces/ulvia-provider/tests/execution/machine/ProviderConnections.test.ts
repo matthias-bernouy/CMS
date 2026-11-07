@@ -1,3 +1,4 @@
+import { installationsFeature } from "@bernouy/repository/features/installations";
 import { mountInstallations } from "../installations/mount";
 import { compileProviderRoutes } from "../../../src/transport/routes";
 import { ProviderClientError } from "@bernouy/cms-gateway/provider";
@@ -11,7 +12,7 @@ const context = {
     requestId: crypto.randomUUID(),
     siteId: "site-a",
     providerId: "ulvia/provider-a",
-    contractVersion: "1.1.0",
+    contractVersion: installationsFeature.version,
 };
 
 test("Provider actors cannot approve installations or look up other Providers' credentials", async () => {

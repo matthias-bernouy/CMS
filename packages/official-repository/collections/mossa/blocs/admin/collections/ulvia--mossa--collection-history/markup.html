@@ -1,0 +1,132 @@
+<section
+    cms-query="ulvia/cms.installations:list-collection-releases as catalogue"
+    cms-query-input='{"repositoryId":{"from":"state","key":"@param:ulvia--mossa--repository"},"publisherId":{"from":"state","key":"@param:ulvia--mossa--publisher"},"collectionId":{"from":"state","key":"@param:ulvia--mossa--collection"},"channel":{"from":"literal","value":"all"},"limit":{"from":"literal","value":25},"cursor":{"from":"state","key":"@param:ulvia--mossa--collection-cursor","optional":true}}'
+    cms-query-listen="@param:ulvia--mossa--collection-cursor @page:ulvia--mossa--collection-catalogue-mutation/lastSuccess/requestId"
+    cms-query-refresh="focus reconnect"
+>
+    <p role="status" cms-condition="catalogue.activity === &#x27;fetching&#x27;">{{ cms.i18n.ulvia/mossa.ui-reading-collection-catalogue }}</p>
+    <div cms-match="catalogue.outcome.kind">
+        <span cms-case='"none"' hidden></span>
+        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-collection-catalogue-unavailable }}</p>
+        <div cms-case='"error"' cms-match="catalogue.outcome.code">
+            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-collection-catalogue-unavailable }}</p>
+            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-collection-catalogue-unavailable }}</p>
+            <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-collection-catalogue-unavailable }}</p>
+            <p role="alert" cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia/mossa.ui-collection-catalogue-unavailable }}</p>
+        </div>
+        <div cms-case='"success"'>
+            <div part="table-wrap">
+                <table>
+                    <caption>
+                        {{ cms.i18n.ulvia/mossa.ui-collection-release-history }}
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">{{ cms.i18n.ulvia/mossa.ui-title }}</th>
+                            <th scope="col">{{ cms.i18n.ulvia/mossa.ui-version }}</th>
+                            <th scope="col">{{ cms.i18n.ulvia/mossa.ui-technical-details }}</th>
+                            <th scope="col">{{ cms.i18n.ulvia/mossa.ui-actions }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr cms-repeat="catalogue.data.releases as release">
+                            <th scope="row">
+                                {{ release.name }}
+                                <p>{{ release.collectionId }}</p>
+                            </th>
+                            <td>{{ release.version }}</td>
+                            <td>
+                                <div cms-bloc="ulvia--mossa--badge" tone="danger" cms-condition="release.browserRisk === &#x27;high&#x27;">
+                                    <span slot="label">{{ cms.i18n.ulvia/mossa.ui-high-risk-browser-authority }}</span>
+                                </div>
+                                <div cms-bloc="ulvia--mossa--badge" tone="warning" cms-condition="release.browserRisk === &#x27;review&#x27;">
+                                    <span slot="label">{{ cms.i18n.ulvia/mossa.ui-browser-authority-review-required }}</span>
+                                </div>
+                                <div cms-bloc="ulvia--mossa--badge" tone="success" cms-condition="release.browserRisk === &#x27;none&#x27;">
+                                    <span slot="label">{{ cms.i18n.ulvia/mossa.ui-no-browser-authority }}</span>
+                                </div>
+                                <details cms-condition="release.browserRisk !== &#x27;none&#x27;">
+                                    <summary>{{ cms.i18n.ulvia/mossa.ui-technical-details }}</summary>
+                                    <p>{{ release.javaScriptBlocCount }} {{ cms.i18n.ulvia/mossa.ui-javascript-blocks }}</p>
+                                    <p cms-repeat="release.javaScriptBlocs as blocId">{{ blocId }}</p>
+                                    <p>{{ release.frameBlocCount }} {{ cms.i18n.ulvia/mossa.ui-iframe-blocks }}</p>
+                                    <div cms-repeat="release.frameBlocs as frame">
+                                        <strong>{{ frame.id }}</strong>
+                                        <p cms-repeat="frame.origins as origin">{{ origin }}</p>
+                                        <p cms-repeat="frame.sandbox as permission">{{ permission }}</p>
+                                    </div>
+                                    <p cms-repeat="release.externalFrameOrigins as origin">{{ origin }}</p>
+                                    <p cms-condition="release.scriptsWithSameOrigin">{{ cms.i18n.ulvia/mossa.ui-same-origin-script-authority }}</p>
+                                </details>
+                            </td>
+                            <td>
+                                <div part="actions">
+                                    <form
+                                        cms-condition="release.action === &#x27;install&#x27;"
+                                        cms-mutation="ulvia/cms.installations:install-collection as mutation"
+                                        cms-sync="@page:ulvia--mossa--collection-catalogue-mutation"
+                                        cms-sync-select="lastSuccess.requestId"
+                                    >
+                                        <input type="hidden" name="expectedRevision" value="{{ catalogue.data.revision }}" cms-form-value-type="number">
+                                        <input type="hidden" name="targets[0][repositoryId]" value="{{ release.repositoryId }}">
+                                        <input type="hidden" name="targets[0][publisherId]" value="{{ release.publisherId }}">
+                                        <input type="hidden" name="targets[0][collectionId]" value="{{ release.collectionId }}">
+                                        <input type="hidden" name="targets[0][version]" value="{{ release.version }}">
+                                        <input type="hidden" name="targets[0][digest]" value="{{ release.digest }}">
+                                        <input type="hidden" name="targets[0][approvedBrowserRiskDigest]" value="{{ release.browserRiskDigest }}">
+                                        <button cms-bloc="ulvia--mossa--action" tone="primary" variant="filled" size="sm" type="submit">
+                                            <span>{{ cms.i18n.ulvia/mossa.ui-install }}</span>
+                                        </button>
+                                        <div cms-match="mutation.outcome.kind">
+                                            <span cms-case='"none"' hidden></span>
+                                            <span cms-case='"success"' hidden></span>
+                                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                                <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"BROWSER_CAPABILITIES_APPROVAL_REQUIRED"'>
+                                                    {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                                                </p>
+                                                <p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <a
+                                        cms-bloc="ulvia--mossa--action"
+                                        tone="secondary"
+                                        variant="outline"
+                                        size="sm"
+                                        cms-condition="release.action === &#x27;upgrade&#x27;"
+                                        href="/admin/collections/upgrade?ulvia--mossa--repository={{ release.repositoryId | urlencode }}&amp;ulvia--mossa--publisher={{ release.publisherId | urlencode }}&amp;ulvia--mossa--collection={{ release.collectionId | urlencode }}&amp;ulvia--mossa--version={{ release.version | urlencode }}&amp;ulvia--mossa--digest={{ release.digest | urlencode }}&amp;ulvia--mossa--browser-risk={{ release.browserRiskDigest | urlencode }}"
+                                        ><span>{{ cms.i18n.ulvia/mossa.ui-plan-upgrade }}</span></a
+                                    >
+                                    <a
+                                        cms-bloc="ulvia--mossa--action"
+                                        tone="secondary"
+                                        variant="outline"
+                                        size="sm"
+                                        cms-condition="release.action === &#x27;current&#x27;"
+                                        href="/admin/collections/detail?ulvia--mossa--collection={{ release.collectionId | urlencode }}"
+                                        ><span>{{ cms.i18n.ulvia/mossa.ui-manage }}</span></a
+                                    >
+                                    <span cms-condition="release.action === &#x27;older&#x27;">{{ cms.i18n.ulvia/mossa.ui-historical-release }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <a
+                cms-bloc="ulvia--mossa--action"
+                tone="secondary"
+                variant="outline"
+                cms-condition="catalogue.data.nextCursor !== &#x27;&#x27;"
+                href="/admin/collections/releases?ulvia--mossa--repository={{ catalogue.data.repositoryId | urlencode }}&amp;ulvia--mossa--publisher={{ catalogue.data.publisherId | urlencode }}&amp;ulvia--mossa--collection={{ catalogue.data.collectionId | urlencode }}&amp;ulvia--mossa--collection-cursor={{ catalogue.data.nextCursor | urlencode }}"
+                ><span>{{ cms.i18n.ulvia/mossa.ui-next-collection-page }}</span></a
+            >
+        </div>
+    </div>
+</section>

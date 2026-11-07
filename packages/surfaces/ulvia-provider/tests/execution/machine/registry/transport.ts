@@ -1,3 +1,4 @@
+import { repositoryFeature } from "@bernouy/repository/features/repository";
 import { encodeHttpParameter } from "@bernouy/ulvia-contracts/bindings";
 import { createProviderHandler, compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
@@ -104,7 +105,7 @@ export async function repositoryTransport(
             requestId: crypto.randomUUID(),
             instanceId: "instance-a",
             contractId: "ulvia/repository",
-            contractVersion: "1.0.0",
+            contractVersion: repositoryFeature.version,
             capabilityId: id,
             actorKind: "user",
             subjectId: "provider-user",

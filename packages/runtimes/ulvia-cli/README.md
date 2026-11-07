@@ -115,7 +115,7 @@ profile:
 
 ```bash
 ulvia services start
-ulvia instance create registry --profile repository@1.2.0
+ulvia instance create registry --profile repository@1.3.0
 ulvia instance status registry
 ```
 
@@ -126,7 +126,7 @@ an explicit supported transition within the same application ID and saves it
 only after acknowledgement. `upgrade provider --version VERSION` replaces the
 shared Provider image with retention checks and rollback on activation failure.
 The Repository has no separate image, port, service, or deployment lifecycle.
-The default `ulvia@1.2.0` and explicit `repository@1.2.0` profiles start without
+The default `ulvia@1.3.0` and explicit `repository@1.3.0` profiles start without
 collections or Pages. System APIs and the supplied administrator remain usable;
 the missing home route offers native setup at `/.cms/setup`. Sign in with the
 administrator to start empty or review an optional bootstrap from the configured
@@ -319,11 +319,11 @@ API, then starts its Edge. Connection review validates the runtime report and
 exact manifest claims. Provider behavior is covered by implementation-owned tests.
 
 Official releases evolve independently: the current installations contract,
-Provider manifest, Mossa and Repository collections use `1.1.0`; local formats
+Provider manifest, Mossa and Repository collections use `1.2.0`; local formats
 remain `v1`.
 Each named instance uses `<name>.localhost` unless an explicit domain is supplied;
 `default` is an ordinary name. Repository hosting uses a CMS instance with the
-`repository@1.2.0` profile. Client PAT connections and local release caches
+`repository@1.3.0` profile. Client PAT connections and local release caches
 are separate from the shared services and instance lifecycle.
 
 ## Collection examples

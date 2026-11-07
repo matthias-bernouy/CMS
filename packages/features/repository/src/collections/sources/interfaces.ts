@@ -30,6 +30,18 @@ export interface CollectionRepositoryBundle {
 export interface CollectionRepositorySource {
     readonly id: string;
     list(): Promise<CollectionRepositoryEntry[]>;
+    page?(
+        input: {
+            mode: "latest" | "history";
+            channel: "stable" | "beta" | "all";
+            limit: number;
+            cursor?: string;
+            publisherId?: string;
+            collectionId?: string;
+            version?: string;
+        },
+        signal?: AbortSignal,
+    ): Promise<{ entries: CollectionRepositoryEntry[]; nextCursor?: string }>;
     /** Untrusted release JSON without assets; consumers verify its exact digest before using it. */
     getMetadata(reference: CollectionRepositoryReference, signal?: AbortSignal): Promise<unknown>;
     get(

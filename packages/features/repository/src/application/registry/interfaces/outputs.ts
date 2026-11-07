@@ -14,3 +14,5 @@ export type SourceGetOutput = z.output<typeof artifactSourceGetOutputSchema>;
 export type RepositoryCatalogueMetadata = z.output<typeof catalogueMetadataSchema>;
 
 export type PublicationStateOutput = z.output<typeof publicationYankOutputSchema>;
+
+export type CollectionCatalogueOutput = z.output<typeof catalogueListOutputSchema>;

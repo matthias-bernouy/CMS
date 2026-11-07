@@ -1,3 +1,13 @@
+import type {
+    ListCollectionCatalogueInput,
+    ListCollectionReleasesInput,
+    GetCollectionReleaseInput,
+} from "repository/application/installations/interfaces/inputs";
+import type {
+    ListCollectionCatalogueOutput,
+    ListCollectionReleasesOutput,
+    GetCollectionReleaseOutput,
+} from "repository/application/installations/interfaces/outputs";
 import type { InitializationService } from "repository/application/installations/interfaces/initialization";
 import type { CollectionStore } from "repository/collections/installations/core/CollectionStore";
 import type { CollectionUpgradeService } from "repository/exports/collections/installations";
@@ -10,6 +20,23 @@ import type { InstallationOperationQueries } from "repository/application/instal
 import type { ListAvailableCollectionsOutput } from "repository/application/installations/interfaces/outputs";
 import type { InstallCollectionInput } from "repository/application/installations/interfaces/inputs";
 export interface CollectionSourceReader {
+    readonly discovery: {
+        list(
+            siteId: string,
+            input: ListCollectionCatalogueInput,
+            signal?: AbortSignal,
+        ): Promise<ListCollectionCatalogueOutput>;
+        history(
+            siteId: string,
+            input: ListCollectionReleasesInput,
+            signal?: AbortSignal,
+        ): Promise<ListCollectionReleasesOutput>;
+        review(
+            siteId: string,
+            input: GetCollectionReleaseInput,
+            signal?: AbortSignal,
+        ): Promise<GetCollectionReleaseOutput>;
+    };
     catalogue(
         siteId: string,
         channel: "stable" | "beta" | "all",

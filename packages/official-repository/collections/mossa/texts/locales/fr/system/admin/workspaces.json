@@ -83,5 +83,9 @@
     "ui-locale-french": "Français",
     "ui-examples-first-page": "Première page",
     "ui-show-collection-history": "Afficher les versions historiques",
-    "ui-more-operations": "Opérations suivantes"
+    "ui-more-operations": "Opérations suivantes",
+    "ui-collection-release-history": "Historique des versions",
+    "ui-collections-on-page": "collections sur cette page",
+    "ui-next-collection-page": "Page suivante",
+    "ui-version": "Version"
 }

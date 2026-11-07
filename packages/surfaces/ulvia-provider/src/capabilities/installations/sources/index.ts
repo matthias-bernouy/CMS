@@ -1,3 +1,4 @@
+import { CollectionDiscovery } from "./discovery";
 import { releaseChannel } from "@bernouy/ulvia-contracts/compatibility";
 import type { CollectionRepositoryEntry, CollectionRepositorySource } from "@bernouy/repository/collections/sources";
 import {
@@ -18,6 +19,7 @@ const MAX_CATALOGUE_RELEASES = 1024;
 type CatalogueEntry = ReturnType<typeof verifiedCatalogueEntry>;
 
 export class CollectionSources {
+    readonly discovery: CollectionDiscovery;
     private readonly byId: ReadonlyMap<string, CollectionRepositorySource>;
 
     constructor(
@@ -26,6 +28,12 @@ export class CollectionSources {
         private readonly verifier: CollectionVerifier = inlineCollectionVerifier,
         private readonly caches = new CollectionSourceCaches(),
     ) {
+        this.discovery = new CollectionDiscovery(
+            store,
+            new Map(sources.map((source) => [source.id, source])),
+            verifier,
+            caches,
+        );
         this.byId = new Map(sources.map((source) => [source.id, source]));
         if (this.byId.size !== sources.length) {
             throw new TypeError("Collection repository source IDs must be unique");
@@ -111,16 +119,32 @@ export class CollectionSources {
         await Promise.all(
             Array.from({ length: Math.min(4, references.length) }, async () => {
                 while (next < references.length) {
+                    signal?.throwIfAborted();
                     const index = next++;
                     const reference = references[index]!;
                     const source = this.byId.get(reference.repositoryId);
                     if (!source) {
                         throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
                     }
-                    let catalogue = catalogues.get(source.id);
+                    const lookupKey = `${source.id}\0${reference.publisherId}\0${reference.collectionId}\0${reference.version}`;
+                    let catalogue = catalogues.get(lookupKey);
                     if (!catalogue) {
-                        catalogue = source.list();
-                        catalogues.set(source.id, catalogue);
+                        catalogue = source.page
+                            ? source
+                                  .page(
+                                      {
+                                          mode: "history",
+                                          channel: "all",
+                                          limit: 1,
+                                          publisherId: reference.publisherId,
+                                          collectionId: reference.collectionId,
+                                          version: reference.version,
+                                      },
+                                      signal,
+                                  )
+                                  .then((page) => page.entries)
+                            : source.list();
+                        catalogues.set(lookupKey, catalogue);
                     }
                     const listed = (await catalogue).find((entry) => sameRelease(entry, reference));
                     if (!listed) {

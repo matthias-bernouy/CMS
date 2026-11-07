@@ -1,3 +1,6 @@
+import type { listCollectionReleasesInputSchema } from "repository/application/installations/schemas/collections/discovery/list-collection-releases";
+import type { listCollectionCatalogueInputSchema } from "repository/application/installations/schemas/collections/discovery/list-collection-catalogue";
+import type { getCollectionReleaseInputSchema } from "repository/application/installations/schemas/collections/discovery/get-collection-release";
 import type { z } from "zod";
 import type { installCollectionInputSchema } from "repository/application/installations/schemas/collections/install-collection";
 import type { listSiteUsageInputSchema } from "repository/application/installations/schemas/collections/list-site-usage";
@@ -25,3 +28,9 @@ export type ListOperationsInput = z.output<typeof listOperationsInputSchema>;
 export type ListSiteUsageInput = z.output<typeof listSiteUsageInputSchema>;
 export type PlanCollectionUpgradeInput = z.output<typeof planCollectionUpgradeInputSchema>;
 export type PlanContractUpgradeInput = z.output<typeof planContractUpgradeInputSchema>;
+
+export type GetCollectionReleaseInput = z.output<typeof getCollectionReleaseInputSchema>;
+
+export type ListCollectionCatalogueInput = z.output<typeof listCollectionCatalogueInputSchema>;
+
+export type ListCollectionReleasesInput = z.output<typeof listCollectionReleasesInputSchema>;

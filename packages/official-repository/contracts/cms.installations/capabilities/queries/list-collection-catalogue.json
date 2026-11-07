@@ -1,0 +1,277 @@
+{
+    "id": "list-collection-catalogue",
+    "access": "admin",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 25
+            },
+            "cursor": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+            },
+            "channel": {
+                "type": "string",
+                "enum": ["stable", "beta", "all"],
+                "maxLength": 6
+            }
+        },
+        "required": []
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "releases": {
+                "type": "array",
+                "maxItems": 25,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "repositoryId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "publisherId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "collectionId": {
+                            "type": "string",
+                            "maxLength": 193
+                        },
+                        "version": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "digest": {
+                            "type": "string",
+                            "maxLength": 71
+                        },
+                        "name": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "description": {
+                            "type": "string",
+                            "maxLength": 4096
+                        },
+                        "blocCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1024
+                        },
+                        "hasTheme": {
+                            "type": "boolean"
+                        },
+                        "browserRisk": {
+                            "type": "string",
+                            "maxLength": 6,
+                            "enum": ["none", "review", "high"]
+                        },
+                        "browserRiskDigest": {
+                            "type": "string",
+                            "maxLength": 71
+                        },
+                        "javaScriptBlocCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1024
+                        },
+                        "frameBlocCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1024
+                        },
+                        "externalFrameOrigins": {
+                            "type": "array",
+                            "maxItems": 32,
+                            "items": {
+                                "type": "string",
+                                "maxLength": 2048
+                            }
+                        },
+                        "scriptsWithSameOrigin": {
+                            "type": "boolean"
+                        },
+                        "action": {
+                            "type": "string",
+                            "maxLength": 7,
+                            "enum": ["install", "upgrade", "current", "older"]
+                        },
+                        "channel": {
+                            "type": "string",
+                            "enum": ["stable", "beta"],
+                            "maxLength": 6
+                        },
+                        "installedVersion": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128
+                        },
+                        "javaScriptBlocs": {
+                            "type": "array",
+                            "maxItems": 1024,
+                            "items": {
+                                "type": "string",
+                                "maxLength": 96
+                            }
+                        },
+                        "frameBlocs": {
+                            "type": "array",
+                            "maxItems": 1024,
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "maxLength": 96
+                                    },
+                                    "origins": {
+                                        "type": "array",
+                                        "maxItems": 32,
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 2048
+                                        }
+                                    },
+                                    "sandbox": {
+                                        "type": "array",
+                                        "maxItems": 6,
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 17
+                                        }
+                                    }
+                                },
+                                "required": ["id", "origins", "sandbox"]
+                            }
+                        }
+                    },
+                    "required": [
+                        "repositoryId",
+                        "publisherId",
+                        "collectionId",
+                        "version",
+                        "digest",
+                        "name",
+                        "description",
+                        "blocCount",
+                        "hasTheme",
+                        "browserRisk",
+                        "browserRiskDigest",
+                        "javaScriptBlocCount",
+                        "frameBlocCount",
+                        "externalFrameOrigins",
+                        "scriptsWithSameOrigin",
+                        "action",
+                        "channel",
+                        "javaScriptBlocs",
+                        "frameBlocs"
+                    ]
+                }
+            },
+            "nextCursor": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 4096
+            },
+            "channel": {
+                "type": "string",
+                "enum": ["stable", "beta", "all"],
+                "maxLength": 6
+            }
+        },
+        "required": ["revision", "releases", "channel", "nextCursor"]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "RELEASE_MISMATCH",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/collections/catalogue",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "CORE_UNAVAILABLE": 503,
+                    "RELEASE_MISMATCH": 409
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "installations_list_collection_catalogue",
+                "description": "List one bounded page of verified collection summaries, hydrating only that page and reusing immutable evidence. Select only the latest non-yanked release of each collection in the requested channel."
+            }
+        }
+    ],
+    "docs": ["collection-discovery.md"],
+    "description": "List one bounded page of verified collection summaries, hydrating only that page and reusing immutable evidence. Select only the latest non-yanked release of each collection in the requested channel."
+}
