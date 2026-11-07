@@ -1,4 +1,4 @@
-import { LazyOfficialProfiles } from "./runtime/instances/profiles/execution/LazyOfficialProfiles";
+import { bundledOfficialProfiles } from "./runtime/instances/profiles/execution/LazyOfficialProfiles";
 import { ProviderExecutionSupport } from "./runtime/instances/profiles/execution/support";
 import { assertHostedReleaseRetention, managedReleaseReader } from "./runtime/instances/profiles/retention";
 import { MongoClient } from "mongodb";
@@ -14,7 +14,6 @@ import { ProviderInstanceHost } from "./runtime/instances/composition/ProviderIn
 import { RecoverySupervisor } from "./runtime/recovery/RecoverySupervisor";
 import { MongoProviderInstanceRegistry } from "./runtime/instances/MongoProviderInstanceRegistry";
 import { MongoInstanceTransitionStore } from "./runtime/instances/MongoInstanceTransitionStore";
-import { loadOfficialArtifacts } from "./runtime/instances/profiles/artifacts";
 import { bundledBootstrapSources } from "./runtime/instances/profiles/bootstrap";
 import { mountUlviaProvider } from "./runtime/gateway/mountUlviaProvider";
 import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
@@ -54,9 +53,7 @@ try {
     let operationRecovery: Promise<void> | undefined;
     try {
         const bootstrap = bundledBootstrapSources(env.ULVIA_BOOTSTRAP_DIR);
-        const profiles = new LazyOfficialProfiles(() =>
-            loadOfficialArtifacts(bootstrap.providers, bootstrap.collections),
-        );
+        const profiles = bundledOfficialProfiles(bootstrap);
         const support = new ProviderExecutionSupport();
         const managedInstances = await instances.list();
         await assertHostedReleaseRetention(

@@ -20,8 +20,10 @@ export type OfficialBootstrapArtifacts = Readonly<{
     }>[];
 }>;
 
-export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstrapArtifacts> {
-    const resources = await prepareOfficialResources();
+export async function buildOfficialBootstrapArtifacts(
+    options: { includeCollections?: boolean } = {},
+): Promise<OfficialBootstrapArtifacts> {
+    const resources = await prepareOfficialResources(options);
     const contracts: Record<string, string> = {};
     const contractAssets: { contractId: string; id: string; bytes: Uint8Array }[] = [];
     const collections = [];
@@ -117,5 +119,13 @@ async function writeBytes(root: string, path: string, bytes: Uint8Array): Promis
 }
 
 if (import.meta.main) {
-    await writeOfficialBootstrapArtifacts();
+    const args = Bun.argv.slice(2);
+    if (args.some((arg) => arg !== "--core-only") || args.length > 1) {
+        throw new Error("Usage: generate:bootstrap [--core-only]");
+    }
+    const coreOnly = args.includes("--core-only");
+    await writeOfficialBootstrapArtifacts(
+        coreOnly ? resolve(import.meta.dir, "../../dist/bootstrap-core") : undefined,
+        coreOnly ? await buildOfficialBootstrapArtifacts({ includeCollections: false }) : undefined,
+    );
 }

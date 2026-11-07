@@ -9,10 +9,19 @@ import { installedFixture } from "./installedFixture";
 test("retention of ready and disabled instances never opens an unavailable installation kit", async () => {
     const f = await installedFixture();
     let loads = 0;
-    const profiles = new LazyOfficialProfiles(async () => {
-        loads++;
-        throw new Error("Installation resources are unavailable");
-    });
+    const profiles = new LazyOfficialProfiles(
+        {
+            defaultProfile: { id: "removed-recipe", version: "0.9.0" },
+            profiles: [
+                { id: "removed-recipe", version: "0.9.0" },
+                { id: "ulvia", version: "1.0.0" },
+            ],
+        },
+        async () => {
+            loads++;
+            throw new Error("Installation resources are unavailable");
+        },
+    );
     for (const status of ["ready", "disabled"] as const) {
         await assertHostedReleaseRetention(
             f.support,
@@ -23,16 +32,26 @@ test("retention of ready and disabled instances never opens an unavailable insta
         );
     }
     expect(loads).toBe(0);
-    await expect(profiles.describe()).rejects.toThrow("resources are unavailable");
+    expect(profiles.describe().defaultProfile.id).toBe("removed-recipe");
+    expect(loads).toBe(0);
     await expect(profiles.resolve("ulvia", "1.0.0")).rejects.toThrow("resources are unavailable");
-    expect(loads).toBe(2);
+    expect(loads).toBe(1);
 });
 
 test("unfinished provisioning still requires its exact kit and cannot silently use installed execution", async () => {
     const f = await installedFixture();
-    const profiles = new LazyOfficialProfiles(async () => {
-        throw new Error("Missing exact kit");
-    });
+    const profiles = new LazyOfficialProfiles(
+        {
+            defaultProfile: { id: "removed-recipe", version: "0.9.0" },
+            profiles: [
+                { id: "removed-recipe", version: "0.9.0" },
+                { id: "ulvia", version: "1.0.0" },
+            ],
+        },
+        async () => {
+            throw new Error("Missing exact kit");
+        },
+    );
     await expect(
         assertHostedReleaseRetention(
             f.support,

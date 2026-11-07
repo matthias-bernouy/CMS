@@ -17,10 +17,12 @@ COPY packages/ ./packages/
 RUN bun install --frozen-lockfile
 RUN bunx tsc --build packages/runtimes/ulvia-provider-server
 RUN cd packages/features/content && bun run build:browser
-RUN bun run generate:official-bootstrap
+RUN bun run generate:official-bootstrap --core-only
 
 FROM build AS runtime-source
-RUN rm -rf /app/node_modules /app/packages/*/node_modules /app/packages/*/*/node_modules
+RUN rm -rf /app/node_modules /app/packages/*/node_modules /app/packages/*/*/node_modules \
+    /app/packages/official-repository/collections \
+    /app/packages/runtimes/ulvia-cli/dist/bootstrap /app/packages/runtimes/ulvia-cli/dist/bootstrap-core
 
 # ONNX Runtime's CPU bindings require glibc; the Provider's embedding model cannot run on musl.
 FROM oven/bun:1.4.4-debian@sha256:93d5032fe06d163427822dc1598f420363759bb18155c9cc90eb1be05a64a19e AS runtime

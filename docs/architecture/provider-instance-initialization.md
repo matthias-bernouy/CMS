@@ -10,8 +10,7 @@ is ready and receives that instance's opaque access token.
 Ulvia Provider owns:
 
 - its durable instance registry and encrypted instance credentials;
-- the exact official manifest, contracts and collection assigned to a new
-  instance;
+- the exact official manifest and contracts assigned to a new instance;
 - idempotent provisioning, transition recovery and the initial administrator
   grant;
 - resolution of an installations control token to the isolated instance context
@@ -69,13 +68,24 @@ collections.
 
 ## Bootstrap And Repository Connections
 
-The Provider loads installation profiles lazily from its bundled admitted snapshot
-when an operator requests provisioning or an unfinished transition needs recovery.
-The default CMS profile installs `ulvia/mossa`; the explicit
-`repository@1.0.0` profile also installs `ulvia/repository` and seeds its
-ordinary website Pages. Neither requires a running remote Repository. Missing
-bundled resources refuse those installation operations rather than falling back
-to the network. They do not prevent ready instances from restarting.
+The Provider advertises exact profile references without reading optional
+collection resources. It loads only the selected profile from its bundled
+admitted snapshot when provisioning or recovering an unfinished transition.
+The default `ulvia@1.1.0` and explicit `repository@1.1.0` profiles initialize
+system APIs and the administrator with zero collections and zero Pages. Their
+collection initialization step makes no collection source or content-store calls.
+A Repository can start before its own Edge or public catalogue exists; API
+authentication and publication then work without a browser login Page.
+
+Production images generate `bun run generate:official-bootstrap --core-only`
+and omit authored collections and starter assets. There is no required ZIP.
+The full generator remains available for authoring and example tests. Exact
+`ulvia@1.0.0` and `repository@1.0.0` starter profiles retain their original
+Mossa/Repository Page recipes; provisioning them requires an explicit snapshot
+containing those resources. Missing resources refuse the operation rather than
+falling back to the network. They do not prevent ready instances from restarting.
+Collection `bootstrap.json` recipes are optional release data; their admission
+format is implemented, but a general recipe application workflow is not mounted.
 
 Ready instances reopen their approved persisted manifest, observed implementation
 pins, exact contract admissions and selections. The runtime checks each digest
@@ -90,12 +100,19 @@ Discovery, remote imports and publication use that connection after bootstrap.
 A new Registry has its own account-owned public catalogue: installing its
 bootstrap resources is not publication into that catalogue.
 
+The local Docker regression `tests/integration/instance/repository/scratch.docker.test.ts`
+checks API-only creation, initially empty Pages/catalogue/collection installations,
+explicit publication and installation of a new collection, omitted image starter
+directories and state after Provider restart. It uses isolated networks and never
+contacts the public Repository.
+
 ## Operator API
 
 Every endpoint requires
 `Authorization: Bearer <ULVIA_PROVIDER_OPERATOR_TOKEN>`:
 
 - `GET /ulvia/operator/instances` lists instances;
+- `GET /ulvia/operator/profiles` lists supported exact references and the default;
 - `POST /ulvia/operator/instances` creates or resumes an instance and requires
   `Idempotency-Key`;
 - `GET /ulvia/operator/instances/:instanceId` returns lifecycle state;

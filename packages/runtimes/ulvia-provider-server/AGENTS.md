@@ -14,6 +14,10 @@ Production runtime for the official Ulvia Provider.
   transitions. A ready or disabled instance must not require its original recipe
   or bundled collection resources. Missing installation resources refuse a new
   installation rather than silently fetching replacements.
+- Default `ulvia@1.1.0` and `repository@1.1.0` initialization installs system APIs
+  and an administrator only. Never enumerate optional collection sources, create
+  Pages or publish the public catalogue for these profiles. Production image
+  generation uses `--core-only`; exact `1.0.0` starters require explicit resources.
 - Enable `ulvia/repository` only for its explicit instance profile. Registry
   ownership uses ordinary CMS accounts and PATs, never a parallel signing-key
   authority. Bootstrap installation is not public catalogue publication and

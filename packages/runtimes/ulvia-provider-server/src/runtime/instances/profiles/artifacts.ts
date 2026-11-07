@@ -1,8 +1,6 @@
 import { resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
 import { loadDocumentedContract } from "@bernouy/repository/providers/sources";
-import { CURRENT_PROFILE, REPOSITORY_PROFILE, SUPPORTED_PROFILES, type ProfileDefinition } from "./definitions";
-import { repositoryPages } from "./repositoryPages";
-import { initialPages } from "./initialPages";
+import { CURRENT_PROFILE, SUPPORTED_PROFILES, type ProfileDefinition } from "./definitions";
 import { admitCollectionRelease } from "@bernouy/repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/repository/collections/sources";
 import { type AdmittedContractRelease, type ResolvedContract } from "@bernouy/ulvia-contracts";
@@ -11,6 +9,11 @@ import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repositor
 import { admitProviderManifestJson, verifyStoredProviderManifestJson } from "@bernouy/ulvia-providers";
 import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/repository/providers/sources";
 import type { OfficialInstanceProfile } from "@bernouy/ulvia-provider";
+
+export type LoadedOfficialProfile = Readonly<{
+    profile: OfficialInstanceProfile;
+    contracts: readonly ResolvedContract[];
+}>;
 
 export type LoadedOfficialArtifacts = Readonly<{
     profiles: readonly OfficialInstanceProfile[];
@@ -45,12 +48,12 @@ export async function loadOfficialArtifacts(
     });
 }
 
-async function loadOfficialProfile(
+export async function loadOfficialProfile(
     providers: ProviderRepositorySource,
     collections: CollectionRepositorySource,
     manifestEntries: readonly RepositoryArtifactEntry[],
     definition: ProfileDefinition,
-): Promise<Readonly<{ profile: OfficialInstanceProfile; contracts: readonly ResolvedContract[] }>> {
+): Promise<LoadedOfficialProfile> {
     const manifestEntry = exactEntry(manifestEntries, definition.manifest.providerId, definition.manifest.version);
     const manifestBytes = await providers.get(manifestEntry);
     const storedManifest = await verifyStoredProviderManifestJson(manifestBytes, manifestEntry.digest);
@@ -72,7 +75,7 @@ async function loadOfficialProfile(
             `Official Provider manifest digest mismatch: ${manifest.manifest.providerId}@${manifest.manifest.version}`,
         );
     }
-    const collectionEntries = await collections.list();
+    const collectionEntries = definition.collections.length ? await collections.list() : [];
     const collectionPins = [];
     for (const pin of definition.collections) {
         const entry = collectionEntries.find(
@@ -92,10 +95,7 @@ async function loadOfficialProfile(
         collectionPins.push(Object.freeze({ ...pin, digest: collection.digest }));
     }
     const profile: OfficialInstanceProfile = Object.freeze({
-        initialPages:
-            definition.id === REPOSITORY_PROFILE.id
-                ? [...initialPages.filter(({ id }) => id !== "login"), ...repositoryPages]
-                : initialPages,
+        initialPages: definition.initialPages,
         id: definition.id,
         version: definition.version,
         upgradeFromVersions: definition.upgradeFromVersions,
@@ -106,10 +106,7 @@ async function loadOfficialProfile(
         }),
         contracts: Object.freeze(
             implementationAdmissions
-                .filter(
-                    ({ release }) =>
-                        definition.id === REPOSITORY_PROFILE.id || release.contractId !== "ulvia/repository",
-                )
+                .filter(({ release }) => definition.repository || release.contractId !== "ulvia/repository")
                 .map(({ digest, release }) =>
                     Object.freeze({ contractId: release.contractId, version: release.version, digest }),
                 ),

@@ -115,7 +115,7 @@ profile:
 
 ```bash
 ulvia services start
-ulvia instance create registry --profile repository@1.0.0
+ulvia instance create registry --profile repository@1.1.0
 ulvia instance status registry
 ```
 
@@ -126,6 +126,10 @@ an explicit supported transition within the same application ID and saves it
 only after acknowledgement. `upgrade provider --version VERSION` replaces the
 shared Provider image with retention checks and rollback on activation failure.
 The Repository has no separate image, port, service, or deployment lifecycle.
+The default `ulvia@1.1.0` and explicit `repository@1.1.0` profiles start without
+collections or Pages. System APIs and the supplied administrator remain usable;
+an empty browser route returns 404. Publish and install resources through CLI/API
+before adding a browser interface. No ZIP or default collection is required.
 
 `repository login URL` verifies the Repository identity and saves a shared CMS
 PAT supplied through `ULVIA_REPOSITORY_TOKEN` or `--token-stdin`. Ordinary
@@ -287,19 +291,22 @@ ID, and discovery stops there so `settings/definition.json` is never mistaken
 for a nested Bloc. Intermediate grouping directories contain only directories
 and do not affect release identity.
 
-The Provider image bundles admitted contracts, manifests, collection assets and
-documentation required by its shipped profiles. The local snapshot feeds the
-same provisioning and admission flow as remote sources. An incomplete snapshot
-fails explicitly; bootstrap does not fall back to the network. Restart preserves
-existing accounts, namespace ownership and edited Pages. Generate the snapshot
-from the authoritative authored resources with:
+The production Provider image bundles admitted system contracts, documentation
+and the Provider manifest, without authored collections or starter assets. An
+incomplete snapshot fails explicitly; bootstrap does not fall back to the network.
+Restart preserves existing accounts, namespace ownership and edited Pages and
+reopens ready instances from their persisted execution. Generate the API-only
+snapshot from the authoritative authored resources with:
 
 ```bash
-bun run generate:official-bootstrap
+bun run generate:official-bootstrap --core-only
 ```
 
 That command neither publishes to a running repository nor upgrades an existing
-instance. For individual manual releases, use `release` in dependency order:
+instance. Without `--core-only`, generation includes optional starter collections
+for authoring and example tests. Exact `1.0.0` starter profiles retain their old
+resources and refuse new provisioning if those resources are unavailable.
+For individual manual releases, use `release` in dependency order:
 exact contract dependencies before dependent contracts and provider manifests.
 Publication, provider profile transitions, collection upgrades and container
 image replacement remain separate actions.
@@ -311,7 +318,7 @@ exact manifest claims. Provider behavior is covered by implementation-owned test
 The current baseline uses fresh `1.0.0` official releases and `v1` local state.
 Each named instance uses `<name>.localhost` unless an explicit domain is supplied;
 `default` is an ordinary name. Repository hosting uses a CMS instance with the
-`repository@1.0.0` profile. Client PAT connections and local release caches
+`repository@1.1.0` profile. Client PAT connections and local release caches
 are separate from the shared services and instance lifecycle.
 
 ## Collection examples
