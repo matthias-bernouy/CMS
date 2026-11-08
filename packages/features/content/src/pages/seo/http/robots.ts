@@ -6,7 +6,7 @@ export type RobotsHandlerConfig = {
     content: Pick<ContentReader, "getRenderingSettings">;
     basePath: string;
     cmsPathPrefix: string;
-    collectionAssetsPath: string;
+    publicAssetPaths: readonly string[];
     publicRuntimePaths: readonly string[];
     capabilityCallsEnabled: boolean;
     logger: Logger;
@@ -25,7 +25,7 @@ export function createRobotsHandler(config: RobotsHandlerConfig) {
             "User-agent: *",
             "Allow: /",
             ...config.publicRuntimePaths.flatMap((path) => [`Allow: ${path}$`, `Allow: ${path}?`]),
-            `Allow: ${config.collectionAssetsPath}/`,
+            ...config.publicAssetPaths.map((path) => `Allow: ${path}/`),
             ...(config.capabilityCallsEnabled ? [`Allow: ${config.cmsPathPrefix}/call/`] : []),
             `Disallow: ${config.cmsPathPrefix}/`,
             ...(publicBaseUrl ? [`Sitemap: ${publicBaseUrl}/sitemap.xml`] : []),

@@ -81,10 +81,15 @@ export class ResourceAssets {
         await this.metadata.createAsset(asset);
     }
     async read(reference: ResourceAssetReference, range?: BlobRange) {
+        const entry = await this.representation(reference);
+        return entry ? { metadata: entry.metadata, stream: await entry.read(range) } : null;
+    }
+    /** Captures one scoped immutable metadata read; body opens remain lazy for HEAD and conditions. */
+    async representation(reference: ResourceAssetReference) {
         const asset = (await this.getMetadata([reference]))[0];
-        if (!asset) {
-            return null;
-        }
+        return asset ? { metadata: asset, read: (range?: BlobRange) => this.readAsset(asset, range) } : null;
+    }
+    private async readAsset(asset: ResourceAssetMetadata, range?: BlobRange) {
         if (range) {
             assertBlobRange(range, asset.byteLength);
         }
@@ -96,6 +101,6 @@ export class ResourceAssets {
         if (!stream) {
             throw new ResourceArchiveError("Stored resource asset is missing");
         }
-        return { metadata: asset, stream };
+        return stream;
     }
 }

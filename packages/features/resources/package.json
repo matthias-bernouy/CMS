@@ -12,7 +12,8 @@
         "./mongo": "./src/exports/mongo.ts",
         "./initialization": "./src/exports/initialization.ts",
         "./feature": "./src/application/feature.ts",
-        "./build": "./src/exports/build.ts"
+        "./build": "./src/exports/build.ts",
+        "./delivery": "./src/exports/delivery.ts"
     },
     "dependencies": {
         "@bernouy/content": "workspace:*",
@@ -23,7 +24,8 @@
         "zod": "4.6.7",
         "css-tree": "^3.2.1",
         "@bernouy/blob-store": "workspace:*",
-        "linkedom": "^0.18.15"
+        "linkedom": "^0.18.15",
+        "@bernouy/http-runner": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2",

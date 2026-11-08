@@ -1,7 +1,7 @@
 import type { Middleware } from "@bernouy/http-runner";
 import type { SiteUpgradeStorage } from "repository/site-upgrades/interfaces";
 
-const AVAILABLE_PREFIXES = ["/login", "/_content/assets", "/_content/collections"];
+const AVAILABLE_PREFIXES = ["/login", "/_content/assets", "/_content/collections", "/_content/resources"];
 const AVAILABLE_PATHS = new Set([
     "/favicon.ico",
     "/_content/blocset",

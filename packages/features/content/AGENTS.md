@@ -10,7 +10,7 @@ bindings, validation, and read models.
   repository, validation, and authoring operations.
 - `@bernouy/content/public-delivery` owns `ContentDelivery.resolvePath`,
   the complete existing Page renderer and static Page capability analysis.
-  Runtime injects collection assets, admitted capability metadata, query execution
+  Runtime injects ordinary resource asset serving/resolution, admitted capability metadata, query execution
   and observation ports. Never import Gateway or Repository into Content code.
 - `@bernouy/content/rendering` exposes `ContentReader`, its composition
   factory and public rendering helpers. It has published-only page operations,

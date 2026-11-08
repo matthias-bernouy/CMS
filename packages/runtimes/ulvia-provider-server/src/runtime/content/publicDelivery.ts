@@ -1,10 +1,10 @@
+import { serveResourceAsset } from "@bernouy/resources/delivery";
 import { createDescriptionCache } from "./descriptionCache";
 import { contentGatewayClient } from "./gatewayClient";
 import { contentPhaseObserver } from "./observe";
 import { ContentDelivery, PageCapabilityAnalyzer } from "@bernouy/content/public-delivery";
 import { createContentReader } from "@bernouy/content/rendering";
 import { satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
-import { resolveInstalledCollectionAssets } from "@bernouy/repository/collections/assets";
 import { serveInstalledCollectionAsset, collectionMaintenanceResponse } from "@bernouy/repository/collections/http";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
@@ -13,6 +13,7 @@ import type { ProviderStores } from "../stores/providerStores";
 import type { createProviderGateway } from "../gateway/createProviderGateway";
 import { editorialPages } from "./editorialPages";
 import { resolveSvgSources } from "./inlineSvg";
+import { publicAssetSources } from "./assetSources";
 
 export function createPublicDelivery(
     stores: ProviderStores,
@@ -20,12 +21,14 @@ export function createPublicDelivery(
     publicUrl: string,
 ): Pick<CmsContentDependencies, "publicDelivery" | "contentQuery"> {
     const cache = new InMemoryCache();
+    const svgCache = new InMemoryCache({ maxEntries: 64 });
     const readSelectionRevision = async () =>
         (await stores.executionState.read(gateway.siteId, [])).selections?.revision ?? 0;
     const description = createDescriptionCache(readSelectionRevision);
     const analyzer = new PageCapabilityAnalyzer({ satisfiesVersionRange, resolveCapability: async () => null });
     const content = createContentReader(stores.repo);
     const assets = { siteId: gateway.siteId, store: stores.collections };
+    const resolveAssets = publicAssetSources(stores.resourceStores.assets, assets);
     const connections = new ProviderConnections(stores.providerConnections);
     const client = (context: ProviderCapabilityInvocationContext) => {
         return contentGatewayClient({
@@ -42,8 +45,10 @@ export function createPublicDelivery(
         return route.requestedRelease.admission.release;
     };
     return {
-        publicDelivery: (context) =>
-            new ContentDelivery({
+        publicDelivery: (context) => {
+            let revision: Promise<number> | undefined;
+            const contextRevision = () => (revision ??= readSelectionRevision());
+            return new ContentDelivery({
                 content,
                 observe: contentPhaseObserver(stores.logger),
                 cache,
@@ -51,7 +56,8 @@ export function createPublicDelivery(
                 publicUrl,
                 sitemapStore: stores.sitemapStore,
                 editorialPages: editorialPages(stores.repo),
-                resolveContributedAssets: (input) => resolveInstalledCollectionAssets(input, assets, ""),
+                resolveContributedAssets: async (input) => (await resolveAssets([input])).get(input)!,
+                serveResourceAsset: (request) => serveResourceAsset(request, stores.resourceStores.assets),
                 serveCollectionAsset: (request) => serveInstalledCollectionAsset(request, assets, ""),
                 guard: (request) =>
                     collectionMaintenanceResponse(request, {
@@ -59,11 +65,22 @@ export function createPublicDelivery(
                         upgrades: stores.upgradeStorage,
                         basePath: "",
                     }),
-                resolveSvgSources: (sources) =>
-                    resolveSvgSources({ cache, assets, client: client(context), release }, sources),
+                resolveSvgSources: async (sources) =>
+                    resolveSvgSources(
+                        {
+                            cache: svgCache,
+                            executionRevision: await contextRevision(),
+                            assets: stores.resourceStores.assets,
+                            resolveAssets,
+                            serveLegacyAsset: (request) => serveInstalledCollectionAsset(request, assets, ""),
+                            client: client(context),
+                            release,
+                        },
+                        sources,
+                    ),
                 pageCapabilities: {
                     requiredAccess: async (page) => {
-                        const revision = await readSelectionRevision();
+                        const revision = await contextRevision();
                         return analyzer.requiredAccess(page, (contractId) =>
                             description(contractId, revision, async () => {
                                 const response = await client(context).invoke(
@@ -85,7 +102,8 @@ export function createPublicDelivery(
                         );
                     },
                 },
-            }),
+            });
+        },
         contentQuery: async (context, contractId, capabilityId, input) => {
             if (!context.delegation) {
                 return new Response(null, { status: 503 });

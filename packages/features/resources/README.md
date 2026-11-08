@@ -40,8 +40,8 @@ retention, verification and disposable preview ports. Memory adapters are explic
 preview/test composition only. The Mongo initialization adapter uses a mandatory
 scope-bound protocol record and compare-and-swap checkpoints, provisioned explicitly
 rather than inferred from an empty site. The official Provider composes these ports and selects the generated HTTP/MCP API
-through its inventory. Native setup uses this API; the CLI produces localized base ZIPs from ordinary sources. Asset delivery remains
-separate work while the legacy collection APIs are retired.
+through its inventory. Native setup uses this API; the CLI produces localized base
+ZIPs from ordinary sources.
 
 `./feature` defines the generated `ulvia/cms.resources` API. It offers explicit
 empty/base initialization, a scoped public pending flag, administrator-only review
@@ -54,3 +54,12 @@ from ordinary Content Blocs, Pages, texts, theme and assets. It also validates a
 retained authoring examples, browser state ownership and typed producer compatibility.
 Run these builds and their tests with `bun --no-macros`; authored modules are bundled,
 never executed. Official source data lives in [resources/base](../../../resources/base/README.md).
+
+`./delivery` resolves static `cms.asset.<namespace>.<path>` expressions with one
+scoped metadata batch (512 distinct references at most) and serves ordinary assets
+under `/_content/resources/<encoded namespace>/<encoded path>?v=<SHA-256>`.
+GET streams the stored representation; HEAD and conditional 304 do not open a body.
+Single byte ranges, strong ETags, immutable versioned caching, cancellation and
+observed stream lengths are enforced. Unversioned URLs revalidate, wrong versions
+refuse, and inline SVG expansion requires its verified `inline-svg` profile.
+The Provider supplies the instance's asset service; serving never reopens a ZIP.

@@ -69,3 +69,10 @@ Production runtime for the official Ulvia Provider.
   Private instance storage is owned by one host process. Retention compositions
   share a writer guard; two 64-MiB archives plus one atomic-write temporary are
   the filesystem budget. Do not mount that private root on competing hosts.
+
+- Public Content resolves ordinary resource metadata and streams instance-owned
+  files without reopening base ZIPs. SVG expansion has a separate 64-entry cache
+  and at most eight distinct pending loads per instance cache, with 64-KiB bodies.
+  Public capability SVG cache keys include the selected execution revision; static
+  resource URLs pin immutable digests. Scope and cache lifetime remain instance-local.
+  The explicit collection fallback is temporary until published API retirement.

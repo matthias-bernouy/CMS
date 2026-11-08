@@ -4,28 +4,36 @@ import { admitContractRelease } from "@bernouy/ulvia-contracts";
 import type { GatewayInvocation, GatewayResult } from "@bernouy/cms-gateway";
 import type { GatewayProviderClient } from "@bernouy/cms-gateway/provider/node";
 import type { ContractRelease } from "@bernouy/ulvia-contracts";
-import type { InstalledCollectionAssetSource } from "@bernouy/repository/collections/assets";
+import type { ResourceAssetSource } from "@bernouy/resources/delivery";
 import type { Cache } from "@bernouy/http-runner";
-import { resolveInstalledCollectionAssetSources } from "@bernouy/repository/collections/assets";
-import { serveInstalledCollectionAsset } from "@bernouy/repository/collections/http";
+import { resolveResourceAssetSources, serveResourceAsset, RESOURCE_ASSETS_ROUTE } from "@bernouy/resources/delivery";
 import { compress, getOrGenerateEntryAsync } from "@bernouy/http-runner";
+import { readImmutableSvg } from "./svgResponse";
 type SvgHost = {
     cache: Cache;
-    assets: InstalledCollectionAssetSource;
+    executionRevision?: number;
+    assets: ResourceAssetSource;
+    resolveAssets?(sources: readonly string[]): Promise<ReadonlyMap<string, string>>;
+    serveLegacyAsset?(request: Request): Promise<Response>;
     client: Pick<GatewayProviderClient, "invoke">;
     release(contractId: string): Promise<ContractRelease>;
 };
 
-const MAX_INLINE_SVG_BYTES = 64 * 1024;
+const activeLoads = new WeakMap<Cache, number>();
 const RESOLUTION_CONCURRENCY = 8;
 
 export async function resolveSvgSources(
     host: SvgHost,
     sources: readonly string[],
 ): Promise<ReadonlyMap<string, Uint8Array>> {
+    if (sources.length > 512 || sources.reduce((size, value) => size + value.length, 0) > 1024 * 1024) {
+        throw new RangeError("Inline SVG sources exceed their budget");
+    }
     const uniqueSources = [...new Set(sources)];
-    const collectionSources = uniqueSources.filter((source) => parseCollectionAssetReference(source) !== null);
-    const collectionUrls = await resolveInstalledCollectionAssetSources(collectionSources, host.assets, "");
+    const resourceSources = uniqueSources.filter((source) => parseCollectionAssetReference(source) !== null);
+    const resourceUrls = host.resolveAssets
+        ? await host.resolveAssets(resourceSources)
+        : await resolveResourceAssetSources(resourceSources, host.assets);
     const resolved = new Map<string, Uint8Array>();
     let cursor = 0;
     const worker = async () => {
@@ -34,32 +42,51 @@ export async function resolveSvgSources(
             if (source === undefined) {
                 return;
             }
-            const collectionAsset = collectionUrls.has(source);
-            const url = collectionUrls.get(source) ?? source;
-            resolved.set(source, await resolveSvgUrl(host, url, collectionAsset));
+            const resourceAsset = resourceUrls.has(source);
+            const url = resourceUrls.get(source) ?? source;
+            resolved.set(source, await resolveSvgUrl(host, url, resourceAsset));
         }
     };
     await Promise.all(Array.from({ length: Math.min(RESOLUTION_CONCURRENCY, uniqueSources.length) }, worker));
     return resolved;
 }
 
-async function resolveSvgUrl(host: SvgHost, url: string, collectionAsset: boolean): Promise<Uint8Array> {
-    const entry = await getOrGenerateEntryAsync(`inline-svg:${url}`, host.cache, async () => {
-        const response = await readSvgResponse(host, url, collectionAsset);
-        assertImmutableSvgResponse(response);
-        const bytes = await readBounded(response);
-        return compress(bytes, "image/svg+xml");
+async function resolveSvgUrl(host: SvgHost, url: string, resourceAsset: boolean): Promise<Uint8Array> {
+    // Resource URLs already pin immutable ordinary metadata. Capability reads also bind selected execution.
+    const key = resourceAsset ? `inline-svg:${url}` : `inline-svg:${host.executionRevision ?? 0}:${url}`;
+    const entry = await getOrGenerateEntryAsync(key, host.cache, async () => {
+        const active = activeLoads.get(host.cache) ?? 0;
+        if (active >= RESOLUTION_CONCURRENCY) {
+            throw new Error("Inline SVG load concurrency exhausted");
+        }
+        activeLoads.set(host.cache, active + 1);
+        try {
+            return compress(await readImmutableSvg(await readSvgResponse(host, url, resourceAsset)), "image/svg+xml");
+        } finally {
+            const remaining = activeLoads.get(host.cache)! - 1;
+            if (remaining) {
+                activeLoads.set(host.cache, remaining);
+            } else {
+                activeLoads.delete(host.cache);
+            }
+        }
     });
     return entry.raw.slice();
 }
 
-async function readSvgResponse(host: SvgHost, path: string, collectionAsset: boolean): Promise<Response> {
+async function readSvgResponse(host: SvgHost, path: string, resourceAsset: boolean): Promise<Response> {
     const request = new Request(new URL(path, "http://content.internal"), {
         method: "GET",
         headers: { accept: "image/svg+xml" },
     });
-    if (collectionAsset) {
-        return serveInstalledCollectionAsset(request, host.assets, "");
+    if (resourceAsset) {
+        if (new URL(request.url).pathname.startsWith(RESOURCE_ASSETS_ROUTE + "/")) {
+            return serveResourceAsset(request, host.assets, { inlineSvg: true });
+        }
+        if (host.serveLegacyAsset) {
+            return host.serveLegacyAsset(request);
+        }
+        throw new Error("Unknown static SVG resource source");
     }
     return handleGatewayHttpCall(request, {
         siteId: "default",
@@ -94,48 +121,4 @@ async function readSvgResponse(host: SvgHost, path: string, collectionAsset: boo
             },
         },
     });
-}
-
-function assertImmutableSvgResponse(response: Response): void {
-    const mediaType = response.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase();
-    const etag = response.headers.get("etag");
-    const cacheControl = response.headers.get("cache-control")?.toLowerCase() ?? "";
-    if (response.status !== 200 || mediaType !== "image/svg+xml") {
-        throw new Error(`cms-svg source returned ${response.status} ${mediaType ?? "without a content type"}`);
-    }
-    if (!etag || etag.startsWith("W/") || !cacheControl.includes("immutable")) {
-        throw new Error("cms-svg source must return a strong ETag and immutable cache policy");
-    }
-    const length = response.headers.get("content-length");
-    if (length !== null && (!/^\d+$/u.test(length) || Number(length) > MAX_INLINE_SVG_BYTES)) {
-        throw new Error("cms-svg source exceeds its byte budget");
-    }
-}
-
-async function readBounded(response: Response): Promise<Uint8Array> {
-    if (!response.body) {
-        return new Uint8Array();
-    }
-    const reader = response.body.getReader();
-    const chunks: Uint8Array[] = [];
-    let length = 0;
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-            break;
-        }
-        length += value.byteLength;
-        if (length > MAX_INLINE_SVG_BYTES) {
-            await reader.cancel();
-            throw new Error("cms-svg source exceeds its byte budget");
-        }
-        chunks.push(value);
-    }
-    const result = new Uint8Array(length);
-    let offset = 0;
-    for (const chunk of chunks) {
-        result.set(chunk, offset);
-        offset += chunk.byteLength;
-    }
-    return result;
 }

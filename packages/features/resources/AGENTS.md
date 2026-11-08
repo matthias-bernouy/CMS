@@ -60,3 +60,9 @@ resolution, upgrades, uninstallation or remote publication mechanism.
 - Source snapshots own immutable asset Blobs. Bound files, bytes, tree entries/depth,
   roots and runtime imports. Build-only source translation keys do not define runtime
   IDs. The CLI owns profile composition and the bounded one-process official ZIP cache.
+
+- `./delivery` owns ordinary static asset expression resolution and streaming HTTP
+  representations. Keep namespace/ID/digest URLs independent of releases. Resolve
+  at most 512 references per metadata batch; HEAD/304 never open bodies. Preserve
+  byte-range conditions, exact observed lengths, cancellation and reader release.
+  Static inline SVG reads require the verified profile in addition to media type.
