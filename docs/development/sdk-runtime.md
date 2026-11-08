@@ -39,11 +39,22 @@ fallbacks. Corrupt, duplicate, oversized or mismatched artifacts fail before ser
 construction. No document/fixture asset hydration occurs during attachment.
 
 `loadOfficialFeatures` caches one verified attachment per process. Mounting receives
-exact approved `{ contractId, version, digest }` pins from the instance profile.
+exact approved `{ contractId, version, digest }` pins from the instance installation plan.
 The existing execution support matrix remains required. A source feature missing its
 runtime service refuses mounting; disabled features require no service. HTTP routes
 and validators come from admitted artifact metadata. Source definitions supply their
 captured default executors and private error ownership.
+
+`loadCompatibleImplementation` explicitly attaches a retained canonical release to
+one current code-owned implementation. It compares every retained capability’s
+execution signature (access, behavior, schemas, effects, bindings/tools and errors)
+before creating a runtime plan. Documentation and explanatory text do not grant
+execution. The official surface accepts only its fixed shipped retention list,
+caches those verified attachments and uses `selectImplementationBuilds` to select
+exact pins across current/retained builds. Conflicting or ambiguous coordinates
+fail before handlers mount; different instances may retain different historical
+digests independently. This is an explicit host compatibility decision, never
+remote executable loading or an automatic SemVer fallback.
 
 ## Domain authorization before replay
 

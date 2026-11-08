@@ -139,7 +139,7 @@ sessions per invocation and persists its position; committed history is not
 parsed during cleanup. Active asset transfers and commits hold the same upload
 lock. Closing the upload store waits for pending maintenance.
 
-`application/registry/` authors the 22-capability `ulvia/repository` API. The
+`application/registry/` authors the 23-capability `ulvia/repository` API. The
 feature calls typed `RepositoryCapabilityService` groups (`reads`, `namespaces`,
 `sources`, `publications`); public search, catalogue, namespace, source and upload
 receipt DTOs derive from schemas. Its injected account resolver receives verified

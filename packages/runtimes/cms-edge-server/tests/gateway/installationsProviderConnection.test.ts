@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { fetchInstallationsProviderReport } from "../../src/runtime/gateway/fetchProviderReport";
+import { fetchInstallationsProviderReport } from "../../src/runtime/gateway/controlReport";
 import { InstallationsProviderTransport } from "../../src/runtime/gateway/InstallationsProviderTransport";
 
 test("the public Provider report accepts the exact installations control contract", async () => {

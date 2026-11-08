@@ -11,13 +11,20 @@ export class MongoInstanceTransitionStore implements InstanceTransitionStore {
     }
 
     async init(): Promise<void> {
-        await Promise.all([
-            this.#transitions.createIndex(
-                { instanceId: 1, "targetProfile.id": 1, "targetProfile.version": 1 },
-                { unique: true, name: "instance_target_profile" },
-            ),
-            this.#transitions.createIndex({ status: 1, "lease.expiresAt": 1 }, { name: "transition_recovery" }),
-        ]);
+        // Explicit index evolution: old plan uniqueness would reject distinct system transitions.
+        const indexes = await this.#transitions
+            .listIndexes()
+            .toArray()
+            .catch((error: { code?: number }) => {
+                if (error.code === 26) {
+                    return [];
+                }
+                throw error;
+            });
+        if (indexes.some(({ name }) => name === "instance_target_profile")) {
+            await this.#transitions.dropIndex("instance_target_profile");
+        }
+        await this.#transitions.createIndex({ status: 1, "lease.expiresAt": 1 }, { name: "transition_recovery" });
     }
 
     async createOrGet(
@@ -32,11 +39,7 @@ export class MongoInstanceTransitionStore implements InstanceTransitionStore {
             if ((error as { code?: number }).code !== 11000) {
                 throw error;
             }
-            const existing = await this.#transitions.findOne({
-                instanceId: value.instanceId,
-                "targetProfile.id": value.targetProfile.id,
-                "targetProfile.version": value.targetProfile.version,
-            });
+            const existing = await this.#transitions.findOne({ _id: value.id });
             if (!existing) {
                 throw error;
             }
@@ -63,10 +66,24 @@ export class MongoInstanceTransitionStore implements InstanceTransitionStore {
         ).map(fromDocument);
     }
 
-    async requeue(id: string, revision: number, now: string): Promise<InstanceTransitionRecord | null> {
+    async requeue(
+        id: string,
+        revision: number,
+        now: string,
+        administratorSub?: string,
+        sourceRevision?: number,
+    ): Promise<InstanceTransitionRecord | null> {
         const value = await this.#transitions.findOneAndUpdate(
             { _id: id, revision, status: "failed" },
-            { $set: { status: "queued", updatedAt: now }, $unset: { failure: "", lease: "" }, $inc: { revision: 1 } },
+            {
+                $set: {
+                    status: "queued",
+                    updatedAt: now,
+                    ...(administratorSub ? { administratorSub, sourceRevision } : {}),
+                },
+                $unset: { failure: "", lease: "" },
+                $inc: { revision: 1 },
+            },
             { returnDocument: "after" },
         );
         return value ? fromDocument(value) : null;

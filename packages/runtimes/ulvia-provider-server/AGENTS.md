@@ -10,22 +10,23 @@ Production runtime for the official Ulvia Provider.
   selections and exact admitted contracts. Check every release against the
   build's explicit implementation support matrix; persistence or SemVer alone
   never grants executable support. Compile HTTP bindings per authenticated instance.
-- Load bundled installation profiles lazily for provisioning and unfinished
-  transitions. A ready or disabled instance must not require its original recipe
-  or bundled collection resources. Missing installation resources refuse a new
-  installation rather than silently fetching replacements.
-- Default `ulvia@1.3.0` and `repository@1.3.0` initialization installs system APIs
-  and an administrator only. Never enumerate optional collection sources, create
-  Pages or publish the public catalogue during profile provisioning. Persist the
-  explicit initialization marker only for a newly provisioned supporting profile.
-  Native site setup then runs through admitted Gateway capabilities; never infer
-  pending state from zero Pages or backfill ready instances. Production image
-  generation bundles only SDK contracts and the Provider manifest. Prefabricated
-  collection profiles are not shipped.
-- Enable `ulvia/repository` only for its explicit instance profile. Registry
-  ownership uses ordinary CMS accounts and PATs, never a parallel signing-key
-  authority. Bootstrap installation is not public catalogue publication and
-  must not replace the configured Repository connection.
+- Load one admitted SDK system snapshot lazily for provisioning. Persist exact plans
+  for unfinished transitions; ready/disabled instances reopen approved execution.
+  Missing installation resources refuse without remote fallback or data repair.
+- New instances receive system APIs, an administrator and an explicit pending
+  initialization marker, with no collections, Pages or public catalogue publication.
+  Native setup uses ordinary Access and admitted Installations capabilities.
+- Repository settings are per instance. No named profiles, global Repository URL
+  environment variable or CLI profile catalogue exists. The three setup choices
+  are a custom address, the official Repository and a new Registry on this instance.
+  Enable Registry through its actual installed/selected contract, never by URL.
+  Registry creation uses the already approved manifest and its exact Registry pin,
+  including after image replacement. Resolve recovery plans from stored admissions,
+  never the current image's bootstrap. The instance transition is the sole durable
+  creation owner; commit the self-origin URL only on success. Recheck the current
+  local administrator grant during recovery.
+- Keep public self-origin settings distinct from the known private Edge transport.
+  Never forward a publication PAT across origins or relax redirect refusal.
 - Give each secret-consuming contract implementation its own least-privilege
   `secrets` namespace adapter. Only bootstrap credentials required to open
   those namespaces may use the runtime's encrypted root secret store directly.

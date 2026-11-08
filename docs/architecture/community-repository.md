@@ -2,17 +2,17 @@
 
 ## CMS instance composition
 
-A Repository is an explicitly enabled `ulvia/repository` CMS application profile.
+A Repository is an explicitly enabled `ulvia/repository` CMS contract on this instance.
 Its Edge exposes the admitted API and any explicitly authored Pages; the official Provider implements
 Repository operations and owns persistence. Edge, Provider and MongoDB remain
-independent processes. Ordinary CMS profiles do not expose Registry capabilities.
+independent processes. Instances without Registry do not expose Registry capabilities.
 
 The Registry contract is generated from `@bernouy/repository/features/repository`.
 Domain implementation and validation belong to `@bernouy/repository`; the Provider
 runtime chooses its adapters. Authored resources neither mount routes nor connect
 to databases.
 
-The Provider image bundles the exact admitted artifacts required by its profiles.
+The Provider image bundles the exact admitted artifacts required for system installation.
 A local source supplies those artifacts through the normal provisioning flow,
 without a remote Repository. Missing or invalid bundled artifacts fail explicitly.
 Restart preserves instance identity, credentials, namespace ownership and edited
@@ -21,16 +21,16 @@ resources into it remains an explicit authenticated action.
 
 ```sh
 ulvia services start
-ulvia instance create registry --profile repository@1.3.0
+ulvia instance create registry
 ulvia instance status registry
 ulvia instance stop registry
 ulvia instance start registry
 ```
 
-The CLI discovers supported exact profiles through the protected Provider
-operator endpoint and persists the selected reference. Profile upgrades use
-`ulvia instance upgrade-profile registry ID@VERSION` within the same application
-ID. Provider and Edge image upgrades use the normal `ulvia upgrade` commands.
+Open `/.cms/setup` and choose **A new Repository** to install Registry. The other
+choices select a custom address or `https://repo.ulvia.fr` for this instance.
+System bootstrap uses local SDK artifacts; Registry’s public catalogue starts
+empty. Provider and Edge image upgrades use the normal `ulvia upgrade` commands.
 The installed image pins and database/files credentials persist across restarts.
 There is no separate Repository runtime, image, Compose service or signing-key
 compatibility protocol. See the [installation guide](../installation/README.md#9-repository-cms-instance).
@@ -185,7 +185,7 @@ commit receipts and audit records. Storage growth, retention and large-catalogue
 indexes need production capacity policy; bounded response pages are not a claim
 of constant work over an unlimited repository.
 
-The Repository profile starts with system APIs and an administrator, without
+A new Repository starts with system APIs and an administrator, without
 collections or Pages. A website can be authored and installed explicitly through
 the same generic collection and Content APIs as any other site. Public releases
 and personal tokens remain available through the API and CLI independently of a

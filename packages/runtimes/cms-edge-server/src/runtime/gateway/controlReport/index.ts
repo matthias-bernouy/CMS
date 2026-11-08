@@ -1,25 +1,9 @@
 import { parseProviderRuntimeReportJson, type ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
-import type { InstallationsProviderTransport } from "./InstallationsProviderTransport";
+import type { InstallationsProviderTransport } from "../InstallationsProviderTransport";
 
-export const INSTALLATIONS_CONTRACT = {
-    contractId: "ulvia/cms.installations",
-    version: "1.2.0",
-    digest: "sha256:109492b625294814e4a6780048f968e4ec6623bd245f8c8c30f8860043b0bf3e",
-} as const;
-
-const SUPPORTED_CONTROL_CONTRACTS = [
-    INSTALLATIONS_CONTRACT,
-    {
-        contractId: "ulvia/cms.installations",
-        version: "1.1.0",
-        digest: "sha256:e5932d6d023d72d1e42ac8e750dbd5ad5f07c23207bfaa62ebb372fb562e2970",
-    },
-    {
-        contractId: "ulvia/cms.installations",
-        version: "1.0.0",
-        digest: "sha256:3fe9ec3a39901418a8817742d2aebadf731f87c7de4b8c70e5e13c60d1f2d4af",
-    },
-] as const;
+import supported from "./supported.json";
+export const INSTALLATIONS_CONTRACT = supported[0]!;
+const SUPPORTED_CONTROL_CONTRACTS = supported;
 
 export type InstallationsControlContract = Readonly<{ contractId: string; version: string; digest: string }>;
 export function installationsControlContract(report: ProviderRuntimeReport): InstallationsControlContract {

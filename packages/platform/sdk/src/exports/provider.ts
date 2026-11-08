@@ -15,3 +15,6 @@ export type {
     ProviderOperationRegistration,
     ProviderOperationInvocation,
 } from "ulvia-sdk/interfaces/runtime";
+
+export { loadCompatibleImplementation } from "ulvia-sdk/provider/artifacts/compatible";
+export { selectImplementationBuilds } from "ulvia-sdk/provider/selection";

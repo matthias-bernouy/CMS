@@ -11,9 +11,8 @@ Usage:
   ulvia repository login <url> [--token-stdin]
   ulvia repository logout
   ulvia namespace <list | claim | status | transfer | suspend> [options]
-  ulvia instance create <name> [--label <label>] [--domain <domain>] [--profile <id@version>]
+  ulvia instance create <name> [--label <label>] [--domain <domain>]
   ulvia instance <start | stop | status | credentials | logs> <name>
-  ulvia instance upgrade-profile <name> <id@version>
   ulvia instance list
   ulvia instance delete <name> --yes
   ulvia upgrade <edge | provider> --version <version>

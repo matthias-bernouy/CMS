@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { ContainerCluster } from "./cluster";
 import { provisionInstance } from "../provision";
 import { waitForHttp } from "../docker";
+import { configureRepository } from "../repository/initializationClient";
 import { repositoryApi } from "../repository/client";
 
 /** Registry bootstraps from the same Provider snapshot before its own Edge exists. */
@@ -28,7 +29,7 @@ export async function repositoryApplication(
         url,
         administrator,
         "http://repository:3000",
-        { id: "repository", version: legacyStarter ? "1.0.0" : "1.3.0" },
+        legacyStarter ? { id: "repository", version: "1.0.0" } : undefined,
     );
     await cluster.run(name, "repository", edgeImage, [
         "--publish",
@@ -41,6 +42,9 @@ export async function repositoryApplication(
         `CMS_INSTALLATIONS_PROVIDER_TOKEN=${instance.credentials.instanceAccessToken}`,
     ]);
     await waitForHttp(`${url}/readyz`);
+    if (!legacyStarter) {
+        await configureRepository(url, administrator, url, true);
+    }
     const api = repositoryApi(url);
     const account = await api.signup("publisher@example.test", `Publisher-${randomBytes(24).toString("base64url")}!`);
     if (account.administrator) {

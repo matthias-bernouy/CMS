@@ -2,7 +2,7 @@ import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
 import supported from "./supported-releases.json";
 
 export type ExecutionRelease = Readonly<{ contractId: string; version: string; digest: string }>;
-export type ExecutionProfile = Readonly<{
+export type ExecutionPlan = Readonly<{
     manifest: Readonly<{ providerId: string; version: string; digest: string }>;
     contracts: readonly ExecutionRelease[];
 }>;

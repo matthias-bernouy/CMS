@@ -1,4 +1,3 @@
-import { instanceProfileCoordinate, selectInstanceProfile } from "../../runtime/instances/profiles";
 import { localEdgeProjectName } from "../../runtime/stack/orchestration/state";
 import { readdir } from "node:fs/promises";
 import { provisionLocalInstance } from "../../runtime/instances/operator";
@@ -39,28 +38,23 @@ export async function instanceCommand(
         await listInstances(paths, installation, log);
         return;
     }
-    if (["start", "stop", "status", "credentials", "delete", "logs", "upgrade-profile"].includes(action ?? "")) {
+    if (["start", "stop", "status", "credentials", "delete", "logs"].includes(action ?? "")) {
         await runExistingInstanceCommand(action as string, rest, paths, log);
         return;
     }
-    throw new Error(
-        "Usage: ulvia instance <create | list | start | stop | status | credentials | logs | delete | upgrade-profile>",
-    );
+    throw new Error("Usage: ulvia instance <create | list | start | stop | status | credentials | logs | delete>");
 }
 
 async function createNamedInstance(
     paths: UlviaPaths,
     name: string,
-    options: Readonly<{ label?: string; domain?: string; profile?: string }>,
+    options: Readonly<{ label?: string; domain?: string }>,
     log: (message: string) => void,
 ): Promise<void> {
     assertLocalInstanceName(name);
     const services = await assertProviderRunning(paths);
     const instancePaths = resolveLocalInstancePaths(paths, name);
-    const existing = await loadLocalInstanceConfig(instancePaths.root);
     const operator = await providerOperatorAccess(paths, services);
-    const requested = options.profile ?? (existing ? `${existing.profile.id}@${existing.profile.version}` : undefined);
-    const profile = await selectInstanceProfile(operator.url, operator.token, requested);
     await ensureLocalInstancePaths(instancePaths);
     if (await loadLocalInstanceConnection(instancePaths.root)) {
         throw new Error(`Local instance already exists: ${name}`);
@@ -77,7 +71,6 @@ async function createNamedInstance(
             name,
             label: options.label ?? defaultLabel(name),
             hostname,
-            profile,
         });
         const connection = await provisionLocalInstance(
             operator.url,
@@ -103,7 +96,7 @@ function defaultLabel(name: string): string {
     return `Local ${name}`;
 }
 
-function parseCreateOptions(args: readonly string[]): Readonly<{ label?: string; domain?: string; profile?: string }> {
+function parseCreateOptions(args: readonly string[]): Readonly<{ label?: string; domain?: string }> {
     if (args.length % 2 !== 0) {
         throw new Error(createUsage());
     }
@@ -111,7 +104,7 @@ function parseCreateOptions(args: readonly string[]): Readonly<{ label?: string;
     for (let index = 0; index < args.length; index += 2) {
         const key = args[index] ?? "";
         const value = args[index + 1]?.trim() ?? "";
-        if (!["--label", "--domain", "--profile"].includes(key) || !value || values.has(key)) {
+        if (!["--label", "--domain"].includes(key) || !value || values.has(key)) {
             throw new Error(createUsage());
         }
         values.set(key, value);
@@ -124,11 +117,7 @@ function parseCreateOptions(args: readonly string[]): Readonly<{ label?: string;
     if (domain && !validHostname(domain)) {
         throw new Error("Instance domain must be a lowercase DNS hostname");
     }
-    const profile = values.get("--profile");
-    if (profile) {
-        instanceProfileCoordinate(profile);
-    }
-    return { ...(label ? { label } : {}), ...(domain ? { domain } : {}), ...(profile ? { profile } : {}) };
+    return { ...(label ? { label } : {}), ...(domain ? { domain } : {}) };
 }
 
 async function assertHostnameAvailable(paths: UlviaPaths, instanceName: string, hostname: string): Promise<void> {
@@ -147,7 +136,7 @@ async function listInstanceDirectoryNames(paths: UlviaPaths): Promise<string[]> 
 }
 
 function createUsage(): string {
-    return "Usage: ulvia instance create <name> [--label <label>] [--domain <domain>] [--profile <id@version>]";
+    return "Usage: ulvia instance create <name> [--label <label>] [--domain <domain>]";
 }
 
 function expectCount(args: readonly string[], count: number, usage: string): void {

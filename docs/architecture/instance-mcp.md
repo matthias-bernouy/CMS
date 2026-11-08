@@ -136,13 +136,11 @@ and publication are available through both CLI and instance Authoring capabiliti
 
 ## Versions and verification
 
-Current system profiles are `ulvia@1.3.0` and `repository@1.3.0`, with Provider
-manifest `1.2.0` and Installations `1.2.0`. Access, Content, Files and Authoring
-retain `1.0.0`; Registry uses `ulvia/repository@1.1.0` and the v1 protocol.
-These are source artifacts until explicitly released;
-editing them does not upgrade a deployed image or publish a catalogue release.
-This profile currently provisions fresh instances; automatic migration from
-older Provider profiles is not implemented.
+New system installations use Provider manifest and Installations `1.3.0`, Content
+`1.0.1` and Authoring `1.1.0`. Registry `1.1.0` is installed explicitly through
+native setup. Other system contracts retain their existing versions. Named
+profiles are removed. Existing sites keep their admitted pins and use explicitly
+verified retained SDK execution; source edits do not publish or deploy releases.
 
 Normal `bun run verify` includes domain, HTTP protocol and source-pipeline
 regressions. The opt-in real-image journey uses isolated local Docker containers

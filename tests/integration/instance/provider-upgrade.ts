@@ -5,7 +5,7 @@ import { docker, waitForHttp } from "./docker";
 export async function upgradeProvider(
     name: string,
     image: string,
-    version: string,
+    _version: string,
     operatorToken: string,
     instanceId: string,
     cleanupNames: string[],
@@ -64,16 +64,10 @@ export async function upgradeProvider(
     const url = controlUrl;
     const headers = { Authorization: `Bearer ${operatorToken}`, "Content-Type": "application/json" };
     await waitForHttp(`${url}/ulvia/operator/instances`, headers);
-    const response = await fetch(`${url}/ulvia/operator/instances/${encodeURIComponent(instanceId)}/profile`, {
-        method: "POST",
+    const response = await fetch(`${url}/ulvia/operator/instances/${encodeURIComponent(instanceId)}`, {
         headers,
-        body: JSON.stringify({ id: "ulvia", version }),
         signal: AbortSignal.timeout(120_000),
     });
-    const result = await response.json();
-    expect(result, "real Provider profile transition").toMatchObject({
-        status: "ready",
-        profile: { id: "ulvia", version },
-    });
     expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ status: "ready", id: instanceId });
 }

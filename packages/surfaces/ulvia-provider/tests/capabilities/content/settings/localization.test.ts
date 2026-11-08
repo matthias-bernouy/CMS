@@ -5,7 +5,7 @@ import { mountContentForTest } from "../mount";
 
 const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
-    contractVersion: "1.0.0",
+    contractVersion: "1.0.1",
     siteId: "default",
     providerId: "ulvia/primary-provider",
 };

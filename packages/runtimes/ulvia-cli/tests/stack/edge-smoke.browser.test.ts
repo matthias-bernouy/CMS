@@ -1,6 +1,6 @@
-import { publishSmokeRepository } from "./fixtures/repositoryBootstrap";
-import { resolveUlviaPaths } from "../../src/runtime/paths";
 import { localEdgeProjectName } from "../../src/runtime/stack/orchestration/state";
+import { resolveUlviaPaths } from "../../src/runtime/paths";
+import { publishSmokeRepository } from "./fixtures/repositoryBootstrap";
 import { captureCapabilityFailures } from "./fixtures/browserDiagnostics";
 import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -29,8 +29,6 @@ smoke(
         const environment = {
             ...process.env,
             ULVIA_DATA_DIR: data,
-            CMS_REPOSITORY_URL: `http://${localEdgeProjectName(resolveUlviaPaths({ ULVIA_DATA_DIR: data }), "registry")}-edge:3000`,
-            CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true",
             ULVIA_CONFIG_DIR: join(data, "client"),
             ULVIA_HTTP_PORT: String(PORTS.edge),
             ULVIA_PROVIDER_PORT: String(PORTS.provider),
@@ -55,10 +53,32 @@ smoke(
                 environment,
                 log: (message) => (output += `${message}\n`),
             });
-            await runCli(["instance", "create", "registry", "--profile", "repository@1.3.0"], {
+            await runCli(["instance", "create", "registry"], {
                 environment,
                 log: (message) => (output += `${message}\n`),
             });
+            browser = await chromium.launch({ headless: true });
+            const registryPage = await browser.newPage();
+            const registryCredentials = JSON.parse(
+                await readFile(join(data, "instances/registry/runtime.json"), "utf8"),
+            );
+            await registryPage.goto(`http://registry.localhost:${PORTS.edge}/.cms/setup`);
+            await registryPage.getByLabel("Email address").fill(registryCredentials.adminEmail);
+            await registryPage.getByLabel("Password", { exact: true }).fill(registryCredentials.adminPassword);
+            await registryPage.getByRole("button", { name: "Continue", exact: false }).click();
+            await registryPage.getByRole("button", { name: "A new Repository", exact: false }).waitFor();
+            await registryPage.screenshot({ path: "/tmp/ulvia-setup-repository.png", fullPage: true });
+            await registryPage.setViewportSize({ width: 375, height: 812 });
+            expect(await registryPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+                true,
+            );
+            await registryPage.screenshot({ path: "/tmp/ulvia-setup-repository-mobile.png", fullPage: true });
+            await registryPage.setViewportSize({ width: 1440, height: 1000 });
+            await registryPage.getByRole("button", { name: "A new Repository", exact: false }).click();
+            await registryPage
+                .getByRole("button", { name: "Start from scratch", exact: false })
+                .waitFor({ timeout: 120_000 });
+            await registryPage.close();
             await publishSmokeRepository(environment, PORTS.registryBridge);
             await runCli(["instance", "create", "default"], {
                 environment,
@@ -71,14 +91,18 @@ smoke(
                 adminEmail: string;
                 adminPassword: string;
             };
-            browser = await chromium.launch({ headless: true });
             const page = await browser.newPage({ locale: "en-US", viewport: { width: 1440, height: 1000 } });
             page.setDefaultTimeout(15_000);
             browserFailures = captureCapabilityFailures(page);
             page.on("pageerror", (error) => browserErrors.push(error.stack ?? error.message));
 
             report("initial browser journey");
-            await runEdgeSmoke(page, credentials, EDGE_URL);
+            await runEdgeSmoke(
+                page,
+                credentials,
+                EDGE_URL,
+                `http://${localEdgeProjectName(resolveUlviaPaths(environment), "registry")}-edge:3000`,
+            );
             const journal: string[] = [];
             await runCli(["instance", "logs", "default", "edge", "--event", "edge.started", "--json"], {
                 environment,

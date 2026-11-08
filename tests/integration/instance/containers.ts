@@ -1,7 +1,7 @@
 import { createTraceProbe, installDeliveryFixture } from "./containers/deliveryFixture";
 import { containerCluster } from "./containers/cluster";
 import { repositoryApplication } from "./containers/repository";
-import { initializationApi } from "./repository/initializationClient";
+import { initializationApi, configureRepository } from "./repository/initializationClient";
 import { repositoryApi } from "./repository/client";
 import { publishBundledReleases } from "./repository/bootstrap";
 import { provisionInstance } from "./provision";
@@ -55,10 +55,6 @@ export async function mcpContainers(
             "--volume",
             "/var/lib/cms/files",
             "--env",
-            "CMS_REPOSITORY_URL=http://repository:3000",
-            "--env",
-            "CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true",
-            "--env",
             `CMS_SESSION_SECRET=${randomBytes(32).toString("base64url")}`,
             "--env",
             "CMS_KEK_ACTIVE_ID=control",
@@ -96,7 +92,7 @@ export async function mcpContainers(
             cmsUrl,
             administrator,
             "http://edge:3000",
-            { id: "ulvia", version: legacyStarters ? "1.0.0" : "1.3.0" },
+            legacyStarters ? { id: "ulvia", version: "1.0.0" } : undefined,
         );
         const named = await provisionInstance(
             providerUrl,
@@ -105,7 +101,7 @@ export async function mcpContainers(
             `http://preview.localhost:${edgePort}`,
             administrator,
             "http://named-edge:3000",
-            { id: "ulvia", version: legacyStarters ? "1.0.0" : "1.3.0" },
+            legacyStarters ? { id: "ulvia", version: "1.0.0" } : undefined,
         );
         const startEdge = async (cache = initialResponseCache) =>
             run(edgeName, "edge", images.edge, [
@@ -122,6 +118,7 @@ export async function mcpContainers(
         await startEdge();
         await waitForHttp(`${cmsUrl}/readyz`);
         if (!legacyStarters) {
+            await configureRepository(cmsUrl, administrator, "http://repository:3000");
             await initializeEmpty(cmsUrl, administrator);
             await installDeliveryFixture(cmsUrl, administrator, repository);
             await createTraceProbe(cmsUrl, administrator);

@@ -1,28 +1,22 @@
 import { expect, test } from "bun:test";
 import {
-    OfficialInstanceProfiles,
-    type OfficialInstanceProfile,
+    type SystemInstallationPlan,
     type ProviderInstanceRecord,
     type InstanceTransitionRecord,
 } from "@bernouy/ulvia-provider";
-import { ProviderExecutionSupport } from "../../../src/runtime/instances/profiles/execution/support";
-import { assertHostedReleaseRetention } from "../../../src/runtime/instances/profiles/retention";
+import { ProviderExecutionSupport } from "../../../src/runtime/instances/system/execution/support";
+import { assertHostedReleaseRetention } from "../../../src/runtime/instances/system/retention";
 
 const digest = `sha256:${"a".repeat(64)}`;
-const profile: OfficialInstanceProfile = {
-    id: "ulvia",
-    version: "1.0.0",
-    upgradeFromVersions: [],
+const plan: SystemInstallationPlan = {
     manifest: { providerId: "ulvia/primary-provider", version: "0.1.0", digest },
-    collections: [{ publisherId: "ulvia", collectionId: "ulvia/mossa", version: "1.0.0", digest }],
-    initialPages: [],
     contracts: [{ contractId: "ulvia/cms.content", version: "1.0.0", digest }],
 };
-const profiles = new OfficialInstanceProfiles([profile]);
+const system = { current: async () => plan };
 const support = new ProviderExecutionSupport({
-    providerId: profile.manifest.providerId,
+    providerId: plan.manifest.providerId,
     buildVersion: "1.0.0",
-    releases: [...profile.contracts],
+    releases: [...plan.contracts],
 });
 const instance: ProviderInstanceRecord = {
     id: "instance:one",
@@ -32,55 +26,48 @@ const instance: ProviderInstanceRecord = {
     cmsUrl: "http://127.0.0.1:5100",
     label: "One",
     status: "disabled",
-    profile: { id: profile.id, version: profile.version },
+    systemPlan: plan,
+    gatewayUrl: "http://edge.internal:3000",
     revision: 1,
     createdAt: "2026-10-01T00:00:00Z",
     updatedAt: "2026-10-01T00:00:00Z",
 };
 
-test("even disabled instances retain their exact profile and selected release digests", async () => {
+test("even disabled instances retain their exact installed and selected release digests", async () => {
     await expect(
         assertHostedReleaseRetention(
             support,
             [instance],
             [],
-            async () => [{ ...profile.contracts[0]!, location: "site:default" }],
-            profiles,
+            async () => [{ ...plan.contracts[0]!, location: "site:default" }],
+            system,
         ),
     ).resolves.toBeUndefined();
     await expect(
-        assertHostedReleaseRetention(
-            support,
-            [{ ...instance, profile: { id: "removed-recipe", version: "0.9.0" } }],
-            [],
-            async () => [],
-            {
-                ...profiles,
-                resolve: () => {
-                    throw new Error("Must not load a recipe");
-                },
-            } as never,
-        ),
+        assertHostedReleaseRetention(support, [instance], [], async () => [], {
+            current: () => {
+                throw new Error("Must not load a recipe");
+            },
+        } as never),
     ).resolves.toBeUndefined();
     await expect(
         assertHostedReleaseRetention(
             support,
             [instance],
             [],
-            async () => [{ ...profile.contracts[0]!, digest: `sha256:${"b".repeat(64)}`, location: "site:default" }],
-            profiles,
+            async () => [{ ...plan.contracts[0]!, digest: `sha256:${"b".repeat(64)}`, location: "site:default" }],
+            system,
         ),
     ).rejects.toThrow("does not support ulvia/cms.content");
 });
 
-test("queued, running and retryable failed transitions retain both profiles", async () => {
+test("queued, running and retryable failed transitions retain their exact system plan", async () => {
     for (const status of ["queued", "running", "failed"] as const) {
         const transition: InstanceTransitionRecord = {
             id: "upgrade:one",
             instanceId: instance.id,
-            kind: "upgrade",
-            sourceProfile: { id: profile.id, version: "0.9.0" },
-            targetProfile: instance.profile,
+            kind: "provision",
+            targetPlan: { ...plan, manifest: { ...plan.manifest, digest: `sha256:${"f".repeat(64)}` } },
             planVersion: 1,
             steps: [],
             completedSteps: [],
@@ -90,7 +77,7 @@ test("queued, running and retryable failed transitions retain both profiles", as
             updatedAt: instance.updatedAt,
         };
         await expect(
-            assertHostedReleaseRetention(support, [instance], [transition], async () => [], profiles),
+            assertHostedReleaseRetention(support, [instance], [transition], async () => [], system),
         ).rejects.toThrow("transition:upgrade:one");
         await expect(
             assertHostedReleaseRetention(
@@ -98,7 +85,7 @@ test("queued, running and retryable failed transitions retain both profiles", as
                 [instance],
                 [{ ...transition, status: "succeeded" }],
                 async () => [],
-                profiles,
+                system,
             ),
         ).resolves.toBeUndefined();
     }

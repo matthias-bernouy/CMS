@@ -36,29 +36,18 @@ After initialization, `bun run ulvia -- start` reuses the installed digests.
 Building workspace sources does not update those containers; follow the
 explicit image build/publish and upgrade workflow below.
 
-Standard installations use `https://repo.ulvia.fr` for the Provider's Repository
-connection. Tests and offline development must select a local Repository
-explicitly before initialization:
-
-```bash
-CMS_REPOSITORY_URL=http://repository:3000 \
-CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true bun run ulvia -- services start --version 1.0.7
-```
-
-In this example, `repository:3000` is a Repository CMS Edge address reachable
-from the Provider containers. Profiles `ulvia@1.3.0` and `repository@1.3.0`
-initialize system APIs and an administrator from bundled artifacts before that
-remote catalogue is available. They create no collections or Pages. Images contain the SDK-generated system API snapshot. Tests publish their own
-small collection fixtures explicitly; there is no full starter snapshot.
-
-The connection is persisted in `services/installation.json` independently of
-network exposure and client PAT connections. The Edge smoke supplies this
-local override itself and never uses the public Repository.
+The native `/.cms/setup` offers a custom Repository address, the official
+Repository (`https://repo.ulvia.fr`), or a new Registry on this instance. Settings
+are persisted per instance, independently of shared services and client PAT
+connections. No global Repository URL environment variable is read. System
+provisioning uses bundled SDK artifacts offline and creates no collections or
+Pages. Tests publish small collection fixtures explicitly; no starter is bundled.
+The Edge smoke selects its isolated Registry through the same setup screen.
 
 The CLI manages shared services and any number of named Edge instances through
 independent Docker Compose projects. It runs the same Edge and Provider images
 for loopback and public installations, plus Nginx and MongoDB. A Repository is
-an explicit CMS application profile with its own Edge. The CLI never starts
+an instance with explicitly installed Registry and its own Edge. The CLI never starts
 application servers inside its process. Data lives below `$XDG_DATA_HOME/ulvia` or
 `~/.local/share/ulvia`; commands work from any directory. `ULVIA_DATA_DIR` is an
 explicit isolation override for tests and CI. `ULVIA_HTTP_PORT`
@@ -95,11 +84,10 @@ upgrades process instances in sequence; a later failure can leave earlier
 instances upgraded. Collection, contract, and provider
 manifest releases remain Repository artifacts and do not become Docker images.
 
-Distribution versions are independent of official artifacts. Current
-profiles use `1.3.0`; the Installations contract and Provider manifest use `1.2.0`;
-`ulvia/repository` uses `1.1.0`, and other
-official contracts retain `1.0.0`. Existing npm
-versions and Docker tags are retained rather than reused.
+Distribution versions are independent of official artifacts. Current Installations
+and Provider manifest use `1.3.0`; Content uses `1.0.1`, Authoring `1.1.0` and
+Registry `1.1.0`. Other system contracts retain their existing versions. Existing
+npm versions and Docker tags are never reused.
 
 The host CLI is a separate public npm artifact. Its private workspace sources
 are bundled so the published package has no `workspace:*` dependencies:
@@ -297,7 +285,7 @@ Generated historical copies under `artifacts/` are retained as evidence and are
 not executable inputs to the current suite. Plain `bun test` uses Bun's broader
 automatic discovery and can also execute those archival copies.
 
-Fresh core profiles expose optional native setup at `/.cms/setup`. The Edge
+Fresh instances expose optional native setup at `/.cms/setup`. The Edge
 smoke completes empty setup, explicitly publishes and installs a test collection,
 then creates, publishes, reloads and deletes a Page through public APIs and Chromium. See
 [Provider instance initialization](../architecture/provider-instance-initialization.md)

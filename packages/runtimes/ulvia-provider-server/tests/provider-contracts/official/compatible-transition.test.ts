@@ -4,18 +4,18 @@ import type { ContractRelease } from "@bernouy/ulvia-contracts";
 import type { ProviderInstallationCandidate } from "@bernouy/repository/providers/installations";
 import type { ProviderManagementGateway } from "@bernouy/repository/providers/management";
 import { compatibleTransitionRetention } from "../../../src/runtime/stores/collections/compatibleRetention";
-import { loadOfficialArtifacts } from "../../../src/runtime/instances/profiles/artifacts";
+import { loadSystemArtifacts } from "../../../src/runtime/instances/system/artifacts";
 import { repositoryFixture } from "./fixture";
 
 let base:
     | Promise<{
           repository: Awaited<ReturnType<typeof repositoryFixture>>;
-          profiles: Awaited<ReturnType<typeof loadOfficialArtifacts>>;
+          profiles: Awaited<ReturnType<typeof loadSystemArtifacts>>;
       }>
     | undefined;
 async function baseFixture() {
     const repository = await repositoryFixture();
-    return { repository, profiles: await loadOfficialArtifacts(repository.providers, repository.collections) };
+    return { repository, profiles: await loadSystemArtifacts(repository.providers) };
 }
 
 // Admit the official baseline once; future releases in this test are synthetic.
@@ -26,7 +26,7 @@ beforeAll(async () => {
 
 async function fixture(change: (release: ContractRelease) => ContractRelease = (value) => value) {
     const { repository: f, profiles } = await (base ??= baseFixture());
-    const before = profiles.profiles[0]!.contracts.find(({ contractId }) => contractId === "ulvia/cms.observability")!;
+    const before = profiles.plan.contracts.find(({ contractId }) => contractId === "ulvia/cms.observability")!;
     const source = f.contracts.find(
         ({ release }) => release.contractId === before.contractId && release.version === "1.0.0",
     )!;
@@ -47,8 +47,8 @@ async function fixture(change: (release: ContractRelease) => ContractRelease = (
         },
     } as unknown as ProviderManagementGateway;
     const target = {
-        ...profiles.defaultProfile,
-        contracts: profiles.defaultProfile.contracts.map((pin) => (pin.contractId === after.contractId ? after : pin)),
+        ...profiles.plan,
+        contracts: profiles.plan.contracts.map((pin) => (pin.contractId === after.contractId ? after : pin)),
     };
     const candidate: ProviderInstallationCandidate = {
         id: "official",

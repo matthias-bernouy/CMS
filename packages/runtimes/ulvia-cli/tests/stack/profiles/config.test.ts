@@ -1,39 +1,27 @@
 import { expect, test } from "bun:test";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { runCli } from "../../../src/cli";
 import { clientConfigDirectory } from "../../../src/runtime/repository/config";
-import {
-    loadLocalInstanceConfig,
-    loadOrCreateLocalInstanceConfig,
-    saveLocalInstanceProfile,
-} from "../../../src/runtime/instances/config";
+import { loadLocalInstanceConfig, loadOrCreateLocalInstanceConfig } from "../../../src/runtime/instances/config";
 
-test("an exact application profile persists without replacing instance identity or credentials", async () => {
-    const root = await mkdtemp(join(tmpdir(), "ulvia-profile-config-"));
-    const input = {
-        name: "registry",
-        label: "Registry",
-        hostname: "registry.localhost",
-        profile: { id: "repository", version: "1.0.0" },
-    };
+test("instance credentials and identity persist independently from Repository setup", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ulvia-instance-config-"));
+    const input = { name: "registry", label: "Registry", hostname: "registry.localhost" };
     try {
         const initial = await loadOrCreateLocalInstanceConfig(root, input);
         expect(await loadOrCreateLocalInstanceConfig(root, input)).toEqual(initial);
-        await expect(
-            loadOrCreateLocalInstanceConfig(root, {
-                ...input,
-                profile: { id: "ulvia", version: "1.0.0" },
-            }),
-        ).rejects.toThrow("conflicts");
-        await saveLocalInstanceProfile(root, { id: "repository", version: "1.1.0" });
-        const updated = await loadLocalInstanceConfig(root);
-        expect(updated).toEqual({ ...initial, profile: { id: "repository", version: "1.1.0" } });
+        expect(initial).not.toHaveProperty("profile");
+        await expect(loadOrCreateLocalInstanceConfig(root, { ...input, hostname: "other.localhost" })).rejects.toThrow(
+            "conflicts",
+        );
         expect((await stat(join(root, "runtime.json"))).mode & 0o777).toBe(0o600);
-        const bytes = await readFile(join(root, "runtime.json"), "utf8");
-        await expect(saveLocalInstanceProfile(root, { id: "repository", version: "latest" })).rejects.toThrow();
-        expect(await readFile(join(root, "runtime.json"), "utf8")).toBe(bytes);
+        await writeFile(
+            join(root, "runtime.json"),
+            JSON.stringify({ ...initial, profile: { id: "repository", version: "1.0.0" } }),
+        );
+        expect(await loadLocalInstanceConfig(root)).toEqual(initial);
         await writeFile(
             join(root, "runtime.json"),
             JSON.stringify({ ...initial, schema: "ulvia.local-instance-runtime.v2" }),

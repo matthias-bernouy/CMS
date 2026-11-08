@@ -67,3 +67,5 @@ progress { width: 100%; accent-color: #385f4e; height: 7px; margin: 12px 0 22px;
 footer { margin-top: auto; padding-top: 32px; font-size: 11px; color: #6b786d; display: flex; gap: 12px; }
 @media (max-width: 1000px) { .shell { grid-template-columns: 280px minmax(0, 1fr); } .sidebar { padding: 36px 28px; } main { padding: 32px; } .choices { grid-template-columns: 1fr; } .stage { padding-top: 48px; } }
 @media (max-width: 680px) { .shell { display: block; } .sidebar { padding: 22px 24px; border-right: 0; border-bottom: 1px solid #e4e9e1; } .brand { margin: 0; font-size: 20px; } .sidebar > :not(.brand) { display: none; } main { min-height: calc(100dvh - 78px); padding: 24px; } .stage { padding: 40px 0; } h2 { font-size: 27px; } .choice { padding: 22px; } }
+
+.repository-choices { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }

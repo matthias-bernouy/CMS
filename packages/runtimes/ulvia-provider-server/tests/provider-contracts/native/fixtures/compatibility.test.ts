@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { ProviderExecutionSupport } from "../../../../src/runtime/instances/profiles/execution/support";
+import { ProviderExecutionSupport } from "../../../../src/runtime/instances/system/execution/support";
 import { parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { apiSignature } from "./apiSignature";
 import previous from "./previous-apis.json";
 
-test("historical v1 capability signatures remain compatible while unshipped exact pins refuse execution", async () => {
+test("retained deployed v1 contracts keep their executable APIs and exact runtime support", async () => {
     const root = resolve(import.meta.dir, "../../../../../ulvia-cli/dist/bootstrap");
     const index = JSON.parse(await readFile(resolve(root, "index.json"), "utf8")) as { contracts: string[] };
     const releases = await Promise.all(
@@ -14,8 +14,7 @@ test("historical v1 capability signatures remain compatible while unshipped exac
     );
     const support = new ProviderExecutionSupport();
     for (const reference of previous.releases) {
-        // API comparison remains historical evidence; this build cannot advertise an unshipped exact release.
-        expect(() => support.assert(reference, previous.image)).toThrow("does not support");
+        expect(() => support.assert(reference, previous.image)).not.toThrow();
         const current = releases.find(({ contractId }) => contractId === reference.contractId)!;
         for (const [id, signature] of Object.entries(reference.capabilities)) {
             const capability = current.capabilities.find((capability) => capability.id === id);
@@ -45,14 +44,21 @@ test("the API evidence preserves business properties called description and incl
     );
 });
 
-test("the runtime support matrix contains exactly the SDK's shipped executable claims", async () => {
+test("the runtime support matrix includes exactly the current and explicitly retained executable claims", async () => {
     const { loadOfficialFeatures } = await import("@bernouy/ulvia-provider/capabilities");
     const runtime = await loadOfficialFeatures();
     const pins = runtime.implementations
         .map(({ contractId, version, digest }) => ({ contractId, version, digest }))
         .sort((a, b) => (a.contractId < b.contractId ? -1 : a.contractId > b.contractId ? 1 : 0));
     const support = new ProviderExecutionSupport();
-    expect(support.releases).toEqual(pins);
+    const retained = (await import("@bernouy/ulvia-provider/build")).compileRetainedFeatures;
+    const all = [
+        ...pins,
+        ...(await retained())
+            .flatMap((build) => build.implementations)
+            .map(({ contractId, version, digest }) => ({ contractId, version, digest })),
+    ];
+    expect(new Set(support.releases.map((pin) => pin.digest))).toEqual(new Set(all.map((pin) => pin.digest)));
     for (const pin of pins) {
         expect(() => support.assert(pin, "runtime artifact")).not.toThrow();
     }

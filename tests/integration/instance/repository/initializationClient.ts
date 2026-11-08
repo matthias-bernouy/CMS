@@ -11,7 +11,7 @@ export function initializationApi(origin: string, cookie = "") {
                 origin,
                 cookie,
                 ...(input === undefined ? {} : { "content-type": "application/json" }),
-                ...(method === "POST" ? { "idempotency-key": crypto.randomUUID() } : {}),
+                ...(path === "initialization/apply" ? { "idempotency-key": crypto.randomUUID() } : {}),
             },
             ...(input === undefined ? {} : { body: JSON.stringify(input) }),
         });
@@ -72,4 +72,29 @@ export async function installStarter(
         cursor = page.cursor;
     } while (cursor);
     throw new Error(`Missing test bootstrap for ${collectionId}`);
+}
+
+/** Select a site source through admitted setup capabilities; Registry activation remains explicit. */
+export async function configureRepository(
+    origin: string,
+    administrator: { email: string; password: string },
+    url: string,
+    createRepository = false,
+) {
+    const session = await repositoryApi(origin).session(administrator.email, administrator.password);
+    const api = initializationApi(origin, session.cookie);
+    const current = await (await api.call("initialization/repository")).json();
+    const response = await api.call(
+        createRepository ? "initialization/repository/create" : "initialization/repository",
+        "POST",
+        createRepository ? { expectedRevision: current.revision } : { expectedRevision: current.revision, url },
+    );
+    expect(response.status, await response.clone().text()).toBe(200);
+    const state = await response.json();
+    expect(state).toMatchObject({ configured: true, url: new URL(url).origin });
+    if (createRepository) {
+        expect(state.repositoryEnabled).toBe(true);
+        expect(state.creationStatus).toBe("succeeded");
+    }
+    return state;
 }

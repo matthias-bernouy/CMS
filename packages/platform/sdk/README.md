@@ -344,3 +344,10 @@ HTTP request; alternative implementations own their full domain authorization.
 Use readonly Zod wrappers for readonly port results; they preserve emitted schemas.
 `contractString({ enum: ["read", "write"], maxLength: 32 })` retains both the literal
 union and the explicit v1 length bound.
+
+Retaining an older admitted contract is explicit: `./provider` exports
+`loadCompatibleImplementation` to compare its complete execution signatures with
+one code-owned implementation, and `selectImplementationBuilds` to select exact
+pins across verified builds. Hosts must supply their own bounded retention policy;
+unknown or conflicting pins refuse before handler registration. See the
+[runtime attachment guide](../../../docs/development/sdk-runtime.md).

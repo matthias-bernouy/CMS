@@ -1,4 +1,4 @@
-import type { ExecutionProfile } from "../../instances/profiles/execution/support";
+import type { ExecutionPlan } from "../../instances/system/execution/support";
 import type { ProviderReleaseRetention } from "@bernouy/repository/providers/installations";
 import type { ProviderManagementGateway } from "@bernouy/repository/providers/management";
 import type { SiteUpgradeStorage } from "@bernouy/repository/upgrades";
@@ -9,7 +9,7 @@ import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
 export function createProviderRetention(
     gateway: ProviderManagementGateway,
     storage: SiteUpgradeStorage,
-    profile: ExecutionProfile,
+    plan: ExecutionPlan,
     instanceId: string,
 ): ProviderReleaseRetention {
     const snapshot: ProviderReleaseRetention["snapshot"] = async (scope) => {
@@ -44,10 +44,10 @@ export function createProviderRetention(
         }
         if (
             installed?.installation.accountId === instanceId &&
-            installed.installation.providerId === profile.manifest.providerId
+            installed.installation.providerId === plan.manifest.providerId
         ) {
             releases.push(
-                ...profile.contracts.map((pin) => ({ ...pin, location: `instance:${instanceId}/implementation` })),
+                ...plan.contracts.map((pin) => ({ ...pin, location: `instance:${instanceId}/implementation` })),
             );
         }
         return { complete: true, releases, revision: await catalogueRevision({ selected, active, releases }, 64) };

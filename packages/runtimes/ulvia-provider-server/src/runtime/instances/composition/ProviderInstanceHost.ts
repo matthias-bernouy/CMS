@@ -1,6 +1,10 @@
-import { readInstalledExecution } from "../profiles/execution/installed";
-import { ProviderExecutionSupport, type ExecutionProfile } from "../profiles/execution/support";
-import type { LazyOfficialProfiles } from "../profiles/execution/LazyOfficialProfiles";
+import { registryInstallationPlan } from "../system/execution/registry";
+import { readStoredPlan } from "../system/execution/plan";
+import type { InstanceTransitionRecord } from "@bernouy/ulvia-provider";
+import { readInstalledExecution } from "../system/execution/installed";
+import { ProviderExecutionSupport, type ExecutionPlan } from "../system/execution/support";
+import type { SystemBootstrap } from "../system/execution/SystemBootstrap";
+import { createRepositorySettings, repositoryTransport } from "./repositorySettings";
 import { MemoryVectorStore } from "@bernouy/text-search";
 import { HttpRepositoryDiscovery } from "@bernouy/repository/repository/search/http";
 import { RepositoryDiscovery } from "@bernouy/repository/repository/search";
@@ -45,7 +49,7 @@ import { RecoverySupervisor } from "../../recovery/RecoverySupervisor";
 import { createProviderStores, type ProviderStores } from "../../stores/providerStores";
 import { CmsFileWorkspace } from "../../stores/CmsFileWorkspace";
 import { createInstanceProvisioningTarget } from "../instanceProvisioning";
-import type { OfficialBootstrapSources } from "../profiles/bootstrap";
+import type { OfficialBootstrapSources } from "../system/bootstrap";
 import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from "../InstanceResourcePool";
 import { CollectionVerificationPool } from "../verification/CollectionVerificationPool";
 import { CollectionSourceCaches } from "@bernouy/ulvia-provider";
@@ -69,10 +73,7 @@ export type InstanceComposition = Readonly<{
     gateway: Awaited<ReturnType<typeof createProviderGateway>>;
     runtime: UlviaProviderInstanceRuntime;
     management: ProviderManagement;
-    managementForProfile(
-        profile: ExecutionProfile,
-        execution?: ProviderInstanceTransitionExecution,
-    ): ProviderManagement;
+    managementForPlan(plan: ExecutionPlan, execution?: ProviderInstanceTransitionExecution): ProviderManagement;
     administrators: Awaited<ReturnType<typeof createProviderGateway>>["administrators"];
     operations: ProviderOperationExecutor;
     documentation: CmsDocumentation;
@@ -86,16 +87,22 @@ export class ProviderInstanceHost {
     readonly #collectionCaches = new CollectionSourceCaches();
     readonly #documentation: ProviderDocumentation;
     readonly #instances: InstanceResourcePool<InstanceComposition>;
-    readonly #providerSource: HttpProviderRepository;
-    readonly #collectionSource: HttpCollectionRepository;
+    repositoryCreation?: {
+        create(
+            instance: ProviderInstanceRecord,
+            expectedRevision: number,
+            administratorId: string,
+        ): Promise<ProviderInstanceRecord>;
+        read(instance: ProviderInstanceRecord): Promise<InstanceTransitionRecord | null>;
+    };
 
     constructor(
         private readonly env: ProviderRuntimeEnv,
         private readonly credentials: EncryptedInstanceCredentials,
-        private readonly profiles: LazyOfficialProfiles,
+        private readonly system: SystemBootstrap,
         private readonly logger: Logger,
         private readonly support: ProviderExecutionSupport,
-        instances: Pick<ProviderInstanceRegistry, "get">,
+        private readonly instances: Pick<ProviderInstanceRegistry, "get" | "update">,
         private readonly bootstrap: OfficialBootstrapSources,
     ) {
         this.#documentation = new ProviderDocumentation(
@@ -112,15 +119,6 @@ export class ProviderInstanceHost {
             },
             logger,
         );
-        this.#providerSource = new HttpProviderRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL, {
-            request: correlatedRepositoryFetch,
-            allowInsecureHttp: env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
-        });
-        this.#collectionSource = new HttpCollectionRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL, {
-            verifier: this.#verification,
-            request: correlatedRepositoryFetch,
-            allowInsecureHttp: env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
-        });
         this.#instances = new InstanceResourcePool(
             (key, lifetime) => this.createComposition(this.#records.get(key)!, lifetime),
             (composition) => composition.close(),
@@ -165,6 +163,20 @@ export class ProviderInstanceHost {
             }),
             release: lease.release,
         };
+    }
+
+    async registryPlan(instance: ProviderInstanceRecord) {
+        const lease = await this.open(instance);
+        try {
+            return await registryInstallationPlan(
+                instance,
+                lease.resource.stores,
+                this.support,
+                this.env.ULVIA_PROVIDER_PUBLIC_URL,
+            );
+        } finally {
+            lease.release();
+        }
     }
 
     async close(): Promise<void> {
@@ -225,6 +237,16 @@ export class ProviderInstanceHost {
         if (!credentials) {
             throw new Error(`Provider instance credentials are unavailable: ${instance.id}`);
         }
+        const repository = repositoryTransport(instance);
+        const providerSource = new HttpProviderRepository(repository.id, repository.url, {
+            request: correlatedRepositoryFetch,
+            allowInsecureHttp: repository.allowInsecureHttp,
+        });
+        const collectionSource = new HttpCollectionRepository(repository.id, repository.url, {
+            verifier: this.#verification,
+            request: correlatedRepositoryFetch,
+            allowInsecureHttp: repository.allowInsecureHttp,
+        });
         const filesDirectory = join(this.env.CMS_FILES_DIR, instance.storageKey);
         await mkdir(filesDirectory, { recursive: true, mode: 0o700 });
         const diagnostics = createInstanceDiagnostics(instance.id, this.logger.child({ instanceId: instance.id }));
@@ -257,9 +279,9 @@ export class ProviderInstanceHost {
             const execution =
                 instance.status === "ready" || instance.status === "disabled"
                     ? await readInstalledExecution(instance, stores, this.support, this.env.ULVIA_PROVIDER_PUBLIC_URL)
-                    : await this.provisioningExecution(instance);
-            const { profile, contracts, report } = execution;
-            const registryPin = profile.contracts.find(({ contractId }) => contractId === "ulvia/repository");
+                    : await this.provisioningExecution(instance, stores);
+            const { plan, contracts, report } = execution;
+            const registryPin = plan.contracts.find(({ contractId }) => contractId === "ulvia/repository");
             if (registryPin) {
                 registry = await createInstanceRepository(
                     stores,
@@ -272,31 +294,28 @@ export class ProviderInstanceHost {
             }
             const readReport = async (endpoint: string, token: string) =>
                 endpoint === this.env.ULVIA_PROVIDER_PUBLIC_URL && token === credentials.invocationSecret
-                    ? providerReport(instance, profile, this.support.buildVersion)
+                    ? providerReport(instance, plan, this.support.buildVersion)
                     : readRemoteProviderReport(endpoint, token);
             const gateway = await createProviderGateway(stores, SITE_ID, {
                 readReport,
                 reportFailure: (installationId, error) =>
                     instanceLogger.warn("provider.observation.refresh.failed", { installationId }, error),
             });
-            const managementForProfile = (
-                profile: ExecutionProfile,
-                execution?: ProviderInstanceTransitionExecution,
-            ) => {
-                const retention = createProviderRetention(gateway, stores.upgradeStorage, profile, instance.id);
+            const managementForPlan = (plan: ExecutionPlan, execution?: ProviderInstanceTransitionExecution) => {
+                const retention = createProviderRetention(gateway, stores.upgradeStorage, plan, instance.id);
                 return new ProviderManagement(gateway, stores.contractSecrets.installations, {
                     retention: execution
-                        ? compatibleTransitionRetention(retention, gateway, instance.id, profile, execution)
+                        ? compatibleTransitionRetention(retention, gateway, instance.id, plan, execution)
                         : retention,
-                    sources: [this.#providerSource],
+                    sources: [providerSource],
                     drafts: stores.connectionDrafts,
                     readReport: async (endpoint, token) =>
                         endpoint === this.env.ULVIA_PROVIDER_PUBLIC_URL && token === credentials.invocationSecret
-                            ? providerReport(instance, profile, this.support.buildVersion)
+                            ? providerReport(instance, plan, this.support.buildVersion)
                             : readRemoteProviderReport(endpoint, token),
                 });
             };
-            const management = managementForProfile(profile);
+            const management = managementForPlan(plan);
             const providerOperations = new MongoProviderOperationStore(stores.db);
             await providerOperations.init();
             const instanceOperations = new ProviderOperationExecutor(providerOperations, undefined, {
@@ -317,7 +336,7 @@ export class ProviderInstanceHost {
             const officialPairing = new ProviderPairing(stores, gateway, instance.gatewayUrl, {
                 endpoint: this.env.ULVIA_PROVIDER_PUBLIC_URL,
                 instanceId: instance.id,
-                providerId: profile.manifest.providerId,
+                providerId: plan.manifest.providerId,
                 connections: providerConnections,
             });
             const authentication = await createInstanceAuth(stores, instance.cmsUrl);
@@ -329,10 +348,10 @@ export class ProviderInstanceHost {
             const authoring = createRepositoryAuthoring(
                 stores,
                 filesDirectory,
-                this.env.CMS_REPOSITORY_URL,
-                this.#collectionSource,
+                repository.url,
+                collectionSource,
                 fileWorkspace,
-                this.env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
+                repository.allowInsecureHttp,
             );
             documentation = await createInstanceDocumentation(stores, this.#documentation.model, () =>
                 this.#documentation.request(instance),
@@ -341,7 +360,7 @@ export class ProviderInstanceHost {
             const keyedExecution = new DurableKeyedExecution(
                 new MongoKeyedReceiptStore(stores.db),
                 {
-                    providerId: profile.manifest.providerId,
+                    providerId: plan.manifest.providerId,
                     siteId: SITE_ID,
                     instanceId: instance.id,
                 },
@@ -354,16 +373,50 @@ export class ProviderInstanceHost {
                     ...(registry ? { withUserDeletion: registry.withUserDeletion } : {}),
                     documentation: instanceDocumentation,
                     repositoryDiscovery: new RepositoryDiscovery([
-                        new HttpRepositoryDiscovery("ulvia-provider-bootstrap", this.env.CMS_REPOSITORY_URL, {
+                        new HttpRepositoryDiscovery(repository.id, repository.url, {
                             request: correlatedRepositoryFetch,
-                            allowInsecureHttp: this.env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
+                            allowInsecureHttp: repository.allowInsecureHttp,
                         }),
                     ]),
                     ...createPublicDelivery(stores, gateway, instance.cmsUrl),
                     authoring,
                     repository: registry?.service,
                     providerConnections,
-                    initialization: stores.createInitialization(this.#collectionSource),
+                    initialization: stores.createInitialization(collectionSource),
+                    repositorySettings: createRepositorySettings({
+                        instanceId: instance.id,
+                        instances: this.instances,
+                        enabled: async () => {
+                            const [selected, installed] = await Promise.all([
+                                gateway.selections.get(SITE_ID),
+                                stores.installations.list(SITE_ID),
+                            ]);
+                            const owned = new Set(
+                                installed
+                                    .filter(
+                                        ({ installation }) =>
+                                            installation.accountId === instance.id &&
+                                            installation.providerId === this.support.providerId,
+                                    )
+                                    .map(({ installation }) => installation.id),
+                            );
+                            return Boolean(
+                                selected?.plan.selections.some(
+                                    ({ contractId, installationId }) =>
+                                        contractId === "ulvia/repository" && owned.has(installationId),
+                                ),
+                            );
+                        },
+                        create: async (instance, expectedRevision, administratorId) => {
+                            if (!this.repositoryCreation) {
+                                throw new Error("Registry creation is unavailable");
+                            }
+                            return this.repositoryCreation.create(instance, expectedRevision, administratorId);
+                        },
+                        creation: async (instance) => ({
+                            status: (await this.repositoryCreation?.read(instance))?.status ?? "none",
+                        }),
+                    }),
                     emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
                     files: stores.providerFiles,
@@ -388,18 +441,18 @@ export class ProviderInstanceHost {
                 gateway,
                 instanceOperations,
                 {
-                    ...createProtectedProviderManagement(management, instance, profile),
+                    ...createProtectedProviderManagement(management, instance, plan),
                     administration: providerAdministration(stores, gateway, management, instance.gatewayUrl),
                 },
                 new CollectionSources(
                     stores.collections,
-                    [this.#collectionSource],
+                    [collectionSource],
                     this.#verification,
                     this.#collectionCaches,
                 ),
-                profile.contracts,
+                plan.contracts,
                 {
-                    providerId: profile.manifest.providerId,
+                    providerId: plan.manifest.providerId,
                     scope: { siteId: SITE_ID, instanceId: instance.id },
                     executeKeyed: keyedExecution.execute,
                 },
@@ -418,13 +471,13 @@ export class ProviderInstanceHost {
                 gateway,
                 documentation: instanceDocumentation,
                 management,
-                managementForProfile,
+                managementForPlan,
                 administrators: gateway.administrators,
                 operations: instanceOperations,
                 pairOfficialProvider: async () => {
                     const state = await management.list();
                     const official = state.installations.find(
-                        (item) => item.providerId === profile.manifest.providerId && item.accountId === instance.id,
+                        (item) => item.providerId === plan.manifest.providerId && item.accountId === instance.id,
                     );
                     if (!official) {
                         throw new Error("Official Provider installation is unavailable for pairing");
@@ -493,18 +546,21 @@ export class ProviderInstanceHost {
             throw error;
         }
     }
-    private async provisioningExecution(instance: ProviderInstanceRecord) {
-        const profile = await this.profiles.resolve(instance.profile.id, instance.profile.version);
-        if (!profile) {
-            throw new Error(`Unsupported provisioning profile: ${instance.profile.id}@${instance.profile.version}`);
+    private async provisioningExecution(instance: ProviderInstanceRecord, stores: ProviderStores) {
+        const plan = instance.systemPlan;
+        if (!plan) {
+            throw new Error("Unfinished legacy provisioning requires its original Provider image");
         }
-        for (const pin of profile.contracts) {
+        for (const pin of plan.contracts) {
             this.support.assert(pin, `provisioning:${instance.id}`);
         }
         return {
-            profile,
-            contracts: await this.profiles.contracts(profile),
-            report: providerReport(instance, profile, this.support.buildVersion),
+            plan,
+            contracts:
+                instance.status === "upgrading"
+                    ? await readStoredPlan(plan, stores, this.support)
+                    : await this.system.contracts(plan),
+            report: providerReport(instance, plan, this.support.buildVersion),
         };
     }
 
@@ -530,17 +586,17 @@ function roundDuration(value: number): number {
 
 function providerReport(
     instance: ProviderInstanceRecord,
-    profile: ExecutionProfile,
+    plan: ExecutionPlan,
     buildVersion: string,
 ): ProviderRuntimeReport {
     return {
         protocol: "ulvia-provider/v1",
-        providerId: profile.manifest.providerId,
+        providerId: plan.manifest.providerId,
         instanceId: instance.id,
         account: { id: instance.id, label: instance.label },
         buildVersion,
-        manifest: { version: profile.manifest.version, digest: profile.manifest.digest as ProviderManifestDigest },
-        implementations: profile.contracts.map((contract) => ({
+        manifest: { version: plan.manifest.version, digest: plan.manifest.digest as ProviderManifestDigest },
+        implementations: plan.contracts.map((contract) => ({
             ...contract,
             digest: contract.digest as ReleaseDigest,
             status: "ready" as const,
@@ -549,7 +605,7 @@ function providerReport(
 }
 
 function compositionKey(instance: ProviderInstanceRecord): string {
-    return `${instance.id}\0${instance.profile.id}\0${instance.profile.version}`;
+    return `${instance.id}\0${instance.revision}`;
 }
 
 import { DurableKeyedExecution } from "../../provider-operations/keyed/DurableKeyedExecution";

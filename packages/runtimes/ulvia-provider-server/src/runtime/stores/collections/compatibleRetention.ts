@@ -1,4 +1,4 @@
-import type { ExecutionProfile } from "../../instances/profiles/execution/support";
+import type { ExecutionPlan } from "../../instances/system/execution/support";
 import { resolveContract } from "@bernouy/ulvia-contracts";
 import { compareContractReleases, semVerMajor } from "@bernouy/ulvia-contracts/compatibility";
 import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
@@ -11,7 +11,7 @@ export function compatibleTransitionRetention(
     retention: ProviderReleaseRetention,
     gateway: ProviderManagementGateway,
     instanceId: string,
-    target: ExecutionProfile,
+    target: ExecutionPlan,
     execution: ProviderInstanceTransitionExecution,
 ): ProviderReleaseRetention {
     return {

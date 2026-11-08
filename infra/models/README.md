@@ -49,7 +49,7 @@ ULVIA_MODEL_PROVIDER_IMAGE=ulvia-provider:local \
 bun test tests/images/models/offline.docker.test.ts
 ```
 
-The Repository is a CMS profile in this Provider and shares its embedding model.
+Registry is an optional CMS feature in this Provider and shares its embedding model.
 The Edge image has no model. To additionally exercise the real Repository API
 on an internal Docker network without Internet access, supply
 `ULVIA_MCP_EDGE_DOCKER_IMAGE` alongside `ULVIA_MODEL_PROVIDER_IMAGE` and run

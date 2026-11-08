@@ -39,7 +39,7 @@ behavior.
   Runtime mounting must not import the build entry or require authored docs/fixtures.
   Add a migrated feature to the inventory, without a family-specific registrar.
 - `registerOfficialFeatures` receives exact approved implementation pins from the
-  runtime profile. Reject every unknown or reserved-template claim, and any
+  runtime installation plan. Reject every unknown or reserved-template claim, and any
   selected SDK family with an unsupported version/digest or missing service. Do not
   silently skip a claimed feature because its runtime service is unavailable.
 
@@ -56,7 +56,7 @@ behavior.
   Do not expose private instance lifecycle/storage records through that template.
 
 - `ulvia/repository` is selected from the shared SDK inventory only for explicit
-  Repository execution profiles. Inject its typed domain facade and the host's
+  instances selecting Registry. Inject its typed domain facade and the host's
   account-alias resolver; public reads do not resolve accounts. Namespace/source/
   publication ownership remains domain-owned. Never add a second registry registrar
   or convert unknown return values into DTOs with casts. Preserve bounded public
@@ -68,7 +68,7 @@ behavior.
   receipts, leases, instance retention, recovery and shutdown draining. Exact-version
   declared errors may be supplied by an explicit registration reader.
 
-- `ulvia/cms.installations` is mounted only from the SDK inventory; its five durable
+- `ulvia/cms.installations` is mounted only from the SDK inventory; its durable
   workers are derived from the selected definition. Never restore family registrars
   or unselected routes. Inject collections/upgrades, gateway/admin, documentation,
   discovery and operation-read ports before mounting. `createInstallationOperationQueries`
@@ -84,3 +84,8 @@ behavior.
   again in recovered workers. Inject the structural initialization service; never
   restore the old registrar. Upgrade-operation queries retain their declared DTO's
   capability-ID set; initialization progress uses one scoped metadata-only latest read.
+
+- Repository address changes are synchronous natural commands with a single CAS.
+  Registry creation awaits the host's durable instance transition; do not queue a
+  second SDK operation or add a parallel pending-choice record. Project creation
+  status from that transition and keep recovery authority checks in its owner.

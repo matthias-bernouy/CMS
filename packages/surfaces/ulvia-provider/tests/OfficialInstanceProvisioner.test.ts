@@ -1,8 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
-    OfficialInstanceProfiles,
     OfficialInstanceProvisioner,
-    canUpgradeOfficialInstanceProfile,
     type CreateProviderInstanceRecord,
     type InstanceTransitionRecord,
     type InstanceTransitionStore,
@@ -12,46 +10,149 @@ import {
     type UpdateProviderInstanceRecord,
 } from "../src/exports/index";
 
-const OFFICIAL_INSTANCE_PROFILE = Object.freeze({
-    id: "ulvia",
-    version: "1.0.0",
-    initialPages: [],
-    upgradeFromVersions: Object.freeze([] as string[]),
+const SYSTEM_PLAN = Object.freeze({
     manifest: Object.freeze({
         providerId: "ulvia/primary-provider",
-        version: "0.3.0",
+        version: "1.0.0",
         digest: `sha256:${"a".repeat(64)}`,
     }),
     contracts: Object.freeze([
         Object.freeze({ contractId: "ulvia/cms.content", version: "1.0.0", digest: `sha256:${"b".repeat(64)}` }),
     ]),
-    collections: Object.freeze([
-        Object.freeze({
-            publisherId: "ulvia",
-            collectionId: "ulvia/mossa",
-            version: "1.0.0",
-            digest: `sha256:${"c".repeat(64)}`,
-        }),
-    ]),
 });
-const PROFILES = new OfficialInstanceProfiles([OFFICIAL_INSTANCE_PROFILE]);
 
 describe("OfficialInstanceProvisioner", () => {
-    test("acknowledging an unchanged ready profile needs no installation kit", async () => {
-        const registry = new MemoryRegistry({ ...instance(), status: "ready" });
+    test("Registry transition recovery rechecks current administrator authority before opening services", async () => {
+        const registry = new MemoryRegistry(instance("ready"));
+        const transitions = new MemoryTransitions();
+        transitions.record = {
+            id: "system:extension",
+            instanceId: "instance:one",
+            kind: "registry",
+            targetPlan: SYSTEM_PLAN,
+            administratorSub: "local:revoked",
+            planVersion: 1,
+            steps: ["manifest", "provider", "contracts"],
+            completedSteps: [],
+            status: "queued",
+            revision: 1,
+            createdAt: new Date(0).toISOString(),
+            updatedAt: new Date(0).toISOString(),
+        };
+        const calls: string[] = [];
+        const provisioner = new OfficialInstanceProvisioner(
+            registry,
+            transitions,
+            async () => {
+                calls.push("open");
+                return target(calls, async () => undefined);
+            },
+            { ...administratorCredentials(), authorizeExtension: async () => false },
+        );
+        await provisioner.recover();
+        expect(calls).toEqual([]);
+        expect(transitions.record?.status).toBe("failed");
+        expect((await registry.get("instance:one"))?.status).toBe("ready");
+    });
+
+    test("Registry uses one durable transition, resumes completed steps, and commits the address only at completion", async () => {
+        const registry = new MemoryRegistry(instance("ready"));
         const transitions = new MemoryTransitions();
         const calls: string[] = [];
-        const unavailable = () => {
-            throw new Error("Installation kit must not be loaded");
+        let fail = true;
+        const plan = {
+            ...SYSTEM_PLAN,
+            contracts: [
+                ...SYSTEM_PLAN.contracts,
+                { contractId: "ulvia/repository", version: "1.0.0", digest: `sha256:${"c".repeat(64)}` },
+            ],
+        };
+        const provisioner = new OfficialInstanceProvisioner(
+            registry,
+            transitions,
+            async () => ({
+                ...target(calls, async () => undefined),
+                selectContracts: async () => {
+                    calls.push("contracts");
+                    if (fail) {
+                        throw new Error("Interrupted");
+                    }
+                },
+            }),
+            { ...administratorCredentials(), authorizeExtension: async () => true },
+        );
+        await expect(provisioner.createRepository("instance:one", SYSTEM_PLAN, plan, 1, "local:admin")).rejects.toThrow(
+            "Interrupted",
+        );
+        expect((await registry.get("instance:one"))?.repository).toBeUndefined();
+        expect(transitions.record?.completedSteps).toEqual(["provider"]);
+        fail = false;
+        const latest = (await registry.get("instance:one"))!;
+        const ready = await provisioner.createRepository(latest.id, SYSTEM_PLAN, plan, latest.revision, "local:admin");
+        expect(ready.repository).toEqual({ url: ready.cmsUrl, configured: true });
+        expect(calls).toEqual(["provider", "contracts", "contracts"]);
+        expect(transitions.record?.status).toBe("succeeded");
+        expect(transitions.record?.steps).toEqual(["provider", "contracts"]);
+        expect(await provisioner.createRepository(ready.id, SYSTEM_PLAN, plan, ready.revision, "local:admin")).toEqual(
+            ready,
+        );
+        expect(calls).toHaveLength(3);
+    });
+
+    test("Registry recovery reconciles a lost completion acknowledgement without reopening business services", async () => {
+        const registry = new MemoryRegistry(instance("ready"));
+        const transitions = new MemoryTransitions();
+        const calls: string[] = [];
+        const plan = {
+            ...SYSTEM_PLAN,
+            contracts: [
+                ...SYSTEM_PLAN.contracts,
+                { contractId: "ulvia/repository", version: "1.0.0", digest: `sha256:${"c".repeat(64)}` },
+            ],
         };
         const provisioner = new OfficialInstanceProvisioner(
             registry,
             transitions,
             async () => target(calls, async () => undefined),
-            administratorCredentials(),
-            { describe: unavailable, resolve: unavailable, canUpgrade: unavailable },
+            { ...administratorCredentials(), authorizeExtension: async () => true },
         );
-        expect((await provisioner.upgrade("instance:one", { id: "ulvia", version: "1.0.0" })).status).toBe("ready");
+        transitions.allowFinish = false;
+        await expect(provisioner.createRepository("instance:one", SYSTEM_PLAN, plan, 1, "local:admin")).rejects.toThrow(
+            "lease was lost",
+        );
+        const committed = structuredClone((await registry.get("instance:one"))!);
+        expect(committed.status).toBe("ready");
+        expect(committed.repository?.configured).toBe(true);
+        expect(transitions.record?.status).toBe("running");
+        transitions.allowFinish = true;
+        await provisioner.recover();
+        expect(transitions.record?.status).toBe("succeeded");
+        expect(await registry.get(committed.id)).toEqual(committed);
+        expect(calls).toEqual(["provider", "contracts"]);
+    });
+
+    test("a stale Registry command does not change instance metadata or open business services", async () => {
+        const registry = new MemoryRegistry(instance("ready"));
+        const before = structuredClone((await registry.get("instance:one"))!);
+        const transitions = new MemoryTransitions();
+        const calls: string[] = [];
+        const plan = {
+            ...SYSTEM_PLAN,
+            contracts: [
+                ...SYSTEM_PLAN.contracts,
+                { contractId: "ulvia/repository", version: "1.0.0", digest: `sha256:${"c".repeat(64)}` },
+            ],
+        };
+        const provisioner = new OfficialInstanceProvisioner(
+            registry,
+            transitions,
+            async () => target(calls, async () => undefined),
+            { ...administratorCredentials(), authorizeExtension: async () => true },
+        );
+        await expect(
+            provisioner.createRepository(before.id, SYSTEM_PLAN, plan, 0, "local:admin"),
+        ).rejects.toMatchObject({ status: 409 });
+        expect(await registry.get(before.id)).toEqual(before);
         expect(transitions.record).toBeNull();
         expect(calls).toEqual([]);
     });
@@ -63,19 +164,19 @@ describe("OfficialInstanceProvisioner", () => {
         const provisioner = createProvisioner(registry, transitions, calls);
 
         expect((await provisioner.provision("instance:one")).status).toBe("ready");
-        expect(calls).toEqual(["manifest", "provider", "contracts", "collection", "administrator"]);
+        expect(calls).toEqual(["manifest", "provider", "contracts", "initialization", "administrator"]);
         await provisioner.provision("instance:one");
         expect(calls).toHaveLength(5);
         expect(transitions.record?.status).toBe("succeeded");
     });
 
-    test("resumes a failed profile plan after its last durable step", async () => {
+    test("resumes a failed system plan after its last durable step", async () => {
         const registry = new MemoryRegistry(instance());
         const transitions = new MemoryTransitions();
         let fails = true;
         const calls: string[] = [];
         const provisioner = createProvisioner(registry, transitions, calls, async () => {
-            calls.push("collection");
+            calls.push("initialization");
             if (fails) {
                 fails = false;
                 throw new Error("repository unavailable");
@@ -85,7 +186,7 @@ describe("OfficialInstanceProvisioner", () => {
         await expect(provisioner.provision("instance:one")).rejects.toThrow("repository unavailable");
         await provisioner.provision("instance:one");
         expect(calls.filter((step) => step === "manifest")).toHaveLength(1);
-        expect(calls.filter((step) => step === "collection")).toHaveLength(2);
+        expect(calls.filter((step) => step === "initialization")).toHaveLength(2);
     });
 
     test("clears staged administrator credentials after the durable step and reconciles a cleanup crash", async () => {
@@ -97,14 +198,13 @@ describe("OfficialInstanceProvisioner", () => {
         const provisioner = new OfficialInstanceProvisioner(
             registry,
             transitions,
-            async () => target(calls, async () => void calls.push("collection")),
+            async () => target(calls, async () => void calls.push("initialization")),
             administratorCredentials(async () => {
                 cleanupAttempts += 1;
                 if (failCleanup) {
                     throw new Error("secret store unavailable");
                 }
             }),
-            PROFILES,
         );
 
         await expect(provisioner.provision("instance:one")).rejects.toThrow("secret store unavailable");
@@ -119,34 +219,22 @@ describe("OfficialInstanceProvisioner", () => {
         expect(transitions.record?.status).toBe("succeeded");
     });
 
-    test("rejects undeclared profile upgrades before creating a transition", async () => {
-        const registry = new MemoryRegistry(instance("ready", "1.0.0"));
-        const calls: string[] = [];
+    test("rejects extensions which replace installed pins before creating a transition", async () => {
+        const registry = new MemoryRegistry(instance("ready"));
         const transitions = new MemoryTransitions();
+        const calls: string[] = [];
         const provisioner = createProvisioner(registry, transitions, calls);
-
-        await expect(provisioner.upgrade("instance:one", { id: "ulvia", version: "1.1.0" })).rejects.toThrow(
-            "Unsupported Provider instance profile",
-        );
-
+        await expect(
+            provisioner.createRepository(
+                "instance:one",
+                SYSTEM_PLAN,
+                { ...SYSTEM_PLAN, contracts: [] },
+                1,
+                "local:admin",
+            ),
+        ).rejects.toThrow("preserve the exact");
         expect(transitions.record).toBeNull();
         expect(calls).toEqual([]);
-    });
-
-    test("allows only explicitly declared forward profile transitions", () => {
-        const target = {
-            ...OFFICIAL_INSTANCE_PROFILE,
-            version: "2.0.0",
-            upgradeFromVersions: ["1.0.0"],
-        };
-        const downgrade = {
-            ...OFFICIAL_INSTANCE_PROFILE,
-            version: "0.9.0",
-            upgradeFromVersions: ["1.0.0"],
-        };
-        expect(canUpgradeOfficialInstanceProfile(OFFICIAL_INSTANCE_PROFILE, target)).toBe(true);
-        expect(canUpgradeOfficialInstanceProfile(target, OFFICIAL_INSTANCE_PROFILE)).toBe(false);
-        expect(canUpgradeOfficialInstanceProfile(OFFICIAL_INSTANCE_PROFILE, downgrade)).toBe(false);
     });
 
     test("does not fail or overwrite a transition after losing its lease", async () => {
@@ -161,7 +249,6 @@ describe("OfficialInstanceProvisioner", () => {
                 return target([], async () => undefined);
             },
             administratorCredentials(),
-            PROFILES,
             () => new Date(),
             3,
         );
@@ -189,14 +276,13 @@ function createProvisioner(
     registry: MemoryRegistry,
     transitions: MemoryTransitions,
     calls: string[],
-    installCollection: () => Promise<void> = async () => void calls.push("collection"),
+    initializeSetup: () => Promise<void> = async () => void calls.push("initialization"),
 ) {
     return new OfficialInstanceProvisioner(
         registry,
         transitions,
-        async () => target(calls, installCollection),
+        async () => target(calls, initializeSetup),
         administratorCredentials(),
-        PROFILES,
     );
 }
 
@@ -207,20 +293,17 @@ function administratorCredentials(clear: () => Promise<void> = async () => undef
     };
 }
 
-function target(calls: string[], installCollection: () => Promise<void>): OfficialInstanceProvisioningTarget {
+function target(calls: string[], initializeSetup: () => Promise<void>): OfficialInstanceProvisioningTarget {
     return {
         importManifest: async () => void calls.push("manifest"),
         connectProvider: async () => void calls.push("provider"),
         selectContracts: async () => void calls.push("contracts"),
-        installCollection,
+        initializeSetup,
         initializeAdministrator: async () => void calls.push("administrator"),
     };
 }
 
-function instance(
-    status: ProviderInstanceRecord["status"] = "provisioning",
-    version = OFFICIAL_INSTANCE_PROFILE.version,
-) {
+function instance(status: ProviderInstanceRecord["status"] = "provisioning") {
     return {
         id: "instance:one",
         idempotencyKey: "create-one",
@@ -230,7 +313,7 @@ function instance(
         gatewayUrl: "http://edge.internal:3000",
         label: "One",
         status,
-        profile: { id: OFFICIAL_INSTANCE_PROFILE.id, version },
+        systemPlan: SYSTEM_PLAN,
         revision: 1,
         createdAt: new Date(0).toISOString(),
         updatedAt: new Date(0).toISOString(),
@@ -285,8 +368,13 @@ class MemoryTransitions implements InstanceTransitionStore {
     async listRecoverable() {
         return this.record ? [this.record] : [];
     }
-    async requeue(_id: string, revision: number, now: string) {
-        return this.patch(revision, { status: "queued", updatedAt: now, failure: undefined });
+    async requeue(_id: string, revision: number, now: string, administratorSub?: string, sourceRevision?: number) {
+        return this.patch(revision, {
+            status: "queued",
+            updatedAt: now,
+            failure: undefined,
+            ...(administratorSub ? { administratorSub, sourceRevision } : {}),
+        });
     }
     async claim(_id: string, revision: number, owner: string, expiresAt: string, now: string) {
         return !!this.patch(revision, { status: "running", lease: { owner, expiresAt }, updatedAt: now });

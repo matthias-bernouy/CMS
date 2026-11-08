@@ -1,6 +1,6 @@
 import { ControlProviderClient } from "../../../src/runtime/gateway/ControlProviderClient";
 import { InstallationsProviderTransport } from "../../../src/runtime/gateway/InstallationsProviderTransport";
-import { INSTALLATIONS_CONTRACT } from "../../../src/runtime/gateway/fetchProviderReport";
+import { INSTALLATIONS_CONTRACT } from "../../../src/runtime/gateway/controlReport";
 export function fixture() {
     const calls: { path: string; input: any }[] = [];
     let fail = false;

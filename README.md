@@ -139,7 +139,7 @@ straight to `src/` outside the explicit `content` browser bundles.
 ## Deployment
 
 `infra/images/` ships distinct Edge and Provider images. A Repository runs as
-an explicit CMS application profile on these same images, with ordinary accounts
+an explicitly enabled Registry on these same images, with ordinary accounts
 and account-owned namespaces; see the [Repository setup](docs/installation/README.md#9-repository-cms-instance).
 The Provider boots from exact admitted resources bundled in its image, without
 a running Repository. Remote discovery and publication use the separately

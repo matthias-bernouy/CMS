@@ -2,7 +2,7 @@ import type { CollectionRepositorySource } from "@bernouy/repository/collections
 import { importProviderManifest } from "@bernouy/repository/providers/sources";
 import type { ProviderRepositorySource } from "@bernouy/repository/providers/sources";
 import type {
-    OfficialInstanceProfile,
+    SystemInstallationPlan,
     OfficialInstanceProvisioningTarget,
     ProviderInstanceRecord,
     ProviderInstanceCredentials,
@@ -10,8 +10,8 @@ import type {
 } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../../runtimeEnv";
 import type { InstanceComposition } from "./composition/ProviderInstanceHost";
-import { loadOfficialManifest } from "./profiles/artifacts";
-import { initializeOfficialAdministrator, installOfficialCollections } from "./instanceInitialization";
+import { loadOfficialManifest } from "./system/artifacts";
+import { initializeOfficialAdministrator } from "./instanceInitialization";
 
 const BOOTSTRAP_ACTOR = "system:provider-provisioner";
 
@@ -26,9 +26,9 @@ type TargetOptions = Readonly<{
 
 export function createInstanceProvisioningTarget(options: TargetOptions): OfficialInstanceProvisioningTarget {
     return {
-        importManifest: async (profile, execution) => {
+        importManifest: async (plan, execution) => {
             execution.throwIfLeaseLost();
-            const manifest = await loadOfficialManifest(options.providerSource, profile);
+            const manifest = await loadOfficialManifest(options.providerSource, plan);
             execution.throwIfLeaseLost();
             await importProviderManifest(
                 manifest,
@@ -38,15 +38,14 @@ export function createInstanceProvisioningTarget(options: TargetOptions): Offici
             );
             execution.throwIfLeaseLost();
         },
-        connectProvider: (profile, execution) => connectProvider(options, profile, execution),
-        selectContracts: async (profile, execution) => {
-            await selectContracts(options.composition, profile, execution);
+        connectProvider: (plan, execution) => connectProvider(options, plan, execution),
+        selectContracts: async (plan, execution) => {
+            await selectContracts(options.composition, plan, execution);
             execution.throwIfLeaseLost();
             await options.composition.pairOfficialProvider();
             execution.throwIfLeaseLost();
         },
-        installCollection: async (profile, execution) => {
-            await installOfficialCollections(options.composition, options.collectionSource, profile, execution);
+        initializeSetup: async (_plan, execution) => {
             if (
                 options.composition.runtime.contracts.some(
                     (contract) =>
@@ -66,25 +65,25 @@ export function createInstanceProvisioningTarget(options: TargetOptions): Offici
 
 async function connectProvider(
     options: TargetOptions,
-    profile: OfficialInstanceProfile,
+    plan: SystemInstallationPlan,
     execution: ProviderInstanceTransitionExecution,
 ): Promise<void> {
     execution.throwIfLeaseLost();
-    const management = options.composition.managementForProfile(
-        profile,
+    const management = options.composition.managementForPlan(
+        plan,
         options.instance.status === "upgrading" ? execution : undefined,
     );
     const state = await management.list();
     execution.throwIfLeaseLost();
     const installation = state.installations.find(
-        (item) => item.providerId === profile.manifest.providerId && item.accountId === options.instance.id,
+        (item) => item.providerId === plan.manifest.providerId && item.accountId === options.instance.id,
     );
     if (installation?.status === "revoked") {
         throw new Error(
             `Official Provider installation was revoked and cannot be restored: ${installation.id}. Provision a new instance instead.`,
         );
     }
-    if (installation && connectionIsReady(installation, options, profile)) {
+    if (installation && connectionIsReady(installation, options, plan)) {
         return;
     }
     const credentials = await options.credentials.read(options.instance.id);
@@ -94,8 +93,8 @@ async function connectProvider(
     }
     const preview = await management.preview(
         {
-            providerId: profile.manifest.providerId,
-            version: profile.manifest.version,
+            providerId: plan.manifest.providerId,
+            version: plan.manifest.version,
             endpoint: options.env.ULVIA_PROVIDER_PUBLIC_URL,
             token: credentials.invocationSecret,
             ...(installation ? { installationId: installation.id, revision: installation.revision } : {}),
@@ -112,7 +111,7 @@ async function connectProvider(
 
 async function selectContracts(
     composition: InstanceComposition,
-    profile: OfficialInstanceProfile,
+    plan: SystemInstallationPlan,
     execution: ProviderInstanceTransitionExecution,
 ): Promise<void> {
     execution.throwIfLeaseLost();
@@ -123,13 +122,13 @@ async function selectContracts(
     execution.throwIfLeaseLost();
     const installation = state.installations.find(
         (item) =>
-            item.providerId === profile.manifest.providerId && item.accountId === composition.runtime.report.instanceId,
+            item.providerId === plan.manifest.providerId && item.accountId === composition.runtime.report.instanceId,
     );
     if (!installation) {
         throw new Error("Official Provider installation is unavailable during provisioning");
     }
     if (
-        profile.contracts.every((contract) =>
+        plan.contracts.every((contract) =>
             state.selected.some(
                 (current) =>
                     current.contractId === contract.contractId &&
@@ -141,12 +140,12 @@ async function selectContracts(
     ) {
         return;
     }
-    const managedContractIds = new Set(profile.contracts.map(({ contractId }) => contractId));
+    const managedContractIds = new Set(plan.contracts.map(({ contractId }) => contractId));
     await composition.management.replaceSelections({
         expectedRevision: selected?.revision ?? 0,
         selections: [
             ...(selected?.plan.selections ?? []).filter(({ contractId }) => !managedContractIds.has(contractId)),
-            ...profile.contracts.map((contract) => ({ ...contract, installationId: installation.id })),
+            ...plan.contracts.map((contract) => ({ ...contract, installationId: installation.id })),
         ],
     });
     execution.throwIfLeaseLost();
@@ -159,15 +158,15 @@ type ProviderInstallationState = Awaited<
 function connectionIsReady(
     installation: ProviderInstallationState,
     options: TargetOptions,
-    profile: OfficialInstanceProfile,
+    plan: SystemInstallationPlan,
 ): boolean {
     return (
         installation.status === "enabled" &&
         installation.endpoint === options.env.ULVIA_PROVIDER_PUBLIC_URL &&
-        installation.manifestVersion === profile.manifest.version &&
-        installation.manifestDigest === profile.manifest.digest &&
+        installation.manifestVersion === plan.manifest.version &&
+        installation.manifestDigest === plan.manifest.digest &&
         installation.observedAt !== null &&
-        profile.contracts.every((contract) =>
+        plan.contracts.every((contract) =>
             installation.contracts.some(
                 (observed) =>
                     observed.contractId === contract.contractId &&

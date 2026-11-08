@@ -1,7 +1,7 @@
 import type { ProviderInstanceRecord } from "@bernouy/ulvia-provider";
 import { gatewayRoute } from "../../../../../../tests/integration/gateway/fixtures";
-import { ProviderExecutionSupport } from "../../../src/runtime/instances/profiles/execution/support";
-import { readInstalledExecution } from "../../../src/runtime/instances/profiles/execution/installed";
+import { ProviderExecutionSupport } from "../../../src/runtime/instances/system/execution/support";
+import { readInstalledExecution } from "../../../src/runtime/instances/system/execution/installed";
 
 export async function installedFixture() {
     const route = await gatewayRoute({ contractId: "ulvia/cms.installations", providerId: "ulvia/primary-provider" });
@@ -20,7 +20,6 @@ export async function installedFixture() {
         cmsUrl: "https://cms.example",
         gatewayUrl: "https://cms.example",
         status: "ready",
-        profile: { id: "removed-recipe", version: "0.9.0" },
         revision: 1,
         createdAt: "2026-11-07T00:00:00Z",
         updatedAt: "2026-11-07T00:00:00Z",

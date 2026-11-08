@@ -9,7 +9,7 @@ import type { InstallationsProviderTransport } from "./InstallationsProviderTran
 import type { Logger } from "@bernouy/logging";
 import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 
-import { INSTALLATIONS_CONTRACT, type InstallationsControlContract } from "./fetchProviderReport";
+import { INSTALLATIONS_CONTRACT, type InstallationsControlContract } from "./controlReport";
 const MAX_CONTROL_RESPONSE_BYTES = 2 * 1024 * 1024;
 
 export type IssuedProviderInvocation = Readonly<{

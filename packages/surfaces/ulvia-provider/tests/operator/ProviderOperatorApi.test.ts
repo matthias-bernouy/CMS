@@ -8,7 +8,7 @@ import type {
     ProviderInstanceRegistry,
     UpdateProviderInstanceRecord,
 } from "../../src/exports/index";
-import { OfficialInstanceProfiles, ProviderInstanceLifecycle, ProviderOperatorApi } from "../../src/exports/index";
+import { ProviderInstanceLifecycle, ProviderOperatorApi } from "../../src/exports/index";
 
 const OPERATOR_TOKEN = "operator-token-that-is-long-enough";
 
@@ -16,7 +16,6 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
     const instance = readyInstance();
     const creates: unknown[] = [];
     const lifecycle = {
-        describeProfiles: () => ({ defaultProfile: instance.profile, profiles: [instance.profile] }),
         list: async () => [instance],
         get: async (id: string) => (id === instance.id ? instance : null),
         create: async (key: string, input: unknown) => {
@@ -36,10 +35,7 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
     const authorization = { Authorization: `Bearer ${OPERATOR_TOKEN}` };
     try {
         expect((await server.request("GET", "/ulvia/operator/instances")).status).toBe(401);
-        expect((await server.request("GET", "/ulvia/operator/profiles")).status).toBe(401);
-        const profiles = await server.request("GET", "/ulvia/operator/profiles", { headers: authorization });
-        expect(profiles.headers.get("cache-control")).toBe("no-store");
-        expect(await profiles.json()).toEqual({ defaultProfile: instance.profile, profiles: [instance.profile] });
+        expect((await server.request("GET", "/ulvia/operator/profiles", { headers: authorization })).status).toBe(404);
         const listing = await server.request("GET", "/ulvia/operator/instances", { headers: authorization });
         expect((await listing.json()).instances).toHaveLength(1);
 
@@ -62,10 +58,6 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
             { headers: authorization },
         );
         expect((await disabled.json()).status).toBe("disabled");
-        lifecycle.describeProfiles = async () => {
-            throw new Error("Installation kit unavailable");
-        };
-        expect((await server.request("GET", "/ulvia/operator/profiles", { headers: authorization })).status).toBe(503);
         expect((await server.request("GET", "/ulvia/operator/instances", { headers: authorization })).status).toBe(200);
     } finally {
         server.stop();
@@ -74,6 +66,8 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
 
 test("an idempotency key can only replay the exact instance request", async () => {
     const registry = new MemoryRegistry();
+    let stagedAdministrators = 0;
+    let provisions = 0;
     const lifecycle = new ProviderInstanceLifecycle(
         registry,
         {
@@ -85,12 +79,30 @@ test("an idempotency key can only replay the exact instance request", async () =
             }),
             read: async () => null,
             disable: async () => undefined,
-            stageAdministrator: async () => undefined,
+            stageAdministrator: async () => {
+                stagedAdministrators++;
+            },
             readAdministrator: async () => null,
             clearAdministrator: async () => undefined,
         },
-        { provision: async (id: string) => required(await registry.get(id)) } as unknown as OfficialInstanceProvisioner,
-        profiles(),
+        {
+            provision: async (id: string) => {
+                provisions++;
+                const current = required(await registry.get(id));
+                Object.assign(current, { status: "ready" });
+                return current;
+            },
+        } as unknown as OfficialInstanceProvisioner,
+        {
+            current: async () => ({
+                manifest: {
+                    providerId: "ulvia/primary-provider",
+                    version: "1.0.0",
+                    digest: `sha256:${"a".repeat(64)}`,
+                },
+                contracts: [],
+            }),
+        },
         "idempotency-secret",
     );
     const input = {
@@ -100,12 +112,10 @@ test("an idempotency key can only replay the exact instance request", async () =
         administrator: { email: "admin@example.test", password: "long-enough-password" },
     };
 
-    expect(await lifecycle.describeProfiles()).toEqual({
-        defaultProfile: { id: "ulvia", version: "1.0.0" },
-        profiles: [{ id: "ulvia", version: "1.0.0" }],
-    });
     const created = await lifecycle.create("create-one", input);
     expect((await lifecycle.create("create-one", input)).instance.id).toBe(created.instance.id);
+    expect(stagedAdministrators).toBe(1);
+    expect(provisions).toBe(1);
     await expect(
         lifecycle.create("create-one", {
             ...input,
@@ -113,27 +123,6 @@ test("an idempotency key can only replay the exact instance request", async () =
         }),
     ).rejects.toThrow("different request");
 });
-
-function profiles(): OfficialInstanceProfiles {
-    return new OfficialInstanceProfiles([
-        {
-            id: "ulvia",
-            version: "1.0.0",
-            initialPages: [],
-            upgradeFromVersions: [],
-            manifest: { providerId: "ulvia/primary-provider", version: "0.3.0", digest: `sha256:${"a".repeat(64)}` },
-            contracts: [],
-            collections: [
-                {
-                    publisherId: "ulvia",
-                    collectionId: "ulvia/mossa",
-                    version: "1.0.0",
-                    digest: `sha256:${"b".repeat(64)}`,
-                },
-            ],
-        },
-    ]);
-}
 
 function readyInstance(): ProviderInstanceRecord {
     return {
@@ -145,7 +134,6 @@ function readyInstance(): ProviderInstanceRecord {
         gatewayUrl: "http://edge.internal:3000",
         label: "One",
         status: "ready",
-        profile: { id: "ulvia", version: "1.0.0" },
         revision: 6,
         createdAt: new Date(0).toISOString(),
         updatedAt: new Date(0).toISOString(),

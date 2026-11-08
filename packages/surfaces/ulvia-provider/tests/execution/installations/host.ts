@@ -1,3 +1,4 @@
+import type { InstallationServices } from "@bernouy/repository/features/installations";
 import { spyOn } from "bun:test";
 import {
     DefaultProviderCapabilityDispatcher,
@@ -99,6 +100,41 @@ export async function installationHost(store = new HeldInstallationStore(), stat
                     return initializationStatus();
                 },
             },
+            repositorySettings: {
+                siteId: "site-a",
+                get: async () => ({
+                    revision: 1,
+                    url: "https://repo.ulvia.fr",
+                    configured: false,
+                    repositoryEnabled: false,
+                    creationStatus: "none",
+                    errorMessage: "",
+                }),
+                configure: async (
+                    input: Parameters<NonNullable<InstallationServices["repositorySettings"]>["configure"]>[0],
+                ) => {
+                    state.calls.push({ name: "repository-configure", input });
+                    return {
+                        revision: 2,
+                        url: input.url,
+                        configured: true,
+                        repositoryEnabled: false,
+                        creationStatus: "none",
+                        errorMessage: "",
+                    };
+                },
+                create: async (input: { expectedRevision: number }, administratorId: string) => {
+                    state.calls.push({ name: "repository-create", input, administratorId });
+                    return {
+                        revision: 2,
+                        url: "https://site.example",
+                        configured: true,
+                        repositoryEnabled: true,
+                        creationStatus: "succeeded",
+                        errorMessage: "",
+                    };
+                },
+            },
             collections: { snapshot: unused },
             collectionUpgrades: {
                 apply: execute("apply-collection", "collection"),
@@ -130,9 +166,7 @@ export async function installationHost(store = new HeldInstallationStore(), stat
         {
             providerId: "ulvia/primary-provider",
             scope: { siteId: "site-a", instanceId: "instance-a" },
-            executeKeyed: async () => {
-                throw new Error("Default operations cannot create a second receipt");
-            },
+            executeKeyed: async (_invocation, execute) => execute(),
         },
     );
     const receiver = createProviderHandler({

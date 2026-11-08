@@ -1,7 +1,5 @@
-import { parseInstanceProfile } from "./profiles";
-import type { InstanceProfile } from "./profiles";
-import { randomBytes, randomUUID } from "node:crypto";
-import { chmod, readFile, writeFile, rename, rm } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import { chmod, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const SCHEMA = "ulvia.local-instance-runtime.v1" as const;
@@ -11,14 +9,13 @@ export type LocalInstanceConfig = Readonly<{
     name: string;
     label: string;
     hostname: string;
-    profile: InstanceProfile;
     adminEmail: string;
     adminPassword: string;
 }>;
 
 export async function loadOrCreateLocalInstanceConfig(
     root: string,
-    input: Readonly<{ name: string; label: string; hostname: string; profile: InstanceProfile }>,
+    input: Readonly<{ name: string; label: string; hostname: string }>,
 ): Promise<LocalInstanceConfig> {
     const path = join(root, "runtime.json");
     const existing = await loadLocalInstanceConfig(root);
@@ -26,10 +23,11 @@ export async function loadOrCreateLocalInstanceConfig(
         assertSameIdentity(existing, input);
         return existing;
     }
-    parseInstanceProfile(input.profile);
     const config: LocalInstanceConfig = {
         schema: SCHEMA,
-        ...input,
+        name: input.name,
+        label: input.label,
+        hostname: input.hostname,
         adminEmail: "admin@ulvia.local",
         adminPassword: `${randomBytes(24).toString("base64url")}Aa1!`,
     };
@@ -76,7 +74,14 @@ export async function loadLocalInstanceConfig(root: string): Promise<LocalInstan
     ) {
         throw new Error("Ulvia local instance configuration is invalid");
     }
-    return { ...value, profile: parseInstanceProfile(value.profile) } as LocalInstanceConfig;
+    return {
+        schema: SCHEMA,
+        name: value.name,
+        label: value.label,
+        hostname: value.hostname,
+        adminEmail: value.adminEmail,
+        adminPassword: value.adminPassword,
+    } as LocalInstanceConfig;
 }
 
 function validEmail(value: unknown): value is string {
@@ -99,33 +104,9 @@ function secret(value: unknown): value is string {
 
 function assertSameIdentity(
     config: LocalInstanceConfig,
-    input: Readonly<{ name: string; label: string; hostname: string; profile: InstanceProfile }>,
+    input: Readonly<{ name: string; label: string; hostname: string }>,
 ): void {
-    if (
-        config.name !== input.name ||
-        config.label !== input.label ||
-        config.hostname !== input.hostname ||
-        config.profile.id !== input.profile.id ||
-        config.profile.version !== input.profile.version
-    ) {
+    if (config.name !== input.name || config.label !== input.label || config.hostname !== input.hostname) {
         throw new Error(`Local instance configuration conflicts with ${input.name}`);
-    }
-}
-
-export async function saveLocalInstanceProfile(root: string, profile: InstanceProfile): Promise<void> {
-    const current = await loadLocalInstanceConfig(root);
-    if (!current) {
-        throw new Error("Local instance configuration is unavailable");
-    }
-    const temporary = join(root, `${randomUUID()}.tmp`);
-    try {
-        await writeFile(
-            temporary,
-            `${JSON.stringify({ ...current, profile: parseInstanceProfile(profile) }, null, 2)}\n`,
-            { flag: "wx", mode: 0o600 },
-        );
-        await rename(temporary, join(root, "runtime.json"));
-    } finally {
-        await rm(temporary, { force: true });
     }
 }

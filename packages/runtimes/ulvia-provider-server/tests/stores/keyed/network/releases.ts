@@ -1,7 +1,7 @@
 import { loadOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
 import { verifyStoredProviderManifestJson } from "@bernouy/ulvia-providers";
-import { bundledBootstrapSources } from "../../../../src/runtime/instances/profiles/bootstrap";
-import { ProviderExecutionSupport } from "../../../../src/runtime/instances/profiles/execution/support";
+import { bundledBootstrapSources } from "../../../../src/runtime/instances/system/bootstrap";
+import { ProviderExecutionSupport } from "../../../../src/runtime/instances/system/execution/support";
 
 /** Use the actual generated bootstrap and execution support matrix, not handwritten SMTP pins. */
 async function readPreparedEmailer() {

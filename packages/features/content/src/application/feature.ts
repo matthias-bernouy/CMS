@@ -33,7 +33,7 @@ export const contentFeature = defineFeature({
     "contractId": "ulvia/cms.content",
     "name": "CMS Content",
     "description": "Manage site settings, pages, localization and themes for one provider-selected CMS instance.",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "publisherId": "ulvia",
     "catalogue": { "icon": "pages", "categories": ["administration", "content"] },
     documents: new URL("../../docs/", import.meta.url),

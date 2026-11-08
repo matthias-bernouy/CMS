@@ -60,7 +60,8 @@ export class MongoProviderInstanceRegistry implements ProviderInstanceRegistry {
     ): Promise<ProviderInstanceRecord> {
         const set: Partial<ProviderInstanceDocument> = {
             ...(changes.status ? { status: changes.status } : {}),
-            ...(changes.profile ? { profile: changes.profile } : {}),
+            ...(changes.systemPlan ? { systemPlan: changes.systemPlan } : {}),
+            ...(changes.repository ? { repository: changes.repository } : {}),
             ...(changes.failure === null ? {} : changes.failure ? { failure: changes.failure } : {}),
             updatedAt: new Date(),
         };
@@ -87,7 +88,8 @@ export function serializeProviderInstance(document: ProviderInstanceDocument): P
         gatewayUrl,
         label,
         status,
-        profile,
+        systemPlan,
+        repository,
         failure,
         revision,
     } = document;
@@ -100,7 +102,8 @@ export function serializeProviderInstance(document: ProviderInstanceDocument): P
         gatewayUrl,
         label,
         status,
-        profile,
+        ...(systemPlan ? { systemPlan } : {}),
+        ...(repository ? { repository } : {}),
         ...(failure ? { failure } : {}),
         revision,
         createdAt: document.createdAt.toISOString(),

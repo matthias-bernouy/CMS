@@ -8,7 +8,10 @@ import type {
     ListCollectionReleasesOutput,
     GetCollectionReleaseOutput,
 } from "repository/application/installations/interfaces/outputs";
-import type { InitializationService } from "repository/application/installations/interfaces/initialization";
+import type {
+    InitializationService,
+    RepositorySettings,
+} from "repository/application/installations/interfaces/initialization";
 import type { CollectionStore } from "repository/collections/installations/core/CollectionStore";
 import type { CollectionUpgradeService } from "repository/exports/collections/installations";
 import type { AdmittedCollectionRelease } from "repository/collections/interfaces/CollectionAdmission";
@@ -50,6 +53,7 @@ export interface CollectionSourceReader {
 }
 export interface InstallationServices {
     readonly initialization?: InitializationService;
+    readonly repositorySettings?: RepositorySettings;
     readonly collections: Pick<
         CollectionStore,
         "listInstalled" | "readInstalled" | "revision" | "getRelease" | "installMany" | "saveConfiguration"

@@ -1,198 +1,148 @@
 # Provider Instance Initialization
 
-Ulvia Provider owns instance creation and the exact official system profile.
-The Edge does not install contracts, connect a provider, import a collection,
-create an administrator or open durable stores. It starts only after an instance
-is ready and receives that instance's opaque access token.
+The Provider installs the image-owned system APIs for every new instance. The
+Edge is a separate stateless process; it receives an opaque instance token and
+uses the public Provider report and admitted capabilities. It neither provisions
+databases nor implements a second authentication system.
 
-## Responsibility Boundary
+## Technical creation
 
-Ulvia Provider owns:
+`ulvia instance create <name>` calls `POST /ulvia/operator/instances` with a stable
+idempotency key, the public and private Edge addresses, and initial administrator
+credentials. The Provider allocates isolated storage and encrypted credentials,
+imports its SDK-generated manifest and system contracts, connects its own account,
+selects those contracts and grants the administrator. It installs no collection,
+creates no Page and publishes nothing into a public Repository catalogue.
 
-- its durable instance registry and encrypted instance credentials;
-- the exact official manifest and contracts assigned to a new instance;
-- idempotent provisioning, transition recovery and the initial administrator
-  grant;
-- resolution of an installations control token to the isolated instance context
-  used by public contract calls.
+The CLI saves the returned connection privately and starts that instance’s Edge.
+Services startup owns shared MongoDB, proxy and Provider processes; the CLI owns
+no listener. Restart reuses stored credentials and installed pins. Deleting an
+Edge disables its instance and retains Provider data; it is not tenant erasure.
 
-One Edge serves one already-provisioned instance. It owns
-public HTTP presentation, provider-neutral Gateway execution and application of
-validated response effects. Content, accounts, session tokens, files, Gateway
-state, installation state and durable release-switch intents remain behind contracts. Edge
-knows neither the Provider operator secret nor another instance's identity or
-credentials.
+There are no named application profiles, profile discovery endpoint, `--profile`
+option or `upgrade-profile` command. A durable system installation plan records
+exact manifest and contract pins rather than an application name/version.
+Image replacement does not implicitly change installed contracts or collections.
 
-## Installation Flow
+## Choosing a Repository
 
-The CLI manages one shared-services Compose project and one Edge project per
-named instance. The same projects support a loopback installation or explicit
-public binding with ACME TLS; there is no separate production mode. Shared
-services must already be running (`ulvia services start`; a source CLI needs
-an explicit initial `--version`). `ulvia instance create <name>`
-then performs the following sequence:
+After ordinary Access login, `/.cms/setup` offers three separate buttons:
 
-1. Verify that the shared Provider is healthy and read its private operator
-   connection from the local services state.
-2. Call `POST /ulvia/operator/instances` with the operator Bearer, a stable
-   idempotency key, Edge URL and initial administrator credentials.
-3. Let the Provider create or resume the instance, generate its opaque token and
-   isolated storage key, then install the exact official profile.
-4. Persist the returned Edge connection inside the private named-instance directory.
-5. Start the deployment Edge image with its public URL, installations Provider URL and
-   `CMS_INSTALLATIONS_PROVIDER_TOKEN` only.
-6. Report readiness only after the Edge health endpoint is reachable through
-   the shared proxy.
+- **A Repository address** opens an origin input.
+- **The official Repository** selects `https://repo.ulvia.fr`.
+- **A new Repository** installs Registry from admitted image resources and uses
+  this instance’s public Edge origin.
 
-Repeating `ulvia start` starts the shared services and every previously created
-Edge without calling the provisioning endpoint again. `ulvia services ...`
-manages the shared services without changing Edge containers, while
-`ulvia instance ... <name>` creates, starts, stops and deletes named Edges.
-`ulvia upgrade edge --version <version>` upgrades the existing Edges
-sequentially; there is no per-instance upgrade subcommand or atomic fleet switch.
-Nginx routes names through the configured shared ports. Instances
-default to `<name>.localhost`; public instances receive an explicit immutable
-domain during provisioning.
-Deleting a named Edge disables its Provider instance and retains the Provider
-data; it is not tenant-data erasure.
-The CLI itself owns no server process: it only drives Compose. Restart reopens
-persisted stores and resumes recoverable transitions.
-`ulvia reset --yes` deliberately clears every local instance and shared store;
-ordinary startup never repairs incompatible encrypted state by deleting it.
+The URL belongs to the instance, in `ProviderInstanceRecord.repository.url`.
+New instances start with the official URL and `configured: false`; no `local` or
+`remote` mode is persisted. `CMS_REPOSITORY_URL` and the shared CLI installation’s
+Repository connection are removed. Older ready instance records can omit this
+new optional setting: reading the default neither writes state nor restarts setup.
 
-Packaged CLI releases embed an initial stack version. A first startup from
-workspace source instead requires `ulvia services start --version <published-version>`;
-later starts reuse the persisted image digests. Restarting or replacing an image
-does not automatically upgrade an instance's exact profile or installed
-collections.
+The `ulvia/cms.installations@1.3.0` setup capabilities are:
 
-## Bootstrap And Repository Connections
+- `initialization.repository.get`: `GET /initialization/repository` reads settings
+  and projects Registry creation status from its instance transition.
+- `initialization.repository.configure`: `POST` at the same path performs one
+  atomic revision-checked URL update, without installing anything.
+- `initialization.repository.create`: `POST /initialization/repository/create`
+  awaits a durable Registry instance transition and returns its completed settings.
 
-The Provider advertises exact profile references without reading optional
-collection resources. It loads only the selected profile from its bundled
-admitted snapshot when provisioning or recovering an unfinished transition.
-The default `ulvia@1.3.0` and explicit `repository@1.3.0` profiles initialize
-system APIs and the administrator with zero collections and zero Pages. Their
-collection initialization step makes no collection source or content-store calls.
-A Repository can start before its own Edge or public catalogue exists; API
-authentication and publication then work without a browser login Page.
+The two commands are naturally idempotent. There is no SDK operation queue entry
+or pending-choice journal for either. Only the existing instance transition owns
+Registry's lease, checkpoints, failure and recovery. It commits the self-origin URL
+with ready state after successful selection. A lost completion acknowledgement is
+reconciled without replaying business steps. A changed URL cannot overwrite a
+concurrent creation: the instance revision and lifecycle state fence those writes.
 
-Production images generate `bun run generate:official-bootstrap` from the SDK
-inventory and bundle system contracts, documentation and the Provider manifest.
-The repository ships no prefabricated collection sources or starter profiles.
-Missing exact resources refuse provisioning without a network fallback; existing
-ready instances reopen from their persisted execution.
-Current profiles select the official Provider manifest and `ulvia/cms.installations`
-contract at `1.2.0`. Profile versions are independent from artifact versions.
+Only a current local administrator can configure the site. Subject aliases resolve
+through the existing authority store; members, delegated Providers, machine actors
+and foreign instances cannot use setup. Registry transition recovery rechecks the
+administrator's current grant. No new login or private Edge API exists.
 
-## Optional Site Setup
+Registry availability follows its installed/selected contract, never a hostname.
+An autonomous catalogue starts empty and requires explicit publication through
+ordinary CMS accounts and PATs. System bootstrap metadata is not catalogue
+publication. Choosing a remote source needs no network request; an empty site can
+finish setup while that source is unavailable.
 
-New instances persist an explicit `ulvia-site-initialization/v1` marker during
-provisioning. A missing marker is unavailable: reads never infer initialization
-from zero Pages or backfill old instances. The Edge redirects a missing home Page
-to `/.cms/setup` only while the admitted `initialization.entry` capability reports
-pending. Existing successful Pages and non-home routes add no Gateway calls;
-a missing home Page adds one bounded entry query.
+The public self-origin is retained in settings. For this exact origin only, the
+runtime connects to the known private Edge URL, avoiding host/container loopback
+confusion. Other origins are used as supplied. Selecting an HTTP origin explicitly
+permits HTTP transport; redirect refusal and PAT origin/identity pinning still
+apply. Changing the source affects future discovery/imports and authoring
+connections. It never replaces installed release pins or forwards an existing
+publication PAT to a different origin.
 
-The native HTML/CSS/module screens belong to Edge and require no collection.
-Login uses ordinary `ulvia/cms.access` session effects. Status, recipe discovery,
-review and application use `ulvia/cms.installations` through the same Gateway as
-other contract calls. Only a currently authorized local administrator can read
-or change setup; the public entry query reveals only the pending boolean.
+## Collection setup
 
-The administrator chooses an empty site or an exact collection bootstrap.
-Empty completion needs no Repository, collection or Page. Starter discovery uses
-the configured Repository, four latest stable collections per page and at most
-64 recipe cards. Only explicitly published collections contribute recipes; the
-repository ships none. Ordinary collection installation or upgrade never executes
-a bootstrap.
+The Repository step precedes the existing empty-site or collection choice.
+Native HTML/CSS/modules belong to Edge and need no authored collection. Ordinary
+`ulvia/cms.access` session effects authenticate every request; the remaining
+screens use admitted Installations capabilities through the Gateway.
 
-Review resolves exact dependency pins and includes, checks selected capabilities,
-route conflicts and browser-code risks, then simulates Pages against disposable
-Content stores. It makes no durable business changes. The digest binds the
-instance, administrator, execution fingerprint, revisions and complete plan.
-Application recomputes that evidence before mutation. Limits include 16 collections,
-32 recipes, 256 Pages, include depth eight, 32 MiB metadata and 32 MiB aggregate
-assets, with a 60-second preparation deadline and bounded transport requests.
+New instances have an explicit `ulvia-site-initialization/v1` pending marker.
+Missing markers are unavailable: reads never infer setup from zero Pages or
+backfill existing sites. A missing home Page adds one `initialization.entry`
+query and redirects to setup only when pending. Successful Pages and other routes
+retain their existing call counts. Empty completion leaves `/` at 404 until a
+Page is published.
 
-Application is an idempotent asynchronous operation. Its durable site intent holds
-a maintenance fence while collections and Pages are written; receipts checkpoint
-completed Pages. A resumed application uses already imported verified local
-artifacts, including when the Repository is offline. It does not overwrite
-completed Pages. The UI polls one status capability per second, reporting actual
-Page counts and the latest operation outcome. A completed marker survives restart
-and prevents the empty-site choice from reopening setup indefinitely.
+Recipe discovery reads explicitly published collections from the configured
+Repository. The workspace ships no starter collection. Review resolves exact
+pins, route conflicts, selected capabilities and browser-code risks without
+business writes. Its digest binds the instance, administrator, execution state
+and revisions. Application recomputes that evidence, imports verified resources
+and checkpoints ordinary Content Pages under the site maintenance fence. Collection
+installation or upgrade never implicitly replays a bootstrap recipe.
 
-The browser journey in
-`tests/integration/instance/repository/initialization.docker.test.ts` covers native
-login, review and application of an explicitly published test recipe, mobile overflow, cross-instance review refusal,
-offline empty completion and restart. Domain fault-injection tests cover persisted
-checkpoints and local recovery. These are local validation flows, not evidence of
-a deployment to a public site.
+Preparation bounds remain 16 collections, 32 recipes, 256 Pages, include depth
+eight, 32 MiB metadata and 32 MiB aggregate assets, with a 60-second deadline.
+Resumed application uses verified local artifacts and preserves completed Pages.
+The browser polls one setup status request per second while applying a recipe.
 
-Ready instances reopen their approved persisted manifest, observed implementation
-pins, exact contract admissions and selections. The runtime checks each digest
-against its explicit implementation support matrix and compiles HTTP bindings
-per authenticated instance. The historical installation profile is not execution
-authority, and its collection resources are not needed in the image to reopen a
-site. Missing or unsupported installed state fails without repairing data.
+## Execution and recovery
 
-`CMS_REPOSITORY_URL` remains required by the Provider; the CLI supplies
-`https://repo.ulvia.fr` by default and persists an explicitly selected origin.
-Discovery, remote imports and publication use that connection after bootstrap.
-A new Registry has its own account-owned public catalogue: installing its
-bootstrap resources is not publication into that catalogue.
+Images generate `bun run generate:official-bootstrap` from the SDK inventory.
+The resulting admitted contracts, documentation assets and Provider manifest are
+local provisioning resources. Missing exact resources refuse provisioning without
+a remote fallback. Ready/disabled instances reopen their approved persisted
+manifest, observed implementations, admissions and selections independently of
+that image snapshot.
 
-The local Docker regression `tests/integration/instance/repository/scratch.docker.test.ts`
-checks API-only creation, initially empty Pages/catalogue/collection installations,
-explicit publication and installation of a new collection, omitted image starter
-directories and state after Provider restart. It uses isolated networks and never
-contacts the public Repository.
+Executable support requires an exact digest in the generated build matrix. The
+explicit retained metadata list is linked to current SDK executors only after
+checking every capability’s access, behavior, schemas, bindings and errors.
+SemVer or a persisted claim alone cannot grant execution. Fixed retention metadata
+is verified once per process; it contains no instance secrets or authority.
+
+Provisioning journals manifest, Provider connection, contract selection, setup
+marker and administrator steps under a renewable lease. Registry creation uses
+the same durable transition mechanism and preserves every existing pin. Its Registry
+release comes from the already approved manifest, independently of the image
+bootstrap. Recovery resolves the exact plan from stored admissions; changing the
+image never substitutes new contract or manifest pins. Its
+administrator subject is rechecked against the instance’s current grant during
+recovery. Bootstrap administrator credentials are removed once their durable step
+is confirmed. Failed steps require explicit retry; queued/expired work is recovered.
+Unfinished old transitions whose exact installation resources are unavailable must
+finish with their original image. Ready sites are not reset or silently repaired.
+
+Composition caches include the instance revision, so a completed source change
+or Registry installation opens the updated composition on the next authenticated
+request. Existing leases finish before resource disposal. Runtime authentication
+already joins fresh instance metadata; this change adds no catalogue or remote
+Repository lookup to each authenticated request.
 
 ## Operator API
 
-Every endpoint requires
-`Authorization: Bearer <ULVIA_PROVIDER_OPERATOR_TOKEN>`:
+All endpoints require `Authorization: Bearer <ULVIA_PROVIDER_OPERATOR_TOKEN>`:
 
-- `GET /ulvia/operator/instances` lists instances;
-- `GET /ulvia/operator/profiles` lists supported exact references and the default;
-- `POST /ulvia/operator/instances` creates or resumes an instance and requires
-  `Idempotency-Key`;
-- `GET /ulvia/operator/instances/:instanceId` returns lifecycle state;
-- `POST /ulvia/operator/instances/:instanceId/disable` disables its connection;
-- `POST /ulvia/operator/instances/:instanceId/profile` starts an exact declared
-  profile upgrade.
+- `GET /ulvia/operator/instances` lists lifecycle records.
+- `POST /ulvia/operator/instances` creates/resumes with `Idempotency-Key`.
+- `GET /ulvia/operator/instances/:instanceId` reads one lifecycle record.
+- `POST /ulvia/operator/instances/:instanceId/disable` disables its connection.
 
-Creation returns the instance record and the raw `instanceAccessToken`. The
-registry stores only the incoming token hash and the encrypted secrets needed
-inside the Provider. The raw access token has no claims; Provider resolves it
-server-side and never asks Edge for an instance ID header.
-
-## Public Composition
-
-Public installation uses the same CLI flow in two phases:
-
-1. start shared MongoDB, proxy and Provider services, then create the instance
-   through the operator API using the image-owned admitted profile;
-2. start one Edge with the returned access token, canonical domain and the
-   Provider's private network URL.
-
-Ulvia Provider needs access to its control-plane database and isolated instance
-databases. Its MongoDB account is provisioned idempotently before the Provider
-starts and those credentials are never passed to Edge.
-
-## Recovery And Limits
-
-Profile transitions durably record their plan version, lease owner, completed
-steps and failure. Provisioning records `manifest`, `provider`, `contracts`,
-`collection` and `administrator`; upgrades omit the administrator step. The
-Provider continuously recovers queued transitions and running transitions whose
-lease expired. It retains the encrypted bootstrap administrator secret only
-until the durable administrator step is confirmed, including crash recovery.
-
-Failed transitions require an explicit retry, and the active profile changes
-only after every step succeeds. A disabled instance rejects report and contract
-traffic. Backup, restore, complete tenant-data deletion and instance-token
-rotation remain explicit lifecycle work rather than hidden Edge startup
-behavior. Shared Provider MongoDB-user provisioning is handled by deployment
-infrastructure; the Edge never receives those credentials.
+Creation returns the opaque instance access token. Edge never receives the
+operator secret, database credentials, KEKs or session signing secrets. Backup,
+restore, tenant erasure and token rotation remain explicit lifecycle work.

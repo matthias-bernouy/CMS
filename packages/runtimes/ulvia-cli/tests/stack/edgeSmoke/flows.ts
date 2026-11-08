@@ -18,11 +18,19 @@ async function session(origin: string, credentials: Credentials) {
     return { api, actor, call };
 }
 
-export async function runEdgeSmoke(page: Page, credentials: Credentials, origin: string): Promise<void> {
+export async function runEdgeSmoke(
+    page: Page,
+    credentials: Credentials,
+    origin: string,
+    repositoryUrl?: string,
+): Promise<void> {
     await page.goto(`${origin}/.cms/setup`);
     await page.getByLabel("Email address").fill(credentials.adminEmail);
     await page.getByLabel("Password", { exact: true }).fill(credentials.adminPassword);
     await page.getByRole("button", { name: "Continue", exact: false }).click();
+    await page.getByRole("button", { name: "A Repository address", exact: false }).click();
+    await page.getByLabel("Repository address", { exact: true }).fill(repositoryUrl!);
+    await page.getByRole("button", { name: "Use this Repository", exact: false }).click();
     await page.getByRole("button", { name: "Start from scratch", exact: false }).click();
     await page.getByRole("button", { name: "Create an empty site", exact: false }).click();
     await page.getByRole("heading", { name: "Your workspace is ready." }).waitFor({ timeout: 60_000 });

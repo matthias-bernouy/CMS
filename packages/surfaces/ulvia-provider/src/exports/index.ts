@@ -1,3 +1,4 @@
+export { default as systemManifest } from "./provider/definition.json";
 export { createInstallationOperationQueries } from "../capabilities/features/services/installations/operations";
 export { createProviderOperationAdapter } from "../capabilities/features/services/operations";
 export type { ProviderAdministration } from "../ports/providers";
@@ -47,7 +48,7 @@ export type { ProviderInstanceRegistry } from "../instances/registry";
 export { ProviderInstanceRevisionConflictError } from "../instances/registry";
 export type {
     CreateProviderInstanceRecord,
-    ProviderInstanceProfile,
+    SiteRepositoryConfiguration,
     ProviderInstanceRecord,
     ProviderInstanceStatus,
     UpdateProviderInstanceRecord,
@@ -58,13 +59,7 @@ export type {
     InstanceTransitionStatus,
     InstanceTransitionStore,
 } from "../instances/transitions";
-export {
-    OfficialInstanceProfiles,
-    canUpgradeOfficialInstanceProfile,
-    type OfficialInstanceProfile,
-    type OfficialInstanceProfileSource,
-    type OfficialProfileListing,
-} from "../instances/officialProfile";
+export type { SystemInstallationPlan, SystemInstallationSource } from "../instances/installationPlan";
 export {
     OfficialInstanceProvisioner,
     type OfficialInstanceProvisioningTarget,

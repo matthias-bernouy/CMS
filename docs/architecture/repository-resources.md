@@ -75,6 +75,6 @@ from this baseline. This source change does not publish or deploy those releases
 
 Official contracts and the Provider manifest are generated from SDK features;
 `infra/releases/ulvia.release.ts` is the trusted local build entry. The offline
-bootstrap contains system API artifacts only. Application profile IDs are `ulvia`
-and `repository`; profiles are not a fourth Repository resource type. Collections
+bootstrap contains system API artifacts only. Named application profiles are removed; setup explicitly selects
+a source URL or installs Registry on the instance. Collections
 remain ordinary authored, published and installed Repository resources.

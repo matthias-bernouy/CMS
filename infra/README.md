@@ -28,7 +28,7 @@ bun run cli:build --version <cli-version> --stack-version <stack-version>
 These prepare local artifacts. `images:publish`, `cli:publish` and `ulvia push`
 are explicit publication actions with their respective registry credentials.
 Image and CLI versions are independent from contracts, manifests and instance
-profiles. A local build never updates a running installation.
+system installations. A local build never updates a running installation.
 
 See [development](../docs/development/README.md) for release commands and checks,
 [SDK releases](../docs/development/sdk-releases.md) for generated artifacts and

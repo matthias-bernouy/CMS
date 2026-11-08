@@ -144,7 +144,7 @@ capability requirements and official error presentation. Its single inventory is
 `compileOfficialFeatures` compiles it for release preparation and bootstrap.
 `loadOfficialFeatures` verifies the emitted artifact and attaches matching runtime code. The manifest
 claims and generated current execution support matrix follow that inventory.
-`registerOfficialProviderCapabilities` receives exact profile release pins rather than
+`registerOfficialProviderCapabilities` receives exact installed release pins rather than
 contract IDs alone; `registerOfficialFeatures` mounts the selected SDK families.
 Unsupported versions/digests reject before service projection or registration.
 Missing services refuse a claimed implementation; disabled features mount nothing.

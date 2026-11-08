@@ -66,7 +66,7 @@ export async function contentTransport(dependencies: Partial<CmsContentDependenc
             requestId: crypto.randomUUID(),
             instanceId: "instance-a",
             contractId: "ulvia/cms.content",
-            contractVersion: "1.0.0",
+            contractVersion: "1.0.1",
             capabilityId: id,
             actorKind: "administrator",
             subjectId: "admin",

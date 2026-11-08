@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { containerCluster } from "./cluster";
 import { docker, waitForHttp } from "../docker";
+import { configureRepository } from "../repository/initializationClient";
 import { provisionInstance } from "../provision";
 import { scratchSite } from "./scratchSite";
 
@@ -40,10 +41,6 @@ export async function scratchRepository(images: { provider: string; edge: string
             "--volume",
             "/var/lib/cms/files",
             "--env",
-            "CMS_REPOSITORY_URL=http://repository:3000",
-            "--env",
-            "CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true",
-            "--env",
             `CMS_SESSION_SECRET=${randomBytes(32).toString("base64url")}`,
             "--env",
             "CMS_KEK_ACTIVE_ID=control",
@@ -70,7 +67,6 @@ export async function scratchRepository(images: { provider: string; edge: string
             url,
             administrator,
             "http://repository:3000",
-            { id: "repository", version: "1.3.0" },
         );
         await run(edgeName, "repository", images.edge, [
             "--publish",
@@ -83,6 +79,7 @@ export async function scratchRepository(images: { provider: string; edge: string
             `CMS_INSTALLATIONS_PROVIDER_TOKEN=${instance.credentials.instanceAccessToken}`,
         ]);
         await waitForHttp(`${url}/readyz`);
+        await configureRepository(url, administrator, url, true);
         return {
             url,
             administrator,

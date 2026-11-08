@@ -3,6 +3,7 @@ import * as styleAsset from "./style.css" with { type: "text" };
 import * as appAsset from "./app.asset.js" with { type: "text" };
 import * as clientAsset from "./client.asset.js" with { type: "text" };
 import * as reviewAsset from "./review.asset.js" with { type: "text" };
+import * as repositoryAsset from "./repository.asset.js" with { type: "text" };
 import * as progressAsset from "./progress.asset.js" with { type: "text" };
 import type EdgeCms from "../../EdgeCms";
 import { readGatewayRequestContext } from "@bernouy/cms-gateway/http/handlers";
@@ -20,6 +21,7 @@ const app = textAsset(appAsset);
 const client = textAsset(clientAsset);
 const review = textAsset(reviewAsset);
 const progress = textAsset(progressAsset);
+const repository = textAsset(repositoryAsset);
 
 const headers = {
     "cache-control": "private, no-store",
@@ -42,6 +44,7 @@ export function mountSetupRoutes(edge: EdgeCms) {
         ["client.asset.js", client, "text/javascript"],
         ["review.asset.js", review, "text/javascript"],
         ["progress.asset.js", progress, "text/javascript"],
+        ["repository.asset.js", repository, "text/javascript"],
     ]) {
         edge.runner.get(
             `/.cms/setup/${path}`,

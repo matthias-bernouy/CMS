@@ -44,7 +44,7 @@ bun run ulvia -- reset --yes
 bun run ulvia -- release ./my-collection
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
-bun run ulvia -- push contract ulvia/cms.installations@1.2.0 --repository https://repository.example
+bun run ulvia -- push contract ulvia/cms.installations@1.3.0 --repository https://repository.example
 bun run ulvia -- pull collection example/ui@1.0.0 --repository https://repository.example
 bun run ulvia -- yank collection example/ui@1.0.0 --repository https://repository.example --reason "Superseded"
 bun run ulvia -- restore collection example/ui@1.0.0 --repository https://repository.example
@@ -113,28 +113,26 @@ previously created local instance; it never creates an implicit instance.
 
 The lifecycle boundary is deliberate:
 
-A Repository is an ordinary named CMS instance with an explicit application
-profile:
+A Repository is an ordinary named CMS instance:
 
 ```bash
 ulvia services start
-ulvia instance create registry --profile repository@1.3.0
+ulvia instance create registry
 ulvia instance status registry
+ulvia instance credentials registry
 ```
 
-The Provider advertises supported profiles through its protected operator API.
-The CLI persists the exact selected profile; restart reuses that selection and
-its instance credentials. `instance upgrade-profile registry ID@VERSION` requests
-an explicit supported transition within the same application ID and saves it
-only after acknowledgement. `upgrade provider --version VERSION` replaces the
-shared Provider image with retention checks and rollback on activation failure.
-The Repository has no separate image, port, service, or deployment lifecycle.
-The default `ulvia@1.3.0` and explicit `repository@1.3.0` profiles start without
-collections or Pages. System APIs and the supplied administrator remain usable;
-the missing home route offers native setup at `/.cms/setup`. Sign in with the
-administrator to start empty or review an optional bootstrap from the configured
-Repository. Empty completion leaves ordinary routes at 404 until Pages are added.
-CLI/API/MCP remain available. No ZIP or default collection is required.
+Open its `/.cms/setup`, sign in and choose **A new Repository**. The other
+buttons accept a Repository address or select `https://repo.ulvia.fr`.
+Creation installs system APIs and the administrator, with zero collections and
+Pages. Repository settings belong to this instance; there is no `--profile`,
+`upgrade-profile`, or shared Repository environment setting. Changing sources
+preserves installed pins. An empty site can finish setup offline.
+
+`upgrade provider --version VERSION` replaces the shared image with retention
+checks and rollback on activation failure. Installed resources and credentials
+remain in Provider storage; explicit contract/collection upgrades use their
+admitted workflows. Registry needs no separate image, service or port.
 
 `repository login URL` verifies the Repository identity and saves a shared CMS
 PAT supplied through `ULVIA_REPOSITORY_TOKEN` or `--token-stdin`. Ordinary
@@ -314,7 +312,7 @@ instance. Collections are built and published only from explicitly supplied
 sources; no starter collection is included in this command.
 For individual manual releases, use `release` in dependency order:
 exact parent contracts before specializations, then Provider manifests and collection dependencies.
-Publication, provider profile transitions, collection upgrades and container
+Publication, system installation transitions, collection upgrades and container
 image replacement remain separate actions.
 
 `instance create` provisions the named instance through the Provider operator
@@ -322,11 +320,11 @@ API, then starts its Edge. Connection review validates the runtime report and
 exact manifest claims. Provider behavior is covered by implementation-owned tests.
 
 Official releases evolve independently: the current installations contract and
-Provider manifest use `1.2.0`; local formats remain `v1`. Collections are supplied
+Provider manifest use `1.3.0`; local formats remain `v1`. Collections are supplied
 and versioned by their authors.
 Each named instance uses `<name>.localhost` unless an explicit domain is supplied;
 `default` is an ordinary name. Repository hosting uses a CMS instance with the
-`repository@1.3.0` profile. Client PAT connections and local release caches
+explicit Registry installation. Client PAT connections and local release caches
 are separate from the shared services and instance lifecycle.
 
 ## Collection examples

@@ -28,6 +28,7 @@ export interface CmsContentDependencies
 
 export interface CmsCollectionDependencies {
     readonly initialization?: InstallationServices["initialization"];
+    readonly repositorySettings?: InstallationServices["repositorySettings"];
     readonly documentation?: InstallationServices["documentation"];
     readonly repositoryDiscovery?: InstallationServices["discovery"];
     readonly authoring?: AuthoringService;

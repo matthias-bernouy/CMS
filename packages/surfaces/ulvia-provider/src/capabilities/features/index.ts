@@ -1,9 +1,15 @@
-import { loadImplementations, registerProviderHandlers } from "@bernouy/ulvia-sdk/provider";
+import {
+    loadImplementations,
+    loadCompatibleImplementation,
+    selectImplementationBuilds,
+    registerProviderHandlers,
+} from "@bernouy/ulvia-sdk/provider";
 import type { ImplementationRelease, ProviderRegistrationOptions } from "@bernouy/ulvia-sdk/provider";
 import type { ProviderCapabilityRegistry } from "../../dispatch/registry";
 import type { UlviaProviderFeatureServices } from "../../ports/index";
 import { officialFeatureImplementations } from "./inventory";
 import artifact from "./generated/runtime.json";
+import retained from "./generated/retained.json";
 import { formatOfficialCapabilityFailure } from "./errors";
 
 let loaded: ReturnType<typeof loadImplementations<UlviaProviderFeatureServices>> | undefined;
@@ -12,6 +18,9 @@ let loaded: ReturnType<typeof loadImplementations<UlviaProviderFeatureServices>>
 export function loadOfficialFeatures() {
     return (loaded ??= loadImplementations(officialFeatureImplementations, artifact));
 }
+
+// Only the fixed, shipped retention list may populate this bounded metadata cache.
+const compatible = new Map<string, ReturnType<typeof loadCompatibleImplementation<UlviaProviderFeatureServices>>>();
 
 /** Mount only exact host-approved releases from the same inventory used to build the manifest. */
 export async function registerOfficialFeatures(
@@ -33,5 +42,41 @@ export async function registerOfficialFeatures(
         implementations,
         formatCapabilityFailure: options.formatCapabilityFailure ?? formatOfficialCapabilityFailure,
     };
-    registerProviderHandlers(await loadOfficialFeatures(), dispatcher, dependencies, registration);
+    const current = await loadOfficialFeatures();
+    const builds = [current];
+    for (const release of implementations) {
+        if (
+            current.implementations.some(
+                (pin) =>
+                    pin.contractId === release.contractId &&
+                    pin.version === release.version &&
+                    pin.digest === release.digest,
+            )
+        ) {
+            continue;
+        }
+        const metadata = retained.find(({ digest }) => digest === release.digest);
+        const source = current.implementations.find((pin) => pin.contractId === release.contractId);
+        if (!metadata || !source) {
+            throw new TypeError(`Unsupported exact implementation: ${release.contractId}@${release.version}`);
+        }
+        let pending = compatible.get(metadata.digest);
+        if (!pending) {
+            pending = loadCompatibleImplementation(current, source, metadata);
+            compatible.set(metadata.digest, pending);
+            const loading = pending;
+            void loading.catch(() => {
+                if (compatible.get(metadata.digest) === loading) {
+                    compatible.delete(metadata.digest);
+                }
+            });
+        }
+        builds.push(await pending);
+    }
+    registerProviderHandlers(
+        selectImplementationBuilds(builds, implementations),
+        dispatcher,
+        dependencies,
+        registration,
+    );
 }

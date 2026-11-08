@@ -10,8 +10,6 @@ export async function profileCliFixture() {
     await mkdir(bin);
     await cp(fakeDockerFixturePath, join(bin, "docker"));
     await chmod(join(bin, "docker"), 0o755);
-    const official = { id: "ulvia", version: "1.0.0" };
-    const registry = { id: "repository", version: "1.0.0" };
     const state = { rejectUpgrade: false, unauthorized: 0, creates: [] as unknown[], upgrades: [] as unknown[] };
     const provider = Bun.serve({
         hostname: "127.0.0.1",
@@ -23,12 +21,6 @@ export async function profileCliFixture() {
                 return new Response(null, { status: 401 });
             }
             const path = new URL(request.url).pathname;
-            if (request.method === "GET" && path === "/ulvia/operator/profiles") {
-                return Response.json({
-                    defaultProfile: official,
-                    profiles: [official, registry, { ...registry, version: "1.1.0" }],
-                });
-            }
             if (request.method === "POST" && path === "/ulvia/operator/instances") {
                 const input = await request.json();
                 state.creates.push(input);
@@ -36,17 +28,9 @@ export async function profileCliFixture() {
                     instance: {
                         id: "instance:00000000-0000-4000-8000-000000000001",
                         status: "ready",
-                        profile: input.profile,
                     },
                     credentials: { instanceAccessToken: "a".repeat(43) },
                 });
-            }
-            if (request.method === "POST" && path.endsWith("/profile")) {
-                const profile = await request.json();
-                state.upgrades.push(profile);
-                return state.rejectUpgrade
-                    ? new Response(null, { status: 503 })
-                    : Response.json({ status: "ready", profile });
             }
             return new Response(null, { status: 404 });
         },
@@ -64,8 +48,6 @@ export async function profileCliFixture() {
                     ULVIA_TEST_DOCKER_ROOT: root,
                     ULVIA_HTTP_PORT: String(proxy.port),
                     ULVIA_PROVIDER_PORT: String(provider.port),
-                    CMS_REPOSITORY_URL: "http://127.0.0.1:1",
-                    CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true",
                     ...extra,
                 },
                 stdout: "pipe",

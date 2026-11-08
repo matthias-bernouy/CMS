@@ -12,8 +12,8 @@ composeTest("one Compose model renders loopback HTTP and public ACME exposure", 
         { mode: "ingress", host_ip: "127.0.0.1", target: 80, published: "15100", protocol: "tcp" },
     ]);
     expect(base.services.provider.environment.MODE).toBe("PROD");
-    expect(base.services.provider.environment.CMS_REPOSITORY_URL).toBe("https://repo.ulvia.fr");
-    expect(base.services.provider.environment.CMS_REPOSITORY_ALLOW_INSECURE_HTTP).toBe("false");
+    expect(base.services.provider.environment.CMS_REPOSITORY_URL).toBeUndefined();
+    expect(base.services.provider.environment.CMS_REPOSITORY_ALLOW_INSECURE_HTTP).toBeUndefined();
     expect(base.services.provider.environment.MONGO_URL).toContain("ulvia_provider:bbbb");
     expect(base.services.provider.environment.MONGO_URL).not.toContain("ulvia:aaaa");
     expect(base.services.mongo.ports).toBeUndefined();
@@ -131,6 +131,6 @@ composeTest("an explicit local Repository override reaches the Provider without 
         CMS_REPOSITORY_URL: "http://repository:3000",
         CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true",
     });
-    expect(config.services.provider.environment.CMS_REPOSITORY_URL).toBe("http://repository:3000");
-    expect(config.services.provider.environment.CMS_REPOSITORY_ALLOW_INSECURE_HTTP).toBe("true");
+    expect(config.services.provider.environment.CMS_REPOSITORY_URL).toBeUndefined();
+    expect(config.services.provider.environment.CMS_REPOSITORY_ALLOW_INSECURE_HTTP).toBeUndefined();
 });

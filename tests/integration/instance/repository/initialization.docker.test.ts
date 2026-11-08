@@ -20,6 +20,9 @@ async function login(page: Page, site: { url: string; administrator: { email: st
     await page.getByLabel("Email address").fill(site.administrator.email);
     await page.getByLabel("Password", { exact: true }).fill(site.administrator.password);
     await page.getByRole("button", { name: "Continue", exact: false }).click();
+    await page.getByRole("button", { name: "A Repository address", exact: false }).click();
+    await page.getByLabel("Repository address", { exact: true }).fill("http://repository:3000");
+    await page.getByRole("button", { name: "Use this Repository", exact: false }).click();
     await page.getByRole("heading", { name: "Where would you like to start?" }).waitFor();
 }
 
@@ -89,6 +92,9 @@ integration(
             );
             await docker(["stop", stack.edgeName]);
             await login(page, blank);
+            await page.locator("#change-repository").click();
+            await page.getByRole("button", { name: "The official Repository", exact: false }).click();
+            await page.getByRole("heading", { name: "Where would you like to start?" }).waitFor();
             await page.getByRole("button", { name: "Start from scratch", exact: false }).click();
             await page.getByRole("button", { name: "Create an empty site", exact: false }).click();
             await page.getByRole("heading", { name: "Your workspace is ready." }).waitFor({ timeout: 60_000 });

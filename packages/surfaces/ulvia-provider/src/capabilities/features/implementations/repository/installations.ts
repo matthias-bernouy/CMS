@@ -5,6 +5,7 @@ export const installationsImplementation = implementFeature(installationsFeature
     services: (dependencies: UlviaProviderFeatureServices) => {
         const {
             initialization,
+            repositorySettings,
             collections,
             collectionUpgrades,
             gateway,
@@ -31,6 +32,7 @@ export const installationsImplementation = implementFeature(installationsFeature
         }
         return {
             initialization,
+            repositorySettings,
             collections,
             collectionUpgrades,
             gateway,

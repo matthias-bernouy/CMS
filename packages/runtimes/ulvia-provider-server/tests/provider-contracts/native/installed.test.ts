@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { readInstalledExecution } from "../../../src/runtime/instances/profiles/execution/installed";
-import { ProviderExecutionSupport } from "../../../src/runtime/instances/profiles/execution/support";
+import { readInstalledExecution } from "../../../src/runtime/instances/system/execution/installed";
+import { ProviderExecutionSupport } from "../../../src/runtime/instances/system/execution/support";
 import { installedFixture } from "./installedFixture";
 
 test("a newer build reopens persisted execution without its former recipe or any collection resources", async () => {
@@ -9,7 +9,7 @@ test("a newer build reopens persisted execution without its former recipe or any
     expect(execution.report.buildVersion).toBe("1.1.0");
     expect(execution.report.implementations[0]!.version).toBe("1.0.0");
     expect(execution.contracts[0]!.digest).toBe(f.model.release.admission.digest);
-    expect(execution.profile.contracts).toEqual([
+    expect(execution.plan.contracts).toEqual([
         { contractId: "ulvia/cms.installations", version: "1.0.0", digest: f.model.release.admission.digest },
     ]);
     expect(f.model.reads).toEqual([

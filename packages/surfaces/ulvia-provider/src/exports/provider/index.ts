@@ -4,6 +4,7 @@ import definition from "./definition.json";
 import { compileOfficialFeatures } from "../../capabilities/features/build";
 
 export { compileOfficialFeatures };
+export { compileRetainedFeatures } from "../../capabilities/features/build";
 
 /** All exact implementation claims and dependencies come from the selected SDK inventory. */
 export async function compileOfficialManifest(

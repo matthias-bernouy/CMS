@@ -1,8 +1,8 @@
 # Reviewed Release Upgrades
 
 Provider and collection protocols remain v1. Artifact versions, software image
-versions and instance profile versions are independent; exact current pins live
-in the authored definitions and Provider profile catalogue. Published artifacts
+versions are independent; exact current pins live
+in SDK definitions, generated manifests and persisted system installation plans. Published artifacts
 remain immutable. Removed development formats have no reader or automatic data
 conversion.
 
@@ -104,7 +104,7 @@ site contract changes cannot replace the control plane.
 ## Provider Retention And Recovery
 
 Ordinary manifest reapproval cannot drop exact releases retained by site
-selections, profiles or pending contract switches. Unknown retention evidence
+selections, system plans or pending contract switches. Unknown retention evidence
 fails closed. During an operator-requested instance upgrade, the provisioner may
 replace a selected release with an admitted, verified compatible newer release
 in the same major. The instance is unavailable to live invocations during this
@@ -118,29 +118,27 @@ The Provider checks all managed instance pins, including disabled instances,
 against the build's explicit implementation support matrix before startup. Ready
 instances load the exact approved manifest, observations, selections and contracts
 from their own persistent stores, independently of the bundled installation kit.
-The check still retains both profiles of queued/running/retryable failed transitions
-and profiles of unfinished instances so recovery cannot lose its installation resources.
+The check retains exact plans for unfinished system installations and transitions,
+so recovery cannot lose its admitted resources. Ready sites need no original kit.
 The CLI runs a one-shot `checkRetention.ts` preflight in the candidate Provider
 image before replacing the live image; startup repeats the guard. The public
 Repository does not track sites outside this Provider's administrative scope.
 
-Installation profiles and their exact artifact pins are declared in the Provider
-runtime and bundled bootstrap snapshot, loaded lazily for installation operations.
-Implementation support is declared separately in
-`packages/runtimes/ulvia-provider-server/src/runtime/instances/profiles/execution/supported-releases.json`.
-Adding a release there requires implementation and contract tests; neither a
-recipe, an installed artifact nor a compatible version number expands support.
-The default CMS and explicit Repository profiles share the same runtime.
-An image update never silently changes an existing profile or selected release pin.
+System installation pins come from the SDK-generated manifest and bundled snapshot,
+loaded lazily for installation operations. Named profiles are removed. Executable
+support is generated in
+`packages/runtimes/ulvia-provider-server/src/runtime/instances/system/execution/supported-releases.json`.
+An image update never silently changes selected release pins. Adding support
+requires exact executor linkage and contract tests; SemVer alone grants nothing.
 
 Compatibility evidence recorded on 2026-11-07 also covers the exact published
 `cyaxis/ulvia-provider:1.0.11` digests of `cms.authoring`, `cms.content` and
 `repository`. Their installed `1.0.0` artifacts differ from the current authored
 baseline. The fixture records executable capability signatures from that image:
 access, behavior, schemas, tool names and HTTP mappings must remain unchanged.
-These signatures remain historical compatibility evidence, not current execution
-support. Only exact claims shipped in the SDK runtime artifact and support matrix
-can execute; older digests absent there refuse. Existing coordinates are never
+The explicit retained metadata snapshot now links these verified historical pins
+to current SDK executors after comparing their execution signatures. Generated
+support includes only those exact verified claims; unlisted old digests refuse. Existing coordinates are never
 rewritten or republished. Future artifact changes require new release versions.
 
 Expired worker leases can be reclaimed for an exact intent. Normal write permits

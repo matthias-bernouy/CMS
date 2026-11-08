@@ -12,9 +12,9 @@ Ulvia CMS installation runtime.
   let their default setup contact the public Repository.
 - Expose lifecycle commands for starting, inspecting, and stopping the stack.
 - Shared services are proxy, MongoDB and Provider. A Repository is an explicitly
-  profiled named CMS instance with its own Edge, not another shared server or
+  named CMS instance with explicitly installed Registry with its own Edge, not another shared server or
   image. Keep `upgrade` targets limited to Edge and Provider.
-- Source CLI startup requires an explicit initial image version. Bundled profile
+- Source CLI startup requires an explicit initial image version. Bundled system
   provisioning must work without remote Repository access, while later discovery
   and publication still use the persisted Repository connection.
 
@@ -88,14 +88,11 @@ Ulvia CMS installation runtime.
   invalidates active credential resolvers. Never silently generate credentials.
   Push metadata first, stream separately verified assets and finish with an
   idempotent commit. Preserve bounded transfers and artifact-last atomic visibility.
-- Deploy Repository as an ordinary named CMS instance with an explicit application
-  profile. `repository` commands manage client PAT connections only. Do not add a
-  standalone runtime, image, Compose service or lifecycle forwarding alias.
-  The Provider advertises supported exact profile references through its protected
-  operator endpoint; the CLI persists the selected reference without duplicating
-  the profile catalogue. A profile update must retain its application ID and only
-  persist after the Provider acknowledges the exact target. Image updates retain
-  Provider data and credentials; never reassign namespace ownership at startup.
+- Deploy Repository as an ordinary named CMS instance. Native setup activates
+  Registry after creation. Do not add profiles, profile discovery/upgrade commands,
+  a standalone runtime, or a global Repository URL to service configuration.
+  `repository` commands manage client PAT connections only. Keep those independent
+  from per-instance source settings. Image updates retain data and credentials.
 - First services/Edge startup must reuse cached exact-version images after the
   normal component, stack API, version and digest checks. Pull only when absent;
   an invalid cached image must refuse rather than silently replace itself.

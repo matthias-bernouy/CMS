@@ -2,7 +2,7 @@
 
 Private production executable for the official Ulvia Provider HTTP server.
 It owns the Provider listener, instance registry, encrypted runtime credentials,
-instance persistence, authentication, gateway state, files, profile transitions
+instance persistence, authentication, gateway state, files, system installation transitions
 and recovery. The CMS Edge is a separate stateless process connected only
 through the public Provider report and admitted contract capabilities.
 
@@ -13,31 +13,22 @@ resolved through the official `ulvia/cms.access` contract; outbound delivery
 uses the `ulvia/cms.emailer.smtp` specialization of `ulvia/cms.emailer`, and no authentication store or session secret is
 shared with the Edge.
 
-New `ulvia@1.3.0` (default) and `repository@1.3.0` instances start with system
-contracts and an administrator, but no collections or Pages. A Repository API
-can therefore start before any public catalogue or browser interface exists.
-Authenticate through `ulvia/cms.access` and publish resources through CLI/API;
-initialization never publishes the bundled system releases to the catalogue.
+New instances receive system contracts and an administrator with zero collections
+and Pages. The image-owned SDK snapshot bootstraps those APIs offline; setup then
+offers a custom Repository address, the official Repository, or a new Registry on
+this instance. There are no named profiles or global Repository environment settings.
 
-Run `bun run generate:official-bootstrap` from the workspace root
-before native startup to stage admitted system contracts, documentation and the
-Provider manifest in this package's `dist/bootstrap`. Production images use
-this snapshot and omit authored collections and compiled starter assets.
-Discovery reads profile references only; provisioning reads the selected profile's
-resources and never falls back to the configured public Repository. Set an absolute
-`ULVIA_BOOTSTRAP_DIR` to select another pre-built snapshot. Public resource
-discovery and explicit imports still use the configured Repository connection.
+Run `bun run generate:official-bootstrap` before native startup. Images bundle the
+admitted system contracts, documentation and manifest in `dist/bootstrap` and omit
+starter collections. `ULVIA_BOOTSTRAP_DIR` may select an absolute prebuilt snapshot.
+Ready sites reopen approved persisted execution without their original image kit.
 
-Prefabricated starter profiles are no longer shipped. Existing ready instances
-reopen from persisted execution and do not read their old installation kit.
-Profile versions are independent of contract and collection release versions.
-
-New profiles persist a pending site-initialization marker. Edge serves native
-setup at `/.cms/setup`; its ordinary Gateway calls use `ulvia/cms.installations@1.2.0`
-for review and explicit asynchronous application. Starting empty works offline.
-Optional bootstrap application imports exact verified releases, creates ordinary
-Content Pages and checkpoints recovery under the site maintenance fence. Ready
-instances with no marker are never silently initialized or backfilled. See
+Native Edge setup at `/.cms/setup` uses ordinary Access login and
+`ulvia/cms.installations@1.3.0`. The Repository URL is persisted per instance;
+Registry creation has one durable instance transition and rechecks current
+administrator authority. It uses the already approved manifest, including after
+an image update; URL-only changes are atomic synchronous commands. Changing sources preserves installed pins and Pages. Starting empty
+works offline, and a new Registry publishes nothing automatically. See
 [initialization architecture](../../../docs/architecture/provider-instance-initialization.md).
 
 ```bash
@@ -70,12 +61,9 @@ covers collection verification, not every authoring/compiler or documentation ta
 
 ## Paged collection catalogue
 
-New profiles select `ulvia/cms.installations@1.2.0`, the Provider manifest at
-`1.2.0` and (for a Repository instance) `ulvia/repository@1.1.0`. Existing sites keep
-their exact approved manifests and selected releases; replacing an image does not
-implicitly adopt these releases. Discovery and installation remain available through
-the admitted API, independently of an authored administration website. A collection
-upgrade does not replay its bootstrap recipe or add Pages.
+New instances select Installations and Provider manifest `1.3.0`.
+Explicit Registry activation adds `ulvia/repository@1.1.0`. Existing sites retain
+their approved pins; replacing an image does not adopt the new releases.
 
 Latest discovery indexes coordinate heads from filenames, excluding yanked and
 out-of-channel releases before pagination. It reads JSON only for the requested

@@ -94,7 +94,7 @@ Files providers use generic transforms from `@bernouy/image-processing`.
 The production runtime constructs Mongo catalogues and site stores, secret
 resolution, network adapters, identity storage and observation refresh. The
 Edge receives provider-neutral invocation and native resource delivery.
-Fresh runtime profiles seed no Pages or collections. Explicit native initialization
+Fresh instances seed no Pages or collections. Explicit native initialization
 can materialize Pages from a separately published collection recipe;
 provider connection approval, credential rotation and exact contract selection
 are application workflows owned by `repository`. Repository publication is
@@ -146,7 +146,7 @@ there is no aggregate instance-runtime package shared by both processes.
 mount exactly one surface and start one listener. The Edge runtime is
 stateless; the Provider runtime selects every persistent adapter. `ulvia-cli`
 manages the persistent local container stack; it does not supervise application processes.
-The Repository profile selects admitted Registry capabilities implemented in the
+Explicit Registry installation selects admitted Registry capabilities implemented in the
 Provider and exposed by an independent Edge. Account ownership and publications
 use instance-scoped storage; authored releases remain separate publication inputs. New
 environment reads belong in runtimes; a fixed

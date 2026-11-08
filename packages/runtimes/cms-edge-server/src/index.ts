@@ -3,7 +3,7 @@ import { commandCacheEffect, commandCacheTags } from "./runtime/resources/cache/
 import { mountProductionEdge } from "./runtime/mountEdge";
 import { ControlProviderClient } from "./runtime/gateway/ControlProviderClient";
 import { createEdgeGateway } from "./runtime/gateway/createEdgeGateway";
-import { fetchInstallationsProviderReport, installationsControlContract } from "./runtime/gateway/fetchProviderReport";
+import { fetchInstallationsProviderReport, installationsControlContract } from "./runtime/gateway/controlReport";
 import { InstallationsProviderTransport } from "./runtime/gateway/InstallationsProviderTransport";
 import { readRuntimeEnv } from "./runtimeEnv";
 import { createEdgeDiagnostics, connectEdgeDiagnostics } from "./runtime/diagnostics";

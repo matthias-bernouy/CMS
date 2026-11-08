@@ -2,12 +2,6 @@ import { chmod, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { UlviaPaths } from "../paths";
 import { resolveServicePorts, type ServicePorts } from "./ports";
-import {
-    defaultRepositoryConnection,
-    parseRepositoryConnection,
-    type InstallationRepository,
-} from "./repositoryConnection";
-
 const SCHEMA = "ulvia.installation.v1" as const;
 
 type InstallationTls = Readonly<{ mode: "disabled" }> | Readonly<{ mode: "acme"; email: string; httpsPort: number }>;
@@ -16,7 +10,6 @@ export type InstallationConfig = Readonly<{
     schema: typeof SCHEMA;
     bindAddress: string;
     ports: ServicePorts;
-    repository: InstallationRepository;
     tls: InstallationTls;
 }>;
 
@@ -25,7 +18,6 @@ export function defaultInstallationConfig(environment: Record<string, string | u
         schema: SCHEMA,
         bindAddress: "127.0.0.1",
         ports: resolveServicePorts(environment),
-        repository: defaultRepositoryConnection(environment),
         tls: Object.freeze({ mode: "disabled" }),
     });
 }
@@ -88,16 +80,20 @@ export function parseInstallationConfig(value: unknown): InstallationConfig {
         throw new Error("Ulvia installation configuration is invalid");
     }
     const record = value as Record<string, unknown>;
-    if (Object.keys(record).sort().join(",") !== "bindAddress,ports,repository,schema,tls") {
+    if (
+        Object.keys(record)
+            .filter((key) => key !== "repository")
+            .sort()
+            .join(",") !== "bindAddress,ports,schema,tls"
+    ) {
         throw new Error("Ulvia installation configuration is invalid");
     }
     const ports = parsePorts(record.ports);
     const tls = parseTls(record.tls);
-    const repository = parseRepositoryConnection(record.repository);
     if (record.schema !== SCHEMA || !validBindAddress(record.bindAddress)) {
         throw new Error("Ulvia installation configuration is invalid");
     }
-    return Object.freeze({ schema: SCHEMA, bindAddress: record.bindAddress, ports, repository, tls });
+    return Object.freeze({ schema: SCHEMA, bindAddress: record.bindAddress, ports, tls });
 }
 
 function parsePorts(value: unknown): ServicePorts {

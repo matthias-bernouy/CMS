@@ -45,7 +45,7 @@ export class ProviderDocumentation {
     }
 
     request(instance: ProviderInstanceRecord, changed = false): void {
-        const key = JSON.stringify([instance.id, instance.profile.id, instance.profile.version]);
+        const key = JSON.stringify([instance.id, instance.revision]);
         if (this.stopping || (!changed && this.queue.contains(key))) {
             return;
         }

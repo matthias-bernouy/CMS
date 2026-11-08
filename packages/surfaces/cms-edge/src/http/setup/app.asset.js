@@ -1,4 +1,5 @@
 import { request, setup, stopped } from "./client.asset.js";
+import { repositoryStep } from "./repository.asset.js";
 import { renderReview } from "./review.asset.js";
 import { watchOperation, showProgress } from "./progress.asset.js";
 
@@ -6,12 +7,13 @@ const $ = (selector) => document.querySelector(selector);
 let review;
 let resumeState;
 let cursor = "";
+const repository = repositoryStep(run, stage, async () => stage("choice"));
 
 function stage(id) {
     for (const section of document.querySelectorAll(".stage")) {
         section.hidden = section.id !== id;
     }
-    const step = id === "login" ? "login" : ["choice", "recipes"].includes(id) ? "choice" : "review";
+    const step = ["login", "repository"].includes(id) ? id : ["choice", "recipes"].includes(id) ? "choice" : "review";
     for (const item of document.querySelectorAll("[data-step]")) {
         if (item.dataset.step === step) {
             item.setAttribute("aria-current", "step");
@@ -96,7 +98,7 @@ async function loadState(authenticated = false) {
         $("#resume").hidden = false;
         return;
     }
-    stage("choice");
+    await repository.open();
 }
 async function choose(root) {
     $("#refresh").hidden = true;

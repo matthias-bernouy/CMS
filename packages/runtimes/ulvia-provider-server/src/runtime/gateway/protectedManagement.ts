@@ -1,4 +1,4 @@
-import type { ExecutionProfile } from "../instances/profiles/execution/support";
+import type { ExecutionPlan } from "../instances/system/execution/support";
 import type { ProviderManagement } from "@bernouy/repository/providers/management";
 import type { ProviderInstanceRecord, UlviaProviderManagement } from "@bernouy/ulvia-provider";
 
@@ -7,12 +7,12 @@ const CONTROL_CONTRACT_ID = "ulvia/cms.installations";
 export function createProtectedProviderManagement(
     management: ProviderManagement,
     instance: ProviderInstanceRecord,
-    profile: ExecutionProfile,
+    plan: ExecutionPlan,
 ): UlviaProviderManagement {
     const controlInstallation = async () => {
         const state = await management.list();
         const installation = state.installations.find(
-            (candidate) => candidate.providerId === profile.manifest.providerId && candidate.accountId === instance.id,
+            (candidate) => candidate.providerId === plan.manifest.providerId && candidate.accountId === instance.id,
         );
         if (!installation) {
             throw policyError("control_installation_missing");
@@ -22,7 +22,7 @@ export function createProtectedProviderManagement(
     return {
         replaceSelections: async (input) => {
             const control = await controlInstallation();
-            const contract = profile.contracts.find((candidate) => candidate.contractId === CONTROL_CONTRACT_ID);
+            const contract = plan.contracts.find((candidate) => candidate.contractId === CONTROL_CONTRACT_ID);
             if (!contract) {
                 throw policyError("control_contract_missing");
             }

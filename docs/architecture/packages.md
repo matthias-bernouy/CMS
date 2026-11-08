@@ -63,7 +63,7 @@ Provider remain surfaces; documentation search remains a feature.
 | `@bernouy/email-smtp` (`features/email/smtp`) | SMTP-specific administration, secret-backed configuration and the official Nodemailer implementation. |
 | `@bernouy/auth` | Provider-owned accounts, local credentials, PATs, persistent opaque sessions, account lifecycle and authentication email composition. It exposes no HTTP routes. |
 
-Collections own reusable examples, not live Pages or routes. Fresh runtime profiles create system APIs and an administrator without collections
+Collections own reusable examples, not live Pages or routes. Fresh instances create system APIs and an administrator without collections
 or Pages. Explicit initialization can copy a published recipe's examples into Pages.
 Content owns their route registry, rendering, access analysis and sitemap; Edge
 forwards native resources. Authored administration Pages use the same Page model
@@ -97,7 +97,7 @@ instances, exposed through their independent Edge.
 | `@bernouy/ulvia-provider` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous operation execution for admitted `ulvia/cms.*` contracts. |
 | `@bernouy/cms-edge` | Stateless HTTP protocols, request-actor resolution, public resource streaming and final security/cache policy. |
 | `@bernouy/cms-edge-server` | Stateless HTTP composition for one pre-provisioned instance, connected only by Provider URL and opaque instance access token. |
-| `@bernouy/ulvia-provider-server` | Durable instance registry and credentials, instance-scoped persistence/auth/gateway/files, exact profile transitions and recovery, operator API and Ulvia Provider listener. |
+| `@bernouy/ulvia-provider-server` | Durable instance registry and credentials, instance-scoped persistence/auth/gateway/files, exact system installation transitions and recovery, operator API and Ulvia Provider listener. |
 | `@bernouy/ulvia-cli` | Persistent local release cache and Provider/Edge container stack, including idempotent instance provisioning. |
 
 See [workspace architecture](README.md) for dependency direction and

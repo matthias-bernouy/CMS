@@ -20,7 +20,7 @@ test("Page deletion maps incoming links to the declared PAGE_REFERENCED conflict
             { id: "target", expectedRevision: 1 },
             {
                 requestId: "test",
-                contractVersion: "1.0.0",
+                contractVersion: "1.0.1",
                 siteId: "default",
                 providerId: "ulvia/primary-provider",
             },

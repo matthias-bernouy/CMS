@@ -18,16 +18,6 @@ export class ProviderOperatorApi {
         };
 
         runner.get(
-            "/ulvia/operator/profiles",
-            authorized(async () => {
-                try {
-                    return Response.json(await lifecycle.describeProfiles(), noStore());
-                } catch (error) {
-                    return operatorError(error);
-                }
-            }),
-        );
-        runner.get(
             "/ulvia/operator/instances",
             authorized(async () => Response.json({ instances: await lifecycle.list() }, noStore())),
         );
@@ -57,42 +47,7 @@ export class ProviderOperatorApi {
                 return instance ? Response.json(instance, noStore()) : new Response(null, { status: 404 });
             }),
         );
-        runner.post(
-            "/ulvia/operator/instances/:instanceId/profile",
-            authorized(async (request) => {
-                try {
-                    const profile = await parseProfileInput(request);
-                    return Response.json(
-                        await lifecycle.upgrade(instanceIdFrom(request, "/profile"), profile),
-                        noStore(),
-                    );
-                } catch (error) {
-                    return operatorError(error);
-                }
-            }),
-        );
     }
-}
-
-async function parseProfileInput(request: Request): Promise<{ id: string; version: string }> {
-    const bytes = await readBoundedRequestBody(request, MAX_BODY_BYTES);
-    const value = parseStrictJson(bytes, MAX_BODY_BYTES, 2);
-    return profileValue(value);
-}
-
-function profileValue(value: unknown): { id: string; version: string } {
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-        throw new TypeError("Request body is invalid");
-    }
-    const input = value as Record<string, unknown>;
-    if (
-        Object.keys(input).sort().join(",") !== "id,version" ||
-        typeof input.id !== "string" ||
-        typeof input.version !== "string"
-    ) {
-        throw new TypeError("Request body is invalid");
-    }
-    return { id: input.id, version: input.version };
 }
 
 async function parseCreateInput(request: Request): Promise<CreateProviderInstance> {
@@ -105,7 +60,7 @@ async function parseCreateInput(request: Request): Promise<CreateProviderInstanc
     const administrator = input.administrator;
     if (
         Object.keys(input)
-            .filter((key) => key !== "gatewayUrl" && key !== "profile")
+            .filter((key) => key !== "gatewayUrl")
             .sort()
             .join(",") !== "administrator,cmsUrl,label" ||
         typeof input.label !== "string" ||
@@ -129,7 +84,6 @@ async function parseCreateInput(request: Request): Promise<CreateProviderInstanc
         label: input.label,
         cmsUrl: input.cmsUrl,
         ...(typeof input.gatewayUrl === "string" ? { gatewayUrl: input.gatewayUrl } : {}),
-        ...(input.profile === undefined ? {} : { profile: profileValue(input.profile) }),
         administrator: { email: admin.email, password: admin.password },
     };
 }

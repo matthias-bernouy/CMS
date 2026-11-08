@@ -1,11 +1,7 @@
+import type { SystemInstallationPlan } from "./installationPlan";
 export const PROVIDER_INSTANCE_STATUSES = ["provisioning", "upgrading", "ready", "failed", "disabled"] as const;
 
 export type ProviderInstanceStatus = (typeof PROVIDER_INSTANCE_STATUSES)[number];
-
-export type ProviderInstanceProfile = Readonly<{
-    id: string;
-    version: string;
-}>;
 
 export type ProviderInstanceRecord = Readonly<{
     id: string;
@@ -16,7 +12,8 @@ export type ProviderInstanceRecord = Readonly<{
     gatewayUrl: string;
     label: string;
     status: ProviderInstanceStatus;
-    profile: ProviderInstanceProfile;
+    systemPlan?: SystemInstallationPlan;
+    repository?: SiteRepositoryConfiguration;
     failure?: string;
     revision: number;
     createdAt: string;
@@ -27,6 +24,12 @@ export type CreateProviderInstanceRecord = Omit<ProviderInstanceRecord, "revisio
 
 export type UpdateProviderInstanceRecord = Readonly<{
     status?: ProviderInstanceStatus;
-    profile?: ProviderInstanceProfile;
+    systemPlan?: SystemInstallationPlan;
+    repository?: SiteRepositoryConfiguration;
     failure?: string | null;
+}>;
+
+export type SiteRepositoryConfiguration = Readonly<{
+    url: string;
+    configured: boolean;
 }>;

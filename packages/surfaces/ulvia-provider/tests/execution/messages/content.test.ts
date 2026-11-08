@@ -4,7 +4,8 @@ import { validateExpandedPageDocument } from "@bernouy/content/page-document";
 import { mountContentForTest } from "../../capabilities/content/mount";
 import { DefaultProviderCapabilityDispatcher, ProviderCapabilityDispatchError } from "@bernouy/ulvia-provider";
 import { officialFailure } from "../../../src/dispatch/errors/failure";
-import { context } from "./fixtures";
+import { context as commonContext } from "./fixtures";
+const context = (language: string) => commonContext(language, "1.0.1");
 
 test("the same INVALID_PAGE code reports distinct real validation reasons without writes", async () => {
     let writes = 0;

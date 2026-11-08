@@ -1,8 +1,8 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import type { OfficialInstanceProfileSource, OfficialProfileListing } from "./officialProfile";
+import type { SystemInstallationSource } from "./installationPlan";
 import type { OfficialInstanceProvisioner, ProviderInstanceAdministrator } from "./provisioning";
 import type { ProviderInstanceRegistry } from "./registry";
-import type { ProviderInstanceProfile, ProviderInstanceRecord } from "./types";
+import type { ProviderInstanceRecord } from "./types";
 
 export interface ProviderInstanceCredentials {
     ensure(instance: ProviderInstanceRecord): Promise<ProviderInstanceRuntimeCredentials>;
@@ -29,7 +29,6 @@ export type CreateProviderInstance = Readonly<{
     cmsUrl: string;
     gatewayUrl?: string;
     administrator: ProviderInstanceAdministrator;
-    profile?: ProviderInstanceProfile;
 }>;
 
 export type CreatedProviderInstance = Readonly<{
@@ -42,29 +41,13 @@ export class ProviderInstanceLifecycle {
         private readonly instances: ProviderInstanceRegistry,
         private readonly credentials: ProviderInstanceCredentials,
         private readonly provisioner: OfficialInstanceProvisioner,
-        private readonly profiles: OfficialInstanceProfileSource,
+        private readonly system: SystemInstallationSource,
         private readonly idempotencySecret: string,
     ) {}
 
-    async describeProfiles() {
-        const profiles = await this.profiles.describe();
-        const reference = ({ id, version }: OfficialProfileListing["defaultProfile"]) => ({ id, version });
-        return {
-            defaultProfile: reference(profiles.defaultProfile),
-            profiles: profiles.profiles.map(reference),
-        };
-    }
-
     async create(idempotencyKey: string, input: CreateProviderInstance): Promise<CreatedProviderInstance> {
         validateCreateInput(idempotencyKey, input);
-        const profile = input.profile
-            ? await this.profiles.resolve(input.profile.id, input.profile.version)
-            : (await this.profiles.describe()).defaultProfile;
-        if (!profile) {
-            throw new TypeError("Instance profile is unavailable");
-        }
-        const selected = { id: profile.id, version: profile.version };
-        const idempotencyFingerprint = fingerprintCreateInput({ ...input, profile: selected }, this.idempotencySecret);
+        const idempotencyFingerprint = fingerprintCreateInput(input, this.idempotencySecret);
         let instance = await this.instances.getByIdempotencyKey(idempotencyKey);
         if (!instance) {
             const uuid = randomUUID();
@@ -77,21 +60,24 @@ export class ProviderInstanceLifecycle {
                 gatewayUrl: new URL(input.gatewayUrl ?? input.cmsUrl).origin,
                 label: input.label.trim(),
                 status: "provisioning",
-                profile: selected,
+                systemPlan: await this.system.current(),
+                repository: { url: "https://repo.ulvia.fr", configured: false },
             });
         }
         assertMatchingFingerprint(instance.idempotencyFingerprint, idempotencyFingerprint);
+        if (instance.status === "disabled") {
+            throw new TypeError("Provider instance is disabled");
+        }
         const credentials = await this.credentials.ensure(instance);
+        if (instance.status === "ready") {
+            return { instance, credentials: { instanceAccessToken: credentials.instanceAccessToken } };
+        }
         await this.credentials.stageAdministrator(instance.id, input.administrator);
         const provisioned = await this.provisioner.provision(instance.id);
         return {
             instance: provisioned,
             credentials: { instanceAccessToken: credentials.instanceAccessToken },
         };
-    }
-
-    upgrade(instanceId: string, target: ProviderInstanceProfile): Promise<ProviderInstanceRecord> {
-        return this.provisioner.upgrade(instanceId, target);
     }
 
     get(instanceId: string): Promise<ProviderInstanceRecord | null> {
@@ -123,7 +109,6 @@ function fingerprintCreateInput(input: CreateProviderInstance, secret: string): 
                 cmsUrl: new URL(input.cmsUrl).toString(),
                 gatewayUrl: new URL(input.gatewayUrl ?? input.cmsUrl).toString(),
                 administrator: input.administrator,
-                profile: input.profile,
             }),
         )
         .digest("base64url");

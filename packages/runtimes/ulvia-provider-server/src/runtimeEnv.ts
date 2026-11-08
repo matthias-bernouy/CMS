@@ -1,4 +1,4 @@
-import { parseHttpUrl, parseBoolean, parsePort, requiredEnv, type RuntimeEnvSource } from "./runtimeEnvParsing";
+import { parseHttpUrl, parsePort, requiredEnv, type RuntimeEnvSource } from "./runtimeEnvParsing";
 import { parseRuntimeKekConfig, type RuntimeKekConfig } from "./runtimeEnvKek";
 import { assertProviderConnectionToken } from "@bernouy/ulvia-providers/installations";
 import { isAbsolute } from "node:path";
@@ -8,8 +8,6 @@ export type ProviderRuntimeEnv = Readonly<{
     ULVIA_PROVIDER_HOST: string;
     ULVIA_PROVIDER_PUBLIC_URL: string;
     ULVIA_PROVIDER_OPERATOR_TOKEN: string;
-    CMS_REPOSITORY_URL: string;
-    CMS_REPOSITORY_ALLOW_INSECURE_HTTP: boolean;
     MONGO_URL: string;
     CMS_FILES_DIR: string;
     CMS_SESSION_SECRET: string;
@@ -48,12 +46,6 @@ export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntim
         ULVIA_PROVIDER_HOST: parseListenerHost(source.ULVIA_PROVIDER_HOST),
         ULVIA_PROVIDER_PUBLIC_URL,
         ULVIA_PROVIDER_OPERATOR_TOKEN: token!,
-        CMS_REPOSITORY_URL: parseHttpUrl(requiredEnv(source, "CMS_REPOSITORY_URL"), "CMS_REPOSITORY_URL"),
-        CMS_REPOSITORY_ALLOW_INSECURE_HTTP: parseBoolean(
-            source.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
-            "CMS_REPOSITORY_ALLOW_INSECURE_HTTP",
-            false,
-        ),
         MONGO_URL: requiredEnv(source, "MONGO_URL"),
         CMS_FILES_DIR: requiredEnv(source, "CMS_FILES_DIR"),
         CMS_SESSION_SECRET: requiredEnv(source, "CMS_SESSION_SECRET"),

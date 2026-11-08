@@ -219,7 +219,7 @@ transport rules. See [files and responsive images](../images/README.md).
 - Mongo contract publication rejects fixture assets until a byte store exists.
 - Collection releases can be installed and upgraded from configured repository
   sources. Exact remote `push`/`pull` and reversible yanking are implemented;
-  the Repository CMS profile provides single-replica hosting with durable staged
+  the Repository instance provides single-replica hosting with durable staged
   uploads bound to account ownership revisions. Horizontal storage remains
   outside the implemented deployment.
 - The official Files provider schedules reconstructible image representations in

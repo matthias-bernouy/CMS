@@ -1,6 +1,8 @@
-import { bundledOfficialProfiles } from "./runtime/instances/profiles/execution/LazyOfficialProfiles";
-import { ProviderExecutionSupport } from "./runtime/instances/profiles/execution/support";
-import { assertHostedReleaseRetention, managedReleaseReader } from "./runtime/instances/profiles/retention";
+import { SystemBootstrap } from "./runtime/instances/system/execution/SystemBootstrap";
+import { ProviderExecutionSupport } from "./runtime/instances/system/execution/support";
+import { assertHostedReleaseRetention, managedReleaseReader } from "./runtime/instances/system/retention";
+import { MongoAdministratorGrantStore } from "@bernouy/cms-gateway/access/mongo";
+import { instanceDatabaseName } from "./runtime/stores/storageRoots";
 import { MongoClient } from "mongodb";
 import { ValidatingSecretStore } from "@bernouy/secret-store";
 import { EncryptedMongoSecretStore } from "@bernouy/secret-store/mongo";
@@ -14,7 +16,7 @@ import { ProviderInstanceHost } from "./runtime/instances/composition/ProviderIn
 import { RecoverySupervisor } from "./runtime/recovery/RecoverySupervisor";
 import { MongoProviderInstanceRegistry } from "./runtime/instances/MongoProviderInstanceRegistry";
 import { MongoInstanceTransitionStore } from "./runtime/instances/MongoInstanceTransitionStore";
-import { bundledBootstrapSources } from "./runtime/instances/profiles/bootstrap";
+import { bundledBootstrapSources } from "./runtime/instances/system/bootstrap";
 import { mountUlviaProvider } from "./runtime/gateway/mountUlviaProvider";
 import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
 import { readProviderRuntimeEnv } from "./runtimeEnv";
@@ -53,7 +55,7 @@ try {
     let operationRecovery: Promise<void> | undefined;
     try {
         const bootstrap = bundledBootstrapSources(env.ULVIA_BOOTSTRAP_DIR);
-        const profiles = bundledOfficialProfiles(bootstrap);
+        const system = new SystemBootstrap(bootstrap);
         const support = new ProviderExecutionSupport();
         const managedInstances = await instances.list();
         await assertHostedReleaseRetention(
@@ -61,17 +63,9 @@ try {
             managedInstances,
             await transitions.listRetained(),
             managedReleaseReader(mongo, support, env.ULVIA_PROVIDER_PUBLIC_URL),
-            profiles,
+            system,
         );
-        const instanceHost = new ProviderInstanceHost(
-            env,
-            credentials,
-            profiles,
-            logger,
-            support,
-            instances,
-            bootstrap,
-        );
+        const instanceHost = new ProviderInstanceHost(env, credentials, system, logger, support, instances, bootstrap);
         host = instanceHost;
         const provisioner = new OfficialInstanceProvisioner(
             instances,
@@ -80,14 +74,26 @@ try {
             {
                 read: (instanceId) => credentials.readAdministrator(instanceId),
                 clear: (instanceId) => credentials.clearAdministrator(instanceId),
+                authorizeExtension: async (instance, sub) =>
+                    (
+                        await new MongoAdministratorGrantStore(mongo.db(instanceDatabaseName(instance.storageKey))).get(
+                            sub,
+                        )
+                    ).enabled,
             },
-            profiles,
         );
+        instanceHost.repositoryCreation = {
+            create: async (instance, expectedRevision, administratorId) => {
+                const { source, target } = await instanceHost.registryPlan(instance);
+                return provisioner.createRepository(instance.id, source, target, expectedRevision, administratorId);
+            },
+            read: (instance) => provisioner.repositoryCreation(instance),
+        };
         const lifecycle = new ProviderInstanceLifecycle(
             instances,
             credentials,
             provisioner,
-            profiles,
+            system,
             env.CMS_SESSION_SECRET,
         );
         const authenticator = new ProviderInstanceAuthenticator(

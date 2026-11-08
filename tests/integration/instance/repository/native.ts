@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { MongoClient } from "mongodb";
 import { documentationChildren } from "../documentation/processes";
 import { waitForHttp } from "../docker";
+import { configureRepository } from "./initializationClient";
 import { provisionInstance } from "../provision";
 import { instanceDatabaseName } from "../../../../packages/runtimes/ulvia-provider-server/src/runtime/stores/storageRoots";
 import type { OfflineRuntimeNetwork } from "./network";
@@ -37,8 +38,6 @@ export async function repositoryProcesses() {
         CMS_KEK_ACTIVE_ID: "journey",
         CMS_KEK_RING_JSON: JSON.stringify({ journey: randomBytes(32).toString("hex") }),
         // The local Edge does not exist during bootstrap; no remote Repository is available.
-        CMS_REPOSITORY_URL: cmsUrl!,
-        CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true",
         ULVIA_PROVIDER_PORT: new URL(providerUrl!).port,
         ULVIA_PROVIDER_HOST: "127.0.0.1",
         ULVIA_PROVIDER_PUBLIC_URL: providerUrl!,
@@ -84,7 +83,6 @@ export async function repositoryProcesses() {
             cmsUrl!,
             admin,
             cmsUrl!,
-            { id: "repository", version: "1.0.0" },
         );
         const edge = async (name: string, url: string, token: string) => {
             processes.start(
@@ -103,6 +101,7 @@ export async function repositoryProcesses() {
             await waitForHttp(`${url}/healthz`);
         };
         await edge("edge", cmsUrl!, registry.credentials.instanceAccessToken);
+        await configureRepository(cmsUrl!, admin, cmsUrl!, true);
         return {
             root,
             cmsUrl: cmsUrl!,
@@ -120,6 +119,7 @@ export async function repositoryProcesses() {
                     neighbourUrl!,
                 );
                 await edge("neighbour", neighbourUrl!, created.credentials.instanceAccessToken);
+                await configureRepository(neighbourUrl!, admin, cmsUrl!);
                 return neighbourUrl!;
             },
             async restart() {

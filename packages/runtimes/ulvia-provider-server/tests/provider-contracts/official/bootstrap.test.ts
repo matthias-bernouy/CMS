@@ -3,8 +3,8 @@ import { cp, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { LocalArtifactFiles } from "@bernouy/repository/repository/filesystem";
-import { bundledBootstrapSources } from "../../../src/runtime/instances/profiles/bootstrap";
-import { loadOfficialArtifacts } from "../../../src/runtime/instances/profiles/artifacts";
+import { bundledBootstrapSources } from "../../../src/runtime/instances/system/bootstrap";
+import { loadSystemArtifacts } from "../../../src/runtime/instances/system/artifacts";
 
 const snapshot = resolve(import.meta.dir, "../../../dist/bootstrap");
 
@@ -14,22 +14,18 @@ test("loads the complete official profile and documentation from immutable files
     });
     try {
         const sources = bundledBootstrapSources(snapshot);
-        const loaded = await loadOfficialArtifacts(sources.providers, sources.collections);
-        expect(loaded.defaultProfile.id).toBe("ulvia");
+        const loaded = await loadSystemArtifacts(sources.providers);
+        expect(loaded.plan.manifest.providerId).toBe("ulvia/primary-provider");
         expect(loaded.contracts.length).toBeGreaterThan(0);
         const documented = loaded.contracts.filter(({ release }) => release.documentation?.length);
         expect(documented.length).toBeGreaterThan(0);
         expect(
             documented.every(({ release }) =>
-                loaded.profiles.some((profile) =>
-                    profile.contracts.some((pin) => pin.contractId === release.contractId),
-                ),
+                loaded.plan.contracts.some((pin) => pin.contractId === release.contractId),
             ),
         ).toBe(true);
         expect(await sources.collections.list()).toEqual([]);
-        expect((await loadOfficialArtifacts(sources.providers, sources.collections)).defaultProfile).toEqual(
-            loaded.defaultProfile,
-        );
+        expect((await loadSystemArtifacts(sources.providers)).plan).toEqual(loaded.plan);
         await expect(
             sources.providers.get({
                 ...(await sources.providers.list("contract"))[0]!,
@@ -49,7 +45,7 @@ test("missing snapshot and corrupt declared documentation fail without a remote 
     });
     try {
         let sources = bundledBootstrapSources(root);
-        await expect(loadOfficialArtifacts(sources.providers, sources.collections)).rejects.toThrow("unavailable");
+        await expect(loadSystemArtifacts(sources.providers)).rejects.toThrow("unavailable");
         await cp(snapshot, root, { recursive: true });
         sources = bundledBootstrapSources(root);
         const entries = await sources.providers.list("contract");
@@ -60,7 +56,7 @@ test("missing snapshot and corrupt declared documentation fail without a remote 
         const document = release.documentation[0];
         const file = new LocalArtifactFiles(root).fixtureBlob(canonical, `docs/${document.path}`);
         await Bun.write(file, "corrupt");
-        await expect(loadOfficialArtifacts(sources.providers, sources.collections)).rejects.toThrow();
+        await expect(loadSystemArtifacts(sources.providers)).rejects.toThrow();
         expect(network).not.toHaveBeenCalled();
     } finally {
         network.mockRestore();

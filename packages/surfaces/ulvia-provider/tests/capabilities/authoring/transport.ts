@@ -67,7 +67,7 @@ export async function authoringTransport(service: Partial<AuthoringService> = {}
             requestId: crypto.randomUUID(),
             instanceId: "instance-a",
             contractId: "ulvia/cms.authoring",
-            contractVersion: "1.0.0",
+            contractVersion: "1.1.0",
             capabilityId: id,
             actorKind: "administrator",
             subjectId: "admin",

@@ -1,14 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import type { OfficialInstanceProfile, ProviderInstanceRecord } from "@bernouy/ulvia-provider";
+import type { SystemInstallationPlan, ProviderInstanceRecord } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../src/runtimeEnv";
 import type { InstanceComposition } from "../src/runtime/instances/composition/ProviderInstanceHost";
 import { createInstanceProvisioningTarget } from "../src/runtime/instances/instanceProvisioning";
 
-const OFFICIAL_INSTANCE_PROFILE: OfficialInstanceProfile = Object.freeze({
-    id: "ulvia",
-    version: "1.0.0",
-    upgradeFromVersions: Object.freeze([]),
-    initialPages: [],
+const SYSTEM_PLAN: SystemInstallationPlan = Object.freeze({
     manifest: Object.freeze({
         providerId: "ulvia/primary-provider",
         version: "0.3.0",
@@ -16,14 +12,6 @@ const OFFICIAL_INSTANCE_PROFILE: OfficialInstanceProfile = Object.freeze({
     }),
     contracts: Object.freeze([
         Object.freeze({ contractId: "ulvia/cms.content", version: "1.0.0", digest: `sha256:${"b".repeat(64)}` }),
-    ]),
-    collections: Object.freeze([
-        Object.freeze({
-            publisherId: "ulvia",
-            collectionId: "ulvia/mossa",
-            version: "1.0.0",
-            digest: `sha256:${"c".repeat(64)}`,
-        }),
     ]),
 });
 
@@ -54,7 +42,7 @@ describe("official Provider connection provisioning", () => {
             approve: async () => ({ observed: true }),
         });
 
-        await target.connectProvider(OFFICIAL_INSTANCE_PROFILE, execution());
+        await target.connectProvider(SYSTEM_PLAN, execution());
 
         expect(calls).toEqual([expect.objectContaining({ installationId: "installation:official", revision: 4 })]);
     });
@@ -66,7 +54,7 @@ describe("official Provider connection provisioning", () => {
             approve: async () => ({ observed: false }),
         });
 
-        await expect(target.connectProvider(OFFICIAL_INSTANCE_PROFILE, execution())).rejects.toThrow(
+        await expect(target.connectProvider(SYSTEM_PLAN, execution())).rejects.toThrow(
             "Official Provider observation was not persisted",
         );
     });
@@ -81,7 +69,7 @@ describe("official Provider connection provisioning", () => {
             },
         });
 
-        await expect(target.connectProvider(OFFICIAL_INSTANCE_PROFILE, execution())).rejects.toThrow(
+        await expect(target.connectProvider(SYSTEM_PLAN, execution())).rejects.toThrow(
             "was revoked and cannot be restored",
         );
         expect(previewed).toBe(false);
@@ -126,8 +114,8 @@ function connectionTarget(management: Record<string, unknown>) {
         instance,
         composition: {
             management,
-            managementForProfile: (profile: typeof OFFICIAL_INSTANCE_PROFILE) => {
-                expect(profile).toBe(OFFICIAL_INSTANCE_PROFILE);
+            managementForPlan: (plan: typeof SYSTEM_PLAN) => {
+                expect(plan).toBe(SYSTEM_PLAN);
                 return management;
             },
         } as unknown as InstanceComposition,
@@ -148,15 +136,15 @@ function connectionTarget(management: Record<string, unknown>) {
 function installation(observedAt: string | null) {
     return {
         id: "installation:official",
-        providerId: OFFICIAL_INSTANCE_PROFILE.manifest.providerId,
+        providerId: SYSTEM_PLAN.manifest.providerId,
         accountId: "instance:official",
         endpoint: "http://127.0.0.1:5103",
         status: "enabled",
-        manifestVersion: OFFICIAL_INSTANCE_PROFILE.manifest.version,
-        manifestDigest: OFFICIAL_INSTANCE_PROFILE.manifest.digest,
+        manifestVersion: SYSTEM_PLAN.manifest.version,
+        manifestDigest: SYSTEM_PLAN.manifest.digest,
         revision: 4,
         observedAt,
-        contracts: OFFICIAL_INSTANCE_PROFILE.contracts.map((contract) => ({ ...contract, status: "ready" })),
+        contracts: SYSTEM_PLAN.contracts.map((contract) => ({ ...contract, status: "ready" })),
     };
 }
 
@@ -166,7 +154,7 @@ function execution() {
 
 test("fresh provisioning pairs the official return connection after selecting contracts", async () => {
     const steps: string[] = [];
-    const selected = OFFICIAL_INSTANCE_PROFILE.contracts.map((contract) => ({
+    const selected = SYSTEM_PLAN.contracts.map((contract) => ({
         ...contract,
         installationId: "installation:official",
     }));
@@ -190,6 +178,6 @@ test("fresh provisioning pairs the official return connection after selecting co
         providerSource: {} as never,
         collectionSource: {} as never,
     });
-    await target.selectContracts(OFFICIAL_INSTANCE_PROFILE, execution());
+    await target.selectContracts(SYSTEM_PLAN, execution());
     expect(steps).toEqual(["selections", "paired"]);
 });

@@ -69,7 +69,7 @@ change returns a revision conflict rather than restoring earlier authority.
 
 The official receiving runtime mounts the return channel through the shared SDK
 inventory. `approvedConnectionPins` contains the exact connection-contract releases
-approved by its execution profile; the host also supplies the Provider and instance scope:
+approved by its execution plan; the host also supplies the Provider and instance scope:
 
 ```ts
 import { ProviderConnections } from "@bernouy/cms-gateway/provider/node";

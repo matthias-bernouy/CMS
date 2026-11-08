@@ -5,10 +5,10 @@ import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
 import { validateProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 import type { ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 import type { ProviderStores } from "../../../stores/providerStores";
-import type { ExecutionProfile, ProviderExecutionSupport } from "./support";
+import type { ExecutionPlan, ProviderExecutionSupport } from "./support";
 
 export type InstalledExecution = Readonly<{
-    profile: ExecutionProfile;
+    plan: ExecutionPlan;
     contracts: readonly ResolvedContract[];
     report: ProviderRuntimeReport;
 }>;
@@ -82,7 +82,7 @@ export async function readInstalledExecution(
     // Check the current build range independently from the historical observation.
     validateProviderRuntimeReport(report, manifest.admission, { endpoint, accountId: instance.id });
     return deepFreeze({
-        profile: {
+        plan: {
             manifest: {
                 providerId: installation.providerId,
                 version: installation.approval.manifestVersion,

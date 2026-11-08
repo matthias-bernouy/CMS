@@ -87,8 +87,6 @@ services:
             MODE: PROD
             NODE_ENV: production
             CMS_FILES_DIR: /var/lib/cms/files
-            CMS_REPOSITORY_URL: ${CMS_REPOSITORY_URL:-https://repo.ulvia.fr}
-            CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "${CMS_REPOSITORY_ALLOW_INSECURE_HTTP:-false}"
             CMS_SESSION_SECRET: ${ULVIA_PROVIDER_SESSION_SECRET}
             CMS_KEK_ACTIVE_ID: ${ULVIA_PROVIDER_KEK_ACTIVE_ID}
             CMS_KEK_RING_JSON: ${ULVIA_PROVIDER_KEK_RING_JSON}

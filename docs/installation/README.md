@@ -72,58 +72,23 @@ command prints the initial administrator email and password. It never prints
 the Provider, Repository, encryption, or instance service secrets.
 
 Open `http://my-site.localhost:5100/.cms/setup` and use those credentials. Fresh
-profiles create zero collections and Pages. Choose an empty site or explicitly
+instances create zero collections and Pages. Choose an empty site or explicitly
 review a recipe from a published collection; no starter or administration site
 is bundled. Empty completion leaves `/` returning 404 until a Page is published.
 See [first published Page](../product/first-published-page.md) for the current API flow.
 
-The Provider uses `https://repo.ulvia.fr` by default for resource discovery
-and connected-account publications. The shared stack contains the proxy, MongoDB and Provider. Repository hosting
-is selected explicitly on a named CMS instance.
+Setup first offers **A Repository address**, **The official Repository**
+(`https://repo.ulvia.fr`), or **A new Repository** on this instance. Then choose
+an empty site or review a published collection recipe. The URL is stored per
+instance; there is no global Repository environment variable or service setting.
+The address must be reachable from the Provider. HTTP origins are an explicit
+choice; credentials, queries and fragments are forbidden in settings URLs.
 
-When initializing a node, select another Repository by setting
-`CMS_REPOSITORY_URL` on the first configuration or startup command. For an
-isolated local installation:
-
-```bash
-CMS_REPOSITORY_URL=http://repository:3000 \
-CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true ulvia services start
-```
-
-Here `repository:3000` is a Repository CMS Edge address reachable from the
-Provider containers. Initial provisioning uses the bundled application profile
-before the remote catalogue is available.
-
-The selected connection is persisted as `repository.url` and
-`repository.allowInsecureHttp` in
-`~/.local/share/ulvia/services/installation.json`. Later environment changes
-do not replace an existing connection. To change it, update those fields and
-run `ulvia services start`. The Provider bundles admitted resources needed for initial provisioning; it
-does not need to contact this Repository to bootstrap its shipped profiles.
-Remote discovery and publication still require the configured Repository. An
-origin remains required in configuration even when it is unavailable at bootstrap.
-Creating a Repository instance neither changes that connection nor publishes the
-image-owned bootstrap artifacts into its public catalogue.
-
-Ulvia deliberately separates shared services from sites:
-
-| Command | Responsibility |
-| --- | --- |
-| `ulvia services start` | Starts the proxy, MongoDB and Provider. |
-| `ulvia instance create <name>` | Provisions one Provider tenant and starts its Edge. |
-| `ulvia instance start <name>` | Restarts an existing instance without provisioning it again. |
-| `ulvia start` | Starts shared services and every existing instance; it creates nothing. |
-
-List and inspect the installation at any time:
-
-```bash
-ulvia services status
-ulvia instance list
-ulvia instance status my-site
-```
-
-Persistent data lives below `$XDG_DATA_HOME/ulvia` or
-`~/.local/share/ulvia`. Commands can be run from any working directory.
+A new Repository installs Registry from the system resources already in the
+image and selects this site’s public Edge origin. Its catalogue starts empty.
+Self-origin calls use the known private Edge transport; no remote catalogue is
+needed for creation or empty completion. Changing a Repository URL affects future
+discovery/imports, preserving installed resources and Pages.
 
 ## 4. Daily Operations
 
@@ -255,7 +220,7 @@ For a local installation:
 
 ```bash
 ulvia services start
-ulvia instance create registry --profile repository@1.3.0
+ulvia instance create registry
 ulvia instance status registry
 ulvia instance credentials registry
 ```
@@ -263,7 +228,8 @@ ulvia instance credentials registry
 The Registry API is available below
 `http://registry.localhost:5100/.cms/call/ulvia/repository`. Its public identity
 endpoint is `GET /v1/info` relative to that prefix. Ordinary CMS instances do not
-expose this contract. The profile starts with an administrator and system APIs,
+expose this contract. Open `/.cms/setup`, sign in and choose **A new Repository**
+to activate it. Creation starts with an administrator and system APIs,
 without any collection or Page. Publish resources through the CLI/API and install
 a website explicitly if needed.
 
@@ -271,7 +237,7 @@ For public hosting, configure network exposure and ACME as described in section 
 before creating instances, then create the application on its public domain:
 
 ```bash
-ulvia instance create registry --domain repository.example.com --profile repository@1.3.0
+ulvia instance create registry --domain repository.example.com
 ```
 
 Replace the example domain with a domain routed to this host. The same shared
@@ -331,11 +297,8 @@ digests, checks Provider retention before replacing it, and attempts to restore
 the previous image if activation fails. Accounts, ownership, releases, Pages and
 credentials remain in the normal CMS storage.
 
-A profile change is separate from an image replacement:
-`ulvia instance upgrade-profile registry ID@VERSION`. The target must be a
-supported explicit transition shipped by the Provider and retain the
-`ulvia/repository` application ID. The CLI saves the exact new reference only
-after the Provider acknowledges it. Restart never selects a different profile.
+Installed contract and collection upgrades are separate from image replacement.
+They use explicit admitted Installations workflows; restart never selects new pins.
 
 Back up the Provider database, file storage, matching encryption credentials and
 private instance configuration together, following section 7. The Repository is

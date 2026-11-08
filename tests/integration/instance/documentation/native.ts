@@ -1,3 +1,4 @@
+import { configureRepository } from "../repository/initializationClient";
 import { installDeliveryFixture } from "../containers/deliveryFixture";
 import { randomBytes } from "node:crypto";
 import { cp, mkdir, mkdtemp, rm } from "node:fs/promises";
@@ -72,8 +73,6 @@ export async function documentationProcesses() {
             CMS_SESSION_SECRET: randomBytes(32).toString("base64url"),
             CMS_KEK_ACTIVE_ID: "control",
             CMS_KEK_RING_JSON: JSON.stringify({ control: randomBytes(32).toString("hex") }),
-            CMS_REPOSITORY_URL: repositoryUrl,
-            CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true",
             ULVIA_PROVIDER_PORT: String(providerPort),
             ULVIA_PROVIDER_HOST: "127.0.0.1",
             ULVIA_PROVIDER_PUBLIC_URL: providerUrl,
@@ -112,6 +111,7 @@ export async function documentationProcesses() {
                 CMS_INSTALLATIONS_PROVIDER_TOKEN: token,
             });
             await waitForHttp(`${url}/readyz`);
+            await configureRepository(url, administrator, repositoryUrl);
             const api = repositoryApi(url);
             const admin = await api.session(administrator.email, administrator.password);
             const connected = await api.request(

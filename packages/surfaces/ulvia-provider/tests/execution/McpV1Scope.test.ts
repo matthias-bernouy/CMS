@@ -59,5 +59,5 @@ test("official MCP V1 exposes authoring, collection lifecycle and administrator 
             }
         }
     }
-    expect(tools).toBe(82);
+    expect(tools).toBe(85);
 });

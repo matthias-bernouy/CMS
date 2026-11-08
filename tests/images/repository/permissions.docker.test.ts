@@ -4,7 +4,7 @@ import { docker } from "../../integration/instance/docker";
 const image = process.env.ULVIA_MCP_PROVIDER_DOCKER_IMAGE;
 
 test.skipIf(!image)(
-    "bundled profiles and public artifacts are readable by an arbitrary runtime UID without network or writes",
+    "system bootstrap and public artifacts are readable by an arbitrary runtime UID without network or writes",
     async () => {
         const result = await docker([
             "run",
@@ -22,18 +22,15 @@ test.skipIf(!image)(
             "--no-macros",
             "-e",
             `
-                const base = "/app/packages/runtimes/ulvia-provider-server/src/runtime/instances/profiles/";
+                const base = "/app/packages/runtimes/ulvia-provider-server/src/runtime/instances/system/";
                 const { bundledBootstrapSources } = await import(base + "bootstrap.ts");
-                const { loadOfficialArtifacts } = await import(base + "artifacts.ts");
+                const { loadSystemArtifacts } = await import(base + "artifacts.ts");
                 const sources = bundledBootstrapSources();
-                const artifacts = await loadOfficialArtifacts(sources.providers, sources.collections);
-                console.log(JSON.stringify(artifacts.profiles.map(({ id, version }) => ({ id, version }))));
+                const artifacts = await loadSystemArtifacts(sources.providers);
+                console.log(JSON.stringify(artifacts.plan.manifest));
             `,
         ]);
-        expect(JSON.parse(result.stdout)).toEqual([
-            { id: "ulvia", version: "1.0.0" },
-            { id: "repository", version: "1.0.0" },
-        ]);
+        expect(JSON.parse(result.stdout)).toMatchObject({ providerId: "ulvia/primary-provider", version: "1.3.0" });
     },
     30_000,
 );

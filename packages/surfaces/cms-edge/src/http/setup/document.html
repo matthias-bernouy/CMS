@@ -17,8 +17,9 @@
             <p>Start with an empty workspace or choose a collection to make it yours.</p>
             <ol class="steps">
                 <li data-step="login"><span>1</span> Sign in</li>
-                <li data-step="choice"><span>2</span> Choose a starting point</li>
-                <li data-step="review"><span>3</span> Review and install</li>
+                <li data-step="repository"><span>2</span> Choose a Repository</li>
+                <li data-step="choice"><span>3</span> Choose a starting point</li>
+                <li data-step="review"><span>4</span> Review and install</li>
             </ol>
             <p class="sidebar-note">You stay in control.<br>Nothing is installed without your confirmation.</p>
         </aside>
@@ -27,7 +28,7 @@
             <p id="error" class="notice error" role="alert" hidden></p>
             <section id="loading" class="stage" aria-live="polite"><p class="eyebrow">Getting ready</p><h2>Opening your workspace…</h2></section>
             <section id="login" class="stage" hidden>
-                <p class="eyebrow">Step 1 of 3</p><h2>Welcome to your new site.</h2>
+                <p class="eyebrow">Step 1 of 4</p><h2>Welcome to your new site.</h2>
                 <p class="intro">Sign in with the administrator account created during installation.</p>
                 <form id="login-form" method="post" action="setup">
                     <label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="username" maxlength="254" required>
@@ -35,8 +36,24 @@
                     <button class="primary" type="submit">Continue <span aria-hidden="true">→</span></button>
                 </form>
             </section>
+            <section id="repository" class="stage" hidden>
+                <p class="eyebrow">Step 2 of 4</p><h2>Where will your resources come from?</h2>
+                <p class="intro">Choose a Repository for future discovery and imports. Your installed resources keep their versions.</p>
+                <div class="choices repository-choices">
+                    <button id="repository-address" class="choice" type="button"><strong>A Repository address</strong><span>Connect this site to a Repository you choose.</span><span class="choice-action">Enter an address →</span></button>
+                    <button id="repository-official" class="choice" type="button"><strong>The official Repository</strong><span>Use https://repo.ulvia.fr for collections and releases.</span><span class="choice-action">Use the official Repository →</span></button>
+                    <button id="repository-new" class="choice" type="button"><strong>A new Repository</strong><span>Install Registry on this instance. Its catalogue starts empty.</span><span class="choice-action">Create a Repository →</span></button>
+                </div>
+                <form id="repository-form" method="post" action="setup" hidden>
+                    <label for="repository-url">Repository address</label><input id="repository-url" name="repository-url" type="url" placeholder="https://repository.example" maxlength="2048" required>
+                    <button class="primary" type="submit">Use this Repository →</button>
+                </form>
+                <p id="repository-progress" class="notice" role="status" hidden></p>
+                <button id="repository-resume" class="primary" type="button" hidden>Resume Repository configuration</button>
+            </section>
             <section id="choice" class="stage" hidden>
-                <p class="eyebrow">Step 2 of 3</p><h2>Where would you like to start?</h2>
+                <button id="change-repository" class="back" type="button">← Repository</button>
+                <p class="eyebrow">Step 3 of 4</p><h2>Where would you like to start?</h2>
                 <p class="intro">Choose a blank canvas or a starter you can make your own.</p>
                 <div class="choices">
                     <button id="empty" class="choice" type="button"><span class="choice-icon" aria-hidden="true">＋</span><strong>Start from scratch</strong><span>No collections. No pages. Build at your own pace.</span><span class="choice-action">Choose an empty site →</span></button>
@@ -53,7 +70,7 @@
             </section>
             <section id="review" class="stage" hidden>
                 <button class="back" data-back type="button">← Starting point</button>
-                <p class="eyebrow">Step 3 of 3</p><h2 id="review-title">Review your starting point.</h2>
+                <p class="eyebrow">Step 4 of 4</p><h2 id="review-title">Review your starting point.</h2>
                 <p class="intro" id="review-description"></p>
                 <div id="review-summary" class="summary"></div>
                 <div id="review-collections"></div>

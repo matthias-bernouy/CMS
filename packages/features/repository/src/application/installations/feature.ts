@@ -50,12 +50,15 @@ import { planCollectionUpgrade } from "repository/application/installations/capa
 import { planContractUpgrade } from "repository/application/installations/capabilities/upgrades/contracts/plan-contract-upgrade";
 import { repositoryGet } from "repository/application/installations/capabilities/discovery/repository.get";
 import { repositorySearch } from "repository/application/installations/capabilities/discovery/repository.search";
+import { getRepositorySettings } from "repository/application/installations/capabilities/initialization/repository";
+import { configureRepository } from "repository/application/installations/capabilities/initialization/configure-repository";
+import { createRepository } from "repository/application/installations/capabilities/initialization/create-repository";
 export const installationsFeature = defineFeature({
     contractId: "ulvia/cms.installations",
     name: "CMS Installations",
     description:
         "Inspect and administer the collection installations, provider installations and contract selections of one CMS instance.",
-    version: "1.2.0",
+    version: "1.3.0",
     publisherId: "ulvia",
     catalogue: { icon: "installations", categories: ["administration", "content", "infrastructure"] },
     documents: new URL("../../../docs/installations/", import.meta.url),
@@ -69,6 +72,9 @@ export const installationsFeature = defineFeature({
         initializationList,
         initializationPlan,
         initializationStatus,
+        getRepositorySettings,
+        configureRepository,
+        createRepository,
 
         gatewayAuditAppend,
         applyCollectionUpgrade,
@@ -125,3 +131,7 @@ export type {
 } from "repository/application/installations/interfaces/management";
 export type { InstallationOperationQueries } from "repository/application/installations/interfaces/operations";
 export type * from "repository/application/installations/interfaces/outputs";
+
+export { InstallationError } from "repository/application/installations/core/errors";
+
+export { normalizeRepositoryAddress } from "repository/application/installations/core/repositorySettings";

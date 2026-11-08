@@ -14,7 +14,7 @@ test("Repository deployment uses the Provider and an independent Edge without a 
     expect(provider).toContain("--filter=@bernouy/ulvia-provider-server");
     expect(provider).toContain('VOLUME ["/var/lib/cms/files"]');
     expect(provider).toContain("USER bun");
-    expect(services).toContain("CMS_REPOSITORY_URL:");
+    expect(services).not.toContain("CMS_REPOSITORY_URL:");
     expect(services).toContain("target: /var/lib/cms/files");
     expect(services).not.toContain("OFFICIAL_REPOSITORY_IMAGE");
     expect(services).not.toContain("ULVIA_REPOSITORY_PORT");
