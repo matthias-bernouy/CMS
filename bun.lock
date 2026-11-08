@@ -178,6 +178,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@bernouy/binary-media": "workspace:*",
+        "@bernouy/blob-store": "workspace:*",
         "@bernouy/content": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
@@ -189,6 +190,7 @@
         "@types/css-tree": "^3.2.0",
       },
       "peerDependencies": {
+        "mongodb": "^7.2.0",
         "typescript": "^7.0.2",
       },
     },

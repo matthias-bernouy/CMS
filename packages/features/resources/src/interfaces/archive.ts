@@ -1,6 +1,6 @@
 import type { TBloc, ThemeSettings } from "@bernouy/content";
 import type { ZipOptions, ZipSourceEntry } from "@bernouy/zip";
-import type { ResourceAsset, ResourcePage, ResourceTextSource } from "resources/archive/schemas";
+import type { ResourceAsset, ResourcePage, ResourceTextSource } from "resources/artifacts/archive/schemas";
 
 export interface ResourceDocument {
     readonly format: "ulvia-resources/v1";

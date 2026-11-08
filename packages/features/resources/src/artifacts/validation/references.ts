@@ -1,7 +1,7 @@
 import { parseCollectionAssetExpression } from "@bernouy/content/page-document";
 import { replaceContentTextExpressions } from "@bernouy/content/rendering";
 import type { ResourceDocument } from "resources/interfaces/archive";
-import { ResourceArchiveError } from "resources/archive/errors";
+import { ResourceArchiveError } from "resources/artifacts/archive/errors";
 
 /** Base archives are self-contained data; references never grant installation authority. */
 export function validateResourceReferences(document: ResourceDocument): void {

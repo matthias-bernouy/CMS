@@ -1,5 +1,5 @@
 import type { ResourceDocument } from "resources/interfaces/archive";
-import { ResourceArchiveError } from "resources/archive/errors";
+import { ResourceArchiveError } from "resources/artifacts/archive/errors";
 import { compileBlocStyle } from "./compile";
 import { validateBlocStyles } from "./validate";
 

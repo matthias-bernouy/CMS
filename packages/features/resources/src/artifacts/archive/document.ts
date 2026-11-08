@@ -4,8 +4,9 @@ import { validateBlocWrite, validateThemeSettings } from "@bernouy/content";
 import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import type { ResourceDocument } from "resources/interfaces/archive";
 import { archiveSchema } from "./schemas";
-import { validateResourceReferences } from "resources/validation/references";
-import { validateResourceStyles } from "resources/styles/artifacts";
+import { validateResourceTextSource } from "resources/artifacts/validation/texts";
+import { validateResourceReferences } from "resources/artifacts/validation/references";
+import { validateResourceStyles } from "resources/artifacts/styles/artifacts";
 import { ResourceArchiveError } from "./errors";
 
 const blocHeader = z.looseObject({
@@ -66,15 +67,7 @@ export function resourceDocument(input: unknown): ResourceDocument {
         }
     }
     for (const source of raw.texts) {
-        unique(
-            source.texts.map(({ id }) => id),
-            "text",
-        );
-        for (const text of source.texts) {
-            if (!Object.hasOwn(text.values, source.locale) || Object.keys(text.values).length > 32) {
-                throw new ResourceArchiveError("Texts require their default locale and at most 32 locales");
-            }
-        }
+        validateResourceTextSource(source);
     }
     const document = { ...raw, blocs, theme };
     validateResourceStyles(document);

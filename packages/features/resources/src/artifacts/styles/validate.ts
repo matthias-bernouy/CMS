@@ -1,7 +1,7 @@
 import { ident, parse, walk } from "css-tree";
 import type { Declaration } from "css-tree";
 import type { BlocStyleInput } from "resources/interfaces/styles";
-import { invalidResource as invalid } from "resources/archive/errors";
+import { invalidResource as invalid } from "resources/artifacts/archive/errors";
 import { compileBlocStyle } from "./compile";
 import { colorVariables } from "./colors";
 import { validateColorBehavior } from "./behavior";

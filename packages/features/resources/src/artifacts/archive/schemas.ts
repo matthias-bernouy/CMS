@@ -6,7 +6,7 @@ import { isValidRegisteredPagePath } from "@bernouy/content/page-path";
 import { isResourceId } from "@bernouy/ulvia-contracts/protocol";
 
 const namespaceSchema = contractString({ minLength: 3, maxLength: 193 }).refine(isResourceId);
-const localeSchema = contractString({ minLength: 2, maxLength: 64 }).refine((value) => {
+export const localeSchema = contractString({ minLength: 2, maxLength: 64 }).refine((value) => {
     try {
         return Intl.getCanonicalLocales(value)[0] === value;
     } catch {
@@ -14,7 +14,7 @@ const localeSchema = contractString({ minLength: 2, maxLength: 64 }).refine((val
     }
 });
 const staticText = contractString({ maxLength: 65536 }).refine((value) => !/[{}]/u.test(value));
-const textSourceSchema = z.strictObject({
+export const textSourceSchema = z.strictObject({
     namespace: namespaceSchema,
     locale: localeSchema,
     texts: z
@@ -30,7 +30,7 @@ const textSourceSchema = z.strictObject({
         )
         .max(4096),
 });
-const assetSchema = z.strictObject({
+export const assetSchema = z.strictObject({
     namespace: namespaceSchema,
     id: contractString({ minLength: 1, maxLength: 512 }).refine((value) =>
         value.split("/").every((part) => /^[a-z0-9][a-z0-9._-]*$/u.test(part) && part !== "." && part !== ".."),

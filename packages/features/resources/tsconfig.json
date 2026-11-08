@@ -24,6 +24,9 @@
         },
         {
             "path": "../content"
+        },
+        {
+            "path": "../../foundation/blob-store"
         }
     ],
     "include": [

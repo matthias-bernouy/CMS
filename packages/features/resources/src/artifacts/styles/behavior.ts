@@ -1,7 +1,7 @@
 import { blocStyleWrites } from "@bernouy/content/page-document";
 import { parse } from "css-tree";
 import type { BlocStyleInput } from "resources/interfaces/styles";
-import { invalidResource as invalid } from "resources/archive/errors";
+import { invalidResource as invalid } from "resources/artifacts/archive/errors";
 import { assertTokenColors, cssReferences } from "./colors";
 
 /** Recheck compiled code: caller-supplied runtime artifacts cannot skip source preparation. */

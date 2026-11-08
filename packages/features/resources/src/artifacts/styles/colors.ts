@@ -1,7 +1,7 @@
 import { blocStylePaintProperty } from "@bernouy/content/page-document";
 import { generate, ident, lexer, walk } from "css-tree";
 import type { CssNode, Declaration } from "css-tree";
-import { invalidResource as invalid } from "resources/archive/errors";
+import { invalidResource as invalid } from "resources/artifacts/archive/errors";
 
 const COLOR_FUNCTIONS = new Set([
     "rgb",
