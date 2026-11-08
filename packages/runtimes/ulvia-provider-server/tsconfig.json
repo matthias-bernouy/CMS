@@ -77,6 +77,12 @@
         },
         {
             "path": "../../platform/sdk"
+        },
+        {
+            "path": "../../features/resources"
+        },
+        {
+            "path": "../../foundation/binary-media"
         }
     ]
 }

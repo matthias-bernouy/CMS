@@ -1,9 +1,14 @@
+import { ResourceArchiveError } from "@bernouy/resources";
+import { resourceTaskBytes } from "./resources/limits";
 import { CollectionValidationError } from "@bernouy/repository/collections";
 import type { VerificationTask, VerificationReply } from "./protocol";
 import { CollectionPublicationError } from "@bernouy/repository/collections";
 
 /** Bound retained structured-clone payloads independently of queue length. */
 export function taskBytes(task: VerificationTask): number {
+    if (task.kind === "resource-archive" || task.kind === "resource-preview") {
+        return resourceTaskBytes(task);
+    }
     const values = task.kind === "evolution" ? [task.previous, task.next] : [task.value];
     let bytes = 0;
     for (const value of values) {
@@ -33,6 +38,9 @@ export function taskBytes(task: VerificationTask): number {
 }
 
 export function verificationError(error: NonNullable<VerificationReply["error"]>): Error {
+    if (error.resource) {
+        return Object.assign(new ResourceArchiveError(error.message), error.status ? { status: error.status } : {});
+    }
     if (error.publicationCode) {
         return Object.assign(
             new CollectionPublicationError(error.publicationCode, undefined, error.publicationResource),

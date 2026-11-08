@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { expect, test } from "bun:test";
 import { admitCollectionRelease, CollectionValidationError } from "@bernouy/repository/collections";
-import { CollectionVerificationPool } from "../../../src/runtime/instances/verification/CollectionVerificationPool";
+import { HostPreparationPool } from "../../../src/runtime/instances/verification/HostPreparationPool";
 
 const document = {
     kind: "collection",
@@ -19,7 +19,7 @@ const document = {
 
 test("worker verification preserves exact identity, typed refusals and immutable asset bytes", async () => {
     const artifact = await admitCollectionRelease(document);
-    const pool = new CollectionVerificationPool();
+    const pool = new HostPreparationPool();
     try {
         expect((await pool.metadata(document, artifact.digest)).digest).toBe(artifact.digest);
         expect((await pool.metadataJson(artifact.canonicalJson, artifact.digest)).digest).toBe(artifact.digest);
@@ -46,7 +46,7 @@ test("worker verification preserves exact identity, typed refusals and immutable
 
 test("queued cancellation, timeout and close release retained payloads and allow recovery", async () => {
     const artifact = await admitCollectionRelease(document);
-    const pool = new CollectionVerificationPool(1);
+    const pool = new HostPreparationPool(1);
     try {
         const active = pool.metadata(document, artifact.digest);
         const abort = new AbortController();
@@ -62,7 +62,7 @@ test("queued cancellation, timeout and close release retained payloads and allow
 
 test("host worker queue is finite and another task survives cancellation of the active one", async () => {
     const artifact = await admitCollectionRelease(document);
-    const pool = new CollectionVerificationPool();
+    const pool = new HostPreparationPool();
     const controller = new AbortController();
     const active = pool.metadata(document, artifact.digest, controller.signal);
     const queued = Array.from({ length: 8 }, () => pool.metadata(document, artifact.digest));
@@ -97,7 +97,7 @@ test("worker asset inputs are snapshotted and corrupt bytes refuse", async () =>
     };
     const release = { ...document, assets: [asset] };
     const admitted = await admitCollectionRelease(release, [{ id: asset.id, bytes }]);
-    const pool = new CollectionVerificationPool();
+    const pool = new HostPreparationPool();
     try {
         const pending = pool.artifact(release, [{ id: asset.id, bytes }], admitted.digest);
         bytes[0] = 9;
@@ -131,7 +131,7 @@ test("canceled Blob reads retain capacity and defer successors and shutdown unti
             return super.arrayBuffer();
         }
     }
-    const pool = new CollectionVerificationPool();
+    const pool = new HostPreparationPool();
     const controller = new AbortController();
     const pending = pool.artifact(
         document,

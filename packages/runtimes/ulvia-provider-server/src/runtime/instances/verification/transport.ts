@@ -1,7 +1,15 @@
+import { transferableResourceTask, resourceValue } from "./resources/transport";
 import type { VerificationTask } from "./protocol";
 
 /** Convert immutable Blobs before crossing Bun's worker boundary. */
-export async function transferableTask(task: VerificationTask): Promise<VerificationTask> {
+export async function transferableTask(
+    task: VerificationTask,
+    signal?: AbortSignal,
+    reserve?: (bytes: number) => void,
+): Promise<VerificationTask> {
+    if (task.kind === "resource-archive" || task.kind === "resource-preview") {
+        return transferableResourceTask(task, signal, reserve);
+    }
     if (task.kind !== "artifact") {
         return task;
     }
@@ -18,6 +26,9 @@ export async function transferableTask(task: VerificationTask): Promise<Verifica
 
 /** The worker verifies bytes; the host retains its own immutable snapshot. No Blob crosses back. */
 export function verificationValue(task: VerificationTask, value: unknown): unknown {
+    if (task.kind === "resource-archive" || task.kind === "resource-preview") {
+        return resourceValue(task, value);
+    }
     if (task.kind !== "artifact") {
         return value;
     }

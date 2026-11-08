@@ -32,7 +32,9 @@
         "@bernouy/text-search": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
-        "@bernouy/ulvia-sdk": "workspace:*"
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "@bernouy/resources": "workspace:*",
+        "@bernouy/binary-media": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

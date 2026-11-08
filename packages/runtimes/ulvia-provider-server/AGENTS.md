@@ -47,3 +47,13 @@ Production runtime for the official Ulvia Provider.
 - Durable Secrets creation/rotation persist hashes and metadata outcomes only.
   Recheck namespace credentials before receipt access; revoked/expired/foreign keys
   cannot reuse a completed receipt. Never persist secret values or namespace keys.
+
+- `HostPreparationPool` is the single bounded CPU worker shared by host instances.
+  Resource archive verification and disposable ordinary Page previews use its
+  `resources` ports; no live persistence, authorization or authored code execution
+  belongs in the worker. Keep cancellation, timeout, retained-byte/count bounds and
+  shutdown draining across both resource jobs and remaining collection callers.
+- Preparation snapshots selected execution and system settings before awaits.
+  Observe disk-backed ZIP bytes under a limit before worker transport; do not
+  trust file stat or allocate an unbounded arrayBuffer. Completed initialization
+  replay must remain independent of both the source ZIP and preparation worker.

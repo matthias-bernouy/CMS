@@ -47,7 +47,7 @@ import { CmsFileWorkspace } from "../../stores/CmsFileWorkspace";
 import { createInstanceProvisioningTarget } from "../instanceProvisioning";
 import type { OfficialBootstrapSources } from "../profiles/bootstrap";
 import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from "../InstanceResourcePool";
-import { CollectionVerificationPool } from "../verification/CollectionVerificationPool";
+import { HostPreparationPool } from "../verification/HostPreparationPool";
 import { CollectionSourceCaches } from "@bernouy/ulvia-provider";
 import type { Logger } from "@bernouy/logging";
 import { correlatedRepositoryFetch } from "../../gateway/repositoryFetch";
@@ -82,7 +82,7 @@ export type InstanceComposition = Readonly<{
 }>;
 
 export class ProviderInstanceHost {
-    readonly #verification = new CollectionVerificationPool();
+    readonly #verification = new HostPreparationPool();
     readonly #collectionCaches = new CollectionSourceCaches();
     readonly #documentation: ProviderDocumentation;
     readonly #instances: InstanceResourcePool<InstanceComposition>;

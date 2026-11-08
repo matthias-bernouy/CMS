@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { expect, test } from "bun:test";
 import { inlineCollectionVerifier } from "@bernouy/repository/collections/sources";
-import { CollectionVerificationPool } from "../../../src/runtime/instances/verification/CollectionVerificationPool";
+import { HostPreparationPool } from "../../../src/runtime/instances/verification/HostPreparationPool";
 
 async function measure(operation: () => Promise<unknown>) {
     let last = performance.now();
@@ -35,7 +35,7 @@ test("official collection verification keeps the host heartbeat responsive", asy
         value,
         `sha256:${createHash("sha256").update(json).digest("hex")}`,
     );
-    const pool = new CollectionVerificationPool();
+    const pool = new HostPreparationPool();
     try {
         await pool.metadata(value, admitted.digest);
         const inline = await measure(() => inlineCollectionVerifier.metadata(value, admitted.digest));
