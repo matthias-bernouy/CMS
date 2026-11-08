@@ -159,3 +159,12 @@ test("rejects duplicate JSON keys, unsupported fields and malformed UTF-8 before
         await expect(readResourceArchive(bytes, { expectedDigest })).rejects.toBeInstanceOf(Error);
     }
 });
+
+test("checks intrinsic archive bytes before hashing a misleading Blob subclass", async () => {
+    const built = await writeResourceArchive({ document: documentFixture(), assets: [] });
+    const input = new Blob([built.bytes]);
+    Object.defineProperty(input, "size", { value: 0 });
+    await expect(
+        readResourceArchive(input, { expectedDigest: built.digest, limits: { maxArchiveBytes: 1 } }),
+    ).rejects.toThrow("Resource archive exceeds its limit");
+});

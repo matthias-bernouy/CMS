@@ -19,6 +19,8 @@ export interface ZipEntry {
     readonly bytes: Blob;
 }
 export interface DecodedZip {
+    /** Owned immutable archive bytes, independent of any filesystem-backed input. */
+    readonly bytes: Blob;
     readonly entries: readonly ZipEntry[];
     readonly archiveBytes: number;
     readonly totalBytes: number;

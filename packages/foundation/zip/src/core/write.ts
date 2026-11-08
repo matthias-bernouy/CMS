@@ -1,4 +1,6 @@
+import { binaryByteLength, snapshotBinary } from "@bernouy/binary-media";
 import type { Readable } from "node:stream";
+import { captureBlobBytes } from "./blob";
 import { ZipFile } from "yazl";
 import type { ZipSourceEntry, ZipOptions } from "zip/interfaces/zip";
 import { zipLimits } from "./limits";
@@ -11,6 +13,9 @@ export async function writeZip(entries: readonly ZipSourceEntry[], options: ZipO
     const limits = zipLimits(options.limits);
     const signal = options.signal;
     signal?.throwIfAborted();
+    if (!Array.isArray(entries)) {
+        throw new TypeError("ZIP sources must be an array");
+    }
     if (entries.length > limits.maxEntries) {
         throw new ZipValidationError("limit_exceeded", "ZIP source exceeds its entry count");
     }
@@ -21,22 +26,15 @@ export async function writeZip(entries: readonly ZipSourceEntry[], options: ZipO
         .map((entry) => {
             const path = paths.add(entry.path, false);
             const value = entry.bytes;
-            const size =
-                value instanceof Blob
-                    ? value.size
-                    : typeof value === "string"
-                      ? Buffer.byteLength(value)
-                      : value.byteLength;
+            const size = typeof value === "string" ? Buffer.byteLength(value) : binaryByteLength(value);
             total += size;
             if (size > limits.maxEntryBytes || total > limits.maxTotalBytes) {
                 throw new ZipValidationError("limit_exceeded", "ZIP source exceeds its byte limits");
             }
             return {
                 path,
-                bytes:
-                    value instanceof Blob
-                        ? value
-                        : new Blob([typeof value === "string" ? value : new Uint8Array(value)]),
+                size,
+                bytes: typeof value === "string" ? new Blob([value]) : snapshotBinary(value),
             };
         })
         .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
@@ -52,7 +50,11 @@ export async function writeZip(entries: readonly ZipSourceEntry[], options: ZipO
     try {
         for (const entry of captured) {
             signal?.throwIfAborted();
-            zip.addBuffer(Buffer.from(await entry.bytes.arrayBuffer()), entry.path, {
+            const data = await captureBlobBytes(entry.bytes, entry.size, signal);
+            if (data.byteLength !== entry.size) {
+                throw new ZipValidationError("integrity_mismatch", "ZIP source changed size while captured");
+            }
+            zip.addBuffer(data, entry.path, {
                 compress: false,
                 mtime: new Date(1980, 0, 1),
                 mode: 0o100644,

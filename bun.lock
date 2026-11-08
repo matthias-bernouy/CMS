@@ -303,6 +303,7 @@
       "name": "@bernouy/zip",
       "version": "1.0.0",
       "dependencies": {
+        "@bernouy/binary-media": "workspace:*",
         "yauzl": "3.4.0",
         "yazl": "3.3.1",
       },

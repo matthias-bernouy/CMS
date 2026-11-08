@@ -4,9 +4,9 @@ Generic bounded ZIP construction and decoding for in-memory artifacts. There are
 CMS models, filesystem extraction, network operations or catalogue/version semantics.
 
 `writeZip(entries, { limits, signal })` captures source paths and mutable bytes before
-asynchronous work, sorts paths and emits stored entries with fixed DOS metadata.
+asynchronous work, bounds filesystem-backed Blob reads, sorts paths and emits stored entries with fixed DOS metadata.
 `readZip(bytesOrBlob, { limits, signal })` iterates the central directory lazily and
-returns immutable entry Blobs after size and CRC32 verification. Stored and deflated
+returns immutable entry Blobs and owned archive `bytes` after size and CRC32 verification. Stored and deflated
 files are supported; encrypted entries, links and special files are refused.
 
 Both entry and aggregate bytes/counts are bounded, including observed decompressed

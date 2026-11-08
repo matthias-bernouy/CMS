@@ -1,3 +1,5 @@
+import { binaryByteLength, snapshotBinary } from "@bernouy/binary-media";
+import { captureBlobBytes } from "./blob";
 import { fromBufferPromise } from "yauzl";
 import type { DecodedZip, ZipEntry, ZipOptions } from "zip/interfaces/zip";
 import { zipLimits } from "./limits";
@@ -10,11 +12,15 @@ export async function readZip(input: Blob | Uint8Array, options: ZipOptions = {}
     const limits = zipLimits(options.limits);
     const signal = options.signal;
     signal?.throwIfAborted();
-    const archiveBytes = input instanceof Blob ? input.size : input.byteLength;
+    const archiveBytes = binaryByteLength(input);
     if (archiveBytes > limits.maxArchiveBytes) {
         throw new ZipValidationError("limit_exceeded", "ZIP archive exceeds its byte limit");
     }
-    const bytes = input instanceof Blob ? Buffer.from(await input.arrayBuffer()) : Buffer.from(input);
+    const snapshot = snapshotBinary(input);
+    const bytes = await captureBlobBytes(snapshot, archiveBytes, signal);
+    if (bytes.byteLength !== archiveBytes) {
+        throw new ZipValidationError("integrity_mismatch", "ZIP input changed size while captured");
+    }
     signal?.throwIfAborted();
     try {
         const reader = await fromBufferPromise(bytes, { strictFileNames: true, validateEntrySizes: true });
@@ -59,7 +65,12 @@ export async function readZip(input: Blob | Uint8Array, options: ZipOptions = {}
                 }
             }
             signal?.throwIfAborted();
-            return Object.freeze({ entries: Object.freeze(entries), archiveBytes, totalBytes });
+            return Object.freeze({
+                bytes: new Blob([bytes]),
+                entries: Object.freeze(entries),
+                archiveBytes,
+                totalBytes,
+            });
         } finally {
             reader.close();
         }

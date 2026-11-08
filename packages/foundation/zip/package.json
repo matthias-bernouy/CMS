@@ -10,7 +10,8 @@
     },
     "dependencies": {
         "yauzl": "3.4.0",
-        "yazl": "3.3.1"
+        "yazl": "3.3.1",
+        "@bernouy/binary-media": "workspace:*"
     },
     "devDependencies": {
         "@types/yauzl": "3.4.0",

@@ -1,5 +1,5 @@
 import { readZip } from "@bernouy/zip";
-import { isSha256Digest, sha256Digest, snapshotBinary, mediaTypeIssue } from "@bernouy/binary-media";
+import { binaryByteLength, isSha256Digest, sha256Digest, mediaTypeIssue } from "@bernouy/binary-media";
 import { deepFreeze, parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { parseInlineSvgAsset } from "@bernouy/content/page-document";
 import type { ResourceArchiveOptions, VerifiedResourceArchive } from "resources/interfaces/archive";
@@ -17,20 +17,17 @@ export async function readResourceArchive(
     const signal = capturedOptions.signal;
     signal?.throwIfAborted();
     const maxArchiveBytes = capturedOptions.limits.maxArchiveBytes;
-    if (
-        !isSha256Digest(options.expectedDigest) ||
-        (input instanceof Blob ? input.size : input.byteLength) > maxArchiveBytes
-    ) {
+    if (!isSha256Digest(options.expectedDigest) || binaryByteLength(input) > maxArchiveBytes) {
         throw new ResourceArchiveError("Resource archive exceeds its limit or has an invalid expected digest");
     }
     const expectedDigest = options.expectedDigest;
-    const bytes = snapshotBinary(input);
+    const decoded = await readZip(input, capturedOptions);
+    const bytes = decoded.bytes;
     const digest = await resourceArchiveDigest(bytes, signal);
     signal?.throwIfAborted();
     if (digest !== expectedDigest) {
         throw new ResourceArchiveError("Resource archive digest mismatch");
     }
-    const decoded = await readZip(bytes, capturedOptions);
     const files = new Map(decoded.entries.map((entry) => [entry.path, entry.bytes]));
     const metadata = files.get("resources.json");
     if (!metadata || metadata.size > 16 * 1024 * 1024) {
