@@ -1,18 +1,20 @@
+import { mountInstallations } from "../../installations/mount";
 import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerProviderInstallationCapabilities } from "@bernouy/ulvia-provider/capabilities";
 const contractId = "ulvia/cms.observability";
 test("user invocations cannot use Installations to forge a machine identity", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     const issued: unknown[] = [];
-    registerProviderInstallationCapabilities(dispatcher, {
-        invocations: {
-            issue: async (input: unknown) => {
-                issued.push(input);
-                return { token: "example--scoped--token", instanceId: "instance-a" };
+    await mountInstallations(dispatcher, {
+        gateway: {
+            invocations: {
+                issue: async (input: unknown) => {
+                    issued.push(input);
+                    return { token: "example--scoped--token", instanceId: "instance-a" };
+                },
             },
-        },
-    } as never);
+        } as never,
+    });
     const input = {
         requestId: crypto.randomUUID(),
         installationId: "provider-a",

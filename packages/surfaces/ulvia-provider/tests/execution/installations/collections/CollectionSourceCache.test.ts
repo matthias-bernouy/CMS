@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { CollectionSourceCache } from "../../../src/capabilities/installations/sources/cache";
+import { CollectionSourceCache } from "../../../../src/capabilities/installations/sources/cache";
 
 test("cache bounds entries, uses LRU ordering and does not retain oversized payloads", async () => {
     const cache = new CollectionSourceCache<string>(2, 10, (value) => value.length);

@@ -1,3 +1,4 @@
+import { mountInstallations } from "../installations/mount";
 import { parseUlviaSchema, validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import { expect, test } from "bun:test";
 import {
@@ -6,7 +7,6 @@ import {
     type ProviderCapabilityInvocationContext,
 } from "@bernouy/ulvia-provider";
 import { ProviderOperationExecutor, MemoryProviderOperationStore } from "@bernouy/ulvia-provider";
-import { registerCollectionOperationCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
 const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
@@ -264,7 +264,7 @@ test("the installations contract exposes a completed operation result only from 
     await expectTerminal(store, queued.operationId, "succeeded");
     await expectTerminal(store, unrelated.operationId, "succeeded");
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerCollectionOperationCapabilities(dispatcher, executor);
+    await mountInstallations(dispatcher, {}, { executor: executor });
 
     const detail = record(
         await dispatcher.invoke(

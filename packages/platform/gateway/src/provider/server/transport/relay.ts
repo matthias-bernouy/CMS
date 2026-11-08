@@ -108,6 +108,8 @@ export function createProviderContractRelay(
                 return new Response(null, { status: 304, headers: adapted.headers });
             }
             const output = adapted ? adapted.output : rawOutput;
+            const representation =
+                dispatched instanceof ProviderCapabilityResponse ? dispatched.representation : undefined;
             const responseEffect =
                 dispatched instanceof ProviderCapabilityResponse ? dispatched.responseEffect : undefined;
             if (capability.responseEffects?.length) {
@@ -123,6 +125,9 @@ export function createProviderContractRelay(
             if (capability.output.type === "binary" && capability.behavior.execution === "sync") {
                 if (responseEffect) {
                     throw new TypeError("Binary capabilities cannot return response effects.");
+                }
+                if (representation) {
+                    throw new TypeError("Binary capabilities cannot return JSON representation metadata.");
                 }
                 const response = binaryResponse(request.method, capability, output);
                 logger.debug("provider.capability.binary_response", {
@@ -142,6 +147,9 @@ export function createProviderContractRelay(
             const response = successResponse(request.method, capability, output, responseEffect, adapted?.status);
             for (const [name, value] of Object.entries(adapted?.headers ?? {})) {
                 response.headers.set(name, value);
+            }
+            if (representation) {
+                response.headers.set("content-language", representation.contentLanguage);
             }
             return transformResponse ? await transformResponse(request, response, claims, controlAuthority) : response;
         } catch (cause) {

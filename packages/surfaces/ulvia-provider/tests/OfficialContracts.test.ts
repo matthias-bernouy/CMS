@@ -1,3 +1,4 @@
+import { installationFixturePorts } from "./execution/installations/mount";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
@@ -136,20 +137,23 @@ test("the official adapters implement the complete declared capability matrix", 
     const operations = new ProviderOperationExecutor(new MemoryProviderOperationStore());
     const secrets = new CmsSecrets(new InMemoryCmsSecretMetadataStore(), new InMemorySecretStore());
     const emailer = new ConfiguredSmtpEmailer({ secrets: new InMemorySecretStore() });
+    const installations = installationFixturePorts({ gateway: accessServices().governance as never });
     await registerOfficialProviderCapabilities(
         dispatcher,
         {
             ...({} as UlviaProviderDependencies),
+            ...installations,
             ...accessServices(),
             ...contentPorts(),
+            repositoryDiscovery: installations.discovery as never,
             emailer,
             secrets,
             files: {} as CmsFilesService,
             workspace: {} as CmsFileWorkspace,
         },
-        accessServices().governance as never,
+        installations.gateway as never,
         operations,
-        undefined,
+        installations.management as never,
         undefined,
         contracts.map(({ release, digest }) => ({ contractId: release.contractId, version: release.version, digest })),
         smtpOptions(),

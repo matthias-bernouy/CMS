@@ -104,3 +104,9 @@ Typed authoring and Provider assembly SDK. Depend only on Platform and Foundatio
   and invalid persisted input before business execution. Reauthorize and validate
   terminal DTOs. Preserve the actual binding's failure presentation after restart;
   never fabricate transport Requests or repair missing persisted metadata.
+
+- `capabilityResponse(output, effect?, {contentLanguage})` retains typed JSON
+  representation language without returning raw unvalidated JSON Responses.
+  The Gateway owns its closed metadata validation and HTTP header projection.
+  The language tag carries no response-effect authority; local JSON execution
+  continues to return the validated DTO only.

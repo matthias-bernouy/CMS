@@ -1,10 +1,11 @@
+import { mountInstallations } from "../installations/mount";
 import { compileProviderRoutes } from "../../../src/transport/routes";
 import { ProviderClientError } from "@bernouy/cms-gateway/provider";
 import { createConnectedProviderLogger } from "@bernouy/ulvia-provider/sdk/node";
 import type { ContractRelease } from "@bernouy/ulvia-contracts";
 import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerProviderInstallationCapabilities, loadOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
+import { loadOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
 
 const context = {
     requestId: crypto.randomUUID(),
@@ -16,28 +17,31 @@ const context = {
 test("Provider actors cannot approve installations or look up other Providers' credentials", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     let called = false;
-    registerProviderInstallationCapabilities(
+    await mountInstallations(
         dispatcher,
         {
-            providers: {
-                authenticate: async () => {
-                    called = true;
-                    return "other";
+            gateway: {
+                providers: {
+                    authenticate: async () => {
+                        called = true;
+                        return "other";
+                    },
+                    authorize: async () => {
+                        called = true;
+                        return true;
+                    },
                 },
-                authorize: async () => {
-                    called = true;
-                    return true;
+            } as never,
+            management: {
+                administration: {
+                    approve: async () => {
+                        called = true;
+                        return {};
+                    },
                 },
-            },
-        } as never,
-        {
-            administration: {
-                approve: async () => {
-                    called = true;
-                    return {};
-                },
-            },
-        } as never,
+            } as never,
+        },
+        { context },
     );
     for (const authority of [{}, { sourceInstallationId: "caller" }, { systemServiceId: "cms-edge" }]) {
         await expect(
@@ -62,13 +66,19 @@ test("Provider actors cannot approve installations or look up other Providers' c
 
 test("an approval ticket owned by another administrator is a permanent authorization refusal", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerProviderInstallationCapabilities(dispatcher, undefined, {
-        administration: {
-            approve: async () => {
-                throw Object.assign(new Error("Not this administrator"), { status: 403 });
-            },
+    await mountInstallations(
+        dispatcher,
+        {
+            management: {
+                administration: {
+                    approve: async () => {
+                        throw Object.assign(new Error("Not this administrator"), { status: 403 });
+                    },
+                },
+            } as never,
         },
-    } as never);
+        { context },
+    );
     await expect(
         dispatcher.invoke(
             "ulvia/cms.installations",
@@ -117,7 +127,7 @@ test("the official Provider accepts the generated connection binding and rejects
 
 test("Providers cannot use internal Gateway control capabilities to escape their requires", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerProviderInstallationCapabilities(dispatcher, {} as never);
+    await mountInstallations(dispatcher, { gateway: {} as never }, { context });
     for (const capability of [
         "gateway.route.get",
         "gateway.identity.resolve",

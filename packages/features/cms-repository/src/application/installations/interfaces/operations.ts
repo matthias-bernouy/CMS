@@ -1,3 +1,4 @@
+import type { ProviderCapabilityResponse } from "@bernouy/ulvia-sdk";
 import type {
     GetOperationOutput,
     ListOperationsOutput,
@@ -5,6 +6,9 @@ import type {
 import type { ListOperationsInput } from "cms-repository/application/installations/interfaces/inputs";
 /** The host owns durable storage and localizes persisted failures before returning this read view. */
 export interface InstallationOperationQueries {
-    get(siteId: string, operationId: string): Promise<GetOperationOutput>;
+    get(
+        siteId: string,
+        operationId: string,
+    ): Promise<GetOperationOutput | ProviderCapabilityResponse<GetOperationOutput>>;
     list(siteId: string, input: ListOperationsInput): Promise<ListOperationsOutput>;
 }

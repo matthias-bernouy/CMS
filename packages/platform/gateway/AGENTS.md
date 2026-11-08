@@ -62,3 +62,9 @@ Integration tests that compose Repository stores live in `tests/integration/gate
   `context.invocation.bindingId`. This is host-owned evidence, never a caller header
   or application request-context claim. Durable hosts may retain it when dropping
   the live Request; operation workers must refuse missing or mismatched evidence.
+
+- Typed JSON responses may carry a closed `representation: {contentLanguage}`
+  envelope through `capabilityResponse`'s third argument. Snapshot one bounded
+  canonical language tag, validate the body through the selected release, then
+  set Content-Language. This metadata cannot set arbitrary headers or session
+  effects; binary responses keep their own representation transport.

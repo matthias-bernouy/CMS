@@ -1,10 +1,10 @@
+import { mountInstallations } from "../execution/installations/mount";
 import { expect, test } from "bun:test";
 import {
     DefaultProviderCapabilityDispatcher,
     type ProviderCapabilityInvocationContext,
     type UlviaProviderGateway,
 } from "@bernouy/ulvia-provider";
-import { registerProviderInstallationCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
 const context: ProviderCapabilityInvocationContext = {
     controlAuthority: true,
@@ -31,7 +31,7 @@ test("installation capabilities expose the Gateway control operations", async ()
             },
         },
     } as unknown as UlviaProviderGateway;
-    registerProviderInstallationCapabilities(dispatcher, gateway);
+    await mountInstallations(dispatcher, { gateway: gateway }, { context });
 
     expect(await invoke(dispatcher, "gateway.route.get", { contractId: "ulvia/catalog.items" })).toEqual({
         route: JSON.stringify(route),

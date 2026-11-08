@@ -1,3 +1,4 @@
+export { createInstallationOperationQueries } from "../capabilities/features/services/installations/operations";
 export { createProviderOperationAdapter } from "../capabilities/features/services/operations";
 export type { ProviderAdministration } from "../ports/providers";
 export {

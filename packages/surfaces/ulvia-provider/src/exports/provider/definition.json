@@ -30,44 +30,6 @@
             "secretType": "token"
         }
     ],
-    "implementations": [
-        {
-            "contractId": "ulvia/cms.installations",
-            "version": "1.0.0",
-            "requires": [
-                {
-                    "contractId": "ulvia/cms.secrets",
-                    "versionRange": "^1.0.0",
-                    "capabilityId": "secrets.get-metadata-by-name",
-                    "optional": false
-                },
-                {
-                    "contractId": "ulvia/cms.secrets",
-                    "versionRange": "^1.0.0",
-                    "capabilityId": "secrets.resolve",
-                    "optional": false
-                },
-                {
-                    "contractId": "ulvia/cms.secrets",
-                    "versionRange": "^1.0.0",
-                    "capabilityId": "secrets.create",
-                    "optional": false
-                },
-                {
-                    "contractId": "ulvia/cms.secrets",
-                    "versionRange": "^1.0.0",
-                    "capabilityId": "secrets.rotate",
-                    "optional": false
-                },
-                {
-                    "contractId": "ulvia/cms.secrets",
-                    "versionRange": "^1.0.0",
-                    "capabilityId": "secrets.delete",
-                    "optional": false
-                }
-            ]
-        }
-    ],
     "requires": [
         {
             "contractId": "ulvia/cms.observability",

@@ -1,3 +1,4 @@
+import { mountInstallations } from "../installations/mount";
 import { expect, test } from "bun:test";
 import {
     MemoryProviderOperationStore,
@@ -5,9 +6,8 @@ import {
     DefaultProviderCapabilityDispatcher,
     ProviderCapabilityDispatchError,
 } from "@bernouy/ulvia-provider";
-import { registerCollectionOperationCapabilities } from "../../../src/capabilities/installations/operations";
 import { officialFailure } from "../../../src/dispatch/errors/failure";
-import { context, resolvedContract } from "./fixtures";
+import { context, resolvedContract, invokeHttp } from "./fixtures";
 
 test("async official errors use admitted schemas and retain the original language on replay and detail reads", async () => {
     const contract = await resolvedContract("ulvia/cms.installations");
@@ -39,13 +39,8 @@ test("async official errors use admitted schemas and retain the original languag
         },
     });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerCollectionOperationCapabilities(dispatcher, executor);
-    const detail = (await dispatcher.invoke(
-        "ulvia/cms.installations",
-        "get-operation",
-        first,
-        context("en", contract.release.version),
-    )) as Response;
+    await mountInstallations(dispatcher, {}, { executor: executor });
+    const detail = await invokeHttp(contract, dispatcher, "get-operation", first, "en");
     expect(detail.headers.get("content-language")).toBe("fr");
     expect(await detail.json()).toMatchObject({ errorCode: "REVISION_CONFLICT", errorOutput: failed.errorOutput });
     await expect(
@@ -53,7 +48,7 @@ test("async official errors use admitted schemas and retain the original languag
             ...context("fr", contract.release.version),
             siteId: "example--other--site",
         }),
-    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    ).rejects.toThrow("mounted Provider scope");
 });
 
 test("async undeclared and technical failures expose only a generic localized message", async () => {
@@ -116,13 +111,8 @@ test("explicit async messages retain their actual language and schema-projected 
     });
     expect(record?.errorOutput).not.toHaveProperty("internal");
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerCollectionOperationCapabilities(dispatcher, executor);
-    const response = (await dispatcher.invoke(
-        "ulvia/cms.installations",
-        "get-operation",
-        operation,
-        context("en", contract.release.version),
-    )) as Response;
+    await mountInstallations(dispatcher, {}, { executor: executor });
+    const response = await invokeHttp(contract, dispatcher, "get-operation", operation, "en");
     expect(response.headers.get("content-language")).toBe("es");
     expect(await response.json()).toMatchObject({ errorOutput: { message: "La selección ha cambiado." } });
     expect(await store.get("example--other--site", operation.operationId)).toBeNull();

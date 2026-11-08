@@ -1,3 +1,4 @@
+import { mountInstallations } from "../execution/installations/mount";
 import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { expect, test } from "bun:test";
 import { CapabilityMcpBinding } from "@bernouy/cms-gateway/mcp";
@@ -5,7 +6,6 @@ import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import { RepositoryDiscovery } from "@bernouy/cms-repository/repository/search";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerRepositoryDiscoveryCapabilities } from "../../src/capabilities/installations/providers/discovery";
 import { createProviderContractRelay } from "../../src/transport/relay";
 import { officialContract, resolvedContract, invokeHttp, context } from "../execution/messages/fixtures";
 
@@ -39,7 +39,7 @@ test("MCP discovers repository tools and reads a verified uninstalled contract t
         },
     ]);
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerRepositoryDiscoveryCapabilities(dispatcher, discovery);
+    await mountInstallations(dispatcher, { discovery: discovery });
     const contract = await resolvedContract(admission.release.contractId);
     const binding = new CapabilityMcpBinding({
         contracts: async () => [admission],
@@ -120,7 +120,7 @@ test("live authorization refuses repository discovery before any source access",
         },
     ]);
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerRepositoryDiscoveryCapabilities(dispatcher, discovery);
+    await mountInstallations(dispatcher, { discovery: discovery });
     const contract = await resolvedContract("ulvia/cms.installations");
     const routes = compileProviderRoutes([contract]);
     const relay = createProviderContractRelay(

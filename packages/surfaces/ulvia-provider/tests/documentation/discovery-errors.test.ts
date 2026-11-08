@@ -1,8 +1,8 @@
+import { mountInstallations } from "../execution/installations/mount";
 import { expect, test } from "bun:test";
 import { HttpRepositoryDiscovery } from "@bernouy/cms-repository/repository/search/http";
 import { RepositoryDiscovery } from "@bernouy/cms-repository/repository/search";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerRepositoryDiscoveryCapabilities } from "../../src/capabilities/installations/providers/discovery";
 import { resolvedContract, invokeHttp } from "../execution/messages/fixtures";
 
 test("repository HTTP refusals keep absence, integrity, input and infrastructure errors distinct", async () => {
@@ -26,7 +26,7 @@ test("repository HTTP refusals keep absence, integrity, input and infrastructure
         const source = new HttpRepositoryDiscovery("configured", "https://repository.test", {
             request: async () => Response.json({ error: { code, message: "private upstream details" } }, { status }),
         });
-        registerRepositoryDiscoveryCapabilities(dispatcher, new RepositoryDiscovery([source]));
+        await mountInstallations(dispatcher, { discovery: new RepositoryDiscovery([source]) });
         const response = await invokeHttp(contract, dispatcher, "repository.get", {
             repositoryId: "configured",
             reference,
@@ -37,16 +37,15 @@ test("repository HTTP refusals keep absence, integrity, input and infrastructure
         expect(JSON.stringify(output)).not.toContain("private upstream details");
     }
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerRepositoryDiscoveryCapabilities(
-        dispatcher,
-        new RepositoryDiscovery([
+    await mountInstallations(dispatcher, {
+        discovery: new RepositoryDiscovery([
             {
                 id: "configured",
                 search: async () => ({ revision: "one", mode: "lexical", degraded: true, results: [] }),
                 read: async () => new TextEncoder().encode(JSON.stringify(contract.release)),
             },
         ]),
-    );
+    });
     const mismatch = await invokeHttp(contract, dispatcher, "repository.get", {
         repositoryId: "configured",
         reference: { ...reference, digest: `sha256:${"0".repeat(64)}` },

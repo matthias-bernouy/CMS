@@ -1,6 +1,7 @@
+import { mountInstallations } from "../mount";
 import { expect, spyOn, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { CollectionSources, registerCollectionInstallationCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { CollectionSources } from "@bernouy/ulvia-provider/capabilities";
 import {
     admitCollectionRelease,
     collectionBrowserRisk,
@@ -143,7 +144,7 @@ test("collection details expose translated metadata without revalidating unrelat
         throw new Error("Unexpected graph audit");
     });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerCollectionInstallationCapabilities(dispatcher, { collections: f.store } as never);
+    await mountInstallations(dispatcher, { ...{ collections: f.store } });
     await expect(
         dispatcher.invoke(
             "ulvia/cms.installations",
@@ -170,7 +171,7 @@ test("collection details expose translated metadata without revalidating unrelat
 test("collection commands stage installs and expose no direct unreviewed upgrade", async () => {
     const f = await fixture();
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerCollectionInstallationCapabilities(dispatcher, { collections: f.store } as never, undefined, f.sources);
+    await mountInstallations(dispatcher, { ...{ collections: f.store }, sources: f.sources });
     await expect(
         dispatcher.invoke(
             "ulvia/cms.installations",

@@ -23,10 +23,10 @@ behavior.
 
 - SDK-migrated features own feature metadata, capability IDs, access, behavior and
   bindings through their `./feature` export. Import these definitions instead of
-  redeclaring their API in the Provider. Emailer/SMTP, Secrets, Files, Observability, Access, Content and Authoring capabilities own their default
+  redeclaring their API in the Provider. Emailer/SMTP, Secrets, Files, Observability, Access, Content, Authoring, Repository and Installations capabilities own their default
   `execute`; select the complete feature with `implementFeature`, retain manifest
   requirements and supply official localized failure presentation.
-  Keep other feature adapters here until their migration is requested. Retain
+  Retain
   injected dependencies, exact invocation scope and durable execution policies.
 - Import complete feature definitions (`emailerFeature`, `smtpEmailerFeature`),
   select implementations and generate manifest claims. Do not select a partial
@@ -39,7 +39,7 @@ behavior.
   Runtime mounting must not import the build entry or require authored docs/fixtures.
   Add a migrated feature to the inventory, without a family-specific registrar.
 - `registerOfficialFeatures` receives exact approved implementation pins from the
-  runtime profile. Ignore other families handled by the legacy adapters; reject any
+  runtime profile. Reject every unknown or reserved-template claim, and any
   selected SDK family with an unsupported version/digest or missing service. Do not
   silently skip a claimed feature because its runtime service is unavailable.
 
@@ -67,3 +67,14 @@ behavior.
   SDK inventory; never maintain another operation-capability list. Retain durable
   receipts, leases, instance retention, recovery and shutdown draining. Exact-version
   declared errors may be supplied by an explicit registration reader.
+
+- `ulvia/cms.installations` is mounted only from the SDK inventory; its four durable
+  workers are derived from the selected definition. Never restore family registrars
+  or unselected routes. Inject collections/upgrades, gateway/admin, documentation,
+  discovery and operation-read ports before mounting. `createInstallationOperationQueries`
+  projects bounded host records and localizes persisted errors without exposing
+  technical causes. Typed JSON representation metadata preserves Content-Language;
+  it grants no session authority and cannot bypass admitted output validation.
+- Provider metadata in `exports/provider/definition.json` has no implementation claims.
+  `compileOfficialManifest` consumes all exact claims/dependencies from the same SDK
+  inventory used for runtime artifacts and mounting.

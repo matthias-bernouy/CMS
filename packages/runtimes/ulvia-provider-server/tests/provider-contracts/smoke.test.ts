@@ -24,7 +24,12 @@ test("all administration capability areas dispatch outputs matching their offici
     const system = defaultSystem();
     system.site.name = "Example";
     system.site.language = "en";
+    const unused = async () => {
+        throw new Error("Unexpected smoke service call");
+    };
     const core = {
+        documentation: { get: unused, search: unused },
+        repositoryDiscovery: { get: unused, search: unused },
         repo: { getSystem: async () => system, getSystemRevision: async () => 0 },
         collections: {
             listInstalled: async () => ({ revision: 0, items: [] }),
@@ -52,6 +57,7 @@ test("all administration capability areas dispatch outputs matching their offici
         collectionUpgrades: { storage: { getActive: async () => null } },
     };
     const gateway = {
+        contractUpgrades: { apply: unused, resume: unused, plan: unused, get: unused },
         siteId: "default",
         installations: {
             list: async () => [
@@ -113,10 +119,12 @@ test("all administration capability areas dispatch outputs matching their offici
         { ...core, files, workspace: new CmsFileWorkspace(files, new InMemorySecretStore()) } as never,
         gateway as never,
         new ProviderOperationExecutor(new MemoryProviderOperationStore()),
-        undefined,
+        { administration: { catalogue: unused } } as never,
         undefined,
         (await loadOfficialFeatures()).implementations.filter(({ contractId }) =>
-            ["ulvia/cms.files", "ulvia/cms.access", "ulvia/cms.content"].includes(contractId),
+            ["ulvia/cms.files", "ulvia/cms.access", "ulvia/cms.content", "ulvia/cms.installations"].includes(
+                contractId,
+            ),
         ),
         { providerId: "ulvia/primary-provider", scope: { siteId: "default", instanceId: "smoke" } },
     );

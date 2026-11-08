@@ -1,3 +1,4 @@
+import { installationsImplementation } from "./implementations/repository/installations";
 import { repositoryImplementation } from "./implementations/repository/registry";
 import { authoringImplementation } from "./implementations/repository/authoring";
 import { contentImplementation } from "./implementations/content";
@@ -27,6 +28,7 @@ const officialFeatureInventory: readonly OfficialFeatureSource[] = Object.freeze
     { implementation: observabilityImplementation },
     { implementation: providerConnectionsImplementation },
     { implementation: repositoryImplementation },
+    { implementation: installationsImplementation },
     { definition: providerCmsInstancesFeature },
 ]);
 export const officialFeatureImplementations = officialFeatureInventory.flatMap((source) =>
@@ -34,9 +36,4 @@ export const officialFeatureImplementations = officialFeatureInventory.flatMap((
 );
 export const officialFeatureTemplates = officialFeatureInventory.flatMap((source) =>
     "definition" in source ? [source.definition] : [],
-);
-export const officialFeatureIds = new Set(
-    officialFeatureInventory.map((source) =>
-        "implementation" in source ? source.implementation.feature.contractId : source.definition.contractId,
-    ),
 );

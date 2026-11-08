@@ -1,3 +1,4 @@
+import { mountInstallations } from "../execution/installations/mount";
 import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { expect, test } from "bun:test";
@@ -7,7 +8,6 @@ import { CapabilityMcpBinding } from "@bernouy/cms-gateway/mcp";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerDocumentationCapabilities } from "../../src/capabilities/installations/providers/documentation";
 import { createProviderContractRelay } from "../../src/transport/relay";
 import { officialContract, resolvedContract, invokeHttp, context, bootstrap } from "../execution/messages/fixtures";
 
@@ -25,7 +25,7 @@ test("HTTP and MCP expose exact selected documentation with discoverable lightwe
         },
     });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerDocumentationCapabilities(dispatcher, service);
+    await mountInstallations(dispatcher, { documentation: service });
     const contract = await resolvedContract(admission.release.contractId);
     const binding = new CapabilityMcpBinding({
         contracts: async () => [admission],
@@ -135,7 +135,7 @@ test("a live authorization refusal cannot read or index documentation", async ()
         isCurrent: async () => true,
     });
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerDocumentationCapabilities(dispatcher, service);
+    await mountInstallations(dispatcher, { documentation: service });
     const contract = await resolvedContract("ulvia/cms.installations");
     const routes = compileProviderRoutes([contract]);
     const route = routes.find((entry) => entry.capability.id === "documentation.search")!;

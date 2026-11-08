@@ -1,8 +1,7 @@
+import { mountInstallations } from "./mount";
 import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { parseUlviaSchema, validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
-import { registerContractUpgradeCapabilities } from "../../src/capabilities/installations/providers/upgrades";
-import { registerCollectionInstallationCapabilities } from "../../src/capabilities/installations/collections";
 
 const context = {
     siteId: "site:one",
@@ -16,25 +15,31 @@ const selection = { installationId: "provider:one", contractId: "ulvia/catalog",
 test("contract plan projections match their wire schema and retain explicit source and target pins", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     let captured: unknown;
-    registerContractUpgradeCapabilities(dispatcher, {
-        contractUpgrades: {
-            plan: async (siteId: string, selections: unknown) => {
-                captured = selections;
-                return {
-                    status: "applicable",
-                    planDigest: digest,
-                    expectedRevision: 1,
-                    source: [{ ...selection, siteId }],
-                    selections,
-                    grants: { default: "allow-selected", denied: [] },
-                    issues: [],
-                    authority: { providers: [], capabilities: [], machine: [], delegated: [] },
-                    authorityAdded: [],
-                    usageRevision: digest,
-                };
-            },
+    await mountInstallations(
+        dispatcher,
+        {
+            gateway: {
+                contractUpgrades: {
+                    plan: async (siteId: string, selections: unknown) => {
+                        captured = selections;
+                        return {
+                            status: "applicable",
+                            planDigest: digest,
+                            expectedRevision: 1,
+                            source: [{ ...selection, siteId }],
+                            selections,
+                            grants: { default: "allow-selected", denied: [] },
+                            issues: [],
+                            authority: { providers: [], capabilities: [], machine: [], delegated: [] },
+                            authorityAdded: [],
+                            usageRevision: digest,
+                        };
+                    },
+                },
+            } as never,
         },
-    } as never);
+        { context },
+    );
     const result = (await dispatcher.invoke(
         "ulvia/cms.installations",
         "plan-contract-upgrade",
@@ -46,7 +51,7 @@ test("contract plan projections match their wire schema and retain explicit sour
     expect(result.selections).toEqual([selection]);
     const definition = await Bun.file(
         new URL(
-            "../../../../official-repository/contracts/cms.installations/capabilities/queries/plan-contract-upgrade.json",
+            "../../../../../official-repository/contracts/cms.installations/capabilities/queries/plan-contract-upgrade.json",
             import.meta.url,
         ),
     ).json();
@@ -56,22 +61,26 @@ test("contract plan projections match their wire schema and retain explicit sour
 test("usage pagination binds cursors to the analysed revision and exposes no Page bodies", async () => {
     let revision = digest;
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerCollectionInstallationCapabilities(dispatcher, {
-        collectionUpgrades: {
-            inventory: async () => ({
-                digest: revision,
-                complete: true,
-                unknown: [],
-                references: ["page:one", "page:two"].map((location) => ({
-                    type: "capability",
-                    contractId: "ulvia/catalog",
-                    capabilityId: "read",
-                    location,
-                    scope: "runtime",
-                })),
-            }),
-        },
-    } as never);
+    await mountInstallations(
+        dispatcher,
+        {
+            collectionUpgrades: {
+                inventory: async () => ({
+                    digest: revision,
+                    complete: true,
+                    unknown: [],
+                    references: ["page:one", "page:two"].map((location) => ({
+                        type: "capability",
+                        contractId: "ulvia/catalog",
+                        capabilityId: "read",
+                        location,
+                        scope: "runtime",
+                    })),
+                }),
+            },
+        } as never,
+        { context },
+    );
     const first = (await dispatcher.invoke(
         "ulvia/cms.installations",
         "list-site-usage",
@@ -90,7 +99,7 @@ test("usage pagination binds cursors to the analysed revision and exposes no Pag
     expect(second).not.toHaveProperty("cursor");
     const definition = await Bun.file(
         new URL(
-            "../../../../official-repository/contracts/cms.installations/capabilities/queries/list-site-usage.json",
+            "../../../../../official-repository/contracts/cms.installations/capabilities/queries/list-site-usage.json",
             import.meta.url,
         ),
     ).json();
