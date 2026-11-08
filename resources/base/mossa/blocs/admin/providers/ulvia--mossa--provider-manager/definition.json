@@ -1,0 +1,38 @@
+{
+    "id": "ulvia--mossa--provider-manager",
+    "kind": "component",
+    "name": "bloc.provider-manager.label",
+    "group": "bloc.category.administration",
+    "categories": ["bloc.category.administration"],
+    "description": "bloc.provider-manager.description",
+    "uses": [
+        "ulvia--mossa--action",
+        "ulvia--mossa--badge",
+        "ulvia--mossa--cluster",
+        "ulvia--mossa--form-actions",
+        "ulvia--mossa--heading",
+        "ulvia--mossa--link-card",
+        "ulvia--mossa--list",
+        "ulvia--mossa--list-item",
+        "ulvia--mossa--stack",
+        "ulvia--mossa--surface"
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.installations",
+            "capabilityId": "list-provider-installations",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.installations",
+            "capabilityId": "set-provider-status",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogue": "listed",
+    "catalogueOrder": 650
+}

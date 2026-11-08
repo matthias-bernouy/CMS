@@ -1,0 +1,9 @@
+{
+    "ui-review-contract-upgrade": "Review contract upgrade",
+    "ui-contract-upgrade-description": "Review consumers, exact releases and grants before applying. Content remains unchanged.",
+    "ui-grants-allow-selected": "Selected capabilities are allowed except the explicit denials below.",
+    "ui-upgrade-target-configuration": "Target configuration (JSON, optional)",
+    "ui-upgrade-target-configuration-help": "Leave empty to retain current values. Explicit values are validated against the target release before applying.",
+    "ui-release-sources": "Current releases",
+    "ui-release-targets": "Target releases"
+}

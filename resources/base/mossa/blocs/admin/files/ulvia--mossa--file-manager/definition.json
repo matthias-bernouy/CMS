@@ -1,0 +1,75 @@
+{
+    "id": "ulvia--mossa--file-manager",
+    "kind": "component",
+    "name": "bloc.file-manager.label",
+    "group": "bloc.category.administration",
+    "categories": ["bloc.category.administration"],
+    "description": "bloc.file-manager.description",
+    "uses": [
+        "ulvia--mossa--action",
+        "ulvia--mossa--badge",
+        "ulvia--mossa--cluster",
+        "ulvia--mossa--dialog",
+        "ulvia--mossa--field",
+        "ulvia--mossa--file-input",
+        "ulvia--mossa--file-link",
+        "ulvia--mossa--file-upload",
+        "ulvia--mossa--file-upload-input",
+        "ulvia--mossa--form-actions",
+        "ulvia--mossa--grid",
+        "ulvia--mossa--heading",
+        "ulvia--mossa--image",
+        "ulvia--mossa--input",
+        "ulvia--mossa--media-placeholder",
+        "ulvia--mossa--stack",
+        "ulvia--mossa--surface"
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.files",
+            "capabilityId": "upload.write",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.files",
+            "capabilityId": "workspace.files.delete",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.files",
+            "capabilityId": "workspace.files.set-visibility",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.files",
+            "capabilityId": "workspace.files.sign",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.files",
+            "capabilityId": "workspace.files.update",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.files",
+            "capabilityId": "workspace.get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.files",
+            "capabilityId": "workspace.upload.complete",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.files",
+            "capabilityId": "workspace.upload.create",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogue": "listed",
+    "catalogueOrder": 640
+}

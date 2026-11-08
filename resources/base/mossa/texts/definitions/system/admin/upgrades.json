@@ -1,0 +1,44 @@
+[
+    {
+        "id": "ui-review-contract-upgrade",
+        "label": "text.ui-review-contract-upgrade.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-contract-upgrade-description",
+        "label": "text.ui-contract-upgrade-description.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-grants-allow-selected",
+        "label": "text.ui-grants-allow-selected.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-upgrade-target-configuration",
+        "label": "text.ui-upgrade-target-configuration.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-upgrade-target-configuration-help",
+        "label": "text.ui-upgrade-target-configuration-help.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-release-sources",
+        "label": "text.ui-release-sources.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-release-targets",
+        "label": "text.ui-release-targets.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    }
+]

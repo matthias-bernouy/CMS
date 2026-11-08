@@ -1,0 +1,15 @@
+{
+    "theme.category.spacing.label": "Espacement",
+    "theme.category.spacing.description": "Une échelle d’espacement proportionnelle pour les intervalles, les marges internes et le rythme vertical.",
+    "theme.token.spacing-none.label": "Aucun espacement",
+    "theme.token.spacing-3xs.label": "Espacement 3XS",
+    "theme.token.spacing-2xs.label": "Espacement 2XS",
+    "theme.token.spacing-xs.label": "Espacement XS",
+    "theme.token.spacing-sm.label": "Espacement SM",
+    "theme.token.spacing-md.label": "Espacement MD",
+    "theme.token.spacing-lg.label": "Espacement LG",
+    "theme.token.spacing-xl.label": "Espacement XL",
+    "theme.token.spacing-2xl.label": "Espacement 2XL",
+    "theme.token.spacing-3xl.label": "Espacement 3XL",
+    "theme.token.spacing-4xl.label": "Espacement 4XL"
+}

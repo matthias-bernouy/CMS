@@ -1,0 +1,108 @@
+{
+    "id": "ulvia--mossa--color-input",
+    "kind": "component",
+    "name": "bloc.color-input.label",
+    "group": "bloc.category.forms",
+    "categories": ["bloc.category.forms"],
+    "description": "bloc.color-input.description",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "": {
+            "accepts": [
+                {
+                    "kind": "native-element",
+                    "accepts": ["input"],
+                    "attributes": {
+                        "type": {
+                            "required": true,
+                            "values": ["color"]
+                        }
+                    },
+                    "defaults": {
+                        "type": "color",
+                        "name": "color",
+                        "value": "#3157d5"
+                    }
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 60,
+    "settings": [
+        {
+            "id": "size",
+            "label": "setting.size.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "md",
+            "maxLength": 2,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "sm",
+                        "label": "setting.option.small"
+                    },
+                    {
+                        "value": "md",
+                        "label": "setting.option.medium"
+                    },
+                    {
+                        "value": "lg",
+                        "label": "setting.option.large"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "default-mode",
+            "label": "setting.color-mode.label",
+            "group": "setting.group.behavior",
+            "type": "string",
+            "default": "hex",
+            "maxLength": 4,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "hex",
+                        "label": "setting.option.hex"
+                    },
+                    {
+                        "value": "rgb",
+                        "label": "setting.option.rgb"
+                    },
+                    {
+                        "value": "hsl",
+                        "label": "setting.option.hsl"
+                    },
+                    {
+                        "value": "hsv",
+                        "label": "setting.option.hsv"
+                    },
+                    {
+                        "value": "cmyk",
+                        "label": "setting.option.cmyk"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "action-label",
+            "label": "setting.color-action-label.label",
+            "group": "setting.group.content",
+            "type": "string",
+            "default": "Compose",
+            "maxLength": 40,
+            "control": {
+                "kind": "text"
+            }
+        }
+    ]
+}

@@ -1,0 +1,116 @@
+:scope {
+    --ulvia--mossa--data-table-cell-padding-block: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    --ulvia--mossa--data-table-cell-padding-inline: var(--ulvia--mossa--spacing-md, 1rem);
+    --ulvia--mossa--data-table-cell-border: var(--ulvia--mossa--border-width, 1px) solid
+        var(--ulvia--mossa--border-subtle);
+    --ulvia--mossa--data-table-column-header-padding-block: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    --ulvia--mossa--data-table-column-header-padding-inline: var(--ulvia--mossa--spacing-md, 1rem);
+    --ulvia--mossa--data-table-row-header-padding-block: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    --ulvia--mossa--data-table-row-header-padding-inline: var(--ulvia--mossa--spacing-md, 1rem);
+    --ulvia--mossa--data-table-row-header-border: var(--ulvia--mossa--border-width, 1px) solid
+        var(--ulvia--mossa--border-subtle);
+    --ulvia--mossa--data-table-row-stripe: transparent;
+    --ulvia--mossa--data-table-row-hover: color-mix(in srgb, var(--ulvia--mossa--background-subtle) 72%, transparent);
+    display: block;
+    min-width: 0;
+    container-type: inline-size;
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+}
+
+[part~="viewport"] {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    border: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+    border-radius: var(--ulvia--mossa--radius-lg, 0.75rem);
+    background: var(--ulvia--mossa--background-base);
+    box-shadow: var(--ulvia--mossa--shadow-sm);
+}
+
+[part~="table"] {
+    width: 100%;
+    min-width: 36rem;
+    border-spacing: 0;
+    border-collapse: separate;
+    color: var(--ulvia--mossa--text-primary);
+    background: var(--ulvia--mossa--background-base);
+    font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+}
+
+[part~="caption"] {
+    padding: var(--ulvia--mossa--spacing-md, 1rem);
+    border-bottom: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+    color: var(--ulvia--mossa--text-primary);
+    font-size: var(--ulvia--mossa--font-size-md, 1rem);
+    font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+    text-align: start;
+}
+
+[part~="head"] {
+    color: var(--ulvia--mossa--text-secondary);
+    background: var(--ulvia--mossa--background-subtle);
+}
+
+:scope[density="compact"] {
+    --ulvia--mossa--data-table-cell-padding-block: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    --ulvia--mossa--data-table-cell-padding-inline: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    --ulvia--mossa--data-table-column-header-padding-block: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    --ulvia--mossa--data-table-column-header-padding-inline: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    --ulvia--mossa--data-table-row-header-padding-block: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    --ulvia--mossa--data-table-row-header-padding-inline: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}
+
+:scope[density="comfortable"] {
+    --ulvia--mossa--data-table-cell-padding-block: var(--ulvia--mossa--spacing-md, 1rem);
+    --ulvia--mossa--data-table-cell-padding-inline: var(--ulvia--mossa--spacing-lg, 1.5rem);
+    --ulvia--mossa--data-table-column-header-padding-block: var(--ulvia--mossa--spacing-md, 1rem);
+    --ulvia--mossa--data-table-column-header-padding-inline: var(--ulvia--mossa--spacing-lg, 1.5rem);
+    --ulvia--mossa--data-table-row-header-padding-block: var(--ulvia--mossa--spacing-md, 1rem);
+    --ulvia--mossa--data-table-row-header-padding-inline: var(--ulvia--mossa--spacing-lg, 1.5rem);
+}
+
+:scope[striped-rows] {
+    --ulvia--mossa--data-table-row-stripe: color-mix(in srgb, var(--ulvia--mossa--background-subtle) 58%, transparent);
+}
+
+:scope[caption-visibility="hidden"] [part~="caption"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+@container (max-width: 36rem) {
+    :scope[responsive-layout="stack"] [part~="table"] {
+        display: block;
+        min-width: 0;
+        --ulvia--mossa--data-table-row-display: grid;
+        --ulvia--mossa--data-table-row-padding: var(--ulvia--mossa--spacing-md, 1rem);
+        --ulvia--mossa--data-table-cell-display: block;
+        --ulvia--mossa--data-table-row-header-display: block;
+        --ulvia--mossa--data-table-cell-padding-block: 0;
+        --ulvia--mossa--data-table-cell-padding-inline: 0;
+        --ulvia--mossa--data-table-row-header-padding-block: 0;
+        --ulvia--mossa--data-table-row-header-padding-inline: 0;
+        --ulvia--mossa--data-table-cell-border: 0;
+        --ulvia--mossa--data-table-row-header-border: 0;
+        --ulvia--mossa--data-table-row-divider: 1px solid var(--ulvia--mossa--border-subtle);
+        --ulvia--mossa--data-table-row-gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    }
+    :scope[responsive-layout="stack"] [part~="head"] {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+    :scope[responsive-layout="stack"] [part~="body"] {
+        display: block;
+    }
+}

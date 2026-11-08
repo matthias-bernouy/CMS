@@ -1,0 +1,33 @@
+:scope {
+    --ulvia--mossa--scroll-area-height: 20rem;
+    display: block;
+}
+
+[part~="scroll-area"] {
+    max-height: var(--ulvia--mossa--scroll-area-height);
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--ulvia--mossa--border-strong) transparent;
+}
+[part~="scroll-area"]:focus-visible {
+    outline: 3px solid var(--ulvia--mossa--focus-ring);
+    outline-offset: 3px;
+}
+:scope[height="sm"] {
+    --ulvia--mossa--scroll-area-height: 12rem;
+}
+:scope[height="lg"] {
+    --ulvia--mossa--scroll-area-height: 32rem;
+}
+:scope[height="viewport"] {
+    --ulvia--mossa--scroll-area-height: 100svh;
+}
+:scope[scrollbar="thin"] [part~="scroll-area"] {
+    scrollbar-width: thin;
+}
+:scope[scrollbar="hidden"] [part~="scroll-area"] {
+    scrollbar-width: none;
+}
+:scope[scrollbar="hidden"] [part~="scroll-area"]::-webkit-scrollbar {
+    display: none;
+}

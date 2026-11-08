@@ -1,0 +1,14 @@
+{
+    "path": "/admin/observability/detail",
+    "title": "page.log-detail.name",
+    "description": "page.log-detail.description",
+    "visible": true,
+    "indexing": false,
+    "requires": [
+        {
+            "contractId": "ulvia/cms.observability",
+            "capabilityId": "logs.get",
+            "versionRange": "^1.0.0"
+        }
+    ]
+}

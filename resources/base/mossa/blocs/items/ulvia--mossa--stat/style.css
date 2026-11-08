@@ -1,0 +1,60 @@
+:scope {
+    display: block;
+    color: var(--ulvia--mossa--text-primary);
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+}
+[part~="stat"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+}
+[part~="value"] {
+    grid-column: 1;
+    grid-row: 1;
+    color: var(--ulvia--mossa--primary);
+    font-family: var(--ulvia--mossa--stat-inherited-font-family, var(--ulvia--mossa--font-family-secondary, inherit));
+    font-size: var(--ulvia--mossa--font-size-4xl, 2.5rem);
+    font-weight: var(--ulvia--mossa--font-weight-bold, 700);
+    line-height: var(--ulvia--mossa--line-height-tight, 1.15);
+}
+[part~="label"] {
+    grid-column: 1 / -1;
+    font-size: var(--ulvia--mossa--font-size-lg, 1.125rem);
+    font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+}
+[part~="description"] {
+    grid-column: 1 / -1;
+    color: var(--ulvia--mossa--text-secondary);
+}
+[part~="icon"] {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    color: var(--ulvia--mossa--text-muted);
+}
+[part~="icon"] svg {
+    display: block;
+    width: 1.125rem;
+    height: 1.125rem;
+}
+[part~="icon"]:empty {
+    display: none;
+}
+* {
+    margin: 0;
+}
+:scope[text-align="center"] [part~="stat"] {
+    text-align: center;
+}
+:scope[text-align="end"] [part~="stat"] {
+    text-align: end;
+}
+:scope[size="sm"] [part~="stat"] {
+    gap: var(--ulvia--mossa--spacing-2xs, 0.25rem);
+}
+:scope[size="sm"] [part~="value"] {
+    font-size: var(--ulvia--mossa--font-size-2xl, 1.5rem);
+}
+:scope[size="sm"] [part~="label"] {
+    font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+}

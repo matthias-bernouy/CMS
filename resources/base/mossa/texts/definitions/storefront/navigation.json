@@ -1,0 +1,8 @@
+[
+    {
+        "id": "navigation-home",
+        "label": "text.navigation-home.label",
+        "category": "text.category.storefront",
+        "group": "text.group.navigation"
+    }
+]

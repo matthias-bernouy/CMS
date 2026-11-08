@@ -1,0 +1,44 @@
+[
+    {
+        "id": "ui-activity",
+        "label": "text.ui-activity.label",
+        "category": "text.category.components",
+        "group": "text.group.components.navigation"
+    },
+    {
+        "id": "ui-blocks",
+        "label": "text.ui-blocks.label",
+        "category": "text.category.components",
+        "group": "text.group.components.navigation"
+    },
+    {
+        "id": "ui-navigation-item",
+        "label": "text.ui-navigation-item.label",
+        "category": "text.category.components",
+        "group": "text.group.components.navigation"
+    },
+    {
+        "id": "ui-resources",
+        "label": "text.ui-resources.label",
+        "category": "text.category.components",
+        "group": "text.group.components.navigation"
+    },
+    {
+        "id": "ui-section",
+        "label": "text.ui-section.label",
+        "category": "text.category.components",
+        "group": "text.group.components.navigation"
+    },
+    {
+        "id": "ui-tab-label",
+        "label": "text.ui-tab-label.label",
+        "category": "text.category.components",
+        "group": "text.group.components.navigation"
+    },
+    {
+        "id": "ui-theme-tokens",
+        "label": "text.ui-theme-tokens.label",
+        "category": "text.category.components",
+        "group": "text.group.components.navigation"
+    }
+]

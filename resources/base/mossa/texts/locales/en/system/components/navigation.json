@@ -1,0 +1,9 @@
+{
+    "ui-activity": "Activity",
+    "ui-blocks": "Blocks",
+    "ui-navigation-item": "Navigation item",
+    "ui-resources": "Resources",
+    "ui-section": "Section",
+    "ui-tab-label": "Tab label",
+    "ui-theme-tokens": "Theme tokens"
+}

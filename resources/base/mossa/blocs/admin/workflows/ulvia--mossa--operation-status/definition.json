@@ -1,0 +1,69 @@
+{
+    "id": "ulvia--mossa--operation-status",
+    "kind": "component",
+    "name": "bloc.operation-status.label",
+    "group": "bloc.category.administration",
+    "categories": ["bloc.category.administration"],
+    "description": "bloc.operation-status.description",
+    "uses": ["ulvia--mossa--action"],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.installations",
+            "capabilityId": "get-operation",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {
+        "action": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["form"]
+                }
+            ],
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogue": "listed",
+    "catalogueOrder": 680,
+    "settings": [
+        {
+            "id": "operation-id",
+            "label": "setting.operation-id.label",
+            "group": "setting.group.content",
+            "type": "string",
+            "default": "",
+            "maxLength": 256,
+            "control": {
+                "kind": "text"
+            }
+        },
+        {
+            "id": "result-param",
+            "label": "setting.operation-result-param.label",
+            "group": "setting.group.content",
+            "type": "string",
+            "default": "",
+            "maxLength": 256,
+            "control": {
+                "kind": "text"
+            }
+        },
+        {
+            "id": "tracking-only",
+            "label": "setting.operation-tracking-only.label",
+            "group": "setting.group.behavior",
+            "type": "boolean",
+            "default": false,
+            "control": {
+                "kind": "toggle"
+            }
+        }
+    ]
+}

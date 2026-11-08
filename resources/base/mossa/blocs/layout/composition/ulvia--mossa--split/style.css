@@ -1,0 +1,54 @@
+:scope {
+    --ulvia--mossa--split-gap: var(--ulvia--mossa--spacing-lg, 1.5rem);
+    display: block;
+    container-type: inline-size;
+    text-align: inherit;
+}
+
+[part~="split"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--ulvia--mossa--split-gap);
+    align-items: center;
+}
+
+[part~="primary"],
+[part~="secondary"] {
+    min-width: 0;
+}
+:scope[ratio="primary-wide"] [part~="split"] {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+:scope[ratio="secondary-wide"] [part~="split"] {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+}
+:scope[gap="sm"] {
+    --ulvia--mossa--split-gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}
+:scope[gap="md"] {
+    --ulvia--mossa--split-gap: var(--ulvia--mossa--spacing-md, 1rem);
+}
+:scope[gap="xl"] {
+    --ulvia--mossa--split-gap: var(--ulvia--mossa--spacing-xl, 2rem);
+}
+:scope[items-align="start"] [part~="split"] {
+    align-items: start;
+}
+:scope[items-align="end"] [part~="split"] {
+    align-items: end;
+}
+:scope[items-align="stretch"] [part~="split"] {
+    align-items: stretch;
+}
+
+@container (max-width: 42rem) {
+    [part~="split"],
+    :scope[ratio="primary-wide"] [part~="split"],
+    :scope[ratio="secondary-wide"] [part~="split"] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    :scope[narrow-order="secondary-first"] [part~="secondary"] {
+        order: -1;
+    }
+}

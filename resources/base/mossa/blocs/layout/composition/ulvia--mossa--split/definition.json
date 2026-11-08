@@ -1,0 +1,144 @@
+{
+    "id": "ulvia--mossa--split",
+    "kind": "component",
+    "name": "bloc.split.label",
+    "group": "bloc.category.layout",
+    "categories": ["bloc.category.layout"],
+    "description": "bloc.split.description",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "primary": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        },
+        "secondary": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 60,
+    "settings": [
+        {
+            "id": "ratio",
+            "label": "setting.ratio.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "equal",
+            "maxLength": 14,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "equal",
+                        "label": "setting.option.equal"
+                    },
+                    {
+                        "value": "primary-wide",
+                        "label": "setting.option.primary-wide"
+                    },
+                    {
+                        "value": "secondary-wide",
+                        "label": "setting.option.secondary-wide"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "gap",
+            "label": "setting.gap.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "lg",
+            "maxLength": 2,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "sm",
+                        "label": "setting.option.small"
+                    },
+                    {
+                        "value": "md",
+                        "label": "setting.option.medium"
+                    },
+                    {
+                        "value": "lg",
+                        "label": "setting.option.large"
+                    },
+                    {
+                        "value": "xl",
+                        "label": "setting.option.extra-large"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "items-align",
+            "label": "setting.alignment.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "center",
+            "maxLength": 7,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "start",
+                        "label": "setting.option.start"
+                    },
+                    {
+                        "value": "center",
+                        "label": "setting.option.center"
+                    },
+                    {
+                        "value": "end",
+                        "label": "setting.option.end"
+                    },
+                    {
+                        "value": "stretch",
+                        "label": "setting.option.stretch"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "narrow-order",
+            "label": "setting.narrow-order.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "primary-first",
+            "maxLength": 15,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "primary-first",
+                        "label": "setting.option.primary-first"
+                    },
+                    {
+                        "value": "secondary-first",
+                        "label": "setting.option.secondary-first"
+                    }
+                ]
+            }
+        }
+    ]
+}

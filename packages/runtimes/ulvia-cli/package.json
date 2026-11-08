@@ -10,7 +10,7 @@
         "./releases": "./src/exports/releases.ts"
     },
     "scripts": {
-        "generate:bootstrap": "bun run src/bootstrap/generate.ts"
+        "generate:bootstrap": "bun --no-macros run src/bootstrap/generate.ts"
     },
     "dependencies": {
         "@bernouy/content": "workspace:*",
@@ -23,7 +23,8 @@
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
-        "@bernouy/ulvia-sdk": "workspace:*"
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "@bernouy/resources": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

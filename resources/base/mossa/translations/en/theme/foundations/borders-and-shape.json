@@ -1,0 +1,13 @@
+{
+    "theme.category.borders-and-shape.label": "Borders and shape",
+    "theme.category.borders-and-shape.description": "Border widths and radii for controls, cards, panels and pills.",
+    "theme.token.border-width.label": "Default border width",
+    "theme.token.border-width-strong.label": "Strong border width",
+    "theme.token.radius-none.label": "No radius",
+    "theme.token.radius-sm.label": "Radius SM",
+    "theme.token.radius-md.label": "Radius MD",
+    "theme.token.radius-lg.label": "Radius LG",
+    "theme.token.radius-xl.label": "Radius XL",
+    "theme.token.radius-2xl.label": "Radius 2XL",
+    "theme.token.radius-full.label": "Full radius"
+}

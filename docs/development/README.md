@@ -295,7 +295,9 @@ performance regressions and the optional Cirrus framebuffer mitigation.
 [Repository performance](repository-performance.md) documents catalogue timings,
 HTTP/storage work budgets and the isolated official-collection benchmark.
 
-The maintained test command scopes discovery to those three source trees.
+The maintained `bun run test` command uses `--no-macros` and scopes discovery to
+those three source trees. Resource source compilation requires this flag so authored
+TypeScript cannot execute build-time macros.
 Generated historical copies under `artifacts/` are retained as evidence and are
 not executable inputs to the current suite. Plain `bun test` uses Bun's broader
 automatic discovery and can also execute those archival copies.

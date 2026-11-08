@@ -1,0 +1,87 @@
+{
+    "id": "ulvia--mossa--footer",
+    "kind": "component",
+    "name": "bloc.footer.label",
+    "group": "bloc.category.site",
+    "categories": ["bloc.category.site"],
+    "description": "bloc.footer.description",
+    "uses": ["ulvia--mossa--image"],
+    "requires": [],
+    "slots": {
+        "brand": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                },
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--image"
+                }
+            ],
+            "max": 1
+        },
+        "legal": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        },
+        "navigation": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                },
+                {
+                    "kind": "any-component"
+                }
+            ]
+        },
+        "social": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                },
+                {
+                    "kind": "any-component"
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 20,
+    "settings": [
+        {
+            "id": "surface",
+            "label": "setting.surface.label",
+            "group": "setting.group.appearance",
+            "type": "string",
+            "default": "inverse",
+            "maxLength": 7,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "base",
+                        "label": "setting.option.base"
+                    },
+                    {
+                        "value": "subtle",
+                        "label": "setting.option.subtle"
+                    },
+                    {
+                        "value": "inverse",
+                        "label": "setting.option.inverse"
+                    }
+                ]
+            }
+        }
+    ]
+}

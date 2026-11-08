@@ -1,0 +1,14 @@
+{
+    "path": "/account",
+    "title": "page.account.name",
+    "description": "page.account.description",
+    "visible": true,
+    "indexing": false,
+    "requires": [
+        {
+            "contractId": "ulvia/cms.access",
+            "capabilityId": "logout",
+            "versionRange": "^1.0.0"
+        }
+    ]
+}

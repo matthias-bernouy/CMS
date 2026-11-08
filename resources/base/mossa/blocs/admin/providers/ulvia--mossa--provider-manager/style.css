@@ -1,0 +1,81 @@
+:scope {
+    display: block;
+    min-width: 0;
+}
+[part~="workspace-content"] {
+    display: grid;
+    gap: 1.5rem;
+}
+[part~="section-header"] {
+    display: grid;
+    gap: 0.5rem;
+    margin-block-end: 1.25rem;
+}
+[part~="section-header"] p {
+    margin: 0;
+    color: var(--ulvia--mossa--text-muted);
+    font-size: 0.875rem;
+}
+[part~="routes"] {
+    display: grid;
+    border: 1px solid var(--ulvia--mossa--border-subtle);
+    border-radius: 0.75rem;
+    background: var(--ulvia--mossa--background-surface);
+    overflow: hidden;
+}
+[part~="route"] {
+    display: grid;
+    grid-template-columns: minmax(12rem, 1fr) minmax(0, 2fr);
+    align-items: start;
+    gap: 1.5rem;
+    padding: 1.25rem;
+}
+[part~="route"] + [part~="route"] {
+    border-block-start: 1px solid var(--ulvia--mossa--border-subtle);
+}
+[part~="route"] {
+    overflow-wrap: anywhere;
+}
+[part~="options"] {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+}
+[part~="technical-details"] {
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--ulvia--mossa--text-muted);
+}
+[part~="technical-details"] summary {
+    cursor: pointer;
+}
+[part~="technical-values"] {
+    display: grid;
+    gap: 0.35rem;
+    overflow-wrap: anywhere;
+}
+[part~="technical-values"] strong {
+    font-weight: 600;
+}
+[part~="technical-values"] p {
+    margin: 0 0 0.5rem;
+}
+@media (max-width: 48rem) {
+    [part~="route"] {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+}
+
+[part~="option-state"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+[part~="empty-state"] {
+    padding: 1.25rem;
+    color: var(--ulvia--mossa--text-muted);
+}

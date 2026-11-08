@@ -1,0 +1,9 @@
+{
+    "text.ui-review-contract-upgrade.label": "V\u00e9rifier la mise \u00e0 jour du contrat",
+    "text.ui-contract-upgrade-description.label": "Aide \u00e0 la mise \u00e0 jour des contrats",
+    "text.ui-grants-allow-selected.label": "Les capabilities s\u00e9lectionn\u00e9es sont autoris\u00e9es sauf les refus explicites ci-dessous.",
+    "text.ui-upgrade-target-configuration.label": "Configuration cible (JSON, facultatif)",
+    "text.ui-upgrade-target-configuration-help.label": "Aide \u00e0 la configuration cible",
+    "text.ui-release-sources.label": "Releases actuelles",
+    "text.ui-release-targets.label": "Releases cibles"
+}

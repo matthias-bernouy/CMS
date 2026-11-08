@@ -1,0 +1,47 @@
+{
+    "id": "ulvia--mossa--settings-manager",
+    "kind": "component",
+    "name": "bloc.settings-manager.label",
+    "group": "bloc.category.administration",
+    "categories": ["bloc.category.administration"],
+    "description": "bloc.settings-manager.description",
+    "uses": [
+        "ulvia--mossa--action",
+        "ulvia--mossa--field",
+        "ulvia--mossa--form-actions",
+        "ulvia--mossa--heading",
+        "ulvia--mossa--input",
+        "ulvia--mossa--select",
+        "ulvia--mossa--stack",
+        "ulvia--mossa--surface",
+        "ulvia--mossa--tag-input"
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "localization.get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "localization.update",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "site.get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "site.update",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogue": "listed",
+    "catalogueOrder": 660
+}

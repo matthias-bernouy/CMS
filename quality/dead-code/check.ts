@@ -75,8 +75,8 @@ async function unusedFilesExportsAndDependencies(): Promise<CommandResult> {
     };
 }
 
-function officialRepositoryUnusedFiles(): CommandResult {
-    const root = resolve(repositoryRoot, "packages/official-repository");
+function authoredSourceUnusedFiles(directory: string): CommandResult {
+    const root = resolve(repositoryRoot, directory);
     const files = [...new Bun.Glob("**/*.{js,ts}").scanSync({ cwd: root, absolute: true })].sort();
     const known = new Set(files);
     const visited = new Set<string>();
@@ -105,13 +105,14 @@ function officialRepositoryUnusedFiles(): CommandResult {
     const unused = files.filter((file) => !visited.has(file));
     return {
         exitCode: unused.length ? 1 : 0,
-        output: unused.map((file) => `[dead-code][official-repository] ${relative(repositoryRoot, file)}`).join("\n"),
+        output: unused.map((file) => `[dead-code][authored-sources] ${relative(repositoryRoot, file)}`).join("\n"),
     };
 }
 
 const results = [
     await unusedFilesExportsAndDependencies(),
-    officialRepositoryUnusedFiles(),
+    authoredSourceUnusedFiles("packages/official-repository"),
+    authoredSourceUnusedFiles("resources/base"),
     await unusedTypeScriptDeclarations(),
 ];
 for (const output of results.map(({ output }) => output).filter(Boolean)) {

@@ -1,0 +1,104 @@
+{
+    "id": "ulvia--mossa--time-input",
+    "kind": "component",
+    "name": "bloc.time-input.label",
+    "group": "bloc.category.forms",
+    "categories": ["bloc.category.forms"],
+    "description": "bloc.time-input.description",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "": {
+            "accepts": [
+                {
+                    "kind": "native-element",
+                    "accepts": ["input"],
+                    "attributes": {
+                        "type": {
+                            "required": true,
+                            "values": ["text"]
+                        }
+                    },
+                    "defaults": {
+                        "type": "text",
+                        "name": "time",
+                        "value": "09:30",
+                        "inputmode": "numeric"
+                    }
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 62,
+    "settings": [
+        {
+            "id": "size",
+            "label": "setting.size.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "md",
+            "maxLength": 2,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "sm",
+                        "label": "setting.option.small"
+                    },
+                    {
+                        "value": "md",
+                        "label": "setting.option.medium"
+                    },
+                    {
+                        "value": "lg",
+                        "label": "setting.option.large"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "parts",
+            "label": "setting.time-parts.label",
+            "group": "setting.group.behavior",
+            "type": "string",
+            "default": "hours-minutes",
+            "maxLength": 21,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "hours",
+                        "label": "setting.option.hours"
+                    },
+                    {
+                        "value": "minutes",
+                        "label": "setting.option.minutes"
+                    },
+                    {
+                        "value": "hours-minutes",
+                        "label": "setting.option.hours-minutes"
+                    },
+                    {
+                        "value": "hours-minutes-seconds",
+                        "label": "setting.option.hours-minutes-seconds"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "show-units",
+            "label": "setting.show-time-units.label",
+            "group": "setting.group.content",
+            "type": "boolean",
+            "default": false,
+            "control": {
+                "kind": "toggle"
+            }
+        }
+    ]
+}

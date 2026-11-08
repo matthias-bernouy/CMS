@@ -1,0 +1,182 @@
+[
+    {
+        "id": "ui-provider-catalogue-empty",
+        "label": "text.ui-provider-catalogue-empty.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-upgrade-ready",
+        "label": "text.ui-upgrade-ready.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-upgrade-blocked",
+        "label": "text.ui-upgrade-blocked.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-upgrade-incomplete",
+        "label": "text.ui-upgrade-incomplete.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-empty",
+        "label": "text.ui-operation-empty.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-pending-hint",
+        "label": "text.ui-operation-pending-hint.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-completed-hint",
+        "label": "text.ui-operation-completed-hint.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-failed-hint",
+        "label": "text.ui-operation-failed-hint.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-follow-up",
+        "label": "text.ui-operation-follow-up.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-follow-up-hint",
+        "label": "text.ui-operation-follow-up-hint.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-manual-hint",
+        "label": "text.ui-operation-manual-hint.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-unavailable",
+        "label": "text.ui-operation-unavailable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-retry-hint",
+        "label": "text.ui-operation-retry-hint.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-refresh",
+        "label": "text.ui-operation-refresh.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-updated",
+        "label": "text.ui-operation-updated.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-upgrade-select-release",
+        "label": "text.ui-upgrade-select-release.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-upgrade-read",
+        "label": "text.ui-upgrade-read.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-upgrade-command",
+        "label": "text.ui-upgrade-command.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-upgrade-sensitive",
+        "label": "text.ui-upgrade-sensitive.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-upgrade-authenticated",
+        "label": "text.ui-upgrade-authenticated.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-upgrade-administrators",
+        "label": "text.ui-upgrade-administrators.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-upgrade-capabilities",
+        "label": "text.ui-upgrade-capabilities.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-upgrade-no-issues",
+        "label": "text.ui-upgrade-no-issues.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-upgrade-no-added-authority",
+        "label": "text.ui-upgrade-no-added-authority.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-start-failed",
+        "label": "text.ui-operation-start-failed.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-start-retry",
+        "label": "text.ui-operation-start-retry.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-open",
+        "label": "text.ui-operation-open.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-reconnecting-hint",
+        "label": "text.ui-operation-reconnecting-hint.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-cancelled",
+        "label": "text.ui-operation-cancelled.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-operation-cancelled-hint",
+        "label": "text.ui-operation-cancelled-hint.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    }
+]

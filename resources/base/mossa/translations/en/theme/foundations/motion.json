@@ -1,0 +1,9 @@
+{
+    "theme.category.motion.label": "Motion",
+    "theme.category.motion.description": "Consistent durations and easing curves for optional interface transitions.",
+    "theme.token.duration-fast.label": "Fast duration",
+    "theme.token.duration-normal.label": "Normal duration",
+    "theme.token.duration-slow.label": "Slow duration",
+    "theme.token.easing-standard.label": "Standard easing",
+    "theme.token.easing-emphasized.label": "Emphasized easing"
+}

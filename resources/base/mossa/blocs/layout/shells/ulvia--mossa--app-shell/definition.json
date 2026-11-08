@@ -1,0 +1,223 @@
+{
+    "id": "ulvia--mossa--app-shell",
+    "kind": "component",
+    "name": "bloc.app-shell.label",
+    "group": "bloc.category.layout",
+    "categories": ["bloc.category.layout"],
+    "description": "bloc.app-shell.description",
+    "uses": ["ulvia--mossa--heading", "ulvia--mossa--stat"],
+    "requires": [],
+    "slots": {
+        "actions": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ]
+        },
+        "brand": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["svg"]
+                }
+            ]
+        },
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        },
+        "footer": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        },
+        "primary-mobile-label": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        },
+        "primary-navigation": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        },
+        "secondary-mobile-label": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        },
+        "secondary-navigation": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        },
+        "secondary-sidebar": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 160,
+    "settings": [
+        {
+            "id": "layout",
+            "label": "setting.shell-layout.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "hybrid",
+            "maxLength": 12,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "top",
+                        "label": "setting.option.top"
+                    },
+                    {
+                        "value": "sidebar",
+                        "label": "setting.option.sidebar"
+                    },
+                    {
+                        "value": "dual-sidebar",
+                        "label": "setting.option.dual-sidebar"
+                    },
+                    {
+                        "value": "hybrid",
+                        "label": "setting.option.hybrid"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "width",
+            "label": "setting.width.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "wide",
+            "maxLength": 9,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "contained",
+                        "label": "setting.option.contained"
+                    },
+                    {
+                        "value": "wide",
+                        "label": "setting.option.wide"
+                    },
+                    {
+                        "value": "full",
+                        "label": "setting.option.width-full"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "density",
+            "label": "setting.density.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "default",
+            "maxLength": 11,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "compact",
+                        "label": "setting.option.compact"
+                    },
+                    {
+                        "value": "default",
+                        "label": "setting.option.default"
+                    },
+                    {
+                        "value": "comfortable",
+                        "label": "setting.option.comfortable"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "sticky-header",
+            "label": "setting.sticky-header.label",
+            "group": "setting.group.behaviour",
+            "type": "boolean",
+            "default": true,
+            "control": {
+                "kind": "toggle"
+            }
+        },
+        {
+            "id": "typography",
+            "label": "setting.shell-typography.label",
+            "group": "setting.group.typography",
+            "type": "string",
+            "default": "default",
+            "maxLength": 7,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "default",
+                        "label": "setting.option.default"
+                    },
+                    {
+                        "value": "ui",
+                        "label": "setting.option.ui"
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,8 @@
+{
+    "path": "/admin/settings",
+    "title": "page.settings.name",
+    "description": "page.settings.description",
+    "visible": true,
+    "indexing": false,
+    "requires": []
+}

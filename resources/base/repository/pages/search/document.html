@@ -1,0 +1,66 @@
+<main cms-bloc="ulvia--repository--shell">
+    <section slot="content" cms-queries="@param:ulvia--repository--search-cursor as searchCursor @param:ulvia--repository--query as selectedQuery">
+        <h1 text-align="start" size="lg" cms-bloc="ulvia--mossa--heading">{{ cms.i18n.ulvia/repository.search }}</h1>
+        <div cms-condition="searchCursor.hasData === false">
+            <label>{{ cms.i18n.ulvia/repository.query }}<input type="search" cms-sync="@param:ulvia--repository--query" maxlength="500" required></label>
+        </div>
+        <div cms-condition="searchCursor.hasData">
+            <p>{{ selectedQuery.data }}</p>
+            <a href="/search">{{ cms.i18n.ulvia/repository.change-search }}</a>
+        </div>
+        <section
+            cms-query="ulvia/repository:catalogue-search as results"
+            cms-query-listen="@param:ulvia--repository--channel @param:ulvia--repository--query @param:ulvia--repository--search-cursor"
+            cms-query-input='{"channel":{"from":"state","key":"@param:ulvia--repository--channel","fallback":"stable"},"query":{"from":"state","key":"@param:ulvia--repository--query"},"limit":{"from":"literal","value":20},"cursor":{"from":"state","key":"@param:ulvia--repository--search-cursor","optional":true}}'
+        >
+            <div cms-match="results.outcome.kind">
+                <span cms-case='"none"'></span>
+                <div cms-case='"success"'>
+                    <nav aria-label="{{ cms.i18n.ulvia/repository.release-channel }}">
+                        <a href="/search?ulvia--repository--query={{ results.input.query | urlencode }}&ulvia--repository--channel=stable">{{
+                            cms.i18n.ulvia/repository.stable
+                        }}</a>
+                        <a href="/search?ulvia--repository--query={{ results.input.query | urlencode }}&ulvia--repository--channel=beta">{{
+                            cms.i18n.ulvia/repository.beta
+                        }}</a>
+                        <a href="/search?ulvia--repository--query={{ results.input.query | urlencode }}&ulvia--repository--channel=all">{{
+                            cms.i18n.ulvia/repository.all-releases
+                        }}</a>
+                    </nav>
+                    <p cms-condition="results.data.results.length === 0">{{ cms.i18n.ulvia/repository.empty }}</p>
+                    <ul>
+                        <li cms-repeat="results.data.results as result">
+                            <h2>
+                                <a
+                                    href="/resource?ulvia--repository--kind={{ result.reference.kind | urlencode }}&ulvia--repository--publisher={{ result.reference.publisherId | urlencode }}&ulvia--repository--resource={{ result.reference.id | urlencode }}&ulvia--repository--version={{ result.reference.version | urlencode }}"
+                                    >{{
+                                        result.name
+                                    }}</a
+                                >
+                            </h2>
+                            <p>{{ result.description }}</p>
+                            <p>{{ result.reference.id }} @ {{ result.reference.version }}</p>
+                        </li>
+                    </ul>
+                    <a
+                        cms-condition="results.data.nextCursor !== undefined"
+                        href="/search?ulvia--repository--query={{ results.input.query | urlencode }}&ulvia--repository--channel={{ results.input.channel | urlencode }}&ulvia--repository--search-cursor={{ results.data.nextCursor | urlencode }}"
+                        >{{
+                            cms.i18n.ulvia/repository.next
+                        }}</a
+                    >
+                </div>
+                <div cms-case='"error"' cms-match="results.outcome.code">
+                    <p role="alert" cms-case='"REJECTED"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                    <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                    <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                    <p role="alert" cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                    <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                    <p role="alert" cms-case='"CATALOGUE_TOO_LARGE"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+                </div>
+                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/repository.failed }}</p>
+            </div>
+        </section>
+    </section>
+</main>

@@ -1,0 +1,43 @@
+{
+    "id": "ulvia--mossa--site-composition-manager",
+    "kind": "component",
+    "name": "bloc.site-composition-manager.label",
+    "group": "bloc.category.administration",
+    "categories": ["bloc.category.administration"],
+    "description": "bloc.site-composition-manager.description",
+    "uses": [
+        "ulvia--mossa--action",
+        "ulvia--mossa--badge",
+        "ulvia--mossa--data-table",
+        "ulvia--mossa--data-table-cell",
+        "ulvia--mossa--data-table-column-header",
+        "ulvia--mossa--data-table-row",
+        "ulvia--mossa--data-table-row-header",
+        "ulvia--mossa--heading",
+        "ulvia--mossa--stack",
+        "ulvia--mossa--surface"
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "site-blocs.archive",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "site-blocs.list",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "site-blocs.restore",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogue": "listed",
+    "catalogueOrder": 670
+}

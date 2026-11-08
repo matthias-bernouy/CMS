@@ -1,0 +1,14 @@
+{
+    "path": "/reset-password",
+    "title": "page.reset-password.name",
+    "description": "page.reset-password.description",
+    "visible": true,
+    "indexing": false,
+    "requires": [
+        {
+            "contractId": "ulvia/cms.access",
+            "capabilityId": "confirm-password-reset",
+            "versionRange": "^1.0.0"
+        }
+    ]
+}

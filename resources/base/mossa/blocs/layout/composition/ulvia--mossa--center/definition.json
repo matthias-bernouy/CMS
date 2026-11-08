@@ -1,0 +1,89 @@
+{
+    "id": "ulvia--mossa--center",
+    "kind": "component",
+    "name": "bloc.center.label",
+    "group": "bloc.category.layout",
+    "categories": ["bloc.category.layout"],
+    "description": "bloc.center.description",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 80,
+    "settings": [
+        {
+            "id": "width",
+            "label": "setting.width.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "md",
+            "maxLength": 2,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "sm",
+                        "label": "setting.option.width-sm"
+                    },
+                    {
+                        "value": "md",
+                        "label": "setting.option.width-md"
+                    },
+                    {
+                        "value": "lg",
+                        "label": "setting.option.width-lg"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "text-align",
+            "label": "setting.text-alignment.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "start",
+            "maxLength": 6,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "start",
+                        "label": "setting.option.start"
+                    },
+                    {
+                        "value": "center",
+                        "label": "setting.option.center"
+                    },
+                    {
+                        "value": "end",
+                        "label": "setting.option.end"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "intrinsic",
+            "label": "setting.intrinsic.label",
+            "group": "setting.group.layout",
+            "type": "boolean",
+            "default": false,
+            "control": {
+                "kind": "toggle"
+            }
+        }
+    ]
+}

@@ -1,0 +1,19 @@
+{
+    "path": "/account/namespaces",
+    "title": "page.namespaces.name",
+    "description": "page.namespaces.description",
+    "visible": true,
+    "indexing": false,
+    "requires": [
+        {
+            "contractId": "ulvia/repository",
+            "capabilityId": "namespace-claim",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/repository",
+            "capabilityId": "namespace-list",
+            "versionRange": "^1.0.0"
+        }
+    ]
+}

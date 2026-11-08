@@ -1,0 +1,45 @@
+:scope {
+    --ulvia--mossa--sidebar-width: 15rem;
+    --ulvia--mossa--sidebar-gap: var(--ulvia--mossa--spacing-lg, 1.5rem);
+    display: block;
+    container-type: inline-size;
+}
+
+[part~="layout"] {
+    display: grid;
+    grid-template-columns: minmax(0, var(--ulvia--mossa--sidebar-width)) minmax(0, 1fr);
+    gap: var(--ulvia--mossa--sidebar-gap);
+    align-items: start;
+}
+
+[part~="sidebar"],
+[part~="content"] {
+    min-width: 0;
+}
+:scope[side="end"] [part~="layout"] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, var(--ulvia--mossa--sidebar-width));
+}
+:scope[side="end"] [part~="sidebar"] {
+    order: 2;
+}
+:scope[sidebar-width="sm"] {
+    --ulvia--mossa--sidebar-width: 11rem;
+}
+:scope[sidebar-width="lg"] {
+    --ulvia--mossa--sidebar-width: 20rem;
+}
+:scope[gap="sm"] {
+    --ulvia--mossa--sidebar-gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}
+:scope[gap="md"] {
+    --ulvia--mossa--sidebar-gap: var(--ulvia--mossa--spacing-md, 1rem);
+}
+:scope[gap="xl"] {
+    --ulvia--mossa--sidebar-gap: var(--ulvia--mossa--spacing-xl, 2rem);
+}
+
+@container (max-width: 44rem) {
+    :scope:not([collapse="never"]) [part~="layout"] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

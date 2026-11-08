@@ -1,0 +1,80 @@
+{
+    "id": "ulvia--mossa--choice-group",
+    "kind": "component",
+    "name": "bloc.choice-group.label",
+    "group": "bloc.category.forms",
+    "categories": ["bloc.category.forms"],
+    "description": "bloc.choice-group.description",
+    "uses": [
+        "ulvia--mossa--choice-copy",
+        "ulvia--mossa--choice-field",
+        "ulvia--mossa--option-list",
+        "ulvia--mossa--radio"
+    ],
+    "requires": [],
+    "slots": {
+        "error": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        },
+        "help": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        },
+        "items": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ],
+            "min": 1
+        },
+        "legend": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 130,
+    "settings": [
+        {
+            "id": "orientation",
+            "label": "setting.orientation.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "vertical",
+            "maxLength": 10,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "vertical",
+                        "label": "setting.option.vertical"
+                    },
+                    {
+                        "value": "horizontal",
+                        "label": "setting.option.horizontal"
+                    }
+                ]
+            }
+        }
+    ]
+}

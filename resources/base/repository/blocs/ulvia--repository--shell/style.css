@@ -1,0 +1,45 @@
+:scope {
+    display: block;
+    overflow-wrap: anywhere;
+    min-height: 100dvh;
+    color: var(--ulvia--mossa--text-primary);
+    background-color: var(--ulvia--mossa--background-base);
+    font-family: var(--ulvia--mossa--font-family-main);
+}
+:scope > [part~="navigation"],
+:scope > [part~="body"] {
+    max-width: var(--ulvia--mossa--content-width-lg);
+    margin-inline: auto;
+    padding: var(--ulvia--mossa--page-gutter);
+}
+:scope > [part~="navigation"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia--mossa--spacing-lg);
+    justify-content: space-between;
+    border-bottom: var(--ulvia--mossa--border-width) solid var(--ulvia--mossa--border-default);
+}
+:scope > [part~="navigation"] nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia--mossa--spacing-md);
+}
+:scope a {
+    color: var(--ulvia--mossa--link);
+}
+:scope form,
+:scope label {
+    display: grid;
+    gap: var(--ulvia--mossa--spacing-md);
+}
+:scope form {
+    margin-block: var(--ulvia--mossa--spacing-lg);
+}
+:scope input,
+:scope select,
+:scope button {
+    font: inherit;
+}
+:scope code {
+    overflow-wrap: anywhere;
+}

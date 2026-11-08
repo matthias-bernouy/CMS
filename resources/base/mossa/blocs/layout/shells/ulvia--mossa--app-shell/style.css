@@ -1,0 +1,391 @@
+:scope {
+    --ulvia--mossa--app-shell-shell-width: var(--ulvia--mossa--content-width-xl, 88rem);
+    --ulvia--mossa--app-shell-shell-sidebar-width: 14rem;
+    --ulvia--mossa--app-shell-shell-secondary-sidebar-width: 15.5rem;
+    --ulvia--mossa--app-shell-sidebar-header-padding: 0.875rem 1rem;
+    --ulvia--mossa--app-shell-brand-font-size: var(--ulvia--mossa--font-size-xl, 1.25rem);
+    display: block;
+    min-height: 100svh;
+    color: var(--ulvia--mossa--text-primary);
+    background: var(--ulvia--mossa--background-base);
+    container-type: inline-size;
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+}
+
+[part~="shell"] {
+    position: relative;
+    display: grid;
+    min-height: 100svh;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "header" "secondary" "content" "footer";
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+[part~="header"] {
+    grid-area: header;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--ulvia--mossa--spacing-lg, 1.5rem);
+    align-items: center;
+    padding: var(--ulvia--mossa--spacing-md, 1rem)
+        max(var(--ulvia--mossa--page-gutter, 1rem), calc((100% - var(--ulvia--mossa--app-shell-shell-width)) / 2));
+    border-bottom: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+    background: color-mix(in srgb, var(--ulvia--mossa--background-base) 94%, transparent);
+    backdrop-filter: blur(16px);
+    z-index: 30;
+}
+[part~="brand"] {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}
+[part~="brand"] {
+    color: var(--ulvia--mossa--text-primary);
+    font-size: var(--ulvia--mossa--app-shell-brand-font-size);
+    font-weight: var(--ulvia--mossa--font-weight-bold, 700);
+    letter-spacing: var(--ulvia--mossa--letter-spacing-tight, -0.02em);
+}
+[part~="primary-navigation"] {
+    min-width: 0;
+}
+[part~="actions"] {
+    display: flex;
+    justify-content: flex-end;
+}
+[part~="mobile-navigation"],
+:scope > [part~="shell"] > [part~="mobile-backdrop"] {
+    display: none;
+}
+[part~="secondary-navigation"] {
+    grid-area: secondary;
+    padding: var(--ulvia--mossa--spacing-sm, 0.75rem)
+        max(var(--ulvia--mossa--page-gutter, 1rem), calc((100% - var(--ulvia--mossa--app-shell-shell-width)) / 2));
+    border-bottom: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+    background: var(--ulvia--mossa--background-base);
+}
+[part~="secondary-sidebar"] {
+    display: none;
+    grid-area: contextual;
+    min-height: 0;
+    box-sizing: border-box;
+    padding: var(--ulvia--mossa--spacing-sm, 0.75rem);
+    overflow: auto;
+    background: var(--ulvia--mossa--background-surface);
+}
+[part~="content"] {
+    grid-area: content;
+    min-width: 0;
+    width: min(100%, var(--ulvia--mossa--app-shell-shell-width));
+    box-sizing: border-box;
+    margin-inline: auto;
+    padding: var(--ulvia--mossa--spacing-xl, 2rem) var(--ulvia--mossa--page-gutter, 1rem);
+}
+[part~="content"]:focus-visible {
+    outline: 3px solid var(--ulvia--mossa--focus-ring);
+    outline-offset: -3px;
+}
+[part~="footer"] {
+    grid-area: footer;
+    padding: var(--ulvia--mossa--spacing-lg, 1.5rem)
+        max(var(--ulvia--mossa--page-gutter, 1rem), calc((100% - var(--ulvia--mossa--app-shell-shell-width)) / 2));
+    border-top: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+}
+[part~="footer"][hidden] {
+    display: none;
+}
+:scope[width="contained"] {
+    --ulvia--mossa--app-shell-shell-width: var(--ulvia--mossa--content-width-lg, 72rem);
+}
+:scope[width="full"] {
+    --ulvia--mossa--app-shell-shell-width: 100%;
+}
+:scope[density="compact"] {
+    --ulvia--mossa--app-shell-shell-sidebar-width: 13.5rem;
+    --ulvia--mossa--app-shell-sidebar-header-padding: 1.5rem 1.25rem;
+    --ulvia--mossa--app-shell-brand-font-size: 1.375rem;
+}
+:scope[typography="ui"] {
+    --ulvia--mossa--heading-inherited-font-family: var(--ulvia--mossa--font-family-main, inherit);
+    --ulvia--mossa--heading-inherited-font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+    --ulvia--mossa--stat-inherited-font-family: var(--ulvia--mossa--font-family-main, inherit);
+}
+:scope[density="comfortable"] {
+    --ulvia--mossa--app-shell-shell-sidebar-width: 15rem;
+    --ulvia--mossa--app-shell-sidebar-header-padding: 1rem 1.125rem;
+    --ulvia--mossa--app-shell-brand-font-size: 1.25rem;
+}
+:scope[sticky-header] [part~="header"] {
+    position: sticky;
+    top: 0;
+}
+
+:scope[layout="hybrid"] [part~="shell"] {
+    grid-template-columns: var(--ulvia--mossa--app-shell-shell-sidebar-width) minmax(0, 1fr);
+    grid-template-areas: "header header" "secondary content" "footer footer";
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+:scope[layout="sidebar"] [part~="shell"] {
+    height: 100svh;
+    max-height: 100svh;
+    grid-template-columns: var(--ulvia--mossa--app-shell-shell-sidebar-width) minmax(0, 1fr);
+    grid-template-areas: "header content" "secondary content" "footer content";
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+}
+:scope[layout="dual-sidebar"] [part~="shell"] {
+    height: 100svh;
+    max-height: 100svh;
+    grid-template-columns: var(--ulvia--mossa--app-shell-shell-sidebar-width) var(
+            --ulvia--mossa--app-shell-shell-secondary-sidebar-width
+        ) minmax(0, 1fr);
+    grid-template-areas: "header contextual content" "secondary contextual content" "footer contextual content";
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+}
+:scope[layout="dual-sidebar"] [part~="secondary-sidebar"] {
+    display: block;
+    border-right: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+}
+:scope[layout="sidebar"] [part~="primary-navigation"],
+:scope[layout="dual-sidebar"] [part~="primary-navigation"] {
+    display: none;
+}
+:scope[layout="sidebar"] [part~="header"],
+:scope[layout="dual-sidebar"] [part~="header"] {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--ulvia--mossa--app-shell-sidebar-header-padding);
+    border-right: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+    border-bottom: 0;
+    background: var(--ulvia--mossa--background-surface);
+    backdrop-filter: none;
+}
+:scope[layout="sidebar"] [part~="actions"],
+:scope[layout="dual-sidebar"] [part~="actions"] {
+    display: none;
+}
+:scope[layout="sidebar"] [part~="secondary-navigation"],
+:scope[layout="dual-sidebar"] [part~="secondary-navigation"] {
+    min-height: 0;
+    overflow: auto;
+    padding: 0;
+    border-right: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+    border-bottom: 0;
+    background: var(--ulvia--mossa--background-surface);
+}
+:scope[layout="sidebar"] [part~="content"],
+:scope[layout="dual-sidebar"] [part~="content"] {
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    padding: 1.75rem clamp(1.25rem, 2.5vw, 2rem);
+}
+:scope[layout="sidebar"] [part~="footer"],
+:scope[layout="dual-sidebar"] [part~="footer"] {
+    padding: var(--ulvia--mossa--spacing-md, 1rem);
+    border-top: 0;
+    border-right: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+    background: var(--ulvia--mossa--background-base);
+}
+:scope[layout="hybrid"] [part~="secondary-navigation"] {
+    padding: var(--ulvia--mossa--spacing-lg, 1.5rem) var(--ulvia--mossa--spacing-md, 1rem);
+    border-right: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+    border-bottom: 0;
+}
+
+@container (max-width: 56rem) {
+    [part~="shell"],
+    :scope[layout="sidebar"] [part~="shell"],
+    :scope[layout="dual-sidebar"] [part~="shell"],
+    :scope[layout="hybrid"] [part~="shell"] {
+        height: 100svh;
+        max-height: 100svh;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "header" "mobile" "body" "footer";
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        overflow: hidden;
+    }
+    [part~="header"],
+    :scope[layout="sidebar"] [part~="header"],
+    :scope[layout="dual-sidebar"] [part~="header"] {
+        position: relative;
+        grid-template-columns: minmax(0, 1fr) auto;
+        padding: var(--ulvia--mossa--spacing-sm, 0.75rem) var(--ulvia--mossa--page-gutter, 1rem);
+        border-right: 0;
+        border-bottom: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+        backdrop-filter: blur(16px);
+    }
+    [part~="primary-navigation"] {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        overflow-x: auto;
+    }
+    [part~="mobile-navigation"] {
+        z-index: 30;
+        grid-area: mobile;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(9.5rem, 100%), 1fr));
+        gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+        padding: var(--ulvia--mossa--spacing-xs, 0.5rem) var(--ulvia--mossa--page-gutter, 1rem);
+        border-bottom: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+        background: var(--ulvia--mossa--background-base);
+    }
+    [part~="mobile-navigation"] > slot {
+        display: contents;
+    }
+    button[part~="mobile-navigation-toggle"],
+    button[part~="mobile-contextual-toggle"] {
+        display: grid;
+        min-width: 0;
+        min-height: 2.75rem;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+        padding: var(--ulvia--mossa--spacing-xs, 0.5rem) var(--ulvia--mossa--spacing-sm, 0.75rem);
+        border: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-default);
+        border-radius: var(--ulvia--mossa--radius-md, 0.5rem);
+        color: var(--ulvia--mossa--text-primary);
+        background: var(--ulvia--mossa--background-base);
+        box-shadow: 0 1px 2px color-mix(in srgb, var(--ulvia--mossa--shadow-color) 5%, transparent);
+        font: inherit;
+        font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+        font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+        line-height: var(--ulvia--mossa--line-height-tight, 1.15);
+        text-align: start;
+        cursor: pointer;
+        transition:
+            border-color var(--ulvia--mossa--duration-fast, 120ms),
+            background var(--ulvia--mossa--duration-fast, 120ms),
+            box-shadow var(--ulvia--mossa--duration-fast, 120ms);
+    }
+    button[part~="mobile-navigation-toggle"]::before,
+    button[part~="mobile-contextual-toggle"]::before {
+        content: "";
+        width: 1.125rem;
+        height: 1rem;
+        background:
+            linear-gradient(currentcolor 0 0) 0 1px / 100% 1.5px no-repeat,
+            linear-gradient(currentcolor 0 0) 0 50% / 100% 1.5px no-repeat,
+            linear-gradient(currentcolor 0 0) 0 calc(100% - 1px) / 100% 1.5px no-repeat;
+    }
+    button[part~="mobile-contextual-toggle"]::before {
+        width: 1rem;
+        border: 1.5px solid currentcolor;
+        border-radius: 0.2rem;
+        background:
+            linear-gradient(currentcolor 0 0) 0.2rem 0.25rem / 0.25rem 0.25rem no-repeat,
+            linear-gradient(currentcolor 0 0) 0.65rem 0.25rem / 0.15rem 0.25rem no-repeat,
+            linear-gradient(currentcolor 0 0) 0.2rem 0.65rem / 0.6rem 1.5px no-repeat;
+    }
+    button[part~="mobile-navigation-toggle"]::after,
+    button[part~="mobile-contextual-toggle"]::after {
+        content: "";
+        width: 0.45rem;
+        height: 0.45rem;
+        transform: translateY(-0.15rem) rotate(45deg);
+        border-right: 1.5px solid currentcolor;
+        border-bottom: 1.5px solid currentcolor;
+        transition: transform var(--ulvia--mossa--duration-fast, 120ms);
+    }
+    button[part~="mobile-navigation-toggle"]:hover,
+    button[part~="mobile-contextual-toggle"]:hover {
+        border-color: var(--ulvia--mossa--border-strong);
+        background: var(--ulvia--mossa--background-subtle);
+    }
+    button[part~="mobile-navigation-toggle"][aria-expanded="true"],
+    button[part~="mobile-contextual-toggle"][aria-expanded="true"] {
+        border-color: var(--ulvia--mossa--primary);
+        background: var(--ulvia--mossa--primary-subtle);
+        box-shadow: 0 0 0 1px var(--ulvia--mossa--primary);
+    }
+    button[part~="mobile-navigation-toggle"][aria-expanded="true"]::after,
+    button[part~="mobile-contextual-toggle"][aria-expanded="true"]::after {
+        transform: translateY(0.15rem) rotate(225deg);
+    }
+    button[part~="mobile-navigation-toggle"]:focus-visible,
+    button[part~="mobile-contextual-toggle"]:focus-visible {
+        outline: 3px solid var(--ulvia--mossa--focus-ring);
+        outline-offset: 2px;
+    }
+    button[part~="mobile-navigation-toggle"][hidden],
+    button[part~="mobile-contextual-toggle"][hidden] {
+        display: none;
+    }
+    :scope > [part~="shell"] > [part~="mobile-backdrop"] {
+        display: block;
+        z-index: 10;
+        grid-area: body;
+        width: 100%;
+        height: 100%;
+        background: var(--ulvia--mossa--overlay-backdrop);
+    }
+    :scope:not([mobile-panel]) > [part~="shell"] > [part~="mobile-backdrop"] {
+        display: none;
+    }
+    button[data-mobile-toggle-close] {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: default;
+    }
+    [part~="secondary-navigation"],
+    :scope[layout="sidebar"] [part~="secondary-navigation"],
+    :scope[layout="dual-sidebar"] [part~="secondary-navigation"],
+    :scope[layout="hybrid"] [part~="secondary-navigation"],
+    [part~="secondary-sidebar"],
+    :scope[layout="dual-sidebar"] [part~="secondary-sidebar"] {
+        z-index: 20;
+        grid-area: body;
+        display: block;
+        width: min(86%, 20rem);
+        height: 100%;
+        min-height: 0;
+        box-sizing: border-box;
+        padding: 0;
+        border: 0;
+        border-right: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+        overflow: auto;
+        visibility: hidden;
+        transform: translateX(-100%);
+        pointer-events: none;
+        box-shadow: 0.75rem 0 2rem color-mix(in srgb, var(--ulvia--mossa--shadow-color) 16%, transparent);
+        transition:
+            transform var(--ulvia--mossa--duration-normal, 200ms) var(--ulvia--mossa--easing-standard, ease),
+            visibility var(--ulvia--mossa--duration-normal, 200ms);
+    }
+    [part~="secondary-navigation"] {
+        background: var(--ulvia--mossa--background-base);
+    }
+    [part~="secondary-sidebar"] {
+        padding: var(--ulvia--mossa--spacing-md, 1rem) var(--ulvia--mossa--spacing-sm, 0.75rem);
+        background: var(--ulvia--mossa--background-subtle);
+    }
+    :scope[mobile-panel="navigation"] [part~="secondary-navigation"],
+    :scope[mobile-panel="contextual"] [part~="secondary-sidebar"] {
+        visibility: visible;
+        transform: translateX(0);
+        pointer-events: auto;
+    }
+    [part~="content"],
+    :scope[layout="sidebar"] [part~="content"],
+    :scope[layout="dual-sidebar"] [part~="content"] {
+        grid-area: body;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        margin: 0;
+        padding-block: var(--ulvia--mossa--spacing-lg, 1.5rem);
+        overflow: auto;
+        scrollbar-gutter: auto;
+    }
+    [part~="footer"],
+    :scope[layout="sidebar"] [part~="footer"],
+    :scope[layout="dual-sidebar"] [part~="footer"] {
+        padding: var(--ulvia--mossa--spacing-md, 1rem);
+        border-top: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+        border-right: 0;
+        background: var(--ulvia--mossa--background-base);
+    }
+}

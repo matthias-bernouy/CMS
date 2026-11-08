@@ -30,6 +30,7 @@ export async function discoverUiSources(root: string): Promise<UiSource[]> {
     const sourceRoots = [
         ...packages.map(({ root: packageRoot }) => packageRoot),
         join(root, "packages", "official-repository", "collections"),
+        join(root, "resources", "base"),
     ];
     const paths: string[] = [];
     async function visit(directory: string): Promise<void> {

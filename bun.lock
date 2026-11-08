@@ -184,6 +184,7 @@
         "@bernouy/ulvia-sdk": "workspace:*",
         "@bernouy/zip": "workspace:*",
         "css-tree": "^3.2.1",
+        "linkedom": "^0.18.15",
         "zod": "4.6.7",
       },
       "devDependencies": {
@@ -390,6 +391,7 @@
         "@bernouy/logging": "workspace:*",
         "@bernouy/observability": "workspace:*",
         "@bernouy/repository": "workspace:*",
+        "@bernouy/resources": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",

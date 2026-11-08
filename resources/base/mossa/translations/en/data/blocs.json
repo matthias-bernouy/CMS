@@ -1,0 +1,13 @@
+{
+    "bloc.category.data": "Data",
+    "bloc.data-table.description": "An accessible native data table with responsive overflow and explicit row and column headers",
+    "bloc.data-table.label": "Data table",
+    "bloc.data-table-cell.description": "A native data cell owned by a data table row",
+    "bloc.data-table-cell.label": "Data table cell",
+    "bloc.data-table-column-header.description": "A native column header owned by a data table",
+    "bloc.data-table-column-header.label": "Data table column header",
+    "bloc.data-table-row.description": "A native row owned by a data table",
+    "bloc.data-table-row.label": "Data table row",
+    "bloc.data-table-row-header.description": "A native row header owned by a data table row",
+    "bloc.data-table-row-header.label": "Data table row header"
+}

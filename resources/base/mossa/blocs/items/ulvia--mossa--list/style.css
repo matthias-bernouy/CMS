@@ -1,0 +1,51 @@
+:scope {
+    --ulvia--mossa--list-border: var(--ulvia--mossa--border-subtle);
+    --ulvia--mossa--list-radius: var(--ulvia--mossa--radius-lg, 0.75rem);
+    --ulvia--mossa--list-item-divider: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--list-border);
+    --ulvia--mossa--list-item-border: 0;
+    --ulvia--mossa--list-item-radius: 0;
+    --ulvia--mossa--list-item-background: transparent;
+    --ulvia--mossa--list-item-gap: 0;
+    display: block;
+    min-width: 0;
+}
+
+[part~="list"] {
+    display: grid;
+    min-width: 0;
+    overflow: clip;
+    border: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--list-border);
+    border-radius: var(--ulvia--mossa--list-radius);
+    background: var(--ulvia--mossa--background-base);
+    box-shadow: var(--ulvia--mossa--shadow-sm);
+}
+[part~="header"] {
+    padding: var(--ulvia--mossa--spacing-sm, 0.75rem) var(--ulvia--mossa--spacing-md, 1rem);
+    border-bottom: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--list-border);
+    color: var(--ulvia--mossa--text-muted);
+    font-size: 0.6875rem;
+    font-weight: var(--ulvia--mossa--font-weight-bold, 700);
+    letter-spacing: var(--ulvia--mossa--letter-spacing-wide, 0.025em);
+    text-transform: uppercase;
+}
+[part~="header"]:empty {
+    display: none;
+}
+
+:scope[appearance="plain"] [part~="list"] {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+:scope[appearance="plain"] [part~="header"] {
+    display: none;
+}
+:scope[appearance="plain"] {
+    --ulvia--mossa--list-item-divider: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--list-border);
+    --ulvia--mossa--list-item-border: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--list-border);
+    --ulvia--mossa--list-item-radius: var(--ulvia--mossa--list-radius);
+    --ulvia--mossa--list-item-background: var(--ulvia--mossa--background-base);
+    --ulvia--mossa--list-item-gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}

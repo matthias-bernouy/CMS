@@ -49,3 +49,14 @@ resolution, upgrades, uninstallation or remote publication mechanism.
   current site grant and matching instance/site invocation before private reads.
 - Default initialization apply is a host-owned durable operation. Its authorize
   hook runs before receipts/replay; the service independently reauthorizes copies.
+
+- `./build` is explicit authoring tooling, never a runtime startup import. It reads
+  ordinary `ulvia-resource-source/v1` folders and composes explicit source snapshots;
+  never import collection admission, stores, installation or publication here.
+- Require `bun --no-macros` before compiling authored TypeScript. Validate fixed and
+  default markup, all retained examples, CSS ownership, state reads/writes/scopes,
+  cycles, casts/fallbacks and synchronized producer schema compatibility. Preserve
+  exact capability-output references and UTF-16 bounds. Compilation calls no services.
+- Source snapshots own immutable asset Blobs. Bound files, bytes, tree entries/depth,
+  roots and runtime imports. Build-only source translation keys do not define runtime
+  IDs. The CLI owns profile composition and the bounded one-process official ZIP cache.

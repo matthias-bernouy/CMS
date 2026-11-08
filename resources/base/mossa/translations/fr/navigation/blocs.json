@@ -1,0 +1,15 @@
+{
+    "bloc.category.navigation": "Navigation",
+    "bloc.navigation-group.description": "Un parent de navigation dépliable qui contient des liens ou des groupes imbriqués",
+    "bloc.navigation-group.label": "Groupe de navigation",
+    "bloc.navigation-item.description": "Un lien ou bouton natif avec une icône facultative et un état actif",
+    "bloc.navigation-item.label": "Élément de navigation",
+    "bloc.navigation-menu.description": "Un menu d’application structuré avec des sections groupées et des actions de pied de page",
+    "bloc.navigation-menu.label": "Menu de navigation",
+    "bloc.navigation-section.description": "Un groupe libellé d’éléments de navigation associés",
+    "bloc.navigation-section.label": "Section de navigation",
+    "bloc.route-tab.description": "Un lien de Page présenté dans les onglets de route",
+    "bloc.route-tab.label": "Onglet de route",
+    "bloc.route-tabs.description": "Une navigation locale de Page sous forme d’onglets soulignés ou de pastilles",
+    "bloc.route-tabs.label": "Onglets de route"
+}

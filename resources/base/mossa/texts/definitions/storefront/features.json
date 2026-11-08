@@ -1,0 +1,44 @@
+[
+    {
+        "id": "feature-one-title",
+        "label": "text.feature-one-title.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features"
+    },
+    {
+        "id": "feature-one-body",
+        "label": "text.feature-one-body.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features"
+    },
+    {
+        "id": "feature-two-title",
+        "label": "text.feature-two-title.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features"
+    },
+    {
+        "id": "feature-two-body",
+        "label": "text.feature-two-body.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features"
+    },
+    {
+        "id": "feature-three-title",
+        "label": "text.feature-three-title.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features"
+    },
+    {
+        "id": "feature-three-body",
+        "label": "text.feature-three-body.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features"
+    },
+    {
+        "id": "feature-card-note",
+        "label": "text.feature-card-note.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features"
+    }
+]

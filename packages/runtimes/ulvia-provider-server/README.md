@@ -22,7 +22,7 @@ initialization never publishes the bundled system releases to the catalogue.
 Run `bun run generate:official-bootstrap --core-only` from the workspace root
 before native startup to stage admitted system contracts, documentation and the
 Provider manifest in this package's `dist/bootstrap`. Production images use
-this snapshot and omit authored collections and compiled starter assets.
+this snapshot, include localized inert base ZIPs and omit authored collections.
 Discovery reads profile references only; provisioning reads the selected profile's
 resources and never falls back to the configured public Repository. Set an absolute
 `ULVIA_BOOTSTRAP_DIR` to select another pre-built snapshot. Public resource
@@ -44,10 +44,11 @@ Plans use the existing bounded preparation worker; application owns the durable
 maintenance fence and per-entity checkpoints. Completed replay needs no ZIP or
 worker, and ready reads never provision a missing marker.
 
-The host reads optional local `resources/<profile>/<locale>.zip` and `.zip.sha256`
+The host reads local `resources/<profile>/<locale>.zip` and `.zip.sha256`
 files from the bootstrap root. Missing files safely refuse a base review; empty
-setup makes no source request. Production ZIP generation and ordinary asset
-delivery are still being transitioned from the legacy collection system. Private
+setup makes no source request. The generator compiles ordinary sources from
+`resources/base/`; it performs no collection admission or installation for these ZIPs.
+Ordinary asset delivery is still being transitioned. Private
 per-instance retention belongs to one host process and holds at most two 64-MiB
 archives plus one bounded atomic-write temporary. See
 [initialization architecture](../../../docs/architecture/provider-instance-initialization.md).

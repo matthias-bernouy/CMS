@@ -1,0 +1,198 @@
+<div cms-bloc="ulvia--mossa--admin-workspace">
+    <h1 text-align="start" size="lg" cms-bloc="ulvia--mossa--heading" slot="title">{{ cms.i18n.ulvia/mossa.ui-provider-connect }}</h1>
+    <p slot="description">{{ cms.i18n.ulvia/mossa.ui-provider-connect-help }}</p>
+    <div items-align="stretch" slot="content" cms-bloc="ulvia--mossa--stack" gap="lg" width="md">
+        <section cms-query="ulvia/cms.installations:list-available-providers as catalogue" slot="items">
+            <div cms-bloc="ulvia--mossa--surface" appearance="outlined" padding="lg" radius="md">
+                <div width="full" items-align="stretch" cms-bloc="ulvia--mossa--stack" gap="md" slot="content">
+                    <h2 text-align="start" cms-bloc="ulvia--mossa--heading" size="sm" slot="items">{{ cms.i18n.ulvia/mossa.ui-provider-catalogue }}</h2>
+                    <div cms-match="catalogue.outcome.kind" slot="items">
+                        <span cms-case='"none"'></span>
+                        <span cms-case='"success"'></span>
+                        <div cms-case='"error"' cms-match="catalogue.outcome.code">
+                            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"FORBIDDEN"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                        </div>
+                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                    </div>
+                    <div cms-condition="catalogue.outcome.kind === 'success'" slot="items">
+                        <article cms-repeat="catalogue.data.items as release">
+                            <h3 text-align="start" cms-bloc="ulvia--mossa--heading" size="xs">{{ release.name }}</h3>
+                            <p>{{ release.id }} {{ release.version }}</p>
+                            <form
+                                items-align="stretch"
+                                cms-mutation="ulvia/cms.installations:import-provider-manifest as imported"
+                                cms-bloc="ulvia--mossa--stack"
+                                gap="md"
+                                width="md"
+                            >
+                                <p role="status" aria-live="polite" cms-condition="imported.activity === 'submitting'" slot="items">
+                                    {{ cms.i18n.ulvia/mossa.ui-working }}
+                                </p>
+                                <input type="hidden" name="repositoryId" value="{{ release.repositoryId }}" slot="items">
+                                <input type="hidden" name="publisherId" value="{{ release.publisherId }}" slot="items">
+                                <input type="hidden" name="id" value="{{ release.id }}" slot="items">
+                                <input type="hidden" name="version" value="{{ release.version }}" slot="items">
+                                <input type="hidden" name="digest" value="{{ release.digest }}" slot="items">
+                                <div responsive-layout="stack" cms-bloc="ulvia--mossa--form-actions" actions-align="end" slot="items">
+                                    <button size="md" cms-bloc="ulvia--mossa--action" type="submit" tone="primary" variant="filled" slot="actions">
+                                        <span>{{ cms.i18n.ulvia/mossa.ui-provider-import }}</span>
+                                    </button>
+                                </div>
+                                <div cms-match="imported.outcome.kind" slot="items">
+                                    <span cms-case='"none"'></span>
+                                    <span cms-case='"success"'></span>
+                                    <div cms-case='"error"' cms-match="imported.outcome.code">
+                                        <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"FORBIDDEN"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                    </div>
+                                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                </div>
+                                <p cms-condition="imported.outcome.kind === 'success'" slot="items">
+                                    {{ imported.data.id }} {{ imported.data.version }}
+                                </p>
+                                <p role="alert" cms-condition="imported.outcome.kind === 'error' || imported.outcome.kind === 'failure'" slot="items">
+                                    {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                                </p>
+                            </form>
+                        </article>
+                    </div>
+                    <p slot="items" cms-condition="catalogue.outcome.kind === 'success' && catalogue.data.items.length === 0">
+                        {{ cms.i18n.ulvia/mossa.ui-provider-catalogue-empty }}
+                    </p>
+                </div>
+            </div>
+        </section>
+        <div cms-bloc="ulvia--mossa--surface" appearance="outlined" padding="lg" radius="md" slot="items">
+            <div width="full" items-align="stretch" cms-bloc="ulvia--mossa--stack" gap="md" slot="content">
+                <h2 text-align="start" cms-bloc="ulvia--mossa--heading" size="sm" slot="items">{{ cms.i18n.ulvia/mossa.ui-provider-preview }}</h2>
+                <form
+                    items-align="stretch"
+                    cms-mutation="ulvia/cms.installations:preview-provider-connection as preview"
+                    cms-sync="@page:ulvia--mossa--provider-preview"
+                    cms-sync-select="lastSuccess.data"
+                    cms-bloc="ulvia--mossa--stack"
+                    gap="md"
+                    width="md"
+                    slot="items"
+                >
+                    <p role="status" aria-live="polite" cms-condition="preview.activity === 'submitting'" slot="items">
+                        {{ cms.i18n.ulvia/mossa.ui-working }}
+                    </p>
+                    <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
+                        <span slot="label">{{ cms.i18n.ulvia/mossa.ui-provider-id }}</span>
+                        <div size="md" cms-bloc="ulvia--mossa--input" slot="control">
+                            <input name="providerId" type="text" required maxlength="193" id="provider-connect-preview-providerId">
+                        </div>
+                    </div>
+                    <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
+                        <span slot="label">{{ cms.i18n.ulvia/mossa.ui-provider-version }}</span>
+                        <div size="md" cms-bloc="ulvia--mossa--input" slot="control">
+                            <input name="version" type="text" required maxlength="128" id="provider-connect-preview-version">
+                        </div>
+                    </div>
+                    <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
+                        <span slot="label">{{ cms.i18n.ulvia/mossa.ui-provider-endpoint }}</span>
+                        <div size="md" cms-bloc="ulvia--mossa--input" slot="control">
+                            <input name="endpoint" type="url" required maxlength="2048" id="provider-connect-preview-endpoint">
+                        </div>
+                    </div>
+                    <div cms-bloc="ulvia--mossa--field" label-position="top" slot="items">
+                        <span slot="label">{{ cms.i18n.ulvia/mossa.ui-provider-token }}</span>
+                        <div size="md" cms-bloc="ulvia--mossa--input" slot="control">
+                            <input name="token" type="password" required autocomplete="off" maxlength="4096" id="provider-connect-preview-token">
+                        </div>
+                    </div>
+                    <div responsive-layout="stack" cms-bloc="ulvia--mossa--form-actions" actions-align="end" slot="items">
+                        <button size="md" cms-bloc="ulvia--mossa--action" type="submit" tone="primary" variant="filled" slot="actions">
+                            <span>{{ cms.i18n.ulvia/mossa.ui-provider-preview }}</span>
+                        </button>
+                    </div>
+                    <div cms-match="preview.outcome.kind" slot="items">
+                        <span cms-case='"none"'></span>
+                        <span cms-case='"success"'></span>
+                        <div cms-case='"error"' cms-match="preview.outcome.code">
+                            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"FORBIDDEN"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                        </div>
+                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                    </div>
+                    <p role="alert" cms-condition="preview.outcome.kind === 'error' || preview.outcome.kind === 'failure'" slot="items">
+                        {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                    </p>
+                </form>
+            </div>
+        </div>
+        <section cms-queries="@page:ulvia--mossa--provider-preview as review" slot="items">
+            <div cms-bloc="ulvia--mossa--surface" appearance="outlined" padding="lg" radius="md" cms-condition="review.data.lastSuccess.data.ticket">
+                <div width="full" items-align="stretch" cms-bloc="ulvia--mossa--stack" gap="md" slot="content">
+                    <h2 text-align="start" cms-bloc="ulvia--mossa--heading" size="sm" slot="items">{{ review.data.lastSuccess.data.providerName }}</h2>
+                    <p slot="items">
+                        {{ cms.i18n.ulvia/mossa.ui-provider-account }} {{ review.data.lastSuccess.data.accountLabel }}
+                        {{ review.data.lastSuccess.data.accountId }}
+                    </p>
+                    <p slot="items">{{ review.data.lastSuccess.data.endpoint }}</p>
+                    <code slot="items">{{ review.data.lastSuccess.data.manifestDigest }}</code>
+                    <p cms-repeat="review.data.lastSuccess.data.contracts as contract" slot="items">
+                        {{ contract.contractId }} {{ contract.version }} {{ contract.status }}
+                    </p>
+                    <h3 text-align="start" cms-bloc="ulvia--mossa--heading" size="xs" slot="items">{{ cms.i18n.ulvia/mossa.ui-provider-requests }}</h3>
+                    <p cms-repeat="review.data.lastSuccess.data.requests as request" slot="items">
+                        {{ request.contractId }} {{ request.capabilityId }} {{ request.versionRange }}
+                    </p>
+                    <h3 text-align="start" cms-bloc="ulvia--mossa--heading" size="xs" slot="items">
+                        {{ cms.i18n.ulvia/mossa.ui-provider-delegated-authority }}
+                    </h3>
+                    <div cms-repeat="review.data.lastSuccess.data.delegation.policies as policy" slot="items">
+                        <p>{{ policy.implementationContractId }} · {{ policy.sources | json }} · {{ policy.allow | json }}</p>
+                    </div>
+                    <div cms-repeat="review.data.lastSuccess.data.delegation.matches as grant" slot="items">
+                        <p>
+                            {{ grant.sourceContractId }} · {{ grant.sourceCapabilityId }} → {{ grant.targetContractId }} {{ grant.targetVersion }} ·
+                            {{ grant.targetCapabilityId }}
+                        </p>
+                    </div>
+                    <form
+                        items-align="stretch"
+                        cms-mutation="ulvia/cms.installations:approve-provider-connection as approval"
+                        cms-mutation-redirect="/admin/providers"
+                        cms-bloc="ulvia--mossa--stack"
+                        gap="md"
+                        width="md"
+                        slot="items"
+                    >
+                        <p role="status" aria-live="polite" cms-condition="approval.activity === 'submitting'" slot="items">
+                            {{ cms.i18n.ulvia/mossa.ui-working }}
+                        </p>
+                        <input type="hidden" name="ticket" value="{{ review.data.lastSuccess.data.ticket }}" slot="items">
+                        <div responsive-layout="stack" cms-bloc="ulvia--mossa--form-actions" actions-align="end" slot="items">
+                            <button size="md" cms-bloc="ulvia--mossa--action" type="submit" tone="primary" variant="filled" slot="actions">
+                                <span>{{ cms.i18n.ulvia/mossa.ui-provider-approve }}</span>
+                            </button>
+                        </div>
+                        <div cms-match="approval.outcome.kind" slot="items">
+                            <span cms-case='"none"'></span>
+                            <span cms-case='"success"'></span>
+                            <div cms-case='"error"' cms-match="approval.outcome.code">
+                                <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <p role="alert" cms-case='"FORBIDDEN"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                            </div>
+                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                        </div>
+                        <p role="alert" cms-condition="approval.outcome.kind === 'error' || approval.outcome.kind === 'failure'" slot="items">
+                            {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>

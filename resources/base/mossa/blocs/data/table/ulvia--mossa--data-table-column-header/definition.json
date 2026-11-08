@@ -1,0 +1,64 @@
+{
+    "id": "ulvia--mossa--data-table-column-header",
+    "kind": "component",
+    "name": "bloc.data-table-column-header.label",
+    "group": "bloc.category.data",
+    "categories": ["bloc.category.data"],
+    "description": "bloc.data-table-column-header.description",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["th"],
+        "attributes": {
+            "scope": {
+                "required": true,
+                "values": ["col"]
+            }
+        },
+        "defaults": {
+            "scope": "col"
+        }
+    },
+    "catalogue": "hidden",
+    "settings": [
+        {
+            "id": "text-align",
+            "label": "setting.alignment.label",
+            "group": "setting.group.typography",
+            "type": "string",
+            "default": "start",
+            "maxLength": 6,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "start",
+                        "label": "setting.option.start"
+                    },
+                    {
+                        "value": "center",
+                        "label": "setting.option.center"
+                    },
+                    {
+                        "value": "end",
+                        "label": "setting.option.end"
+                    }
+                ]
+            }
+        }
+    ]
+}

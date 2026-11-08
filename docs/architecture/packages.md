@@ -14,8 +14,9 @@ package without workspace dependencies.
 
 Server composition roots are deployment units rather than reusable packages:
 `@bernouy/cms-edge-server` and `@bernouy/ulvia-provider-server` are private.
-`packages/official-repository` has no package manifest; its authored artifacts
-are admitted into the Provider snapshot and explicitly published to CMS Repository instances. A package being
+`packages/official-repository` has no package manifest; it temporarily retains
+contract parity evidence and legacy collection sources during their retirement.
+Current contracts and Provider claims come from the SDK inventory. A package being
 publishable describes its intended boundary, not evidence that a release has
 already been published to a registry.
 
@@ -23,6 +24,7 @@ already been published to a registry.
 
 | Package | Responsibility |
 | --- | --- |
+| `@bernouy/zip` | Bounded deterministic ZIP encoding and strict owned-byte decoding. |
 | `@bernouy/binary-media` | Immutable binary snapshots, SHA-256 identities, representation fingerprints and bounded media signature inspection. |
 | `@bernouy/blob-store` | Stream-first opaque blob contracts with memory, local-filesystem and S3-compatible adapters. |
 | `@bernouy/http-runner` | Runner abstractions, Bun HTTP serving, cache, compression, CSP and test helpers. |
@@ -42,7 +44,7 @@ already been published to a registry.
 | `platform/contracts` | `@bernouy/ulvia-contracts` | Contract schemas, parsing, validation, admission, bindings, compatibility and release read ports. |
 | `platform/providers` | `@bernouy/ulvia-providers` | Manifest admission, Provider execution models, selection validation, readiness and read ports. |
 | `platform/gateway` | `@bernouy/cms-gateway` | Authorized generic capability invocation, HTTP/MCP transports, Provider SDK, authority, identities and audit. |
-| `platform/sdk` | `@bernouy/ulvia-sdk` | Typed feature capabilities/contracts, static Provider assembly, generated manifests and an explicit Gateway HTTP receiver adapter used by Emailer/SMTP, Secrets and Files. |
+| `platform/sdk` | `@bernouy/ulvia-sdk` | Typed feature capabilities/contracts, static Provider assembly, generated manifests and an explicit Gateway HTTP receiver adapter used by the official feature inventory. |
 
 Platform depends only on Platform and Foundation. Catalogue publication, installation
 approval and selection replacement remain feature-owned. Edge and the official
@@ -56,6 +58,7 @@ Provider remain surfaces; documentation search remains a feature.
 | `@bernouy/content` | Provider-neutral Pages, routes, Blocs, settings, themes, metadata, structured data, indexing, sitemap snapshots, rendering and generic contribution inputs. |
 | `@bernouy/observability` | Instance-scoped journal validation, bounded collection, query and retention services; explicit memory and Mongo adapters. |
 | `@bernouy/files` | SDK feature and default implementation for namespaces, credentials, streaming uploads, immutable files, private signatures and image representations. |
+| `@bernouy/resources` | Verified ordinary resource ZIPs, explicit source compilation, persisted assets/texts and reviewed one-time initialization. |
 | `@bernouy/repository` | Persistent release catalogues, publication, installation/selection workflows, authored collection admission, content projections, upgrades and build tooling. |
 | `@bernouy/secrets` | Credential-scoped secret namespaces, metadata and lifecycle over an injected generic encrypted secret store. |
 | `@bernouy/email` (`features/email/base`) | Provider-neutral outbound email delivery interface. |
@@ -99,3 +102,8 @@ for explicitly enabled CMS instances, exposed through their independent Edge.
 
 See [workspace architecture](README.md) for dependency direction and
 [repository and gateway flows](../providers/README.md) for runtime wiring.
+
+Authored ordinary base data lives outside package roots in `resources/base/` and
+is compiled through `@bernouy/resources/build`. It is build input, not an executable
+package or an installed collection catalogue. The Provider image ships only its
+localized ZIP outputs, copied into ordinary stores after explicit administrator review.

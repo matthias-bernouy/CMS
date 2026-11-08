@@ -1,0 +1,120 @@
+{
+    "id": "ulvia--mossa--cluster",
+    "kind": "component",
+    "name": "bloc.cluster.label",
+    "group": "bloc.category.layout",
+    "categories": ["bloc.category.layout"],
+    "description": "bloc.cluster.description",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "items": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["div", "form", "svg"]
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 50,
+    "settings": [
+        {
+            "id": "gap",
+            "label": "setting.gap.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "md",
+            "maxLength": 4,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "none",
+                        "label": "setting.option.none"
+                    },
+                    {
+                        "value": "sm",
+                        "label": "setting.option.small"
+                    },
+                    {
+                        "value": "md",
+                        "label": "setting.option.medium"
+                    },
+                    {
+                        "value": "lg",
+                        "label": "setting.option.large"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "items-align",
+            "label": "setting.alignment.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "center",
+            "maxLength": 7,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "start",
+                        "label": "setting.option.start"
+                    },
+                    {
+                        "value": "center",
+                        "label": "setting.option.center"
+                    },
+                    {
+                        "value": "end",
+                        "label": "setting.option.end"
+                    },
+                    {
+                        "value": "stretch",
+                        "label": "setting.option.stretch"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "justify",
+            "label": "setting.justification.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "start",
+            "maxLength": 7,
+            "control": {
+                "kind": "select",
+                "options": [
+                    {
+                        "value": "start",
+                        "label": "setting.option.start"
+                    },
+                    {
+                        "value": "center",
+                        "label": "setting.option.center"
+                    },
+                    {
+                        "value": "end",
+                        "label": "setting.option.end"
+                    },
+                    {
+                        "value": "between",
+                        "label": "setting.option.space-between"
+                    }
+                ]
+            }
+        }
+    ]
+}

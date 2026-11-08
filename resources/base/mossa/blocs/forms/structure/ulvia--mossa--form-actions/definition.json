@@ -1,0 +1,86 @@
+{
+    "id": "ulvia--mossa--form-actions",
+    "kind": "component",
+    "name": "bloc.form-actions.label",
+    "group": "bloc.category.forms",
+    "categories": ["bloc.category.forms"],
+    "description": "bloc.form-actions.description",
+    "uses": ["ulvia--mossa--action"],
+    "requires": [],
+    "slots": {
+        "actions": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 150,
+    "settings": [
+        {
+            "id": "actions-align",
+            "label": "setting.alignment.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "start",
+            "maxLength": 6,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "start",
+                        "label": "setting.option.start"
+                    },
+                    {
+                        "value": "center",
+                        "label": "setting.option.center"
+                    },
+                    {
+                        "value": "end",
+                        "label": "setting.option.end"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "wide",
+            "label": "setting.wide.label",
+            "group": "setting.group.layout",
+            "type": "boolean",
+            "default": false,
+            "control": {
+                "kind": "toggle"
+            }
+        },
+        {
+            "id": "responsive-layout",
+            "label": "setting.responsive-layout.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "stack",
+            "maxLength": 5,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "stack",
+                        "label": "setting.option.stack"
+                    },
+                    {
+                        "value": "wrap",
+                        "label": "setting.option.wrap"
+                    }
+                ]
+            }
+        }
+    ]
+}

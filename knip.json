@@ -64,7 +64,8 @@
         "**/dist/**",
         "**/runtime/stack/orchestration/definitions/mongo/*.js",
         "maquette/**",
-        "packages/official-repository/**"
+        "packages/official-repository/**",
+        "resources/base/**"
     ],
     "ignoreIssues": {
         "**/tests/**": [

@@ -1,0 +1,148 @@
+:scope {
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    border: var(--ulvia--mossa--list-item-border, 0);
+    border-radius: var(--ulvia--mossa--list-item-radius, 0);
+    color: var(--ulvia--mossa--text-primary);
+    background: var(--ulvia--mossa--list-item-background, transparent);
+    container-type: inline-size;
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+    transition: background var(--ulvia--mossa--duration-fast, 120ms) var(--ulvia--mossa--easing-standard, ease);
+}
+:scope:not(:last-child) {
+    margin-block-end: var(--ulvia--mossa--list-item-gap, 0);
+    border-bottom: var(--ulvia--mossa--list-item-divider, 0);
+}
+
+:scope:hover {
+    background: color-mix(in srgb, var(--ulvia--mossa--background-subtle) 62%, transparent);
+}
+
+[part~="item"] {
+    display: grid;
+    min-width: 0;
+    grid-template-areas: "leading content actions" ". body actions";
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--ulvia--mossa--spacing-md, 1rem);
+    align-items: center;
+    padding: var(
+        --ulvia--mossa--list-item-padding,
+        var(--ulvia--mossa--spacing-md, 1rem) var(--ulvia--mossa--spacing-lg, 1.5rem)
+    );
+}
+[part~="leading"] {
+    grid-area: leading;
+}
+[part~="content"] {
+    grid-area: content;
+}
+[part~="body"] {
+    grid-area: body;
+}
+[part~="actions"] {
+    grid-area: actions;
+}
+[part~="item"]:has(> [part~="body"]:empty) {
+    row-gap: 0;
+}
+[part~="item"]:has(> [part~="leading"]:empty) {
+    grid-template-areas: "content actions" "body actions";
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+[part~="leading"],
+[part~="content"],
+[part~="header"],
+[part~="title"],
+[part~="meta"],
+[part~="description"],
+[part~="body"],
+[part~="actions"] {
+    min-width: 0;
+}
+
+[part~="leading"]:empty,
+[part~="meta"]:empty,
+[part~="description"]:empty,
+[part~="body"]:empty,
+[part~="actions"]:empty {
+    display: none;
+}
+
+[part~="content"] {
+    display: grid;
+    gap: var(--ulvia--mossa--spacing-2xs, 0.25rem);
+}
+
+[part~="header"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia--mossa--spacing-xs, 0.5rem) var(--ulvia--mossa--spacing-sm, 0.75rem);
+    align-items: baseline;
+}
+
+[part~="title"] {
+    font-weight: var(--ulvia--mossa--font-weight-semibold, 600);
+}
+
+[part~="meta"],
+[part~="description"] {
+    color: var(--ulvia--mossa--text-secondary);
+    font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+}
+
+[part~="body"] {
+    padding-block-start: var(--ulvia--mossa--spacing-xs, 0.5rem);
+}
+
+[part~="actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    align-items: center;
+    justify-content: flex-end;
+}
+
+:scope[density="compact"] {
+    --ulvia--mossa--list-item-padding: var(--ulvia--mossa--spacing-sm, 0.75rem) var(--ulvia--mossa--spacing-md, 1rem);
+}
+:scope[layout="columns"] [part~="item"] {
+    grid-template-areas: "content body actions";
+    grid-template-columns: minmax(10rem, 1fr) minmax(10rem, 0.85fr) minmax(16rem, 1.35fr);
+    align-items: start;
+    padding: var(--ulvia--mossa--spacing-md, 1rem);
+}
+:scope[layout="columns"] [part~="leading"] {
+    display: none;
+}
+:scope[layout="columns"] [part~="body"] {
+    padding-block-start: 0;
+    color: var(--ulvia--mossa--text-secondary);
+    font-size: var(--ulvia--mossa--font-size-sm, 0.875rem);
+}
+:scope[layout="columns"] [part~="actions"] {
+    display: grid;
+    justify-content: stretch;
+}
+
+@container (max-width: 36rem) {
+    [part~="item"] {
+        grid-template-areas: "leading content" ". body" "actions actions";
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+    }
+    :scope[layout="columns"] [part~="item"] {
+        grid-template-areas: "content" "body" "actions";
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    [part~="actions"] {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+    [part~="item"]:has(> [part~="leading"]:empty) {
+        grid-template-areas: "content" "body" "actions";
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

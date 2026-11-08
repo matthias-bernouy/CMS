@@ -1,0 +1,39 @@
+{
+    "id": "ulvia--mossa--request-journal",
+    "kind": "component",
+    "name": "bloc.request-journal.label",
+    "group": "bloc.category.data",
+    "categories": ["bloc.category.data"],
+    "description": "bloc.request-journal.description",
+    "uses": ["ulvia--mossa--date-range"],
+    "requires": [
+        {
+            "contractId": "ulvia/cms.observability",
+            "capabilityId": "logs.get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.observability",
+            "capabilityId": "logs.query",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 530,
+    "settings": [
+        {
+            "id": "detail-path",
+            "label": "setting.journal-detail-path.label",
+            "group": "setting.group.content",
+            "type": "string",
+            "default": "",
+            "maxLength": 256,
+            "control": {
+                "kind": "text"
+            }
+        }
+    ]
+}

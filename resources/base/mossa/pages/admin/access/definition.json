@@ -1,0 +1,24 @@
+{
+    "path": "/admin/access",
+    "title": "page.access.name",
+    "description": "page.access.description",
+    "visible": true,
+    "indexing": false,
+    "requires": [
+        {
+            "contractId": "ulvia/cms.access",
+            "capabilityId": "delete-user",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.access",
+            "capabilityId": "list-users",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.access",
+            "capabilityId": "set-administrator",
+            "versionRange": "^1.0.0"
+        }
+    ]
+}

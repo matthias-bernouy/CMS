@@ -11,7 +11,8 @@
         "./memory": "./src/exports/memory.ts",
         "./mongo": "./src/exports/mongo.ts",
         "./initialization": "./src/exports/initialization.ts",
-        "./feature": "./src/application/feature.ts"
+        "./feature": "./src/application/feature.ts",
+        "./build": "./src/exports/build.ts"
     },
     "dependencies": {
         "@bernouy/content": "workspace:*",
@@ -21,7 +22,8 @@
         "@bernouy/ulvia-sdk": "workspace:*",
         "zod": "4.6.7",
         "css-tree": "^3.2.1",
-        "@bernouy/blob-store": "workspace:*"
+        "@bernouy/blob-store": "workspace:*",
+        "linkedom": "^0.18.15"
     },
     "peerDependencies": {
         "typescript": "^7.0.2",

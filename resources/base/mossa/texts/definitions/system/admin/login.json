@@ -1,0 +1,116 @@
+[
+    {
+        "id": "ui-administration-access-is-restricted-to-approved-accounts",
+        "label": "text.ui-administration-access-is-restricted-to-approved-accounts.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-confirm-email",
+        "label": "text.ui-confirm-email.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-confirm-email-action",
+        "label": "text.ui-confirm-email-action.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-confirm-email-description",
+        "label": "text.ui-confirm-email-description.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-email-confirmed",
+        "label": "text.ui-email-confirmed.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-invalid-email-or-password",
+        "label": "text.ui-invalid-email-or-password.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-invalid-or-expired-link",
+        "label": "text.ui-invalid-or-expired-link.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-new-password",
+        "label": "text.ui-new-password.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-password",
+        "label": "text.ui-password.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-password-reset",
+        "label": "text.ui-password-reset.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-reset-password-action",
+        "label": "text.ui-reset-password-action.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-reset-password-description",
+        "label": "text.ui-reset-password-description.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-reset-password-title",
+        "label": "text.ui-reset-password-title.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-sign-in",
+        "label": "text.ui-sign-in.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-sign-in-to-continue-to-your-administration-workspace",
+        "label": "text.ui-sign-in-to-continue-to-your-administration-workspace.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-site-administration",
+        "label": "text.ui-site-administration.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-too-many-attempts-please-wait-and-try-again",
+        "label": "text.ui-too-many-attempts-please-wait-and-try-again.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-ulvia-admin",
+        "label": "text.ui-ulvia-admin.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-welcome-back",
+        "label": "text.ui-welcome-back.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    }
+]

@@ -1,0 +1,166 @@
+{
+    "id": "ulvia--mossa--page-shell",
+    "kind": "component",
+    "name": "bloc.page-shell.label",
+    "group": "bloc.category.layout",
+    "categories": ["bloc.category.layout"],
+    "description": "bloc.page-shell.description",
+    "uses": ["ulvia--mossa--heading"],
+    "requires": [],
+    "slots": {
+        "actions": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ]
+        },
+        "breadcrumb": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ]
+        },
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        },
+        "description": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        },
+        "footer": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        },
+        "navigation": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ]
+        },
+        "title": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 170,
+    "settings": [
+        {
+            "id": "width",
+            "label": "setting.width.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "lg",
+            "maxLength": 4,
+            "control": {
+                "kind": "select",
+                "options": [
+                    {
+                        "value": "sm",
+                        "label": "setting.option.width-sm"
+                    },
+                    {
+                        "value": "md",
+                        "label": "setting.option.width-md"
+                    },
+                    {
+                        "value": "lg",
+                        "label": "setting.option.width-lg"
+                    },
+                    {
+                        "value": "xl",
+                        "label": "setting.option.width-xl"
+                    },
+                    {
+                        "value": "full",
+                        "label": "setting.option.width-full"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "appearance",
+            "label": "setting.appearance.label",
+            "group": "setting.group.appearance",
+            "type": "string",
+            "default": "plain",
+            "maxLength": 7,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "plain",
+                        "label": "setting.option.plain"
+                    },
+                    {
+                        "value": "surface",
+                        "label": "setting.option.surface"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "density",
+            "label": "setting.density.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "default",
+            "maxLength": 11,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "compact",
+                        "label": "setting.option.compact"
+                    },
+                    {
+                        "value": "default",
+                        "label": "setting.option.default"
+                    },
+                    {
+                        "value": "comfortable",
+                        "label": "setting.option.comfortable"
+                    }
+                ]
+            }
+        }
+    ]
+}

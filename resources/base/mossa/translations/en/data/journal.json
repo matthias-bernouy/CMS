@@ -1,0 +1,5 @@
+{
+    "setting.journal-detail-path.label": "Log detail Page path",
+    "setting.date-range-from.label": "From (UTC ISO date)",
+    "setting.date-range-to.label": "To (UTC ISO date)"
+}

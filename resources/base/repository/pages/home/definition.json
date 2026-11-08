@@ -1,0 +1,14 @@
+{
+    "path": "/",
+    "title": "page.catalogue.name",
+    "description": "page.catalogue.description",
+    "visible": true,
+    "indexing": true,
+    "requires": [
+        {
+            "contractId": "ulvia/repository",
+            "capabilityId": "catalogue-list",
+            "versionRange": "^1.0.0"
+        }
+    ]
+}

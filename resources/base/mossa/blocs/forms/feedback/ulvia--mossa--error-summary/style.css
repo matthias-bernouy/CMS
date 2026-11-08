@@ -1,0 +1,19 @@
+:scope {
+    display: block;
+    color: var(--ulvia--mossa--on-danger-subtle);
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+}
+[part~="summary"] {
+    display: contents;
+}
+section[part~="summary"] {
+    padding: var(--ulvia--mossa--spacing-lg, 1.5rem);
+    border: var(--ulvia--mossa--border-width-strong, 2px) solid var(--ulvia--mossa--danger-border);
+    border-radius: var(--ulvia--mossa--radius-md, 0.5rem);
+    background: var(--ulvia--mossa--danger-subtle);
+    line-height: var(--ulvia--mossa--line-height-relaxed, 1.65);
+}
+section[part~="summary"]:focus {
+    outline: 3px solid var(--ulvia--mossa--focus-ring);
+    outline-offset: 3px;
+}

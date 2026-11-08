@@ -40,11 +40,17 @@ retention, verification and disposable preview ports. Memory adapters are explic
 preview/test composition only. The Mongo initialization adapter uses a mandatory
 scope-bound protocol record and compare-and-swap checkpoints, provisioned explicitly
 rather than inferred from an empty site. The official Provider composes these ports and selects the generated HTTP/MCP API
-through its inventory. Native setup uses this API; source ZIP production and ordinary
-asset delivery remain separate work while the legacy collection APIs are retired.
+through its inventory. Native setup uses this API; the CLI produces localized base ZIPs from ordinary sources. Asset delivery remains
+separate work while the legacy collection APIs are retired.
 
 `./feature` defines the generated `ulvia/cms.resources` API. It offers explicit
 empty/base initialization, a scoped public pending flag, administrator-only review
 and progress, and a durable apply capability with browser-risk acknowledgement.
 The official core profile explicitly selects this definition. Missing base files
 refuse a base review; empty initialization does not access them.
+
+`./build` prepares bounded source snapshots and builds deterministic localized ZIPs
+from ordinary Content Blocs, Pages, texts, theme and assets. It also validates all
+retained authoring examples, browser state ownership and typed producer compatibility.
+Run these builds and their tests with `bun --no-macros`; authored modules are bundled,
+never executed. Official source data lives in [resources/base](../../../resources/base/README.md).

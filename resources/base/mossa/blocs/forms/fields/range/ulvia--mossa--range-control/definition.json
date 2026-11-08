@@ -1,0 +1,127 @@
+{
+    "id": "ulvia--mossa--range-control",
+    "kind": "component",
+    "name": "bloc.range-control.label",
+    "group": "bloc.category.forms",
+    "categories": ["bloc.category.forms"],
+    "description": "bloc.range-control.description",
+    "uses": ["ulvia--mossa--input", "ulvia--mossa--range"],
+    "requires": [],
+    "slots": {
+        "control": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--range"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 45,
+    "settings": [
+        {
+            "id": "size",
+            "label": "setting.size.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "md",
+            "maxLength": 2,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "sm",
+                        "label": "setting.option.small"
+                    },
+                    {
+                        "value": "md",
+                        "label": "setting.option.medium"
+                    },
+                    {
+                        "value": "lg",
+                        "label": "setting.option.large"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "editable-value",
+            "label": "setting.editable-value.label",
+            "group": "setting.group.behavior",
+            "help": "setting.editable-value.help",
+            "type": "boolean",
+            "default": false,
+            "control": {
+                "kind": "toggle"
+            }
+        },
+        {
+            "id": "value-label",
+            "label": "setting.value-label.label",
+            "group": "setting.group.content",
+            "type": "string",
+            "default": "Value",
+            "maxLength": 40,
+            "control": {
+                "kind": "text"
+            },
+            "visibleWhen": [
+                {
+                    "setting": "editable-value",
+                    "equals": true
+                }
+            ]
+        },
+        {
+            "id": "layout",
+            "label": "setting.range-layout.label",
+            "group": "setting.group.appearance",
+            "type": "string",
+            "default": "auto",
+            "maxLength": 7,
+            "control": {
+                "kind": "select",
+                "options": [
+                    {
+                        "value": "auto",
+                        "label": "setting.option.range-auto"
+                    },
+                    {
+                        "value": "inline",
+                        "label": "setting.option.range-inline"
+                    },
+                    {
+                        "value": "stacked",
+                        "label": "setting.option.stacked"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "value-placement",
+            "label": "setting.range-value-placement.label",
+            "group": "setting.group.appearance",
+            "type": "string",
+            "default": "field",
+            "maxLength": 7,
+            "control": {
+                "kind": "select",
+                "options": [
+                    {
+                        "value": "field",
+                        "label": "setting.option.field-label"
+                    },
+                    {
+                        "value": "control",
+                        "label": "setting.option.range-control"
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,9 @@
+{
+    "ui-review-contract-upgrade": "V\u00e9rifier la mise \u00e0 jour du contrat",
+    "ui-contract-upgrade-description": "V\u00e9rifier les usages, versions exactes et autorisations avant application. Le contenu est conserv\u00e9.",
+    "ui-grants-allow-selected": "Les capabilities s\u00e9lectionn\u00e9es sont autoris\u00e9es sauf les refus explicites ci-dessous.",
+    "ui-upgrade-target-configuration": "Configuration cible (JSON, facultatif)",
+    "ui-upgrade-target-configuration-help": "Laisser vide pour conserver les valeurs actuelles. Les valeurs fournies sont valid\u00e9es avec le sch\u00e9ma cible avant application.",
+    "ui-release-sources": "Releases actuelles",
+    "ui-release-targets": "Releases cibles"
+}

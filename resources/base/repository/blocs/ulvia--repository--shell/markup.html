@@ -1,0 +1,11 @@
+<header part="navigation">
+    <strong>{{ cms.i18n.ulvia/repository.brand }}</strong>
+    <nav aria-label="{{ cms.i18n.ulvia/repository.brand }}">
+        <a href="/">{{ cms.i18n.ulvia/repository.catalogue }}</a>
+        <a href="/search">{{ cms.i18n.ulvia/repository.search }}</a>
+        <a href="/account">{{ cms.i18n.ulvia/repository.account }}</a>
+        <a href="/login">{{ cms.i18n.ulvia/repository.login }}</a>
+        <a href="/signup">{{ cms.i18n.ulvia/repository.signup }}</a>
+    </nav>
+</header>
+<div part="body"><slot name="content"></slot></div>

@@ -1,0 +1,19 @@
+{
+    "path": "/admin/providers/upgrade",
+    "title": "page.contract-upgrade.name",
+    "description": "page.contract-upgrade.description",
+    "visible": true,
+    "indexing": false,
+    "requires": [
+        {
+            "contractId": "ulvia/cms.installations",
+            "capabilityId": "apply-contract-upgrade",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.installations",
+            "capabilityId": "plan-contract-upgrade",
+            "versionRange": "^1.0.0"
+        }
+    ]
+}

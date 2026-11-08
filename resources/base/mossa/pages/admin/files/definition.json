@@ -1,0 +1,8 @@
+{
+    "path": "/admin/files",
+    "title": "page.files.name",
+    "description": "page.files.description",
+    "visible": true,
+    "indexing": false,
+    "requires": []
+}

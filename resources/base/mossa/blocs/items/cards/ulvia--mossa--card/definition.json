@@ -1,0 +1,154 @@
+{
+    "id": "ulvia--mossa--card",
+    "kind": "component",
+    "name": "bloc.card.label",
+    "group": "bloc.category.components",
+    "categories": ["bloc.category.components"],
+    "description": "bloc.card.description",
+    "uses": ["ulvia--mossa--action", "ulvia--mossa--heading", "ulvia--mossa--image"],
+    "requires": [],
+    "slots": {
+        "actions": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--action"
+                }
+            ],
+            "max": 2
+        },
+        "body": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ],
+            "max": 1
+        },
+        "eyebrow": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        },
+        "media": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--image"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["svg"]
+                }
+            ],
+            "max": 1
+        },
+        "title": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia--mossa--heading"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
+    },
+    "catalogueOrder": 10,
+    "settings": [
+        {
+            "id": "surface",
+            "label": "setting.surface.label",
+            "group": "setting.group.appearance",
+            "type": "string",
+            "default": "base",
+            "maxLength": 6,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "base",
+                        "label": "setting.option.base"
+                    },
+                    {
+                        "value": "subtle",
+                        "label": "setting.option.subtle"
+                    },
+                    {
+                        "value": "raised",
+                        "label": "setting.option.raised"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "padding",
+            "label": "setting.padding.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "md",
+            "maxLength": 2,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "sm",
+                        "label": "setting.option.small"
+                    },
+                    {
+                        "value": "md",
+                        "label": "setting.option.medium"
+                    },
+                    {
+                        "value": "lg",
+                        "label": "setting.option.large"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "media-tone",
+            "label": "setting.tone.label",
+            "group": "setting.group.appearance",
+            "type": "string",
+            "default": "none",
+            "maxLength": 9,
+            "control": {
+                "kind": "select",
+                "options": [
+                    {
+                        "value": "none",
+                        "label": "setting.option.none"
+                    },
+                    {
+                        "value": "primary",
+                        "label": "setting.option.primary"
+                    },
+                    {
+                        "value": "secondary",
+                        "label": "setting.option.secondary"
+                    },
+                    {
+                        "value": "neutral",
+                        "label": "setting.option.neutral"
+                    }
+                ]
+            }
+        }
+    ]
+}

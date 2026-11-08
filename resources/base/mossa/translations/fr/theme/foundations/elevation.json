@@ -1,0 +1,9 @@
+{
+    "theme.category.elevation.label": "Élévation",
+    "theme.category.elevation.description": "Ombres superposées pour surélever les surfaces sans modifier leur couleur sémantique.",
+    "theme.token.shadow-none.label": "Aucune ombre",
+    "theme.token.shadow-sm.label": "Ombre SM",
+    "theme.token.shadow-md.label": "Ombre MD",
+    "theme.token.shadow-lg.label": "Ombre LG",
+    "theme.token.shadow-xl.label": "Ombre XL"
+}

@@ -13,6 +13,7 @@ WORKDIR /app
 COPY package.json bun.lock tsconfig.base.json tsconfig.json build.ts ./
 COPY infra/bootstrap.ts infra/execution-support.ts ./infra/
 COPY packages/ ./packages/
+COPY resources/ ./resources/
 
 RUN bun install --frozen-lockfile
 RUN bunx tsc --build packages/runtimes/ulvia-provider-server

@@ -1,0 +1,260 @@
+<section
+    cms-query="ulvia/cms.installations:list-provider-installations as providers"
+    cms-query-listen="@page:ulvia--mossa--providers-mutation/lastSuccess/requestId"
+>
+    <div role="status" aria-live="polite" cms-condition="providers.activity === 'fetching'">
+        <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-reading-provider-configuration }}</h2>
+    </div>
+    <div cms-match="providers.outcome.kind">
+        <span cms-case='"none"' hidden></span>
+        <div cms-case='"error"' cms-match="providers.outcome.code">
+            <div role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-provider-configuration-unavailable }}</h2>
+                <p>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+            </div>
+        </div>
+        <div cms-case='"success"' part="workspace-content">
+            <div id="provider-installations" role="tabpanel">
+                <header part="section-header">
+                    <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-provider-installations }}</h2>
+                    <p>
+                        {{ providers.data.installations.length }}
+                        {{ cms.i18n.ulvia/mossa.ui-provider-installations }}
+                        {{ providers.data.selections.length }}
+                        {{ cms.i18n.ulvia/mossa.ui-selected-contracts }}
+                    </p>
+                </header>
+
+                <div cms-bloc="ulvia--mossa--list" role="list" cms-condition="providers.data.installations.length">
+                    <div
+                        cms-bloc="ulvia--mossa--list-item"
+                        density="compact"
+                        role="listitem"
+                        cms-repeat="providers.data.installations as installation"
+                        slot="items"
+                    >
+                        <h3 cms-bloc="ulvia--mossa--heading" size="xs" slot="title">{{ installation.providerId }}</h3>
+
+                        <a
+                            cms-bloc="ulvia--mossa--action"
+                            tone="secondary"
+                            variant="outline"
+                            size="sm"
+                            slot="body"
+                            href="/admin/providers/access?ulvia--mossa--provider-access-id={{ installation.id | urlencode }}"
+                            >{{
+                                cms.i18n.ulvia/mossa.ui-provider-access
+                            }}</a
+                        >
+                        <div cms-bloc="ulvia--mossa--badge" tone="success" cms-condition="installation.status === 'enabled'" slot="meta">
+                            <span slot="label">{{ cms.i18n.ulvia/mossa.ui-enabled }}</span>
+                        </div>
+                        <div cms-bloc="ulvia--mossa--badge" tone="neutral" cms-condition="installation.status === 'disabled'" slot="meta">
+                            <span slot="label">{{ cms.i18n.ulvia/mossa.ui-disabled }}</span>
+                        </div>
+                        <div cms-bloc="ulvia--mossa--badge" tone="danger" cms-condition="installation.status === 'revoked'" slot="meta">
+                            <span slot="label">{{ cms.i18n.ulvia/mossa.ui-revoke }}</span>
+                        </div>
+                        <span slot="meta"> {{ installation.selectionCount }} {{ cms.i18n.ulvia/mossa.ui-selected-contracts }} </span>
+                        <details slot="body">
+                            <summary>{{ cms.i18n.ulvia/mossa.ui-technical-details }}</summary>
+                            <div>
+                                <p><strong>{{ cms.i18n.ulvia/mossa.ui-provider-account }}</strong></p>
+                                <p><code>{{ installation.accountId }}</code></p>
+                                <p><strong>{{ cms.i18n.ulvia/mossa.ui-installation-id }}</strong></p>
+                                <p><code>{{ installation.id }}</code></p>
+                                <p><strong>{{ cms.i18n.ulvia/mossa.ui-endpoint }}</strong></p>
+                                <p><code>{{ installation.endpoint }}</code></p>
+                                <p><strong>{{ cms.i18n.ulvia/mossa.ui-manifest }}</strong> {{ installation.manifestVersion }}</p>
+                            </div>
+                        </details>
+                        <p slot="body" role="note" cms-condition="installation.selectionCount > 0">
+                            {{ cms.i18n.ulvia/mossa.ui-reroute-selected-contracts-before-changing-this-provider }}
+                        </p>
+                        <div cms-bloc="ulvia--mossa--cluster" justify="end" items-align="center" slot="actions">
+                            <div slot="items" cms-condition="installation.status === 'enabled'">
+                                <form
+                                    cms-mutation="ulvia/cms.installations:set-provider-status as mutation"
+                                    cms-sync="@page:ulvia--mossa--providers-mutation"
+                                    cms-sync-select="lastSuccess.requestId"
+                                >
+                                    <input type="hidden" name="installationId" value="{{ installation.id }}">
+                                    <input type="hidden" name="expectedRevision" value="{{ installation.revision }}" cms-form-value-type="number">
+                                    <input type="hidden" name="action" value="disable">
+                                    <button
+                                        cms-bloc="ulvia--mossa--action"
+                                        size="sm"
+                                        tone="secondary"
+                                        variant="outline"
+                                        disabled="{{ installation.selectionCount > 0 }}"
+                                        type="submit"
+                                    >
+                                        <span>
+                                            {{ cms.i18n.ulvia/mossa.ui-disable }}
+                                        </span>
+                                    </button>
+
+                                    <p role="status" aria-live="polite" cms-condition="mutation.activity === 'submitting'">
+                                        {{ cms.i18n.ulvia/mossa.ui-working }}
+                                    </p>
+                                    <p role="alert" cms-condition="mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure'">
+                                        {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                                    </p>
+                                    <div cms-match="mutation.outcome.kind">
+                                        <span cms-case='"none"' hidden></span>
+                                        <span cms-case='"success"' hidden></span>
+                                        <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        </div>
+                                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                    </div>
+                                </form>
+                            </div>
+                            <div slot="items" cms-condition="installation.status === 'disabled'">
+                                <form
+                                    cms-mutation="ulvia/cms.installations:set-provider-status as mutation"
+                                    cms-sync="@page:ulvia--mossa--providers-mutation"
+                                    cms-sync-select="lastSuccess.requestId"
+                                >
+                                    <input type="hidden" name="installationId" value="{{ installation.id }}">
+                                    <input type="hidden" name="expectedRevision" value="{{ installation.revision }}" cms-form-value-type="number">
+                                    <input type="hidden" name="action" value="enable">
+                                    <button cms-bloc="ulvia--mossa--action" size="sm" tone="primary" variant="filled" type="submit">
+                                        <span>{{ cms.i18n.ulvia/mossa.ui-enable }}</span>
+                                    </button>
+
+                                    <p role="status" aria-live="polite" cms-condition="mutation.activity === 'submitting'">
+                                        {{ cms.i18n.ulvia/mossa.ui-working }}
+                                    </p>
+                                    <p role="alert" cms-condition="mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure'">
+                                        {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                                    </p>
+                                    <div cms-match="mutation.outcome.kind">
+                                        <span cms-case='"none"' hidden></span>
+                                        <span cms-case='"success"' hidden></span>
+                                        <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        </div>
+                                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <details slot="body" cms-condition="installation.status !== 'revoked'">
+                            <summary>{{ cms.i18n.ulvia/mossa.ui-revoke }}</summary>
+                            <p>{{ cms.i18n.ulvia/mossa.ui-revocation-is-terminal-and-deletes-stored-credentials }}</p>
+                            <form
+                                cms-mutation="ulvia/cms.installations:set-provider-status as mutation"
+                                cms-sync="@page:ulvia--mossa--providers-mutation"
+                                cms-sync-select="lastSuccess.requestId"
+                            >
+                                <input type="hidden" name="installationId" value="{{ installation.id }}">
+                                <input type="hidden" name="expectedRevision" value="{{ installation.revision }}" cms-form-value-type="number">
+                                <input type="hidden" name="action" value="revoke">
+                                <button
+                                    cms-bloc="ulvia--mossa--action"
+                                    size="sm"
+                                    tone="danger"
+                                    variant="filled"
+                                    disabled="{{ installation.selectionCount > 0 }}"
+                                    type="submit"
+                                >
+                                    <span>
+                                        {{ cms.i18n.ulvia/mossa.ui-revoke }}
+                                    </span>
+                                </button>
+
+                                <p role="status" aria-live="polite" cms-condition="mutation.activity === 'submitting'">{{ cms.i18n.ulvia/mossa.ui-working }}</p>
+                                <p role="alert" cms-condition="mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure'">
+                                    {{ cms.i18n.ulvia/mossa.ui-request-failed }}
+                                </p>
+                                <div cms-match="mutation.outcome.kind">
+                                    <span cms-case='"none"' hidden></span>
+                                    <span cms-case='"success"' hidden></span>
+                                    <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                        <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                    </div>
+                                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+                                </div>
+                            </form>
+                        </details>
+                    </div>
+                </div>
+                <div cms-condition="providers.data.installations.length === 0" part="workspace-content">
+                    <p>{{ cms.i18n.ulvia/mossa.ui-no-provider-installation-has-been-approved }}</p>
+                </div>
+            </div>
+
+            <section part="routing" id="contract-routing" role="tabpanel">
+                <header part="section-header">
+                    <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-contract-routing }}</h2>
+                    <p>{{ cms.i18n.ulvia/mossa.ui-choose-an-exact-immutable-release }}</p>
+                </header>
+                <div part="routes">
+                    <p part="empty-state" cms-condition="providers.data.routes.length === 0">{{ cms.i18n.ulvia/mossa.ui-provider-route-empty }}</p>
+                    <section part="route" cms-repeat="providers.data.routes as route">
+                        <h3 cms-bloc="ulvia--mossa--heading" size="xs">{{ route.contractId }}</h3>
+                        <div part="options">
+                            <p cms-condition="route.options.length === 0">{{ cms.i18n.ulvia/mossa.ui-provider-route-empty }}</p>
+                            <div part="option" cms-repeat="route.options as option">
+                                <a
+                                    cms-bloc="ulvia--mossa--link-card"
+                                    cms-condition="option.status === 'ready'"
+                                    href="/admin/providers/upgrade?ulvia--mossa--contract={{ option.selection.contractId | urlencode }}&ulvia--mossa--installation={{ option.selection.installationId | urlencode }}&ulvia--mossa--version={{ option.selection.version | urlencode }}&ulvia--mossa--digest={{ option.selection.digest | urlencode }}"
+                                >
+                                    <span slot="title">{{ option.providerId }}</span>
+                                    <span slot="description">{{ cms.i18n.ulvia/mossa.ui-review-contract-upgrade }}</span>
+                                    <span slot="count">{{ option.selection.version }}</span>
+                                </a>
+                                <div
+                                    cms-bloc="ulvia--mossa--badge"
+                                    size="sm"
+                                    tone="success"
+                                    cms-condition="option.status === 'ready' && route.selectedInstallationId === option.selection.installationId && route.selectedDigest === option.selection.digest"
+                                >
+                                    <span slot="label">{{ cms.i18n.ulvia/mossa.ui-provider-route-current }}</span>
+                                </div>
+                                <div part="option-state" cms-condition="option.status !== 'ready'">
+                                    <p>{{ option.providerId }}</p>
+                                    <div cms-bloc="ulvia--mossa--badge" size="sm" tone="warning" cms-condition="option.status === 'setup-required'">
+                                        <span slot="label">{{ cms.i18n.ulvia/mossa.ui-provider-route-setup }}</span>
+                                    </div>
+                                    <div cms-bloc="ulvia--mossa--badge" size="sm" tone="neutral" cms-condition="option.status === 'unavailable'">
+                                        <span slot="label">{{ cms.i18n.ulvia/mossa.ui-provider-route-unavailable }}</span>
+                                    </div>
+                                </div>
+                                <details part="technical-details">
+                                    <summary>{{ cms.i18n.ulvia/mossa.ui-technical-details }}</summary>
+                                    <div part="technical-values">
+                                        <p><strong>{{ cms.i18n.ulvia/mossa.ui-provider-account }}</strong></p>
+                                        <p><code>{{ option.accountId }}</code></p>
+                                        <p><strong>{{ cms.i18n.ulvia/mossa.ui-installation-id }}</strong></p>
+                                        <p><code>{{ option.selection.installationId }}</code></p>
+                                        <p><strong>{{ cms.i18n.ulvia/mossa.ui-release-digest }}</strong></p>
+                                        <p><code>{{ option.selection.digest }}</code></p>
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </section>
+        </div>
+        <div role="alert" cms-case='"failure"'>
+            <h2 cms-bloc="ulvia--mossa--heading" size="sm">{{ cms.i18n.ulvia/mossa.ui-provider-configuration-unavailable }}</h2>
+            <p>{{ cms.i18n.ulvia/mossa.ui-request-failed }}</p>
+        </div>
+    </div>
+</section>

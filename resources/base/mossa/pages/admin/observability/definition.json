@@ -1,0 +1,14 @@
+{
+    "path": "/admin/observability",
+    "title": "page.observability.name",
+    "description": "page.observability.description",
+    "visible": true,
+    "indexing": false,
+    "requires": [
+        {
+            "contractId": "ulvia/cms.observability",
+            "capabilityId": "logs.query",
+            "versionRange": "^1.0.0"
+        }
+    ]
+}

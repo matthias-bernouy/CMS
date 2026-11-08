@@ -119,3 +119,12 @@ Ulvia CMS installation runtime.
   assets. Require one real H1 per document; paths identify documents. Preserve
   exact bytes through bootstrap, release, push and pull. Reject authored
   manifests, source symlinks and dangling capability or internal document links.
+
+- Official base ZIPs come from `resources/base/` through `@bernouy/resources/build`,
+  not from collection admission or installed views. Core-only images still ship these
+  inert ZIPs. Keep them outside the contract/provider publication index and never
+  publish them as versioned installable products.
+- The official generator captures its two source folders once per process, builds
+  canonical locale/profile combinations and retains at most 32 MiB of ZIP output.
+  Failures clear that pending snapshot. New CLI processes read fresh source bytes.
+  Tests/builds that compile these sources use `bun --no-macros`.

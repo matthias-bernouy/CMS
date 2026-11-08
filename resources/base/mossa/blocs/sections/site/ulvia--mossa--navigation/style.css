@@ -1,0 +1,84 @@
+:scope {
+    display: block;
+    color: var(--ulvia--mossa--text-primary);
+    background: var(--ulvia--mossa--background-base);
+    font-family: var(--ulvia--mossa--font-family-main, inherit);
+    container-type: inline-size;
+}
+[part~="header"] {
+    border-block-end: var(--ulvia--mossa--border-width, 1px) solid var(--ulvia--mossa--border-subtle);
+}
+[part~="navigation"] {
+    display: flex;
+    width: min(100% - (2 * var(--ulvia--mossa--page-gutter, 1rem)), var(--ulvia--mossa--content-width-xl, 88rem));
+    min-height: var(--ulvia--mossa--control-height-lg, 3.25rem);
+    margin-inline: auto;
+    align-items: center;
+    gap: var(--ulvia--mossa--spacing-xl, 2rem);
+    padding-block: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}
+[part~="navigation"] > [part~="brand"] {
+    font-family: var(--ulvia--mossa--font-family-secondary, inherit);
+    font-size: var(--ulvia--mossa--font-size-lg, 1.125rem);
+    font-weight: var(--ulvia--mossa--font-weight-bold, 700);
+}
+[part~="navigation"] > [part~="links"] {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: var(--ulvia--mossa--spacing-md, 1rem);
+    justify-content: center;
+}
+[part~="navigation"] > [part~="actions"] {
+    display: flex;
+    gap: var(--ulvia--mossa--spacing-sm, 0.75rem);
+}
+[part~="links"] {
+    margin: 0;
+}
+:scope[surface="subtle"] {
+    background: var(--ulvia--mossa--background-subtle);
+}
+:scope[surface="inverse"] {
+    color: var(--ulvia--mossa--text-inverse);
+    background: var(--ulvia--mossa--background-inverse);
+}
+:scope[sticky] {
+    position: sticky;
+    z-index: 10;
+    top: 0;
+}
+@container (max-width: 56rem) {
+    [part~="navigation"] {
+        flex-wrap: wrap;
+    }
+    [part~="navigation"] > [part~="links"] {
+        order: 3;
+        width: 100%;
+        flex-basis: 100%;
+        justify-content: flex-start;
+    }
+    [part~="navigation"] > [part~="actions"] {
+        margin-inline-start: auto;
+    }
+}
+@container (max-width: 30rem) {
+    [part~="navigation"] {
+        gap: var(--ulvia--mossa--spacing-md, 1rem);
+    }
+    [part~="navigation"] > [part~="brand"],
+    [part~="navigation"] > [part~="actions"] {
+        width: 100%;
+    }
+    [part~="navigation"] > [part~="actions"] {
+        margin-inline-start: 0;
+    }
+    [part~="navigation"] > [part~="actions"] > * {
+        width: 100%;
+    }
+    [part~="navigation"] > [part~="links"] {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--ulvia--mossa--spacing-xs, 0.5rem);
+    }
+}

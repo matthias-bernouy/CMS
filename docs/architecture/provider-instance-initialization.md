@@ -78,7 +78,8 @@ A Repository can start before its own Edge or public catalogue exists; API
 authentication and publication then work without a browser login Page.
 
 Production images generate `bun run generate:official-bootstrap --core-only`
-and omit authored collections and starter assets. There is no required ZIP.
+and omit authored collections. They ship localized inert base ZIPs; provisioning
+and empty setup do not open those files.
 The full generator includes the current Mossa and Repository `1.2.0` releases
 for explicit publication, authoring and example tests. Historical profile references
 remain advertised, but provisioning an old profile requires an explicit snapshot
@@ -109,8 +110,8 @@ The administrator chooses an empty site or the local base resource ZIP. Empty
 completion makes no base-file or remote Repository request. Base source files
 are `resources/<profile>/<locale>.zip` with an exact `.zip.sha256` sidecar under
 the image-owned bootstrap root; canonical locale, language and English are tried
-in that order. Missing files refuse base review. ZIP production/shipping remains
-an explicit transition task; the current generator still emits legacy collections.
+in that order. Missing files refuse base review. The CLI compiles ordinary sources under `resources/base/` into these ZIPs, including
+in core-only images. Its full snapshot temporarily also emits legacy collections.
 This API does not discover, install or select a versioned resource product.
 
 Review verifies archive integrity and counts, selected execution, normalized Page

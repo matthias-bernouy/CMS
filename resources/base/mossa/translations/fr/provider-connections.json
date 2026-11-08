@@ -1,0 +1,6 @@
+{
+    "page.provider-connect.name": "Connecter un Provider",
+    "page.provider-connect.description": "Choisissez une release, importez-la, puis vérifiez et approuvez le compte du Provider distant.",
+    "page.provider-access.name": "Autorisations du Provider",
+    "page.provider-access.description": "L’appairage configure le retour vers le CMS ; les accès suivent les dépendances du manifeste approuvé."
+}

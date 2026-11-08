@@ -1,0 +1,39 @@
+{
+    "path": "/admin/pages/detail",
+    "title": "page.page-details.name",
+    "description": "page.page-details.description",
+    "visible": true,
+    "indexing": false,
+    "requires": [
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "pages.delete",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "pages.get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "pages.publish",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "pages.update",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "pages.update-route",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia/cms.content",
+            "capabilityId": "pages.update-seo",
+            "versionRange": "^1.0.0"
+        }
+    ]
+}

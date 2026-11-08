@@ -1,0 +1,126 @@
+{
+    "id": "ulvia--mossa--section",
+    "kind": "component",
+    "name": "bloc.section.label",
+    "group": "bloc.category.layout",
+    "categories": ["bloc.category.layout"],
+    "description": "bloc.section.description",
+    "uses": ["ulvia--mossa--heading", "ulvia--mossa--prose"],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["section", "article", "aside", "nav", "header", "footer", "main", "div"]
+    },
+    "catalogueOrder": 10,
+    "settings": [
+        {
+            "id": "surface",
+            "label": "setting.surface.label",
+            "group": "setting.group.appearance",
+            "type": "string",
+            "default": "base",
+            "maxLength": 7,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "base",
+                        "label": "setting.option.base"
+                    },
+                    {
+                        "value": "subtle",
+                        "label": "setting.option.subtle"
+                    },
+                    {
+                        "value": "inverse",
+                        "label": "setting.option.inverse"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "width",
+            "label": "setting.width.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "lg",
+            "maxLength": 4,
+            "control": {
+                "kind": "select",
+                "options": [
+                    {
+                        "value": "sm",
+                        "label": "setting.option.width-sm"
+                    },
+                    {
+                        "value": "md",
+                        "label": "setting.option.width-md"
+                    },
+                    {
+                        "value": "lg",
+                        "label": "setting.option.width-lg"
+                    },
+                    {
+                        "value": "xl",
+                        "label": "setting.option.width-xl"
+                    },
+                    {
+                        "value": "full",
+                        "label": "setting.option.width-full"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "spacing",
+            "label": "setting.spacing.label",
+            "group": "setting.group.layout",
+            "type": "string",
+            "default": "md",
+            "maxLength": 4,
+            "control": {
+                "kind": "segmented",
+                "options": [
+                    {
+                        "value": "none",
+                        "label": "setting.option.none"
+                    },
+                    {
+                        "value": "sm",
+                        "label": "setting.option.small"
+                    },
+                    {
+                        "value": "md",
+                        "label": "setting.option.medium"
+                    },
+                    {
+                        "value": "lg",
+                        "label": "setting.option.large"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "viewport-height",
+            "label": "setting.viewport-height.label",
+            "group": "setting.group.layout",
+            "type": "boolean",
+            "default": false,
+            "control": {
+                "kind": "toggle"
+            }
+        }
+    ]
+}
