@@ -1,3 +1,8 @@
+import type {
+    ContractPublication,
+    ProviderManifestPublication,
+    ArtifactPublication,
+} from "cms-repository/application/authoring/interfaces/AuthoringDtos";
 import {
     CollectionAuthoring,
     CollectionPreparationError,
@@ -33,7 +38,14 @@ export class RepositoryAuthoring extends CollectionAuthoring {
             throw new CollectionPreparationError(message, [{ code: `${kind}.invalid`, severity: "error", message }]);
         }
     }
-    publishArtifact(kind: AuthoredArtifactKind, id: string, expectedDigest: string) {
+    publishArtifact(kind: "contract", id: string, expectedDigest: string): Promise<ContractPublication>;
+    publishArtifact(
+        kind: "provider-manifest",
+        id: string,
+        expectedDigest: string,
+    ): Promise<ProviderManifestPublication>;
+    publishArtifact(kind: AuthoredArtifactKind, id: string, expectedDigest: string): Promise<ArtifactPublication>;
+    publishArtifact(kind: AuthoredArtifactKind, id: string, expectedDigest: string): Promise<ArtifactPublication> {
         return publishPreparedArtifact(this.host, this.publisher, kind, id, expectedDigest);
     }
     async artifactSources(kind: AuthoredArtifactKind, namespace: string, id: string, version: string) {

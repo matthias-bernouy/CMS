@@ -1,3 +1,5 @@
+import { CollectionPublicationRecoveryError } from "@bernouy/cms-repository/repository/authoring";
+import { RepositoryRequestError } from "@bernouy/cms-repository/repository/publication";
 import { CmsFilesError } from "@bernouy/cms-files";
 import type { CapabilityFailure } from "@bernouy/ulvia-sdk";
 import type { CapabilityFailurePresentation, CapabilityFailurePresentationContext } from "@bernouy/ulvia-sdk/provider";
@@ -9,6 +11,14 @@ export function formatOfficialCapabilityFailure(
     failure: CapabilityFailure,
     { contractId, status, invocation }: CapabilityFailurePresentationContext,
 ): CapabilityFailurePresentation {
+    if (
+        contractId === "ulvia/cms.authoring" &&
+        (failure.cause instanceof CollectionPublicationRecoveryError ||
+            (failure.cause instanceof RepositoryRequestError && failure.cause.publicationCode))
+    ) {
+        // These typed publication outcomes carry deliberately public recovery/evolution instructions.
+        return { output: failure.output };
+    }
     const localized = localizeOfficialError(
         officialFailure(
             failure.code,

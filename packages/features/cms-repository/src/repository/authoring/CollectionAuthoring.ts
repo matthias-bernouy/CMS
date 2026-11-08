@@ -1,3 +1,6 @@
+import type { RepositoryConnectionStatus } from "cms-repository/application/authoring/interfaces/AuthoringDtos";
+export type { RepositoryConnectionStatus } from "cms-repository/application/authoring/interfaces/AuthoringDtos";
+import type { RepositoryNamespaceView } from "cms-repository/repository/namespaces/accounts/interfaces";
 import type { NamespaceInventoryQuery, NamespaceInventoryPage } from "./namespaces";
 import { join } from "node:path";
 import { RepositorySourceClient } from "../sources/client";
@@ -15,12 +18,6 @@ export {
 import type { RepositoryNamespaceCredential } from "cms-repository/repository/publication/transport/credentials";
 import { discardPreparationWorkspace } from "./preparations/workspace";
 
-export interface RepositoryConnectionStatus {
-    readonly configured: boolean;
-    readonly repositoryUrl: string;
-    readonly repositoryId: string | null;
-}
-
 export interface CollectionPublisher {
     readonly repositoryUrl: string;
     readonly repositorySourceId: string;
@@ -30,7 +27,7 @@ export interface CollectionPublisher {
     configureConnection(token: string): Promise<RepositoryConnectionStatus>;
     disconnectConnection(): Promise<RepositoryConnectionStatus>;
     listNamespaces(input?: NamespaceInventoryQuery): Promise<NamespaceInventoryPage>;
-    claim(namespace: string): Promise<unknown>;
+    claim(namespace: string): Promise<RepositoryNamespaceView>;
 }
 
 export class CollectionAuthoring {

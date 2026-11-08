@@ -1,3 +1,4 @@
+import { authoringImplementation } from "./implementations/authoring";
 import { contentImplementation } from "./implementations/content";
 import { accessImplementation } from "./implementations/access";
 import { observabilityImplementation } from "./implementations/observability";
@@ -10,6 +11,7 @@ export const officialFeatureImplementations = Object.freeze([
     smtpEmailerImplementation,
     accessImplementation,
     contentImplementation,
+    authoringImplementation,
     secretsImplementation,
     filesImplementation,
     observabilityImplementation,

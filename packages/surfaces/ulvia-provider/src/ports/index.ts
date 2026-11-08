@@ -8,7 +8,7 @@ import type { GatewayDelegationAuthority } from "@bernouy/cms-gateway/access/del
 import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
 import type { ProviderAccess } from "@bernouy/cms-gateway/access/providers";
 import type { ProviderAdministration } from "./providers";
-import type { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
+import type { AuthoringServices, AuthoringService } from "@bernouy/cms-repository/features/authoring";
 import type { AccessServices } from "@bernouy/cms-auth/feature";
 import type { CollectionUpgradeService } from "@bernouy/cms-repository/collections/installations";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
@@ -38,14 +38,20 @@ export interface CmsContentDependencies
 export interface CmsCollectionDependencies {
     readonly documentation?: CmsDocumentation;
     readonly repositoryDiscovery?: RepositoryDiscovery;
-    readonly authoring?: RepositoryAuthoring;
+    readonly authoring?: AuthoringService;
     readonly collections: CollectionStore;
     readonly collectionUpgrades: CollectionUpgradeService;
 }
 
 /** Ports supplied by the runtime for SDK feature implementations. */
 export type UlviaProviderFeatureServices = Partial<
-    SmtpEmailerServices & SecretsServices & FilesServices & ObservabilityServices & AccessServices & ContentServices
+    SmtpEmailerServices &
+        SecretsServices &
+        FilesServices &
+        ObservabilityServices &
+        AccessServices &
+        ContentServices &
+        AuthoringServices
 >;
 
 export type UlviaProviderDependencies = CmsContentDependencies &

@@ -1,7 +1,6 @@
-export interface RepositorySourceSnapshot {
-    readonly sourceJson: string;
-    readonly releaseDigest: string;
-}
+import type { z } from "zod";
+import type { sourceSnapshotSchema } from "cms-repository/application/authoring/schemas/sources";
+export type RepositorySourceSnapshot = z.output<typeof sourceSnapshotSchema>;
 
 export type ArtifactSourceKind = "contract" | "provider-manifest";
 

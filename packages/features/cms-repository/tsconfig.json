@@ -39,6 +39,9 @@
         },
         {
             "path": "../../platform/providers"
+        },
+        {
+            "path": "../../platform/sdk"
         }
     ]
 }

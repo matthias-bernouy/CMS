@@ -1,17 +1,6 @@
-export interface NamespaceInventoryQuery {
-    readonly cursor?: string;
-    readonly limit?: number;
-    readonly namespace?: string;
-}
-export interface NamespaceAccess {
-    readonly namespace: string;
-    readonly repositoryId: string;
-    readonly access: "owned" | "suspended";
-    readonly revision: number;
-    readonly checkedAt: string;
-}
-export interface NamespaceInventoryPage {
-    readonly items: readonly NamespaceAccess[];
-    readonly nextCursor: string | null;
-}
+export type {
+    NamespaceInventoryQuery,
+    NamespaceInventoryPage,
+    NamespaceAccess,
+} from "cms-repository/application/authoring/interfaces/AuthoringDtos";
 export class NamespaceAccessError extends Error {}

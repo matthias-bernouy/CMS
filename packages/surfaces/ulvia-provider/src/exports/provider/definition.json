@@ -68,11 +68,6 @@
             ]
         },
         {
-            "contractId": "ulvia/cms.authoring",
-            "version": "1.0.0",
-            "requires": []
-        },
-        {
             "contractId": "ulvia/provider.connections",
             "version": "1.0.0",
             "requires": []

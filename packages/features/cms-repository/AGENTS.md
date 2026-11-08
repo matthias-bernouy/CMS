@@ -8,6 +8,7 @@ models and validation for CMS-owned installations and site selections.
 - Platform contract definitions, admission, bindings and compatibility live in
   `@bernouy/ulvia-contracts`; Provider models and generic validation live in
   `@bernouy/ulvia-providers`. Use their declared exports, never their source trees.
+- `src/application/authoring/` authors the `ulvia/cms.authoring` SDK feature through `./features/authoring`. Keep default execution, schemas and error classification here, ordinary docs in `docs/authoring/`, and domain workflows under `repository/`. The root export remains type-only. Service ports are structural and public DTOs derive from schemas.
 - `src/contracts/` retains catalogue publication, mutation interfaces and memory/Mongo
   persistence. Its `ReleaseCatalogue` extends the Platform read-only port.
 - `src/providers/` retains persistent catalogues/stores, connection and approval

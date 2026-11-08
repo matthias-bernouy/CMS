@@ -10,6 +10,7 @@ boundaries. Reports remain observations, never authority to approve new releases
 
 ## Layout
 
+- `application/`: SDK definitions for the package’s public API families.
 - `contracts/`: catalogue publication, write interface and memory/Mongo adapters.
 - `providers/`: persistent stores, administrative workflows, discovery and upgrades.
 - `collections/`: authored releases, resources, installation, projection and build tooling.
@@ -27,6 +28,7 @@ boundaries. Reports remain observations, never authority to approve new releases
 | `@bernouy/ulvia-contracts/schema` | Bounded schema vocabulary, parsing and value validation |
 | `@bernouy/ulvia-contracts/bindings` | Explicit HTTP/MCP binding types, exposure selection, HTTP plans and pure scalar codecs |
 | `@bernouy/ulvia-contracts/compatibility` | Release evolution and consumer-compatibility checks |
+| `@bernouy/cms-repository/features/authoring` | `authoringFeature`, default execution and structural service ports |
 | `@bernouy/cms-repository/contracts/catalogue` | Mutable release catalogue and deterministic in-memory implementation |
 | `@bernouy/cms-repository/contracts/mongo` | Mongo release artifacts and revisioned publication metadata |
 | `@bernouy/ulvia-contracts/protocol` | Strict I-JSON parsing, canonicalization and freezing primitives |
@@ -63,6 +65,18 @@ boundaries. Reports remain observations, never authority to approve new releases
 | `@bernouy/cms-repository/upgrades/mongo` | Durable upgrade plans, intents and write fences |
 | `@bernouy/cms-repository/repository/filesystem` | Reference immutable registry, streamed upload staging, local catalogues, yanks and download ports |
 | `@bernouy/cms-repository/repository/filesystem/lock` | Native filesystem leases without loading artifact parsers or publication services |
+
+`application/authoring/` authors `ulvia/cms.authoring`: schemas, grouped
+capabilities and the feature definition. `docs/authoring/` holds the ordinary
+Markdown sources scanned at build time. Runtime selection uses generated
+metadata and an injected `AuthoringService`; importing definitions never
+constructs a publisher, reads source files or starts preparation/publication.
+Public connection, namespace inventory and publication DTOs derive from schemas;
+private preparation records and ownership state retain their separate types.
+
+Invalid source preparation returns a successful diagnostic result. Expected
+publication recovery/evolution refusals retain their bounded public instructions;
+other exceptions remain private. HTTP localization belongs to the Provider surface.
 
 Use explicit domain subpaths for executable APIs. There are no compatibility
 packages or wrappers under the former package names.

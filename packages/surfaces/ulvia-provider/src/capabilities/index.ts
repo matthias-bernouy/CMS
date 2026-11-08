@@ -2,7 +2,6 @@ import type { ProviderCapabilityRegistry } from "../dispatch/registry";
 import type { UlviaProviderDependencies, UlviaProviderGateway, UlviaProviderManagement } from "../ports/index";
 import { createContentContributions } from "./features/services/content";
 import { registerOfficialFeatures } from "./features";
-import { registerAuthoringCapabilities } from "./installations/authoring/index";
 import { registerInstallationCapabilities } from "./installations/index";
 import type { CollectionSources } from "./installations/sources/index";
 import type { ProviderOperationExecutor } from "../operations/ProviderOperationExecutor";
@@ -17,10 +16,6 @@ export async function registerOfficialProviderCapabilities(
     enabledContracts?: readonly ImplementationRelease[],
     featureOptions?: ProviderRegistrationOptions,
 ): Promise<void> {
-    const enabledContractIds = new Set(enabledContracts?.map(({ contractId }) => contractId));
-    if (enabledContractIds.has("ulvia/cms.authoring")) {
-        registerAuthoringCapabilities(dispatcher, dependencies.authoring);
-    }
     registerInstallationCapabilities(
         dispatcher,
         dependencies,

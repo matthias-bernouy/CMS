@@ -3,8 +3,8 @@ import { CapabilityMcpBinding, capabilityToolName } from "@bernouy/cms-gateway/m
 import type { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import { CollectionPublicationRecoveryError } from "@bernouy/cms-repository/repository/authoring";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerAuthoringCapabilities } from "../../../src/capabilities/installations/authoring/index";
-import { officialContract, resolvedContract, invokeHttp } from "../messages/fixtures";
+import { mountAuthoringForTest } from "./mount";
+import { officialContract, resolvedContract, invokeHttp } from "../../execution/messages/fixtures";
 
 const preparationId = "c9ddc861-4e76-48cb-8188-7cfa4a94a11d";
 const digest = `sha256:${"a".repeat(64)}`;
@@ -27,7 +27,7 @@ test.each(["contract", "provider-manifest"] as const)(
             publishArtifact: async () => ({ ...coordinate, kind, digest, repositoryId: "local", added: true }),
             artifactSources: async () => ({ sourceJson: "{}", releaseDigest: digest }),
         } as unknown as RepositoryAuthoring;
-        registerAuthoringCapabilities(dispatcher, fake);
+        await mountAuthoringForTest(dispatcher, fake);
         const prepare = await invokeHttp(contract, dispatcher, `prepare-${kind}`, { sourceJson: "{}" });
         expect(prepare.status).toBe(200);
         expect(await prepare.json()).toMatchObject({
@@ -88,7 +88,7 @@ test.each(["contract", "provider-manifest"] as const)(
     "%s source-retention recovery retains its exact capability-specific retry instruction",
     async (kind) => {
         const dispatcher = new DefaultProviderCapabilityDispatcher();
-        registerAuthoringCapabilities(dispatcher, {
+        await mountAuthoringForTest(dispatcher, {
             publishArtifact: async () => {
                 throw new CollectionPublicationRecoveryError(
                     preparationId,

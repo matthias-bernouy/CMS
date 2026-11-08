@@ -1,3 +1,4 @@
+import type { ArtifactPublication } from "cms-repository/application/authoring/interfaces/AuthoringDtos";
 import { join } from "node:path";
 import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { RepositoryRequestError } from "../../core/errors";
@@ -20,7 +21,7 @@ export async function publishPreparedArtifact(
     kind: AuthoredArtifactKind,
     id: string,
     expectedDigest: string,
-) {
+): Promise<ArtifactPublication> {
     const { path, prepared } = await readArtifactPreparation(host.root, kind, id, expectedDigest);
     const credential = await publisher.credential(prepared.publisherId);
     if (
@@ -88,13 +89,14 @@ export async function publishPreparedArtifact(
     } catch (error) {
         throw new CollectionPublicationRecoveryError(id, expectedDigest, "sources-pending", { cause: error }, kind);
     }
-    return {
+    const common = {
         added,
         digest: expectedDigest,
-        kind,
         repositoryId: publisher.repositorySourceId,
         publisherId: prepared.publisherId,
         version: prepared.version,
-        ...(kind === "contract" ? { contractId: prepared.id } : { providerId: prepared.id }),
     };
+    return kind === "contract"
+        ? { ...common, kind, contractId: prepared.id }
+        : { ...common, kind, providerId: prepared.id };
 }

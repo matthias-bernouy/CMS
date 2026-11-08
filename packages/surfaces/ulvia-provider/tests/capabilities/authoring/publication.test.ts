@@ -3,14 +3,14 @@ import { CollectionPublicationRecoveryError } from "@bernouy/cms-repository/repo
 import type { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import { RepositoryRequestError } from "@bernouy/cms-repository/repository/publication";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerAuthoringCapabilities } from "../../../src/capabilities/installations/authoring/index";
-import { resolvedContract, invokeHttp } from "../messages/fixtures";
+import { mountAuthoringForTest } from "./mount";
+import { resolvedContract, invokeHttp } from "../../execution/messages/fixtures";
 
 const id = "c9ddc861-4e76-48cb-8188-7cfa4a94a11d";
 const digest = `sha256:${"a".repeat(64)}`;
 async function rejectedPublication(failure: Error) {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerAuthoringCapabilities(dispatcher, {
+    await mountAuthoringForTest(dispatcher, {
         publish: async () => {
             throw failure;
         },

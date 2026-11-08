@@ -130,9 +130,11 @@
         "@bernouy/text-search": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
         "css-tree": "^3.2.1",
         "htmlparser2": "^12.0.0",
         "linkedom": "^0.18.15",
+        "zod": "4.6.7",
       },
       "devDependencies": {
         "@bernouy/text-embeddings": "workspace:*",
