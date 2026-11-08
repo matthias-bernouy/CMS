@@ -1,4 +1,4 @@
-import { createBlocScope } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/content/browser";
 
 const COMPACT_BREAKPOINT_REM = 56;
 

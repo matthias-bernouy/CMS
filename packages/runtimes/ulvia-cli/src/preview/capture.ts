@@ -1,7 +1,7 @@
 import { serveExampleFiles } from "./server";
 import { chromium } from "playwright";
 import { join } from "node:path";
-import type { CollectionExampleFrame } from "@bernouy/cms-repository/collections/build";
+import type { CollectionExampleFrame } from "@bernouy/repository/collections/build";
 
 /** Disposable browser contexts and an exact in-memory file map; no remote network access. */
 export async function captureCollectionExamples(

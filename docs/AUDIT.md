@@ -34,7 +34,7 @@ generic MCP binding are planned work, not implemented features of this revision.
 
 There are 22 workspace packages: eight Foundation, eight features, two surfaces
 and four runtimes. See the [package map](architecture/packages.md) for their
-names and responsibilities. SEO belongs to `cms-content`; there is no separate
+names and responsibilities. SEO belongs to `content`; there is no separate
 `cms-seo` package.
 
 The authored official tree contains eight contract definitions, one Provider
@@ -95,7 +95,7 @@ has no entry or byte ceiling. Expiration revalidates rather than removes
 entries, including missing paths. A controlled probe retained 5,000 distinct
 missing-path snapshots. Bound memory, pending work and negative caching.
 
-[Page render inputs](../packages/features/cms-content/src/application/core/pageRenderInputs.ts)
+[Page render inputs](../packages/features/content/src/application/core/pageRenderInputs.ts)
 load the complete renderable Bloc catalogue. Provider delivery then includes
 its behavior sources and collection text catalogues. A controlled empty-Page
 fixture grew from 958 to 4,198,847 serialized bytes after adding 1,000 unused

@@ -2,8 +2,8 @@ import { expect, test } from "bun:test";
 import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { join, dirname, resolve } from "node:path";
 import { tmpdir } from "node:os";
-import { parseSourceSnapshot } from "@bernouy/cms-repository/repository/authoring";
-import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
+import { parseSourceSnapshot } from "@bernouy/repository/repository/authoring";
+import { prepareCollectionRelease } from "@bernouy/repository/collections/build";
 
 test("the complete collection snapshot printed in the contract guide builds without hidden fixture files", async () => {
     const path = resolve(

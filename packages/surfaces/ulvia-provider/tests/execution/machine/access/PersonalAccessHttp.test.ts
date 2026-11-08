@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { InMemoryPatRepository, InMemoryUsersRepository } from "@bernouy/cms-auth";
+import { InMemoryPatRepository, InMemoryUsersRepository } from "@bernouy/auth";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import { NOOP_LOGGER } from "@bernouy/logging";

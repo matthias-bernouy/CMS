@@ -1,4 +1,4 @@
-import { mutationFormRequest, createBlocScope } from "@bernouy/cms-content/browser";
+import { mutationFormRequest, createBlocScope } from "@bernouy/content/browser";
 
 class Controller {
     private readonly scope: ReturnType<typeof createBlocScope>;

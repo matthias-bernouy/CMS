@@ -1,11 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
+import { admitCollectionRelease } from "@bernouy/repository/collections";
+import type { CollectionRepositorySource } from "@bernouy/repository/collections/sources";
 import { admitContractBundleJson, parseContractReleaseJson } from "@bernouy/ulvia-contracts";
-import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
-import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
+import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/repository/providers/sources";
 
 const ROOT = resolve(import.meta.dir, "../../../../ulvia-cli/dist/bootstrap");
 

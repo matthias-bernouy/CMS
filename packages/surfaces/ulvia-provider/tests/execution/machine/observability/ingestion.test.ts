@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { CmsObservability } from "@bernouy/cms-observability";
+import { CmsObservability } from "@bernouy/observability";
 import { PROVIDER_TOKEN } from "../../../ulviaProviderFixture";
 import { entry, observabilityFixture } from "./fixture";
 

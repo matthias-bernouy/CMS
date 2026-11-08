@@ -1,5 +1,5 @@
 import { join, resolve } from "node:path";
-import { LocalArtifactFiles } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalArtifactFiles } from "@bernouy/repository/repository/filesystem";
 import { writeAuthoredContractFixture } from "../../authoredContractFixture";
 import { expect, test } from "bun:test";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";

@@ -4,8 +4,8 @@ import {
     InMemoryDelegationStore,
     type DelegationActor,
 } from "@bernouy/cms-gateway/access/delegation";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
+import { InMemoryProviderManifestCatalogue } from "@bernouy/repository/providers/catalogue";
 import { planContractSelections } from "@bernouy/ulvia-providers/selections";
 import { gatewayRoute } from "../../fixtures";
 

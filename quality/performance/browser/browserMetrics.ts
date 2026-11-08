@@ -5,7 +5,7 @@ import { assertMaximum } from "../benchmark";
 
 export const BINDING_CORE = join(
     import.meta.dir,
-    "../../../packages/features/cms-content/dist/runtime-assets/binding-core.js",
+    "../../../packages/features/content/dist/runtime-assets/binding-core.js",
 );
 
 export async function reportBundleSize(): Promise<void> {

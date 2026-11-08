@@ -1,7 +1,7 @@
 import { mountInstallations } from "../execution/installations/mount";
 import { expect, test } from "bun:test";
-import { HttpRepositoryDiscovery } from "@bernouy/cms-repository/repository/search/http";
-import { RepositoryDiscovery } from "@bernouy/cms-repository/repository/search";
+import { HttpRepositoryDiscovery } from "@bernouy/repository/repository/search/http";
+import { RepositoryDiscovery } from "@bernouy/repository/repository/search";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { resolvedContract, invokeHttp } from "../execution/messages/fixtures";
 

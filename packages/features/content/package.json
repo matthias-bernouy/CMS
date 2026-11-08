@@ -1,0 +1,48 @@
+{
+    "name": "@bernouy/content",
+    "version": "1.0.0",
+    "description": "CMS-owned pages, blocs, settings, bindings, persistence, and rendering.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./bindings": "./src/exports/bindings.ts",
+        "./browser": "./src/exports/runtime/browser.ts",
+        "./runtime-abi": "./src/exports/runtime/abi.ts",
+        "./runtime-assets": "./src/exports/runtime/assets.ts",
+        "./runtime-assets/build": "./src/exports/runtime/assets-build.ts",
+        "./browser/dom": "./src/exports/runtime/browser-dom.ts",
+        "./rendering": "./src/exports/rendering.ts",
+        "./http": "./src/exports/runtime/http.ts",
+        "./theme": "./src/exports/theme.ts",
+        "./page-path": "./src/exports/pages/path.ts",
+        "./page-document": "./src/exports/pages/document.ts",
+        "./seo": "./src/pages/seo/exports/index.ts",
+        "./seo/http": "./src/pages/seo/exports/http.ts",
+        "./mongo": "./src/exports/mongo.ts",
+        "./public-delivery": "./src/exports/runtime/public-delivery.ts",
+        "./feature": "./src/application/feature.ts"
+    },
+    "scripts": {
+        "build:browser": "bun run src/runtime-assets/build.ts"
+    },
+    "devDependencies": {
+        "@bernouy/cms-gateway": "workspace:*",
+        "@happy-dom/global-registrator": "^21.0.4",
+        "@types/bun": "1.4.4"
+    },
+    "dependencies": {
+        "@bernouy/blob-store": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*",
+        "linkedom": "^0.18.15",
+        "@bernouy/resource-identity": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "zod": "4.6.7"
+    },
+    "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^7.0.2"
+    }
+}

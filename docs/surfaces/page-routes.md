@@ -1,9 +1,9 @@
 # Page languages and routes
 
-Page content and route persistence belong to `@bernouy/cms-content`. Provider
+Page content and route persistence belong to `@bernouy/content`. Provider
 capabilities expose authoring operations; Content renders Pages and Edge
 forwards their native resource responses. This guide describes that content repository, not the
-contract/provider `cms-repository` package.
+contract/provider `repository` package.
 
 One page record owns its content and stable ID. Its `paths` map stores a local
 path for each configured site language. The default language uses the site

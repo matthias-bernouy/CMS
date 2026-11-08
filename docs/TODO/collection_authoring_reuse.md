@@ -48,7 +48,7 @@ will not resolve that failure.
   no network, latency or runtime performance improvement has been measured.
 - Internal wrapper parts collided with projected slot names during styling.
   The renderer deliberately adds consumed slot names to projected element parts;
-  see [slot projection](../../packages/features/cms-content/src/blocs/core/composition/expandCompositions.ts).
+  see [slot projection](../../packages/features/content/src/blocs/core/composition/expandCompositions.ts).
 - A patch publication containing interface additions failed as HTTP 503. A
   minor version resolved the refusal. The agent chose the wrong version, while
   the error feedback obscured the actual collection evolution constraint.
@@ -70,7 +70,7 @@ These are editorial/refactoring tasks, separate from changes to generic CMS code
   at the intended source of truth; an alias in one direction does not recolor
   an official Action that consumes a different token.
 - [ ] Decide theme scope before changing shared official values. Current
-  [theme CSS](../../packages/features/cms-content/src/theme/core/css.ts) emits root
+  [theme CSS](../../packages/features/content/src/theme/core/css.ts) emits root
   declarations; check public Pages and administration consumers. Do not assume
   independent per-surface themes already exist or add that mechanism prematurely.
 - [ ] Store the portrait and programme PDF as site files and update Page media
@@ -113,8 +113,8 @@ a collection upgrade does not automatically rewrite authored Page HTML.
   If the previous release cannot be inspected, report incomplete preflight.
 - [ ] Preserve existing evolution rules: patch releases change implementations
   only, and incompatible retained resources require new identities. See
-  [publication evolution](../../packages/features/cms-repository/src/collections/core/admission/evolution.ts)
-  and [authoring preparation/publication](../../packages/features/cms-repository/src/repository/authoring/CollectionAuthoring.ts).
+  [publication evolution](../../packages/features/repository/src/collections/core/admission/evolution.ts)
+  and [authoring preparation/publication](../../packages/features/repository/src/repository/authoring/CollectionAuthoring.ts).
 
 ### Priority 2: Architecture Feedback And Provenance
 

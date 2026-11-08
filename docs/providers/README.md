@@ -1,6 +1,6 @@
 # Repository And Gateway Flows
 
-`@bernouy/cms-repository` describes and validates artifacts and site choices.
+`@bernouy/repository` describes and validates artifacts and site choices.
 `@bernouy/cms-gateway` executes selected capabilities. Runtimes supply storage,
 network access, secrets and trusted actors; the Edge mounts the site HTTP
 entry points.
@@ -22,10 +22,10 @@ planning validates proposed choices against catalogue and installation revisions
 Runtime observations describe live state; they cannot approve a manifest or
 change the site's selection.
 
-These APIs exist in explicit `cms-repository/contracts`, `/providers` and
+These APIs exist in explicit `repository/contracts`, `/providers` and
 `/collections` subpaths. Mongo adapters use `/contracts/mongo` and
 `/providers/mongo`. The package root exports types only. See the
-[repository package guide](../../packages/features/cms-repository/README.md)
+[repository package guide](../../packages/features/repository/README.md)
 for the public boundaries; its `package.json` defines the complete export map.
 
 ## Local Releases
@@ -171,7 +171,7 @@ lifecycle and provider-status mutations. The control Provider's own
 `ulvia/cms.installations` selection is pinned; ordinary contracts remain
 replaceable. Manifest
 import and provider connection approval are application workflows owned by
-`cms-repository`: the host obtains an exact runtime report, validates it against
+`repository`: the host obtains an exact runtime report, validates it against
 the admitted manifest, persists the credential through the injected secret
 store and records an observation. These workflows are not a second protocol and
 do not give collection JavaScript direct access to credentials.

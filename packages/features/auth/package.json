@@ -1,0 +1,27 @@
+{
+    "name": "@bernouy/auth",
+    "version": "1.0.0",
+    "description": "Provider-owned local authentication, personal access tokens, persistent sessions, membership and credential stores.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./management": "./src/exports/management.ts",
+        "./mongo": "./src/exports/mongo.ts",
+        "./oauth": "./src/exports/oauth.ts",
+        "./feature": "./src/application/feature.ts"
+    },
+    "dependencies": {
+        "@bernouy/email": "workspace:*",
+        "@bernouy/envelope-crypto": "workspace:*",
+        "@bernouy/rate-limiter": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "zod": "4.6.7"
+    },
+    "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^7.0.2"
+    }
+}

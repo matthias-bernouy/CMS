@@ -4,7 +4,7 @@ import type { GatewayRoute } from "@bernouy/cms-gateway";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
-import type { LogDetail, LogQuery, LogSummary } from "@bernouy/cms-observability";
+import type { LogDetail, LogQuery, LogSummary } from "@bernouy/observability";
 
 type ReadCapability = "logs.query" | "logs.get";
 

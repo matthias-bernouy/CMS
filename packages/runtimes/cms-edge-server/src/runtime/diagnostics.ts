@@ -1,6 +1,6 @@
-import { assertLogAcknowledgement } from "@bernouy/cms-observability";
+import { assertLogAcknowledgement } from "@bernouy/observability";
 import { createNodeLogSink } from "@bernouy/logging/node";
-import { createObservabilityLogger, LogDeliveryError } from "@bernouy/cms-observability/logging";
+import { createObservabilityLogger, LogDeliveryError } from "@bernouy/observability/logging";
 import { currentRequestLogAttributes } from "@bernouy/http-runner/observability";
 import type { createEdgeGateway } from "./gateway/createEdgeGateway";
 

@@ -1,6 +1,6 @@
-import { createLocalUser } from "@bernouy/cms-auth/management";
+import { createLocalUser } from "@bernouy/auth/management";
 import { seedOfficialPages } from "./profiles/seedPages";
-import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
+import type { CollectionRepositorySource } from "@bernouy/repository/collections/sources";
 import type {
     OfficialInstanceProfile,
     ProviderInstanceAdministrator,

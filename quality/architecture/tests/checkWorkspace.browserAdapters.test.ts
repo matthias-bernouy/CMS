@@ -7,7 +7,7 @@ const { createWorkspace } = createWorkspaceFixture();
 describe("browser adapter boundaries", () => {
     test("allows feature handlers in surfaces while keeping transport adapters in runtimes", async () => {
         const root = await createWorkspace({
-            "packages/features/content/package.json": manifest("@bernouy/cms-content", {
+            "packages/features/content/package.json": manifest("@bernouy/content", {
                 exports: { "./http": "./src/http.ts", "./seo/http": "./src/seo-http.ts" },
             }),
             "packages/features/gateway/package.json": manifest("@bernouy/cms-gateway", {
@@ -24,7 +24,7 @@ describe("browser adapter boundaries", () => {
             "packages/features/gateway/src/node.ts": "export const network = true;",
             "packages/surfaces/web/package.json": manifest("@fixture/web", {
                 dependencies: {
-                    "@bernouy/cms-content": "workspace:*",
+                    "@bernouy/content": "workspace:*",
                     "@bernouy/cms-gateway": "workspace:*",
                 },
                 exports: { ".": "./src/index.ts", "./browser": "./src/browser.ts" },
@@ -33,8 +33,8 @@ describe("browser adapter boundaries", () => {
                 "import '@bernouy/cms-gateway/http/handlers';",
                 "import '@bernouy/cms-gateway/http';",
                 "import '@bernouy/cms-gateway/http/node';",
-                "import '@bernouy/cms-content/http';",
-                "import '@bernouy/cms-content/seo/http';",
+                "import '@bernouy/content/http';",
+                "import '@bernouy/content/seo/http';",
             ].join("\n"),
             "packages/surfaces/web/src/browser.ts": "export const browser = true;",
         });
@@ -48,7 +48,7 @@ describe("browser adapter boundaries", () => {
 
     test("allows feature HTTP handlers in surfaces but keeps transports and browser imports restricted", async () => {
         const root = await createWorkspace({
-            "packages/features/content/package.json": manifest("@bernouy/cms-content", {
+            "packages/features/content/package.json": manifest("@bernouy/content", {
                 exports: {
                     ".": "./src/index.ts",
                     "./http": "./src/http.ts",
@@ -60,27 +60,27 @@ describe("browser adapter boundaries", () => {
             "packages/features/content/src/http.ts": "export const routes = true;",
             "packages/features/content/src/smtp.ts": "export const smtp = true;",
             "packages/features/content/src/browser.ts": [
-                "import '@bernouy/cms-content/http';",
-                "import '@bernouy/cms-content/smtp';",
+                "import '@bernouy/content/http';",
+                "import '@bernouy/content/smtp';",
             ].join("\n"),
             "packages/surfaces/web/package.json": manifest("@fixture/web", {
-                dependencies: { "@bernouy/cms-content": "workspace:*" },
+                dependencies: { "@bernouy/content": "workspace:*" },
                 exports: { ".": "./src/index.ts" },
             }),
             "packages/surfaces/web/src/index.ts": [
-                "import '@bernouy/cms-content/http';",
-                "import '@bernouy/cms-content/smtp';",
+                "import '@bernouy/content/http';",
+                "import '@bernouy/content/smtp';",
                 "import 'nodemailer';",
             ].join("\n"),
         });
         const violations = await checkWorkspaceArchitecture({ rootDir: root });
         const surface = ofKind(violations, "surface-runtime-adapter");
         expect(surface).toHaveLength(2);
-        expect(surface.some((item) => item.message.endsWith("@bernouy/cms-content/smtp"))).toBe(true);
+        expect(surface.some((item) => item.message.endsWith("@bernouy/content/smtp"))).toBe(true);
         expect(surface.some((item) => item.message.endsWith("nodemailer"))).toBe(true);
         const browser = ofKind(violations, "browser-runtime-adapter");
         expect(browser).toHaveLength(2);
-        expect(browser.some((item) => item.message.endsWith("@bernouy/cms-content/http"))).toBe(true);
+        expect(browser.some((item) => item.message.endsWith("@bernouy/content/http"))).toBe(true);
     });
 
     test("reports runtime adapters in surfaces and transitive browser exports", async () => {
@@ -134,19 +134,19 @@ describe("browser adapter boundaries", () => {
 
     test("follows package-local path aliases from browser exports", async () => {
         const root = await createWorkspace({
-            "packages/features/cms-auth/package.json": manifest("@fixture/cms-auth", {
+            "packages/features/auth/package.json": manifest("@fixture/auth", {
                 exports: { ".": "./src/exports/index.ts", "./components": "./src/exports/components.ts" },
             }),
-            "packages/features/cms-auth/tsconfig.json": `${JSON.stringify(
+            "packages/features/auth/tsconfig.json": `${JSON.stringify(
                 {
-                    compilerOptions: { baseUrl: "./src", paths: { "cms-auth/*": ["./*"] } },
+                    compilerOptions: { baseUrl: "./src", paths: { "auth/*": ["./*"] } },
                 },
                 null,
                 2,
             )}\n`,
-            "packages/features/cms-auth/src/exports/index.ts": "export const auth = true;\n",
-            "packages/features/cms-auth/src/exports/components.ts": "export { unsafe } from 'cms-auth/core/unsafe';\n",
-            "packages/features/cms-auth/src/core/unsafe.ts": [
+            "packages/features/auth/src/exports/index.ts": "export const auth = true;\n",
+            "packages/features/auth/src/exports/components.ts": "export { unsafe } from 'auth/core/unsafe';\n",
+            "packages/features/auth/src/core/unsafe.ts": [
                 "import { readFile } from 'node:fs';",
                 "export const unsafe = readFile;",
                 "",

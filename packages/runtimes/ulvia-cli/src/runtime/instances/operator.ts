@@ -1,5 +1,5 @@
 import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
-import { boundedResponseBytes } from "@bernouy/cms-repository/repository/publication/transport";
+import { boundedResponseBytes } from "@bernouy/repository/repository/publication/transport";
 import type { LocalInstanceConfig } from "./config";
 import type { LocalInstanceConnection } from "./connection";
 

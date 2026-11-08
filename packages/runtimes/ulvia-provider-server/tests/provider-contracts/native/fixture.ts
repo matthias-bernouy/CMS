@@ -1,6 +1,6 @@
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { ProviderExecutionState } from "@bernouy/ulvia-providers/selections";
-import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { gatewayRoute } from "../../../../../../tests/integration/gateway/fixtures";
 import { specializedRoute } from "../../../../../../tests/integration/gateway/invocation/specialization/fixture";
 import { createNativeInvocationAuthorizer } from "../../../src/runtime/gateway/native/authorizeInvocation";

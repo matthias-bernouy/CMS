@@ -1,19 +1,19 @@
 import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { basename, join } from "node:path";
 import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
-import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { admitProviderManifestJson, type AdmittedProviderManifest } from "@bernouy/ulvia-providers";
-import type { AdmittedCollectionRelease } from "@bernouy/cms-repository/collections";
+import type { AdmittedCollectionRelease } from "@bernouy/repository/collections";
 import {
     LocalArtifactFiles,
     LocalCollectionRepository,
     LocalContractReleases,
     LocalProviderReleases,
     LocalRepositoryYanks,
-} from "@bernouy/cms-repository/repository/filesystem";
-import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
-import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
-import type { ContentDiagnostic } from "@bernouy/cms-content/page-document";
+} from "@bernouy/repository/repository/filesystem";
+import { prepareContractSource } from "@bernouy/repository/repository/authoring/build";
+import { prepareCollectionRelease } from "@bernouy/repository/collections/build";
+import type { ContentDiagnostic } from "@bernouy/content/page-document";
 
 export type PreparedResource =
     | Readonly<{ kind: "contract"; admission: AdmittedContractRelease }>

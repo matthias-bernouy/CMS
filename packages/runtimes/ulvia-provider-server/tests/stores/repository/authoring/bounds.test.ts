@@ -1,9 +1,9 @@
 import { expect, spyOn, test } from "bun:test";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { CollectionAuthoring } from "@bernouy/cms-repository/repository/authoring";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
-import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
+import { CollectionAuthoring } from "@bernouy/repository/repository/authoring";
+import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
+import { LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
 import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { authoringFixture, sourceSnapshot } from "./fixture";
 

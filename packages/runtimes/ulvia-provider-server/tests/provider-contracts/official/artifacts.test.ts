@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { ProviderRepositorySource } from "@bernouy/cms-repository/providers/sources";
+import type { ProviderRepositorySource } from "@bernouy/repository/providers/sources";
 import { loadOfficialArtifacts } from "../../../src/runtime/instances/profiles/artifacts";
 import { repositoryFixture } from "./fixture";
 

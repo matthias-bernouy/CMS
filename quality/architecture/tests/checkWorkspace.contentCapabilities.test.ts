@@ -11,23 +11,23 @@ const OFFICIAL_COLLECTIONS = resolve(REPOSITORY_ROOT, "packages/official-reposit
 
 test("Delivery imports only public content capabilities, including type and dynamic imports", async () => {
     const root = await createWorkspace({
-        "packages/features/cms-content/package.json": manifest("@bernouy/cms-content", {
+        "packages/features/content/package.json": manifest("@bernouy/content", {
             exports: {
                 ".": "./src/index.ts",
                 "./rendering": "./src/rendering.ts",
                 "./mongo": "./src/mongo.ts",
             },
         }),
-        "packages/features/cms-content/src/index.ts": "export type ContentRepository = {};",
-        "packages/features/cms-content/src/rendering.ts": "export type ContentReader = {};",
-        "packages/features/cms-content/src/mongo.ts": "export const persistence = true;",
+        "packages/features/content/src/index.ts": "export type ContentRepository = {};",
+        "packages/features/content/src/rendering.ts": "export type ContentReader = {};",
+        "packages/features/content/src/mongo.ts": "export const persistence = true;",
         "packages/surfaces/cms-edge/package.json": manifest("@bernouy/cms-edge", {
-            dependencies: { "@bernouy/cms-content": "workspace:*" },
+            dependencies: { "@bernouy/content": "workspace:*" },
         }),
         "packages/surfaces/cms-edge/src/index.ts": [
-            "import type { ContentReader } from '@bernouy/cms-content/rendering';",
-            "import type { ContentRepository } from '@bernouy/cms-content';",
-            "void import('@bernouy/cms-content/mongo');",
+            "import type { ContentReader } from '@bernouy/content/rendering';",
+            "import type { ContentRepository } from '@bernouy/content';",
+            "void import('@bernouy/content/mongo');",
         ].join("\n"),
     });
     const violations = await checkWorkspaceArchitecture({

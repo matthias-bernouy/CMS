@@ -1,5 +1,5 @@
-import { InMemoryLocalCredentialStore, InMemoryPatRepository, InMemoryUsersRepository } from "@bernouy/cms-auth";
-import type { AccessServices } from "@bernouy/cms-auth/feature";
+import { InMemoryLocalCredentialStore, InMemoryPatRepository, InMemoryUsersRepository } from "@bernouy/auth";
+import type { AccessServices } from "@bernouy/auth/feature";
 const unused = async (): Promise<never> => {
     throw new Error("Unexpected test service call");
 };

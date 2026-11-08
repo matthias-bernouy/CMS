@@ -2,7 +2,7 @@ import {
     validateBlocContentMarkup,
     validatePageDocument,
     type PageDocumentBlocContract,
-} from "@bernouy/cms-content/page-document";
+} from "@bernouy/content/page-document";
 import { assertGrowth, assertMaximum, benchmark, printResults } from "../benchmark";
 
 const CARD: PageDocumentBlocContract = {

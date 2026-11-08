@@ -1,4 +1,4 @@
-import type { RemoteCoordinate, RepositoryArtifactKind } from "@bernouy/cms-repository/repository/publication";
+import type { RemoteCoordinate, RepositoryArtifactKind } from "@bernouy/repository/repository/publication";
 
 export type RemoteAction = "pull" | "push" | "restore" | "yank";
 export type RemoteSelection =

@@ -1,4 +1,4 @@
-import { observeBlocAttributes } from "@bernouy/cms-content/browser";
+import { observeBlocAttributes } from "@bernouy/content/browser";
 import { recentRange, validRange } from "./runtime/range";
 
 export function mount(root: HTMLElement): () => void {

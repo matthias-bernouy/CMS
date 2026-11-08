@@ -1,0 +1,59 @@
+import type { z } from "zod";
+import type { pagesRenameInputSchema } from "content/application/schemas/pages/inputs";
+import type { pagesRenameOutputSchema } from "content/application/schemas/pages/outputs";
+import { ContentValidationError } from "content/application/core/validation/errors";
+import type { ContentRepository } from "content/application/interfaces/ContentRepository";
+import { PageRevisionConflictError } from "content/application/core/validation/errors";
+import { validatePageTitle } from "content/pages/core/validation/page";
+import type { TPage } from "content/pages/interfaces/pages";
+
+export type CmsPageRenameInput = z.input<typeof pagesRenameInputSchema>;
+
+export type CmsPageRenameOutput = z.output<typeof pagesRenameOutputSchema>;
+
+export class CmsPageNotFoundError extends Error {
+    constructor(readonly pageId: string) {
+        super("CMS Page was not found.");
+        this.name = "CmsPageNotFoundError";
+    }
+}
+
+/** Provider-neutral, naturally idempotent implementation of `ulvia/cms.content/pages.rename`. */
+export async function renameCmsPage(
+    repository: Pick<ContentRepository, "getPageById" | "updatePage">,
+    input: CmsPageRenameInput,
+): Promise<CmsPageRenameOutput> {
+    if (typeof input.id !== "string" || input.id.length === 0 || input.id.length > 200) {
+        throw new ContentValidationError("id", "Invalid Page id.");
+    }
+    if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 1) {
+        throw new ContentValidationError("expectedRevision", "Invalid expected Page revision.");
+    }
+    const title = validatePageTitle(input.title);
+    try {
+        const updated = await repository.updatePage({ id: input.id, title }, input.expectedRevision);
+        if (!updated) {
+            throw new CmsPageNotFoundError(input.id);
+        }
+        return pageItem(updated);
+    } catch (error) {
+        if (!(error instanceof PageRevisionConflictError)) {
+            throw error;
+        }
+        const current = await repository.getPageById(input.id);
+        if (current?.revision === input.expectedRevision + 1 && current.title === title) {
+            return pageItem(current);
+        }
+        throw error;
+    }
+}
+
+function pageItem(page: TPage): CmsPageRenameOutput {
+    return {
+        id: page.id,
+        revision: page.revision,
+        path: page.path,
+        title: page.title,
+        visible: page.visible,
+    };
+}

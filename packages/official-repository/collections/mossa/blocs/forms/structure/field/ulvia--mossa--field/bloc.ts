@@ -3,7 +3,7 @@ import {
     createBlocScope,
     connectBlocFormControl,
     requestBlocFormControl,
-} from "@bernouy/cms-content/browser";
+} from "@bernouy/content/browser";
 
 const FIELD_VALUE_EVENT = "ulvia/mossa:field-value";
 

@@ -4,9 +4,9 @@ import { join, resolve } from "node:path";
 import { runCli } from "../../../../packages/runtimes/ulvia-cli/src/cli";
 import { readClientConfig } from "../../../../packages/runtimes/ulvia-cli/src/runtime/repository/config";
 import { writeAuthoredContractFixture } from "../../../../packages/runtimes/ulvia-cli/tests/authoredContractFixture";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
-import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
-import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
+import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
+import { HttpCollectionRepository } from "@bernouy/repository/collections/http";
+import { HttpProviderRepository } from "@bernouy/repository/providers/http";
 import { repositoryApi } from "./client";
 
 export async function exerciseCli(root: string, origin: string, token: string) {

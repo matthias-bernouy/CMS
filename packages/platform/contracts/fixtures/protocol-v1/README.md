@@ -27,7 +27,7 @@ safe query methods and derived bodyless HEAD error identity. These are validated
 not a runner or a passing-provider attestation. Provider-specific call
 permissions belong to provider manifests.
 Initial collection authored bundles live in the repository's `src/collections/`
-domain, with their own [fixtures](../../../../features/cms-repository/fixtures/collections/v1/README.md). Resource
+domain, with their own [fixtures](../../../../features/repository/fixtures/collections/v1/README.md). Resource
 packages may publish collection resources, including reusable examples;
 they must reference this contract format rather than extending it. The
 [package overview](../../README.md) distinguishes implemented and planned work.

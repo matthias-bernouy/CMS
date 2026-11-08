@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { MemoryVectorStore } from "@bernouy/text-search";
-import { RepositorySearch } from "@bernouy/cms-repository/repository/search";
+import { RepositorySearch } from "@bernouy/repository/repository/search";
 
 test("shared host vectors survive index disposal without sharing scoped results, and invalidate by model and text", async () => {
     const vectors = new MemoryVectorStore(4);

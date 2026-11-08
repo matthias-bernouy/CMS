@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { compileProviderRoutes, createProviderContractRelay } from "@bernouy/cms-gateway/provider/server";
 import { DefaultProviderCapabilityDispatcher, ProviderCapabilityDispatchError } from "@bernouy/ulvia-provider";
 import { loadOfficialFeatures, registerOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
-import type { RepositoryCapabilityService } from "@bernouy/cms-repository/repository/capabilities";
+import type { RepositoryCapabilityService } from "@bernouy/repository/repository/capabilities";
 import { NOOP_LOGGER } from "@bernouy/logging";
 
 const PREFIX = "/.cms/call/ulvia/repository";

@@ -1,9 +1,9 @@
-import type { AdmittedCollectionRelease } from "@bernouy/cms-repository/collections";
+import type { AdmittedCollectionRelease } from "@bernouy/repository/collections";
 import {
     collectionBrowserRisk,
     collectionBrowserRiskDigest,
     resolveCollectionTranslation,
-} from "@bernouy/cms-repository/collections";
+} from "@bernouy/repository/collections";
 import { compareSemVer, releaseChannel } from "@bernouy/ulvia-contracts/compatibility";
 import type { CmsCollectionDependencies } from "../../../ports/index";
 

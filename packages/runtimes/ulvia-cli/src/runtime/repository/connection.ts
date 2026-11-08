@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
-import type { RepositoryConnectionCredential } from "@bernouy/cms-repository/repository/namespaces";
+import { RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
+import type { RepositoryConnectionCredential } from "@bernouy/repository/repository/namespaces";
 import { readClientConfig, updateClientConfig } from "./config";
 
 function normalizeRepositoryUrl(value: string): string {

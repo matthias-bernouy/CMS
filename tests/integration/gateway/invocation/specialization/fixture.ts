@@ -1,6 +1,6 @@
 import { CatalogueGatewayRouteResolver } from "@bernouy/cms-gateway";
 import { admitContractRelease } from "@bernouy/ulvia-contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { admitProviderManifest } from "@bernouy/ulvia-providers";
 import { gatewayRoute, NOW } from "../../fixtures";
 

@@ -2,12 +2,12 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
-import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
-import { importRepositoryArtifact } from "@bernouy/cms-repository/providers/sources";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
+import { InMemoryProviderManifestCatalogue } from "@bernouy/repository/providers/catalogue";
+import { HttpProviderRepository } from "@bernouy/repository/providers/http";
+import { importRepositoryArtifact } from "@bernouy/repository/providers/sources";
 import { runCli } from "../../src/cli";
-import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/repository/repository/filesystem";
 import { startTestRepository } from "../repository/fixture";
 import { writeAuthoredContractFixture } from "../authoredContractFixture";
 

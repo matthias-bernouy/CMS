@@ -1,6 +1,6 @@
-import { CmsDocumentation } from "@bernouy/cms-documentation";
-import type { DocumentationEmbeddings, DocumentationScope } from "@bernouy/cms-documentation";
-import { MongoDocumentationVectors } from "@bernouy/cms-documentation/mongo";
+import { CmsDocumentation } from "@bernouy/documentation";
+import type { DocumentationEmbeddings, DocumentationScope } from "@bernouy/documentation";
+import { MongoDocumentationVectors } from "@bernouy/documentation/mongo";
 import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import type { ProviderStores } from "../../stores/providerStores";
 

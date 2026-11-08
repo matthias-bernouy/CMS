@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { ResponseCache } from "../../src/runtime/resources/cache/ResponseCache";
-import { mountPublicPages } from "../../../../features/cms-content/tests/pages/delivery/routing/publicPage.fixture";
-import { PRODUCT_PAGE } from "../../../../features/cms-content/tests/pages/delivery/routing/indexing/fixtures";
+import { mountPublicPages } from "../../../../features/content/tests/pages/delivery/routing/publicPage.fixture";
+import { PRODUCT_PAGE } from "../../../../features/content/tests/pages/delivery/routing/indexing/fixtures";
 
 test("SSR query results never enter either cache and a live restriction cannot expose an older result", async () => {
     let allowed = true;

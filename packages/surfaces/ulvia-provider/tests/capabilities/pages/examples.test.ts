@@ -5,10 +5,10 @@ import {
     InMemoryContentRepository,
     ValidatingContentRepository,
     createContentReader,
-} from "@bernouy/cms-content";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
-import { MemorySiteUpgradeStorage, withSiteWriteFence } from "@bernouy/cms-repository/upgrades";
+} from "@bernouy/content";
+import { CollectionStore, MemoryCollectionStorage } from "@bernouy/repository/collections/installations";
+import { withInstalledCollections } from "@bernouy/repository/collections/content";
+import { MemorySiteUpgradeStorage, withSiteWriteFence } from "@bernouy/repository/upgrades";
 import { listExamples, getExample } from "../../../src/capabilities/features/services/content/examples";
 
 async function fixture() {

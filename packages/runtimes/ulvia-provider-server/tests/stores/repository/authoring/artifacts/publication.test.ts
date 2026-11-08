@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
+import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 import { artifactFixture, contractSnapshot, providerSnapshot, contractId } from "./fixtures";
 
 test("contract docs and Provider manifests publish with retained sources without installing dependencies", async () => {

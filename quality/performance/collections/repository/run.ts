@@ -1,8 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { CollectionSources } from "@bernouy/ulvia-provider";
-import { assertCollectionResourceIsolation } from "@bernouy/cms-repository/collections/installations";
-import { FilesystemRepositoryCatalogueIndex } from "@bernouy/cms-repository/repository/filesystem";
+import { assertCollectionResourceIsolation } from "@bernouy/repository/collections/installations";
+import { FilesystemRepositoryCatalogueIndex } from "@bernouy/repository/repository/filesystem";
 import { assertMaximum, benchmark, printResults, type BenchmarkResult } from "../../benchmark";
 import { repositoryFixture } from "./fixture";
 

@@ -15,7 +15,7 @@ test("Provider image contains only the stateful Provider runtime", async () => {
     expect(dockerfile).toContain("/var/lib/cms/files");
     expect(dockerfile).toContain('VOLUME ["/var/lib/cms/files"]');
     expect(dockerfile).toContain("USER bun");
-    expect(dockerfile).toContain("RUN cd packages/features/cms-content && bun run build:browser");
+    expect(dockerfile).toContain("RUN cd packages/features/content && bun run build:browser");
     expect(dockerfile).toContain(
         'CMD ["bun", "--no-macros", "run", "packages/runtimes/ulvia-provider-server/src/index.ts"]',
     );

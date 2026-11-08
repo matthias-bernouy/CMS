@@ -5,13 +5,13 @@ import {
     prepareCollectionRelease,
     renderCollectionExamples,
     type CollectionExampleRuntimes,
-} from "@bernouy/cms-repository/collections/build";
+} from "@bernouy/repository/collections/build";
 import {
     LocalArtifactFiles,
     LocalContractReleases,
     LocalRepositoryYanks,
-} from "@bernouy/cms-repository/repository/filesystem";
-import { CMS_BROWSER_RUNTIME_ABI } from "@bernouy/cms-content/runtime-abi";
+} from "@bernouy/repository/repository/filesystem";
+import { CMS_BROWSER_RUNTIME_ABI } from "@bernouy/content/runtime-abi";
 import { exampleExplorer } from "./explorer";
 import { captureCollectionExamples } from "./capture";
 

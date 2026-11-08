@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
-import { CollectionPublicationRecoveryError } from "@bernouy/cms-repository/repository/authoring";
-import type { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
-import { RepositoryRequestError } from "@bernouy/cms-repository/repository/publication";
+import { CollectionPublicationRecoveryError } from "@bernouy/repository/repository/authoring";
+import type { RepositoryAuthoring } from "@bernouy/repository/repository/authoring";
+import { RepositoryRequestError } from "@bernouy/repository/repository/publication";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { mountAuthoringForTest } from "./mount";
 import { resolvedContract, invokeHttp } from "../../execution/messages/fixtures";

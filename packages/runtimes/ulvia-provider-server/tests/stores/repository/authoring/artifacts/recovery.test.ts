@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
-import { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
+import { RepositoryAuthoring } from "@bernouy/repository/repository/authoring";
 import { artifactFixture, contractSnapshot, contractId } from "./fixtures";
 
 test("artifact publication resumes source retention after restart without rebuilding or uploading", async () => {

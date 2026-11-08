@@ -1,5 +1,5 @@
-import type { ContentRepository } from "@bernouy/cms-content";
-import type { ContentDeliveryHost } from "@bernouy/cms-content/public-delivery";
+import type { ContentRepository } from "@bernouy/content";
+import type { ContentDeliveryHost } from "@bernouy/content/public-delivery";
 
 export function editorialPages(repo: ContentRepository): ContentDeliveryHost["editorialPages"] {
     return {

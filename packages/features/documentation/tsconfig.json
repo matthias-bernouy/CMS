@@ -1,0 +1,26 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "documentation/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../../foundation/binary-media"
+        },
+        {
+            "path": "../../foundation/text-search"
+        },
+        {
+            "path": "../../platform/contracts"
+        }
+    ]
+}

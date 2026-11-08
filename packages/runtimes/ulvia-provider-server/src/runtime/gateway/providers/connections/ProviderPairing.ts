@@ -8,7 +8,7 @@ import {
     type PairingInput,
 } from "./PairingIntent";
 import { secretKeyToRef, secretRefToKey } from "@bernouy/secret-store";
-import { ProviderInstallationLifecycle } from "@bernouy/cms-repository/providers/installations";
+import { ProviderInstallationLifecycle } from "@bernouy/repository/providers/installations";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import type { ProviderStores } from "../../../stores/providerStores";

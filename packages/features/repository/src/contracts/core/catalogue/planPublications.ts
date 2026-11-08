@@ -1,0 +1,95 @@
+import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
+import { verifyAdmission } from "@bernouy/ulvia-contracts/validation";
+import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
+import { ReleaseValidationError } from "@bernouy/ulvia-contracts";
+import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "@bernouy/ulvia-contracts";
+import type { CatalogueContractRelease } from "@bernouy/ulvia-contracts/catalogue";
+import type { ReleaseCatalogue } from "repository/contracts/interfaces/ReleaseCatalogue";
+import { verifyEvolution } from "@bernouy/ulvia-contracts/validation";
+import { verifySpecialization } from "@bernouy/ulvia-contracts/catalogue";
+
+const PLANNED_AT = "1970-01-01T00:00:00.000Z";
+
+/** Validates a complete publication set and returns an order that satisfies inheritance and version ordering. */
+export async function planContractPublications(
+    catalogue: ReleaseCatalogue,
+    admissions: readonly AdmittedContractRelease[],
+    limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
+): Promise<readonly AdmittedContractRelease[]> {
+    const snapshotLimits = Object.freeze({ ...limits });
+    const verified = await Promise.all(admissions.map((admission) => verifyAdmission(admission, snapshotLimits)));
+    const published = [...(await catalogue.list())];
+    const planned: CatalogueContractRelease[] = [];
+    const candidates = [...verified].sort((left, right) => compareSemVer(left.release.version, right.release.version));
+    const staged = candidates.map((admission) => ({ admission, publishedAt: PLANNED_AT }));
+    for (const admission of candidates) {
+        const { contractId, version, publisherId } = admission.release;
+        const existing = [...published, ...planned].find(
+            (record) =>
+                record.admission.release.contractId === contractId && record.admission.release.version === version,
+        );
+        if (existing) {
+            if (existing.admission.digest !== admission.digest) {
+                throw new ReleaseValidationError("invalid_contract", `${contractId}@${version} is already published`);
+            }
+            continue;
+        }
+        const digestOwner = [...published, ...planned].find((record) => record.admission.digest === admission.digest);
+        if (digestOwner) {
+            throw new ReleaseValidationError("invalid_contract", "release digest is already assigned", "$.digest");
+        }
+        const historical = [...published, ...planned].find(
+            (record) => record.admission.release.contractId === contractId,
+        );
+        if (historical && historical.admission.release.publisherId !== publisherId) {
+            throw new ReleaseValidationError(
+                "invalid_contract",
+                "publisher ownership cannot change between releases",
+                "$.publisherId",
+            );
+        }
+        verifyEvolution(admission.release, [...published, ...planned], snapshotLimits, [
+            ...published,
+            ...planned,
+            ...staged,
+        ]);
+        verifySpecialization(admission.release, [...published, ...staged]);
+        planned.push(Object.freeze({ admission, publishedAt: PLANNED_AT }));
+    }
+    return orderByInheritance(planned, published);
+}
+
+function orderByInheritance(
+    planned: readonly CatalogueContractRelease[],
+    published: readonly CatalogueContractRelease[],
+): readonly AdmittedContractRelease[] {
+    const pending = [...planned];
+    const available = [...published];
+    const ordered: AdmittedContractRelease[] = [];
+    while (pending.length > 0) {
+        const index = pending.findIndex((record) => {
+            try {
+                if (
+                    pending.some(
+                        (other) =>
+                            other.admission.release.contractId === record.admission.release.contractId &&
+                            compareSemVer(other.admission.release.version, record.admission.release.version) < 0,
+                    )
+                ) {
+                    return false;
+                }
+                verifySpecialization(record.admission.release, available);
+                return true;
+            } catch {
+                return false;
+            }
+        });
+        if (index === -1) {
+            throw new ReleaseValidationError("invalid_contract", "staged contract inheritance cycle");
+        }
+        const [record] = pending.splice(index, 1);
+        available.push(record!);
+        ordered.push(record!.admission);
+    }
+    return Object.freeze(ordered);
+}

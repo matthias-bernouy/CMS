@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { CmsObservability, type LogQuery } from "@bernouy/cms-observability";
-import { InMemoryJournalStore } from "@bernouy/cms-observability/memory";
+import { CmsObservability, type LogQuery } from "@bernouy/observability";
+import { InMemoryJournalStore } from "@bernouy/observability/memory";
 import { readJournalUpdates, showInstanceLogs } from "../../../src/runtime/stack/logs/index";
 
 for (const offset of [-3_600_000, 60_000]) {

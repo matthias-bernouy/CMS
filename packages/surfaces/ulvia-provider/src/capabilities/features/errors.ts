@@ -1,7 +1,7 @@
-import { CollectionPublicationError } from "@bernouy/cms-repository/collections";
-import { CollectionPublicationRecoveryError } from "@bernouy/cms-repository/repository/authoring";
-import { RepositoryRequestError } from "@bernouy/cms-repository/repository/publication";
-import { CmsFilesError } from "@bernouy/cms-files";
+import { CollectionPublicationError } from "@bernouy/repository/collections";
+import { CollectionPublicationRecoveryError } from "@bernouy/repository/repository/authoring";
+import { RepositoryRequestError } from "@bernouy/repository/repository/publication";
+import { CmsFilesError } from "@bernouy/files";
 import type { CapabilityFailure } from "@bernouy/ulvia-sdk";
 import type { CapabilityFailurePresentation, CapabilityFailurePresentationContext } from "@bernouy/ulvia-sdk/provider";
 import { officialFailure } from "../../dispatch/errors/failure";

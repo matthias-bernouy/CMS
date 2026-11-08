@@ -2,7 +2,7 @@ import { expect, spyOn, test } from "bun:test";
 import { cp, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { LocalArtifactFiles } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalArtifactFiles } from "@bernouy/repository/repository/filesystem";
 import { bundledBootstrapSources } from "../../../src/runtime/instances/profiles/bootstrap";
 import { loadOfficialArtifacts } from "../../../src/runtime/instances/profiles/artifacts";
 

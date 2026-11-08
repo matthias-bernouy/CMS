@@ -1,7 +1,4 @@
-import type {
-    RepositoryAssetDownloadSink,
-    RepositoryDownloadAsset,
-} from "@bernouy/cms-repository/repository/publication";
+import type { RepositoryAssetDownloadSink, RepositoryDownloadAsset } from "@bernouy/repository/repository/publication";
 import { mkdir, open, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 

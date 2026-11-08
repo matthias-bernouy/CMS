@@ -1,12 +1,9 @@
 import type { Embeddings, VectorStore } from "@bernouy/text-search";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
-import {
-    RepositoryCapabilityService,
-    RepositoryCapabilityError,
-} from "@bernouy/cms-repository/repository/capabilities";
-import { RepositoryNamespaces } from "@bernouy/cms-repository/repository/namespaces";
-import { MongoRepositoryNamespaces } from "@bernouy/cms-repository/repository/namespaces/mongo";
+import { RepositoryCapabilityService, RepositoryCapabilityError } from "@bernouy/repository/repository/capabilities";
+import { RepositoryNamespaces } from "@bernouy/repository/repository/namespaces";
+import { MongoRepositoryNamespaces } from "@bernouy/repository/repository/namespaces/mongo";
 import {
     FilesystemRegistryReads,
     FilesystemRepositoryCatalogueIndex,
@@ -14,10 +11,10 @@ import {
     FilesystemRepositoryPublicationUploadStore,
     recoverRepositoryStorage,
     withRepositoryWriteLock,
-} from "@bernouy/cms-repository/repository/filesystem";
-import { FilesystemRepositorySourceStore } from "@bernouy/cms-repository/repository/sources";
-import { RepositorySearch } from "@bernouy/cms-repository/repository/search";
-import { FilesystemRepositorySearchSource } from "@bernouy/cms-repository/repository/search/filesystem";
+} from "@bernouy/repository/repository/filesystem";
+import { FilesystemRepositorySourceStore } from "@bernouy/repository/repository/sources";
+import { RepositorySearch } from "@bernouy/repository/repository/search";
+import { FilesystemRepositorySearchSource } from "@bernouy/repository/repository/search/filesystem";
 import { ProviderCapabilityDispatchError } from "@bernouy/ulvia-provider";
 import type { ProviderStores } from "../providerStores";
 

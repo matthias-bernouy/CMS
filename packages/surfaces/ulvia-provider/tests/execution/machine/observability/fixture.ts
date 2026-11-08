@@ -1,6 +1,6 @@
-import { CmsObservability } from "@bernouy/cms-observability";
-import type { JournalStore } from "@bernouy/cms-observability";
-import { InMemoryJournalStore } from "@bernouy/cms-observability/memory";
+import { CmsObservability } from "@bernouy/observability";
+import type { JournalStore } from "@bernouy/observability";
+import { InMemoryJournalStore } from "@bernouy/observability/memory";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import { signProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { BunRunner } from "@bernouy/http-runner";

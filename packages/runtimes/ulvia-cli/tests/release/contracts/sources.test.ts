@@ -3,9 +3,9 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
-import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/repository/repository/filesystem";
 import { runCli } from "../../../src/cli";
-import { compileContractSource } from "@bernouy/cms-repository/repository/authoring/build";
+import { compileContractSource } from "@bernouy/repository/repository/authoring/build";
 
 test("recursive contract sources are path-independent and attach separate mocks", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-contract-sources-"));

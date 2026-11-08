@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { type ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";
 import { accessServices } from "../services";
 import { accessTransport } from "../transport";
-import { InMemoryUsersRepository } from "@bernouy/cms-auth";
+import { InMemoryUsersRepository } from "@bernouy/auth";
 
 const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",

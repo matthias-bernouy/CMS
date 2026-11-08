@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { ContentValidationError } from "@bernouy/cms-content";
-import { validateExpandedPageDocument } from "@bernouy/cms-content/page-document";
+import { ContentValidationError } from "@bernouy/content";
+import { validateExpandedPageDocument } from "@bernouy/content/page-document";
 import { mountContentForTest } from "../../capabilities/content/mount";
 import { DefaultProviderCapabilityDispatcher, ProviderCapabilityDispatchError } from "@bernouy/ulvia-provider";
 import { officialFailure } from "../../../src/dispatch/errors/failure";

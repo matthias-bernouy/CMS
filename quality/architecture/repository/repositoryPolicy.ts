@@ -14,17 +14,17 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
     return {
         rootDir,
         browserEntryPaths: [
-            "packages/features/cms-content/src/browser/entries/blocRuntime.entry.ts",
-            "packages/features/cms-content/src/browser/entries/bindingCore.entry.ts",
-            "packages/features/cms-content/src/exports/runtime/browser.ts",
-            "packages/features/cms-content/src/exports/runtime/browser-dom.ts",
-            "packages/features/cms-content/src/exports/bindings.ts",
-            "packages/features/cms-content/src/exports/theme.ts",
-            "packages/features/cms-content/src/exports/pages/path.ts",
+            "packages/features/content/src/browser/entries/blocRuntime.entry.ts",
+            "packages/features/content/src/browser/entries/bindingCore.entry.ts",
+            "packages/features/content/src/exports/runtime/browser.ts",
+            "packages/features/content/src/exports/runtime/browser-dom.ts",
+            "packages/features/content/src/exports/bindings.ts",
+            "packages/features/content/src/exports/theme.ts",
+            "packages/features/content/src/exports/pages/path.ts",
         ],
         packageImportAllowlist: {
             "@bernouy/cms-edge": {
-                "@bernouy/cms-content": [
+                "@bernouy/content": [
                     "./rendering",
                     "./bindings",
                     "./browser",

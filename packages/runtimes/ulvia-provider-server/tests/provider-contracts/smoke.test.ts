@@ -2,7 +2,7 @@ import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { defaultSystem } from "@bernouy/cms-content";
+import { defaultSystem } from "@bernouy/content";
 import {
     ProviderOperationExecutor,
     DefaultProviderCapabilityDispatcher,
@@ -15,8 +15,8 @@ import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { loadOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
 import { CmsFileWorkspace } from "../../src/runtime/stores/CmsFileWorkspace";
 import { InMemorySecretStore } from "@bernouy/secret-store";
-import { CmsFilesService } from "@bernouy/cms-files";
-import { InMemoryCmsFilesStore } from "@bernouy/cms-files/memory";
+import { CmsFilesService } from "@bernouy/files";
+import { InMemoryCmsFilesStore } from "@bernouy/files/memory";
 
 test("all administration capability areas dispatch outputs matching their official contracts", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();

@@ -1,8 +1,8 @@
-import { NamespaceAccessError } from "@bernouy/cms-repository/repository/authoring";
+import { NamespaceAccessError } from "@bernouy/repository/repository/authoring";
 import { randomUUID } from "node:crypto";
 import type { SecretStore } from "@bernouy/secret-store";
-import { RepositoryConnection, RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
-import type { RepositoryConnectionCredential } from "@bernouy/cms-repository/repository/namespaces";
+import { RepositoryConnection, RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
+import type { RepositoryConnectionCredential } from "@bernouy/repository/repository/namespaces";
 
 const SECRET = "REPOSITORY_CONNECTION";
 interface StoredConnection {

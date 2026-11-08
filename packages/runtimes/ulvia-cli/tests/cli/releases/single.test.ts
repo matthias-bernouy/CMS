@@ -4,8 +4,8 @@ import { mkdtemp, readdir, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../../src/cli";
-import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
-import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
+import { LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
+import { resolveCollectionTranslation } from "@bernouy/repository/collections";
 
 test("release publishes a folder explicitly, survives CLI runs, and prune clears only the repository", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-cli-release-"));

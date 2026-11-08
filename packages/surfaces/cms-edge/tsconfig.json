@@ -17,10 +17,10 @@
     ],
     "references": [
         {
-            "path": "../../features/cms-auth"
+            "path": "../../features/auth"
         },
         {
-            "path": "../../features/cms-repository"
+            "path": "../../features/repository"
         },
         {
             "path": "../../foundation/http-runner"

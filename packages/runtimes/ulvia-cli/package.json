@@ -13,12 +13,12 @@
         "generate:bootstrap": "bun run src/bootstrap/generate.ts"
     },
     "dependencies": {
-        "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
+        "@bernouy/content": "workspace:*",
+        "@bernouy/repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "playwright": "^1.64.1",
-        "@bernouy/cms-observability": "workspace:*",
+        "@bernouy/observability": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",

@@ -1,0 +1,15 @@
+import { collectionFixture } from "../examples/buildFixture";
+import { parseCollectionRelease } from "repository/collections/core/parsing/parseCollectionRelease";
+import { collectionDocument, textDefinition } from "../../fixtures";
+
+export const example = {
+    id: "overview",
+    label: "page.overview.name",
+    description: "page.overview.name",
+    previews: [{ id: "desktop", frame: { width: 800, height: 600 } }],
+    document: {
+        html: '<div cms-bloc="atlas-dofficial--atlas--panel"></div>',
+    },
+} as const;
+
+export { collectionFixture, collectionDocument, parseCollectionRelease, textDefinition };

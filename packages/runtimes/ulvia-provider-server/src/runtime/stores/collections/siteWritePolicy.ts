@@ -1,5 +1,5 @@
-import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
-import type { ContentRepository } from "@bernouy/cms-content";
+import type { CollectionStore } from "@bernouy/repository/collections/installations";
+import type { ContentRepository } from "@bernouy/content";
 
 export const CMS_REPOSITORY_FENCED_MUTATIONS = [
     "updateSiteBlocGroup",

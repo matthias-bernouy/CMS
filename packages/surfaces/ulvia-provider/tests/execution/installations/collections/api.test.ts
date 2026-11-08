@@ -6,9 +6,9 @@ import {
     admitCollectionRelease,
     collectionBrowserRisk,
     collectionBrowserRiskDigest,
-} from "@bernouy/cms-repository/collections";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
+} from "@bernouy/repository/collections";
+import { CollectionStore, MemoryCollectionStorage } from "@bernouy/repository/collections/installations";
+import type { CollectionRepositorySource } from "@bernouy/repository/collections/sources";
 
 const context = {
     requestId: "00000000-0000-4000-8000-000000000001",

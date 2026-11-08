@@ -1,7 +1,7 @@
 import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { resolve } from "node:path";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
+import { prepareContractSource } from "@bernouy/repository/repository/authoring/build";
 
 export async function officialContractCatalogue(): Promise<InMemoryReleaseCatalogue> {
     const catalogue = new InMemoryReleaseCatalogue();

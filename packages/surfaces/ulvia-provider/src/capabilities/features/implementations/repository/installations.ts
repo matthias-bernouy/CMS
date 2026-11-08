@@ -1,5 +1,5 @@
 import { implementFeature } from "@bernouy/ulvia-sdk";
-import { installationsFeature } from "@bernouy/cms-repository/features/installations";
+import { installationsFeature } from "@bernouy/repository/features/installations";
 import type { UlviaProviderFeatureServices } from "../../../../ports/index";
 export const installationsImplementation = implementFeature(installationsFeature, {
     services: (dependencies: UlviaProviderFeatureServices) => {

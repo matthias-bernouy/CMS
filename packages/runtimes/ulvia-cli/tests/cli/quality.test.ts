@@ -3,9 +3,9 @@ import { expect, test } from "bun:test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { validatePageDocument } from "@bernouy/cms-content/page-document";
+import { validatePageDocument } from "@bernouy/content/page-document";
 import { buildOfficialBootstrapArtifacts, writeOfficialBootstrapArtifacts } from "../../src/bootstrap/generate";
-import { parseCollectionReleaseJson } from "@bernouy/cms-repository/collections";
+import { parseCollectionReleaseJson } from "@bernouy/repository/collections";
 
 let compiled: ReturnType<typeof buildOfficialBootstrapArtifacts> | undefined;
 function officialArtifacts() {

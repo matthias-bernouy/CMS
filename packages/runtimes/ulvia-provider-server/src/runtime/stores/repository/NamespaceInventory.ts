@@ -1,7 +1,7 @@
-import { assertRepositoryNamespace } from "@bernouy/cms-repository/repository/namespaces";
-import type { RepositoryNamespaceView } from "@bernouy/cms-repository/repository/namespaces";
-import { NamespaceAccessError } from "@bernouy/cms-repository/repository/authoring";
-import type { NamespaceInventoryQuery, NamespaceInventoryPage } from "@bernouy/cms-repository/repository/authoring";
+import { assertRepositoryNamespace } from "@bernouy/repository/repository/namespaces";
+import type { RepositoryNamespaceView } from "@bernouy/repository/repository/namespaces";
+import { NamespaceAccessError } from "@bernouy/repository/repository/authoring";
+import type { NamespaceInventoryQuery, NamespaceInventoryPage } from "@bernouy/repository/repository/authoring";
 
 export function validateNamespaceQuery(input: NamespaceInventoryQuery): number {
     const limit = input.limit ?? 25;

@@ -2,15 +2,15 @@ import { repositoryApplication } from "../../../../tests/fixtures/repository/app
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
+import { admitCollectionReleaseJson } from "@bernouy/repository/collections";
 import { admitContractBundleJson, parseContractReleaseJson } from "@bernouy/ulvia-contracts";
-import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
-import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
-import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
-import type { RepositoryFetch } from "@bernouy/cms-repository/collections/http";
+import { CollectionStore, MemoryCollectionStorage } from "@bernouy/repository/collections/installations";
+import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
+import { HttpCollectionRepository } from "@bernouy/repository/collections/http";
+import { HttpProviderRepository } from "@bernouy/repository/providers/http";
+import type { RepositoryFetch } from "@bernouy/repository/collections/http";
 
 const BOOTSTRAP = join(import.meta.dir, "../../../../packages/runtimes/ulvia-cli/dist/bootstrap");
 

@@ -1,5 +1,5 @@
 import { implementFeature } from "@bernouy/ulvia-sdk";
-import { accessFeature } from "@bernouy/cms-auth/feature";
+import { accessFeature } from "@bernouy/auth/feature";
 import type { UlviaProviderFeatureServices } from "../../../ports/index";
 
 export const accessImplementation = implementFeature(accessFeature, {

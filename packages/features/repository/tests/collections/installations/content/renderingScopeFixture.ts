@@ -1,0 +1,95 @@
+import { collectionFixture } from "../../admission/examples/buildFixture";
+import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/content";
+import type { BlocListItemResponse } from "@bernouy/content";
+import { createContentReader } from "@bernouy/content/rendering";
+import { withInstalledCollections } from "repository/collections/integration/content/installedRepository";
+import { CollectionStore } from "repository/collections/installations/core/CollectionStore";
+import { MemoryCollectionStorage } from "repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
+
+export class RenderingStorage extends MemoryCollectionStorage {
+    siteReads = 0;
+    override readSite(siteId: string) {
+        this.siteReads++;
+        return super.readSite(siteId);
+    }
+}
+
+export async function renderingScopeFixture() {
+    const storage = new RenderingStorage();
+    const store = new CollectionStore(storage);
+    const artifact = await store.importRelease(
+        collectionFixture({
+            kind: "collection",
+            protocol: "ulvia-collection/v1",
+            schemaDialect: "ulvia-schema/v1",
+            collectionId: "example/scoped",
+            publisherId: "example",
+            version: "1.0.0",
+            name: "name",
+            locale: "en",
+            translations: { en: { name: "Scoped", label: "Card" } },
+            assets: [],
+            texts: [{ id: "title", label: "label", group: "label", category: "label", values: { en: "Initial" } }],
+            blocs: [
+                {
+                    kind: "component",
+                    id: "example--scoped--card",
+                    root: { accepts: ["div"] },
+                    label: "label",
+                    description: "label",
+                    categories: ["label"],
+                    markup: "<article></article>",
+                    uses: [],
+                    requires: [],
+                    slots: {},
+                },
+            ],
+        }),
+    );
+    await store.install("site", artifact.digest, 0);
+    const local = new InMemoryContentRepository();
+    await local.insertPage("/", "Home", '<div cms-bloc="example--scoped--card"></div>');
+    const page = (await local.getPage("/"))!;
+    await local.updatePage({ id: page.id, visible: true }, page.revision);
+    const counts = { blocs: 0, system: 0, routes: 0 };
+    const getSystem = local.getSystem.bind(local);
+    local.getSystem = async () => {
+        counts.system++;
+        return getSystem();
+    };
+    const getRoute = local.getPageRoute.bind(local);
+    local.getPageRoute = async (path) => {
+        counts.routes++;
+        return getRoute(path);
+    };
+    let localBlocs: BlocListItemResponse[] = [];
+    local.getBlocsList = async () => {
+        counts.blocs++;
+        return structuredClone(localBlocs);
+    };
+    const decorated = withInstalledCollections(local, store, "site");
+    const repository = new ValidatingContentRepository(decorated);
+    const reader = createContentReader(repository);
+    await reader.getPageRenderInputs!("/");
+    const reset = () => {
+        storage.siteReads = 0;
+        counts.blocs = 0;
+        counts.system = 0;
+        counts.routes = 0;
+    };
+    reset();
+    return {
+        storage,
+        store,
+        local,
+        decorated,
+        repository,
+        reader,
+        page,
+        counts,
+        reset,
+        set localBlocs(value: BlocListItemResponse[]) {
+            localBlocs = value;
+        },
+    };
+}

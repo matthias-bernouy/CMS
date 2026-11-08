@@ -7,13 +7,13 @@ export async function exerciseRenderingResources(providerName: string, stackId: 
     const script = `
         import { strict as assert } from "node:assert";
         import { MongoClient } from "mongodb";
-        import { MongoContentRepository } from "@bernouy/cms-content/mongo";
-        import { ValidatingContentRepository } from "@bernouy/cms-content";
-        import { createContentReader } from "@bernouy/cms-content/rendering";
-        import { CollectionStore } from "@bernouy/cms-repository/collections/installations";
-        import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
-        import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
-        import { collectionFixture } from "/app/packages/features/cms-repository/tests/collections/admission/examples/buildFixture";
+        import { MongoContentRepository } from "@bernouy/content/mongo";
+        import { ValidatingContentRepository } from "@bernouy/content";
+        import { createContentReader } from "@bernouy/content/rendering";
+        import { CollectionStore } from "@bernouy/repository/collections/installations";
+        import { MongoCollectionStorage } from "@bernouy/repository/collections/mongo";
+        import { withInstalledCollections } from "@bernouy/repository/collections/content";
+        import { collectionFixture } from "/app/packages/features/repository/tests/collections/admission/examples/buildFixture";
         import { readProviderRuntimeEnv } from "/app/packages/runtimes/ulvia-provider-server/src/runtimeEnv";
         const name = ${JSON.stringify(database)};
         assert.match(name, /^ulvia_render_[a-z0-9_]+$/);

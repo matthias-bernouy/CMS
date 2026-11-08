@@ -8,15 +8,15 @@ boundaries and keep browser/server/adapters separated.
 Import another package only through its declared package name or subpath:
 
 ```ts
-import { ValidatingContentRepository } from "@bernouy/cms-content";
-import { MongoContentRepository } from "@bernouy/cms-content/mongo";
+import { ValidatingContentRepository } from "@bernouy/content";
+import { MongoContentRepository } from "@bernouy/content/mongo";
 ```
 
 Do not import another package through a deep filesystem path:
 
 ```ts
 // Wrong
-import { MongoContentRepository } from "../../cms-content/src/application/default-implementation/mongo/MongoContentRepository";
+import { MongoContentRepository } from "../../content/src/application/default-implementation/mongo/MongoContentRepository";
 ```
 
 If a symbol must be consumed by another package, export it from the owning
@@ -39,7 +39,7 @@ that package:
 
 ```ts
 import { renderPage } from "cms-edge/html/renderPage";
-import { isPublishedPage } from "cms-content/pages/core/lifecycle/publication";
+import { isPublishedPage } from "content/pages/core/lifecycle/publication";
 import { BunRunner } from "http-runner/default-implementation/BunRunner";
 ```
 
@@ -55,10 +55,10 @@ Adapter subpaths isolate optional infrastructure:
 - `@bernouy/blob-store/s3` imports the generic S3-backed blob adapter.
 - `@bernouy/blob-store/local-fs` imports the generic filesystem blob adapter.
 - `./browser` exposes browser-safe APIs where the package declares it, such as
-  `@bernouy/cms-content/browser`.
+  `@bernouy/content/browser`.
 
 Subpath names are not conventions that callers may guess. They must exist in
-the producing package's `exports` map. For example, `@bernouy/cms-auth` exposes
+the producing package's `exports` map. For example, `@bernouy/auth` exposes
 `/management`, `/mongo` and `/smtp`, but deliberately has no browser subpath.
 
 Production adapters are composed inside the server that consumes them. Edge
@@ -73,7 +73,7 @@ Browser-facing code must not import Node, Bun server APIs, Mongo adapters, S3
 adapters, or surface internals. Use browser-safe subpaths such as:
 
 ```ts
-import { createBlocScope, mutationFormRequest } from "@bernouy/cms-content/browser";
+import { createBlocScope, mutationFormRequest } from "@bernouy/content/browser";
 ```
 
 Collection authoring metadata is JSON and does not create a second browser

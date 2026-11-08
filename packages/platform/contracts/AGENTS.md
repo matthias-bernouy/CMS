@@ -9,6 +9,6 @@ Platform package for the Ulvia contract language and immutable release validatio
 - HTTP/MCP exposure is explicit. Compile transport plans before runtime execution.
 - Documentation and mocks are verified release data. Search and indexing are feature-owned.
 - `ContractReleaseReader` is read-only. Catalogue publication, metadata mutation and
-  memory/Mongo catalogue implementations belong to `@bernouy/cms-repository`.
+  memory/Mongo catalogue implementations belong to `@bernouy/repository`.
 - Keep public exports explicit and adapter-light. Interfaces contain no executable code.
 - Contract source scanning and filesystem authoring remain in Repository build tooling.

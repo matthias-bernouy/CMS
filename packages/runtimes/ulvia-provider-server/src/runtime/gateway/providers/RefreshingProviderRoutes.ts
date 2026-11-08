@@ -1,6 +1,6 @@
 import type { GatewayAuthorityReads, GatewayRoute, GatewayRouteResolver } from "@bernouy/cms-gateway";
-import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
-import type { ProviderReportReader } from "@bernouy/cms-repository/providers/management";
+import type { ProviderInstallationStore } from "@bernouy/repository/providers/installations";
+import type { ProviderReportReader } from "@bernouy/repository/providers/management";
 
 /** Refresh approved remote observations on demand; reports never change approval or selection. */
 export class RefreshingProviderRoutes implements GatewayRouteResolver {

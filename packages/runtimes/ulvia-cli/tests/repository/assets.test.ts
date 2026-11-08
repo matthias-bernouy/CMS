@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
-import { LocalArtifactFiles } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalArtifactFiles } from "@bernouy/repository/repository/filesystem";
 import { startTestRepository } from "./fixture";
 import { writeAuthoredContractFixture } from "../authoredContractFixture";
 

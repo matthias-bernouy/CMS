@@ -1,10 +1,10 @@
 import { observeSelectionCommits } from "./selections/notifications";
 import { createCollectionUpgradeAnalysis } from "./collections/upgradeAnalysis";
-import { CollectionStore } from "@bernouy/cms-repository/collections/installations";
-import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
-import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
-import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
-import { CollectionUpgradeService } from "@bernouy/cms-repository/collections/installations";
+import { CollectionStore } from "@bernouy/repository/collections/installations";
+import { MongoCollectionStorage } from "@bernouy/repository/collections/mongo";
+import { MongoReleaseCatalogue } from "@bernouy/repository/contracts/mongo";
+import { withInstalledCollections } from "@bernouy/repository/collections/content";
+import { CollectionUpgradeService } from "@bernouy/repository/collections/installations";
 import {
     MongoOAuthStore,
     MongoSessionRepository,
@@ -12,23 +12,23 @@ import {
     MongoLocalCredentialStore,
     MongoPatRepository,
     MongoUsersRepository,
-} from "@bernouy/cms-auth/mongo";
+} from "@bernouy/auth/mongo";
 import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
-import { ValidatingContentRepository } from "@bernouy/cms-content";
-import { MongoContentRepository } from "@bernouy/cms-content/mongo";
-import { MongoSiteUpgradeStorage } from "@bernouy/cms-repository/upgrades/mongo";
-import { withSiteWriteFence } from "@bernouy/cms-repository/upgrades";
+import { ValidatingContentRepository } from "@bernouy/content";
+import { MongoContentRepository } from "@bernouy/content/mongo";
+import { MongoSiteUpgradeStorage } from "@bernouy/repository/upgrades/mongo";
+import { withSiteWriteFence } from "@bernouy/repository/upgrades";
 import { createFieldCrypto } from "@bernouy/envelope-crypto/mongo";
 import { ValidatingSecretStore } from "@bernouy/secret-store";
 import { EncryptedMongoSecretStore } from "@bernouy/secret-store/mongo";
 import { MongoClient } from "mongodb";
-import { CmsObservability } from "@bernouy/cms-observability";
-import { MongoJournalStore } from "@bernouy/cms-observability/mongo";
+import { CmsObservability } from "@bernouy/observability";
+import { MongoJournalStore } from "@bernouy/observability/mongo";
 import type { RuntimeKekConfig } from "../../runtimeEnvKek";
 import { CMS_REPOSITORY_FENCED_MUTATIONS, COLLECTION_STORE_FENCED_MUTATIONS } from "./collections/siteWritePolicy";
 import { createEnvelopeSecretCrypto } from "./envelopeCrypto";
-import { CmsFilesService, CmsImageDerivatives } from "@bernouy/cms-files";
-import { MongoCmsFilesStore } from "@bernouy/cms-files/mongo";
+import { CmsFilesService, CmsImageDerivatives } from "@bernouy/files";
+import { MongoCmsFilesStore } from "@bernouy/files/mongo";
 import { LocalFsBlobStore } from "@bernouy/blob-store/local-fs";
 import { join } from "node:path";
 import { SharpImageTransformer } from "@bernouy/image-processing/sharp";
@@ -38,13 +38,13 @@ import {
     MongoContractSelectionStore,
     MongoProviderInstallationStore,
     MongoProviderManifestCatalogue,
-} from "@bernouy/cms-repository/providers/mongo";
-import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/providers/selections";
+} from "@bernouy/repository/providers/mongo";
+import { CatalogueSelectionDependencies } from "@bernouy/repository/providers/selections";
 import type { StoredContractSelections } from "@bernouy/ulvia-providers/selections";
 import { selectedCapabilityResolver, selectedPublicSvgCapabilityValidator } from "./selections/capabilities";
 import type { Logger } from "@bernouy/logging";
-import { CmsSecrets } from "@bernouy/cms-secrets";
-import { MongoCmsSecretMetadataStore } from "@bernouy/cms-secrets/mongo";
+import { CmsSecrets } from "@bernouy/secrets";
+import { MongoCmsSecretMetadataStore } from "@bernouy/secrets/mongo";
 import { EncryptedProviderConnections } from "../gateway/providers/connections/EncryptedProviderConnections";
 import { EncryptedConnectionDrafts } from "../gateway/providers/connections/EncryptedConnectionDrafts";
 import { MongoCmsSecretResolutionReader } from "./secrets/MongoCmsSecretResolutionReader";

@@ -62,7 +62,7 @@ test("quality workflow keeps every G0 check visible", async () => {
         "bun run quality/ci/coverage/ratchet.ts",
         "bun run build:browser && bun run generate:official-bootstrap",
         "docker compose version",
-        "bun test packages/features/cms-files/tests",
+        "bun test packages/features/files/tests",
         "bun test tests/integration/gateway/http tests/integration/gateway/invocation",
     ]) {
         expect(configuration).toContain(command);
@@ -103,7 +103,7 @@ test("integration CI runs Files and binary gateway contract integration", async 
     const qualityGate = workflow.match(/\n  quality-gate:[\s\S]*$/)?.[0];
 
     expect(job).toBeDefined();
-    expect(job).toContain("bun test packages/features/cms-files/tests");
+    expect(job).toContain("bun test packages/features/files/tests");
     expect(job).toContain("bun test tests/integration/gateway/http tests/integration/gateway/invocation");
     expect(qualityGate).toContain("- integration-contracts");
     expect(qualityGate).toContain('test "$INTEGRATION_RESULT" = success');

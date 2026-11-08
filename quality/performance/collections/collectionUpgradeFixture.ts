@@ -1,4 +1,4 @@
-import { InMemoryContentRepository, type ContentRepository, type TPage } from "@bernouy/cms-content";
+import { InMemoryContentRepository, type ContentRepository, type TPage } from "@bernouy/content";
 
 export function syntheticCorpus(pageCount: number) {
     const base = new InMemoryContentRepository();

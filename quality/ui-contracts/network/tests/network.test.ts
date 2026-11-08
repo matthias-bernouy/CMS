@@ -95,14 +95,14 @@ describe("browser network contracts", () => {
     });
 
     test("uses exact infrastructure paths and preserves browser helper findings", () => {
-        const path = "packages/features/cms-content/src/browser/binding/runtime/query/queryFetch.ts";
+        const path = "packages/features/content/src/browser/binding/runtime/query/queryFetch.ts";
         expect(inspect("fetch(url)", { path })[0]).toMatchObject({
             severity: "INFO",
             message: expect.stringContaining("declarative query"),
         });
         expect(
             inspect("fetch(url)", {
-                path: "packages/features/cms-content/src/browser/binding/form/submitRequest.ts",
+                path: "packages/features/content/src/browser/binding/form/submitRequest.ts",
             })[0]?.severity,
         ).toBe("INFO");
         expect(inspect("fetch(url)", { path: path.replace("queryFetch.ts", "helper.ts") })[0]?.severity).toBe(
@@ -137,7 +137,7 @@ describe("browser network contracts", () => {
 
 test("programmatic binding requests remain visible without being classified as imperative HTTP", () => {
     const findings = inspect(
-        'import { mutationFormRequest as request, Component } from "@bernouy/cms-content/browser"; request(form); new Component();',
+        'import { mutationFormRequest as request, Component } from "@bernouy/content/browser"; request(form); new Component();',
     );
     expect(findings).toHaveLength(1);
     expect(findings[0]).toMatchObject({

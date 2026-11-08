@@ -1,5 +1,5 @@
 import { implementFeature } from "@bernouy/ulvia-sdk";
-import { observabilityFeature } from "@bernouy/cms-observability/feature";
+import { observabilityFeature } from "@bernouy/observability/feature";
 import type { UlviaProviderFeatureServices } from "../../../ports/index";
 export const observabilityImplementation = implementFeature(observabilityFeature, {
     services: (dependencies: UlviaProviderFeatureServices) => {

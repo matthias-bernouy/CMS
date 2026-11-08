@@ -1,9 +1,9 @@
-import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
+import { prepareContractSource } from "@bernouy/repository/repository/authoring/build";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { accountFixture } from "../accounts/fixture";
 import { writeAuthoredContractFixture } from "../../authoredContractFixture";
-import { LocalArtifactFiles } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalArtifactFiles } from "@bernouy/repository/repository/filesystem";
 
 export async function pushFixture() {
     const f = await accountFixture();

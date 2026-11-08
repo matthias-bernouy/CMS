@@ -6,7 +6,7 @@ utilities.
 
 ## Boundaries
 
-- This package is CMS-agnostic. Do not import `@bernouy/cms-*` packages.
+- This package is CMS-agnostic. Keep imports within Foundation and generic external libraries.
 - Root export exposes the server runner and shared HTTP helpers.
 - `./html` is the browser-safe helper subpath. Keep it free of Bun/Node server
   imports.

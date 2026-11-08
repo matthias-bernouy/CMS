@@ -8,7 +8,7 @@ const provider = Bun.main === ${JSON.stringify(`${root}/packages/runtimes/ulvia-
 const runtime = provider ? "ulvia-provider-server" : "cms-edge-server";
 const workspaceRequire = createRequire(${JSON.stringify(`${root}/packages/runtimes/`)} + runtime + "/package.json");
 const { currentTraceContext } = workspaceRequire("@bernouy/logging/tracing");
-const { BufferedLogCollector } = workspaceRequire("@bernouy/cms-observability/logging");
+const { BufferedLogCollector } = workspaceRequire("@bernouy/observability/logging");
 const recordWork = (kind: string, name: string) => appendFileSync(${JSON.stringify(`${logFile}.work`)},
     JSON.stringify({ kind, name, traceId: currentTraceContext()?.traceId }) + "\\n");
 const record = (target: string) => {

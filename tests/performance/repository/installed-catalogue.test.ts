@@ -3,8 +3,8 @@ import {
     CollectionStore,
     type CollectionStorage,
     type CollectionSiteState,
-} from "@bernouy/cms-repository/collections/installations";
-import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
+} from "@bernouy/repository/collections/installations";
+import { MongoCollectionStorage } from "@bernouy/repository/collections/mongo";
 import type { Db } from "mongodb";
 
 const digest = `sha256:${"a".repeat(64)}`;

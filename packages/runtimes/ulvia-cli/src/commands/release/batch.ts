@@ -3,12 +3,12 @@ import {
     LocalContractReleases,
     LocalProviderReleases,
     LocalRepositoryYanks,
-} from "@bernouy/cms-repository/repository/filesystem";
-import { planContractPublications } from "@bernouy/cms-repository/contracts/catalogue";
+} from "@bernouy/repository/repository/filesystem";
+import { planContractPublications } from "@bernouy/repository/contracts/catalogue";
 import { prepareReleaseModule } from "./module";
 import { admitContractBundleJson } from "@bernouy/ulvia-contracts";
 import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
+import { admitCollectionRelease } from "@bernouy/repository/collections";
 import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
 import type { ResourceSource } from "./discovery";
 import {
@@ -142,4 +142,4 @@ export async function releaseBatch(
     log(`Prepared ${coordinates.size} local releases.`);
 }
 
-import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers";
+import { InMemoryProviderManifestCatalogue } from "@bernouy/repository/providers";

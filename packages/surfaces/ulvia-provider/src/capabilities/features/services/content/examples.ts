@@ -1,5 +1,5 @@
-import { ContentValidationError } from "@bernouy/cms-content";
-import { collectionExampleDocument, resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
+import { ContentValidationError } from "@bernouy/content";
+import { collectionExampleDocument, resolveCollectionTranslation } from "@bernouy/repository/collections";
 import type { CmsContentDependencies } from "../../../../ports/index";
 
 export async function listExamples(

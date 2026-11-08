@@ -4,9 +4,9 @@ import {
     admitCollectionRelease,
     collectionBrowserRisk,
     collectionBrowserRiskDigest,
-} from "@bernouy/cms-repository/collections";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
+} from "@bernouy/repository/collections";
+import { CollectionStore, MemoryCollectionStorage } from "@bernouy/repository/collections/installations";
+import type { CollectionRepositorySource } from "@bernouy/repository/collections/sources";
 
 async function fixture() {
     const artifact = await admitCollectionRelease({

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
+import { RepositoryAuthoring } from "@bernouy/repository/repository/authoring";
 import { artifactFixture, contractSnapshot } from "./fixtures";
 
 test("artifact preparation kind, digest, source, expiry, instance and Repository are checked before writes", async () => {

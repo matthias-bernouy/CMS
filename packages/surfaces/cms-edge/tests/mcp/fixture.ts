@@ -1,4 +1,4 @@
-import { McpAuthorization, InMemoryOAuthStore, OAuthError } from "@bernouy/cms-auth/oauth";
+import { McpAuthorization, InMemoryOAuthStore, OAuthError } from "@bernouy/auth/oauth";
 import { createCmsMcpHandler } from "@bernouy/cms-edge";
 import { createMcpTestContract } from "./contracts";
 import type { GatewayActor, GatewayInvocation, GatewayInvoker, GatewayResult } from "@bernouy/cms-gateway";

@@ -1,0 +1,105 @@
+import { describe, expect, test } from "bun:test";
+import { dirname, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const sourceRoot = fileURLToPath(new URL("../../src/", import.meta.url));
+const transpiler = new Bun.Transpiler({ loader: "ts" });
+
+function importPaths(source: string): readonly string[] {
+    const paths = transpiler.scan(source).imports.map((entry) => entry.path);
+    // Include erased type-only imports/re-exports in the domain boundary check.
+    for (const match of source.matchAll(/\bfrom\s+["']([^"']+)["']/g)) {
+        paths.push(match[1]!);
+    }
+    return [...new Set(paths)];
+}
+
+function internalPath(specifier: string, file: string): string | undefined {
+    if (specifier.startsWith("repository/")) {
+        return specifier.slice("repository/".length);
+    }
+    if (specifier.startsWith(".")) {
+        return relative(sourceRoot, resolve(dirname(file), specifier));
+    }
+    return undefined;
+}
+
+describe("repository domain boundaries", () => {
+    test.each(["contracts", "exports/contracts"])("keeps %s independent of provider and site state", async (domain) => {
+        const violations: string[] = [];
+        for await (const file of new Bun.Glob("**/*.ts").scan({ cwd: resolve(sourceRoot, domain), absolute: true })) {
+            for (const specifier of importPaths(await Bun.file(file).text())) {
+                const target = internalPath(specifier, file);
+                if (
+                    (target !== undefined &&
+                        !target.startsWith("contracts/") &&
+                        !target.startsWith("exports/contracts/")) ||
+                    specifier.startsWith("@bernouy/repository")
+                ) {
+                    violations.push(`${relative(sourceRoot, file)} -> ${specifier}`);
+                }
+            }
+        }
+        expect(violations).toEqual([]);
+    });
+
+    test.each(["providers", "collections"])(
+        "%s consumes contracts through the contract export facade",
+        async (domain) => {
+            const violations: string[] = [];
+            for await (const file of new Bun.Glob("**/*.ts").scan({
+                cwd: resolve(sourceRoot, domain),
+                absolute: true,
+            })) {
+                for (const specifier of importPaths(await Bun.file(file).text())) {
+                    const target = internalPath(specifier, file);
+                    if (
+                        (target !== undefined &&
+                            !target.startsWith(`${domain}/`) &&
+                            !target.startsWith("repository-http/") &&
+                            !target.startsWith("site-upgrades/") &&
+                            // Collection build tooling shares the bounded filesystem scanner,
+                            // not the Repository's publication or workspace services.
+                            !(
+                                domain === "collections" &&
+                                relative(sourceRoot, file).startsWith("collections/tooling/") &&
+                                target === "repository/authoring/sourceTree"
+                            ) &&
+                            target !== "exports/contracts" &&
+                            !target.startsWith("exports/contracts/")) ||
+                        (specifier.startsWith("@bernouy/repository") &&
+                            !specifier.startsWith(`@bernouy/repository/${domain}`) &&
+                            !specifier.startsWith("@bernouy/repository/contracts"))
+                    ) {
+                        violations.push(`${relative(sourceRoot, file)} -> ${specifier}`);
+                    }
+                }
+            }
+            expect(violations).toEqual([]);
+        },
+    );
+
+    test("the shared authoring scanner stays independent of CMS business domains", async () => {
+        const source = await Bun.file(resolve(sourceRoot, "repository/authoring/sourceTree.ts")).text();
+        expect(importPaths(source).every((specifier) => specifier.startsWith("node:"))).toBe(true);
+    });
+
+    test("keeps repository HTTP transport independent of domains", async () => {
+        const violations: string[] = [];
+        for await (const file of new Bun.Glob("**/*.ts").scan({
+            cwd: resolve(sourceRoot, "repository-http"),
+            absolute: true,
+        })) {
+            for (const specifier of importPaths(await Bun.file(file).text())) {
+                const target = internalPath(specifier, file);
+                if (
+                    (target !== undefined && !target.startsWith("repository-http/")) ||
+                    specifier.startsWith("@bernouy/repository")
+                ) {
+                    violations.push(`${relative(sourceRoot, file)} -> ${specifier}`);
+                }
+            }
+        }
+        expect(violations).toEqual([]);
+    });
+});

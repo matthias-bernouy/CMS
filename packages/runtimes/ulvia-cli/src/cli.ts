@@ -129,7 +129,7 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
         return;
     }
     const { pruneCommand } = await import("./commands/prune");
-    const { LocalCollectionRepository } = await import("@bernouy/cms-repository/repository/filesystem");
+    const { LocalCollectionRepository } = await import("@bernouy/repository/repository/filesystem");
     const repository = new LocalCollectionRepository(paths.repository);
     await pruneCommand(args.slice(1), repository, log);
 }

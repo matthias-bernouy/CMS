@@ -1,5 +1,5 @@
 import { LOG_LEVELS, type LogRecord } from "@bernouy/logging";
-import type { LogDetail, LogQuery, LogSummary } from "@bernouy/cms-observability";
+import type { LogDetail, LogQuery, LogSummary } from "@bernouy/observability";
 import { formatRecord, parseSelection } from "./selection";
 
 export interface InstanceJournalClient {

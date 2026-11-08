@@ -1,1 +1,1 @@
-export type { ProviderAdministration } from "@bernouy/cms-repository/features/installations";
+export type { ProviderAdministration } from "@bernouy/repository/features/installations";

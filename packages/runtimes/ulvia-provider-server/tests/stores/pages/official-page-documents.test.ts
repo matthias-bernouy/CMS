@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { createCmsPage } from "@bernouy/cms-content";
-import { collectionExampleDocument } from "@bernouy/cms-repository/collections";
+import { createCmsPage } from "@bernouy/content";
+import { collectionExampleDocument } from "@bernouy/repository/collections";
 import { officialPagesFixture } from "./officialPagesFixture";
 
 test("official initial Pages and a translated input example use ordinary Content writes", async () => {

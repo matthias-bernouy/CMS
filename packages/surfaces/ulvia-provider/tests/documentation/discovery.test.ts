@@ -3,7 +3,7 @@ import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { expect, test } from "bun:test";
 import { CapabilityMcpBinding } from "@bernouy/cms-gateway/mcp";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
-import { RepositoryDiscovery } from "@bernouy/cms-repository/repository/search";
+import { RepositoryDiscovery } from "@bernouy/repository/repository/search";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { createProviderContractRelay } from "../../src/transport/relay";

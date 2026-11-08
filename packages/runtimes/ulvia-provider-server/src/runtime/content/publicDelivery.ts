@@ -1,11 +1,11 @@
 import { createDescriptionCache } from "./descriptionCache";
 import { contentGatewayClient } from "./gatewayClient";
 import { contentPhaseObserver } from "./observe";
-import { ContentDelivery, PageCapabilityAnalyzer } from "@bernouy/cms-content/public-delivery";
-import { createContentReader } from "@bernouy/cms-content/rendering";
+import { ContentDelivery, PageCapabilityAnalyzer } from "@bernouy/content/public-delivery";
+import { createContentReader } from "@bernouy/content/rendering";
 import { satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
-import { resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/assets";
-import { serveInstalledCollectionAsset, collectionMaintenanceResponse } from "@bernouy/cms-repository/collections/http";
+import { resolveInstalledCollectionAssets } from "@bernouy/repository/collections/assets";
+import { serveInstalledCollectionAsset, collectionMaintenanceResponse } from "@bernouy/repository/collections/http";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
 import type { CmsContentDependencies, ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";

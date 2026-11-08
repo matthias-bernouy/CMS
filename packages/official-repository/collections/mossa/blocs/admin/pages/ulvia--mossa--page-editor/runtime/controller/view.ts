@@ -1,4 +1,4 @@
-import { createBlocScope } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/content/browser";
 import type { EditableInsertionTarget, EditablePageDocument } from "../document/index";
 import type { EditorHistory } from "../document/history";
 import type { EditorFrame } from "../frame";

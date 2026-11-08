@@ -1,4 +1,4 @@
-import { mutationFormRequest } from "@bernouy/cms-content/browser";
+import { mutationFormRequest } from "@bernouy/content/browser";
 import { callCapability, diagnosticMessages } from "../client";
 import { EditorFrame } from "../frame";
 import type { EditorCatalogue, EditorCatalogueItem } from "../model";

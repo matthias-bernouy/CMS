@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { LocalCollectionRepository, LocalRepositoryYanks } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalCollectionRepository, LocalRepositoryYanks } from "@bernouy/repository/repository/filesystem";
 import { pushFixture } from "./fixtures";
 
 test("push all orders inherited contracts and omits locally yanked releases", async () => {

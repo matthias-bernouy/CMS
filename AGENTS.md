@@ -47,14 +47,14 @@ New environment reads belong in runtimes. Existing `process.env.MODE` exceptions
 are recorded in `quality/architecture/repository/repositoryPolicy.ts`; do not
 expand that baseline to bypass dependency injection.
 
-`cms-content` owns the content persistence facade named `ContentRepository`,
+`content` owns the content persistence facade named `ContentRepository`,
 metadata, structured data, dynamic indexing and sitemap snapshots.
 `ulvia-contracts` owns contract definitions, validation, bindings, admission and
 compatibility. `ulvia-providers` owns immutable Provider models, common selection
-rules and read ports. `cms-repository` owns persistent contract/provider catalogues,
+rules and read ports. `repository` owns persistent contract/provider catalogues,
 installation/selection mutation workflows, collection admission and build tooling.
 `cms-gateway` owns provider-neutral live invocation and provider-wide identities.
-`cms-files` owns namespaces, file credentials, uploads, immutable generations,
+`files` owns namespaces, file credentials, uploads, immutable generations,
 access signatures, storage metadata and image representations. Generic secret
 storage and image transforms belong to Foundation. See the
 [package map](docs/architecture/packages.md).
@@ -71,9 +71,9 @@ recovery; those are current domain operations, not historical import paths.
 ## Imports
 
 - Import workspace packages through their package name or declared subpath:
-  `@bernouy/cms-content`, `@bernouy/cms-content/mongo`, etc.
+  `@bernouy/content`, `@bernouy/content/mongo`, etc.
 - Inside a package, prefer the local path aliases already configured for that
-  package (`cms-edge/...`, `cms-content/...`, `http-runner/...`, and so on)
+  package (`cms-edge/...`, `content/...`, `http-runner/...`, and so on)
   over deep relative paths.
 - Do not import another package through `packages/.../src/...`.
 - Declare type dependencies with top-level `import type` statements. Inline
@@ -149,7 +149,7 @@ bun run clean
 ```
 
 `bun run build` emits TypeScript project references, builds the Bloc behavior
-and binding-core runtimes owned by `@bernouy/cms-content`, then refreshes the
+and binding-core runtimes owned by `@bernouy/content`, then refreshes the
 CLI's admitted official bootstrap snapshot.
 
 ## Agent Validation Loop

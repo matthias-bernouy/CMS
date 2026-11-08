@@ -1,17 +1,17 @@
-import type { RepositoryPublicationRegistry } from "@bernouy/cms-repository/repository/publication";
+import type { RepositoryPublicationRegistry } from "@bernouy/repository/repository/publication";
 import { join } from "node:path";
-import { InMemoryPatRepository } from "@bernouy/cms-auth";
+import { InMemoryPatRepository } from "@bernouy/auth";
 import {
     FilesystemRegistryReads,
     FilesystemRepositoryCatalogueIndex,
     FilesystemRepositoryPublicationRegistry,
     FilesystemRepositoryPublicationUploadStore,
-} from "@bernouy/cms-repository/repository/filesystem";
-import { RepositoryNamespaces } from "@bernouy/cms-repository/repository/namespaces";
-import { RepositoryCapabilityService } from "@bernouy/cms-repository/repository/capabilities";
-import { FilesystemRepositorySourceStore } from "@bernouy/cms-repository/repository/sources";
-import { RepositorySearch } from "@bernouy/cms-repository/repository/search";
-import { FilesystemRepositorySearchSource } from "@bernouy/cms-repository/repository/search/filesystem";
+} from "@bernouy/repository/repository/filesystem";
+import { RepositoryNamespaces } from "@bernouy/repository/repository/namespaces";
+import { RepositoryCapabilityService } from "@bernouy/repository/repository/capabilities";
+import { FilesystemRepositorySourceStore } from "@bernouy/repository/repository/sources";
+import { RepositorySearch } from "@bernouy/repository/repository/search";
+import { FilesystemRepositorySearchSource } from "@bernouy/repository/repository/search/filesystem";
 import { FixtureNamespaceStore } from "./ownership";
 import { repositoryFixtureHttp } from "./http";
 

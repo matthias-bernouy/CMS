@@ -3,7 +3,7 @@ import { signProviderInvocationToken, verifyProviderInvocationToken } from "@ber
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { loadOfficialFeatures, registerOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
-import type { SecretsService } from "@bernouy/cms-secrets";
+import type { SecretsService } from "@bernouy/secrets";
 
 export const scope = { siteId: "site-a", instanceId: "instance-a" };
 const providerId = "ulvia/primary-provider";

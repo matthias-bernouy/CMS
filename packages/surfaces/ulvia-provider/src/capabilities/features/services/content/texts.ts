@@ -1,5 +1,5 @@
-import type { ContentTextSelection } from "@bernouy/cms-content/feature";
-import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
+import type { ContentTextSelection } from "@bernouy/content/feature";
+import { resolveCollectionTranslation } from "@bernouy/repository/collections";
 import type { CmsContentDependencies } from "../../../../ports/index";
 
 type CollectionInstallation = Awaited<

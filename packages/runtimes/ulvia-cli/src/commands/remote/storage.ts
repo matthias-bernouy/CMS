@@ -1,20 +1,20 @@
 import { contractAssetDefinitions } from "@bernouy/ulvia-contracts/documentation";
 import { admitContractBundleJson, admitContractReleaseJson, parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
-import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
+import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
+import { admitCollectionReleaseJson } from "@bernouy/repository/collections";
 import {
     LocalArtifactFiles,
     LocalCollectionRepository,
     LocalContractReleases,
     LocalProviderReleases,
     LocalRepositoryYanks,
-} from "@bernouy/cms-repository/repository/filesystem";
+} from "@bernouy/repository/repository/filesystem";
 import {
     type PublicationAsset,
     type PublicationEnvelope,
     type RemoteCoordinate,
-} from "@bernouy/cms-repository/repository/publication";
+} from "@bernouy/repository/repository/publication";
 
 export type LocalPushReads = {
     readonly collections: LocalCollectionRepository;

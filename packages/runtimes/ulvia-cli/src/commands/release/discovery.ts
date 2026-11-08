@@ -1,6 +1,6 @@
 import { lstat, readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { readOptionalJsonSourceRecord } from "@bernouy/cms-repository/repository/authoring/build";
+import { readOptionalJsonSourceRecord } from "@bernouy/repository/repository/authoring/build";
 
 export type ResourceSource = Readonly<{
     directory: string;

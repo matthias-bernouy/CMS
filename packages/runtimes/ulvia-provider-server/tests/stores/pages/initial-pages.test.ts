@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { initialPagesFixture as fixture } from "./initialPagesFixture";
-import { resolvePageMetadata, storedSitemapLocations } from "@bernouy/cms-content/seo";
-import { createContentReader } from "@bernouy/cms-content";
+import { resolvePageMetadata, storedSitemapLocations } from "@bernouy/content/seo";
+import { createContentReader } from "@bernouy/content";
 
 test("initial Pages are ordinary site Pages, seeded once and independent of the profile afterwards", async () => {
     const { repo, seed, records } = fixture();

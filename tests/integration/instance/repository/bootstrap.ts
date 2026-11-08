@@ -1,7 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { parseContractReleaseJson } from "@bernouy/ulvia-contracts";
-import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
+import { RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
+import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 
 export async function publishBundledReleases(url: string, providerUrl: string, token: string) {
     const root = resolve(import.meta.dir, "../../../../packages/runtimes/ulvia-cli/dist/bootstrap");

@@ -1,4 +1,4 @@
-import type { AuthoringService, AuthoringServices } from "@bernouy/cms-repository/features/authoring";
+import type { AuthoringService, AuthoringServices } from "@bernouy/repository/features/authoring";
 const unused = async (): Promise<never> => {
     throw new Error("Unexpected authoring test service call");
 };

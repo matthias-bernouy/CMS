@@ -4,8 +4,8 @@ import {
     collectionBrowserRisk,
     collectionBrowserRiskDigest,
     parseCollectionRelease,
-} from "@bernouy/cms-repository/collections";
-import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
+} from "@bernouy/repository/collections";
+import type { CollectionRepositorySource } from "@bernouy/repository/collections/sources";
 import { CollectionSources } from "../../../../src/capabilities/installations/sources/index";
 
 test("stages only the exact browser-risk report approved by the caller", async () => {

@@ -1,7 +1,0 @@
-export { RepositorySourceClient } from "cms-repository/repository/sources/client";
-export { FilesystemRepositorySourceStore } from "cms-repository/repository/sources/filesystem";
-export type {
-    ArtifactSourceKind,
-    RepositorySourceSnapshot,
-    RepositorySourceStore,
-} from "cms-repository/repository/sources/interfaces";

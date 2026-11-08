@@ -1,5 +1,5 @@
 import { implementFeature } from "@bernouy/ulvia-sdk";
-import { repositoryFeature } from "@bernouy/cms-repository/features/repository";
+import { repositoryFeature } from "@bernouy/repository/features/repository";
 import type { UlviaProviderFeatureServices } from "../../../../ports/index";
 
 export const repositoryImplementation = implementFeature(repositoryFeature, {

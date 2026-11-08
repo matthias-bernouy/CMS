@@ -1,0 +1,39 @@
+import { expect, test } from "bun:test";
+import { planContractSelections } from "@bernouy/ulvia-providers/selections";
+import { InMemoryProviderManifestCatalogue } from "repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
+import { installationFor, siteId } from "./fixtures";
+import { contractDocument, implementation, releaseCatalogue } from "../support/fixtures";
+
+test("remote site selection requires HTTP beside MCP while contract admission still permits local MCP-only execution", async () => {
+    for (const http of [false, true]) {
+        const document = contractDocument("ulvia/remote.example", "invoke");
+        const capability = (document.capabilities as Record<string, unknown>[])[0]!;
+        capability.bindings = [
+            ...(http ? [{ id: "http", ...(capability.bindings[0] as object) }] : []),
+            { id: "mcp", transport: "mcp" },
+        ];
+        const releases = await releaseCatalogue(document);
+        const record = (await releases.get("ulvia/remote.example", "1.0.0"))!;
+        const manifests = new InMemoryProviderManifestCatalogue(releases);
+        const installation = await installationFor(releases, manifests, [
+            implementation("ulvia/remote.example", "1.0.0", record.admission.digest),
+        ]);
+        const selection = {
+            siteId,
+            installationId: installation.id,
+            contractId: "ulvia/remote.example",
+            version: "1.0.0",
+            digest: record.admission.digest,
+        };
+        const result = planContractSelections(siteId, [selection], {
+            releases,
+            manifests,
+            installations: [installation],
+        });
+        if (http) {
+            expect((await result).structurallyValid).toBe(true);
+        } else {
+            await expect(result).rejects.toThrow("outbound HTTP binding");
+        }
+    }
+});

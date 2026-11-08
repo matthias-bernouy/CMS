@@ -57,16 +57,16 @@ CmsCore/
 |   |   |-- gateway/           @bernouy/cms-gateway
 |   |   `-- sdk/               @bernouy/ulvia-sdk
 |   |-- features/
-|   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, themes, SEO)
-|   |   |-- cms-auth/          @bernouy/cms-auth
-|   |   |-- cms-documentation/ @bernouy/cms-documentation
-|   |   |-- cms-observability/ @bernouy/cms-observability
+|   |   |-- content/           @bernouy/content (pages, blocs, settings, themes, SEO)
+|   |   |-- auth/              @bernouy/auth
+|   |   |-- documentation/     @bernouy/documentation
+|   |   |-- observability/     @bernouy/observability
 |   |   |-- email/
 |   |   |   |-- base/          @bernouy/email
 |   |   |   `-- smtp/          @bernouy/email-smtp
-|   |   |-- cms-files/         @bernouy/cms-files
-|   |   |-- cms-repository/    @bernouy/cms-repository (including collection build tooling)
-|   |   `-- cms-secrets/       @bernouy/cms-secrets
+|   |   |-- files/             @bernouy/files
+|   |   |-- repository/        @bernouy/repository (including collection build tooling)
+|   |   `-- secrets/           @bernouy/secrets
 |   |-- surfaces/
 |   |   |-- ulvia-provider/    @bernouy/ulvia-provider
 |   |   `-- cms-edge/          @bernouy/cms-edge
@@ -121,12 +121,12 @@ See the [development guide](docs/development/README.md) for current checks and
 The [2026-10-25 audit](docs/AUDIT.md) is a historical snapshot.
 
 `build.ts` first runs `tsc --build`, then builds the generated Bloc behavior and
-binding-core runtimes owned by `@bernouy/cms-content`, and finally refreshes the
+binding-core runtimes owned by `@bernouy/content`, and finally refreshes the
 CLI's admitted official bootstrap snapshot. There is no separate visual-component
 package or generated component distribution.
 
 Packages ship **source** through their `exports` fields; consumers resolve
-straight to `src/` outside the explicit `cms-content` browser bundles.
+straight to `src/` outside the explicit `content` browser bundles.
 
 ## Deployment
 

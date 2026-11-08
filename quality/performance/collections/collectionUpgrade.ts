@@ -2,7 +2,7 @@ import {
     CollectionStore,
     MemoryCollectionStorage,
     prepareCollectionUpgrade,
-} from "@bernouy/cms-repository/collections/installations";
+} from "@bernouy/repository/collections/installations";
 import { assertGrowth, assertMaximum, benchmark, printResults } from "../benchmark";
 import { syntheticCorpus } from "./collectionUpgradeFixture";
 import { admittedFixture } from "./collectionFixtures";

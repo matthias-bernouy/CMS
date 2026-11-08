@@ -1,0 +1,258 @@
+import { collectionFixture } from "./examples/buildFixture";
+import { describe, expect, test } from "bun:test";
+import {
+    admitCollectionRelease,
+    admitCollectionReleaseJson,
+} from "repository/collections/core/admission/admitCollectionRelease";
+import { canonicalIJsonBytes } from "@bernouy/ulvia-contracts/protocol";
+import { collectionDocument } from "../fixtures";
+import { capabilityTransition, contractDocument, releaseCatalogue } from "../../providers/support/fixtures";
+
+describe("collection authored bundle admission", () => {
+    test("supports the full identifier length admitted by contracts", async () => {
+        const capabilityId = "a".repeat(128);
+        const contracts = await releaseCatalogue(contractDocument("ulvia/payment", capabilityId));
+        const source = collectionDocument();
+        (source.blocs as Record<string, unknown>[])[0]!.requires = [
+            { contractId: "ulvia/payment", capabilityId, versionRange: "^1.0.0" },
+        ];
+        expect((await admitCollectionRelease(collectionFixture(source), [], { contracts })).digest).toMatch(/^sha256:/);
+    });
+
+    test("hashes only fully verified normalized data", async () => {
+        const source = collectionDocument();
+        const admission = await admitCollectionRelease(collectionFixture(source));
+        const reordered = structuredClone(source);
+        (reordered.blocs as unknown[]).reverse();
+        expect((await admitCollectionRelease(collectionFixture(reordered))).digest).toBe(admission.digest);
+        expect((await admitCollectionReleaseJson(JSON.stringify(source))).digest).toBe(admission.digest);
+        expect(admission.digest).toBe(
+            `sha256:${new Bun.CryptoHasher("sha256").update(canonicalIJsonBytes(admission.release)).digest("hex")}`,
+        );
+        expect(Object.isFrozen(admission)).toBe(true);
+        const renamed = structuredClone(source);
+        (renamed.translations as Record<string, Record<string, string>>)["en-US"]!["collection.name"] = "New name";
+        expect((await admitCollectionRelease(collectionFixture(renamed))).digest).not.toBe(admission.digest);
+    });
+
+    test("derives immutable scoped CSS fragments while admitting a release", async () => {
+        const source = collectionDocument();
+        const admission = await admitCollectionRelease(collectionFixture(source));
+        const component = admission.release.blocs.find((bloc) => bloc.id === "atlas-dofficial--atlas--panel");
+
+        expect(component?.kind === "component" ? component.runtime?.styleCSS : undefined).toContain(
+            '@scope ([cms-bloc="atlas-dofficial--atlas--panel"]) to (:scope [cms-bloc])',
+        );
+        expect(component?.kind === "component" ? component.runtime?.viewJS : undefined).toBeUndefined();
+
+        const forged = structuredClone(source);
+        (forged.blocs as Record<string, unknown>[])[0]!.runtime = { styleCSS: "forged" };
+        await expect(admitCollectionRelease(collectionFixture(forged))).rejects.toThrow(
+            "must be the canonical compilation of the Bloc style",
+        );
+    });
+
+    test("requires one common contract witness for all requirements of one bloc", async () => {
+        const contracts = await releaseCatalogue(
+            contractDocument("ulvia/payment", "create-link"),
+            ...capabilityTransition("ulvia/payment", "create-link", "refund"),
+        );
+        const source = collectionDocument();
+        const blocs = source.blocs as Record<string, unknown>[];
+        const create = { contractId: "ulvia/payment", capabilityId: "create-link", versionRange: "1.0.0 || 2.0.0" };
+        const refund = { contractId: "ulvia/payment", capabilityId: "refund", versionRange: "1.0.0 || 2.0.0" };
+        blocs[0]!.requires = [create, refund];
+        await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).rejects.toMatchObject({
+            code: "resolution_failed",
+        });
+        blocs[0]!.requires = [create];
+        blocs[1]!.requires = [refund];
+        await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).rejects.toMatchObject({
+            code: "resolution_failed",
+        });
+        blocs[1] = {
+            ...blocs[1],
+            markup: "<main>{{ resource.name }}</main>",
+            uses: [],
+            slots: {},
+        };
+        expect((await admitCollectionRelease(collectionFixture(source), [], { contracts })).release.blocs).toHaveLength(
+            2,
+        );
+        await expect(admitCollectionRelease(collectionFixture(source))).rejects.toMatchObject({
+            code: "resolution_failed",
+        });
+        await contracts.setYank("ulvia/payment", "1.0.0", { reason: "Withdrawn" });
+        await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).rejects.toMatchObject({
+            code: "resolution_failed",
+        });
+    });
+
+    test("rejects capability bindings placed on Page Bloc hosts", async () => {
+        const contracts = await releaseCatalogue(contractDocument("ulvia/catalog.items", "item.list"));
+        const source = collectionDocument({ "page.catalog.name": "Catalog" });
+        source.examples = [
+            {
+                id: "catalog",
+                label: "page.catalog.name",
+                description: "page.catalog.name",
+                previews: [{ id: "desktop", frame: { width: 800, height: 600 } }],
+                requires: [{ contractId: "ulvia/catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
+                document: {
+                    html: '<div cms-bloc="atlas-dofficial--atlas--panel" cms-mutation="ulvia/catalog.items:item.list as catalog"></div>',
+                },
+            },
+        ];
+        await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).rejects.toThrow(
+            "mutations are reserved for form submissions",
+        );
+    });
+
+    test("admits cms-query only for capabilities declared as queries", async () => {
+        const command = contractDocument("ulvia/catalog.items", "item.list");
+        const query = structuredClone(command);
+        ((query.capabilities as Record<string, unknown>[])[0]!.behavior as Record<string, unknown>) = {
+            sensitive: false,
+            effect: "query",
+            execution: "sync",
+        };
+        (((query.capabilities as Record<string, unknown>[])[0]!.bindings[0] as Record<string, unknown>)
+            .method as string) = "QUERY";
+        const source = collectionDocument();
+        (source.blocs as Record<string, unknown>[]).push({
+            description: "bloc.page.label",
+            categories: ["bloc.page.label"],
+
+            kind: "composition",
+            root: { accepts: ["div"] },
+            id: "atlas-dofficial--atlas--catalog",
+            label: "bloc.page.label",
+            markup: `<section cms-query="ulvia/catalog.items:item.list as items">
+                <div cms-match="items.outcome.kind">
+                    <div cms-case='"none"'></div>
+                    <p cms-case='"success"'>{{ items.data.id }}</p>
+                    <p cms-case='"failure"'>{{ items.outcome.code }}</p>
+                </div>
+            </section>`,
+            slots: {},
+            uses: [],
+            requires: [{ contractId: "ulvia/catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
+        });
+
+        await expect(
+            admitCollectionRelease(collectionFixture(source), [], { contracts: await releaseCatalogue(command) }),
+        ).rejects.toMatchObject({ code: "resolution_failed" });
+        await expect(
+            admitCollectionRelease(collectionFixture(source), [], { contracts: await releaseCatalogue(query) }),
+        ).resolves.toMatchObject({ release: { collectionId: "atlas.official/atlas" } });
+        const binaryQuery = structuredClone(query);
+        const binaryCapability = (binaryQuery.capabilities as Record<string, unknown>[])[0]!;
+        binaryCapability.output = { type: "binary", maxBytes: 1024 };
+        (binaryCapability.bindings[0] as Record<string, unknown>).response = {
+            successStatuses: [200],
+            contentTypes: ["application/octet-stream"],
+            errorStatuses: {},
+        };
+        await expect(
+            admitCollectionRelease(collectionFixture(source), [], { contracts: await releaseCatalogue(binaryQuery) }),
+        ).rejects.toMatchObject({ code: "resolution_failed" });
+    });
+
+    test("proves synchronized query projections against their declared state schemas", async () => {
+        const query = contractDocument("ulvia/catalog.items", "item.list");
+        const capability = (query.capabilities as Record<string, unknown>[])[0]!;
+        capability.behavior = { sensitive: false, effect: "query", execution: "sync" };
+        (capability.bindings[0] as Record<string, unknown>).method = "QUERY";
+        const source = collectionDocument();
+        source.states = [
+            {
+                id: "selection",
+                scope: "page",
+                schema: {
+                    type: "object",
+                    properties: {
+                        data: {
+                            type: "object",
+                            nullable: true,
+                            properties: { id: { type: "string", maxLength: 128 } },
+                            required: ["id"],
+                        },
+                    },
+                    required: ["data"],
+                },
+            },
+        ];
+        (source.blocs as Record<string, unknown>[]).push({
+            description: "bloc.page.label",
+            categories: ["bloc.page.label"],
+
+            kind: "composition",
+            root: { accepts: ["div"] },
+            id: "atlas-dofficial--atlas--catalog",
+            label: "bloc.page.label",
+            markup: `<section
+                cms-query="ulvia/catalog.items:item.list as items"
+                cms-sync="@page:atlas-dofficial--atlas--selection"
+                cms-sync-select="data.id"
+            >
+                <div cms-match="items.outcome.kind">
+                    <div cms-case='"none"'></div>
+                    <p cms-case='"success"'>{{ items.data.id }}</p>
+                    <p cms-case='"failure"'>{{ items.outcome.code }}</p>
+                </div>
+            </section>`,
+            slots: {},
+            uses: [],
+            requires: [{ contractId: "ulvia/catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
+        });
+        const contracts = await releaseCatalogue(query);
+
+        await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).resolves.toMatchObject({
+            release: { collectionId: "atlas.official/atlas" },
+        });
+
+        const incompatible = structuredClone(source);
+        const state = (incompatible.states as Record<string, unknown>[])[0]!;
+        const schema = state.schema as Record<string, unknown>;
+        const data = (schema.properties as Record<string, Record<string, unknown>>).data!;
+        const id = (data.properties as Record<string, Record<string, unknown>>).id!;
+        id.maxLength = 64;
+        await expect(admitCollectionRelease(collectionFixture(incompatible), [], { contracts })).rejects.toThrow(
+            "cms-sync producer is incompatible",
+        );
+
+        const implicitFullSnapshot = structuredClone(source);
+        const bloc = (implicitFullSnapshot.blocs as Record<string, unknown>[]).at(-1)!;
+        bloc.markup = String(bloc.markup).replace(' cms-sync-select="data.id"', "");
+        await expect(
+            admitCollectionRelease(collectionFixture(implicitFullSnapshot), [], { contracts }),
+        ).rejects.toThrow("cms-sync producer is incompatible");
+    });
+
+    test("snapshots release and all asset bytes before any asynchronous work", async () => {
+        const first = new Uint8Array([1, 2]);
+        const second = new Uint8Array([3, 4]);
+        const source = collectionDocument();
+        source.assets = [first, second].map((bytes, index) => ({
+            id: `asset-${index}`,
+            mediaType: "application/octet-stream",
+            byteLength: bytes.length,
+            digest: `sha256:${new Bun.CryptoHasher("sha256").update(bytes).digest("hex")}`,
+        }));
+        const pending = admitCollectionRelease(collectionFixture(source), [
+            { id: "asset-0", bytes: first },
+            { id: "asset-1", bytes: second },
+        ]);
+        first.fill(9);
+        second.fill(9);
+        (source.translations as Record<string, Record<string, string>>)["en-US"]!["collection.name"] = "Mutated";
+        const admission = await pending;
+        expect(admission.release.name).toBe("collection.name");
+        expect(admission.release.translations["en-US"]![admission.release.name]).toBe("Atlas UI");
+        expect(new Uint8Array(await admission.assets[0]!.bytes.arrayBuffer())).toEqual(new Uint8Array([1, 2]));
+        expect(new Uint8Array(await admission.assets[1]!.bytes.arrayBuffer())).toEqual(new Uint8Array([3, 4]));
+        await expect(admitCollectionRelease(collectionFixture(source))).rejects.toMatchObject({
+            code: "asset_mismatch",
+        });
+    });
+});

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/content";
 import { decodeResourceMetadata, RESOURCE_HEADER } from "@bernouy/cms-gateway/protocol";
 import { contentTransport } from "./transport";
 

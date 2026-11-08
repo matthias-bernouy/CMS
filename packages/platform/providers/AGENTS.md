@@ -8,7 +8,7 @@ Platform models and validation for Ulvia Providers and selected exact releases.
 - Readiness derives from approved status, exact releases and fresh observations.
 - Read ports do not expose approval, revocation, publication or selection replacement.
 - Administrative workflows, mutation stores, discovery clients and persistence
-  adapters remain in `@bernouy/cms-repository`.
+  adapters remain in `@bernouy/repository`.
 - Selection validation never chooses versions or installations, changes grants,
   writes state or proves runtime readiness.
 - Keep common state errors and parsing bounds stable during extraction.

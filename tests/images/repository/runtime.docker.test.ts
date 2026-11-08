@@ -103,7 +103,7 @@ async function holdRegistryWriteLock(providerName: string): Promise<void> {
     const script = `
         import { readdir, stat } from "node:fs/promises";
         import { join } from "node:path";
-        import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem";
+        import { withRepositoryWriteLock } from "@bernouy/repository/repository/filesystem";
         const directory = "/var/lib/cms/files";
         const roots = [];
         for (const item of await readdir(directory, { withFileTypes: true })) {

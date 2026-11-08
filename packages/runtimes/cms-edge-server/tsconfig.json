@@ -9,13 +9,13 @@
     ],
     "references": [
         {
-            "path": "../../features/cms-auth"
+            "path": "../../features/auth"
         },
         {
-            "path": "../../features/cms-observability"
+            "path": "../../features/observability"
         },
         {
-            "path": "../../features/cms-repository"
+            "path": "../../features/repository"
         },
         {
             "path": "../../foundation/http-runner"

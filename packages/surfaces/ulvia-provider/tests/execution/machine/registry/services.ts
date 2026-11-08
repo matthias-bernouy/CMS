@@ -1,4 +1,4 @@
-import type { RepositoryService } from "@bernouy/cms-repository/features/repository";
+import type { RepositoryService } from "@bernouy/repository/features/repository";
 
 type Overrides = { readonly [Key in keyof RepositoryService]?: Partial<RepositoryService[Key]> };
 const unexpected = async (): Promise<never> => {

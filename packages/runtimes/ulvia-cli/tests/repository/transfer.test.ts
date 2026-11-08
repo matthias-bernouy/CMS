@@ -4,11 +4,11 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
-import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
 import { startTestRepository } from "./fixture";
-import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
+import { prepareContractSource } from "@bernouy/repository/repository/authoring/build";
 import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
-import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
 
 test("CLI push and pull preserve every official artifact kind through a remote repository", async () => {
     const sourceData = await mkdtemp(join(tmpdir(), "ulvia-push-source-"));

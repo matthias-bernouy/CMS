@@ -1,0 +1,53 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "repository/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../../features/content"
+        },
+        {
+            "path": "../../foundation/binary-media"
+        },
+        {
+            "path": "../../foundation/blob-store"
+        },
+        {
+            "path": "../../foundation/http-runner"
+        },
+        {
+            "path": "../../foundation/resource-identity"
+        },
+        {
+            "path": "../../foundation/secret-store"
+        },
+        {
+            "path": "../../foundation/text-search"
+        },
+        {
+            "path": "../../platform/contracts"
+        },
+        {
+            "path": "../../platform/providers"
+        },
+        {
+            "path": "../../platform/sdk"
+        },
+        {
+            "path": "../../platform/gateway"
+        },
+        {
+            "path": "../documentation"
+        }
+    ]
+}

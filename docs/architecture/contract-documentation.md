@@ -1,7 +1,7 @@
 # Contract documentation
 
-Contract documentation is immutable release data. `cms-repository` admits and
-transfers it; `cms-documentation` retrieves and ranks it; the Provider runtime
+Contract documentation is immutable release data. `repository` admits and
+transfers it; `documentation` retrieves and ranks it; the Provider runtime
 injects instance selection, Mongo storage and a local multilingual embedding
 model. Generic ranking and vector preparation live in `@bernouy/text-search`;
 runtimes explicitly import the subprocess backend from `@bernouy/text-embeddings`.

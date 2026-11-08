@@ -10,7 +10,7 @@ import {
     UlviaProvider,
     type UlviaProviderInstanceRuntime,
 } from "@bernouy/ulvia-provider";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import {
     NETWORK_INSTANCE_ID,

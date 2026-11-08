@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { rm, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { CollectionAuthoring, CollectionPublicationRecoveryError } from "@bernouy/cms-repository/repository/authoring";
+import { CollectionAuthoring, CollectionPublicationRecoveryError } from "@bernouy/repository/repository/authoring";
 import { authoringFixture, sourceSnapshot } from "./fixture";
 
 test("durable publication receipt resumes private sources after restart without rebuilding or uploading", async () => {

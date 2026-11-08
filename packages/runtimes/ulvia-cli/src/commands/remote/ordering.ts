@@ -1,7 +1,7 @@
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { type CatalogueContractRelease } from "@bernouy/ulvia-contracts/catalogue";
 import { compareSemVer, satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
-import type { CollectionRelease } from "@bernouy/cms-repository/collections";
+import type { CollectionRelease } from "@bernouy/repository/collections";
 
 /** Reconstruct the dependency order without hydrating fixture bytes or discarding historical yank witnesses. */
 export async function orderContracts(

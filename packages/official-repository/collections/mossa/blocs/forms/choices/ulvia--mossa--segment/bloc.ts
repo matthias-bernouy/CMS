@@ -1,4 +1,4 @@
-import { CMS_BLOC_FORM_CONTROL_READY_EVENT, createBlocScope } from "@bernouy/cms-content/browser";
+import { CMS_BLOC_FORM_CONTROL_READY_EVENT, createBlocScope } from "@bernouy/content/browser";
 
 class Controller {
     private readonly scope: ReturnType<typeof createBlocScope>;

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { readDocumentationSource } from "@bernouy/cms-repository/repository/authoring/build";
+import { readDocumentationSource } from "@bernouy/repository/repository/authoring/build";
 
 test("documentation source compilation derives paths, plain H1 titles and exact byte manifests", async () => {
     const root = await mkdtemp(join(tmpdir(), "documentation-source-"));

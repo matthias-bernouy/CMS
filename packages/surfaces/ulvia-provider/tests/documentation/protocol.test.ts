@@ -3,7 +3,7 @@ import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
-import { CmsDocumentation } from "@bernouy/cms-documentation";
+import { CmsDocumentation } from "@bernouy/documentation";
 import { CapabilityMcpBinding } from "@bernouy/cms-gateway/mcp";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import { NOOP_LOGGER } from "@bernouy/logging";

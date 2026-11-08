@@ -15,8 +15,8 @@ provider-neutral capabilities without importing any CMS feature or choosing stor
 | `./validation` | Shared validation primitives used by persistent catalogue implementations. |
 
 `ContractReleaseReader` exposes reads only. Persistent catalogues, publication,
-yanks and deprecations belong to `@bernouy/cms-repository/contracts/catalogue`
+yanks and deprecations belong to `@bernouy/repository/contracts/catalogue`
 and its explicit Mongo adapter. Authoring source assembly remains in
-`@bernouy/cms-repository/repository/authoring/build`.
+`@bernouy/repository/repository/authoring/build`.
 
 Detailed format rules are documented in [the contract model](src/README.md).

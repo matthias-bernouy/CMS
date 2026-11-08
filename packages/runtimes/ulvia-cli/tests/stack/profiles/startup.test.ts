@@ -13,7 +13,7 @@ test("help, version and local instance listing do not initialize authoring or pu
         await runCli(["--version"], options);
         await runCli(["instance", "list"], options);
         console.log(JSON.stringify(Object.keys(require.cache).filter(path =>
-            /cms-repository\/src\/collections\/|ulvia-cli\/src\/commands\/(release|remote)\//.test(path))));
+            /repository\/src\/collections\/|ulvia-cli\/src\/commands\/(release|remote)\//.test(path))));
     `;
     try {
         const child = Bun.spawn([process.execPath, "--eval", script, root], { stdout: "pipe", stderr: "pipe" });

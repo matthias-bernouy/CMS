@@ -1,6 +1,6 @@
 import { activeProviderRequirements } from "@bernouy/ulvia-providers/selections";
 import { satisfiesVersionRange } from "@bernouy/ulvia-providers";
-import type { ProviderManagement } from "@bernouy/cms-repository/providers/management";
+import type { ProviderManagement } from "@bernouy/repository/providers/management";
 import type { ProviderAdministration } from "@bernouy/ulvia-provider";
 import type { ProviderStores } from "../../stores/providerStores";
 import type { createProviderGateway } from "../createProviderGateway";

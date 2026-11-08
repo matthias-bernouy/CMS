@@ -1,0 +1,218 @@
+import { RevisionedRecordReader } from "repository/providers/persistence/mongo/RevisionedRecordReader";
+import type { Db } from "mongodb";
+import { MongoServerError } from "mongodb";
+import type { ProviderManifestCatalogue } from "repository/providers/manifests/interfaces/ProviderManifestCatalogue";
+import { catalogueRevision } from "@bernouy/ulvia-contracts/protocol";
+import {
+    approvedInstallation,
+    candidateFromInstallation,
+} from "repository/providers/installations/core/lifecycle/candidates";
+import { ProviderInstallationWorkflowError } from "@bernouy/ulvia-providers/installations";
+import {
+    validateApprovalCommand,
+    validateProposal,
+    workflowOptions,
+} from "repository/providers/installations/core/lifecycle/preparations";
+import {
+    assertActive,
+    assertCurrentTimestamp,
+    assertIdentity,
+    assertRevision,
+    installationScope,
+} from "repository/providers/installations/core/lifecycle/state";
+import { timestamp } from "@bernouy/ulvia-providers/validation";
+import { parseProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import { parseOpaqueId } from "@bernouy/ulvia-providers/validation";
+import type { ProviderInstallationStatus } from "@bernouy/ulvia-providers/installations";
+import type {
+    ProviderInstallationApprovalCommand,
+    ProviderInstallationClock,
+    ProviderInstallationStore,
+    ProviderInstallationWorkflowOptions,
+} from "repository/providers/installations/interfaces/ProviderInstallationStore";
+import type { ProviderInstallationScope, StoredProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import {
+    installationDocument,
+    type InstallationDocument,
+    readInstallationDocument,
+} from "repository/providers/installations/default-implementation/mongo/record";
+import { mongoInstallationSelectionRevision } from "./selectionMetadata";
+
+/** Durable site-scoped installation state. Mongo's revision predicate fences concurrent writers. */
+export class MongoProviderInstallationStore implements ProviderInstallationStore {
+    readonly #reads = new RevisionedRecordReader<StoredProviderInstallation>();
+    readonly #collection;
+    readonly #options;
+
+    constructor(
+        db: Db,
+        private readonly catalogue: ProviderManifestCatalogue,
+        private readonly clock: ProviderInstallationClock,
+        options: ProviderInstallationWorkflowOptions = {},
+    ) {
+        this.#collection = db.collection<InstallationDocument>("cms_provider_installations");
+        this.#options = workflowOptions(options);
+    }
+
+    async init(): Promise<void> {
+        await this.#collection.createIndex({ siteId: 1, _id: 1 });
+    }
+
+    async revision(siteId: string): Promise<string> {
+        const site = parseOpaqueId(siteId, "$.siteId");
+        const records = await this.#collection
+            .find({ siteId: site }, { projection: { _id: 1, revision: 1 } })
+            .sort({ _id: 1 })
+            .toArray();
+        return catalogueRevision({ siteId: site, records: records.map((record) => [record._id, record.revision]) });
+    }
+
+    async selectionRevision(siteId: string): Promise<string> {
+        const site = parseOpaqueId(siteId, "$.siteId");
+        return mongoInstallationSelectionRevision(this.#collection, site);
+    }
+
+    async get(scope: ProviderInstallationScope): Promise<StoredProviderInstallation | null> {
+        const filter = {
+            _id: parseOpaqueId(scope.installationId, "$.installationId"),
+            siteId: parseOpaqueId(scope.siteId, "$.siteId"),
+        };
+        return this.#reads.get(
+            `${filter.siteId}\0${filter._id}`,
+            (revisionOnly) => this.#collection.findOne(filter, revisionOnly ? { projection: { revision: 1 } } : {}),
+            (document) => readInstallationDocument(document, this.#options.limits),
+        );
+    }
+
+    async list(siteId: string): Promise<readonly StoredProviderInstallation[]> {
+        const documents = await this.#collection
+            .find({ siteId: parseOpaqueId(siteId, "$.siteId") })
+            .sort({ _id: 1 })
+            .toArray();
+        return Object.freeze(documents.map((document) => readInstallationDocument(document, this.#options.limits)));
+    }
+
+    async approve(command: ProviderInstallationApprovalCommand): Promise<StoredProviderInstallation> {
+        const proposal = await validateApprovalCommand(command, this.catalogue, this.clock, this.#options);
+        const record = {
+            installation: approvedInstallation(
+                proposal.candidate,
+                proposal.approvedBy,
+                proposal.now,
+                proposal.admission,
+                this.#options.limits,
+            ),
+            revision: 1,
+        };
+        const document = await installationDocument(record);
+        try {
+            await this.#collection.insertOne(document);
+        } catch (error) {
+            if (error instanceof MongoServerError && error.code === 11000) {
+                throw new ProviderInstallationWorkflowError(
+                    "installation_exists",
+                    "Installation ID is already allocated",
+                );
+            }
+            throw error;
+        }
+        return readInstallationDocument(document, this.#options.limits);
+    }
+
+    async reapprove(
+        scope: ProviderInstallationScope,
+        expectedRevision: number,
+        command: ProviderInstallationApprovalCommand,
+    ): Promise<StoredProviderInstallation> {
+        const before = await this.requireCurrent(scope, expectedRevision);
+        const proposal = await validateApprovalCommand(command, this.catalogue, this.clock, this.#options);
+        assertIdentity(before, proposal.candidate);
+        assertCurrentTimestamp(before, proposal.now);
+        if (timestamp(proposal.preparedAt) < timestamp(before.installation.updatedAt)) {
+            throw new ProviderInstallationWorkflowError(
+                "stale_timestamp",
+                "Preparation predates the current installation",
+            );
+        }
+        return this.replace(before, {
+            installation: approvedInstallation(
+                proposal.candidate,
+                proposal.approvedBy,
+                proposal.now,
+                proposal.admission,
+                this.#options.limits,
+                before.installation,
+            ),
+            revision: expectedRevision + 1,
+        });
+    }
+
+    async setStatus(scope: ProviderInstallationScope, expectedRevision: number, status: ProviderInstallationStatus) {
+        const before = await this.requireCurrent(scope, expectedRevision);
+        const now = this.clock();
+        assertCurrentTimestamp(before, now);
+        return this.replace(before, {
+            installation: parseProviderInstallation(
+                { ...before.installation, status, updatedAt: now },
+                this.#options.limits,
+            ),
+            revision: expectedRevision + 1,
+        });
+    }
+
+    async recordObservation(scope: ProviderInstallationScope, expectedRevision: number, report: unknown) {
+        const before = await this.requireCurrent(scope, expectedRevision);
+        const proposal = await validateProposal(
+            candidateFromInstallation(before.installation),
+            report,
+            this.catalogue,
+            this.clock,
+            this.#options.limits,
+            this.#options.manifestLimits,
+            true,
+        );
+        assertCurrentTimestamp(before, proposal.now);
+        if (before.observation && timestamp(proposal.now) < timestamp(before.observation.observedAt)) {
+            throw new ProviderInstallationWorkflowError(
+                "stale_timestamp",
+                "Observation cannot predate the previous observation",
+            );
+        }
+        return this.replace(before, {
+            installation: before.installation,
+            revision: expectedRevision + 1,
+            observation: { observedAt: proposal.now, report: proposal.report },
+        });
+    }
+
+    private async requireCurrent(scope: ProviderInstallationScope, expectedRevision: number) {
+        const record = await this.get(scope);
+        if (!record) {
+            throw new ProviderInstallationWorkflowError(
+                "installation_not_found",
+                "Installation does not belong to this site",
+            );
+        }
+        assertRevision(record, expectedRevision);
+        assertActive(record);
+        return record;
+    }
+
+    private async replace(before: StoredProviderInstallation, after: StoredProviderInstallation) {
+        const scope = installationScope(before);
+        const document = await installationDocument(after);
+        const result = await this.#collection.replaceOne(
+            {
+                _id: scope.installationId,
+                siteId: scope.siteId,
+                revision: before.revision,
+                "installation.status": { $ne: "revoked" },
+            },
+            document,
+        );
+        if (result.matchedCount !== 1) {
+            throw new ProviderInstallationWorkflowError("revision_conflict", "Installation revision changed");
+        }
+        return readInstallationDocument(document, this.#options.limits);
+    }
+}

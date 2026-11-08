@@ -1,6 +1,6 @@
 import { isCanonicalSemVer, isRepositoryIdentifier } from "@bernouy/ulvia-contracts/compatibility";
 import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
-import { boundedResponseBytes } from "@bernouy/cms-repository/repository/publication/transport";
+import { boundedResponseBytes } from "@bernouy/repository/repository/publication/transport";
 
 export type InstanceProfile = Readonly<{ id: string; version: string }>;
 

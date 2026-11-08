@@ -152,7 +152,7 @@ the refusal performs no write". A generic "security verified" is not evidence.
   oversized input) and assert both the refusal and the absence of writes.
 - Performance tests count work instead of wall-clock time: persistence reads
   and writes, HTTP calls, bytes, peak concurrency and cache bounds. Existing
-  examples are `packages/features/cms-content/tests/application/renderingBudget.test.ts`
+  examples are `packages/features/content/tests/application/renderingBudget.test.ts`
   and `tests/performance/repository`.
 - A system-level Docker journey gates operations and internal calls per view
   and a load scenario such as 200 views per minute without 503. Only this level

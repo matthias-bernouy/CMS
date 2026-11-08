@@ -43,8 +43,8 @@ test("embedding backends are production dependencies only of runtimes that execu
     };
     for (const name of [
         "@bernouy/text-search",
-        "@bernouy/cms-documentation",
-        "@bernouy/cms-repository",
+        "@bernouy/documentation",
+        "@bernouy/repository",
         "@bernouy/cms-edge-server",
         "@bernouy/ulvia-cli",
     ]) {

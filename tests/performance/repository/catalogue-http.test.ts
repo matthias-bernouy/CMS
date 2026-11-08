@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
-import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
+import { HttpCollectionRepository } from "@bernouy/repository/collections/http";
+import { HttpProviderRepository } from "@bernouy/repository/providers/http";
 
 const digest = `sha256:${"a".repeat(64)}`;
 

@@ -1,0 +1,105 @@
+import type {
+    CollectionManagedNativeAttributeConstraint,
+    CollectionManagedNativeElement,
+    CollectionManagedNativeElementTag,
+} from "../../../interfaces/CollectionBloc";
+import { MANAGED_NATIVE_ELEMENT_TAGS, managedNativeAttributesIssue } from "@bernouy/content/page-document";
+import { invalid } from "../../errors";
+import { array, keys, record, unique } from "../../values";
+
+export const COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS = MANAGED_NATIVE_ELEMENT_TAGS;
+export { managedNativeAttributesIssue };
+
+const tags = new Set<string>(COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS);
+function parseTag(value: unknown, path: string): CollectionManagedNativeElementTag {
+    if (typeof value !== "string" || !tags.has(value)) {
+        invalid(`must be one of ${COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS.join(", ")}`, path);
+    }
+    return value as CollectionManagedNativeElementTag;
+}
+
+export function parseManagedNativeElement(value: unknown, path: string): CollectionManagedNativeElement {
+    const source = record(value, path);
+    keys(source, ["accepts", "attributes", "defaults"], path);
+    const accepts = array(source.accepts, COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS.length, `${path}.accepts`).map(
+        (tag, index) => parseTag(tag, `${path}.accepts[${index}]`),
+    );
+    if (accepts.length === 0) {
+        invalid("must accept at least one native element tag", `${path}.accepts`);
+    }
+    unique(accepts, `${path}.accepts`);
+    const attributes =
+        source.attributes === undefined
+            ? undefined
+            : parseAttributeConstraints(source.attributes, `${path}.attributes`);
+    const defaults =
+        source.defaults === undefined
+            ? undefined
+            : Object.fromEntries(
+                  Object.entries(record(source.defaults, `${path}.defaults`)).map(([name, value]) => {
+                      if (!/^[a-z][a-z0-9-]*$/u.test(name)) {
+                          invalid("default attribute name must be safe and lowercase", `${path}.defaults.${name}`);
+                      }
+                      if (typeof value !== "string" || value.length > 4096 || /[\u0000-\u001f\u007f]/u.test(value)) {
+                          invalid(
+                              "default attribute value must be at most 4096 characters without controls",
+                              `${path}.defaults.${name}`,
+                          );
+                      }
+                      return [name, value];
+                  }),
+              );
+    return { accepts, ...(attributes ? { attributes } : {}), ...(defaults ? { defaults } : {}) };
+}
+
+function parseAttributeConstraints(
+    value: unknown,
+    path: string,
+): Readonly<Record<string, CollectionManagedNativeAttributeConstraint>> {
+    const source = record(value, path);
+    const entries = Object.entries(source);
+    if (entries.length === 0 || entries.length > 16) {
+        invalid("must contain between 1 and 16 attribute constraints", path);
+    }
+    return Object.fromEntries(
+        entries.map(([name, value]) => {
+            const attributePath = `${path}.${name}`;
+            if (!/^[a-z][a-z0-9-]*$/u.test(name)) {
+                invalid("attribute name must be safe and lowercase", attributePath);
+            }
+            const constraint = record(value, attributePath);
+            keys(constraint, ["required", "values"], attributePath);
+            if (constraint.required !== undefined && typeof constraint.required !== "boolean") {
+                invalid("required must be a boolean", `${attributePath}.required`);
+            }
+            const values =
+                constraint.values === undefined
+                    ? undefined
+                    : array(constraint.values, 32, `${attributePath}.values`).map((entry, index) => {
+                          if (typeof entry !== "string" || entry.length > 128 || /[\u0000-\u001f\u007f]/u.test(entry)) {
+                              invalid(
+                                  "must be a string of at most 128 characters without controls",
+                                  `${attributePath}.values[${index}]`,
+                              );
+                          }
+                          return entry;
+                      });
+            if (values?.length === 0) {
+                invalid("must contain at least one accepted value", `${attributePath}.values`);
+            }
+            if (values) {
+                unique(values, `${attributePath}.values`);
+            }
+            if (constraint.required === undefined && values === undefined) {
+                invalid("must declare required, values, or both", attributePath);
+            }
+            return [
+                name,
+                {
+                    ...(constraint.required === undefined ? {} : { required: constraint.required }),
+                    ...(values === undefined ? {} : { values }),
+                },
+            ];
+        }),
+    );
+}

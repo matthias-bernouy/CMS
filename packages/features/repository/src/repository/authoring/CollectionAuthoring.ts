@@ -1,0 +1,105 @@
+import type { RepositoryConnectionStatus } from "repository/application/authoring/interfaces/AuthoringDtos";
+export type { RepositoryConnectionStatus } from "repository/application/authoring/interfaces/AuthoringDtos";
+import type { RepositoryNamespaceView } from "repository/repository/namespaces/accounts/interfaces";
+import type { NamespaceInventoryQuery, NamespaceInventoryPage } from "./namespaces";
+import { join } from "node:path";
+import { RepositorySourceClient } from "../sources/client";
+import { CollectionAuthoringValidationError } from "repository/collections/tooling/authoring/source";
+import { prepareRemoteCollection, type AuthoringHost } from "./preparations/prepare";
+import { CollectionPreparationError } from "./preparations/errors";
+import { collectionPreflight } from "./preflight";
+import { publishPreparedCollection } from "./publication/publish";
+import { RepositoryRequestError } from "../core/errors";
+import { NamespaceAccessError } from "./namespaces";
+export {
+    CollectionPreparationError,
+    CollectionPublicationRecoveryError,
+} from "repository/repository/authoring/preparations/errors";
+import type { RepositoryNamespaceCredential } from "repository/repository/publication/transport/credentials";
+import { discardPreparationWorkspace } from "./preparations/workspace";
+
+export interface CollectionPublisher {
+    readonly repositoryUrl: string;
+    readonly repositorySourceId: string;
+    readonly allowInsecureHttp?: boolean;
+    credential(namespace: string): Promise<RepositoryNamespaceCredential>;
+    connectionStatus(): Promise<RepositoryConnectionStatus>;
+    configureConnection(token: string): Promise<RepositoryConnectionStatus>;
+    disconnectConnection(): Promise<RepositoryConnectionStatus>;
+    listNamespaces(input?: NamespaceInventoryQuery): Promise<NamespaceInventoryPage>;
+    claim(namespace: string): Promise<RepositoryNamespaceView>;
+}
+
+export class CollectionAuthoring {
+    constructor(
+        protected readonly host: AuthoringHost,
+        protected readonly publisher: CollectionPublisher,
+    ) {}
+    connectionStatus() {
+        return this.publisher.connectionStatus();
+    }
+    configureConnection(token: string) {
+        return this.publisher.configureConnection(token);
+    }
+    disconnectConnection() {
+        return this.publisher.disconnectConnection();
+    }
+    claim(namespace: string) {
+        return this.publisher.claim(namespace);
+    }
+    listNamespaces(input: NamespaceInventoryQuery = {}) {
+        return this.publisher.listNamespaces(input);
+    }
+    async prepare(sourceJson: string) {
+        try {
+            return {
+                ...(await prepareRemoteCollection(this.host, sourceJson, (artifact) =>
+                    collectionPreflight(this.publisher, artifact),
+                )),
+                repositoryId: this.publisher.repositorySourceId,
+            };
+        } catch (error) {
+            if (
+                error instanceof CollectionPreparationError ||
+                error instanceof NamespaceAccessError ||
+                error instanceof RepositoryRequestError
+            ) {
+                throw error;
+            }
+            if (
+                ["EACCES", "EPERM", "EIO", "ENOSPC", "EROFS", "EMFILE", "ENFILE"].includes(
+                    (error as NodeJS.ErrnoException).code ?? "",
+                )
+            ) {
+                throw error;
+            }
+            const message = (error instanceof Error ? error.message : "Invalid collection sources")
+                .replaceAll(this.host.root, "<sources>")
+                .slice(0, 2048);
+            throw new CollectionPreparationError(
+                message,
+                error instanceof CollectionAuthoringValidationError ? error.diagnostics : undefined,
+            );
+        }
+    }
+    async publish(id: string, expectedDigest: string) {
+        return publishPreparedCollection(this.host, this.publisher, id, expectedDigest);
+    }
+    async sources(namespace: string, collectionId: string, version: string) {
+        return new RepositorySourceClient(
+            this.publisher.repositoryUrl,
+            await this.publisher.credential(namespace),
+            this.publisher,
+        ).get(collectionId, version);
+    }
+    async discard(id: string) {
+        await discardPreparationWorkspace(this.host.root, this.path(id));
+        return { discarded: true };
+    }
+    private path(id: string) {
+        if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/u.test(id)) {
+            throw new Error("Invalid preparation ID");
+        }
+        return join(this.host.root, id);
+    }
+}

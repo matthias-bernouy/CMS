@@ -8,7 +8,7 @@ test("the logging check rejects direct server console references outside browser
     const root = await mkdtemp(join(tmpdir(), "logging-check-"));
     try {
         await mkdir(join(root, "packages/example/src/runtime"), { recursive: true });
-        await mkdir(join(root, "packages/features/cms-content/src/browser"), { recursive: true });
+        await mkdir(join(root, "packages/features/content/src/browser"), { recursive: true });
         await mkdir(join(root, "packages/runtimes/ulvia-cli/src"), { recursive: true });
         await writeFile(
             join(root, "packages/example/src/runtime/server.ts"),
@@ -19,10 +19,7 @@ test("the logging check rejects direct server console references outside browser
                 "const { error } = console; error('bad');",
             ].join("\n"),
         );
-        await writeFile(
-            join(root, "packages/features/cms-content/src/browser/client.ts"),
-            "console.warn('allowed');\n",
-        );
+        await writeFile(join(root, "packages/features/content/src/browser/client.ts"), "console.warn('allowed');\n");
         await writeFile(join(root, "packages/runtimes/ulvia-cli/src/cli.ts"), "console.log('allowed');\n");
 
         expect(await findServerConsoleCalls(root)).toEqual([

@@ -1,9 +1,9 @@
 import { join } from "node:path";
-import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem";
+import { withRepositoryWriteLock } from "@bernouy/repository/repository/filesystem";
 import type {
     RepositoryNamespaceOwnershipStore,
     RepositoryOwnedNamespace,
-} from "@bernouy/cms-repository/repository/namespaces";
+} from "@bernouy/repository/repository/namespaces";
 
 /** Test metadata adapter; real Mongo persistence and races are exercised separately. */
 export class FixtureNamespaceStore implements RepositoryNamespaceOwnershipStore {

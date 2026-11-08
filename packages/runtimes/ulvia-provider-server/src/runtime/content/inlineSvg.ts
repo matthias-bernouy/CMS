@@ -1,13 +1,13 @@
-import { parseCollectionAssetReference } from "@bernouy/cms-content/rendering";
+import { parseCollectionAssetReference } from "@bernouy/content/rendering";
 import { handleGatewayHttpCall } from "@bernouy/cms-gateway/http/handlers";
 import { admitContractRelease } from "@bernouy/ulvia-contracts";
 import type { GatewayInvocation, GatewayResult } from "@bernouy/cms-gateway";
 import type { GatewayProviderClient } from "@bernouy/cms-gateway/provider/node";
 import type { ContractRelease } from "@bernouy/ulvia-contracts";
-import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
+import type { InstalledCollectionAssetSource } from "@bernouy/repository/collections/assets";
 import type { Cache } from "@bernouy/http-runner";
-import { resolveInstalledCollectionAssetSources } from "@bernouy/cms-repository/collections/assets";
-import { serveInstalledCollectionAsset } from "@bernouy/cms-repository/collections/http";
+import { resolveInstalledCollectionAssetSources } from "@bernouy/repository/collections/assets";
+import { serveInstalledCollectionAsset } from "@bernouy/repository/collections/http";
 import { compress, getOrGenerateEntryAsync } from "@bernouy/http-runner";
 type SvgHost = {
     cache: Cache;

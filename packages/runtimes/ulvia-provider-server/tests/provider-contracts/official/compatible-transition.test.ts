@@ -1,8 +1,8 @@
 import { beforeAll, expect, test } from "bun:test";
 import { admitContractRelease } from "@bernouy/ulvia-contracts";
 import type { ContractRelease } from "@bernouy/ulvia-contracts";
-import type { ProviderInstallationCandidate } from "@bernouy/cms-repository/providers/installations";
-import type { ProviderManagementGateway } from "@bernouy/cms-repository/providers/management";
+import type { ProviderInstallationCandidate } from "@bernouy/repository/providers/installations";
+import type { ProviderManagementGateway } from "@bernouy/repository/providers/management";
 import { compatibleTransitionRetention } from "../../../src/runtime/stores/collections/compatibleRetention";
 import { loadOfficialArtifacts } from "../../../src/runtime/instances/profiles/artifacts";
 import { repositoryFixture } from "./fixture";

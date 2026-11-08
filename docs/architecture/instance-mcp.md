@@ -65,7 +65,7 @@ CMS administrator authorizing the authoring call.
    an immutable Repository collection asset; arbitrary download URLs are rejected.
 3. Inspect `valid`, `diagnostics`, source/release digests and browser-risk output.
    Compilation failures produce bounded diagnostics. The compiler uses the shared
-   `@bernouy/cms-repository/collections/build` API, also used directly by the CLI.
+   `@bernouy/repository/collections/build` API, also used directly by the CLI.
 4. Publish the exact `preparationId` and `expectedDigest`. The host recompiles
    and compares the preparation before account-authorized publication. Publication stores the immutable
    release, then its private source snapshot. A retry can finish snapshot storage

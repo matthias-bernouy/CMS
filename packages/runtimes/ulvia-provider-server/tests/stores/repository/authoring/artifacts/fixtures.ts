@@ -1,6 +1,6 @@
 import { join } from "node:path";
-import { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
-import type { SourceAsset } from "@bernouy/cms-repository/repository/authoring";
+import { RepositoryAuthoring } from "@bernouy/repository/repository/authoring";
+import type { SourceAsset } from "@bernouy/repository/repository/authoring";
 import { authoringFixture } from "../fixture";
 
 export const contractId = "community/notes";

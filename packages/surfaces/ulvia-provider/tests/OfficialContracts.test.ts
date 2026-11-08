@@ -1,5 +1,5 @@
 import { installationFixturePorts } from "./execution/installations/mount";
-import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
@@ -18,9 +18,9 @@ import { signProviderInvocationToken, verifyProviderInvocationToken } from "@ber
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
 import { UlviaProvider } from "../src/exports/index";
-import type { CmsFilesService } from "@bernouy/cms-files";
-import { CmsSecrets } from "@bernouy/cms-secrets";
-import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";
+import type { CmsFilesService } from "@bernouy/files";
+import { CmsSecrets } from "@bernouy/secrets";
+import { InMemoryCmsSecretMetadataStore } from "@bernouy/secrets/memory";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { contentPorts } from "./capabilities/content/mount";
 import { accessServices } from "./execution/machine/access/services";

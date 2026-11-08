@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
+import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 import { artifactFixture, contractSnapshot, contractId } from "./fixtures";
 
 const bytes = new Uint8Array(

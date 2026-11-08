@@ -13,7 +13,7 @@ const CLIENT_MODULES = new Set([
     "undici",
     "node-fetch",
     "cross-fetch",
-    "@bernouy/cms-content/browser",
+    "@bernouy/content/browser",
 ]);
 
 export function importedTarget(declaration: ts.Declaration): NetworkTarget | undefined {
@@ -39,7 +39,7 @@ export function importedTarget(declaration: ts.Declaration): NetworkTarget | und
 }
 
 export function clientExport(module: string, name: string): NetworkTarget | undefined {
-    if (module === "@bernouy/cms-content/browser" && name === "mutationFormRequest") {
+    if (module === "@bernouy/content/browser" && name === "mutationFormRequest") {
         return { kind: "binding", name: "mutationFormRequest" };
     }
     if ((module === "axios" || module === "ky") && name === "default") {

@@ -1,12 +1,12 @@
-import type { Subject } from "@bernouy/cms-auth";
-import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
+import type { Subject } from "@bernouy/auth";
+import type { ContractSelectionStore } from "@bernouy/repository/providers/selections";
 import type { GatewayRouteResolver } from "@bernouy/cms-gateway";
 import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
 import { MongoAdministratorGrantStore } from "@bernouy/cms-gateway/access/mongo";
 import { ProviderAccess } from "@bernouy/cms-gateway/access/providers";
 import { MongoProviderAccessStore } from "@bernouy/cms-gateway/access/providers/mongo";
-import type { ProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
-import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
+import type { ProviderManifestCatalogue } from "@bernouy/repository/providers/catalogue";
+import type { ProviderInstallationStore } from "@bernouy/repository/providers/installations";
 import type { Db } from "mongodb";
 
 export async function createProviderGatewayAccess(

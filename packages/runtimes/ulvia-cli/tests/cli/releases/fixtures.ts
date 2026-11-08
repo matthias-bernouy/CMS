@@ -1,9 +1,9 @@
-import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
+import { prepareContractSource } from "@bernouy/repository/repository/authoring/build";
 import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { runCli } from "../../../src/cli";
-import { LocalArtifactFiles } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalArtifactFiles } from "@bernouy/repository/repository/filesystem";
 import { writeAuthoredContractFixture } from "../../authoredContractFixture";
 
 export async function batchFixture() {

@@ -1,4 +1,4 @@
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
+import { admitCollectionRelease } from "@bernouy/repository/collections";
 
 export function collectionFixture(blocCount: number, exampleCount: number, version = "1.0.0") {
     const messages: Record<string, string> = { "collection.name": "Performance collection", content: "Content" };

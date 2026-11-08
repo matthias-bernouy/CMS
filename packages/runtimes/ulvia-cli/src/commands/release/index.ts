@@ -5,7 +5,7 @@ import {
     LocalArtifactFiles,
     LocalContractReleases,
     LocalRepositoryYanks,
-} from "@bernouy/cms-repository/repository/filesystem";
+} from "@bernouy/repository/repository/filesystem";
 import { releaseBatch } from "./batch";
 import { discoverResources } from "./discovery";
 import { prepareResource, storeResource } from "./resource";

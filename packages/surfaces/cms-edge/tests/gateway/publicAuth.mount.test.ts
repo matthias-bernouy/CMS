@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createContentReader, InMemoryContentRepository } from "@bernouy/cms-content";
+import { createContentReader, InMemoryContentRepository } from "@bernouy/content";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import EdgeCms from "cms-edge/EdgeCms";

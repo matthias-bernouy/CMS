@@ -1,6 +1,6 @@
-import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
+import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/content";
+import { CollectionStore, MemoryCollectionStorage } from "@bernouy/repository/collections/installations";
+import { withInstalledCollections } from "@bernouy/repository/collections/content";
 import { repositoryFixture } from "../../provider-contracts/official/fixture";
 import { loadOfficialArtifacts } from "../../../src/runtime/instances/profiles/artifacts";
 import { installOfficialCollections } from "../../../src/runtime/instances/instanceInitialization";

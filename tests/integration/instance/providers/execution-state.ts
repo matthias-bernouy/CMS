@@ -7,10 +7,10 @@ export async function exerciseExecutionState(providerName: string, stackId: stri
     const script = `
         import { strict as assert } from "node:assert";
         import { MongoClient } from "mongodb";
-        import { MongoProviderExecutionStateReader } from "@bernouy/cms-repository/providers/mongo";
-        import { planContractSelections } from "@bernouy/cms-repository/providers/selections";
+        import { MongoProviderExecutionStateReader } from "@bernouy/repository/providers/mongo";
+        import { planContractSelections } from "@bernouy/repository/providers/selections";
         import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
-        import { graphFixture, siteId } from "/app/packages/features/cms-repository/tests/providers/selections/fixtures";
+        import { graphFixture, siteId } from "/app/packages/features/repository/tests/providers/selections/fixtures";
         import { readProviderRuntimeEnv } from "/app/packages/runtimes/ulvia-provider-server/src/runtimeEnv";
         const name = ${JSON.stringify(database)};
         assert.match(name, /^ulvia_execution_[a-z0-9_]+$/);

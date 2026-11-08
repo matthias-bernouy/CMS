@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
-import { ContentValidationError } from "@bernouy/cms-content";
+import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
+import type { ContractSelectionStore } from "@bernouy/repository/providers/selections";
+import { ContentValidationError } from "@bernouy/content";
 import {
     selectedCapabilityResolver,
     selectedPublicSvgCapabilityValidator,

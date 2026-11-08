@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { admitContractRelease, resolveContract } from "@bernouy/ulvia-contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import {
     createProviderHandler,
     compileProviderRoutes,

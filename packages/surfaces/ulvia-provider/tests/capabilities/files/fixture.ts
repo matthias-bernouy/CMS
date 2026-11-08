@@ -1,9 +1,9 @@
 import { expect } from "bun:test";
-import { CmsFilesService } from "@bernouy/cms-files";
-import type { CmsFileWorkspace, FilesService } from "@bernouy/cms-files";
-import { InMemoryCmsFilesStore } from "@bernouy/cms-files/memory";
+import { CmsFilesService } from "@bernouy/files";
+import type { CmsFileWorkspace, FilesService } from "@bernouy/files";
+import { InMemoryCmsFilesStore } from "@bernouy/files/memory";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
-import type { filesFeature } from "@bernouy/cms-files/feature";
+import type { filesFeature } from "@bernouy/files/feature";
 import type { CapabilityInput, CapabilityOutput, EffectiveCapabilities } from "@bernouy/ulvia-sdk";
 import { filesTransport } from "./transport";
 import type { RequestOptions } from "./transport";

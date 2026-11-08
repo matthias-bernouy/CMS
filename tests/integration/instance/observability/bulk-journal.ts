@@ -7,7 +7,7 @@ export async function exerciseBulkJournal(providerName: string, stackId: string)
     const script = `
         import { strict as assert } from "node:assert";
         import { MongoClient } from "mongodb";
-        import { MongoJournalStore } from "@bernouy/cms-observability/mongo";
+        import { MongoJournalStore } from "@bernouy/observability/mongo";
         import { readProviderRuntimeEnv } from "/app/packages/runtimes/ulvia-provider-server/src/runtimeEnv";
         const name = ${JSON.stringify(database)};
         assert.match(name, /^ulvia_journal_[a-z0-9_]+$/);

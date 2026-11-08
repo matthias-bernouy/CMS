@@ -2,8 +2,8 @@ import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import { readFile } from "node:fs/promises";
 import { compileOfficialFeatures, compileOfficialManifest } from "@bernouy/ulvia-provider/build";
-import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
-import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
+import { prepareContractSource } from "@bernouy/repository/repository/authoring/build";
+import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
 
 test("SDK feature releases preserve every schema, mock, binding, document byte and parent digest", async () => {

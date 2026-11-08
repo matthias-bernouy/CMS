@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { createContentReader } from "@bernouy/cms-content/rendering";
-import { ContentDelivery } from "@bernouy/cms-content/public-delivery";
+import { createContentReader } from "@bernouy/content/rendering";
+import { ContentDelivery } from "@bernouy/content/public-delivery";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import { sitePagesFixture } from "./site-pages.fixture";

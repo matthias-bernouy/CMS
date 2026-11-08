@@ -148,7 +148,7 @@ memberships through its existing authoring contract.
 ## Validation
 
 ```bash
-bun test packages/features/cms-repository/tests/collections/admission/examples
+bun test packages/features/repository/tests/collections/admission/examples
 ULVIA_RUN_EXAMPLE_BROWSER=1 bun test packages/runtimes/ulvia-cli/tests/preview
 bun run verify:full
 ```

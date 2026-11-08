@@ -8,8 +8,8 @@ export async function exerciseNamedSecretResolution(providerName: string, stackI
         import { strict as assert } from "node:assert";
         import { createHash } from "node:crypto";
         import { MongoClient } from "mongodb";
-        import { CmsSecrets } from "@bernouy/cms-secrets";
-        import { MongoCmsSecretMetadataStore } from "@bernouy/cms-secrets/mongo";
+        import { CmsSecrets } from "@bernouy/secrets";
+        import { MongoCmsSecretMetadataStore } from "@bernouy/secrets/mongo";
         import { encryptAesGcm, decryptAesGcm } from "@bernouy/envelope-crypto";
         import { EncryptedMongoSecretStore } from "@bernouy/secret-store/mongo";
         import { MongoCmsSecretResolutionReader } from "/app/packages/runtimes/ulvia-provider-server/src/runtime/stores/secrets/MongoCmsSecretResolutionReader";

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { CapabilityMcpBinding, capabilityToolName } from "@bernouy/cms-gateway/mcp";
-import type { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
-import { CollectionPublicationRecoveryError } from "@bernouy/cms-repository/repository/authoring";
+import type { RepositoryAuthoring } from "@bernouy/repository/repository/authoring";
+import { CollectionPublicationRecoveryError } from "@bernouy/repository/repository/authoring";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { mountAuthoringForTest } from "./mount";
 import { officialContract, resolvedContract, invokeHttp } from "../../execution/messages/fixtures";

@@ -1,5 +1,5 @@
-import { RemoteRepositoryClient, type RemoteCoordinate } from "@bernouy/cms-repository/repository/publication";
-import { type RepositoryNamespaceCredential } from "@bernouy/cms-repository/repository/namespaces";
+import { RemoteRepositoryClient, type RemoteCoordinate } from "@bernouy/repository/repository/publication";
+import { type RepositoryNamespaceCredential } from "@bernouy/repository/repository/namespaces";
 import { formatCoordinate, type RemoteSelection } from "./arguments";
 import { loadLocal, type LocalPushReads } from "./storage";
 import {
@@ -7,8 +7,8 @@ import {
     LocalCollectionRepository,
     LocalContractReleases,
     LocalRepositoryYanks,
-} from "@bernouy/cms-repository/repository/filesystem";
-import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+} from "@bernouy/repository/repository/filesystem";
+import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { inferLocalCoordinate } from "./selection";
 import { allLocalCoordinates } from "./plan";
 import { remoteRepositoryCredential } from "../namespace/credentials";

@@ -1,4 +1,4 @@
-import { CmsSecretNamespaceStore, type CmsSecrets, type SecretNamespacePermission } from "@bernouy/cms-secrets";
+import { CmsSecretNamespaceStore, type CmsSecrets, type SecretNamespacePermission } from "@bernouy/secrets";
 import { ValidatingSecretStore, type SecretStore } from "@bernouy/secret-store";
 
 type StoredNamespaceAuthority = Readonly<{

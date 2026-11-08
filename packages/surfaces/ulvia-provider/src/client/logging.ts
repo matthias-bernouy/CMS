@@ -1,7 +1,7 @@
 import type { ContractRelease } from "@bernouy/ulvia-contracts";
 import { type ProviderCapabilityClient, ProviderClientError } from "@bernouy/cms-gateway/provider";
-import { assertLogAcknowledgement } from "@bernouy/cms-observability";
-import { createObservabilityLogger, LogDeliveryError } from "@bernouy/cms-observability/logging";
+import { assertLogAcknowledgement } from "@bernouy/observability";
+import { createObservabilityLogger, LogDeliveryError } from "@bernouy/observability/logging";
 import type { LogSink } from "@bernouy/logging";
 
 /** The connection and logger belong to one authenticated customer context. */

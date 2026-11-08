@@ -1,0 +1,69 @@
+import { admitProviderManifest } from "@bernouy/ulvia-providers";
+import { InMemoryProviderManifestCatalogue } from "repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
+import { parseProviderInstallation } from "@bernouy/ulvia-providers/installations";
+import type { ContractSelection, ContractSelectionContext } from "@bernouy/ulvia-providers/selections";
+import type { ReleaseCatalogue } from "repository/contracts/interfaces/ReleaseCatalogue";
+import { installationDocument } from "../installations/fixtures";
+import {
+    capabilityTransition,
+    contractDocument,
+    implementation,
+    manifestDocument,
+    releaseCatalogue,
+    requirement,
+} from "../support/fixtures";
+
+export const siteId = "site:STORE_1";
+
+export async function installationFor(
+    releases: ReleaseCatalogue,
+    manifests: InMemoryProviderManifestCatalogue,
+    claims: Record<string, unknown>[],
+    providerId = "ulvia/ulvia.example",
+) {
+    providerId = providerId.includes("/") ? providerId : `ulvia/${providerId}`;
+    const admission = await admitProviderManifest(manifestDocument(claims, { providerId }), releases);
+    await manifests.publish(admission);
+    return parseProviderInstallation({
+        ...installationDocument(),
+        id: `installation:${providerId.replaceAll("/", ":")}`,
+        providerId,
+        configuration: {},
+        approval: { ...installationDocument().approval, manifestDigest: admission.digest },
+    });
+}
+
+export async function graphFixture(extraRequirements: Record<string, unknown>[] = []) {
+    const commerce = (version: string, _versionRange: string) =>
+        contractDocument("ulvia/commerce", "checkout", version);
+    const releases = await releaseCatalogue(
+        contractDocument("ulvia/payment", "pay"),
+        contractDocument("ulvia/payment", "pay", "2.0.0"),
+        contractDocument("ulvia/emailer", "send"),
+        ...capabilityTransition("ulvia/emailer", "send", "deliver"),
+        commerce("1.0.0", "^1.0.0"),
+        commerce("1.1.0", "^1.0.0 || ^2.0.0"),
+    );
+    const manifests = new InMemoryProviderManifestCatalogue(releases);
+    const claims = (await releases.list()).map(({ admission }) => {
+        const { contractId, version } = admission.release;
+        const requires =
+            contractId === "ulvia/commerce"
+                ? [
+                      requirement("ulvia/payment", "pay", version === "1.0.0" ? "^1.0.0" : "^1.0.0 || ^2.0.0"),
+                      ...extraRequirements,
+                  ]
+                : [];
+        return implementation(contractId, version, admission.digest, requires);
+    });
+    const installation = await installationFor(releases, manifests, claims);
+    const context: ContractSelectionContext = { releases, manifests, installations: [installation] };
+    const select = async (contractId: string, version = "1.0.0"): Promise<ContractSelection> => ({
+        siteId,
+        contractId,
+        version,
+        digest: (await releases.get(contractId, version))!.admission.digest,
+        installationId: installation.id,
+    });
+    return { context, releases, manifests, installation, select };
+}

@@ -5,7 +5,7 @@ import type {
     ProviderOperationExecutor,
 } from "@bernouy/ulvia-provider";
 import type { UlviaProviderFeatureServices } from "@bernouy/ulvia-provider/capabilities";
-import type { InstallationServices } from "@bernouy/cms-repository/features/installations";
+import type { InstallationServices } from "@bernouy/repository/features/installations";
 import { createInstallationOperationQueries } from "@bernouy/ulvia-provider";
 
 const contractId = "ulvia/cms.installations";

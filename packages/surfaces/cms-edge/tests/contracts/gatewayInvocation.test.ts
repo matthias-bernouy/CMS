@@ -1,6 +1,6 @@
 import { handlerContract } from "../../../../../tests/integration/gateway/http/handlerContract.fixture";
 import { expect, test } from "bun:test";
-import { createContentReader, InMemoryContentRepository } from "@bernouy/cms-content";
+import { createContentReader, InMemoryContentRepository } from "@bernouy/content";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
 import { TtlCache } from "@bernouy/http-runner";
 import EdgeCms from "cms-edge/EdgeCms";

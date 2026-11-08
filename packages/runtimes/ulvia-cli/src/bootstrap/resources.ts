@@ -1,8 +1,8 @@
 import { readdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
-import { prepareContractSource } from "@bernouy/cms-repository/repository/authoring/build";
-import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
+import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
+import { prepareContractSource } from "@bernouy/repository/repository/authoring/build";
+import { prepareCollectionRelease } from "@bernouy/repository/collections/build";
 import { compileOfficialFeatures, compileOfficialManifest } from "@bernouy/ulvia-provider/build";
 import type { PreparedResource } from "../commands/release/resource";
 

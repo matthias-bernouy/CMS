@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { MemorySiteUpgradeStorage, withSiteWriteFence } from "@bernouy/cms-repository/upgrades";
+import { MemorySiteUpgradeStorage, withSiteWriteFence } from "@bernouy/repository/upgrades";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { mountContentForTest } from "./content/mount";
 

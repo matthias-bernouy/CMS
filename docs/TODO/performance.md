@@ -113,7 +113,7 @@ each phase measures them.
    next request that reaches Content.
 4. **Server-side query execution.** Dynamic indexing Pages already execute an
    indexing query and render its result into the canonical URL, title and
-   metadata variables (`cms-content/src/pages/seo/indexing/resolvePageIndexingMetadata.ts:38`).
+   metadata variables (`content/src/pages/seo/indexing/resolvePageIndexingMetadata.ts:38`).
    These calls are delegated invocations authorized at call time, and such
    Pages render per request with `private, no-store`. Neither the Provider
    render cache nor the Edge cache stores them. General execution of
@@ -157,7 +157,7 @@ runs the journey in `verify:full` and nightly CI.
   after a selection change uses the new access levels.
 - Compute Brotli and gzip variants on first negotiation instead of on every
   `compress()` call (`http-runner/src/core/compression/content.ts`). Only
-  `cms-content` and `ulvia-provider-server` use the helper, and the Edge never
+  `content` and `ulvia-provider-server` use the helper, and the Edge never
   forwards `accept-encoding`, so the variants are unused today and lazy
   computation changes no response.
 
@@ -220,7 +220,7 @@ operation; throughput then bounded by the Edge.
 
 | Task | Location | Expected gain per miss |
 | --- | --- | --- |
-| Read `system` and `blocs` once per operation, keeping the ordered route/settings fence | `cms-content` reader and `pageRenderInputs` | −2 operations, −1 ms |
+| Read `system` and `blocs` once per operation, keeping the ordered route/settings fence | `content` reader and `pageRenderInputs` | −2 operations, −1 ms |
 | Remove duplicate installation and secret-key reads in dispatch preparation and parallelize independent reads | `…/authority/prepareDispatch.ts`, `issueInvocation.ts` | −3 operations, −2 to 3 ms |
 | Write journal batches with one unordered `bulkWrite` and review the 12 indexes | `MongoJournalStore.ts` | batch of 15 entries from ~50 ms to ~5 ms |
 

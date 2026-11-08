@@ -1,6 +1,6 @@
-import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
-import { importProviderManifest } from "@bernouy/cms-repository/providers/sources";
-import type { ProviderRepositorySource } from "@bernouy/cms-repository/providers/sources";
+import type { CollectionRepositorySource } from "@bernouy/repository/collections/sources";
+import { importProviderManifest } from "@bernouy/repository/providers/sources";
+import type { ProviderRepositorySource } from "@bernouy/repository/providers/sources";
 import type {
     OfficialInstanceProfile,
     OfficialInstanceProvisioningTarget,

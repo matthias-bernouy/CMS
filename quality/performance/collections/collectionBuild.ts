@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { buildCollectionBloc, type CollectionBlocBuildInput } from "@bernouy/cms-repository/collections/build";
+import { buildCollectionBloc, type CollectionBlocBuildInput } from "@bernouy/repository/collections/build";
 import { assertMaximum, benchmark, printResults } from "../benchmark";
 
 const BLOC_ROOT = join(import.meta.dir, "../../../packages/official-repository/collections/mossa/blocs");

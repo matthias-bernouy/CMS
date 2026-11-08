@@ -1,6 +1,6 @@
 import { capabilityResponse } from "@bernouy/ulvia-sdk";
-import { installationsFeature } from "@bernouy/cms-repository/features/installations";
-import type { InstallationOperationQueries } from "@bernouy/cms-repository/features/installations";
+import { installationsFeature } from "@bernouy/repository/features/installations";
+import type { InstallationOperationQueries } from "@bernouy/repository/features/installations";
 import type { ProviderOperationExecutor } from "../../../../operations/ProviderOperationExecutor";
 import type { ProviderOperationRecord } from "../../../../operations/types";
 import { operationLanguage, operationMessage } from "../../../../operations/messages";

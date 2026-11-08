@@ -19,7 +19,7 @@ Production runtime for the official Ulvia Provider.
   authority. Bootstrap installation is not public catalogue publication and
   must not replace the configured Repository connection.
 - Give each secret-consuming contract implementation its own least-privilege
-  `cms-secrets` namespace adapter. Only bootstrap credentials required to open
+  `secrets` namespace adapter. Only bootstrap credentials required to open
   those namespaces may use the runtime's encrypted root secret store directly.
 - Mount only the `@bernouy/ulvia-provider` surface; never mount or start the
   CMS Edge.

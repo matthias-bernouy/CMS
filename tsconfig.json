@@ -26,7 +26,7 @@
             "path": "packages/foundation/image-processing"
         },
         {
-            "path": "packages/features/cms-auth"
+            "path": "packages/features/auth"
         },
         {
             "path": "packages/features/email/base"
@@ -38,19 +38,19 @@
             "path": "packages/foundation/secret-store"
         },
         {
-            "path": "packages/features/cms-content"
+            "path": "packages/features/content"
         },
         {
-            "path": "packages/features/cms-files"
+            "path": "packages/features/files"
         },
         {
-            "path": "packages/features/cms-repository"
+            "path": "packages/features/repository"
         },
         {
             "path": "packages/platform/gateway"
         },
         {
-            "path": "packages/features/cms-secrets"
+            "path": "packages/features/secrets"
         },
         {
             "path": "packages/surfaces/cms-edge"
@@ -68,10 +68,10 @@
             "path": "packages/runtimes/ulvia-provider-server"
         },
         {
-            "path": "packages/features/cms-observability"
+            "path": "packages/features/observability"
         },
         {
-            "path": "packages/features/cms-documentation"
+            "path": "packages/features/documentation"
         },
         {
             "path": "packages/foundation/text-search"

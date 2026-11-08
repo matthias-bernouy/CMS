@@ -1,0 +1,214 @@
+import { describe, expect, test } from "bun:test";
+import { generateSiteBlocSourceBundle } from "@bernouy/content";
+import { definition } from "./fixtures";
+
+describe("generated site Bloc source", () => {
+    test("represents a composition without an unnecessary browser runtime", () => {
+        const source = generateSiteBlocSourceBundle(definition());
+        expect(source["markup.html"]).toContain('<slot name="title" slot="title"></slot>');
+        expect(source["default.html"]).toBe(
+            '<div cms-bloc="site-hero"><h1 cms-bloc="basic-heading-1" slot="title">Hello</h1><p cms-bloc="basic-paragraph">Body</p></div>\n',
+        );
+        expect(Object.keys(source)).not.toContain("runtime.js");
+    });
+
+    test("accepts declarative bindings and rejects unsafe site bloc behavior", () => {
+        const base = definition();
+        expect(() =>
+            generateSiteBlocSourceBundle(base, {
+                ...base.draft,
+                structure: [
+                    { kind: "slot", slotId: "title" },
+                    { kind: "slot", slotId: "title" },
+                    { kind: "slot", slotId: "content" },
+                ],
+            }),
+        ).toThrow('Duplicate site bloc slot placeholder "title"');
+        expect(() =>
+            generateSiteBlocSourceBundle(base, {
+                ...base.draft,
+                structure: [{ kind: "slot", slotId: "title" }],
+            }),
+        ).toThrow('Site bloc slot "content" has no placeholder');
+        const bound = generateSiteBlocSourceBundle(base, {
+            ...base.draft,
+            structure: [
+                {
+                    kind: "bloc",
+                    tag: "basic-container",
+                    attributes: {
+                        "cms-query": "ulvia/catalog:items as items",
+                        "cms-query-input": '{"query":{"from":"state","key":"@param:site-query"}}',
+                    },
+                    children: [
+                        { kind: "slot", slotId: "title" },
+                        { kind: "slot", slotId: "content" },
+                    ],
+                },
+            ],
+        });
+        expect(bound["markup.html"]).toContain('cms-query="ulvia/catalog:items as items"');
+
+        for (const attributes of [{ "cms-query": "https://example.com/items" }, { "cms-ready": "" }]) {
+            expect(() =>
+                generateSiteBlocSourceBundle(base, {
+                    ...base.draft,
+                    structure: [
+                        {
+                            kind: "bloc",
+                            tag: "basic-container",
+                            attributes,
+                            children: [
+                                { kind: "slot", slotId: "title" },
+                                { kind: "slot", slotId: "content" },
+                            ],
+                        },
+                    ],
+                }),
+            ).toThrow();
+        }
+
+        for (const [name, value] of [
+            ["style", "color: red"],
+            ["onclick", "alert(1)"],
+            ["title", "{{ data.title }}"],
+        ]) {
+            expect(() =>
+                generateSiteBlocSourceBundle(base, {
+                    ...base.draft,
+                    structure: [
+                        {
+                            kind: "bloc",
+                            tag: "basic-container",
+                            attributes: { [name]: value },
+                            children: [
+                                { kind: "slot", slotId: "title" },
+                                { kind: "slot", slotId: "content" },
+                            ],
+                        },
+                    ],
+                }),
+            ).toThrow();
+        }
+
+        expect(() =>
+            generateSiteBlocSourceBundle(base, {
+                ...base.draft,
+                structure: [
+                    {
+                        kind: "bloc",
+                        tag: "cms-binding-core",
+                        attributes: {},
+                        children: [
+                            { kind: "slot", slotId: "title" },
+                            { kind: "slot", slotId: "content" },
+                        ],
+                    },
+                ],
+            }),
+        ).toThrow('Binding runtime tag "cms-binding-core" is forbidden');
+
+        expect(() =>
+            generateSiteBlocSourceBundle(base, {
+                ...base.draft,
+                structure: [{ kind: "text", value: "{{ private.value }}" }, ...base.draft.structure],
+            }),
+        ).toThrow("text must be static and free of control characters");
+
+        expect(() =>
+            generateSiteBlocSourceBundle(base, {
+                ...base.draft,
+                structure: [
+                    {
+                        kind: "bloc",
+                        tag: "a",
+                        attributes: { target: "_blank", rel: "nofollow" },
+                        children: [],
+                    },
+                    ...base.draft.structure,
+                ],
+            }),
+        ).toThrow("noopener noreferrer");
+        expect(() =>
+            generateSiteBlocSourceBundle(base, {
+                ...base.draft,
+                structure: [
+                    {
+                        kind: "bloc",
+                        tag: "button",
+                        attributes: { TYPE: "submit" },
+                        children: [],
+                    },
+                    ...base.draft.structure,
+                ],
+            }),
+        ).toThrow('attribute "TYPE" is not allowed');
+    });
+
+    test("serializes escaped static text in private composition", () => {
+        const base = definition();
+        const source = generateSiteBlocSourceBundle(base, {
+            ...base.draft,
+            structure: [
+                {
+                    kind: "bloc",
+                    tag: "basic-container",
+                    attributes: {},
+                    children: [{ kind: "text", value: "Morrow & <Co>" }, ...base.draft.structure[0]!.children],
+                },
+            ],
+        });
+
+        expect(source["markup.html"]).toContain("Morrow &amp; &lt;Co&gt;");
+    });
+
+    test("enforces native placement and form contracts at the source-bundle boundary", () => {
+        const base = definition();
+        for (const [snapshot, message] of [
+            [
+                { ...base.draft, structure: [{ kind: "bloc", tag: "span", attributes: {}, children: [] }] },
+                /explicit component text slot/,
+            ],
+            [
+                {
+                    ...base.draft,
+                    structure: [
+                        {
+                            kind: "bloc",
+                            tag: "section",
+                            attributes: {},
+                            children: [{ kind: "bloc", tag: "li", attributes: {}, children: [] }],
+                        },
+                    ],
+                },
+                /direct child of <ul> or <ol>/,
+            ],
+            [
+                {
+                    ...base.draft,
+                    structure: [
+                        {
+                            kind: "bloc",
+                            tag: "ul",
+                            attributes: {},
+                            children: [{ kind: "bloc", tag: "site-card", attributes: {}, children: [] }],
+                        },
+                    ],
+                },
+                /only direct <li>/,
+            ],
+            [{ ...base.draft, defaultContent: "<li>Orphan item</li>" }, /direct child of <ul> or <ol>/],
+            [{ ...base.draft, defaultContent: "<ul>Loose text<li>Item</li></ul>" }, /only direct <li>/],
+            [{ ...base.draft, defaultContent: '<form cms-bloc="site-contact-form"></form>' }, /declared CMS mutation/],
+        ] as const) {
+            expect(() => generateSiteBlocSourceBundle(base, snapshot as typeof base.draft)).toThrow(message);
+        }
+
+        const source = generateSiteBlocSourceBundle(base, {
+            ...base.draft,
+            defaultContent: `<form cms-bloc="site-contact-form" cms-mutation="ulvia/forms:contact as contact"
+                cms-mutation-reset="true"></form>`,
+        });
+        expect(source["default.html"]).toContain('cms-mutation="ulvia/forms:contact as contact"');
+    });
+});

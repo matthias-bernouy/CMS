@@ -2,8 +2,8 @@ import { afterEach, expect, test } from "bun:test";
 import { dirname, join, resolve } from "node:path";
 import { cp, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { loadCollectionBlocs, prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
-import { loadCollectionTexts } from "@bernouy/cms-repository/collections/build";
+import { loadCollectionBlocs, prepareCollectionRelease } from "@bernouy/repository/collections/build";
+import { loadCollectionTexts } from "@bernouy/repository/collections/build";
 
 const temporaryDirectories: string[] = [];
 

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/content";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { mountContentForTest } from "../content/mount";
 import { invokeHttp, resolvedContract } from "../../execution/messages/fixtures";

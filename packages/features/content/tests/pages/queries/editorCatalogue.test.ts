@@ -1,0 +1,69 @@
+import { expect, test } from "bun:test";
+import { getCmsEditorCatalogue } from "@bernouy/content";
+
+test("editor catalogue projects deterministic authoring contracts", async () => {
+    const getBlocsList = async () => [
+        {
+            id: "ulvia--sample--table",
+            name: "Table",
+            group: "Administration",
+            description: "",
+            ownership: { kind: "code-managed" as const },
+        },
+        {
+            id: "ulvia--sample--card",
+            name: "Card",
+            group: "Content",
+            catalogueOrder: 20,
+            description: "A reusable card.",
+            defaultContent: "<p>Card copy</p>",
+            slots: { actions: { max: 1, accepts: [{ kind: "any-component" as const }] } },
+            settings: [
+                {
+                    id: "featured",
+                    label: "Featured",
+                    type: "boolean" as const,
+                    default: false,
+                    control: { kind: "toggle" as const },
+                },
+            ],
+            ownership: { kind: "code-managed" as const },
+        },
+        {
+            id: "ulvia--sample--hero",
+            name: "Hero",
+            group: "Content",
+            catalogueOrder: 10,
+            description: "A hero composition.",
+            kind: "composition" as const,
+            markupHTML: '<section><slot name="content"></slot></section>',
+            ownership: { kind: "site-builder" as const, definitionId: "hero" },
+        },
+    ];
+
+    const result = await getCmsEditorCatalogue({ getBlocsList } as never);
+
+    expect(result.items.map(({ id }) => id)).toEqual([
+        "ulvia--sample--table",
+        "ulvia--sample--hero",
+        "ulvia--sample--card",
+    ]);
+    expect(result.items[1]).toMatchObject({
+        kind: "composition",
+        ownership: "site-builder",
+        order: 10,
+        defaultContent: "",
+    });
+    expect(JSON.parse(result.items[2]!.authoringJson)).toEqual({
+        settings: [
+            {
+                control: { kind: "toggle" },
+                default: false,
+                id: "featured",
+                label: "Featured",
+                type: "boolean",
+            },
+        ],
+        slots: { actions: { accepts: [{ kind: "any-component" }], max: 1 } },
+    });
+});

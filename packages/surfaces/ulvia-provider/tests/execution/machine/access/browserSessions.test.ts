@@ -6,7 +6,7 @@ import {
     LocalAuthentication,
     SessionTokenService,
     SubjectResolver,
-} from "@bernouy/cms-auth";
+} from "@bernouy/auth";
 import { ProviderCapabilityResponse } from "@bernouy/ulvia-provider";
 import type { ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";
 import { accessServices } from "./services";

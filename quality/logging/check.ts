@@ -5,8 +5,8 @@ import { declaredLoggerBindings, isLoggerCall } from "./loggerBindings";
 
 const ROOT = resolve(import.meta.dir, "../..");
 const ALLOWED = [
-    /^packages\/features\/cms-content\/src\/browser\//u,
-    /^packages\/features\/cms-content\/src\/runtime-assets\/generated\//u,
+    /^packages\/features\/content\/src\/browser\//u,
+    /^packages\/features\/content\/src\/runtime-assets\/generated\//u,
     /^packages\/runtimes\/ulvia-cli\/src\/(?:cli|index)\.ts$/u,
 ];
 const EVENT_PATTERN = /^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/u;

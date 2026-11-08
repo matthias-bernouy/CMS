@@ -52,23 +52,23 @@ Provider remain surfaces; documentation search remains a feature.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/cms-documentation` | Selection-bound Markdown retrieval and hybrid lexical/semantic search, with explicit runtime adapters for multilingual embeddings and derived Mongo vectors. |
-| `@bernouy/cms-content` | Provider-neutral Pages, routes, Blocs, settings, themes, metadata, structured data, indexing, sitemap snapshots, rendering and generic contribution inputs. |
-| `@bernouy/cms-observability` | Instance-scoped journal validation, bounded collection, query and retention services; explicit memory and Mongo adapters. |
-| `@bernouy/cms-files` | SDK feature and default implementation for namespaces, credentials, streaming uploads, immutable files, private signatures and image representations. |
-| `@bernouy/cms-repository` | Persistent release catalogues, publication, installation/selection workflows, authored collection admission, content projections, upgrades and build tooling. |
-| `@bernouy/cms-secrets` | Credential-scoped secret namespaces, metadata and lifecycle over an injected generic encrypted secret store. |
+| `@bernouy/documentation` | Selection-bound Markdown retrieval and hybrid lexical/semantic search, with explicit runtime adapters for multilingual embeddings and derived Mongo vectors. |
+| `@bernouy/content` | Provider-neutral Pages, routes, Blocs, settings, themes, metadata, structured data, indexing, sitemap snapshots, rendering and generic contribution inputs. |
+| `@bernouy/observability` | Instance-scoped journal validation, bounded collection, query and retention services; explicit memory and Mongo adapters. |
+| `@bernouy/files` | SDK feature and default implementation for namespaces, credentials, streaming uploads, immutable files, private signatures and image representations. |
+| `@bernouy/repository` | Persistent release catalogues, publication, installation/selection workflows, authored collection admission, content projections, upgrades and build tooling. |
+| `@bernouy/secrets` | Credential-scoped secret namespaces, metadata and lifecycle over an injected generic encrypted secret store. |
 | `@bernouy/email` (`features/email/base`) | Provider-neutral outbound email delivery interface. |
 | `@bernouy/email-smtp` (`features/email/smtp`) | SMTP-specific administration, secret-backed configuration and the official Nodemailer implementation. |
-| `@bernouy/cms-auth` | Provider-owned accounts, local credentials, PATs, persistent opaque sessions, account lifecycle and authentication email composition. It exposes no HTTP routes. |
+| `@bernouy/auth` | Provider-owned accounts, local credentials, PATs, persistent opaque sessions, account lifecycle and authentication email composition. It exposes no HTTP routes. |
 
 Collections own reusable examples, not live Pages or routes. Runtime profiles
 may copy selected examples into ordinary Content Pages once during provisioning.
 Content owns their route registry, rendering, access analysis and sitemap; Edge
 forwards native resources. Administration uses the same Page model and runtime.
 Collection Bloc compilation is available only through the explicit
-`@bernouy/cms-repository/collections/build` tooling subpath. Site-owned Bloc
-source serialization remains in `cms-content` because it publishes mutable CMS
+`@bernouy/repository/collections/build` tooling subpath. Site-owned Bloc
+source serialization remains in `content` because it publishes mutable CMS
 content rather than an immutable collection release.
 
 The old `cms-sources`, `cms-source-images` and `cms-identities` packages are

@@ -110,10 +110,10 @@ Ulvia CMS installation runtime.
 - Do not reintroduce the removed integration repository or Supabase bridge.
 
 - Import collection source assembly directly from
-  `@bernouy/cms-repository/collections/build`; do not retain CLI forwarding files
+  `@bernouy/repository/collections/build`; do not retain CLI forwarding files
   merely to preserve obsolete internal paths.
 
-- Use `@bernouy/cms-repository/repository/authoring/build` for contract source assembly
+- Use `@bernouy/repository/repository/authoring/build` for contract source assembly
   shared with CMS Authoring. Keep source scanners and compilation in the feature.
 - Compile contract `docs/**/*.md` into a generated manifest plus separate digest-verified
   assets. Require one real H1 per document; paths identify documents. Preserve

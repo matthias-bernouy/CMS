@@ -1,4 +1,4 @@
-import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/content";
 import { seedOfficialPages } from "../../../src/runtime/instances/profiles/seedPages";
 
 export function initialPagesFixture() {

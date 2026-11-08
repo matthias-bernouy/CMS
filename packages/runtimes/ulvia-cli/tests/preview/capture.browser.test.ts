@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { prepareCollectionRelease, renderCollectionExamples } from "@bernouy/cms-repository/collections/build";
+import { prepareCollectionRelease, renderCollectionExamples } from "@bernouy/repository/collections/build";
 import { exampleExplorer } from "../../src/preview/explorer";
 import { serveExampleFiles } from "../../src/preview/server";
 import { expect, test } from "bun:test";

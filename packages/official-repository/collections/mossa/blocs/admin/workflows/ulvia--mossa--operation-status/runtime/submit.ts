@@ -1,4 +1,4 @@
-import { mutationFormRequest } from "@bernouy/cms-content/browser";
+import { mutationFormRequest } from "@bernouy/content/browser";
 
 type Feedback = { loading(): void; failed(): void; accepted(id: string): void };
 

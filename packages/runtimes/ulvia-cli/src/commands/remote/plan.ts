@@ -1,11 +1,11 @@
-import type { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
+import type { LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
 import {
     LocalArtifactFiles,
     LocalContractReleases,
     LocalProviderReleases,
     LocalRepositoryYanks,
-} from "@bernouy/cms-repository/repository/filesystem";
-import type { RemoteCoordinate } from "@bernouy/cms-repository/repository/publication";
+} from "@bernouy/repository/repository/filesystem";
+import type { RemoteCoordinate } from "@bernouy/repository/repository/publication";
 import { orderCollections, orderContracts } from "./ordering";
 
 export async function allLocalCoordinates(

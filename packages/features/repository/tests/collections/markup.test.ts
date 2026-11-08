@@ -1,0 +1,226 @@
+import { collectionFixture } from "./admission/examples/buildFixture";
+import { describe, expect, test } from "bun:test";
+import { parseCollectionRelease } from "repository/collections/core/parsing/parseCollectionRelease";
+import {
+    checkDemoBlocs as check,
+    collectionDocument,
+    demoComponent as component,
+    demoComposition as composition,
+    textDefinition,
+} from "./fixtures";
+
+describe("collection markup admission", () => {
+    test("rejects the removed Shadow DOM contract", () => {
+        expect(() => check([component({ shadowdom: "<div></div>" })])).toThrow('unknown property "shadowdom"');
+        expect(() => check([component({ nativeElement: { accepts: ["div"] } })])).toThrow(
+            'unknown property "nativeElement"',
+        );
+    });
+
+    test("requires a native root contract on every Bloc", () => {
+        const source = component();
+        delete source.root;
+        expect(() => check([source])).toThrow("root");
+        const composed = composition();
+        delete composed.root;
+        expect(() => check([composed])).toThrow("root");
+    });
+
+    test("reads real markup nodes and decoded slot names", () => {
+        expect(() =>
+            check([
+                component({
+                    markup: '<section data-layout="a > b"><slot name="bo&#100;y"></slot></section>',
+                }),
+            ]),
+        ).not.toThrow();
+    });
+
+    test("requires Page slots to be named and declared in both directions", () => {
+        expect(() => check([component({ slots: {} })])).toThrow("must declare page slot");
+        expect(() => check([component({ slots: { body: {}, missing: {} } })])).toThrow("does not exist");
+        expect(() => check([composition({ markup: "<slot></slot>", slots: {} })])).toThrow(
+            "must declare page slot default",
+        );
+    });
+
+    test("validates Page-owned native content separately from the Bloc root", () => {
+        const input = component({
+            id: "example--demo--checkbox",
+            markup: '<label><slot></slot><span part="label"></span></label>',
+            slots: {
+                default: {
+                    accepts: [
+                        {
+                            kind: "native-element",
+                            accepts: ["input"],
+                            attributes: { type: { required: true, values: ["checkbox"] } },
+                            defaults: { type: "checkbox" },
+                        },
+                    ],
+                    min: 1,
+                    max: 1,
+                },
+            },
+            root: { accepts: ["div"] },
+            exampleContent: '<input type="checkbox">',
+        });
+        const page = composition({
+            uses: ["example--demo--checkbox"],
+            markup: '<div cms-bloc="example--demo--checkbox"><input type="checkbox"></div>',
+            slots: {},
+        });
+        expect(() => check([input, page])).not.toThrow();
+        expect(() => check([{ ...input, exampleContent: "<input>" }])).toThrow('requires native attribute "type"');
+        expect(() =>
+            check([input, { ...page, markup: '<div cms-bloc="example--demo--checkbox"><input type="radio"></div>' }]),
+        ).toThrow('native attribute "type" must be one of "checkbox"');
+        expect(() => check([input, { ...page, markup: '<div cms-bloc="example--demo--checkbox"></div>' }])).toThrow(
+            "requires at least 1 item",
+        );
+    });
+
+    test("validates polymorphic semantic roots without wrapper custom elements", () => {
+        const action = component({
+            root: { accepts: ["button", "a"], defaults: { type: "button" } },
+            markup: '<span part="label"><slot></slot></span>',
+            slots: { default: { accepts: [{ kind: "native-content", profile: "phrasing" }], min: 1 } },
+            exampleContent: "<span>Action</span>",
+        });
+        const page = composition({
+            uses: ["example--demo--card"],
+            markup: '<a cms-bloc="example--demo--card" href="/about"><span>About</span></a>',
+            slots: {},
+        });
+        expect(() => check([action, page])).not.toThrow();
+        expect(() =>
+            check([action, { ...page, markup: '<a cms-bloc="example--demo--card"><span>About</span></a>' }]),
+        ).toThrow("declare href");
+        expect(() =>
+            check([
+                action,
+                {
+                    ...page,
+                    markup: '<a cms-bloc="example--demo--card" href="/about"><span>About</span><button>Nested</button></a>',
+                },
+            ]),
+        ).toThrow("cannot nest interactive content");
+    });
+
+    test("resolves slot targets against their direct Bloc parent", () => {
+        const card = component({
+            markup: '<slot name="heading"></slot>',
+            slots: { heading: { accepts: [{ kind: "native-content", profile: "inline" }] } },
+        });
+        const page = composition({
+            uses: ["example--demo--card"],
+            markup: '<div cms-bloc="example--demo--card"><p slot="heading">Title</p></div>',
+            slots: {},
+        });
+        expect(() => check([card, page])).not.toThrow();
+        expect(() => check([card, { ...page, markup: '<div><p slot="heading">Lost</p></div>' }])).toThrow(
+            "direct parent",
+        );
+        expect(() =>
+            check([card, { ...page, markup: '<div cms-bloc="example--demo--card"><p slot="missing">Lost</p></div>' }]),
+        ).toThrow("direct parent");
+    });
+
+    test("requires fixed placed Blocs to be known and declared", () => {
+        expect(() =>
+            check([
+                composition({
+                    slots: {},
+                    uses: ["example--demo--missing"],
+                    markup: '<div cms-bloc="example--demo--missing"></div>',
+                }),
+            ]),
+        ).toThrow("neither local nor imported");
+        expect(() =>
+            check([
+                component(),
+                composition({ slots: {}, uses: [], markup: '<div cms-bloc="example--demo--card"></div>' }),
+            ]),
+        ).toThrow("declared in uses");
+    });
+
+    test.each(["markup", "exampleContent"])("excludes script and event handlers in %s", (field) => {
+        const source =
+            field === "markup" ? composition({ slots: {} }) : component({ markup: "<div></div>", slots: {} });
+        expect(() => check([{ ...source, [field]: "<script>run()</script>" }])).toThrow(
+            field === "markup" ? "script elements" : "<script>",
+        );
+        expect(() => check([{ ...source, [field]: '<button onclick="run()">Run</button>' }])).toThrow(
+            field === "markup" ? "event-handler attributes" : "onclick",
+        );
+    });
+
+    test("applies the shared stored-document security policy to composition markup", () => {
+        for (const markup of [
+            '<iframe srcdoc="<script>run()</script>"></iframe>',
+            '<object data="https://example.invalid/payload"></object>',
+            '<a href="javascript:run()">Run</a>',
+        ]) {
+            expect(() => check([composition({ markup, slots: {} })])).toThrow();
+        }
+    });
+
+    test("requires nested Blocs in markup to be declared", () => {
+        const nested = component({ markup: '<div cms-bloc="example--demo--page"></div>', slots: {}, uses: [] });
+        expect(() => check([nested, composition()])).toThrow("declared in uses");
+    });
+
+    test("any-component slots reject compositions", () => {
+        expect(() =>
+            check([
+                component({ slots: { body: { accepts: [{ kind: "any-component" }] } } }),
+                composition({ id: "example--demo--nested", slots: {}, uses: [], markup: "<div></div>" }),
+                composition({
+                    slots: {},
+                    uses: ["example--demo--card", "example--demo--nested"],
+                    markup: '<div cms-bloc="example--demo--card"><div cms-bloc="example--demo--nested" slot="body"></div></div>',
+                }),
+            ]),
+        ).toThrow("does not accept Bloc example--demo--nested");
+    });
+
+    test("allows structural classes only in component markup", () => {
+        expect(() => check([component({ markup: '<div class="card"></div>', slots: {} })])).not.toThrow();
+        expect(() => check([composition({ markup: '<p class="card">Text</p>', slots: {} })])).toThrow(
+            "class attributes belong only in component markup",
+        );
+        expect(() =>
+            check([component({ markup: "<div></div>", slots: {}, exampleContent: '<p class="card">Text</p>' })]),
+        ).toThrow('attribute "class" is not allowed');
+    });
+
+    test("resolves collection text bindings in authored markup", () => {
+        const source = collectionDocument();
+        source.texts = [textDefinition("title", { "en-US": "Title" })];
+        const composed = (source.blocs as Record<string, unknown>[])[1]!;
+        composed.markup =
+            '<div cms-bloc="atlas-dofficial--atlas--panel"><slot name="main" slot="body"><p>{{ cms.i18n.atlas.official/atlas.title }}</p></slot></div>';
+        expect(() => parseCollectionRelease(collectionFixture(source))).not.toThrow();
+        composed.markup =
+            '<div cms-bloc="atlas-dofficial--atlas--panel"><slot name="main" slot="body"><p>{{ cms.i18n.atlas.official/atlas.missing }}</p></slot></div>';
+        expect(() => parseCollectionRelease(collectionFixture(source))).toThrow("unknown collection text missing");
+    });
+
+    test("allows editable example copy and rejects removed collection Pages", () => {
+        const source = collectionDocument({ "page.demo.name": "Demo" });
+        (source.examples as any[])[0].document.html =
+            '<div cms-bloc="atlas-dofficial--atlas--panel"><p slot="body">Editable copy</p></div>';
+        expect(() => parseCollectionRelease(collectionFixture(source))).not.toThrow();
+        source.pages = [
+            {
+                id: "demo",
+                defaultPath: "/demo",
+                name: "page.demo.name",
+                document: {
+                    html: '<div cms-bloc="atlas-dofficial--atlas--panel"><p slot="body">Hardcoded copy</p></div>',
+                },
+            },
+        ];
+        expect(() => parseCollectionRelease(collectionFixture(source))).toThrow('unknown property "pages"');
+    });
+});

@@ -1,0 +1,191 @@
+import {
+    readSystemDocument,
+    systemFromDocument,
+} from "content/application/default-implementation/mongo/repositories/pageRoutes/systemDocument";
+import type { RenderingResourceReads } from "content/application/core/RenderingResourceReads";
+import { randomUUIDv7 } from "bun";
+import { ContentValidationError } from "content/application/core/validation/errors";
+import type { ContentRepository, PageMeta, PagesQuery } from "content/application/interfaces/ContentRepository";
+import type { SiteBlocGroup } from "content/blocs/interfaces/blocs";
+import {
+    createSiteBlocGroup,
+    siteBlocGroups,
+    validateSiteBlocGroupInput,
+    DEFAULT_SITE_BLOC_GROUP_ID,
+} from "content/blocs/core/catalogue/siteBlocGroups";
+import type { TSystem } from "content/settings/interfaces/settings";
+import { escapeRegex } from "content/pages/core/queries/escapeRegex";
+import { mergeSystemUpdate } from "content/settings/core/system";
+import { languageRoutesChanged } from "content/pages/core/lifecycle/pagePaths";
+import { countValues, normalizeTags } from "content/pages/core/queries/counts";
+import { MongoPageRepository } from "content/application/default-implementation/mongo/repositories/MongoPageRepository";
+import {
+    claimRouteMigration,
+    releaseRouteMigration,
+} from "content/application/default-implementation/mongo/repositories/pageRoutes/migrationFence";
+import { SYSTEM_ID } from "content/application/default-implementation/mongo/repositories/MongoRepositoryStorage";
+
+export class MongoContentRepository extends MongoPageRepository implements ContentRepository {
+    async updateSiteBlocGroup(id: string, input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup> {
+        const metadata = validateSiteBlocGroupInput(input);
+        const result = await this.siteBlocGroups.replaceOne({ _id: id }, metadata, {
+            upsert: id === DEFAULT_SITE_BLOC_GROUP_ID,
+        });
+        if (!result.matchedCount && !result.upsertedCount) {
+            throw new ContentValidationError("groupId", "site Bloc group was not found");
+        }
+        return { id, ...metadata };
+    }
+
+    async getSiteBlocGroups(): Promise<SiteBlocGroup[]> {
+        const documents = await this.siteBlocGroups.find({}).toArray();
+        return siteBlocGroups(documents.map(({ _id, ...metadata }) => ({ id: _id, ...metadata })));
+    }
+
+    async createSiteBlocGroup(input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup> {
+        const group = createSiteBlocGroup(input);
+        const { id, ...metadata } = group;
+        await this.siteBlocGroups.insertOne({ _id: id, ...metadata });
+        return structuredClone(group);
+    }
+
+    async getPagesMetadata(options: PagesQuery = {}): Promise<PageMeta[]> {
+        const filter: Record<string, unknown> = {};
+        const search = options.search?.trim();
+        if (search) {
+            const expression = { $regex: escapeRegex(search), $options: "i" };
+            filter.$or = [{ title: expression }, { path: expression }];
+        }
+        if (options.tag) {
+            filter.tags = options.tag;
+        }
+        if (options.visible === "published") {
+            filter.visible = true;
+        } else if (options.visible === "draft") {
+            filter.visible = { $ne: true };
+        }
+
+        const sortField = options.sortBy ?? "title";
+        const direction = options.sortOrder === "desc" ? -1 : 1;
+        const sort = { [sortField]: direction, _id: direction } as Record<string, 1 | -1>;
+        if (options.afterId !== undefined) {
+            const cursor = await this.pages.findOne(
+                { ...filter, _id: options.afterId },
+                { projection: { [sortField]: 1 } },
+            );
+            if (!cursor) {
+                throw new TypeError("Invalid Page cursor.");
+            }
+            const value = cursor[sortField as keyof typeof cursor];
+            filter.$and = [
+                {
+                    $or: [
+                        { [sortField]: { [direction > 0 ? "$gt" : "$lt"]: value } },
+                        { [sortField]: value, _id: { [direction > 0 ? "$gt" : "$lt"]: cursor._id } },
+                    ],
+                },
+            ];
+        }
+        let query = this.pages
+            .find(filter, { projection: { path: 1, title: 1, tags: 1, visible: 1 } })
+            .collation({ locale: "en", strength: 1 })
+            .sort(sort);
+        if (options.limit !== undefined) {
+            query = query.limit(options.limit);
+        }
+        const documents = await query.toArray();
+        return documents.map((document) => ({
+            id: document._id,
+            path: document.path,
+            title: document.title,
+            tags: document.tags,
+            visible: document.visible === true,
+        }));
+    }
+
+    async getTagCounts() {
+        const documents = await this.pages.find({}, { projection: { tags: 1 } }).toArray();
+        return countValues(documents.flatMap((document) => normalizeTags((document as { tags: unknown }).tags)));
+    }
+
+    async getSystem(reads?: RenderingResourceReads): Promise<TSystem> {
+        // Keep both ordered route/settings fences fresh; retain only their revision.
+        const document = await readSystemDocument(this.system);
+        reads?.rememberRevision(this, "system", document.settingsRevision);
+        return systemFromDocument(document);
+    }
+
+    async getSystemRevision(reads?: RenderingResourceReads): Promise<number> {
+        const revision = reads?.revision(this, "system");
+        return revision === undefined ? (await readSystemDocument(this.system)).settingsRevision : Number(revision);
+    }
+
+    async updateSystem(update: Partial<TSystem>, expectedRevision?: number): Promise<TSystem> {
+        for (let attempt = 0; attempt < 20; attempt++) {
+            const stored = await readSystemDocument(this.system);
+            if (stored.routeMigration) {
+                throw new Error("Page route migration is in progress.");
+            }
+            const current = systemFromDocument(stored);
+            const merged = mergeSystemUpdate(current, update);
+            delete merged.pageRoutesUpdating;
+            const revision = stored.settingsRevision;
+            if (expectedRevision !== undefined && revision !== expectedRevision) {
+                throw Object.assign(new Error("system settings revision conflict"), { status: 409 });
+            }
+            if (!languageRoutesChanged(current, merged)) {
+                const saved = await this.system.updateOne(
+                    { _id: SYSTEM_ID, settingsRevision: revision, routeMigration: { $exists: false } },
+                    { $set: merged, $inc: { settingsRevision: 1 } },
+                );
+                if (saved.matchedCount) {
+                    return merged;
+                }
+                if (expectedRevision !== undefined) {
+                    throw Object.assign(new Error("system settings revision conflict"), { status: 409 });
+                }
+                continue;
+            }
+
+            const token = randomUUIDv7();
+            const claimed = await claimRouteMigration(this.system, revision, {
+                token,
+                target: merged,
+                previousDefaultLanguage: current.site.language,
+                requestedAt: new Date(),
+            });
+            if (!claimed) {
+                if (expectedRevision !== undefined) {
+                    throw Object.assign(new Error("system settings revision conflict"), { status: 409 });
+                }
+                continue;
+            }
+            try {
+                try {
+                    await this.reconfigurePageRoutes(merged, current.site.language, true);
+                } catch (error) {
+                    const released = await this.system.updateOne(
+                        { _id: SYSTEM_ID, "routeMigration.token": token },
+                        { $set: {}, $unset: { routeMigration: "" } },
+                    );
+                    if (!released.matchedCount) {
+                        throw new Error("Page route migration changed during validation.");
+                    }
+                    throw error;
+                }
+                await this.reconfigurePageRoutes(merged, current.site.language);
+                const committed = await this.system.replaceOne(
+                    { _id: SYSTEM_ID, "routeMigration.token": token, settingsRevision: revision },
+                    { ...merged, settingsRevision: revision + 1, activePageWrites: 0, activePageWritePermits: {} },
+                );
+                if (!committed.matchedCount) {
+                    throw new Error("Page route migration changed before completion.");
+                }
+                return merged;
+            } finally {
+                releaseRouteMigration(token);
+            }
+        }
+        throw new Error("System settings changed repeatedly; retry the save.");
+    }
+}

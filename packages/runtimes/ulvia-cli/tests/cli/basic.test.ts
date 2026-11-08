@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
 import { runCli } from "../../src/cli";
 import { bootstrapOfficialRepository } from "../../src/commands/bootstrap";
 import { aggregateStatus } from "../../src/commands/local/services";

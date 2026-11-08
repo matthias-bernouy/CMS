@@ -1,8 +1,8 @@
 import { PublisherConnection } from "./connection";
 import { namespaceInventory, validateNamespaceQuery } from "./NamespaceInventory";
-import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
-import type { RepositoryNamespaceCredential } from "@bernouy/cms-repository/repository/namespaces";
-import type { CollectionPublisher, NamespaceInventoryQuery } from "@bernouy/cms-repository/repository/authoring";
+import { RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
+import type { RepositoryNamespaceCredential } from "@bernouy/repository/repository/namespaces";
+import type { CollectionPublisher, NamespaceInventoryQuery } from "@bernouy/repository/repository/authoring";
 import type { SecretStore } from "@bernouy/secret-store";
 
 export class RepositoryPublisher implements CollectionPublisher {

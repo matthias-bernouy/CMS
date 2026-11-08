@@ -1,6 +1,6 @@
 import { resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
 import { admitContractRelease } from "@bernouy/ulvia-contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { admitProviderManifest } from "@bernouy/ulvia-providers";
 import type { GatewayRoute } from "@bernouy/cms-gateway";
 

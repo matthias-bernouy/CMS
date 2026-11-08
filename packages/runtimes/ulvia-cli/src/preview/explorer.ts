@@ -1,4 +1,4 @@
-import type { CollectionExampleFrame } from "@bernouy/cms-repository/collections/build";
+import type { CollectionExampleFrame } from "@bernouy/repository/collections/build";
 
 export function exampleExplorer(frames: readonly CollectionExampleFrame[]): ReadonlyMap<string, Blob> {
     const escape = (text: string) => text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;");

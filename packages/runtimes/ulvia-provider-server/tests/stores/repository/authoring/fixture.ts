@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { InMemorySecretStore } from "@bernouy/secret-store";
-import { CollectionAuthoring } from "@bernouy/cms-repository/repository/authoring";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { CollectionAuthoring } from "@bernouy/repository/repository/authoring";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { repositoryApplication } from "../../../../../../../tests/fixtures/repository/application";
 import { RepositoryPublisher } from "../../../../src/runtime/stores/repository/RepositoryPublisher";
 

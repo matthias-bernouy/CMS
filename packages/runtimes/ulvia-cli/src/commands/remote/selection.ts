@@ -1,6 +1,6 @@
-import type { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
-import { LocalArtifactFiles } from "@bernouy/cms-repository/repository/filesystem";
-import type { RemoteCoordinate } from "@bernouy/cms-repository/repository/publication";
+import type { LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
+import { LocalArtifactFiles } from "@bernouy/repository/repository/filesystem";
+import type { RemoteCoordinate } from "@bernouy/repository/repository/publication";
 
 export async function inferLocalCoordinate(
     root: string,

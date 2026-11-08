@@ -1,4 +1,4 @@
-import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/content/browser";
 
 type Part = "hours" | "minutes" | "seconds";
 const PART_CONFIG: Record<Part, { label: string; short: string; maximum: number }> = {

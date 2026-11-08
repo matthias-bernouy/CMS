@@ -7,7 +7,7 @@ import type {
     observeBlocAttributes,
     requestBlocFormControl,
     registerBloc,
-} from "@bernouy/cms-content/browser";
+} from "@bernouy/content/browser";
 
 // NOTE: wildcard module declarations for `*.css` / `*.html` live in
 // `./assets.d.ts`, NOT here. This file has top-level imports and is

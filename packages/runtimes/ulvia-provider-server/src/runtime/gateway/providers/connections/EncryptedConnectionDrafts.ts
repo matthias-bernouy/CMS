@@ -1,9 +1,6 @@
 import type { Db } from "mongodb";
 import { asBuffer, type SecretCrypto } from "@bernouy/envelope-crypto";
-import type {
-    ProviderConnectionDraftStore,
-    PendingProviderConnection,
-} from "@bernouy/cms-repository/providers/management";
+import type { ProviderConnectionDraftStore, PendingProviderConnection } from "@bernouy/repository/providers/management";
 
 export class EncryptedConnectionDrafts implements ProviderConnectionDraftStore {
     private readonly documents;

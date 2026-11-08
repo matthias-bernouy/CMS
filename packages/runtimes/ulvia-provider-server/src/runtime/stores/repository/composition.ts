@@ -1,8 +1,8 @@
-import { verifyStoredCollectionArtifact } from "@bernouy/cms-repository/collections";
+import { verifyStoredCollectionArtifact } from "@bernouy/repository/collections";
 import { join } from "node:path";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
-import { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
-import type { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
+import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
+import { RepositoryAuthoring } from "@bernouy/repository/repository/authoring";
+import type { HttpCollectionRepository } from "@bernouy/repository/collections/http";
 import type { ProviderStores } from "../providerStores";
 import type { CmsFileWorkspace } from "../CmsFileWorkspace";
 import { RepositoryPublisher } from "./RepositoryPublisher";

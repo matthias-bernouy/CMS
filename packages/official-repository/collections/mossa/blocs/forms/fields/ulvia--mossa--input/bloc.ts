@@ -1,4 +1,4 @@
-import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/content/browser";
 import { DatePicker } from "./runtime/datePicker";
 
 class Controller {

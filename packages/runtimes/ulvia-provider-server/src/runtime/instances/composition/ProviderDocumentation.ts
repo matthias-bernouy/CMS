@@ -1,4 +1,4 @@
-import type { CmsDocumentation } from "@bernouy/cms-documentation";
+import type { CmsDocumentation } from "@bernouy/documentation";
 import { TransformersEmbeddings } from "@bernouy/text-embeddings";
 import type { EmbeddingModelOptions } from "@bernouy/text-embeddings";
 import type { Logger } from "@bernouy/logging";

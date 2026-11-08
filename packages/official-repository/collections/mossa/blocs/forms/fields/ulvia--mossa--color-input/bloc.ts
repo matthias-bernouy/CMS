@@ -1,4 +1,4 @@
-import { observeBlocAttributes } from "@bernouy/cms-content/browser";
+import { observeBlocAttributes } from "@bernouy/content/browser";
 import { ColorInputController } from "./runtime/behavior";
 
 export function mount(root: HTMLElement): void | (() => void) {

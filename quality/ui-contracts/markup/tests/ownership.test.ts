@@ -52,7 +52,7 @@ describe("binding document ownership", () => {
     });
 
     test("recognizes returned templates, injected constants, imported aliases and DOM factories", () => {
-        const findings = script(`import { CMS_BINDING_CORE_TAG as CORE } from "@bernouy/cms-content/bindings";
+        const findings = script(`import { CMS_BINDING_CORE_TAG as CORE } from "@bernouy/content/bindings";
             const template = '<cms-binding-core class="scope"></cms-binding-core>';
             host.innerHTML = template;
             function render() { return \`<\${CORE}>\${content}</\${CORE}>\`; }
@@ -64,7 +64,7 @@ describe("binding document ownership", () => {
 
     test("does not guess dynamic tag values or resolve shadowed imports", () => {
         expect(
-            script(`import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/bindings";
+            script(`import { CMS_BINDING_CORE_TAG } from "@bernouy/content/bindings";
             function example(CMS_BINDING_CORE_TAG) { document.createElement(CMS_BINDING_CORE_TAG); }
             document.createElement(tagFromServer());
             host.innerHTML = \`<\${tag}>content</\${tag}>\`;`),
@@ -72,7 +72,7 @@ describe("binding document ownership", () => {
     });
 
     test("recognizes HTML Response bodies without treating arbitrary constructors as markup sinks", () => {
-        const content = `import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/bindings";
+        const content = `import { CMS_BINDING_CORE_TAG } from "@bernouy/content/bindings";
             function preview() {
                 return new Response(\`<!doctype html><html><body><\${CMS_BINDING_CORE_TAG}></\${CMS_BINDING_CORE_TAG}></body></html>\`, { headers: { "Content-Type": "text/html" } });
             }`;

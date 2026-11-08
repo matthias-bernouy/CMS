@@ -1,5 +1,5 @@
 import { admitContractRelease, resolveContract } from "@bernouy/ulvia-contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { createProviderHandler, DefaultProviderCapabilityDispatcher } from "@bernouy/cms-gateway/provider/server";

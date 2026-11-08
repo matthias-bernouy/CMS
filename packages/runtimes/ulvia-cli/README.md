@@ -237,7 +237,7 @@ lengths and SHA-256 digests, and makes the artifact visible last. Exact retries
 are idempotent; different bytes at an existing coordinate reject.
 
 The protocol and exact-coordinate client live in
-`@bernouy/cms-repository/repository/publication`. The CLI and CMS authoring
+`@bernouy/repository/repository/publication`. The CLI and CMS authoring
 implementation share those clients. The official Provider composes the domain
 service and persistence for explicitly enabled Repository instances; Edge
 exposes the selected admitted contract. The Repository uses ordinary CMS capabilities and account PATs.

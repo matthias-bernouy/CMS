@@ -1,0 +1,50 @@
+import type { ProviderInstallationPreparation } from "repository/providers/installations/interfaces/ProviderInstallationPreparation";
+import type { ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
+import { assertProviderConnectionToken } from "@bernouy/ulvia-providers/installations";
+import { secretRefToKey } from "@bernouy/secret-store";
+import type {
+    ProviderConnectionPreview,
+    ProviderConnectionPreviewInput,
+} from "repository/providers/management/connectionTypes";
+
+export function validatePreviewInput(input: ProviderConnectionPreviewInput): void {
+    assertProviderConnectionToken(input.token);
+    if (Boolean(input.installationId) !== (input.revision !== undefined)) {
+        throw new TypeError("Installation ID and revision must be provided together");
+    }
+}
+
+export function requiredSecretKey(reference: string): string {
+    const key = secretRefToKey(reference);
+    if (!key) {
+        throw new Error("Provider credential reference is invalid");
+    }
+    return key;
+}
+
+export function previewResult(
+    ticket: string,
+    operation: ProviderInstallationPreparation["operation"],
+    providerName: string,
+    endpoint: string,
+    manifestDigest: string,
+    report: ProviderRuntimeReport,
+    requests: ProviderConnectionPreview["requests"],
+    authority: Pick<ProviderConnectionPreview, "authorityDigest" | "delegation">,
+): ProviderConnectionPreview {
+    return {
+        ticket,
+        operation: operation === "modify" ? "reconnect" : "connect",
+        providerId: report.providerId,
+        providerName,
+        accountId: report.account.id,
+        accountLabel: report.account.label,
+        endpoint,
+        manifestVersion: report.manifest.version,
+        manifestDigest,
+        contracts: report.implementations.map(({ contractId, version, status }) => ({ contractId, version, status })),
+        requests,
+        ...authority,
+        check: "Manifest and runtime report validated.",
+    };
+}

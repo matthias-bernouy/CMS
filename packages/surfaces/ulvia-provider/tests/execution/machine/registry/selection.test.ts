@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { registerOfficialFeatures, loadOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
-import { RepositoryCapabilityError } from "@bernouy/cms-repository/repository/capabilities";
+import { RepositoryCapabilityError } from "@bernouy/repository/repository/capabilities";
 import { repositoryTransport } from "./transport";
 import { repositoryServices } from "./services";
 

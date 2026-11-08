@@ -14,7 +14,7 @@ and its transitive Blocs.
 
 Rendering is performed on demand, and file bytes are served through selected
 provider capabilities. The workspace build emits the Bloc behavior and
-binding-core browser runtimes owned by `cms-content`; HTTP requests only read
+binding-core browser runtimes owned by `content`; HTTP requests only read
 and cache those artifacts.
 
 See the [workspace package map](../../../docs/architecture/packages.md). Licensed

@@ -1,5 +1,5 @@
 import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
-import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { capabilityGranted, type ProviderExecutionStateReader } from "@bernouy/ulvia-providers/selections";
 import { providerInvocationIsCurrent, type ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";

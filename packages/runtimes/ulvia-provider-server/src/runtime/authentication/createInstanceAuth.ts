@@ -1,4 +1,4 @@
-import { createPublicAuthActions, LocalAuthentication, SessionTokenService, SubjectResolver } from "@bernouy/cms-auth";
+import { createPublicAuthActions, LocalAuthentication, SessionTokenService, SubjectResolver } from "@bernouy/auth";
 import type { ProviderStores } from "../stores/providerStores";
 
 export async function createInstanceAuth(stores: ProviderStores, cmsUrl: string) {

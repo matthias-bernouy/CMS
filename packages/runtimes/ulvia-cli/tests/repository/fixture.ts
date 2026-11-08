@@ -1,5 +1,5 @@
 import { repositoryApplication } from "../../../../../tests/fixtures/repository/application";
-import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
+import { RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
 import { runCli } from "../../src/cli";
 
 export function startTestRepository(root: string) {

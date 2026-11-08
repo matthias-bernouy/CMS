@@ -1,4 +1,4 @@
-import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/content/browser";
 
 let nextHintId = 0;
 

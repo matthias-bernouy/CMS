@@ -12,7 +12,7 @@ workflows and persistence implementations.
 | `./selections` | Exact selection models, grants, graph validation and `ContractSelectionReader`. |
 | `./validation` | Shared validation primitives for feature-owned workflows and stores. |
 
-Full mutation interfaces extend these read ports in `@bernouy/cms-repository`.
+Full mutation interfaces extend these read ports in `@bernouy/repository`.
 That feature retains `ProviderInstallationLifecycle`, `ProviderManagement`,
 connection workflows, `ContractUpgradeService`, persistent catalogues and stores.
 Gateway uses only Platform read ports and validation rules.

@@ -1,8 +1,8 @@
 # SDK release workflow
 
 The SDK pilots are Emailer/SMTP in `packages/features/email/base` and `smtp`,
-Secrets in `packages/features/cms-secrets`, Files in `packages/features/cms-files`,
-and Observability in `packages/features/cms-observability`.
+Secrets in `packages/features/secrets`, Files in `packages/features/files`,
+and Observability in `packages/features/observability`.
 Their documentation is authored as ordinary `docs/**/*.md` files and discovered
 during SDK compilation. Reusable Zod data schemas live in `src/schemas/` and the TypeScript
 ports infer their types from those schemas. Each capability declares its stable ID,
@@ -181,7 +181,7 @@ merely because the source vocabulary changes.
 
 Files contributes its complete 27-capability implementation through the same surface
 inventory. Schemas, HTTP/MCP bindings, default executors and the two Markdown documents
-live in `@bernouy/cms-files`; the manifest retains the same Secrets requirements.
+live in `@bernouy/files`; the manifest retains the same Secrets requirements.
 The runtime injects `FilesService` and a `CmsFileWorkspace` port. Workspace credentials
 and concrete blob/metadata/secret stores stay in the runtime. Mounting a selected Files
 release without either port refuses, rather than advertising a partial implementation.
@@ -212,7 +212,7 @@ For local JSON calls with feature policy, use `executeCapability(feature, id, ca
 ## Observability execution
 
 The same inventory selects all four diagnostic capabilities from
-`@bernouy/cms-observability/feature`. Entry/detail/summary/query/group DTOs derive
+`@bernouy/observability/feature`. Entry/detail/summary/query/group DTOs derive
 from reusable Zod schemas. Ingestion retains its trusted machine-context guard;
 HTTP/MCP read access and the original contract/document bytes stay unchanged.
 The runtime injects an instance-bound journal service through a structural port.

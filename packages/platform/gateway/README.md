@@ -38,14 +38,14 @@ Provider can choose the correct account-bound return connection.
 
 The gateway has no file, image, video, MIME, namespace, visibility, signature,
 variant or image-processing model. Those concepts belong to providers such as
-`@bernouy/cms-files`.
+`@bernouy/files`.
 
 Successful responses may carry a separately authenticated semantic effect only
 when the selected contract declares it. The current closed effect vocabulary
 contains `session`; Gateway validates it and returns it to Edge as metadata
 instead of forwarding Provider `Set-Cookie` headers.
 
-`@bernouy/cms-content/public-delivery` statically verifies Page requirements and
+`@bernouy/content/public-delivery` statically verifies Page requirements and
 derives Page access from injected selected capability metadata. Gateway owns
 live invocation authorization against trusted actors and current grants; Pages
 and referrers are not authorities. `./access/mongo` exposes durable grant adapters,

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { CmsSecrets } from "@bernouy/cms-secrets";
-import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";
+import { CmsSecrets } from "@bernouy/secrets";
+import { InMemoryCmsSecretMetadataStore } from "@bernouy/secrets/memory";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { createContractSecretStores } from "../../../src/runtime/stores/secrets/contractSecretStores";
 

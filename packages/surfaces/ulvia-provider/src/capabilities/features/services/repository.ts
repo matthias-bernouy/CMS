@@ -1,4 +1,4 @@
-import type { RepositoryActor } from "@bernouy/cms-repository/features/repository";
+import type { RepositoryActor } from "@bernouy/repository/features/repository";
 import type { UlviaProviderGateway } from "../../../ports/index";
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
 

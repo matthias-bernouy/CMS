@@ -3,11 +3,11 @@ import type {
     BindingCapabilityResolver,
     BindingQueryCapability,
     BindingQueryCapabilityResolver,
-} from "@bernouy/cms-content/page-document";
-import { ContentValidationError, type SvgCapabilityValidator } from "@bernouy/cms-content";
+} from "@bernouy/content/page-document";
+import { ContentValidationError, type SvgCapabilityValidator } from "@bernouy/content";
 import { compileContractBindings, matchPathTemplate } from "@bernouy/ulvia-contracts/bindings";
-import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
+import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
+import type { ContractSelectionStore } from "@bernouy/repository/providers/selections";
 
 export function selectedQueryCapabilityResolver(
     siteId: string,

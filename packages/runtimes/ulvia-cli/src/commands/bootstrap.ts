@@ -3,14 +3,14 @@ import { parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { dirname } from "node:path";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
+import { admitCollectionReleaseJson } from "@bernouy/repository/collections";
 import {
     LocalArtifactFiles,
     LocalCollectionRepository,
     LocalContractReleases,
     LocalProviderReleases,
     withRepositoryWriteLock,
-} from "@bernouy/cms-repository/repository/filesystem";
+} from "@bernouy/repository/repository/filesystem";
 
 type BootstrapIndex = Readonly<{
     contracts: readonly string[];

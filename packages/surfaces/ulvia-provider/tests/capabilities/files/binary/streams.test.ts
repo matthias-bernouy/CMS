@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { FilesService } from "@bernouy/cms-files";
+import type { FilesService } from "@bernouy/files";
 import { filesFixture } from "../fixture";
 
 function replaceRead(service: FilesService, read: FilesService["readFile"]): FilesService {

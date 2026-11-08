@@ -1,4 +1,4 @@
-import type { RepositoryNamespaceView } from "@bernouy/cms-repository/repository/namespaces";
+import type { RepositoryNamespaceView } from "@bernouy/repository/repository/namespaces";
 
 /** Transport peer only; actual account and publication journeys run against Edge and Provider. */
 export function repositoryPeer() {

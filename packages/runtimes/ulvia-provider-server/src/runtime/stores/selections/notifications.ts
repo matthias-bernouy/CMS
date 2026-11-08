@@ -1,4 +1,4 @@
-import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
+import type { ContractSelectionStore } from "@bernouy/repository/providers/selections";
 import type { StoredContractSelections } from "@bernouy/ulvia-providers/selections";
 import type { Logger } from "@bernouy/logging";
 

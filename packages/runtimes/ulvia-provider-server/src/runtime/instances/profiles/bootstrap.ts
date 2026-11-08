@@ -3,9 +3,9 @@ import {
     FilesystemCollectionRepository,
     FilesystemProviderRepository,
     FilesystemRepositoryCatalogueIndex,
-} from "@bernouy/cms-repository/repository/filesystem";
-import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
-import type { ProviderRepositorySource } from "@bernouy/cms-repository/providers/sources";
+} from "@bernouy/repository/repository/filesystem";
+import type { CollectionRepositorySource } from "@bernouy/repository/collections/sources";
+import type { ProviderRepositorySource } from "@bernouy/repository/providers/sources";
 
 export type OfficialBootstrapSources = Readonly<{
     providers: ProviderRepositorySource;

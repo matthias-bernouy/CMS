@@ -1,6 +1,6 @@
 import { sha256Digest } from "@bernouy/binary-media";
 import { admitContractBundleJson } from "@bernouy/ulvia-contracts";
-import { encodePublicationUpload } from "@bernouy/cms-repository/repository/publication";
+import { encodePublicationUpload } from "@bernouy/repository/repository/publication";
 
 export async function sampleContract(namespace: string, version = "1.0.0") {
     const bytes = new TextEncoder().encode("# Greeting examples\n\nVerified immutable fixture bytes.\n");

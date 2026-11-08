@@ -36,8 +36,8 @@ site overrides and repository transport do not depend on the source layout.
 
 ## Server ownership
 
-`@bernouy/cms-repository/collections/texts` provides pure parsing and locale
-resolution. `@bernouy/cms-content/rendering` provides the shared
+`@bernouy/repository/collections/texts` provides pure parsing and locale
+resolution. `@bernouy/content/rendering` provides the shared
 server DOM pass `renderCollectionTexts(root, locale, sources)`. The Edge runs
 this pass after composition expansion, before serializing and caching HTML.
 The same helper renders installed administration Pages.

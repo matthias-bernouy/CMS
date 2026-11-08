@@ -1,5 +1,5 @@
-import { CmsSecrets } from "@bernouy/cms-secrets";
-import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";
+import { CmsSecrets } from "@bernouy/secrets";
+import { InMemoryCmsSecretMetadataStore } from "@bernouy/secrets/memory";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { loadOfficialFeatures, registerOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";

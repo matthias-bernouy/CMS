@@ -26,7 +26,7 @@ loading, empty, error, and long-content states.
 
 ## Compiler checks
 
-`@bernouy/cms-repository/collections/build` validates collection Bloc source and
+`@bernouy/repository/collections/build` validates collection Bloc source and
 builds the browser runtime bundle. Identity validation rejects unnamespaced,
 reserved or malformed Bloc IDs.
 Source validation detects selected registration and navigation patterns; it is
@@ -43,7 +43,7 @@ See [color admission](theming.md#color-admission), including the limits of the
 static JavaScript checks and the canvas channel for color-data previews.
 
 When changing compiler behavior, add a focused test beside
-`packages/features/cms-repository/tests/collections/admission/tooling/`.
+`packages/features/repository/tests/collections/admission/tooling/`.
 
 ## Expanded authoring diagnostics
 

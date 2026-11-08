@@ -1,4 +1,4 @@
-import { createBlocScope } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/content/browser";
 
 const OPTIONAL_REGIONS = ["breadcrumb", "actions", "description", "navigation", "footer"] as const;
 

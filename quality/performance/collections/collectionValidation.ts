@@ -7,12 +7,12 @@ import {
     parseCollectionRelease,
     parseCollectionReleaseJson,
     verifyCollectionPublicationEvolution,
-} from "@bernouy/cms-repository/collections";
-import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
+} from "@bernouy/repository/collections";
+import { LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
 import {
     assertCompatibleCollectionUpgrade,
     collectionUpgradeBreakingResources,
-} from "@bernouy/cms-repository/collections/installations";
+} from "@bernouy/repository/collections/installations";
 import { assertGrowth, assertMaximum, benchmark, printResults } from "../benchmark";
 import { admittedFixture, collectionFixture } from "./collectionFixtures";
 import { officialContractCatalogue } from "../officialContracts";

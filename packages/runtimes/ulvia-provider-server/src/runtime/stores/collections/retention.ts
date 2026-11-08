@@ -1,7 +1,7 @@
 import type { ExecutionProfile } from "../../instances/profiles/execution/support";
-import type { ProviderReleaseRetention } from "@bernouy/cms-repository/providers/installations";
-import type { ProviderManagementGateway } from "@bernouy/cms-repository/providers/management";
-import type { SiteUpgradeStorage } from "@bernouy/cms-repository/upgrades";
+import type { ProviderReleaseRetention } from "@bernouy/repository/providers/installations";
+import type { ProviderManagementGateway } from "@bernouy/repository/providers/management";
+import type { SiteUpgradeStorage } from "@bernouy/repository/upgrades";
 
 import { catalogueRevision } from "@bernouy/ulvia-contracts/protocol";
 import type { ContractSelection } from "@bernouy/ulvia-providers/selections";

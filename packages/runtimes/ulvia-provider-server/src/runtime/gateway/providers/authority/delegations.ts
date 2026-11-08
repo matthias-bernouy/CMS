@@ -6,7 +6,7 @@ import {
 } from "@bernouy/cms-gateway/access/delegation";
 import { MongoDelegationStore } from "@bernouy/cms-gateway/access/delegation/mongo";
 import type { CapabilityGateway, GatewayRoute, GatewayRouteResolver } from "@bernouy/cms-gateway";
-import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
+import type { ContractSelectionStore } from "@bernouy/repository/providers/selections";
 import type { Db } from "mongodb";
 
 export async function createDelegationAuthority(options: {

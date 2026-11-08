@@ -34,11 +34,11 @@ async function build(releaseVersion: string, defaultStackVersion: string): Promi
     await command(["bun", "run", "build:browser"], root);
     const previewRuntimes = {
         blocRuntime: await readFile(
-            join(root, "packages/features/cms-content/dist/runtime-assets/bloc-runtime.js"),
+            join(root, "packages/features/content/dist/runtime-assets/bloc-runtime.js"),
             "utf8",
         ),
         bindingCore: await readFile(
-            join(root, "packages/features/cms-content/dist/runtime-assets/binding-core.js"),
+            join(root, "packages/features/content/dist/runtime-assets/binding-core.js"),
             "utf8",
         ),
     };

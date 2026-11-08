@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { CollectionPreparationError } from "@bernouy/cms-repository/repository/authoring";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
+import { CollectionPreparationError } from "@bernouy/repository/repository/authoring";
+import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 import { authoringFixture, configurationSource, sourceSnapshot } from "./fixture";
 
 test("preparation checks authoritative evolution and cleans refused candidates without opening uploads", async () => {

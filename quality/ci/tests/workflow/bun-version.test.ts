@@ -15,7 +15,7 @@ async function readPackageManifest(path: string): Promise<Record<string, unknown
 test("the Bun runtime, types, CI, and container pins stay aligned", async () => {
     const version = (await readRepositoryFile(".bun-version")).trim();
     const rootPackage = await readPackageManifest("package.json");
-    const contentPackage = await readPackageManifest("packages/features/cms-content/package.json");
+    const contentPackage = await readPackageManifest("packages/features/content/package.json");
     const edgePackage = await readPackageManifest("packages/surfaces/cms-edge/package.json");
     const qualityWorkflow = await readRepositoryFile(".github/workflows/quality.yml");
     const integrationWorkflow = await readRepositoryFile(".github/workflows/quality-integration-contracts.yml");

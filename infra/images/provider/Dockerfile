@@ -16,7 +16,7 @@ COPY packages/ ./packages/
 
 RUN bun install --frozen-lockfile
 RUN bunx tsc --build packages/runtimes/ulvia-provider-server
-RUN cd packages/features/cms-content && bun run build:browser
+RUN cd packages/features/content && bun run build:browser
 RUN bun run generate:official-bootstrap
 
 FROM build AS runtime-source

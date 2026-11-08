@@ -5,7 +5,7 @@ import {
     parseContractReleaseJson,
     type AdmittedContractRelease,
 } from "@bernouy/ulvia-contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 
 const CONTRACT_ROOT = join(import.meta.dir, "../../packages/runtimes/ulvia-cli/dist/bootstrap/contracts/cms");
 

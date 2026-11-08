@@ -1,5 +1,5 @@
 import { expect, spyOn, test } from "bun:test";
-import { LocalContractReleases } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalContractReleases } from "@bernouy/repository/repository/filesystem";
 import { pushFixture } from "./fixtures";
 
 test("batch preflight restores a bounded number of catalogues instead of one per contract", async () => {

@@ -4,7 +4,7 @@ import { signProviderInvocationToken, verifyProviderInvocationToken } from "@ber
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { registerOfficialFeatures, loadOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
-import type { AuthoringService } from "@bernouy/cms-repository/features/authoring";
+import type { AuthoringService } from "@bernouy/repository/features/authoring";
 import { authoringServices } from "./services";
 const providerId = "ulvia/primary-provider";
 const token = "authoring-test-provider-token-" + "x".repeat(40);

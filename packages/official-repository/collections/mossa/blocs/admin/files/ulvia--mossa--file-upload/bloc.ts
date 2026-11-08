@@ -1,4 +1,4 @@
-import { mutationFormRequest, createBlocScope } from "@bernouy/cms-content/browser";
+import { mutationFormRequest, createBlocScope } from "@bernouy/content/browser";
 import { writeWorkspaceUpload } from "./runtime/upload";
 
 type UploadTicket = Readonly<{ uploadId: string; uploadToken: string }>;

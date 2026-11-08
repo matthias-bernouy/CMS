@@ -1,9 +1,9 @@
-import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/content";
 import { CapabilityGateway } from "@bernouy/cms-gateway";
 import { InMemoryGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 import { createCapabilityHttpHandler } from "@bernouy/cms-gateway/http/handlers";
 import { CapabilityMcpBinding, capabilityToolName } from "@bernouy/cms-gateway/mcp";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { DefaultProviderCapabilityDispatcher, ProviderCapabilityDispatchError } from "@bernouy/ulvia-provider";
 import { compileOfficialFeatures } from "@bernouy/ulvia-provider/build";
 import { mountContentForTest } from "../mount";

@@ -1,4 +1,4 @@
-import { createBlocScope } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/content/browser";
 
 export const FILE_SELECTED_EVENT = "ulvia-file:selected";
 

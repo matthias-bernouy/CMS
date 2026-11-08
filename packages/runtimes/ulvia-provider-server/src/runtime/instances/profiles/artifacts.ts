@@ -1,15 +1,15 @@
 import { resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
-import { loadDocumentedContract } from "@bernouy/cms-repository/providers/sources";
+import { loadDocumentedContract } from "@bernouy/repository/providers/sources";
 import { CURRENT_PROFILE, REPOSITORY_PROFILE, SUPPORTED_PROFILES, type ProfileDefinition } from "./definitions";
 import { repositoryPages } from "./repositoryPages";
 import { initialPages } from "./initialPages";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
+import { admitCollectionRelease } from "@bernouy/repository/collections";
+import type { CollectionRepositorySource } from "@bernouy/repository/collections/sources";
 import { type AdmittedContractRelease, type ResolvedContract } from "@bernouy/ulvia-contracts";
 import { resolveContract } from "@bernouy/ulvia-contracts";
-import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
 import { admitProviderManifestJson, verifyStoredProviderManifestJson } from "@bernouy/ulvia-providers";
-import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
+import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/repository/providers/sources";
 import type { OfficialInstanceProfile } from "@bernouy/ulvia-provider";
 
 export type LoadedOfficialArtifacts = Readonly<{

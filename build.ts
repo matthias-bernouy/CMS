@@ -1,5 +1,5 @@
 // Workspace build orchestrator. TypeScript project references emit package
-// declarations first; cms-content then bundles its browser runtimes.
+// declarations first; content then bundles its browser runtimes.
 //
 // Other packages ship sources directly via their `exports` field; no bundle
 // step is needed.
@@ -13,7 +13,7 @@ async function run(cmd: string[], cwd?: string): Promise<void> {
 }
 
 await run(["bunx", "tsc", "--build"]);
-await run(["bun", "run", "build:browser"], "packages/features/cms-content");
+await run(["bun", "run", "build:browser"], "packages/features/content");
 await run(["bun", "run", "generate:official-bootstrap"]);
 
 console.log("✅ workspace build done");

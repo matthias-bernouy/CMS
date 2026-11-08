@@ -1,0 +1,88 @@
+import { describe, expect, test } from "bun:test";
+import { generateSiteBlocSourceBundle } from "@bernouy/content";
+import { definition, publishedSnapshot } from "./fixtures";
+import { expectedBuilderJson } from "./generatedSourceFixtures";
+
+describe("generateSiteBlocSourceBundle", () => {
+    test("generates the exact four composition source files", () => {
+        const source = generateSiteBlocSourceBundle(definition());
+
+        expect(Object.keys(source)).toEqual(["manifest.json", "markup.html", "default.html", "builder.json"]);
+        expect(source["manifest.json"]).toBe(`{
+    "default-tag": "site-hero",
+    "markup": "./markup.html",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Hero",
+        "description": "Reusable hero"
+    }
+}
+`);
+        expect(source["markup.html"]).toBe(
+            '<div cms-bloc=\"basic-container\" aria-label="A &quot;&lt;&amp;" width="wide" data-cms-composition-controller><slot name="title" slot="title"></slot><slot></slot></div>\n',
+        );
+        expect(source["default.html"]).toBe(
+            '<div cms-bloc="site-hero"><h1 cms-bloc="basic-heading-1" slot="title">Hello</h1><p cms-bloc="basic-paragraph">Body</p></div>\n',
+        );
+        expect(source["builder.json"]).toBe(expectedBuilderJson);
+        for (const content of Object.values(source)) {
+            expect(content.includes("\r")).toBe(false);
+            expect(content.endsWith("\n")).toBe(true);
+        }
+    });
+
+    test("forwards a nested named site slot to its parent bloc", () => {
+        const source = generateSiteBlocSourceBundle(definition());
+
+        expect(source["markup.html"]).toContain('<slot name="title" slot="title"></slot>');
+    });
+
+    test("marks the first root bloc as the host behavior controller", () => {
+        const source = generateSiteBlocSourceBundle(definition());
+
+        expect(source["markup.html"]).toContain(
+            '<div cms-bloc=\"basic-container\" aria-label="A &quot;&lt;&amp;" width="wide" data-cms-composition-controller>',
+        );
+    });
+
+    test("canonicalizes map and set-like order while preserving node and slot order", () => {
+        const reordered = structuredClone(publishedSnapshot);
+        const root = reordered.structure[0];
+        if (!root || root.kind !== "bloc") {
+            throw new Error("Expected fixture root bloc");
+        }
+        root.attributes = { "aria-label": 'A "<&', width: "wide" };
+        reordered.dependencies.reverse();
+        reordered.slots[0]!.accepts.reverse();
+        const first = generateSiteBlocSourceBundle(definition());
+        const second = generateSiteBlocSourceBundle(definition({ draft: reordered, published: reordered }));
+        expect(second).toEqual(first);
+
+        const slotOrderChanged = structuredClone(publishedSnapshot);
+        slotOrderChanged.slots.reverse();
+        expect(
+            generateSiteBlocSourceBundle(definition({ draft: slotOrderChanged, published: slotOrderChanged }))[
+                "builder.json"
+            ],
+        ).not.toBe(first["builder.json"]);
+
+        const nodeOrderChanged = structuredClone(publishedSnapshot);
+        const changedRoot = nodeOrderChanged.structure[0];
+        if (!changedRoot || changedRoot.kind !== "bloc") {
+            throw new Error("Expected fixture root bloc");
+        }
+        changedRoot.children.reverse();
+        expect(generateSiteBlocSourceBundle(definition(), nodeOrderChanged)["markup.html"]).not.toBe(
+            first["markup.html"],
+        );
+    });
+
+    test("uses an explicit snapshot for preview without rewriting builder.json", () => {
+        const unpublished = definition({ published: null, publishedRevision: null });
+        const preview = { ...publishedSnapshot, name: "Draft hero" };
+        const source = generateSiteBlocSourceBundle(unpublished, preview);
+        expect(source["manifest.json"]).toContain('"title": "Draft hero"');
+        expect(source["builder.json"]).toContain('"published": null');
+        expect(() => generateSiteBlocSourceBundle(unpublished)).toThrow("has no published snapshot");
+    });
+});

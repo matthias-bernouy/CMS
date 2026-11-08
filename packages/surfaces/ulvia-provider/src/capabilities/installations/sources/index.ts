@@ -1,15 +1,12 @@
 import { releaseChannel } from "@bernouy/ulvia-contracts/compatibility";
-import type {
-    CollectionRepositoryEntry,
-    CollectionRepositorySource,
-} from "@bernouy/cms-repository/collections/sources";
+import type { CollectionRepositoryEntry, CollectionRepositorySource } from "@bernouy/repository/collections/sources";
 import {
     collectionBrowserRisk,
     collectionBrowserRiskDigest,
     verifyStoredCollectionRelease,
     verifyStoredCollectionArtifact,
     type AdmittedCollectionRelease,
-} from "@bernouy/cms-repository/collections";
+} from "@bernouy/repository/collections";
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
 import type { CmsCollectionDependencies } from "../../../ports/index";
 import { CollectionSourceCache } from "./cache";

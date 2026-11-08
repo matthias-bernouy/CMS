@@ -441,7 +441,7 @@ Content's internal `resolvePath()` handles Page delivery by resolving the Page,
 checking the trusted actor context, executing eligible server queries, expanding
 Blocs, texts and assets, and returning final HTML.
 
-Keep the rendering engine in `@bernouy/cms-content`. Inject a provider-neutral
+Keep the rendering engine in `@bernouy/content`. Inject a provider-neutral
 capability-invocation port; do not import Gateway into Content domain code. The
 official Provider adapts that port to the Provider Gateway client.
 

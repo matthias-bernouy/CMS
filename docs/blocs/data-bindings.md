@@ -312,5 +312,5 @@ view, duplicate query state, embed credentials, or call a provider directly.
 
 Collection settings declare provider-neutral capability requirements. The
 Edge resolves installed providers, authorization, and transport. Binding
-syntax is exported by `@bernouy/cms-content/bindings`; the live runtime is
-exported by `@bernouy/cms-content/browser`.
+syntax is exported by `@bernouy/content/bindings`; the live runtime is
+exported by `@bernouy/content/browser`.

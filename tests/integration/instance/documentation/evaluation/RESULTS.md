@@ -50,7 +50,7 @@ two model calls; it is not a clean warm-query latency sample. Evaluation can be
 repeated offline with the populated model cache:
 
 ```sh
-bun run packages/features/cms-documentation/tests/evaluation.ts \
+bun run packages/features/documentation/tests/evaluation.ts \
   packages/runtimes/ulvia-cli/dist/bootstrap /absolute/path/to/model-cache --offline
 ```
 

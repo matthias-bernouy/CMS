@@ -19,7 +19,7 @@ jobs:
         uses: ./.github/actions/setup-workspace
 
       - name: Run Files provider contract integration
-        run: bun test packages/features/cms-files/tests
+        run: bun test packages/features/files/tests
 
       - name: Run binary gateway contracts
         run: bun test tests/integration/gateway/http tests/integration/gateway/invocation

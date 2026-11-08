@@ -12,7 +12,7 @@ describe("cms-edge public API", () => {
                 "-e",
                 `
                     const { EdgeCms } = await import("@bernouy/cms-edge");
-                    const { createContentReader, InMemoryContentRepository } = await import("@bernouy/cms-content");
+                    const { createContentReader, InMemoryContentRepository } = await import("@bernouy/content");
                     const { TtlCache } = await import("@bernouy/http-runner");
                     const { NOOP_LOGGER } = await import("@bernouy/logging");
                     const { CaptureRunner } = await import(${JSON.stringify(captureRunnerUrl)});

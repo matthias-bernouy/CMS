@@ -1,0 +1,82 @@
+import type { TSystem } from "content/settings/interfaces/settings";
+import { defaultThemeSettings } from "content/theme/core";
+
+export function defaultSystem(): TSystem {
+    return {
+        initializationStep: 0,
+        site: {
+            name: "",
+            favicon: "",
+            visible: true,
+            host: "",
+            language: "fr",
+            additionalLanguages: [],
+            activeLanguages: [],
+            organization: emptySiteOrganization(),
+            notFound: null,
+            forbidden: null,
+            serverError: null,
+            login: null,
+        },
+        theme: defaultThemeSettings(),
+    };
+}
+
+function emptySiteOrganization(): TSystem["site"]["organization"] {
+    return {
+        name: "",
+        legalName: "",
+        description: "",
+        logo: "",
+        email: "",
+        telephone: "",
+        address: {
+            streetAddress: "",
+            postalCode: "",
+            addressLocality: "",
+            addressRegion: "",
+            addressCountry: "",
+        },
+        sameAs: [],
+    };
+}
+
+export function mergeSystemUpdate(current: TSystem, update: Partial<TSystem>): TSystem {
+    const merged = { ...current };
+    for (const [section, value] of Object.entries(update) as [keyof TSystem, unknown][]) {
+        if (section === "initializationStep") {
+            merged.initializationStep = value as number;
+        } else if (section === "site" && typeof value === "object" && value !== null) {
+            const site = value as Partial<TSystem["site"]>;
+            const currentOrganization = current.site.organization;
+            const organization = site.organization;
+            merged.site = {
+                ...current.site,
+                ...site,
+                organization: organization
+                    ? {
+                          ...currentOrganization,
+                          ...organization,
+                          address: {
+                              ...currentOrganization.address,
+                              ...(organization.address ?? {}),
+                          },
+                      }
+                    : currentOrganization,
+            };
+            merged.site.additionalLanguages = merged.site.additionalLanguages.filter(
+                (language) => language.toLowerCase() !== merged.site.language.toLowerCase(),
+            );
+            const selected = new Set(merged.site.additionalLanguages.map((language) => language.toLowerCase()));
+            merged.site.activeLanguages = merged.site.activeLanguages.filter((language) =>
+                selected.has(language.toLowerCase()),
+            );
+        } else if (typeof value === "object" && value !== null) {
+            (merged as any)[section] = {
+                ...(current as any)[section],
+                ...value,
+            };
+        }
+    }
+    return merged;
+}

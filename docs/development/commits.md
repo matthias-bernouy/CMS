@@ -17,11 +17,11 @@ chore(domain): summary
 Examples:
 
 ```text
-feat(cms-content): add image variant manifest
+feat(content): add image variant manifest
 fix(cms-edge): validate page editor id before loading
 docs(agents): refresh package instructions
 ```
 
 Keep the domain close to the package or feature being changed:
-`cms-edge`, `cms-auth`, `components`, `http-runner`, `cli`,
+`cms-edge`, `auth`, `components`, `http-runner`, `cli`,
 `docs`, and so on.

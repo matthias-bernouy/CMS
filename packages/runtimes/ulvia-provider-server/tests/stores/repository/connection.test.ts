@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { InMemorySecretStore } from "@bernouy/secret-store";
-import { RepositoryConnection } from "@bernouy/cms-repository/repository/namespaces";
+import { RepositoryConnection } from "@bernouy/repository/repository/namespaces";
 import { RepositoryPublisher } from "../../../src/runtime/stores/repository/RepositoryPublisher";
 import { PublisherConnection } from "../../../src/runtime/stores/repository/connection";
 import { repositoryPeer } from "./peer";

@@ -3,7 +3,7 @@ export const offlineScriptPath = import.meta.path;
 
 if (import.meta.main) {
     const { TransformersEmbeddings } = await import("@bernouy/text-embeddings");
-    const { RepositorySearch } = await import("@bernouy/cms-repository/repository/search");
+    const { RepositorySearch } = await import("@bernouy/repository/repository/search");
 
     const model = new TransformersEmbeddings({
         cacheDirectory: process.env.ULVIA_EMBEDDING_MODEL_DIR!,

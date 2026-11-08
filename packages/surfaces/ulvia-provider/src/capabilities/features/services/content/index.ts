@@ -1,6 +1,6 @@
-import { composeCollectionThemes } from "@bernouy/cms-repository/collections/content";
-import { ContentCapabilityError } from "@bernouy/cms-content/feature";
-import type { ContentContributions } from "@bernouy/cms-content/feature";
+import { composeCollectionThemes } from "@bernouy/repository/collections/content";
+import { ContentCapabilityError } from "@bernouy/content/feature";
+import type { ContentContributions } from "@bernouy/content/feature";
 import type { CmsContentDependencies } from "../../../../ports/index";
 import { listExamples, getExample } from "./examples";
 import { projectTextCatalogue } from "./texts";

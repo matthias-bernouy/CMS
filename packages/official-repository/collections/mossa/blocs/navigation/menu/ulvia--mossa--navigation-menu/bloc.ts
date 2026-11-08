@@ -1,4 +1,4 @@
-import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/content/browser";
 
 class Controller {
     private readonly scope: ReturnType<typeof createBlocScope>;

@@ -7,7 +7,7 @@ import {
 } from "@bernouy/cms-gateway/provider/server";
 import { admitContractRelease, resolveContract } from "@bernouy/ulvia-contracts";
 import { SchemaValueError } from "@bernouy/ulvia-contracts/schema";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { inputFailureResponse, encodeRequestContext, REQUEST_CONTEXT_HEADER } from "@bernouy/cms-gateway/protocol";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import { gatewayRoute } from "../../fixtures";

@@ -5,9 +5,9 @@
         "noEmit": true,
         "paths": {
             "cms-edge/*": ["../../src/*"],
-            "cms-content/*": ["../../../../features/cms-content/src/*"]
+            "content/*": ["../../../../features/content/src/*"]
         }
     },
     "include": ["./publicReader.fixture.ts"],
-    "references": [{ "path": "../.." }, { "path": "../../../../features/cms-content" }]
+    "references": [{ "path": "../.." }, { "path": "../../../../features/content" }]
 }

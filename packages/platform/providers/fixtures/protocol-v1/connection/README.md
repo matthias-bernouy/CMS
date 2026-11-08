@@ -52,7 +52,7 @@ secret persistence. Persisted drafts and remote callback registration failure
 handling are not implemented. `enabled | disabled | revoked` records
 administrative intent. Observation freshness and selected-release validity
 remain separate. See the
-[implemented domain workflows](../../../../../features/cms-repository/src/providers/README.md).
+[implemented domain workflows](../../../../../features/repository/src/providers/README.md).
 
 ## Identity, availability, and multiple sites
 

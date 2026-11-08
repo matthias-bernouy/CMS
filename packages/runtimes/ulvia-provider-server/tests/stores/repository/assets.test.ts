@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { join } from "node:path";
-import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
+import { HttpCollectionRepository } from "@bernouy/repository/collections/http";
+import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 import { createRepositoryAuthoring } from "../../../src/runtime/stores/repository/composition";
 import { authoringFixture, sourceSnapshot } from "./authoring/fixture";
 

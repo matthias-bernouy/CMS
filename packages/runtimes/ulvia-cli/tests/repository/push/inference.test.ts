@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/repository/repository/filesystem";
 import { pushFixture } from "./fixtures";
 
 test("push infers a contract kind and uses the saved login connection", async () => {

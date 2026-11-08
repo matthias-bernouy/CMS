@@ -1,8 +1,8 @@
 import { expect } from "bun:test";
-import { CmsSecrets } from "@bernouy/cms-secrets";
-import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";
+import { CmsSecrets } from "@bernouy/secrets";
+import { InMemoryCmsSecretMetadataStore } from "@bernouy/secrets/memory";
 import { InMemorySecretStore } from "@bernouy/secret-store";
-import type { secretsFeature } from "@bernouy/cms-secrets/feature";
+import type { secretsFeature } from "@bernouy/secrets/feature";
 import type { CapabilityInput, CapabilityOutput, EffectiveCapabilities } from "@bernouy/ulvia-sdk";
 import { secretsTransport } from "./transport";
 

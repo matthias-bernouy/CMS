@@ -3,8 +3,8 @@ import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { RepositoryAuthoring } from "@bernouy/cms-repository/repository/authoring";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { RepositoryAuthoring } from "@bernouy/repository/repository/authoring";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { mountAuthoringForTest } from "./mount";
 

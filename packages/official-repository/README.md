@@ -3,7 +3,7 @@
 This directory is the authored source of official immutable releases published
 to CMS repositories. It contains provider-neutral contracts, provider manifests
 and collections. Admission, canonicalization, storage and installation belong
-to `@bernouy/cms-repository`; this directory only owns the official publications.
+to `@bernouy/repository`; this directory only owns the official publications.
 The Provider consumes a generated admitted snapshot rather than scanning this
 authored directory at runtime. The release pipeline publishes reviewed exact
 coordinates into account-owned namespaces of a CMS Repository instance.
@@ -22,7 +22,7 @@ collection, `ulvia/repository` for the Repository application collection, and
 
 The official `ulvia/cms.*` contracts are served by the `@bernouy/ulvia-provider`
 surface after admission. Generic protocol fixtures remain beside the
-`cms-repository` tests and must not be moved here. `catalog.items`,
+`repository` tests and must not be moved here. `catalog.items`,
 `forms.submissions` and `media.assets` are no longer published demo contracts.
 
 Contract source metadata lives in `definition.json`. Capabilities are individual

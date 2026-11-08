@@ -10,10 +10,10 @@ import {
     MongoContractSelectionStore,
     MongoProviderInstallationStore,
     MongoProviderManifestCatalogue,
-} from "@bernouy/cms-repository/providers/mongo";
-import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
-import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/providers/selections";
-import { MongoSiteUpgradeStorage } from "@bernouy/cms-repository/upgrades/mongo";
+} from "@bernouy/repository/providers/mongo";
+import { MongoReleaseCatalogue } from "@bernouy/repository/contracts/mongo";
+import { CatalogueSelectionDependencies } from "@bernouy/repository/providers/selections";
+import { MongoSiteUpgradeStorage } from "@bernouy/repository/upgrades/mongo";
 import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
 import { instanceDatabaseName } from "../../stores/storageRoots";
 

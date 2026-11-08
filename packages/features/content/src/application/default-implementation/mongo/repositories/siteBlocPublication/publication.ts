@@ -1,0 +1,45 @@
+import type { Collection, Db } from "mongodb";
+import { publishedSiteRecord } from "content/blocs/core/catalogue/records";
+import { replaceSiteBlocRecord } from "content/application/default-implementation/mongo/repositories/blocPersistence";
+import { requireBlocRecord } from "content/application/default-implementation/mongo/repositories/blocReadModels";
+import type { BlocDoc } from "content/application/default-implementation/mongo/repositories/documents";
+import { commitMongoSiteBlocPublication } from "content/application/default-implementation/mongo/repositories/siteBlocPublication/commit";
+import type { SiteBlocPublicationGuard } from "content/application/interfaces/ContentRepository";
+import type { BlocRecord, TBlocWrite } from "content/blocs/interfaces/blocs";
+
+type PublicationLock = (operation: (guard: SiteBlocPublicationGuard) => Promise<BlocRecord>) => Promise<BlocRecord>;
+
+export async function publishMongoSiteBloc(
+    db: Db,
+    blocs: Collection<BlocDoc>,
+    tag: string,
+    artifact: TBlocWrite,
+    expectedDraftRevision: number,
+    publicationDate: Date | undefined,
+    guard: SiteBlocPublicationGuard | undefined,
+    withPublicationLock: PublicationLock,
+): Promise<BlocRecord> {
+    if (!guard) {
+        return withPublicationLock((acquiredGuard) =>
+            commitPublication(db, blocs, tag, artifact, expectedDraftRevision, publicationDate, acquiredGuard),
+        );
+    }
+    return commitPublication(db, blocs, tag, artifact, expectedDraftRevision, publicationDate, guard);
+}
+
+function commitPublication(
+    db: Db,
+    blocs: Collection<BlocDoc>,
+    tag: string,
+    artifact: TBlocWrite,
+    expectedDraftRevision: number,
+    publicationDate: Date | undefined,
+    guard: SiteBlocPublicationGuard,
+): Promise<BlocRecord> {
+    return commitMongoSiteBlocPublication(db, guard, async (session) => {
+        const current = await requireBlocRecord(blocs, tag, session);
+        const published = publishedSiteRecord(current, artifact, expectedDraftRevision, publicationDate);
+        await replaceSiteBlocRecord(blocs, tag, current, published, expectedDraftRevision, session);
+        return structuredClone(published);
+    });
+}

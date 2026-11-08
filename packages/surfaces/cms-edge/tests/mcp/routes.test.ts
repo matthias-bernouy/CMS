@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { EdgeCms } from "@bernouy/cms-edge";
 import { BunRunner, TtlCache } from "@bernouy/http-runner";
-import { createContentReader, InMemoryContentRepository } from "@bernouy/cms-content";
+import { createContentReader, InMemoryContentRepository } from "@bernouy/content";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import { cmsMcpFixture } from "./fixture";
 

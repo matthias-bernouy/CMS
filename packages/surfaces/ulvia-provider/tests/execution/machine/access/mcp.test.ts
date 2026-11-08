@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { OAuthError } from "@bernouy/cms-auth/oauth";
+import { OAuthError } from "@bernouy/auth/oauth";
 import { accessServices } from "./services";
 import { accessTransport } from "./transport";
 

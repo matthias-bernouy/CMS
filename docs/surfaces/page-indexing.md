@@ -22,7 +22,7 @@ and configured projection paths. These helpers do not establish a current
 administration picker: the official Page-detail UI and `pages.*` capability
 inputs do not expose this configuration yet.
 
-`cms-content` resolves metadata through a separate server-side call to the injected
+`content` resolves metadata through a separate server-side call to the injected
 query port. The official Content Provider adapts it to the connection-bound SDK
 and sends the actor's opaque delegation through Edge. It does not execute the
 browser binding or render its result into page content. General declarative SSR
@@ -96,6 +96,6 @@ the initial output identity property to have the bound input's name. A custom
 identity projection does not widen that picker detection. The metadata result
 and the browser request have separate execution/error paths.
 
-See [candidate detection](../../packages/features/cms-content/src/pages/core/indexing/detection.ts),
-[SEO resolution](../../packages/features/cms-content/src/pages/seo/indexing/resolvePageIndexingMetadata.ts),
+See [candidate detection](../../packages/features/content/src/pages/core/indexing/detection.ts),
+[SEO resolution](../../packages/features/content/src/pages/seo/indexing/resolvePageIndexingMetadata.ts),
 and the [Content query adapter](../../packages/runtimes/ulvia-provider-server/src/runtime/content/publicDelivery.ts).

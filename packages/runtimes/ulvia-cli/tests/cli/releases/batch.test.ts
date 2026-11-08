@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { writeAuthoredContractFixture } from "../../authoredContractFixture";
 import { join, resolve } from "node:path";
-import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
+import { LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
 import { batchFixture } from "./fixtures";
 
 test("recursive release orders dependencies independently of directory names and remains idempotent", async () => {

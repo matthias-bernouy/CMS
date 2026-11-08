@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { mkdir, mkdtemp } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
+import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 import { mcpContainers } from "../../integration/instance/containers";
 import { repositoryApi } from "../../integration/instance/repository/client";
 import { sampleContract } from "../../integration/instance/repository/publication/resource";

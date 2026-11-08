@@ -13,20 +13,20 @@
             "blob-store/*": [
                 "../../packages/foundation/blob-store/src/*"
             ],
-            "cms-auth/*": [
-                "../../packages/features/cms-auth/src/*"
+            "auth/*": [
+                "../../packages/features/auth/src/*"
             ],
-            "cms-content/*": [
-                "../../packages/features/cms-content/src/*"
+            "content/*": [
+                "../../packages/features/content/src/*"
             ],
-            "cms-files/*": [
-                "../../packages/features/cms-files/src/*"
+            "files/*": [
+                "../../packages/features/files/src/*"
             ],
             "cms-gateway/*": [
                 "../../packages/platform/gateway/src/*"
             ],
-            "cms-repository/*": [
-                "../../packages/features/cms-repository/src/*"
+            "repository/*": [
+                "../../packages/features/repository/src/*"
             ],
             "http-runner/*": [
                 "../../packages/foundation/http-runner/src/*"
@@ -43,11 +43,11 @@
             "email/*": [
                 "../../packages/features/email/base/src/*"
             ],
-            "cms-observability/*": [
-                "../../packages/features/cms-observability/src/*"
+            "observability/*": [
+                "../../packages/features/observability/src/*"
             ],
-            "cms-secrets/*": [
-                "../../packages/features/cms-secrets/src/*"
+            "secrets/*": [
+                "../../packages/features/secrets/src/*"
             ],
             "email-smtp/*": [
                 "../../packages/features/email/smtp/src/*"
@@ -73,8 +73,8 @@
             "ulvia-provider/*": [
                 "../../packages/surfaces/ulvia-provider/src/*"
             ],
-            "cms-documentation/*": [
-                "../../packages/features/cms-documentation/src/*"
+            "documentation/*": [
+                "../../packages/features/documentation/src/*"
             ],
             "ulvia-contracts/*": [
                 "../../packages/platform/contracts/src/*"

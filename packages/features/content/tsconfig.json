@@ -1,0 +1,38 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "content/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../../foundation/binary-media"
+        },
+        {
+            "path": "../../foundation/blob-store"
+        },
+        {
+            "path": "../../foundation/http-runner"
+        },
+        {
+            "path": "../../foundation/image-processing"
+        },
+        {
+            "path": "../../foundation/logging"
+        },
+        {
+            "path": "../../foundation/resource-identity"
+        },
+        {
+            "path": "../../platform/sdk"
+        }
+    ]
+}

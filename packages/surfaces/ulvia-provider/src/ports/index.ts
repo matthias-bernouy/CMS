@@ -2,21 +2,21 @@ import type {
     InstallationServices,
     InstallationGateway,
     InstallationManagement,
-} from "@bernouy/cms-repository/features/installations";
-import type { RepositoryServices } from "@bernouy/cms-repository/features/repository";
+} from "@bernouy/repository/features/installations";
+import type { RepositoryServices } from "@bernouy/repository/features/repository";
 import type { ProviderConnectionServices } from "../capabilities/features/provider/connections/interfaces";
-import type { ContentServices } from "@bernouy/cms-content/feature";
-import type { AuthoringServices, AuthoringService } from "@bernouy/cms-repository/features/authoring";
-import type { AccessServices } from "@bernouy/cms-auth/feature";
-import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
+import type { ContentServices } from "@bernouy/content/feature";
+import type { AuthoringServices, AuthoringService } from "@bernouy/repository/features/authoring";
+import type { AccessServices } from "@bernouy/auth/feature";
+import type { CollectionStore } from "@bernouy/repository/collections/installations";
 import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
-import type { FilesServices } from "@bernouy/cms-files/feature";
-export type { CmsFileWorkspace } from "@bernouy/cms-files/feature";
-import type { SecretsServices } from "@bernouy/cms-secrets/feature";
+import type { FilesServices } from "@bernouy/files/feature";
+export type { CmsFileWorkspace } from "@bernouy/files/feature";
+import type { SecretsServices } from "@bernouy/secrets/feature";
 import type { SmtpEmailerServices } from "@bernouy/email-smtp/feature";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { Logger } from "@bernouy/logging";
-import type { ObservabilityServices } from "@bernouy/cms-observability/feature";
+import type { ObservabilityServices } from "@bernouy/observability/feature";
 
 export interface CmsContentDependencies
     extends Pick<ContentServices, "repo" | "contentQuery">,

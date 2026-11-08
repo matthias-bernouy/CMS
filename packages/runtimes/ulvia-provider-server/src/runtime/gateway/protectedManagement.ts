@@ -1,5 +1,5 @@
 import type { ExecutionProfile } from "../instances/profiles/execution/support";
-import type { ProviderManagement } from "@bernouy/cms-repository/providers/management";
+import type { ProviderManagement } from "@bernouy/repository/providers/management";
 import type { ProviderInstanceRecord, UlviaProviderManagement } from "@bernouy/ulvia-provider";
 
 const CONTROL_CONTRACT_ID = "ulvia/cms.installations";

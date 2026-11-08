@@ -179,7 +179,7 @@ export function mount(root: HTMLElement): () => void {
 ```
 
 `mount(root)` is the only behavior entrypoint. Shared functional helpers from
-`@bernouy/cms-content/browser` provide ownership-safe queries, bounded attribute
+`@bernouy/content/browser` provide ownership-safe queries, bounded attribute
 observation and explicit native form-control connections. The build wrapper
 registers the function with `bloc-runtime.js`; authored code never calls
 `customElements.define()`. Behavior mounts on the real native `cms-bloc` root

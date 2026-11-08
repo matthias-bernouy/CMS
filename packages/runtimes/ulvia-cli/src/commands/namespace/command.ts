@@ -1,4 +1,4 @@
-import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
+import { RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
 import { clientConfigDirectory } from "../../runtime/repository/config";
 import { savedRepositoryCredential } from "../../runtime/repository/connection";
 

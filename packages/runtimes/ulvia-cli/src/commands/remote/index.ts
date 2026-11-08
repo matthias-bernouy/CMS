@@ -1,5 +1,5 @@
-import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
+import { withRepositoryWriteLock } from "@bernouy/repository/repository/filesystem";
+import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 import { formatCoordinate, parseRemoteArguments, remoteUsage, type RemoteAction } from "./arguments";
 import { RemoteAssetFileSink } from "./assetSink";
 import { storeLocal } from "./storage";

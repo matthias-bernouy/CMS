@@ -1,5 +1,5 @@
 import { implementFeature } from "@bernouy/ulvia-sdk";
-import { secretsFeature } from "@bernouy/cms-secrets/feature";
+import { secretsFeature } from "@bernouy/secrets/feature";
 import type { UlviaProviderFeatureServices } from "../../../ports/index";
 
 export const secretsImplementation = implementFeature(secretsFeature, {

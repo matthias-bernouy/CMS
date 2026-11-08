@@ -1,0 +1,82 @@
+import { ContentValidationError } from "content/application/core/validation/errors";
+import type { TBloc } from "content/blocs/interfaces/blocs";
+import type { BlocSettings } from "content/pages/interfaces/document";
+import { validatePageDocument } from "content/blocs/core/markup/validation/documents/pageDocument";
+import { analyzeExpandedPageDocument } from "content/blocs/core/markup/validation/documents/expandedPageDocument";
+import { assertContentDiagnostics } from "content/application/core/validation/diagnostics";
+import {
+    resolveBindingAnalysisOptions,
+    type ContentBindingValidationOptions,
+} from "content/application/core/validation/bindingCapabilities";
+import { validateSvgCapabilityReferences } from "content/application/core/validation/svgCapabilities";
+
+/** Minimal reader — `ContentRepository` satisfies it structurally. */
+export type ContentRefsReader = {
+    getBlocsList(options?: { includeHidden?: boolean }): Promise<
+        Array<{
+            id: string;
+            kind: TBloc["kind"];
+            markupHTML: TBloc["markupHTML"];
+            root: TBloc["root"];
+            slots?: TBloc["slots"];
+            settings?: BlocSettings;
+        }>
+    >;
+};
+
+/**
+ * Server-side Page grammar gate. Every root is an active Bloc and every child
+ * must satisfy the direct parent's managed-native or named-slot contract.
+ */
+export async function assertContentRefsExist(
+    repository: ContentRefsReader,
+    content: string,
+    bindingOptions: ContentBindingValidationOptions = {},
+    options: { readonly complete?: boolean } = {},
+) {
+    if (!content) {
+        return;
+    }
+
+    const [registeredBlocs, completeCatalogue] = await Promise.all([
+        repository.getBlocsList(),
+        repository.getBlocsList({ includeHidden: true }),
+    ]);
+    const visibleIds = new Set(registeredBlocs.map(({ id }) => id));
+    const hiddenBlocs = completeCatalogue.filter(({ id }) => !visibleIds.has(id));
+    const contracts = (blocs: typeof completeCatalogue) =>
+        blocs.map((bloc) => ({
+            id: bloc.id,
+            kind: bloc.kind,
+            slots: bloc.slots ?? {},
+            root: bloc.root,
+            ...(bloc.settings ? { settings: bloc.settings } : {}),
+        }));
+    const visibleContracts = contracts(registeredBlocs);
+    const hiddenContracts = contracts(hiddenBlocs);
+    const document = validatePageDocument(content, visibleContracts, { hiddenBlocs: hiddenContracts });
+    await validateSvgCapabilityReferences([document.html], bindingOptions);
+    if (
+        bindingOptions.resolveCapabilities ||
+        bindingOptions.resolveQueryCapabilities ||
+        bindingOptions.requireQueryCapabilityResolution
+    ) {
+        validatePageDocument(document.html, visibleContracts, {
+            hiddenBlocs: hiddenContracts,
+            ...(await resolveBindingAnalysisOptions(document.queries, document.mutations, bindingOptions)),
+        });
+    }
+    try {
+        const analysis = analyzeExpandedPageDocument(document.html, completeCatalogue, options.complete ?? true);
+        assertContentDiagnostics(analysis.diagnostics);
+        return analysis;
+    } catch (error) {
+        if (error instanceof ContentValidationError) {
+            throw error;
+        }
+        throw new ContentValidationError(
+            "content",
+            error instanceof Error ? error.message : "invalid automatic state query graph",
+        );
+    }
+}

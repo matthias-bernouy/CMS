@@ -2,8 +2,8 @@ import type { ExecutionProfile } from "../../instances/profiles/execution/suppor
 import { resolveContract } from "@bernouy/ulvia-contracts";
 import { compareContractReleases, semVerMajor } from "@bernouy/ulvia-contracts/compatibility";
 import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
-import type { ProviderReleaseRetention } from "@bernouy/cms-repository/providers/installations";
-import type { ProviderManagementGateway } from "@bernouy/cms-repository/providers/management";
+import type { ProviderReleaseRetention } from "@bernouy/repository/providers/installations";
+import type { ProviderManagementGateway } from "@bernouy/repository/providers/management";
 import type { ProviderInstanceTransitionExecution } from "@bernouy/ulvia-provider";
 
 /** Only the provisioner receives this policy while the instance is fenced from live traffic. */

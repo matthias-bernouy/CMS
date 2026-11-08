@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { defaultSystem } from "@bernouy/cms-content";
+import { defaultSystem } from "@bernouy/content";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { mountContentForTest } from "../mount";
 

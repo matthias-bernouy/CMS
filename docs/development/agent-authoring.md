@@ -9,7 +9,7 @@ ownership, merges translations/texts/theme metadata, expands explicit resource
 exports, compiles optional Bloc behavior, verifies assets and checks dependency
 references. A purely declarative collection is valid; JavaScript is optional.
 
-`@bernouy/cms-repository/collections/build` exposes `buildCollectionBloc`,
+`@bernouy/repository/collections/build` exposes `buildCollectionBloc`,
 `validateBloc` and `compileBlocStyle`. The compiler materializes bounded source
 files into a temporary directory, restricts imports through its boundary plugin,
 and builds a browser runtime against the declared ABI. Static forbidden-API and

@@ -1,4 +1,4 @@
-import { InMemoryContentRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository } from "@bernouy/content";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import type { ProviderCapabilityRegistry } from "@bernouy/ulvia-provider";
 import type { CmsContentDependencies } from "../../../src/ports/index";

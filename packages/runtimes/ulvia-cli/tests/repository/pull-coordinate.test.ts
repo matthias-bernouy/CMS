@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
-import { compileContractSource } from "@bernouy/cms-repository/repository/authoring/build";
+import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
+import { compileContractSource } from "@bernouy/repository/repository/authoring/build";
 
 test("pull rejects an admitted release served under another coordinate", async () => {
     const source = resolve(import.meta.dir, "../../../../official-repository/contracts/cms.installations");

@@ -1,12 +1,12 @@
-import { validateCapabilityUsage } from "@bernouy/cms-repository/providers/selections";
+import { validateCapabilityUsage } from "@bernouy/repository/providers/selections";
 import type {
     CollectionUpgradeAnalysis,
     CapabilityUse,
     UpgradeIssue,
-} from "@bernouy/cms-repository/collections/installations";
-import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
+} from "@bernouy/repository/collections/installations";
+import type { ContractSelectionStore } from "@bernouy/repository/providers/selections";
 import type { ContractSelectionDependencySource } from "@bernouy/ulvia-providers/selections";
-import { type ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { type ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 
 /** Explicit Edge/Provider consumers; catalogue-only demonstrations add no execution grant. */
 const INTERNAL = [

@@ -49,7 +49,7 @@ A Bearer credential has precedence and never falls back to a cookie
 when invalid. Actor resolution is memoized only for the lifetime of the current
 request.
 
-The Provider resolves the credential through `cms-auth`, joins the membership
+The Provider resolves the credential through `auth`, joins the membership
 with the administrator grant and returns the trusted actor state. Subsequent
 capability calls are authorized and dispatched by Gateway; callers cannot
 choose their own subject or administrator flag.

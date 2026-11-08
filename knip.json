@@ -19,8 +19,8 @@
     ],
     "ignoreDependencies": [
         "@bernouy/binary-media",
-        "@bernouy/cms-auth",
-        "@bernouy/cms-files",
+        "@bernouy/auth",
+        "@bernouy/files",
         "@bernouy/cms-edge",
         "@bernouy/envelope-crypto",
         "@bernouy/image-processing",
@@ -31,7 +31,7 @@
         "sharp"
     ],
     "workspaces": {
-        "packages/features/cms-content": {
+        "packages/features/content": {
             "entry": [
                 "src/browser/entries/*.ts",
                 "src/runtime-assets/build.ts"

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { loadOfficialFeatures, registerOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
-import type { FilesService, CmsFileWorkspace } from "@bernouy/cms-files";
+import type { FilesService, CmsFileWorkspace } from "@bernouy/files";
 
 const options = { providerId: "ulvia/primary-provider", scope: { siteId: "site-a", instanceId: "instance-a" } };
 

@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../../packages/runtimes/ulvia-cli/src/cli";
-import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
+import { HttpProviderRepository } from "@bernouy/repository/providers/http";
 import { mcpContainers, waitForHttp } from "./containers";
 import { connectBrowser } from "./oauth";
 import { repositoryApi } from "./repository/client";

@@ -1,6 +1,6 @@
 import { expect } from "bun:test";
 import type { Page } from "playwright";
-import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
+import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 import { sampleContract } from "./publication/resource";
 
 /** Actual releases exercise continuation and filter changes, without mocked browser responses. */

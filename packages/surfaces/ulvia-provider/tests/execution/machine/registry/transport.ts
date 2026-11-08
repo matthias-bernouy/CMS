@@ -2,7 +2,7 @@ import { encodeHttpParameter } from "@bernouy/ulvia-contracts/bindings";
 import { createProviderHandler, compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
-import type { RepositoryService } from "@bernouy/cms-repository/features/repository";
+import type { RepositoryService } from "@bernouy/repository/features/repository";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { registerOfficialFeatures, loadOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
 import { repositoryAccountResolver } from "../../../../src/capabilities/features/services/repository";

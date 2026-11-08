@@ -9,7 +9,7 @@ independent processes. Ordinary CMS profiles do not expose Registry capabilities
 
 `packages/official-repository/contracts/repository` contains the authored
 registry contract. Domain implementation and validation belong to
-`@bernouy/cms-repository`; the Provider runtime chooses its adapters. Authored
+`@bernouy/repository`; the Provider runtime chooses its adapters. Authored
 resources neither mount routes nor connect to databases.
 
 The Provider image bundles the exact admitted artifacts required by its profiles.
@@ -201,7 +201,7 @@ The proposed authoring/test roadmap is in [agent authoring](../development/agent
 
 ## Resource discovery before installation
 
-`QUERY /.cms/call/ulvia/repository/v1/search` is the public `catalogue-search` capability. It searches collection, listed Bloc, contract and Provider manifest metadata. `@bernouy/cms-repository/repository/search` owns ranking orchestration and CMS-side federation; `/repository/search/filesystem` and `/repository/search/http` are explicit adapters. Public exact-release GETs remain the source for inspection and survive yanking.
+`QUERY /.cms/call/ulvia/repository/v1/search` is the public `catalogue-search` capability. It searches collection, listed Bloc, contract and Provider manifest metadata. `@bernouy/repository/repository/search` owns ranking orchestration and CMS-side federation; `/repository/search/filesystem` and `/repository/search/http` are explicit adapters. Public exact-release GETs remain the source for inspection and survive yanking.
 
 The Provider host shares its `@bernouy/text-embeddings` multilingual model across
 documentation and enabled Registry instances. Its image ships verified files in
@@ -223,7 +223,7 @@ CMS `ulvia/cms.installations/repository.search` exposes up to fifty candidates p
 
 `repository.get` verifies a public exact release and returns bounded JSON continuations, optionally selecting a Bloc or example. It never installs resources or executes code. One CMS discovery service admits eight searches/reads concurrently and retains at most eight verified projections, 16 MiB total, with at most eight pending loads. Keys include source, complete immutable reference and resource selector; failed loads are discarded. Authorization belongs to the normal administrator capability path. Selected-contract documentation search and its instance revision checks remain separate.
 
-Run `bun run packages/features/cms-repository/tests/repository-search/evaluation.ts <cached-model-directory>` for an offline lexical/hybrid relevance sample. It measures a small synthetic corpus, not production retrieval quality.
+Run `bun run packages/features/repository/tests/repository-search/evaluation.ts <cached-model-directory>` for an offline lexical/hybrid relevance sample. It measures a small synthetic corpus, not production retrieval quality.
 
 Discovery uses typed domain failures across adapters: invalid input (422), absent exact resource (404), release mismatch or expired cursor (409), corpus/response budgets (422), and infrastructure unavailability (503). Remote error bodies are bounded to 4 KiB and 100 ms, interpreted only for known codes, and never forwarded as diagnostic text. Search may report failed sources as partial results; a 404 during an exact read remains `NOT_FOUND`.
 

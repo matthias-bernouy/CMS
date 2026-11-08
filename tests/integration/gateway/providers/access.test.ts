@@ -5,8 +5,8 @@ import {
     providerInstallationFingerprint,
     type ProviderAccessStore,
 } from "@bernouy/cms-gateway/access/providers";
-import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
-import type { ProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
+import type { ProviderInstallationStore } from "@bernouy/repository/providers/installations";
+import type { ProviderManifestCatalogue } from "@bernouy/repository/providers/catalogue";
 import { gatewayRoute } from "../fixtures";
 
 async function fixture() {

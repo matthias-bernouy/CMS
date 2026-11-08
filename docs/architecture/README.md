@@ -41,9 +41,9 @@ every package must reproduce.
 
 ### Content And Authoring
 
-`cms-content/src/` groups `pages`, `blocs`, `settings`, `theme`,
+`content/src/` groups `pages`, `blocs`, `settings`, `theme`,
 `application` and `exports`. Its `ContentRepository` is the content
-persistence facade; it is distinct from the `@bernouy/cms-repository` package.
+persistence facade; it is distinct from the `@bernouy/repository` package.
 
 The Provider implementing `ulvia/cms.content` composes a read-only `ContentReader`
 from its `ContentRepository` and owns the rendering pipeline. Edge invokes
@@ -83,7 +83,7 @@ and compatibility. `@bernouy/ulvia-providers` owns manifest admission, execution
 models, selection validation and read ports. These Platform packages contain no
 business capability implementations or persistent catalogues.
 
-`cms-repository` owns persistent contract/manifest catalogues, installation and
+`repository` owns persistent contract/manifest catalogues, installation and
 selection mutation workflows, revisioned storage and authored collection admission.
 It does not call business capability providers.
 
@@ -97,7 +97,7 @@ resolution, network adapters, identity storage and observation refresh. The
 Edge receives provider-neutral invocation and native resource delivery.
 Runtime profiles seed ordinary Content administration Pages from collection examples;
 provider connection approval, credential rotation and exact contract selection
-are application workflows owned by `cms-repository`. Repository publication is
+are application workflows owned by `repository`. Repository publication is
 implemented in the official Provider for explicitly enabled Repository instances. See
 [repository and gateway flows](../providers/README.md).
 The [community Repository](community-repository.md) adds account-owned namespaces and an admitted HTTP Repository capability contract. The reusable
@@ -105,7 +105,7 @@ MCP binding is mounted by the CMS instance.
 
 ### Authentication
 
-`cms-auth` groups accounts, local credential proof, persistent opaque sessions,
+`auth` groups accounts, local credential proof, persistent opaque sessions,
 personal access tokens, one-time tokens, authentication email composition and
 account-lifecycle operations. The Provider runtime exposes them through the
 required `ulvia/cms.access` contract. Access delegates delivery to the selected
@@ -116,14 +116,14 @@ auth capabilities or auth persistence: it resolves one request actor through
 Access and applies validated semantic session effects.
 
 Mongo and SMTP adapters are explicit runtime imports. The generic encrypted
-value store remains Foundation infrastructure behind `cms-secrets`.
+value store remains Foundation infrastructure behind `secrets`.
 
 ## Surface And Runtime Composition
 
 The Edge mounts HTTP protocols and forwards Content-owned native resources
 through one supplied `Runner`. It never receives a Content repository or renderer.
 SEO metadata, structured data, dynamic indexing and sitemap materialization are
-owned by `cms-content`. The selected Content implementation produces robots and
+owned by `content`. The selected Content implementation produces robots and
 sitemap resources through declared delivery capabilities; Edge only mounts
 the injected resource handlers on its public URLs.
 Whether a Page is public, authenticated or administrative is derived by

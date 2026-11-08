@@ -4,7 +4,7 @@ import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { createProviderHandler, DefaultProviderCapabilityDispatcher } from "@bernouy/cms-gateway/provider/server";
 import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { resolveContract } from "@bernouy/ulvia-contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { gatewayRoute, NOW } from "../../fixtures";
 
 export async function fixture(resource: boolean, overrides: Parameters<typeof gatewayRoute>[0] = {}, granted = true) {

@@ -3,9 +3,9 @@ import type { NetworkTarget } from "./clients";
 
 /** Exact runtime boundaries; directories and generic helpers are never exempted. */
 const INFRASTRUCTURE: Readonly<Record<string, string>> = {
-    "packages/features/cms-content/src/browser/binding/runtime/query/queryFetch.ts":
+    "packages/features/content/src/browser/binding/runtime/query/queryFetch.ts":
         "The declarative query transport executes capability reads.",
-    "packages/features/cms-content/src/browser/binding/form/submitRequest.ts":
+    "packages/features/content/src/browser/binding/form/submitRequest.ts":
         "The declarative mutation transport submits serialized native forms.",
 };
 

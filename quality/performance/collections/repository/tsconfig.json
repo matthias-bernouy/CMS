@@ -8,32 +8,32 @@
             "cms-edge/*": [
                 "../../../../packages/surfaces/cms-edge/src/*"
             ],
-            "cms-auth/*": [
-                "../../../../packages/features/cms-auth/src/*"
+            "auth/*": [
+                "../../../../packages/features/auth/src/*"
             ],
             "cms-gateway/*": [
                 "../../../../packages/platform/gateway/src/*"
             ],
-            "cms-secrets/*": [
-                "../../../../packages/features/cms-secrets/src/*"
+            "secrets/*": [
+                "../../../../packages/features/secrets/src/*"
             ],
             "email-smtp/*": [
                 "../../../../packages/features/email/smtp/src/*"
             ],
-            "cms-repository/*": [
-                "../../../../packages/features/cms-repository/src/*"
+            "repository/*": [
+                "../../../../packages/features/repository/src/*"
             ],
-            "cms-observability/*": [
-                "../../../../packages/features/cms-observability/src/*"
+            "observability/*": [
+                "../../../../packages/features/observability/src/*"
             ],
-            "cms-files/*": [
-                "../../../../packages/features/cms-files/src/*"
+            "files/*": [
+                "../../../../packages/features/files/src/*"
             ],
             "email/*": [
                 "../../../../packages/features/email/base/src/*"
             ],
-            "cms-content/*": [
-                "../../../../packages/features/cms-content/src/*"
+            "content/*": [
+                "../../../../packages/features/content/src/*"
             ],
             "ulvia-cli/*": [
                 "../../../../packages/runtimes/ulvia-cli/src/*"
@@ -68,8 +68,8 @@
             "envelope-crypto/*": [
                 "../../../../packages/foundation/envelope-crypto/src/*"
             ],
-            "cms-documentation/*": [
-                "../../../../packages/features/cms-documentation/src/*"
+            "documentation/*": [
+                "../../../../packages/features/documentation/src/*"
             ],
             "ulvia-contracts/*": [
                 "../../../../packages/platform/contracts/src/*"

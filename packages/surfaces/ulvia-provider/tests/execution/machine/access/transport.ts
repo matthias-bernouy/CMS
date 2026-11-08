@@ -6,7 +6,7 @@ import {
     encodeActorCredential,
 } from "@bernouy/cms-gateway/protocol";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
-import type { AccessServices } from "@bernouy/cms-auth/feature";
+import type { AccessServices } from "@bernouy/auth/feature";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import { DefaultProviderCapabilityDispatcher, ProviderCapabilityResponse } from "@bernouy/ulvia-provider";
 import type { ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";

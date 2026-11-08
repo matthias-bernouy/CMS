@@ -10,28 +10,28 @@
     ],
     "references": [
         {
-            "path": "../../features/cms-auth"
+            "path": "../../features/auth"
         },
         {
-            "path": "../../features/cms-content"
+            "path": "../../features/content"
         },
         {
-            "path": "../../features/cms-documentation"
+            "path": "../../features/documentation"
         },
         {
             "path": "../../features/email/base"
         },
         {
-            "path": "../../features/cms-files"
+            "path": "../../features/files"
         },
         {
-            "path": "../../features/cms-observability"
+            "path": "../../features/observability"
         },
         {
-            "path": "../../features/cms-repository"
+            "path": "../../features/repository"
         },
         {
-            "path": "../../features/cms-secrets"
+            "path": "../../features/secrets"
         },
         {
             "path": "../../features/email/smtp"

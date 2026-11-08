@@ -1,0 +1,166 @@
+import { RevisionedRecordReader } from "repository/providers/persistence/mongo/RevisionedRecordReader";
+import { parseCapabilityGrants } from "@bernouy/ulvia-providers/selections";
+import type { CapabilityGrantPolicy } from "@bernouy/ulvia-providers/selections";
+import type { Db } from "mongodb";
+import { MongoServerError } from "mongodb";
+import { assertIJson, deepFreeze } from "@bernouy/ulvia-contracts/protocol";
+import { ContractSelectionValidationError } from "@bernouy/ulvia-providers/selections";
+import { DEFAULT_CONTRACT_SELECTION_LIMITS, type ContractSelectionLimits } from "@bernouy/ulvia-providers/selections";
+import { selectionLimits } from "@bernouy/ulvia-providers/validation";
+import { parseContractSelections, parseSelectionSiteId } from "@bernouy/ulvia-providers/selections";
+import { planContractSelections } from "@bernouy/ulvia-providers/selections";
+import type { ContractSelectionDependencySource, StoredContractSelections } from "@bernouy/ulvia-providers/selections";
+import type { ContractSelectionStore } from "repository/providers/selections/interfaces/ContractSelectionStore";
+
+interface SelectionDocument extends StoredContractSelections {
+    readonly _id: string;
+}
+
+/** Persisted site selections with full-graph validation and revision CAS. */
+export class MongoContractSelectionStore implements ContractSelectionStore {
+    readonly #reads = new RevisionedRecordReader<StoredContractSelections>();
+    readonly #collection;
+    readonly #limits: Readonly<ContractSelectionLimits>;
+
+    constructor(
+        db: Db,
+        readonly dependencies: ContractSelectionDependencySource,
+        limits: Readonly<ContractSelectionLimits> = DEFAULT_CONTRACT_SELECTION_LIMITS,
+    ) {
+        this.#collection = db.collection<SelectionDocument>("cms_contract_selections");
+        this.#limits = selectionLimits(limits);
+    }
+
+    async get(siteId: string): Promise<StoredContractSelections | null> {
+        const site = parseSelectionSiteId(siteId);
+        return this.#reads.get(
+            site,
+            (revisionOnly) =>
+                this.#collection.findOne({ _id: site }, revisionOnly ? { projection: { revision: 1 } } : {}),
+            (document) => readSelectionDocument(document, site, this.#limits),
+        );
+    }
+
+    async replace(
+        siteId: string,
+        value: unknown,
+        expectedRevision: number,
+        proposedGrants?: CapabilityGrantPolicy,
+    ): Promise<StoredContractSelections> {
+        const site = parseSelectionSiteId(siteId);
+        if (
+            !Number.isSafeInteger(expectedRevision) ||
+            expectedRevision < 0 ||
+            expectedRevision === Number.MAX_SAFE_INTEGER
+        ) {
+            throw new ContractSelectionValidationError(
+                "revision_conflict",
+                "expected revision must be a nonnegative safe incrementable integer",
+            );
+        }
+        // Snapshot before awaiting the dependency graph so caller mutations cannot change the proposal.
+        const selections = parseContractSelections(value, this.#limits);
+        const suppliedGrants = proposedGrants === undefined ? undefined : parseCapabilityGrants(proposedGrants);
+        const snapshot = await this.dependencies.capture(site);
+        const revision = snapshot.revision;
+        if (typeof revision !== "string" || !revision.length || revision.length > 256) {
+            throw new ContractSelectionValidationError(
+                "stale_dependencies",
+                "dependency snapshot needs a bounded revision",
+            );
+        }
+        const plan = await planContractSelections(site, selections, snapshot, this.#limits);
+        if (!(await this.dependencies.isCurrent(site, revision))) {
+            throw new ContractSelectionValidationError(
+                "stale_dependencies",
+                "dependencies changed during selection validation",
+            );
+        }
+        const previous = await this.get(site);
+        const grants =
+            suppliedGrants ?? previous?.grants ?? parseCapabilityGrants({ default: "allow-selected", denied: [] });
+        const record: StoredContractSelections = {
+            grants,
+            siteId: site,
+            revision: expectedRevision + 1,
+            dependencyRevision: revision,
+            plan,
+        };
+        try {
+            assertIJson(record, this.#limits.maxJsonDepth);
+        } catch {
+            throw new ContractSelectionValidationError(
+                "limit_exceeded",
+                "planned selections exceed the document depth limit",
+            );
+        }
+        if (storedRecordBytes(record) > this.#limits.maxDocumentBytes * 4) {
+            throw new ContractSelectionValidationError(
+                "limit_exceeded",
+                "planned selections exceed the document limit",
+            );
+        }
+        if (expectedRevision === 0) {
+            try {
+                await this.#collection.insertOne({ _id: site, ...structuredClone(record) });
+            } catch (error) {
+                if (error instanceof MongoServerError && error.code === 11000) {
+                    throw new ContractSelectionValidationError(
+                        "revision_conflict",
+                        "site selections changed since they were read",
+                    );
+                }
+                throw error;
+            }
+        } else {
+            const result = await this.#collection.replaceOne(
+                { _id: site, revision: expectedRevision },
+                structuredClone(record),
+            );
+            if (result.matchedCount !== 1) {
+                throw new ContractSelectionValidationError(
+                    "revision_conflict",
+                    "site selections changed since they were read",
+                );
+            }
+        }
+        return deepFreeze(structuredClone(record));
+    }
+}
+
+function readSelectionDocument(
+    document: SelectionDocument,
+    site: string,
+    limits: Readonly<ContractSelectionLimits>,
+): StoredContractSelections {
+    if (
+        document.siteId !== site ||
+        !Number.isSafeInteger(document.revision) ||
+        document.revision < 1 ||
+        typeof document.dependencyRevision !== "string" ||
+        !document.dependencyRevision.length ||
+        document.dependencyRevision.length > 256 ||
+        document.plan.siteId !== site ||
+        document.plan.structurallyValid !== true ||
+        document.plan.runtimeReadiness !== "not-evaluated" ||
+        !Array.isArray(document.plan.dependencies) ||
+        document.plan.dependencies.length > limits.maxDependencies
+    ) {
+        throw new Error("Stored contract selections have invalid metadata");
+    }
+    parseCapabilityGrants(document.grants);
+    const selections = parseContractSelections(document.plan.selections, limits);
+    if (selections.some((selection) => selection.siteId !== site)) {
+        throw new Error("Stored contract selections contain another site");
+    }
+    const { _id, ...record } = document;
+    assertIJson(record, limits.maxJsonDepth);
+    if (storedRecordBytes(record) > limits.maxDocumentBytes * 4) {
+        throw new Error("Stored contract selections exceed the document limit");
+    }
+    return deepFreeze(structuredClone(record));
+}
+
+function storedRecordBytes(record: StoredContractSelections): number {
+    return new TextEncoder().encode(JSON.stringify(record)).byteLength;
+}

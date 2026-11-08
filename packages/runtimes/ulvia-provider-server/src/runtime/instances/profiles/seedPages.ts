@@ -1,5 +1,5 @@
-import { createCmsPage, publishCmsPage, readSystemSnapshot } from "@bernouy/cms-content";
-import { collectionExampleDocument, resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
+import { createCmsPage, publishCmsPage, readSystemSnapshot } from "@bernouy/content";
+import { collectionExampleDocument, resolveCollectionTranslation } from "@bernouy/repository/collections";
 import type { OfficialInstanceProfile, ProviderInstanceTransitionExecution } from "@bernouy/ulvia-provider";
 import type { InstanceComposition } from "../composition/ProviderInstanceHost";
 

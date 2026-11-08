@@ -2,7 +2,7 @@
 
 `ulvia/cms.observability@1.0.0` is a required selection in the official CMS instance profile. Providers implementing unrelated contracts need not implement it.
 
-The official Provider composes `CmsObservability` from `@bernouy/cms-observability` with `MongoJournalStore` from `@bernouy/cms-observability/mongo`. Each instance uses its existing private database and an instance-bound service. Core feature code chooses neither environment configuration nor network adapters.
+The official Provider composes `CmsObservability` from `@bernouy/observability` with `MongoJournalStore` from `@bernouy/observability/mongo`. Each instance uses its existing private database and an instance-bound service. Core feature code chooses neither environment configuration nor network adapters.
 
 ## Contract
 

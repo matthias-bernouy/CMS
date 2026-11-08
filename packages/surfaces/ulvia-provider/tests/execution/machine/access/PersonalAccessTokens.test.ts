@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { InMemoryPatRepository, InMemoryUsersRepository, MAX_PERSONAL_ACCESS_TOKENS } from "@bernouy/cms-auth";
+import { InMemoryPatRepository, InMemoryUsersRepository, MAX_PERSONAL_ACCESS_TOKENS } from "@bernouy/auth";
 import type { UlviaProviderGateway, ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";
 import { accessServices } from "./services";
 import { accessTransport } from "./transport";

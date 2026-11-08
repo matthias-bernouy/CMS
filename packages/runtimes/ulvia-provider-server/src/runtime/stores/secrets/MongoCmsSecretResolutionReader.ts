@@ -1,5 +1,5 @@
 import { asBuffer, type SecretCrypto } from "@bernouy/envelope-crypto";
-import type { CmsSecretResolutionReader, CmsSecretMetadata, SecretNamespaceKeyRecord } from "@bernouy/cms-secrets";
+import type { CmsSecretResolutionReader, CmsSecretMetadata, SecretNamespaceKeyRecord } from "@bernouy/secrets";
 import type { EncryptedSecretDocument } from "@bernouy/secret-store/mongo";
 import type { Collection, Db } from "mongodb";
 
