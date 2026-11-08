@@ -7,6 +7,7 @@ import { fragmentReader, localFragmentDiagnostics } from "./fragments";
 import { collectDocumentLinks, linkIssue } from "./collect";
 
 import type { PageLinkAnalysis } from "content/application/interfaces/diagnostics";
+import type { PageFragmentIndexCache } from "./fragmentIndexCache";
 
 type Analysis = ReturnType<typeof analyzeExpandedPageDocument>;
 
@@ -23,6 +24,11 @@ export async function analyzePageLinkReport(
     analysis: Analysis,
     page: Pick<TPage, "path" | "visible"> & Partial<Pick<TPage, "id">>,
     availablePaths: readonly string[],
+    options: Readonly<{
+        fragmentIndexes?: PageFragmentIndexCache;
+        /** Already captured Pages from this validation batch; never grants an additional read. */
+        snapshotPages?: ReadonlyMap<string, TPage>;
+    }> = {},
 ): Promise<PageLinkAnalysis> {
     if (!analysis.root.querySelector("a[href], form[cms-mutation-redirect], iframe[src]")) {
         return {
@@ -44,16 +50,22 @@ export async function analyzePageLinkReport(
         ? await repository.getPageRoutes(paths)
         : (await Promise.all(paths.map((path) => repository.getPageRoute(path)))).filter((route) => route !== null);
     const byPath = new Map(routes.map((route) => [route.path, route]));
-    const ids = [
+    const destinationIds = [
         ...new Set(
             routes.filter((route) => route.state !== "gone" && route.pageId !== page.id).map((route) => route.pageId),
         ),
-    ].slice(0, 32);
-    const pages = repository.getPagesByIds
-        ? await repository.getPagesByIds(ids)
-        : (await Promise.all(ids.map((id) => repository.getPageById(id)))).filter((target) => target !== null);
+    ];
+    const ids = options.snapshotPages ? destinationIds : destinationIds.slice(0, 32);
+    const pages = options.snapshotPages
+        ? ids.flatMap((id) => {
+              const target = options.snapshotPages!.get(id);
+              return target ? [target] : [];
+          })
+        : repository.getPagesByIds
+          ? await repository.getPagesByIds(ids)
+          : (await Promise.all(ids.map((id) => repository.getPageById(id)))).filter((target) => target !== null);
     const byId = new Map(pages.map((target) => [target.id, target]));
-    const readFragment = fragmentReader(analysis);
+    const readFragment = fragmentReader(analysis, options.fragmentIndexes);
     const missingSeverity = page.visible ? "error" : "warning";
     let complete = true;
     for (const link of links) {

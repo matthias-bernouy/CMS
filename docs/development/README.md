@@ -44,6 +44,11 @@ provisioning uses bundled SDK artifacts offline and creates no collections or
 Pages. Tests publish small collection fixtures explicitly; no starter is bundled.
 The Edge smoke selects its isolated Registry through the same setup screen.
 
+Reviewed collection upgrades validate links against their captured Page snapshot.
+They reuse bounded fragment indexes within that review (128 entries, 8 MiB),
+while preserving per-source document budgets and current route checks. Ordinary
+Page edits still read at most 32 destinations. Neither path crawls linked Pages.
+
 The CLI manages shared services and any number of named Edge instances through
 independent Docker Compose projects. It runs the same Edge and Provider images
 for loopback and public installations, plus Nginx and MongoDB. A Repository is

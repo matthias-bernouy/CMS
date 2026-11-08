@@ -49,7 +49,7 @@ test.each([
     },
 );
 
-test.each(["draft", "published", "budget"] as const)(
+test.each(["draft", "published", "snapshot"] as const)(
     "reviewed upgrades distinguish truncated reports from %s verification failures",
     async (scenario) => {
         const repository = new InMemoryContentRepository();
@@ -59,7 +59,7 @@ test.each(["draft", "published", "budget"] as const)(
         await collections.install("site", previous.digest, 0);
         const next = await collections.importRelease({ ...source, version: "1.1.0" });
         let body = '<a href="/missing">Missing</a>'.repeat(40);
-        if (scenario === "budget") {
+        if (scenario === "snapshot") {
             for (let i = 0; i < 40; i++) {
                 await repository.insertPage(`/target-${i}`, "Target");
                 const target = (await repository.getPage(`/target-${i}`))!;
@@ -81,19 +81,17 @@ test.each(["draft", "published", "budget"] as const)(
         });
         const targets = [{ digest: next.digest }];
         const plan = await service.plan("site", targets);
-        expect(plan.status).toBe(
-            scenario === "draft" ? "applicable" : scenario === "budget" ? "incomplete" : "blocked",
-        );
+        expect(plan.status).toBe(scenario === "published" ? "blocked" : "applicable");
         expect(await collections.revision("site")).toBe(1);
         expect(await repository.getAllPages()).toEqual(before);
-        if (scenario === "draft") {
+        if (scenario !== "published") {
             expect(plan.issues).toEqual([]);
             expect((await service.apply("site", targets, plan.planDigest)).status).toBe("completed");
             expect(await collections.revision("site")).toBe(2);
         } else {
             expect(plan.issues).toContainEqual(
                 expect.objectContaining({
-                    code: scenario === "budget" ? "incomplete" : "incompatible-content",
+                    code: "incompatible-content",
                     location: expect.stringContaining(page.id),
                 }),
             );

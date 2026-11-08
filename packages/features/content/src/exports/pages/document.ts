@@ -42,6 +42,7 @@ export {
     type BlocDocumentValidationResult,
 } from "content/blocs/core/markup/validation/documents/blocDocument";
 export { assertContentRefsExist } from "content/blocs/core/markup/validation/assertContentRefsExist";
+export { PageFragmentIndexCache } from "content/pages/core/routing/analysis/fragmentIndexCache";
 export {
     resolveSyncProducerSchemas,
     validateDocumentBindings,

@@ -1,7 +1,7 @@
 import type { ContentRepository } from "@bernouy/content";
 import type { PageRoute } from "@bernouy/content";
 import { analyzePageLinkReport } from "@bernouy/content";
-import { assertContentRefsExist } from "@bernouy/content/page-document";
+import { assertContentRefsExist, PageFragmentIndexCache } from "@bernouy/content/page-document";
 import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 import type { UsageSnapshot } from "../usage/snapshot";
 import { localBlocDocuments } from "../usage/localDocuments";
@@ -28,6 +28,7 @@ export async function validateUpgradeContent(
         })),
     );
     const finalBlocs = [...current.filter((bloc) => !installedIds.has(bloc.id)), ...targetBlocs];
+    const fragmentIndexes = new PageFragmentIndexCache(finalBlocs);
     const issues: UpgradeIssue[] = [];
     const documents = snapshot.pages.map((page) => ({ location: `page:${page.id}:${page.path}`, html: page.content }));
     const byLocation = new Map(snapshot.pages.map((page) => [`page:${page.id}:${page.path}`, page]));
@@ -71,7 +72,10 @@ export async function validateUpgradeContent(
                 { complete: Boolean(page) },
             );
             if (page && analysis) {
-                const report = await analyzePageLinkReport(reads, analysis, page, [page.path]);
+                const report = await analyzePageLinkReport(reads, analysis, page, [page.path], {
+                    fragmentIndexes,
+                    snapshotPages: byId,
+                });
                 if (report.hasErrors) {
                     for (const diagnostic of report.diagnostics.filter((value) => value.severity === "error")) {
                         issues.push({ code: "incompatible-content", location, message: diagnostic.message });
