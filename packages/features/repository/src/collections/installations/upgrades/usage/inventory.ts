@@ -169,9 +169,9 @@ export function inventoryFromSnapshot(
     if (references.length > 100_000) {
         unknown.push("Usage reference limit exceeded");
     }
-    const unique = [...new Map(references.map((reference) => [usageDigest(reference), reference])).values()].sort(
-        (a, b) => usageDigest(a).localeCompare(usageDigest(b)),
-    );
+    const unique = [...new Map(references.map((reference) => [usageDigest(reference), reference]))]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([, reference]) => reference);
     const result = {
         siteId,
         complete: !unknown.length,

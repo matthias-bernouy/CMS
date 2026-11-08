@@ -35,7 +35,8 @@ export async function validateCapabilityUsage(
     releases: ContractReleaseReader,
 ): Promise<ContractUpgradeIssue[]> {
     const nodes = await selectedContractNodes(selections, releases);
-    const before = await selectedContractNodes(source, releases);
+    const before = source === selections ? nodes : await selectedContractNodes(source, releases);
+    const comparisons = new Map<string, boolean>();
     const issues: ContractUpgradeIssue[] = [];
     const pending = [...usage.requirements];
     const expanded = new Set<string>();
@@ -93,14 +94,23 @@ export async function validateCapabilityUsage(
         );
         const oldContract = oldNode?.lineage.find((release) => release.contractId === reference.contractId);
         const oldCapability = oldNode ? capabilityForReference(oldNode, reference) : undefined;
-        if (oldContract && oldCapability && oldCapability.id === capability.id) {
-            const { extends: _oldParent, ...oldBase } = oldContract;
-            const { extends: _targetParent, ...targetBase } = contract;
-            const compatibility = compareContractReleases(
-                { ...oldBase, capabilities: [oldCapability] },
-                { ...targetBase, capabilities: [capability] },
-            );
-            if (!compatibility.consumerCompatible) {
+        if (oldNode && oldContract && oldCapability && oldCapability.id === capability.id) {
+            const key = `${oldNode.selection.digest}\0${node.selection.digest}\0${reference.contractId}\0${capability.id}`;
+            let compatible = comparisons.get(key);
+            if (compatible === undefined) {
+                if (oldNode.selection.digest === node.selection.digest) {
+                    compatible = true;
+                } else {
+                    const { extends: _oldParent, ...oldBase } = oldContract;
+                    const { extends: _targetParent, ...targetBase } = contract;
+                    compatible = compareContractReleases(
+                        { ...oldBase, capabilities: [oldCapability] },
+                        { ...targetBase, capabilities: [capability] },
+                    ).consumerCompatible;
+                }
+                comparisons.set(key, compatible);
+            }
+            if (!compatible) {
                 issues.push({
                     code: "incompatible-capability",
                     location: reference.location,
