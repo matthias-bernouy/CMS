@@ -1,6 +1,8 @@
+import { declaredPageRequirements } from "content/blocs/core/usage/declaredPageRequirements";
+import type { TPage } from "content/pages/interfaces/pages";
 import { siteBlocsRevision } from "content/blocs/core/catalogue/siteBlocsRevision";
 import type { RenderingResourceReads } from "content/application/core/RenderingResourceReads";
-import type { BlocListOptions } from "content/application/interfaces/ContentRepository";
+import type { BlocListItemResponse, BlocListOptions } from "content/application/interfaces/ContentRepository";
 import { projectBlocList } from "content/application/core/projectBlocList";
 import type {
     BlocRecord,
@@ -119,10 +121,26 @@ export class InMemoryBlocRepository {
         return this.siteBlocPublications.run(operation);
     }
 
-    async getBlocsList(options: BlocListOptions = {}, reads?: RenderingResourceReads) {
-        const records = [...this.blocs.values()];
-        reads?.rememberRevision(this, "blocs", siteBlocsRevision(records));
-        return projectBlocList(records, options);
+    async getPageRequirements(page: TPage, reads?: RenderingResourceReads) {
+        return declaredPageRequirements(this, page, reads);
+    }
+
+    async getBlocsList(options: BlocListOptions = {}, reads?: RenderingResourceReads): Promise<BlocListItemResponse[]> {
+        const captured: BlocListOptions = {
+            projection: options.projection ?? "catalogue",
+            includeHidden: options.includeHidden === true,
+        };
+        const load = async () => {
+            const records = await this.getBlocRecords();
+            reads?.rememberRevision(this, "blocs", siteBlocsRevision(records));
+            return projectBlocList(records, captured);
+        };
+        if (!reads) {
+            return load();
+        }
+        return structuredClone(
+            await reads.resource(this, `bloc-list:${captured.projection}:${captured.includeHidden}`, load),
+        );
     }
 
     async getBlocViewJS(htmlTag: string): Promise<string | null> {

@@ -1,3 +1,5 @@
+import type { ContentCapabilityRequirement } from "@bernouy/content";
+import { validateCapabilityRequirements } from "@bernouy/content";
 import { z } from "zod";
 import { contractString } from "@bernouy/ulvia-sdk";
 import { isValidRegisteredPagePath } from "@bernouy/content/page-path";
@@ -52,6 +54,11 @@ const pageSchema = z.strictObject({
     visible: z.boolean(),
     indexing: z.boolean(),
     systemRole: z.literal("login").optional(),
+    requires: z
+        .array(z.unknown())
+        .max(128)
+        .transform((value): readonly ContentCapabilityRequirement[] => validateCapabilityRequirements(value)!)
+        .optional(),
 });
 
 /** Content owns the nested artifact formats and their semantic validators. */

@@ -1,3 +1,4 @@
+import { declaredPageRequirements } from "content/blocs/core/usage/declaredPageRequirements";
 import type { RenderingResourceReads } from "content/application/core/RenderingResourceReads";
 import { PageMutationValidation } from "content/pages/core/routing/mutations";
 import type {
@@ -51,7 +52,9 @@ export class ValidatingContentRepository implements ContentRepository {
         return (await this.inner.getTextContributions?.(reads)) ?? { revision: 0, texts: [] };
     }
     async getPageRequirements(page: TPage, reads?: RenderingResourceReads) {
-        return (await this.inner.getPageRequirements?.(page, reads)) ?? [];
+        return this.inner.getPageRequirements
+            ? this.inner.getPageRequirements(page, reads)
+            : declaredPageRequirements(this.inner, page, reads);
     }
     getSiteBlocGroups(): Promise<SiteBlocGroup[]> {
         return this.inner.getSiteBlocGroups();

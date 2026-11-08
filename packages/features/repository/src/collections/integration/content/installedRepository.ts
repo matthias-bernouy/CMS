@@ -146,6 +146,7 @@ export function withInstalledCollections(
                                 : "",
                             ownership: { kind: "code-managed" },
                             uses: bloc.uses,
+                            ...(bloc.requires.length ? { requires: bloc.requires } : {}),
                             viewJS: bloc.kind === "component" ? (bloc.runtime?.viewJS ?? "") : "",
                             catalogue: bloc.catalogue,
                             root: bloc.root,
@@ -239,9 +240,10 @@ export function withInstalledCollections(
                     return record ? record.artifact?.viewJS || null : repository.getBlocViewJS(tag);
                 },
             })(page.content);
+            const used = new Set(uses);
             return documentRequirements(
                 installed.collections.map(({ release }) => release),
-                { uses, requires: [] },
+                { uses, requires: local.filter((bloc) => used.has(bloc.id)).flatMap((bloc) => bloc.requires ?? []) },
             );
         },
         getBlocRecords: records,

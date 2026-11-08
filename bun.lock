@@ -59,6 +59,7 @@
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "@bernouy/resource-identity": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
         "linkedom": "^0.18.15",
         "zod": "4.6.7",

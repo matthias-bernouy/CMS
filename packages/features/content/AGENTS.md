@@ -80,6 +80,7 @@ bindings, validation, and read models.
 - Collection admission, installation, projection and reviewed release upgrades
   belong to `@bernouy/repository`. Content exposes only generic persistence,
   validation and contribution inputs consumed by those projections.
+- Ordinary stored Bloc artifacts may retain bounded canonical capability `requires` metadata. It constrains host execution and never grants authority; memory/Mongo storage and catalogue/rendering projections preserve it.
 - Stored Page/Bloc documents, settings and binding contracts must remain stable;
   authored Blocs depend on them even while no visual editor is mounted.
 - When changing repository behavior, update both in-memory and Mongo behavior

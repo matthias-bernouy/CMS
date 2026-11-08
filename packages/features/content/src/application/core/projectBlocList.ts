@@ -25,6 +25,7 @@ export function projectBlocList(records: BlocRecord[], options: BlocListOptions 
                       ...(editor && bloc.settings ? { settings: structuredClone(bloc.settings) } : {}),
                       ...(bloc.catalogue ? { catalogue: bloc.catalogue } : {}),
                       ...(bloc.uses ? { uses: [...bloc.uses] } : {}),
+                      ...(bloc.requires ? { requires: structuredClone(bloc.requires) } : {}),
                       root: structuredClone(bloc.root),
                       ...(bloc.styleCSS ? { styleCSS: bloc.styleCSS } : {}),
                       ...(bloc.styleCollectionId ? { styleCollectionId: bloc.styleCollectionId } : {}),

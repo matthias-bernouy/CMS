@@ -33,6 +33,9 @@
         },
         {
             "path": "../../platform/sdk"
+        },
+        {
+            "path": "../../platform/contracts"
         }
     ]
 }
