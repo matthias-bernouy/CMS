@@ -1,3 +1,4 @@
+import { createResourceOperationQuery } from "./features/services/resources";
 import { createInstallationOperationQueries } from "./features/services/installations/operations";
 import { createProviderOperationAdapter } from "./features/services/operations";
 import { repositoryAccountResolver } from "./features/services/repository";
@@ -23,6 +24,10 @@ export async function registerOfficialProviderCapabilities(
             dispatcher,
             {
                 ...dependencies,
+                resources:
+                    dependencies.resources && operations
+                        ? { ...dependencies.resources, operation: createResourceOperationQuery(operations) }
+                        : undefined,
                 governance: gateway,
                 gateway,
                 management: providerManagement,

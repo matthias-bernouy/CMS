@@ -3,7 +3,7 @@ import { resolveContract } from "@bernouy/ulvia-contracts";
 import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import type { ContractSelectionStore } from "@bernouy/repository/providers/selections";
 import type { ProviderExecutionStateReader, ProviderExecutionState } from "@bernouy/ulvia-providers/selections";
-import type { InitializationExecution } from "@bernouy/repository/collections/installations";
+import type { ResourceInitializationExecution } from "@bernouy/resources/initialization";
 
 /** Refresh authorization evidence without treating an observation timestamp as a new approval. */
 export function initializationExecution(
@@ -12,7 +12,7 @@ export function initializationExecution(
     states: ProviderExecutionStateReader,
     releases: ReleaseCatalogue,
 ) {
-    return async (): Promise<InitializationExecution> => {
+    return async (): Promise<ResourceInitializationExecution> => {
         const current = await selections.get(siteId);
         if (!current || current.plan.selections.length > 64) {
             throw new Error("Initialization execution is unavailable");

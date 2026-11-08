@@ -7,6 +7,7 @@ import { capabilityBindings } from "@bernouy/ulvia-contracts/bindings";
 const allowed = new Set([
     "ulvia/cms.authoring",
     "ulvia/cms.content",
+    "ulvia/cms.resources",
     "ulvia/cms.files",
     "ulvia/cms.installations",
     "ulvia/cms.observability",
@@ -59,5 +60,5 @@ test("official MCP V1 exposes authoring, collection lifecycle and administrator 
             }
         }
     }
-    expect(tools).toBe(82);
+    expect(tools).toBe(86);
 });

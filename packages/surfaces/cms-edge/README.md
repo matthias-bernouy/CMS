@@ -19,3 +19,10 @@ and cache those artifacts.
 
 See the [workspace package map](../../../docs/architecture/packages.md). Licensed
 under the repository [MIT License](../../../LICENSE).
+
+Native setup at `/.cms/setup` calls selected `ulvia/cms.resources` capabilities.
+It offers empty/base initialization, renders the exact reviewed resource counts,
+Page visibility and browser authority, then sends explicit consent for queued
+application. A stopped copy returns through review before resuming. Access owns
+login/logout; the Edge holds no resource store, import service or administrator
+bypass. Missing-home redirects add one public pending query only.

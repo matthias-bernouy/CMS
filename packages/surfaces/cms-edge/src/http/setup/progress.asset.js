@@ -18,14 +18,14 @@ export async function watchOperation(operationId, update) {
 }
 
 export function showProgress(state) {
+    const total = Object.values(state.counts).reduce((sum, count) => sum + count, 0);
+    const completed = Object.values(state.completed).reduce((sum, count) => sum + count, 0);
     document.querySelector("#progress-label").textContent =
-        state.status === "pending"
-            ? "Verifying the reviewed resources…"
-            : `${state.completedPages} of ${state.totalPages} pages completed`;
+        state.status === "pending" ? "Verifying the reviewed resources…" : `${completed} of ${total} resources copied`;
     const progress = document.querySelector("#progress-bar");
-    if (state.totalPages) {
-        progress.max = state.totalPages;
-        progress.value = state.completedPages;
+    if (total) {
+        progress.max = total;
+        progress.value = completed;
     } else {
         progress.removeAttribute("value");
     }

@@ -1,6 +1,6 @@
 import { implementFeature } from "@bernouy/ulvia-sdk";
 import { filesFeature } from "@bernouy/files/feature";
-import type { UlviaProviderFeatureServices } from "../../../ports/index";
+import type { UlviaProviderFeatureServices } from "../../../../ports/index";
 
 export const filesImplementation = implementFeature(filesFeature, {
     services: (dependencies: UlviaProviderFeatureServices) => {

@@ -7,56 +7,55 @@ function node(tag, text, className) {
     return element;
 }
 export function renderReview(review) {
-    const plan = review.plan;
-    document.querySelector("#review-title").textContent = plan.root
+    const base = review.choice === "base";
+    document.querySelector("#review-title").textContent = base
         ? "Review your starting point."
         : "A blank canvas. All yours.";
-    document.querySelector("#review-description").textContent = plan.root
-        ? "These exact resources will be installed on your site."
-        : "Your site will start without collections or pages. Nothing needs to be downloaded.";
+    document.querySelector("#review-description").textContent = base
+        ? "These exact resources will be copied into your site."
+        : "Your site will start without resources or pages. Nothing needs to be downloaded.";
     const summary = document.querySelector("#review-summary");
     summary.replaceChildren();
-    for (const [count, label] of [
-        [plan.collections.length, "collections"],
-        [plan.pages.length, "pages"],
-        [plan.contracts.length, "selected contracts used"],
-    ]) {
+    for (const key of ["blocs", "assets", "texts", "pages"]) {
         const item = node("span", "");
-        item.append(node("strong", String(count)), document.createTextNode(label));
+        item.append(
+            node("strong", String(review.counts[key])),
+            document.createTextNode(key === "texts" ? "text namespaces" : key === "blocs" ? "blocks" : key),
+        );
         summary.append(item);
     }
-    const collections = document.querySelector("#review-collections");
-    collections.replaceChildren();
-    for (const collection of plan.collections) {
-        const item = node("div", "", "resource");
-        item.append(node("strong", `${collection.collectionId} · ${collection.version}`));
-        const risk = collection.browserRisk;
-        item.append(
-            node(
-                "p",
-                risk.level === "none"
-                    ? "No executable browser code declared."
-                    : `${risk.javaScriptBlocs.length} browser scripts · ${risk.frameBlocs.length} embedded content blocks`,
-            ),
+    const resources = document.querySelector("#review-resources");
+    resources.replaceChildren();
+    const risk = review.browserRisk;
+    resources.append(
+        node(
+            "p",
+            risk.level === "none"
+                ? "No executable browser code declared."
+                : `${risk.javaScriptBlocs.length} browser scripts · ${risk.frames.length} embedded content blocks`,
+        ),
+    );
+    if (risk.javaScriptBlocs.length) {
+        resources.append(node("p", `Browser scripts: ${risk.javaScriptBlocs.join(", ")}`));
+    }
+    for (const frame of risk.frames) {
+        resources.append(
+            node("p", `${frame.id}: ${frame.origins.join(", ")} · sandbox: ${frame.sandbox.join(", ") || "none"}`),
         );
-        if (risk.externalFrameOrigins.length) {
-            item.append(node("p", `External content: ${risk.externalFrameOrigins.join(", ")}`));
-        }
-        collections.append(item);
     }
     const rows = document.querySelector("#review-pages");
     rows.replaceChildren();
-    for (const page of plan.pages) {
+    for (const page of review.pages) {
         const row = document.createElement("tr");
-        row.append(node("td", page.title), node("td", page.path), node("td", page.visible ? "Published" : "Draft"));
+        row.append(node("td", page.path), node("td", page.visible ? "Published" : "Draft"));
         rows.append(row);
     }
-    document.querySelector("#page-details").hidden = plan.pages.length === 0;
-    const hasCode = plan.collections.some(({ browserRisk }) => browserRisk.level !== "none");
+    document.querySelector("#page-details").hidden = review.pages.length === 0;
+    const hasCode = risk.level !== "none";
     document.querySelector("#risk-consent").hidden = !hasCode;
     const consent = document.querySelector("#approve-code");
     consent.checked = false;
     consent.required = hasCode;
     consent.disabled = !hasCode;
-    document.querySelector("#confirm").textContent = plan.root ? "Confirm and install →" : "Create an empty site →";
+    document.querySelector("#confirm").textContent = base ? "Confirm and copy →" : "Create an empty site →";
 }

@@ -4,11 +4,12 @@ import { readFile } from "node:fs/promises";
 import { compileOfficialFeatures, compileOfficialManifest } from "@bernouy/ulvia-provider/build";
 import { prepareContractSource } from "@bernouy/repository/repository/authoring/build";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
+import type { ProviderManifest } from "@bernouy/ulvia-providers";
 import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
 
 test("SDK feature releases preserve every schema, mock, binding, document byte and parent digest", async () => {
     const compiled = await compileOfficialFeatures();
-    for (const admission of compiled.contracts) {
+    for (const admission of compiled.contracts.filter(({ release }) => release.contractId !== "ulvia/cms.resources")) {
         const name = admission.release.contractId.slice("ulvia/".length);
         const old = (
             await prepareContractSource(
@@ -26,7 +27,7 @@ test("SDK feature releases preserve every schema, mock, binding, document byte a
     }
 });
 
-test("generated manifest preserves its release identity and exact dependency claims", async () => {
+test("the new manifest adds Resources while preserving every previous exact claim and dependency", async () => {
     const root = resolve(import.meta.dir, "../../../../../official-repository");
     const catalogue = new InMemoryReleaseCatalogue();
     const { readdir } = await import("node:fs/promises");
@@ -40,7 +41,18 @@ test("generated manifest preserves its release identity and exact dependency cla
         await readFile(resolve(root, "providers/primary-provider/definition.json"), "utf8"),
         catalogue,
     );
-    const next = await compileOfficialManifest(catalogue, await compileOfficialFeatures());
-    expect(next.canonicalJson).toBe(old.canonicalJson);
-    expect(next.digest).toBe(old.digest);
+    const compiled = await compileOfficialFeatures();
+    await publishContractSet(catalogue, compiled.contracts);
+    const next = await compileOfficialManifest(catalogue, compiled);
+    expect(next.manifest.version).toBe("1.3.0");
+    expect(next.digest).not.toBe(old.digest);
+    expect(next.manifest.implementations.filter(({ contractId }) => contractId === "ulvia/cms.resources")).toHaveLength(
+        1,
+    );
+    const projected: ProviderManifest = {
+        ...next.manifest,
+        version: old.manifest.version,
+        implementations: next.manifest.implementations.filter(({ contractId }) => contractId !== "ulvia/cms.resources"),
+    };
+    expect(projected).toEqual(old.manifest);
 });

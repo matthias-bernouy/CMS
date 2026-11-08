@@ -13,6 +13,7 @@ export function isOfficialContract(id: string): boolean {
         "ulvia/repository",
         "ulvia/cms.access",
         "ulvia/cms.content",
+        "ulvia/cms.resources",
         "ulvia/cms.emailer",
         "ulvia/cms.emailer.smtp",
         "ulvia/cms.files",

@@ -20,7 +20,7 @@ function officialArtifacts() {
 test("core-only bootstrap retains the exact system APIs with an explicitly empty collection index", async () => {
     const artifacts = await buildOfficialBootstrapArtifacts({ includeCollections: false });
     expect(artifacts.collections).toEqual([]);
-    expect(Object.keys(artifacts.contracts)).toHaveLength(12);
+    expect(Object.keys(artifacts.contracts)).toHaveLength(13);
     const root = await mkdtemp(join(tmpdir(), "ulvia-bootstrap-core-"));
     try {
         await writeOfficialBootstrapArtifacts(root, artifacts);
@@ -28,7 +28,7 @@ test("core-only bootstrap retains the exact system APIs with an explicitly empty
         const repository = join(root, "repository");
         expect(await new FilesystemCollectionRepository("core", repository).list()).toEqual([]);
         const providers = new FilesystemProviderRepository("core", repository);
-        expect(await providers.list("contract")).toHaveLength(12);
+        expect(await providers.list("contract")).toHaveLength(13);
         expect(await providers.list("provider-manifest")).toHaveLength(1);
     } finally {
         await rm(root, { recursive: true, force: true });

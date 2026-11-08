@@ -38,19 +38,19 @@ test("push all publishes every official artifact kind, then inferred provider an
         await f.run(["release", resolve(import.meta.dir, "../../../../../../infra/releases")]);
         f.output.length = 0;
         await f.run(["push", "all"]);
-        expect(await f.remoteFiles.list("contracts")).toHaveLength(12);
+        expect(await f.remoteFiles.list("contracts")).toHaveLength(13);
         expect(await f.remoteFiles.list("providers")).toHaveLength(1);
         expect(
             (await new LocalCollectionRepository(f.remote).list()).map(({ release }) => release.collectionId),
         ).toEqual(["ulvia/mossa", "ulvia/repository"]);
-        expect(f.output.slice(1, 13).every((line) => line.startsWith("+ contract"))).toBe(true);
-        expect(f.output[13]).toStartWith("+ provider-manifest");
-        expect(f.output[14]).toStartWith("+ collection ulvia/mossa@");
-        expect(f.output[15]).toStartWith("+ collection ulvia/repository@");
-        expect(f.output.at(-1)).toBe("Published 15 local releases.");
-        const provider = JSON.parse(await readFile(join(source, "providers/primary-provider/definition.json"), "utf8"));
+        expect(f.output.slice(1, 14).every((line) => line.startsWith("+ contract"))).toBe(true);
+        expect(f.output[14]).toStartWith("+ provider-manifest");
+        expect(f.output[15]).toStartWith("+ collection ulvia/mossa@");
+        expect(f.output[16]).toStartWith("+ collection ulvia/repository@");
+        expect(f.output.at(-1)).toBe("Published 16 local releases.");
+        const provider = (await f.remoteFiles.list("providers"))[0]!;
         const collection = JSON.parse(await readFile(join(source, "collections/mossa/definition.json"), "utf8"));
-        await f.run(["push", `${provider.providerId}@${provider.version}`]);
+        await f.run(["push", `${provider.id}@${provider.version}`]);
         expect(f.output.at(-1)).toStartWith("= provider-manifest");
         await f.run(["push", `${collection.collectionId}@${collection.version}`]);
         expect(f.output.at(-1)).toStartWith("= collection");

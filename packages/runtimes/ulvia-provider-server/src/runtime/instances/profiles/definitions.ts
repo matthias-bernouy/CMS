@@ -61,10 +61,20 @@ const SETUP_REPOSITORY_PROFILE: ProfileDefinition = Object.freeze({
     id: "repository",
     repository: true,
 });
-export const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
+const DISCOVERY_PROFILE: ProfileDefinition = Object.freeze({
     ...SETUP_PROFILE,
     version: "1.3.0",
     manifest: Object.freeze({ providerId: "ulvia/primary-provider", version: "1.2.0" }),
+});
+export const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
+    ...DISCOVERY_PROFILE,
+    version: "1.4.0",
+    manifest: Object.freeze({ providerId: "ulvia/primary-provider", version: "1.3.0" }),
+});
+const DISCOVERY_REPOSITORY_PROFILE: ProfileDefinition = Object.freeze({
+    ...DISCOVERY_PROFILE,
+    id: "repository",
+    repository: true,
 });
 const REPOSITORY_PROFILE: ProfileDefinition = Object.freeze({ ...CURRENT_PROFILE, id: "repository", repository: true });
 export const CURRENT_PROFILES = Object.freeze([CURRENT_PROFILE, REPOSITORY_PROFILE]);
@@ -75,5 +85,7 @@ export const SUPPORTED_PROFILES = Object.freeze([
     EMPTY_REPOSITORY_PROFILE,
     SETUP_PROFILE,
     SETUP_REPOSITORY_PROFILE,
+    DISCOVERY_PROFILE,
+    DISCOVERY_REPOSITORY_PROFILE,
     ...CURRENT_PROFILES,
 ]);

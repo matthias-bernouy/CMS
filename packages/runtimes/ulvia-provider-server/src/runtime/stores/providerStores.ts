@@ -1,3 +1,6 @@
+import { createResourceStores } from "./resources/stores";
+import { resourceInitializationFactory } from "./resources/initialization";
+import { initializationExecution } from "./selections/initializationExecution";
 import { MongoInitializationStateStore } from "@bernouy/repository/collections/mongo";
 import { initializationFactory } from "./collections/initialization";
 import type { CollectionVerifier } from "@bernouy/repository/collections/sources";
@@ -29,7 +32,7 @@ import { CmsObservability } from "@bernouy/observability";
 import { MongoJournalStore } from "@bernouy/observability/mongo";
 import type { RuntimeKekConfig } from "../../runtimeEnvKek";
 import { CMS_REPOSITORY_FENCED_MUTATIONS, COLLECTION_STORE_FENCED_MUTATIONS } from "./collections/siteWritePolicy";
-import { createEnvelopeSecretCrypto } from "./envelopeCrypto";
+import { createEnvelopeSecretCrypto } from "./secrets/envelopeCrypto";
 import { CmsFilesService, CmsImageDerivatives } from "@bernouy/files";
 import { MongoCmsFilesStore } from "@bernouy/files/mongo";
 import { LocalFsBlobStore } from "@bernouy/blob-store/local-fs";
@@ -112,12 +115,13 @@ export async function createProviderStores(
 
     const innerRepo = new MongoContentRepository(db);
     await innerRepo.init();
+    const resourceStores = await createResourceStores(db, env.CMS_FILES_DIR, env.instanceId, SCOPE_ID, innerRepo);
     const collectionStorage = new MongoCollectionStorage(db, undefined, collectionVerifier);
     await collectionStorage.init();
     const rawCollections = new CollectionStore(collectionStorage, releases);
     const upgradeCollections = rawCollections;
     const validatedRepo = new ValidatingContentRepository(
-        withInstalledCollections(innerRepo, upgradeCollections, SCOPE_ID),
+        withInstalledCollections(resourceStores.content, upgradeCollections, SCOPE_ID),
         {
             resolveCapabilities: selectedCapabilityResolver(SCOPE_ID, selections, releases),
             requireQueryCapabilityResolution: true,
@@ -142,6 +146,16 @@ export async function createProviderStores(
         executionState,
         releases,
         collectionVerifier,
+    );
+    const createResourceInitialization = resourceInitializationFactory(
+        env.instanceId,
+        SCOPE_ID,
+        join(env.CMS_FILES_DIR, "resource-initialization"),
+        resourceStores,
+        upgradeRepo,
+        innerRepo,
+        upgradeStorage,
+        initializationExecution(SCOPE_ID, selections, executionState, releases),
     );
     const collections = withSiteWriteFence(
         upgradeCollections,
@@ -222,6 +236,8 @@ export async function createProviderStores(
         collectionUpgrades,
         initializationState,
         createInitialization,
+        resourceStores,
+        createResourceInitialization,
         upgradeStorage,
         mongo,
         db,

@@ -466,6 +466,7 @@
         "@bernouy/logging": "workspace:*",
         "@bernouy/observability": "workspace:*",
         "@bernouy/repository": "workspace:*",
+        "@bernouy/resources": "workspace:*",
         "@bernouy/secrets": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",

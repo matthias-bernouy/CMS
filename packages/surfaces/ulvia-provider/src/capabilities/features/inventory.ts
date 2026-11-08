@@ -1,10 +1,11 @@
+import { resourcesImplementation } from "./implementations/content/resources";
 import { installationsImplementation } from "./implementations/repository/installations";
 import { repositoryImplementation } from "./implementations/repository/registry";
 import { authoringImplementation } from "./implementations/repository/authoring";
-import { contentImplementation } from "./implementations/content";
+import { contentImplementation } from "./implementations/content/content";
 import { accessImplementation } from "./implementations/access";
 import { observabilityImplementation } from "./implementations/observability";
-import { filesImplementation } from "./implementations/files";
+import { filesImplementation } from "./implementations/content/files";
 import { secretsImplementation } from "./implementations/secrets";
 import { smtpEmailerImplementation } from "./implementations/emailer";
 
@@ -22,6 +23,7 @@ const officialFeatureInventory: readonly OfficialFeatureSource[] = Object.freeze
     { implementation: smtpEmailerImplementation },
     { implementation: accessImplementation },
     { implementation: contentImplementation },
+    { implementation: resourcesImplementation },
     { implementation: authoringImplementation },
     { implementation: secretsImplementation },
     { implementation: filesImplementation },

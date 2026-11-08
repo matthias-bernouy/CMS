@@ -5,13 +5,12 @@ import { watchOperation, showProgress } from "./progress.asset.js";
 const $ = (selector) => document.querySelector(selector);
 let review;
 let resumeState;
-let cursor = "";
 
 function stage(id) {
     for (const section of document.querySelectorAll(".stage")) {
         section.hidden = section.id !== id;
     }
-    const step = id === "login" ? "login" : ["choice", "recipes"].includes(id) ? "choice" : "review";
+    const step = id === "login" ? "login" : id === "choice" ? "choice" : "review";
     for (const item of document.querySelectorAll("[data-step]")) {
         if (item.dataset.step === step) {
             item.setAttribute("aria-current", "step");
@@ -47,7 +46,7 @@ function complete(state) {
     $("#refresh").hidden = true;
     $("#done-description").textContent = state.redirectPath
         ? "Your starting point is installed. Make it yours."
-        : "Your site is empty. Add your first collection and pages whenever you are ready.";
+        : "Your site is empty. Add your first resources and pages whenever you are ready.";
     const link = $("#open-site");
     link.hidden = !state.redirectPath;
     if (state.redirectPath?.startsWith("/") && !state.redirectPath.startsWith("//")) {
@@ -98,39 +97,12 @@ async function loadState(authenticated = false) {
     }
     stage("choice");
 }
-async function choose(root) {
+async function choose(choice) {
     $("#refresh").hidden = true;
-    const result = await setup("plan", "QUERY", { root });
+    const result = await setup("plan", "QUERY", { choice, locale: navigator.language || "en" });
     review = JSON.parse(result.reviewJson);
     renderReview(review);
     stage("review");
-}
-async function recipes(append = false) {
-    stage("recipes");
-    if (!append) {
-        cursor = "";
-        $("#recipe-list").replaceChildren();
-    }
-    const page = await setup("recipes", "QUERY", { cursor });
-    cursor = page.cursor;
-    for (const item of page.items) {
-        const button = document.createElement("button");
-        button.className = "recipe";
-        button.type = "button";
-        for (const [tag, text] of [
-            ["strong", item.label],
-            ["span", item.description],
-            ["small", `${item.root.collectionId} · ${item.root.version}`],
-        ]) {
-            const element = document.createElement(tag);
-            element.textContent = text;
-            button.append(element);
-        }
-        button.addEventListener("click", () => run(() => choose(item.root)));
-        $("#recipe-list").append(button);
-    }
-    $("#more").hidden = !cursor;
-    $("#no-recipes").hidden = $("#recipe-list").children.length > 0;
 }
 $("#login-form").addEventListener("submit", (event) => {
     event.preventDefault();
@@ -149,10 +121,17 @@ $("#login-form").addEventListener("submit", (event) => {
 $("#apply-form").addEventListener("submit", (event) => {
     event.preventDefault();
     void run(async () => {
+        const hasRisk = review.browserRisk.level !== "none";
+        if (hasRisk && !$("#approve-code").checked) {
+            throw new Error("Approve the reviewed browser authority before continuing.");
+        }
         const operation = await setup(
             "apply",
             "POST",
-            { root: review.plan.root, locale: review.plan.locale, planDigest: review.digest },
+            {
+                reviewJson: JSON.stringify(review),
+                browserRiskAcknowledgement: hasRisk ? review.browserRiskDigest : null,
+            },
             true,
         );
         await monitor(operation.operationId);
@@ -160,18 +139,16 @@ $("#apply-form").addEventListener("submit", (event) => {
 });
 $("#resume").addEventListener("click", () =>
     run(async () => {
-        const operation = await setup(
-            "apply",
-            "POST",
-            { root: JSON.parse(resumeState.rootJson), locale: resumeState.locale, planDigest: resumeState.planDigest },
-            true,
-        );
-        await monitor(operation.operationId);
+        if (!resumeState.reviewJson) {
+            throw new Error("The reviewed setup is unavailable. Refresh its status.");
+        }
+        review = JSON.parse(resumeState.reviewJson);
+        renderReview(review);
+        stage("review");
     }),
 );
-$("#empty").addEventListener("click", () => run(() => choose(null)));
-$("#browse").addEventListener("click", () => run(() => recipes()));
-$("#more").addEventListener("click", () => run(() => recipes(true)));
+$("#empty").addEventListener("click", () => run(() => choose("empty")));
+$("#base").addEventListener("click", () => run(() => choose("base")));
 $("#refresh").addEventListener("click", () => run(loadState));
 $("#sign-out").addEventListener("click", () =>
     run(async () => {

@@ -79,6 +79,12 @@
             ],
             "ulvia-sdk/*": [
                 "../../../../packages/platform/sdk/src/*"
+            ],
+            "resources/*": [
+                "../../../../packages/features/resources/src/*"
+            ],
+            "zip/*": [
+                "../../../../packages/foundation/zip/src/*"
             ]
         }
     },

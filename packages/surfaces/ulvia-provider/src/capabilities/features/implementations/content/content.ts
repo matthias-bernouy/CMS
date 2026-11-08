@@ -1,6 +1,6 @@
 import { implementFeature } from "@bernouy/ulvia-sdk";
 import { contentFeature } from "@bernouy/content/feature";
-import type { UlviaProviderFeatureServices } from "../../../ports/index";
+import type { UlviaProviderFeatureServices } from "../../../../ports/index";
 export const contentImplementation = implementFeature(contentFeature, {
     services: (dependencies: UlviaProviderFeatureServices) => {
         const { repo, contributions, publicDelivery, contentQuery } = dependencies;

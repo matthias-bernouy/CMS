@@ -13,7 +13,7 @@ signature. Both APIs perform no Content writes and execute no browser artifact.
 Archive verification is not authorization to import. The host must separately review
 browser authority, validate the complete candidate against current selected execution,
 authorize the actor and scope, and own durable fenced application and crash recovery.
-No runtime import or setup endpoint is mounted by this package yet.
+Hosts mount its SDK feature through their ordinary selected capability inventory.
 
 `./storage` exposes ordinary resource asset/text services and the Content text read
 adapter. `./memory` and `./mongo` expose explicitly composed metadata adapters; hosts
@@ -39,11 +39,12 @@ The host must inject durable intents, worker lease/signal, private bounded ZIP
 retention, verification and disposable preview ports. Memory adapters are explicit
 preview/test composition only. The Mongo initialization adapter uses a mandatory
 scope-bound protocol record and compare-and-swap checkpoints, provisioned explicitly
-rather than inferred from an empty site. No runtime, HTTP/MCP or native setup flow
-is wired to this new service yet; legacy setup remains until that transition lands.
+rather than inferred from an empty site. The official Provider composes these ports and selects the generated HTTP/MCP API
+through its inventory. Native setup uses this API; source ZIP production and ordinary
+asset delivery remain separate work while the legacy collection APIs are retired.
 
 `./feature` defines the generated `ulvia/cms.resources` API. It offers explicit
 empty/base initialization, a scoped public pending flag, administrator-only review
 and progress, and a durable apply capability with browser-risk acknowledgement.
-The Provider inventory and native setup integration are separate composition work;
-this definition alone does not mount or select the contract.
+The official core profile explicitly selects this definition. Missing base files
+refuse a base review; empty initialization does not access them.

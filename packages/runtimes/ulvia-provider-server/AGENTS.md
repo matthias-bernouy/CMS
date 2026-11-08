@@ -14,7 +14,7 @@ Production runtime for the official Ulvia Provider.
   transitions. A ready or disabled instance must not require its original recipe
   or bundled collection resources. Missing installation resources refuse a new
   installation rather than silently fetching replacements.
-- Default `ulvia@1.3.0` and `repository@1.3.0` initialization installs system APIs
+- Default `ulvia@1.4.0` and `repository@1.4.0` initialization installs system APIs
   and an administrator only. Never enumerate optional collection sources, create
   Pages or publish the public catalogue during profile provisioning. Persist the
   explicit initialization marker only for a newly provisioned supporting profile.
@@ -57,3 +57,15 @@ Production runtime for the official Ulvia Provider.
   Observe disk-backed ZIP bytes under a limit before worker transport; do not
   trust file stat or allocate an unbounded arrayBuffer. Completed initialization
   replay must remain independent of both the source ZIP and preparation worker.
+
+- Core 1.4 selects `ulvia/cms.resources@1.0.0` from generated manifest 1.3.
+  Explicit provisioning creates the scoped Resource initialization marker. Ready
+  reads never backfill it. The host injects current administrator aliases/grants,
+  maintenance intents, Mongo entities, private local archive retention and the
+  existing preparation pool; no second worker or installed ZIP catalogue.
+- Base inputs are image-owned `resources/<profile>/<locale>.zip` files with an
+  exact `.zip.sha256` sidecar under the bootstrap root. Missing files refuse base
+  setup, while empty setup and completed replay remain independent of them.
+  Private instance storage is owned by one host process. Retention compositions
+  share a writer guard; two 64-MiB archives plus one atomic-write temporary are
+  the filesystem budget. Do not mount that private root on competing hosts.

@@ -71,7 +71,7 @@ collections.
 The Provider advertises exact profile references without reading optional
 collection resources. It loads only the selected profile from its bundled
 admitted snapshot when provisioning or recovering an unfinished transition.
-The default `ulvia@1.3.0` and explicit `repository@1.3.0` profiles initialize
+The default `ulvia@1.4.0` and explicit `repository@1.4.0` profiles initialize
 system APIs and the administrator with zero collections and zero Pages. Their
 collection initialization step makes no collection source or content-store calls.
 A Repository can start before its own Edge or public catalogue exists; API
@@ -84,54 +84,67 @@ for explicit publication, authoring and example tests. Historical profile refere
 remain advertised, but provisioning an old profile requires an explicit snapshot
 with its exact original manifest, contracts and optional collection resources. Missing resources refuse the operation rather than
 falling back to the network. They do not prevent ready instances from restarting.
-Current profiles select the official Provider manifest and `ulvia/cms.installations`
-contract at `1.2.0`. Profile versions are independent from artifact versions.
+Current profiles select Provider manifest `1.3.0`, `ulvia/cms.resources@1.0.0`
+and the unchanged `ulvia/cms.installations@1.2.0`. Profile versions are independent
+from artifact versions. Existing contract releases retain their exact bytes.
 
 ## Optional Site Setup
 
-New instances persist an explicit `ulvia-site-initialization/v1` marker during
-provisioning. A missing marker is unavailable: reads never infer initialization
-from zero Pages or backfill old instances. The Edge redirects a missing home Page
-to `/.cms/setup` only while the admitted `initialization.entry` capability reports
-pending. Existing successful Pages and non-home routes add no Gateway calls;
-a missing home Page adds one bounded entry query.
+New core instances persist an explicit `ulvia-resource-initialization/v1` marker
+in their isolated instance database. A missing marker refuses access; reads never
+infer initialization from zero Pages or backfill ready instances. Edge redirects
+a missing home Page to `/.cms/setup` only while the selected
+`ulvia/cms.resources` capability `initialization.entry` reports pending. Existing
+successful Pages and non-home routes add no Gateway calls; a missing home Page
+adds one bounded entry query. Public entry returns only the pending boolean and
+does not read an operation request, result or receipt.
 
-The native HTML/CSS/module screens belong to Edge and require no collection.
-Login uses ordinary `ulvia/cms.access` session effects. Status, recipe discovery,
-review and application use `ulvia/cms.installations` through the same Gateway as
-other contract calls. Only a currently authorized local administrator can read
-or change setup; the public entry query reveals only the pending boolean.
+The native HTML/CSS/module screens belong to Edge. Login uses ordinary
+`ulvia/cms.access` session effects. Review, progress and application use the
+Resources API through the same Gateway as other contract calls. Verified human
+aliases, current administrator grants and matching instance/site scope precede
+private reads, durable receipt access and recovered execution.
 
-The administrator chooses an empty site or an exact collection bootstrap.
-Empty completion needs no Repository, collection or Page. Starter discovery uses
-the configured Repository, four latest stable collections per page and at most
-64 recipe cards. Mossa's `administration` recipe creates ordinary editable admin
-Pages. Repository's `repository` recipe includes the exact Mossa recipe, omits its
-login Page and supplies its own login and public catalogue Pages. Ordinary
-collection installation or upgrade never executes a bootstrap.
+The administrator chooses an empty site or the local base resource ZIP. Empty
+completion makes no base-file or remote Repository request. Base source files
+are `resources/<profile>/<locale>.zip` with an exact `.zip.sha256` sidecar under
+the image-owned bootstrap root; canonical locale, language and English are tried
+in that order. Missing files refuse base review. ZIP production/shipping remains
+an explicit transition task; the current generator still emits legacy collections.
+This API does not discover, install or select a versioned resource product.
 
-Review resolves exact dependency pins and includes, checks selected capabilities,
-route conflicts and browser-code risks, then simulates Pages against disposable
-Content stores. It makes no durable business changes. The digest binds the
-instance, administrator, execution fingerprint, revisions and complete plan.
-Application recomputes that evidence before mutation. Limits include 16 collections,
-32 recipes, 256 Pages, include depth eight, 32 MiB metadata and 32 MiB aggregate
-assets, with a 60-second preparation deadline and bounded transport requests.
+Review verifies archive integrity and counts, selected execution, normalized Page
+content and publication visibility, merged theme and browser-code authority. A
+bounded host worker exercises ordinary writes in disposable stores and never
+executes authored JavaScript. The review digest binds the instance, actor,
+revisions, execution fingerprint and exact candidate. Plans make no live writes.
+Native confirmation sends this exact review and explicitly acknowledges its
+browser-risk digest. Resuming a stopped copy shows the review and requires fresh
+consent again.
 
-Application is an idempotent asynchronous operation. Its durable site intent holds
-a maintenance fence while collections and Pages are written; receipts checkpoint
-completed Pages. A resumed application uses already imported verified local
-artifacts, including when the Repository is offline. It does not overwrite
-completed Pages. The UI polls one status capability per second, reporting actual
-Page counts and the latest operation outcome. A completed marker survives restart
-and prevents the empty-site choice from reopening setup indefinitely.
+Application is an idempotent asynchronous operation registered from the same SDK
+inventory. Its durable site intent owns maintenance while ordinary assets, texts,
+Blocs, theme and Pages are copied. Scoped compare-and-swap checkpoints and exact
+entity comparisons recognize uncertain commits without overwriting changed or
+missing completed entities. Private retention is keyed by review digest and
+cleaned after terminal completion. Retained ZIPs allow recovery without their
+original source; a completed replay needs neither archive nor preparation worker.
 
-The browser journey in
-`tests/integration/instance/repository/initialization.docker.test.ts` covers native
-login, Mossa review and application, mobile overflow, cross-instance review refusal,
-offline empty completion and restart. Domain fault-injection tests cover persisted
-checkpoints and local recovery. These are local validation flows, not evidence of
-a deployment to a public site.
+The private instance root belongs to one host process. Retention compositions
+share a writer guard and admit two archives of at most 64 MiB plus one bounded
+atomic-write temporary. The preparation pool keeps its shared active/queue/byte
+limits and cancellation behavior. The native UI polls one status capability per
+second, displays resource counts and redirects only to a reviewed published Page.
+The operation projection performs one scoped metadata lookup and never returns
+persisted private failure details.
+
+Focused coverage lives in `packages/features/resources/tests/feature/`,
+`packages/runtimes/ulvia-provider-server/tests/stores/operations/resources/`
+and `packages/surfaces/cms-edge/tests/gateway/setup.test.ts`. Earlier collection
+bootstrap Docker journeys remain historical coverage of the predecessor flow;
+new image/native/offline/restart journeys must be rerun for this replacement.
+Legacy collection APIs remain mounted until their versioned retirement and
+resource delivery replacement are complete.
 
 Ready instances reopen their approved persisted manifest, observed implementation
 pins, exact contract admissions and selections. The runtime checks each digest

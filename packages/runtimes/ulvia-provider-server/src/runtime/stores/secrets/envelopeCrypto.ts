@@ -7,7 +7,7 @@ import {
 import { MongoDekRepository } from "@bernouy/envelope-crypto/mongo";
 import { randomUUID } from "node:crypto";
 import type { Db } from "mongodb";
-import type { RuntimeKekConfig } from "../../runtimeEnvKek";
+import type { RuntimeKekConfig } from "../../../runtimeEnvKek";
 
 type KekRotationAuditDocument = {
     _id: string;

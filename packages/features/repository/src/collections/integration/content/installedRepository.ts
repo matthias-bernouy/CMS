@@ -220,12 +220,21 @@ export function withInstalledCollections(
             ),
         getTextContributions: async (reads) => {
             const snapshot = reads ? await installedState(reads) : await installedSnapshot();
-            return {
-                revision: snapshot.revision,
-                texts: snapshot.collections.map(({ release, textOverrides }) =>
-                    projectCollectionTextSource({ collection: release, overrides: textOverrides }),
-                ),
-            };
+            const local = await repository.getTextContributions?.(reads);
+            const installed = snapshot.collections.map(({ release, textOverrides }) =>
+                projectCollectionTextSource({ collection: release, overrides: textOverrides }),
+            );
+            if (!local?.texts.length) {
+                return { revision: snapshot.revision, texts: installed };
+            }
+            if (!installed.length) {
+                return local;
+            }
+            const texts = [...local.texts, ...installed];
+            if (new Set(texts.map(({ namespace }) => namespace)).size !== texts.length) {
+                throw new Error("Ordinary and installed text namespaces conflict");
+            }
+            return { revision: `${local.revision}:${snapshot.revision}`, texts };
         },
         getPageRequirements: async (page, reads) => {
             const [local, installed] = await Promise.all([localRenderingBlocs(reads), installedState(reads)]);

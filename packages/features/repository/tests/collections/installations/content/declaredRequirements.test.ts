@@ -31,3 +31,15 @@ test("the temporary collection view preserves ordinary stored Bloc requirements"
         }),
     ).toEqual([requirement]);
 });
+
+test("the temporary collection view retains ordinary text contributions when no collection is installed", async () => {
+    const inner = new InMemoryContentRepository();
+    const ordinary = {
+        revision: "ordinary-revision",
+        texts: [{ namespace: "acme/base", resolve: () => ({ hello: "Hello" }) }],
+    };
+    inner.getTextContributions = async () => ordinary;
+    const view = withInstalledCollections(inner, new CollectionStore(new MemoryCollectionStorage()), "site");
+    expect(await view.getTextContributions!()).toBe(ordinary);
+    expect((await view.getTextContributions!()).texts[0]!.resolve("en")).toEqual({ hello: "Hello" });
+});
