@@ -128,3 +128,30 @@ test("a prepared review invalidated before copying can be reviewed again without
     expect(replacement.digest).not.toBe(review.digest);
     expect((await f.service.apply("admin", replacement, null, workerGuard())).status).toBe("completed");
 });
+
+test("the public entry remains pending until durable completion releases the site maintenance intent", async () => {
+    const f = await initializationFixture();
+    expect(await f.service.entry()).toEqual({ pending: true });
+    const review = await f.service.plan("admin", "base", "en");
+    const transition = f.intents.transition.bind(f.intents);
+    f.intents.transition = async (site, id, from, to) => {
+        if (to === "completed") {
+            throw new Error("pause before terminal intent commit");
+        }
+        return transition(site, id, from, to);
+    };
+    await expect(f.service.apply("admin", review, null, workerGuard())).rejects.toThrow("terminal intent");
+    expect((await f.state.read())?.status).toBe("completed");
+    const receipts = f.calls.receipt;
+    f.authority.allowed = false;
+    expect(await f.service.entry()).toEqual({ pending: true });
+    expect(f.calls.receipt).toBe(receipts);
+    f.authority.allowed = true;
+    f.intents.transition = transition;
+    f.retained.clear();
+    f.options.source = async () => {
+        throw new Error("Original ZIP no longer exists");
+    };
+    await new ResourceInitializationService(f.options).apply("admin", review, null, workerGuard());
+    expect(await f.service.entry()).toEqual({ pending: false });
+});

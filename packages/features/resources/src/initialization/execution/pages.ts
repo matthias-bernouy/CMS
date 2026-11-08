@@ -106,7 +106,7 @@ export async function copyResourcePages(
             await guard.assertHeld();
             await guard.checkpoint(progress);
         }
-        result.push({ path: seed.path, contentDigest: resourceDigest(current.content) });
+        result.push({ path: seed.path, contentDigest: resourceDigest(current.content), visible: seed.visible });
     }
     return result;
 }

@@ -7,7 +7,20 @@ import { applyResourceInitialization } from "./apply";
 
 export class ResourceInitializationService {
     private busy = false;
-    constructor(private readonly options: ResourceInitializationOptions) {}
+    readonly instanceId: string;
+    readonly siteId: string;
+    constructor(private readonly options: ResourceInitializationOptions) {
+        this.instanceId = options.instanceId;
+        this.siteId = options.siteId;
+    }
+    async entry() {
+        const state = await readResourceInitialization(this.options);
+        if (state.status !== "completed") {
+            return { pending: true };
+        }
+        const active = await this.options.intents.getActive(this.siteId);
+        return { pending: active?.kind === "resource-initialization" && active.id === state.review?.digest };
+    }
     async status(actorId: string) {
         await this.options.authorize(actorId);
         return readResourceInitialization(this.options);

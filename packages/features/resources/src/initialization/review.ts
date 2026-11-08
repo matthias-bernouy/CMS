@@ -86,7 +86,14 @@ export async function prepareResourceInitialization(
     ];
     assertResourceRequirements(requirements, execution);
     const paths = archive?.document.pages.map((page) => page.path) ?? [];
-    if (preview.pages.length !== paths.length || preview.pages.some((page) => !paths.includes(page.path))) {
+    if (
+        preview.pages.length !== paths.length ||
+        preview.pages.some(
+            (page) =>
+                !paths.includes(page.path) ||
+                archive?.document.pages.find((seed) => seed.path === page.path)?.visible !== page.visible,
+        )
+    ) {
         throw resourceInitializationError("Candidate preview did not cover every Page");
     }
     const browserRisk = resourceBrowserRisk(archive?.document ?? null);

@@ -45,6 +45,8 @@ export interface ResourceInitializationIntent<Payload> {
 }
 /** Structural host port, shared by site operations without importing Repository or its adapters. */
 export interface ResourceInitializationIntents {
+    /** Minimal site activity metadata, never the operation payload or a receipt. */
+    getActive(siteId: string): Promise<Pick<ResourceInitializationIntent<unknown>, "id" | "kind"> | null>;
     begin<T>(intent: ResourceInitializationIntent<T>): Promise<ResourceInitializationIntent<T>>;
     get<T>(siteId: string, id: string, kind: string): Promise<ResourceInitializationIntent<T> | null>;
     transition(

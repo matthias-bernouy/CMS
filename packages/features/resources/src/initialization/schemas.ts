@@ -7,6 +7,7 @@ const count = z.int().min(0).max(2048);
 const previewPageSchema = z.strictObject({
     path: contractString({ minLength: 1, maxLength: 2048 }),
     contentDigest: digest,
+    visible: z.boolean(),
 });
 const browserRiskSchema = z.strictObject({
     level: z.enum(["none", "review", "high"]),

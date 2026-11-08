@@ -40,3 +40,12 @@ resolution, upgrades, uninstallation or remote publication mechanism.
 - Candidate validation must exercise ordinary Page writes before the append-only
   raw Bloc copy port is used. Complete the ordinary entity copy before removing
   retained ZIP bytes; rendering must not depend on those bytes.
+
+- `./feature` defines `ulvia/cms.resources` through the SDK. Keep its public Zod DTOs,
+  bindings, docs and default execution in `application/`; never import Repository
+  or a surface. Contract artifacts are generated projections of this one feature.
+- The public entry may read the minimal site activity marker, not a durable
+  operation payload/receipt. Administrator APIs require a verified human alias,
+  current site grant and matching instance/site invocation before private reads.
+- Default initialization apply is a host-owned durable operation. Its authorize
+  hook runs before receipts/replay; the service independently reauthorizes copies.

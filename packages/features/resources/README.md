@@ -41,3 +41,9 @@ preview/test composition only. The Mongo initialization adapter uses a mandatory
 scope-bound protocol record and compare-and-swap checkpoints, provisioned explicitly
 rather than inferred from an empty site. No runtime, HTTP/MCP or native setup flow
 is wired to this new service yet; legacy setup remains until that transition lands.
+
+`./feature` defines the generated `ulvia/cms.resources` API. It offers explicit
+empty/base initialization, a scoped public pending flag, administrator-only review
+and progress, and a durable apply capability with browser-risk acknowledgement.
+The Provider inventory and native setup integration are separate composition work;
+this definition alone does not mount or select the contract.
