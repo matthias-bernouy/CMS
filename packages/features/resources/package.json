@@ -1,0 +1,26 @@
+{
+    "name": "@bernouy/resources",
+    "version": "1.0.0",
+    "description": "One-time resource ZIP validation and ordinary CMS resource imports.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts"
+    },
+    "dependencies": {
+        "@bernouy/content": "workspace:*",
+        "@bernouy/zip": "workspace:*",
+        "@bernouy/binary-media": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "zod": "4.6.7",
+        "css-tree": "^3.2.1"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    },
+    "devDependencies": {
+        "@types/css-tree": "^3.2.0"
+    }
+}

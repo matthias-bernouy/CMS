@@ -1,0 +1,32 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "resources/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "references": [
+        {
+            "path": "../../foundation/zip"
+        },
+        {
+            "path": "../../foundation/binary-media"
+        },
+        {
+            "path": "../../platform/contracts"
+        },
+        {
+            "path": "../../platform/sdk"
+        },
+        {
+            "path": "../content"
+        }
+    ],
+    "include": [
+        "src/**/*.ts"
+    ]
+}

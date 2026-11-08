@@ -172,6 +172,25 @@
         "typescript": "^7.0.2",
       },
     },
+    "packages/features/resources": {
+      "name": "@bernouy/resources",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/binary-media": "workspace:*",
+        "@bernouy/content": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "@bernouy/zip": "workspace:*",
+        "css-tree": "^3.2.1",
+        "zod": "4.6.7",
+      },
+      "devDependencies": {
+        "@types/css-tree": "^3.2.0",
+      },
+      "peerDependencies": {
+        "typescript": "^7.0.2",
+      },
+    },
     "packages/features/secrets": {
       "name": "@bernouy/secrets",
       "version": "1.0.0",
@@ -487,6 +506,8 @@
     "@bernouy/repository": ["@bernouy/repository@workspace:packages/features/repository"],
 
     "@bernouy/resource-identity": ["@bernouy/resource-identity@workspace:packages/foundation/resource-identity"],
+
+    "@bernouy/resources": ["@bernouy/resources@workspace:packages/features/resources"],
 
     "@bernouy/secret-store": ["@bernouy/secret-store@workspace:packages/foundation/secret-store"],
 
