@@ -68,11 +68,6 @@
             ]
         },
         {
-            "contractId": "ulvia/provider.connections",
-            "version": "1.0.0",
-            "requires": []
-        },
-        {
             "contractId": "ulvia/repository",
             "version": "1.0.0",
             "requires": []

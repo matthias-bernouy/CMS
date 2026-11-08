@@ -6,13 +6,35 @@ import { filesImplementation } from "./implementations/files";
 import { secretsImplementation } from "./implementations/secrets";
 import { smtpEmailerImplementation } from "./implementations/emailer";
 
-/** One inventory drives generated releases, manifest claims and runtime mounting. */
-export const officialFeatureImplementations = Object.freeze([
-    smtpEmailerImplementation,
-    accessImplementation,
-    contentImplementation,
-    authoringImplementation,
-    secretsImplementation,
-    filesImplementation,
-    observabilityImplementation,
+import { providerConnectionsImplementation } from "./implementations/connections";
+import { providerCmsInstancesFeature } from "./provider/instances/feature";
+import type { ContractImplementation, FeatureDefinition } from "@bernouy/ulvia-sdk";
+import type { UlviaProviderFeatureServices } from "../../ports/index";
+
+type OfficialFeatureSource =
+    | { readonly implementation: ContractImplementation<UlviaProviderFeatureServices> }
+    | { readonly definition: FeatureDefinition };
+
+/** One inventory distinguishes executable implementations from published protocol templates. */
+const officialFeatureInventory: readonly OfficialFeatureSource[] = Object.freeze([
+    { implementation: smtpEmailerImplementation },
+    { implementation: accessImplementation },
+    { implementation: contentImplementation },
+    { implementation: authoringImplementation },
+    { implementation: secretsImplementation },
+    { implementation: filesImplementation },
+    { implementation: observabilityImplementation },
+    { implementation: providerConnectionsImplementation },
+    { definition: providerCmsInstancesFeature },
 ]);
+export const officialFeatureImplementations = officialFeatureInventory.flatMap((source) =>
+    "implementation" in source ? [source.implementation] : [],
+);
+export const officialFeatureTemplates = officialFeatureInventory.flatMap((source) =>
+    "definition" in source ? [source.definition] : [],
+);
+export const officialFeatureIds = new Set(
+    officialFeatureInventory.map((source) =>
+        "implementation" in source ? source.implementation.feature.contractId : source.definition.contractId,
+    ),
+);

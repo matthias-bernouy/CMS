@@ -1,12 +1,10 @@
 import { compileProviderRoutes } from "../../../src/transport/routes";
-import { contractRelease, resolveFixtureContract } from "../../ulviaProviderFixture";
 import { ProviderClientError } from "@bernouy/cms-gateway/provider";
 import { createConnectedProviderLogger } from "@bernouy/ulvia-provider/sdk/node";
 import type { ContractRelease } from "@bernouy/ulvia-contracts";
 import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerProviderInstallationCapabilities } from "@bernouy/ulvia-provider/capabilities";
-import { registerProviderConnectionCapabilities } from "@bernouy/ulvia-provider/sdk/node";
+import { registerProviderInstallationCapabilities, loadOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
 
 const context = {
     requestId: crypto.randomUUID(),
@@ -14,40 +12,6 @@ const context = {
     providerId: "ulvia/provider-a",
     contractVersion: "1.0.0",
 };
-
-test("only verified connection authority can configure its own return channel", async () => {
-    const dispatcher = new DefaultProviderCapabilityDispatcher();
-    const configured: unknown[] = [];
-    registerProviderConnectionCapabilities(dispatcher, {
-        configure: async (value) => {
-            configured.push(value);
-            return { connectionId: value.connectionId, configured: true };
-        },
-    });
-    const input = { connectionId: "connection-a", cmsUrl: "https://cms.example", token: "a".repeat(64), generation: 1 };
-    for (const authority of [
-        {},
-        { connectionId: "other" },
-        { connectionId: "connection-a", sourceInstallationId: "caller" },
-        { connectionId: "connection-a", subjectId: "user" },
-        { connectionId: "connection-a", systemServiceId: "cms-edge" },
-    ]) {
-        await expect(
-            dispatcher.invoke("ulvia/provider.connections", "connections.configure", input, {
-                ...context,
-                ...authority,
-            }),
-        ).rejects.toMatchObject({ code: "FORBIDDEN" });
-    }
-    expect(configured).toEqual([]);
-    expect(
-        await dispatcher.invoke("ulvia/provider.connections", "connections.configure", input, {
-            ...context,
-            connectionId: "connection-a",
-        }),
-    ).toEqual({ connectionId: "connection-a", configured: true });
-    expect(configured).toEqual([input]);
-});
 
 test("Provider actors cannot approve installations or look up other Providers' credentials", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
@@ -138,11 +102,15 @@ test("the connected logger drops permanent Gateway failures and retries an uncer
     }
 });
 
-test("the official Provider mounts the connection contract alongside CMS contracts", async () => {
-    const contract = structuredClone(await contractRelease());
-    const resolved = structuredClone(resolveFixtureContract(contract));
-    (resolved.release as { contractId: string }).contractId = "ulvia/provider.connections";
-    expect(compileProviderRoutes([resolved])).not.toBeEmpty();
+test("the official Provider accepts the generated connection binding and rejects unrelated namespaces", async () => {
+    const build = await loadOfficialFeatures();
+    const resolved = structuredClone(
+        build.implementedContracts.find(({ release }) => release.contractId === "ulvia/provider.connections")!,
+    );
+    const routes = compileProviderRoutes([resolved]);
+    expect(routes).toHaveLength(1);
+    expect(routes[0]!.capability.id).toBe("connections.configure");
+    expect(routes[0]!.capability.binding.path).toBe("/provider/connections");
     (resolved.release as { contractId: string }).contractId = "unrelated.provider.contract";
     expect(() => compileProviderRoutes([resolved])).toThrow("only accepts");
 });

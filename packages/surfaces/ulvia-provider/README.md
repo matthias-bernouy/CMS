@@ -11,7 +11,7 @@ admitted contract releases.
   and injected dependency contracts.
 - `/capabilities` exposes registration helpers for official capability adapters.
 - `/build` exposes `compileOfficialFeatures` and `compileOfficialManifest` for release preparation.
-- `/sdk/node` exposes the connection capability registrar and `createConnectedProviderLogger`; the runtime injects the client and storage.
+- `/sdk/node` exposes `createConnectedProviderLogger`; the runtime injects its client.
 
 The surface maps transport to injected feature operations, including the
 official Access capabilities. Login and logout may return a typed semantic
@@ -24,7 +24,8 @@ under the repository [MIT License](../../../LICENSE).
 
 ## SDK feature assembly
 
-`src/capabilities/features/inventory.ts` lists the selected SDK implementations once.
+`src/capabilities/features/inventory.ts` lists selected SDK implementations and
+published protocol templates once. Templates generate releases without claiming execution.
 SMTP's entry projects the injected Emailer service and declares its Secrets
 requirements. Generated releases include the base Emailer contract and exact SMTP
 parent pin; the manifest claims only the complete SMTP implementation. Its inherited
@@ -59,3 +60,16 @@ Observability is selected from the same inventory through a structural journal
 port. Its feature owns the four executors, ingestion machine-context guard,
 Zod-derived DTOs and domain error policy. Read authorization and official failure
 presentation stay in this surface. The legacy diagnostic registrar is removed.
+
+Provider return-channel pairing is authored under
+`src/capabilities/features/provider/connections/`. Its capability checks the signed
+connection identity and rejects user, system-service and source-Provider actors
+before calling the injected `providerConnections.configure` port. Natural
+idempotency remains in that service; no keyed receipt adapter is used. The old
+connection registrar and handwritten manifest claim are removed.
+
+`provider.cms-instances` is authored alongside it as a declarative protocol
+template. Its generated release and Markdown are published, but the official
+Provider has no implementation claim, routes or discovery service. Selecting its
+exact release for execution fails before handlers or services are constructed.
+Private host lifecycle records are not an account-visible discovery API.

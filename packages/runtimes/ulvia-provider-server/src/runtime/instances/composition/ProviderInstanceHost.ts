@@ -11,7 +11,6 @@ import { ProviderDocumentation } from "./ProviderDocumentation";
 import { ProviderPairing } from "../../gateway/providers/connections/ProviderPairing";
 import { createPublicDelivery } from "../../content/publicDelivery";
 import { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
-import { registerProviderConnectionCapabilities } from "@bernouy/ulvia-provider/sdk/node";
 import { readRemoteProviderReport } from "../../gateway/providers/readReport";
 import { providerAdministration } from "../../gateway/providers/administration";
 import { compatibleTransitionRetention } from "../../stores/collections/compatibleRetention";
@@ -308,7 +307,6 @@ export class ProviderInstanceHost {
             operations = instanceOperations;
             const dispatcher = new DefaultProviderCapabilityDispatcher(contracts);
             const providerConnections = new ProviderConnections(stores.providerConnections);
-            registerProviderConnectionCapabilities(dispatcher, providerConnections);
             const officialPairing = new ProviderPairing(stores, gateway, instance.gatewayUrl, {
                 endpoint: this.env.ULVIA_PROVIDER_PUBLIC_URL,
                 instanceId: instance.id,
@@ -356,6 +354,7 @@ export class ProviderInstanceHost {
                     ]),
                     ...createPublicDelivery(stores, gateway, instance.cmsUrl),
                     authoring,
+                    providerConnections,
                     emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
                     files: stores.providerFiles,

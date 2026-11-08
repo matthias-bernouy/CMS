@@ -66,14 +66,21 @@ change returns a revision conflict rather than restoring earlier authority.
 
 ## Provider SDK
 
-A receiving runtime can register the return channel with:
+The official receiving runtime mounts the return channel through the shared SDK
+inventory. `approvedConnectionPins` contains the exact connection-contract releases
+approved by its execution profile; the host also supplies the Provider and instance scope:
 
 ```ts
 import { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
-import { registerProviderConnectionCapabilities } from "@bernouy/ulvia-provider/sdk/node";
+import { registerOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
 
 const connections = new ProviderConnections(accountEncryptedCompareAndSetStore);
-registerProviderConnectionCapabilities(dispatcher, connections);
+await registerOfficialFeatures(
+    dispatcher,
+    { providerConnections: connections },
+    approvedConnectionPins,
+    { providerId, scope: { siteId, instanceId } },
+);
 ```
 
 Implement and report `ulvia/provider.connections@1.0.0` with its exact digest in

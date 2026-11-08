@@ -32,7 +32,7 @@ behavior.
   select implementations and generate manifest claims. Do not select a partial
   capability list while announcing the same contract.
 
-- `src/capabilities/features/inventory.ts` is the single SDK implementation inventory.
+- `src/capabilities/features/inventory.ts` is the single SDK implementation/template inventory.
   `compileOfficialFeatures` is build-only. Bootstrap emits the runtime artifact at
   `src/capabilities/features/generated/runtime.json`; do not edit it by hand.
   `loadOfficialFeatures` verifies and attaches that shipped metadata once per process.
@@ -47,3 +47,10 @@ behavior.
   Its keyed create/rotate capabilities reauthorize before durable receipt access.
   Keep official error localization and Provider HTTP authorization in the surface;
   keep namespaced store construction, adapters and durable receipts in runtimes.
+
+- Provider control definitions live in `capabilities/features/provider/`. Connections
+  owns its signed-connection actor guard and receives an injected structural
+  return-channel port. Mount it through the shared inventory, never a separate
+  registrar. `provider.cms-instances` is a published template without an execution
+  claim; reject selected template pins before service projection or registry writes.
+  Do not expose private instance lifecycle/storage records through that template.

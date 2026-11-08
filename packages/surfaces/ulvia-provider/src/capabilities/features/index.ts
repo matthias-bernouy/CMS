@@ -2,7 +2,7 @@ import { loadImplementations, registerProviderHandlers } from "@bernouy/ulvia-sd
 import type { ImplementationRelease, ProviderRegistrationOptions } from "@bernouy/ulvia-sdk/provider";
 import type { ProviderCapabilityRegistry } from "../../dispatch/registry";
 import type { UlviaProviderFeatureServices } from "../../ports/index";
-import { officialFeatureImplementations } from "./inventory";
+import { officialFeatureImplementations, officialFeatureIds } from "./inventory";
 import artifact from "./generated/runtime.json";
 import { formatOfficialCapabilityFailure } from "./errors";
 
@@ -20,9 +20,8 @@ export async function registerOfficialFeatures(
     releases: readonly ImplementationRelease[],
     options?: ProviderRegistrationOptions,
 ): Promise<void> {
-    const ids = new Set(officialFeatureImplementations.map(({ feature }) => feature.contractId));
     const implementations = releases
-        .filter(({ contractId }) => ids.has(contractId))
+        .filter(({ contractId }) => officialFeatureIds.has(contractId))
         .map(({ contractId, version, digest }) => ({ contractId, version, digest }));
     if (!implementations.length) {
         return;
