@@ -1,3 +1,5 @@
+import { themeResourceOwner } from "content/theme/core/ownership";
+import { resourceRuntimeNamespace } from "@bernouy/resource-identity";
 import { composeThemeSettings } from "content/theme/core/integration/catalog";
 import type { IntegrationThemeContribution, ThemeSettings, ThemeSource } from "content/theme/interfaces/theme";
 
@@ -25,12 +27,16 @@ export function reconcileSubmittedThemeSettings(
         ),
     ]);
 
-    const contributionSources = current.sources.filter((source) => source.owner?.kind === "contribution");
+    const contributionSources = current.sources.filter((source) => themeResourceOwner(source.owner));
     const contributionNamespaces = contributionSources.map((source) =>
-        source.owner?.kind === "contribution" ? source.owner.contributionId : "",
+        resourceRuntimeNamespace(themeResourceOwner(source.owner)!.namespace),
     );
     next.sources = next.sources.flatMap((source) => {
-        if (source.owner?.kind === "contribution" || source.id.startsWith("contribution-")) {
+        if (
+            themeResourceOwner(source.owner) ||
+            source.id.startsWith("contribution-") ||
+            source.id.startsWith("resource-")
+        ) {
             return [];
         }
         if (isReservedIntegrationSource(source)) {

@@ -1,3 +1,5 @@
+import { withInstalledCollections } from "@bernouy/repository/collections/content";
+import { CollectionStore, MemoryCollectionStorage } from "@bernouy/repository/collections/installations";
 import { expect, test } from "bun:test";
 import { mkdtemp, rm, copyFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -33,8 +35,9 @@ async function importedBase(directory: string) {
     for (const bloc of archive.document.blocs) {
         await inner.createBloc(bloc);
     }
-    const system = await inner.getSystem();
-    await inner.updateSystem({ theme: archive.document.theme!, site: { ...system.site, language: "en" } });
+    const projected = withInstalledCollections(inner, new CollectionStore(new MemoryCollectionStorage()), "default");
+    const system = await projected.getSystem();
+    await projected.updateSystem({ theme: archive.document.theme!, site: { ...system.site, language: "en" } });
     const icon = archive.document.assets.find((asset) => asset.profiles?.includes("inline-svg"))!;
     const font = archive.document.assets.find((asset) => asset.mediaType === "font/woff2")!;
     const firstText = archive.document.texts[0]!.texts[0]!;
@@ -58,7 +61,11 @@ test("Provider Content renders imported base icons, text and fonts after source 
         const mount = () => {
             const assets = new ResourceAssets(imported.metadata, new LocalFsBlobStore(join(directory, "assets")));
             const stores = {
-                repo: withResourceTexts(imported.inner, imported.texts),
+                repo: withInstalledCollections(
+                    withResourceTexts(imported.inner, imported.texts),
+                    new CollectionStore(new MemoryCollectionStorage()),
+                    "default",
+                ),
                 logger: NOOP_LOGGER,
                 resourceStores: { assets },
                 executionState: { read: async () => ({ selections: { revision: 0 } }) },

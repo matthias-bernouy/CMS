@@ -1,3 +1,4 @@
+import { themeResourceOwner } from "./ownership";
 import { isResourceId, resourceRuntimeNamespace } from "@bernouy/resource-identity";
 import { ContentValidationError } from "content/application/core/validation/errors";
 import type { ThemeFontFace, ThemeSettings, ThemeSource, ThemeToken } from "content/theme/interfaces/theme";
@@ -76,10 +77,11 @@ export function validateThemeSettings(settings: ThemeSettings): ThemeSettings {
 function validateFontFace(source: ThemeSource, face: ThemeFontFace): void {
     assertIdentifier("font-face id", face.id);
     assertIdentifier("font-face family", face.family);
-    if (source.owner?.kind !== "contribution") {
-        throw new ContentValidationError("theme", `font-face requires a contribution owner: ${face.id}`);
+    const owner = themeResourceOwner(source.owner);
+    if (!owner) {
+        throw new ContentValidationError("theme", `font-face requires a namespaced resource owner: ${face.id}`);
     }
-    const prefix = `${resourceRuntimeNamespace(source.owner.contributionId)}--`;
+    const prefix = `${resourceRuntimeNamespace(owner.namespace)}--`;
     if (!face.id.startsWith(prefix) || !face.family.startsWith(prefix)) {
         throw new ContentValidationError(
             "theme",
@@ -87,7 +89,7 @@ function validateFontFace(source: ThemeSource, face: ThemeFontFace): void {
         );
     }
     const asset = parseCollectionAssetReference(face.source);
-    if (!asset || asset.collectionId !== source.owner.contributionId) {
+    if (!asset || asset.collectionId !== owner.namespace) {
         throw new ContentValidationError("theme", `font-face source must be an immutable collection asset: ${face.id}`);
     }
     if (!["normal", "italic", "oblique"].includes(face.style)) {
@@ -117,15 +119,17 @@ function assertOwnerIsolation(
     }
     for (const match of value.matchAll(/var\s*\(\s*--([a-z][a-z0-9-]*)/gi)) {
         const target = variableSources.get(match[1]!.toLowerCase());
+        const owner = themeResourceOwner(source.owner);
+        const targetOwner = themeResourceOwner(target?.source.owner);
         if (
-            source.owner.kind === "contribution" &&
-            target?.source.owner?.kind === "contribution" &&
-            target.source.owner.contributionId !== source.owner.contributionId &&
-            !source.owner.tokenImports?.includes(target.token.id)
+            owner &&
+            targetOwner &&
+            targetOwner.namespace !== owner.namespace &&
+            !owner.tokenImports?.includes(target!.token.id)
         ) {
             throw new ContentValidationError(
                 "theme",
-                `contribution token cannot reference undeclared dependency: ${source.owner.contributionId}`,
+                `namespaced token cannot reference undeclared dependency: ${owner.namespace}`,
             );
         }
         if (
@@ -167,27 +171,29 @@ function validateSource(source: ThemeSource, sourceIds: Set<string>, integration
                 `source id is not derived for integration: ${owner.integrationId}`,
             );
         }
-    } else if (owner?.kind === "contribution") {
-        if (!isResourceId(owner.contributionId)) {
+    } else if (owner?.kind === "contribution" || owner?.kind === "resource") {
+        const namespace = themeResourceOwner(owner)!.namespace;
+        if (!isResourceId(namespace)) {
             throw new ContentValidationError("theme", "invalid contribution resource identity");
         }
         const imports = new Set<string>();
         for (const tokenId of owner.tokenImports ?? []) {
             assertIdentifier("contribution theme token import", tokenId);
-            if (tokenId.startsWith(`${resourceRuntimeNamespace(owner.contributionId)}--`)) {
+            if (tokenId.startsWith(`${resourceRuntimeNamespace(namespace)}--`)) {
                 throw new ContentValidationError("theme", `contribution theme cannot import itself: ${source.id}`);
             }
             assertUnique(imports, tokenId, "contribution theme token import");
         }
-        if (source.id !== `contribution-${resourceRuntimeNamespace(owner.contributionId)}`) {
-            throw new ContentValidationError(
-                "theme",
-                `source id is not derived for contribution: ${owner.contributionId}`,
-            );
+        if (source.id !== `${owner.kind}-${resourceRuntimeNamespace(namespace)}`) {
+            throw new ContentValidationError("theme", `source id is not derived for resource: ${namespace}`);
         }
     } else if (owner) {
         throw new ContentValidationError("theme", `invalid owner for source: ${source.id}`);
-    } else if (source.id.startsWith("integration-") || source.id.startsWith("contribution-")) {
+    } else if (
+        source.id.startsWith("integration-") ||
+        source.id.startsWith("contribution-") ||
+        source.id.startsWith("resource-")
+    ) {
         throw new ContentValidationError("theme", `reserved source id: ${source.id}`);
     }
 
@@ -216,8 +222,9 @@ function validateToken(source: ThemeSource, token: ThemeToken, integrationOwners
         assertCssValue(token.id, value);
     }
 
-    if (source.owner?.kind === "contribution") {
-        const prefix = `${resourceRuntimeNamespace(source.owner.contributionId)}--`;
+    const resourceOwner = themeResourceOwner(source.owner);
+    if (resourceOwner) {
+        const prefix = `${resourceRuntimeNamespace(resourceOwner.namespace)}--`;
         if (token.id !== token.variable || !token.id.startsWith(prefix) || !token.defaults?.light?.trim()) {
             throw new ContentValidationError("theme", `invalid contribution token: ${token.id}`);
         }

@@ -38,6 +38,9 @@ export function resourceDocument(input: unknown): ResourceDocument {
         return bloc;
     });
     const theme = raw.theme === null ? null : validateThemeSettings(raw.theme as ThemeSettings);
+    if (theme?.sources.some((source) => source.owner && source.owner.kind !== "resource")) {
+        throw new ResourceArchiveError("Imported themes require ordinary resource ownership");
+    }
     unique(
         blocs.map(({ id }) => id),
         "Bloc",

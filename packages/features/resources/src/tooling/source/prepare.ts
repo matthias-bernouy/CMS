@@ -69,6 +69,9 @@ export async function prepareResourceSource(
     const theme = files.has("theme/definition.json")
         ? (sourceJson(files, "theme/definition.json") as ThemeSource)
         : null;
+    if (theme && (theme.owner?.kind !== "resource" || theme.owner.namespace !== definition.namespace)) {
+        throw new TypeError("Ordinary source themes must declare their own resource namespace");
+    }
     const texts = sourceTexts(files);
     const pages = sourcePages(files);
     const examples = [...files]

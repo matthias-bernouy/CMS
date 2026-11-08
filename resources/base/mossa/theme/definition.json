@@ -1,5 +1,5 @@
 {
-    "id": "contribution-ulvia--mossa",
+    "id": "resource-ulvia--mossa",
     "label": "theme.label",
     "supportsModes": true,
     "fontFaces": [
@@ -189,8 +189,8 @@
         }
     ],
     "owner": {
-        "kind": "contribution",
-        "contributionId": "ulvia/mossa"
+        "kind": "resource",
+        "namespace": "ulvia/mossa"
     },
     "categories": [
         {

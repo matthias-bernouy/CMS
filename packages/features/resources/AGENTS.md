@@ -66,3 +66,7 @@ resolution, upgrades, uninstallation or remote publication mechanism.
   at most 512 references per metadata batch; HEAD/304 never open bodies. Preserve
   byte-range conditions, exact observed lengths, cancellation and reader release.
   Static inline SVG reads require the verified profile in addition to media type.
+
+- Imported theme sources use ordinary `{ kind: "resource", namespace }` ownership,
+  never installed contribution/integration ownership. Their namespace protects CSS
+  tokens and font faces while ordinary settings retain their copied catalogues.

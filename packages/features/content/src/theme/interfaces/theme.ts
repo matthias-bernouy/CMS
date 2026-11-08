@@ -16,6 +16,13 @@ export type ThemeSourceOwner =
           /** Fully qualified public token IDs explicitly imported by this contribution. */
           tokenImports?: string[];
           dependencies?: never;
+      }
+    | {
+          kind: "resource";
+          namespace: string;
+          /** Explicit public token dependencies, independent of any installed release. */
+          tokenImports?: string[];
+          dependencies?: never;
       };
 
 export type ThemeToken = {
