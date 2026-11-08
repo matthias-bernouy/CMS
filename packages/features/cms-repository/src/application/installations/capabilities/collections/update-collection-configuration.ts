@@ -1,0 +1,47 @@
+import { defineCapability } from "cms-repository/application/installations/capabilities/policy/define";
+import { installCollectionOutputSchema } from "cms-repository/application/installations/schemas/collections/install-collection";
+import { updateCollectionConfigurationInputSchema } from "cms-repository/application/installations/schemas/collections/update-collection-configuration";
+import { updateCollectionConfigurationErrors as errors } from "cms-repository/application/installations/schemas/common/failures";
+import { projectSnapshot } from "cms-repository/application/installations/core/collections/projection";
+import { parseConfiguration } from "cms-repository/application/installations/core/configuration";
+export const updateCollectionConfiguration = defineCapability({
+    id: "update-collection-configuration",
+    access: "admin",
+    behavior: { effect: "command", idempotency: "none", execution: "sync", sensitive: true },
+    bindings: [
+        {
+            id: "http",
+            transport: "http",
+            method: "POST",
+            path: "/update-collection-configuration",
+            input: { body: true },
+            response: {
+                successStatuses: [200],
+                contentTypes: ["application/json"],
+                errorStatuses: { INVALID_INPUT: 422, NOT_FOUND: 404, REVISION_CONFLICT: 409, CORE_UNAVAILABLE: 503 },
+            },
+        },
+        {
+            id: "mcp",
+            transport: "mcp",
+            tool: {
+                name: "installations_update_collection_configuration",
+                description:
+                    "Update site-owned configuration for an installed collection using the current installation expectedRevision.",
+            },
+        },
+    ],
+    docs: ["overview.md"],
+    input: updateCollectionConfigurationInputSchema,
+    output: installCollectionOutputSchema,
+    errors,
+    execute: async ({ services, input, context }) =>
+        projectSnapshot(
+            await services.collections.saveConfiguration(
+                context.siteId,
+                input.collectionId,
+                input.expectedRevision,
+                parseConfiguration(input.configurationJson),
+            ),
+        ),
+});

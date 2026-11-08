@@ -53,7 +53,7 @@ export class ProviderManagement {
 
     private readonly sources: readonly ProviderRepositorySource[];
 
-    async importManifest(manifest: string | Uint8Array): Promise<unknown> {
+    async importManifest(manifest: string | Uint8Array) {
         return importProviderManifest(manifest, this.sources, this.gateway.releases, this.gateway.manifests);
     }
 
@@ -94,7 +94,7 @@ export class ProviderManagement {
         ) {
             throw new TypeError("Provider release coordinate mismatch");
         }
-        const result = (await this.importManifest(bytes)) as { digest: string };
+        const result = await this.importManifest(bytes);
         if (result.digest !== input.digest) {
             throw new TypeError("Provider release digest mismatch");
         }

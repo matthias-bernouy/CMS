@@ -42,7 +42,8 @@
         "./repository/capabilities": "./src/exports/repository/capabilities.ts",
         "./repository/authoring/build": "./src/exports/repository/authoring/build.ts",
         "./features/authoring": "./src/application/authoring/feature.ts",
-        "./features/repository": "./src/application/registry/feature.ts"
+        "./features/repository": "./src/application/registry/feature.ts",
+        "./features/installations": "./src/application/installations/feature.ts"
     },
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",
@@ -57,7 +58,9 @@
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
-        "zod": "4.6.7"
+        "zod": "4.6.7",
+        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-documentation": "workspace:*"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",
