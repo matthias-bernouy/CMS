@@ -1,7 +1,17 @@
 import type { BlocListItemResponse, BlocListOptions } from "content/application/interfaces/ContentRepository";
-import type { BlocRecord } from "content/blocs/interfaces/blocs";
+import type { BlocRecord, TBloc, SiteBlocDefinition } from "content/blocs/interfaces/blocs";
 
-export function projectBlocList(records: BlocRecord[], options: BlocListOptions = {}): BlocListItemResponse[] {
+/** A metadata read model may omit executable and authoring source bodies. */
+export type BlocListRecord = Pick<BlocRecord, "tag" | "ownership"> & {
+    readonly artifact: (Omit<TBloc, "source" | "viewJS"> & { readonly viewJS?: string }) | null;
+    readonly siteDefinition?: Pick<SiteBlocDefinition, "publishedRevision">;
+    readonly hasBehavior?: boolean;
+};
+
+export function projectBlocList(
+    records: readonly BlocListRecord[],
+    options: BlocListOptions = {},
+): BlocListItemResponse[] {
     const editor = options.projection !== "rendering";
     return records.flatMap((record) => {
         const bloc = record.artifact;
@@ -29,7 +39,7 @@ export function projectBlocList(records: BlocRecord[], options: BlocListOptions 
                       root: structuredClone(bloc.root),
                       ...(bloc.styleCSS ? { styleCSS: bloc.styleCSS } : {}),
                       ...(bloc.styleCollectionId ? { styleCollectionId: bloc.styleCollectionId } : {}),
-                      hasBehavior: Boolean(bloc.viewJS),
+                      hasBehavior: record.hasBehavior ?? Boolean(bloc.viewJS),
                       ...(editor && bloc.thumbnail ? { thumbnail: structuredClone(bloc.thumbnail) } : {}),
                       ownership: structuredClone(record.ownership),
                   },

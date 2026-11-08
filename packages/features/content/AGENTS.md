@@ -85,3 +85,9 @@ bindings, validation, and read models.
   authored Blocs depend on them even while no visual editor is mounted.
 - When changing repository behavior, update both in-memory and Mongo behavior
   or document why only one implementation changes.
+
+- Mongo Bloc lists project only catalogue/rendering metadata at the database.
+  Compute the behavior-presence flag without returning JavaScript or source bundles;
+  keep explicit artifact/source/behavior reads unchanged. Memory uses the same output
+  projector but has no database transfer to narrow. Preserve hidden/draft handling,
+  declared execution constraints and published-revision metadata within render reads.
