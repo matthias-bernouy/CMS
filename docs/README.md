@@ -17,10 +17,12 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [Imports](architecture/imports.md): public exports, local aliases, adapters and
   browser boundaries.
 - [Development](development/README.md): local startup, builds and validation.
+- [Infrastructure tooling](../infra/README.md): release packaging, images, models
+  and optional host operations.
 - [Workspace tests](../tests/README.md): cross-component journeys and image checks.
 - [Commit messages](development/commits.md): the recommended message convention.
-- [First published Page](product/first-published-page.md): locked MVP decisions,
-  the administrator's golden path and its executable completion gate.
+- [First published Page](product/first-published-page.md): the current setup-to-publication API
+  journey, its checks and the visual editing boundary.
 - [Provider instance initialization](architecture/provider-instance-initialization.md):
   operator API, exact official profile, isolated instance connection, local
   first run, restart and production composition boundaries.
@@ -34,12 +36,12 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   state, live invocation, identities and remaining integration gaps.
 - [Community Repository](architecture/community-repository.md): CMS-hosted Registry,
   account-owned namespaces, PAT publication, discovery and deployment limits.
-- [Agent authoring](development/agent-authoring.md): current collection tooling
-  and a prioritized proposal for disposable previews and declared tests.
+- [Agent authoring](development/agent-authoring.md): current collection tooling,
+  compiler boundaries and executable verification.
 - [Bloc authoring](blocs/README.md): collection Blocs, site-owned content
   contracts, bindings and themes.
-- [Collection API and admission](blocs/collections.md): the current administration
-  workspace and the separate `ulvia-collection/v1` authored bundle format.
+- [Collection API and admission](blocs/collections.md): the generic collection
+  lifecycle and the `ulvia-collection/v1` authored bundle format.
 - [Runtime diagnostics](development/README.md#runtime-logs): structured events,
   request correlation, local journals, redaction and CLI inspection.
 

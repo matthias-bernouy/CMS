@@ -1,6 +1,7 @@
 # Create A Collection Bloc
 
-Blocs are authored inside immutable collection releases. `ulvia release` is
+The examples below assume collection identity `example/ui`; its Bloc IDs use
+the `example--ui--` runtime namespace. Blocs are authored inside immutable collection releases. `ulvia release` is
 the supported compilation path; the Edge never imports an authored folder at
 runtime.
 
@@ -10,7 +11,7 @@ Bloc folders are discovered recursively below `blocs/`. A folder becomes a
 Bloc at `definition.json`; its basename must equal the definition `id`.
 
 ```text
-blocs/content/example-card/
+blocs/content/example--ui--card/
 ├── definition.json
 ├── markup.html         # required fixed Light DOM
 ├── style.css           # optional, compiled into a scoped stylesheet
@@ -30,7 +31,7 @@ Every Bloc declares which native element may carry its identity:
 
 ```json
 {
-    "id": "example-card",
+    "id": "example--ui--card",
     "kind": "component",
     "root": { "accepts": ["article", "div"] },
     "slots": {}
@@ -40,7 +41,7 @@ Every Bloc declares which native element may carry its identity:
 A Page instance is ordinary semantic HTML:
 
 ```html
-<article cms-bloc="example-card"></article>
+<article cms-bloc="example--ui--card"></article>
 ```
 
 Collection custom-element tags are forbidden. The Bloc ID remains a stable,
@@ -78,7 +79,7 @@ authored in collection `examples/**/document.html`; listed Blocs select a
 scope:
 
 ```css
-@scope ([cms-bloc="example-card"]) to (:scope [cms-bloc]) {
+@scope ([cms-bloc="example--ui--card"]) to (:scope [cms-bloc]) {
     :scope {
         display: grid;
     }
@@ -97,7 +98,7 @@ the scoped stylesheet can target the resulting Light DOM structure.
 CSS custom properties are part of the collection contract rather than an
 unrestricted global namespace. A component can declare and consume variables
 prefixed by its complete Bloc ID, for example
-`--example-card-title-color`. It can consume or assign another Bloc's variables
+`--example--ui--card-title-color`. It can consume or assign another Bloc's variables
 only when that Bloc is declared in `uses`. Theme variables must resolve to a
 local or explicitly imported theme token. Unknown, unqualified and foreign
 variables are rejected when the release is admitted. Runtime
@@ -132,7 +133,7 @@ A dynamic same-site Page frame uses one complete `pageUrl` expression:
 ```html
 <iframe
     src="{{ page.path | pageUrl }}"
-    title="{{ cms.i18n.example.preview-title }}"
+    title="{{ cms.i18n.example/ui.preview-title }}"
     sandbox="allow-same-origin allow-scripts"
 ></iframe>
 ```
@@ -155,7 +156,7 @@ behavior code. Store the source below the collection's `assets/` tree and
 reference it from an empty native element:
 
 ```html
-<svg cms-svg="{{ cms.asset.example.icons/search.svg }}" aria-hidden="true"></svg>
+<svg cms-svg="{{ cms.asset.example/ui.icons/search.svg }}" aria-hidden="true"></svg>
 ```
 
 Use `role="img"` with a nonempty `aria-label` for informative artwork.

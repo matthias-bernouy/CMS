@@ -24,7 +24,7 @@ at most ten content-addressed representations, and serves the original while
 background representations are unavailable. Representation discovery and reads
 are ordinary contract capabilities.
 
-`ulvia--mossa--image` wraps a native `<img>`. Its `src`, `srcset`, `sizes`,
+A collection Bloc can own a native `<img>`. Its `src`, `srcset`, `sizes`,
 `alt` and loading attributes follow the ordinary Page markup and binding rules;
 the Edge does not interpret `FileReference` values or perform image-specific
 projection. Image processing never runs in the gateway or the Bloc.

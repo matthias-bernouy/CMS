@@ -62,8 +62,10 @@ content. Simple operations with clear schemas do not require repeated searches.
 
 `ulvia/cms.installations` exposes administrator capabilities
 `documentation.search` and `documentation.get`, with HTTP QUERY bindings at
-`/documentation/search` and `/documentation/get` and MCP tools
-`installations_documentation_search` and `installations_documentation_get`.
+`/documentation/search` and `/documentation/get`. Their authored MCP names are
+`installations_documentation_search` and `installations_documentation_get`; the
+Gateway emits a truncated name prefix plus an identity hash. Always use the
+actual name returned by `tools/list` or initialization instructions.
 They use the same live invocation authorization as other selected capabilities.
 
 Search accepts `query`, optional `contractId`, `capabilityId` and `limit` (1–10,

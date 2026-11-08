@@ -1,11 +1,12 @@
 # @bernouy/ulvia-sdk
 
 Define typed feature capabilities, expose contracts, assemble a Provider and compile
-its exact manifest from the same handler table. The optional `./provider` adapter
+its exact manifest from the selected implementations. The optional `./provider` adapter
 mounts that build through the existing Gateway HTTP receiver.
 
-The Emailer/SMTP, Secrets, Files and Observability pilots use the SDK in the official Provider and bootstrap. Other
-feature families retain their existing adapters. Release orchestration lives in
+The official Provider and bootstrap use the SDK inventory for Emailer/SMTP,
+Access, Content, Authoring, Secrets, Files, Observability, Registry, Installations
+and Provider connections. Provider instance discovery remains a declarative template. Release orchestration lives in
 the CLI and infrastructure. Root authoring performs no IO; `./build` discovers
 Markdown only below explicitly declared directories and never publishes releases.
 
@@ -284,8 +285,8 @@ fixture limits are 16 MiB per asset and 64 MiB total per contract.
 The root and compiler do not read environment, initialize adapters or listen.
 The CLI discovers explicit trusted `ulvia.release.ts` entry modules, checks release
 evolution against its local catalogue and reuses ordinary artifact publication.
-See [the release workflow](../../../docs/development/sdk-releases.md). The replacement
-resource ZIP remains separate. All twelve original official definitions are generated
+See [the release workflow](../../../docs/development/sdk-releases.md). Generic ZIP
+utilities do not define a CMS initialization format. All twelve official definitions are generated
 from the shared feature/template inventory.
 
 ## Validation

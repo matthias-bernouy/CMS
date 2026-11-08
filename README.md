@@ -7,6 +7,7 @@ organized in five layers with a one-way dependency rule:
 
 - **foundation/** — generic, zero CMS knowledge; a non-CMS product could use
   these as-is (no `cms-` prefix).
+- **platform/** — contract language, Provider models, generic execution and the SDK.
 - **features/** — reusable CMS domain modules with explicit ownership. Packages
   expose adapter-light roots and declare optional persistence, HTTP, browser or
   tooling subpaths explicitly in their export maps.
@@ -15,8 +16,9 @@ organized in five layers with a one-way dependency rule:
 - **runtimes/** — executables: read env, pick adapters, mount surfaces, listen.
 
 Direct products that are not reusable CMS layers live under `packages/`.
-`official-repository` contains authored immutable releases and never mounts
-routes or chooses runtime adapters.
+Official contracts and the Provider manifest are generated from SDK features.
+Collections are authored and published explicitly; no starter collection or
+administration Page corpus is bundled.
 
 ## Install Ulvia
 
@@ -46,6 +48,8 @@ CmsCore/
 |   |   |-- http-runner/       @bernouy/http-runner
 |   |   |-- envelope-crypto/   @bernouy/envelope-crypto
 |   |   |-- logging/           @bernouy/logging
+|   |   |-- resource-identity/ @bernouy/resource-identity
+|   |   |-- zip/               @bernouy/zip
 |   |   |-- rate-limiter/      @bernouy/rate-limiter
 |   |   |-- image-processing/  @bernouy/image-processing
 |   |   |-- secret-store/      @bernouy/secret-store
@@ -70,14 +74,19 @@ CmsCore/
 |   |-- surfaces/
 |   |   |-- ulvia-provider/    @bernouy/ulvia-provider
 |   |   `-- cms-edge/          @bernouy/cms-edge
-|   |-- runtimes/
-|   |   |-- ulvia-cli/         @bernouy/ulvia-cli
-|   |   |-- cms-edge-server/   @bernouy/cms-edge-server
-|   |   `-- ulvia-provider-server/
-|   `-- official-repository/   Authored official releases
+|   `-- runtimes/
+|       |-- ulvia-cli/         @bernouy/ulvia-cli
+|       |-- cms-edge-server/   @bernouy/cms-edge-server
+|       `-- ulvia-provider-server/
 |
 |-- infra/
-|   `-- images/             Separate Edge and Provider images
+|   |-- cli/                Bundled npm CLI releases
+|   |-- images/             Separate Edge and Provider images
+|   |-- models/             Pinned local embedding model
+|   |-- operations/         Optional host maintenance
+|   |-- releases/           Trusted SDK release entry
+|   |-- bootstrap.ts        Offline system artifact generation
+|   `-- execution-support.ts Exact executable contract pins
 |
 |-- build.ts
 |-- tsconfig.base.json
@@ -104,11 +113,11 @@ CmsCore/
 ## Working in the workspace
 
 ```bash
-bun install                 # links every workspace package + installs externals
+bun install --frozen-lockfile # links workspace packages + installs locked externals
 bun run build               # types, browser runtimes and official bootstrap
 bun run typecheck           # tsc --build only (project references)
 bun run clean               # cleans TypeScript state, package dist and tsbuildinfo
-bun test                    # workspace test runner
+bun run test                # maintained workspace tests
 ```
 
 The source CLI has no embedded initial image version. On an empty installation,
@@ -117,13 +126,12 @@ create a named instance. Later starts reuse persisted image digests. Running
 from source does not build or deploy the current workspace's server code.
 
 See the [development guide](docs/development/README.md) for current checks and
-[open platform work](docs/TODO.md) for remaining product and operational gates.
-The [2026-10-25 audit](docs/AUDIT.md) is a historical snapshot.
+the [documentation index](docs/README.md) for architecture and product boundaries.
 
 `build.ts` first runs `tsc --build`, then builds the generated Bloc behavior and
 binding-core runtimes owned by `@bernouy/content`, and finally refreshes the
-CLI's admitted official bootstrap snapshot. There is no separate visual-component
-package or generated component distribution.
+CLI's admitted system API snapshot from SDK feature definitions. There is no
+separate visual-component package or generated component distribution.
 
 Packages ship **source** through their `exports` fields; consumers resolve
 straight to `src/` outside the explicit `content` browser bundles.
@@ -139,7 +147,8 @@ configured Repository connection; creating a Registry instance does not replace 
 The Ulvia CLI owns one parameterized Compose definition for loopback and public
 installations. The design hosts **many instances on one server**: durable
 instance data and files remain behind the Provider, while each domain routes
-published and administrative Pages to its own Edge process. Network binding,
+published Pages to its own Edge process. Fresh instances start with zero Pages
+and collections; native initialization lives at `/.cms/setup`. Network binding,
 ports and ACME TLS are persisted installation configuration rather than a
 runtime development/production switch.
 

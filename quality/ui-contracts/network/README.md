@@ -26,7 +26,7 @@ Dynamic property names, CommonJS/dynamic imports, arbitrary object aliases,
 global monkey-patching and injected transports are outside this detector.
 
 HTTP usage produces `ui.network.http` warnings recommending declarative
-binding where it fits UI loading or submission. Three exact files produce
+binding where it fits UI loading or submission. The exact transport files below produce
 informational findings instead, with their purpose recorded in `policy.ts`:
 
 - `packages/features/content/src/browser/binding/runtime/query/queryFetch.ts`: query transport.

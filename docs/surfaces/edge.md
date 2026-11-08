@@ -25,8 +25,9 @@ for authenticated actors, HTTP security, operator-controlled CSP and streaming
 compression. Resource metadata cannot set cookies, CSP, CORS or arbitrary
 response headers. Same-origin editor frames are permitted by Edge's HTML policy.
 
-The editor continues to load the saved Page's ordinary URL. There is no separate
-preview route or unsaved-document renderer. Administration documents remain
-ordinary site-owned Pages copied from generic examples during provisioning.
+No visual editor or administration Page collection is bundled. An editor can
+load a saved Page at its ordinary URL; there is no separate unsaved-document
+renderer. Explicit initialization can create ordinary site-owned Pages from a
+published recipe.
 Collection JavaScript still shares the site's origin; this change does not add
 an isolation sandbox around trusted installed Bloc behavior.

@@ -44,12 +44,15 @@ bun run ulvia -- reset --yes
 bun run ulvia -- release ./my-collection
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
-bun run ulvia -- push contract ulvia/cms.installations@1.0.0 --repository https://repository.example
-bun run ulvia -- pull collection ulvia/mossa@1.0.0 --repository https://repository.example
-bun run ulvia -- yank collection ulvia/mossa@1.0.0 --repository https://repository.example --reason "Superseded"
-bun run ulvia -- restore collection ulvia/mossa@1.0.0 --repository https://repository.example
+bun run ulvia -- push contract ulvia/cms.installations@1.2.0 --repository https://repository.example
+bun run ulvia -- pull collection example/ui@1.0.0 --repository https://repository.example
+bun run ulvia -- yank collection example/ui@1.0.0 --repository https://repository.example --reason "Superseded"
+bun run ulvia -- restore collection example/ui@1.0.0 --repository https://repository.example
 bun run ulvia -- prune
 ```
+
+`example/ui` is a hypothetical collection to be authored and published explicitly;
+no official starter collection is bundled.
 
 The stack version above is an example of an exact published image tag. Workspace
 source has no embedded initial stack version: its first `services start`
@@ -169,13 +172,14 @@ removes shared Compose projects, instances, shared state and local repository
 releases, including accounts hosted by this local Provider. Independently deployed
 Repositories and the CLI's saved Repository connection are preserved. It does not
 inspect or modify the current working directory.
-`release <resource-directory>` reads `definition.json` and routes by `kind`:
+`release <resource-directory>` accepts a trusted local `ulvia.release.ts` entry
+or reads `definition.json` and routes by `kind`:
 `collection`, `contract`, or `provider-manifest`. It validates and stores one
 immutable release. A provider manifest must reference exact contract releases
 already in the local repository. Release does not connect to or test a provider.
 `release <directory> --recursive` discovers authored resource roots below a
 folder, stopping before nested Bloc definitions. It orders contracts by
-inheritance and capability requirements, then prepares providers and collections.
+inheritance, then prepares Provider manifests and collection dependencies.
 Existing local dependencies are reused. Source admission happens
 before any resource is stored; each resource is committed separately, so a
 storage or publication conflict can leave a partial batch. Retrying identical
@@ -191,10 +195,10 @@ bun run release:official
 ulvia release infra/releases
 ```
 
-The official build uses a trusted local `ulvia.release.ts` entry so migrated
-Emailer/SMTP sources and the bootstrap share the same compiler. See the
+The official build uses a trusted local `ulvia.release.ts` entry so all SDK
+features, manifest claims and the bootstrap share the same inventory and compiler. See the
 [SDK workflow](../../../docs/development/sdk-releases.md) for explicit versions,
-source-module rules and the remaining JSON migration boundary.
+source-module rules and generated runtime attachment.
 
 Contract fixture assets declared in `definition.json` are read from
 `fixtures/<asset-id>` and verified by digest. Releasing the same coordinate with
@@ -211,7 +215,8 @@ object. Optional `mocks/**/*.json` fragments contain one mock plus its explicit
 `capabilityId`; mocks embedded in capability fragments reject. The compiler
 sorts capabilities and mocks by their declared IDs, so paths never affect the
 immutable digest. `definition.json` cannot contain an inline `capabilities`
-array: the recursive source tree is the only authored contract format.
+array in this JSON source format. SDK features instead use `defineFeature` and
+explicit capabilities/mocks, producing the same admitted release format.
 
 `push <publisher/id@version>` infers the kind from local cached releases. If the
 same coordinate exists in several catalogues, specify `push contract`,
@@ -219,7 +224,7 @@ same coordinate exists in several catalogues, specify `push contract`,
 an explicit kind and downloads and re-admits one exact coordinate locally.
 
 `push all` publishes every non-yanked release in the local cache, independently
-of the working directory. It orders contract inheritance and requirements,
+of the working directory. It orders contract inheritance,
 then providers and known local collection dependencies. All artifacts and every
 namespace's account ownership are checked before the first upload. No namespace
 is implicitly claimed and releases without usable account credentials are not silently skipped.
@@ -308,7 +313,7 @@ That command neither publishes to a running repository nor upgrades an existing
 instance. Collections are built and published only from explicitly supplied
 sources; no starter collection is included in this command.
 For individual manual releases, use `release` in dependency order:
-exact contract dependencies before dependent contracts and provider manifests.
+exact parent contracts before specializations, then Provider manifests and collection dependencies.
 Publication, provider profile transitions, collection upgrades and container
 image replacement remain separate actions.
 

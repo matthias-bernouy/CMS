@@ -71,6 +71,12 @@ The site is available at `http://my-site.localhost:5100`. The credentials
 command prints the initial administrator email and password. It never prints
 the Provider, Repository, encryption, or instance service secrets.
 
+Open `http://my-site.localhost:5100/.cms/setup` and use those credentials. Fresh
+profiles create zero collections and Pages. Choose an empty site or explicitly
+review a recipe from a published collection; no starter or administration site
+is bundled. Empty completion leaves `/` returning 404 until a Page is published.
+See [first published Page](../product/first-published-page.md) for the current API flow.
+
 The Provider uses `https://repo.ulvia.fr` by default for resource discovery
 and connected-account publications. The shared stack contains the proxy, MongoDB and Provider. Repository hosting
 is selected explicitly on a named CMS instance.

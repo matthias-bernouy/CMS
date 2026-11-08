@@ -20,7 +20,7 @@ dispatches it to the specialization's handler. If several specializations share
 that parent, mount the declaring contract explicitly to remove ambiguity.
 
 ```ts
-dispatcher.register("example.catalog", "items.list", async (input, context) => {
+dispatcher.register("example/catalog", "items.list", async (input, context) => {
     const language = context.http.headers.get("accept-language");
     return Response.json(await catalog.list(input, language), {
         headers: { "Content-Language": language === "fr" ? "fr" : "en" },
@@ -180,8 +180,10 @@ validate missing outputs, rather than accepting an incomplete declared failure.
 
 ## Official baseline
 
-All authored official contracts, the Provider manifest, administration collection
-and instance profile start at 1.0.0. Content exposes only
+Official contracts and the Provider manifest are generated from SDK features.
+Current system profiles are `1.3.0`, the manifest and Installations are `1.2.0`,
+Registry is `1.1.0`, and the remaining contracts are `1.0.0`. No administration
+collection is bundled. For native delivery, Content exposes
 `delivery.resolve-resource`, carrying path/method/query as business input and
 HTTP metadata through the common context. Edge follows exact parent pins and
 invokes the declaring contract. There is no historical Delivery fallback or

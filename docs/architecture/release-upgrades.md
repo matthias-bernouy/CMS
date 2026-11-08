@@ -70,12 +70,10 @@ The instance exposes these administration capabilities:
 HTTP and explicit MCP bindings expose the same domain operations. Apply/resume
 commands are durable keyed operations; their operation handles are inspected
 through `get-operation`. Collection targets may supply `configurationJson` and
-`textOverridesJson`. The collection review screen supports optional target
-configuration up to the browser state's 8192-character bound; the API accepts
-larger bounded values. Empty configuration input retains current values.
+`textOverridesJson`. Target configuration is bounded by the admitted API schema.
+No collection review UI is bundled.
 
-The administration's Provider links review one target merged into the current
-graph. The API also accepts the whole `selections` array for coordinated changes
+The contract review API accepts the whole `selections` array for coordinated changes
 and explicit `grants`. Applying uses the complete reviewed graph.
 
 A shared site write fence drains in-flight content/installation/selection writes,
@@ -88,7 +86,7 @@ retry targets reject. Collection switches do not claim or synchronize Page route
 The switch does not rewrite, republish or roll back Page documents. Replacing
 Page-authored Blocs remains a separate future editorial operation. Site changes
 between review and apply invalidate the plan. A collection uninstall is not yet
-exposed in administration; dependency checks alone are insufficient for removal.
+exposed by the official Installations contract; dependency checks alone are insufficient for removal.
 
 ## Selections, Grants And Actor Rights
 
@@ -140,10 +138,10 @@ Compatibility evidence recorded on 2026-11-07 also covers the exact published
 `repository`. Their installed `1.0.0` artifacts differ from the current authored
 baseline. The fixture records executable capability signatures from that image:
 access, behavior, schemas, tool names and HTTP mappings must remain unchanged.
-Only those reviewed digests are retained; existing coordinates are never
-rewritten or republished. An older instance registers only its declared
-capabilities even when the new build implements additional ones. Future artifact
-changes must use the required new release versions.
+These signatures remain historical compatibility evidence, not current execution
+support. Only exact claims shipped in the SDK runtime artifact and support matrix
+can execute; older digests absent there refuse. Existing coordinates are never
+rewritten or republished. Future artifact changes require new release versions.
 
 Expired worker leases can be reclaimed for an exact intent. Normal write permits
 are not erased merely because their heartbeat expired: a delayed writer may

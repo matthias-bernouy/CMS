@@ -57,8 +57,7 @@ an independent dependency of the Content Provider runtime.
 
 Every Page has a monotonic concurrency revision used by authoring and
 reviewed release-change analysis. This is not user-facing page history. Page publication is
-`visible === true`. The editor has bounded in-memory undo/redo; durable
-user-facing Page history is not implemented.
+`visible === true`. No visual Page editor or user-facing Page history is bundled.
 File visibility and temporary private
 access are enforced by the selected Files provider.
 
@@ -95,7 +94,8 @@ Files providers use generic transforms from `@bernouy/image-processing`.
 The production runtime constructs Mongo catalogues and site stores, secret
 resolution, network adapters, identity storage and observation refresh. The
 Edge receives provider-neutral invocation and native resource delivery.
-Runtime profiles seed ordinary Content administration Pages from collection examples;
+Fresh runtime profiles seed no Pages or collections. Explicit native initialization
+can materialize Pages from a separately published collection recipe;
 provider connection approval, credential rotation and exact contract selection
 are application workflows owned by `repository`. Repository publication is
 implemented in the official Provider for explicitly enabled Repository instances. See
@@ -133,8 +133,10 @@ declared HTTP bindings of `ulvia/cms.*` and explicitly enabled `ulvia/repository
 Neither surface chooses production
 databases or storage roots.
 
-The Ulvia Provider surface also owns the thin cross-domain adapters that register the
-official capabilities, project their wire responses and map feature failures.
+Feature definitions own capability schemas, bindings, default execution and domain
+error policies. The SDK derives admitted artifacts and registers executors. The
+Ulvia Provider surface selects complete implementations, binds injected service
+ports and supplies shared HTTP authorization, execution and error presentation.
 Actual page, file, collection, upgrade, authentication, provider and theme
 operations remain in their feature packages. `ulvia-provider-server` injects
 those ports. Each server composition root owns only its concrete adapters;

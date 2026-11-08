@@ -66,15 +66,15 @@ not distributed storage.
 
 ## Contract and clients
 
-`ulvia/repository@2.0.0` declares the registry's public and authenticated
+`ulvia/repository@1.1.0` declares the registry's public and authenticated
 capabilities. Edge mounts selected bindings below `/.cms/call/ulvia/repository`.
 Protected operations use `access: "authenticated"` and domain ownership checks.
 Installing a contract definition alone does not load an implementation.
 The old root `/v1` endpoints and namespace proof headers are not accepted.
 
-`ulvia/cms.authoring@1.0.0` prepares, validates and publishes collections from a
-CMS to its configured Repository. The rename does not add contract or Provider
-manifest authoring. The CLI can release and publish all three resource kinds.
+`ulvia/cms.authoring@1.0.0` prepares, validates and publishes collections,
+contracts and Provider manifests from a CMS to its configured Repository. The
+CLI can also release and publish all three resource kinds.
 CMS publishing stores a shared PAT in the authoring contract's encrypted secret
 namespace. Its connection is pinned to the configured origin and Repository ID;
 configuration returns status only and never the token.
@@ -131,8 +131,10 @@ requires a major release; descriptive tool metadata can evolve in a patch.
 Gateway invoker and trusted per-request actor/site context. Only capabilities
 with an explicit `transport: "mcp"` binding are discoverable and callable.
 HTTP-only capabilities are never implicitly exposed. No Repository identifiers are hard-coded in this adapter. Tool names
-use the binding's configured name or a deterministic contract/capability/binding
-identity; metadata includes the binding ID and exact release digest.
+use up to 27 characters of the authored name (or `cap`), followed by `_` and
+32 hexadecimal characters derived from the contract/capability/binding identity.
+Clients discover the emitted name instead of hardcoding the authored label;
+metadata includes the binding ID and exact release digest.
 Discovery is deterministic and paginated at 64 tools, with 1024 tools maximum.
 
 The supported HTTP protocol is explicitly `2025-11-25`, using JSON responses,
@@ -192,7 +194,7 @@ storage are outside this work.
 Private immutable source snapshots use authenticated bindings below
 `/.cms/call/ulvia/repository/v1/source-snapshots`. Writes must match an existing
 collection release digest. They remain separate from public downloads.
-The proposed authoring/test roadmap is in [agent authoring](../development/agent-authoring.md).
+See [agent authoring](../development/agent-authoring.md) for current compiler and validation boundaries.
 
 ## Resource discovery before installation
 

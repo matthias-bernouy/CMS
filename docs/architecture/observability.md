@@ -73,12 +73,15 @@ Mongo retains entries for 14 days from reception. Reads exclude expired entries 
 
 ## Consultation
 
-The three read capabilities also expose explicit MCP bindings: `observability_logs_query`,
-`observability_logs_get` and `observability_logs_aggregate`. They require the same
+The three read capabilities also expose MCP bindings authored as
+`observability_logs_query`, `observability_logs_get` and
+`observability_logs_aggregate`. Discover their emitted names through `tools/list`;
+Gateway appends a contract/capability/binding identity hash. They require the same
 live administrator authorization and instance scope as HTTP reads. Filters and
 pagination remain bounded; `logs.append` has no MCP binding.
 
-The official collection provides `/admin/observability` and `/admin/observability/detail`. Both use declared contract capabilities and existing collection bindings. They have no Mongo or implementation-specific client.
+No observability Pages are bundled. A client can build a journal view through
+these declared capabilities without Mongo or implementation-specific access.
 
 `ulvia instance logs <name> [edge | provider] [--level warn] [--event page.render.failed] [--request-id <uuid>] [--json] [--stack]` queries the selected journal. `--stack` loads details only for returned entries. The CLI uses reception-time windows so producer clock skew cannot defer a record behind an already seen page. `--follow` polls the recent result window and walks new pages until a known entry is reached. It stops explicitly if more than 2,000 entries need catching up between polls; it is not a durable subscription.
 

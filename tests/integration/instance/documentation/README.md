@@ -12,7 +12,9 @@ ULVIA_DOCUMENTATION_MODEL_CACHE="/absolute/path/to/populated/model-cache" \
 bun test ./tests/integration/instance/documentation
 ```
 
-`native.test.ts` covers linked documentation, Page drafting and verification,
+The current `native.test.ts` still asserts the previous 68-tool catalogue rather
+than the generated 82-tool catalogue. See the [parent guide](../README.md) for
+known acceptance mismatches. Its scenarios cover linked documentation, Page drafting and verification,
 publication at mobile/desktop widths, file transfer, persistence and revocation.
 `exotic.test.ts` runs the following more demanding scenarios:
 
@@ -31,7 +33,7 @@ are cleaned up on success and failure.
 
 `validation.test.ts` exercises authoring diagnostics through the real OAuth/MCP
 boundary: expanded-example refusals, duplicate structures with no design warnings,
-publication and installation, persistent editor warnings, effective template
+publication and installation, Page write diagnostics, effective template
 links, progressive publication, refusal without mutation, scoped template IDs
 and ARIA references, incoming-link protection, and a valid release whose upgrade
 is blocked by incompatible expanded Page HTML. It also checks retained Page state

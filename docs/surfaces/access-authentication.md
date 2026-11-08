@@ -40,6 +40,10 @@ namespace or special browser transport:
 </form>
 ```
 
+This form is a binding fragment, not a complete admitted Page. A full document
+needs declared Bloc roots and mutation outcome/error handling; see
+[bindings](../blocs/data-bindings.md).
+
 The browser sends either the `cms-session` cookie or an
 `Authorization: Bearer` credential. Edge forwards exactly one opaque, typed
 credential to the selected `ulvia/cms.access/resolve-actor` capability; it does
@@ -84,9 +88,9 @@ Only after validation does Edge emit the fixed `cms-session` cookie with
 Provider `Set-Cookie` headers never pass through. A provider cannot select a
 cookie name, domain or policy.
 
-The official collection contributes `/login`, `/confirm-email` and
-`/reset-password` as ordinary Pages. The MVP implements local password
-authentication only. OIDC is intentionally absent; magic links, passkeys or
+No authentication Pages are bundled. A collection or site can author login,
+confirmation and recovery Pages using these capabilities. Native setup and OAuth
+consent supply their own protocol screens. Local password authentication is implemented. OIDC is intentionally absent; magic links, passkeys or
 OIDC can later be added as Access capabilities without adding Edge-owned
 authentication endpoints, provided they resolve through the same actor and
 session-effect boundary.

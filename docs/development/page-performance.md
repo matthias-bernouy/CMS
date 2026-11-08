@@ -6,8 +6,9 @@ TTFB, browser resource timings and Gateway phase timings separately. A healthy
 `/readyz` response only establishes Edge readiness; it does not measure Page
 rendering or Provider dependencies.
 
-The local instance Docker journey exercises `/admin/pages` twice with an active
-browser session. It checks that the document stays private/no-store and that
+The local instance Docker journey exercises the test-owned `/private-delivery`
+Page twice with an active browser session and an explicitly installed test
+collection. It checks that the document stays private/no-store and that
 versioned public Bloc JS/CSS retain immutable caching and conditional 304
 responses. Timings are printed as diagnostic evidence, without brittle
 machine-specific latency assertions. Unit tests gate artifact read counts,
@@ -95,14 +96,14 @@ lookup resolves the exact selected release and pinned ancestors and checks the
 selection again before returning. It does not load transport configuration or
 attest Provider readiness; actual dispatch retains those checks.
 
-Installations `1.0.0` exposes the control-only `gateway.dispatch.prepare` command.
+The current Installations contract exposes the control-only `gateway.dispatch.prepare` command.
 It combines identity resolution, optional root delegation and token issuance.
 The Edge sends the resulting business request through ordinary pinned HTTP.
 Commands still resolve identity before their start audit. Failed preparation or
 transport closes any issued root ticket; a binary response retains it until
 completion or cancellation. The current official profile is
 `ulvia@1.3.0`, with manifest `1.2.0`;
-the explicit Registry profile is `ulvia/repository@1.0.0` and shares that manifest.
+the explicit Registry profile is `repository@1.3.0` and shares that manifest.
 Neither declares a preceding profile transition. After changing the control contract,
 restart the stateless Edge so its startup report selects the exact ready pin.
 
@@ -258,7 +259,7 @@ requests.
 
 The delivery performance journey also measures response caching and sustained
 quota behavior. See [Content delivery](../architecture/content-delivery.md#shared-edge-response-cache)
-for the current cache and invalidation guarantees. Installations 1.0.0 groups
+for the current cache and invalidation guarantees. Installations groups
 explicit machine authentication and preparation while delegated calls preserve
 their original actor inspection path. Exact selections come from the supported
 [instance profiles](../../packages/runtimes/ulvia-provider-server/src/runtime/instances/profiles/definitions.ts).

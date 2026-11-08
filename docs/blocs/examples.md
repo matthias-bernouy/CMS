@@ -62,11 +62,12 @@ Example `definition.json`:
 }
 ```
 
-The `document.html` uses the existing Page grammar:
+For a collection identified as `example/ui`, with a declared
+`example--ui--action` Bloc and `action-label` text, `document.html` uses the Page grammar:
 
 ```html
-<button cms-bloc="my-collection-action" type="button" variant="filled">
-    {{ cms.i18n.my-collection.action-label }}
+<button cms-bloc="example--ui--action" type="button" variant="filled">
+    {{ cms.i18n.example/ui.action-label }}
 </button>
 ```
 
@@ -88,7 +89,7 @@ one root annotated with that Bloc's ID. That root may contain any valid slot
 children. A multi-root example cannot be the default insertion for one Bloc.
 Examples do not introduce new reusable `kind: "composition"` definitions.
 
-The editor can reuse the default example's full root and settings. Shared text
+An authoring client can reuse the default example's full root and settings. Shared text
 references stay in the HTML and resolve through the normal collection text
 renderer. An editor may explicitly replace a reference with literal wording
 when it wants Page-owned content. There is no automatic conversion based on
@@ -142,8 +143,8 @@ fixtures for data-dependent examples.
 
 Generated captures are not uploaded or mounted in the CMS catalogue yet.
 Public preview distribution and the integrated catalogue UI remain separate
-work. The editor already consumes the default insertion and all category
-memberships through its existing authoring contract.
+work. Content's authoring catalogue exposes default insertion metadata and
+category memberships for clients; no visual catalogue/editor is bundled.
 
 ## Validation
 

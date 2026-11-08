@@ -24,6 +24,11 @@ and verify acknowledgement installation/provider/account identities against
 the approved installation; the response parser alone checks shape, not this
 request-response correlation. No business-capability routes are defined here.
 
+These registration paths remain protocol metadata fixtures, not the mounted
+official return-channel API. The official runtime implements
+`ulvia/provider.connections / connections.configure` through admitted bindings,
+with durable pairing intents and receipts. See [current Provider connections](../../../../../../docs/providers/connections.md).
+
 ## Domain workflow and transport orchestration
 
 1. The Provider management workflow accepts an API origin and dedicated
@@ -48,8 +53,8 @@ request-response correlation. No business-capability routes are defined here.
 The installation parser represents an approved record; the local lifecycle
 issues ephemeral preparations and supports explicit approval, modification and
 administrative transitions. The runtime composes live report probing and durable
-secret persistence. Persisted drafts and remote callback registration failure
-handling are not implemented. `enabled | disabled | revoked` records
+secret persistence. The domain preparation object remains ephemeral; the mounted
+application separately persists encrypted approval previews and pairing recovery. `enabled | disabled | revoked` records
 administrative intent. Observation freshness and selected-release validity
 remain separate. See the
 [implemented domain workflows](../../../../../features/repository/src/providers/README.md).
@@ -95,6 +100,6 @@ Provider hub SMTP, payment, and other business credentials stay on the hub.
 One dedicated provider token plus a separate optional gateway token is the
 current connection model. Durable CMS-side persistence, host authorization,
 report probing and credential rotation are implemented. Provider-side token
-revocation and callback registration/removal remain incomplete: local
+revocation and callback removal remain incomplete: local
 administrative revocation does not itself call the hub, revoke the remote
 credential or remove remote gateway grants.

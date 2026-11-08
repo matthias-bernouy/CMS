@@ -24,7 +24,7 @@ The underlying repository supports revision-checked path matrices and localized
 SEO. The former `/api/page/seo` route and its static panel have been removed.
 The current `pages.*` capabilities in `ulvia/cms.content@1.0.0` create a Page,
 manage its title, description, content, tags, publication, per-language routes
-and localized SEO, and expose the admitted Bloc catalogue used by the Page editor.
+and localized SEO, and expose the admitted Bloc catalogue for authoring clients.
 All of those flows use versioned capabilities rather than private `/api/*`
 transports.
 
@@ -39,7 +39,7 @@ created at root paths, but their URLs cannot be renamed.
 Each public path has one permanent route record with state `current`,
 `redirect`, or `gone`. A current route points to the page ID and language.
 Changing or removing a path turns its route into a redirect; another page
-cannot claim it. A page may reactivate one of its own redirects. Deleting a page offers a published
+cannot claim it. A page may reactivate one of its own redirects. The domain deletion API supports a published
 alternative. If selected, all its historical paths redirect to that page's
 corresponding language URL when present, or its default language URL. Without
 an alternative, those paths return 410 Gone and remain reserved. Route records
@@ -100,8 +100,8 @@ read/write facade boundaries.
 
 ## One Content Page Lifecycle
 
-Every Page belongs to Content, including administration and authentication Pages
-copied from examples during provisioning. Collections install rendering resources
+Every Page belongs to Content, including any administration or authentication Pages
+created explicitly from examples. Collections install rendering resources
 and example documents; they never reserve site routes.
 
 Content owns current, redirect and gone routes, localized paths, publication and
@@ -120,8 +120,11 @@ A published alternative preserves the incoming routes as redirects. The Content
 validation facade serializes these checks with its Page writes; native adapter
 revision checks still govern persistence.
 
-Official provisioning first reserves ordinary draft Pages, then fills their
-example documents and metadata before publication. Incomplete receipts replay
-that initialization after interruption. Completed receipts never overwrite
-subsequent site edits. These technical Pages start with `indexing.enabled: false`,
-which excludes them from sitemaps and emits `noindex` metadata.
+Fresh provisioning creates no Pages. When an administrator explicitly selects an
+initialization recipe, the initialization service reserves draft Pages, fills
+their documents and metadata, then publishes them according to that recipe.
+Incomplete receipts resume after interruption; completed receipts never overwrite
+subsequent site edits. See [instance initialization](../architecture/provider-instance-initialization.md).
+
+The official `pages.delete` capability accepts the Page ID and expected revision;
+the domain alternative-target option is not exposed by that capability.

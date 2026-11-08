@@ -35,7 +35,7 @@ installation and publication are independent of system API bootstrap.
 
 ## Versions and publication
 
-Versions are explicit source data: each `src/feature.ts` owns its contract version and
+Versions are explicit source data: each feature definition owns its contract version and
 the surface’s `src/exports/provider/definition.json` owns the manifest version/provenance. Compilation never invents
 versions or publication timestamps. Update the corresponding source version
 before releasing changed bytes. The ordinary catalogue checks immutable exact
@@ -86,7 +86,7 @@ a replay or conflict uses a duplicate insert attempt and one indexed lookup.
 SMTP adds no receipt scan, process cache or extra authentication/authorization pass.
 The synchronous JSON adapter covers Emailer send and Secrets creation/rotation.
 Secrets adds a fresh namespace permission check before receipt access, including
-replay. Streamed commands and general receipt administration remain outside these pilots.
+replay. Streamed keyed commands and general receipt administration remain outside this adapter.
 
 ## Feature source layout
 
@@ -125,8 +125,8 @@ no directory scan or repeated owner ID is needed. Multiple scenarios may share
 input. TypeScript inference and build admission validate their payloads and codes;
 local mock IDs must be unique. Binary fixtures retain their verified asset references.
 
-These changes preserve existing contract versions, canonical bytes and digests.
-Emailer/SMTP, Secrets and Files capabilities own
+Source reorganization alone preserves contract bytes and digests; API or document
+changes require explicit release evolution. Feature capabilities own
 `execute({ input, services, context, fail })`. `src/capabilities/define.ts` types
 capabilities once with `capabilitiesFor<Services>()`, which returns `defineCapability`.
 `src/feature.ts` calls the SDK's `defineFeature` directly. It is the single source

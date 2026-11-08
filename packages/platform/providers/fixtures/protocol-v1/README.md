@@ -1,8 +1,8 @@
 # Protocol v1 provider fixture
 
 `example.provider-manifest.json` is an executable provider-manifest fixture. It
-implements the representative `protocol.examples@1.0.0` contract by exact
-digest and requires `communication.email/email.message.send` through the CMS
+implements the representative `ulvia/protocol.examples@1.0.0` contract by exact
+digest and requires `ulvia/communication.email / email.message.send` through the CMS
 gateway.
 
 Range comparator and union order is canonicalized by the contracts range

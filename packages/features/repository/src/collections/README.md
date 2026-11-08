@@ -73,8 +73,10 @@ or executable scripts. Ordinary collection installation and upgrades never run
 them. Admission checks local examples, translated metadata, reserved paths,
 unique IDs/routes, bounded aggregate counts and joint contract witnesses for
 all local Pages. Recipe changes require at least a minor collection publication.
-The execution planner, explicit application workflow and initialization ZIP are
-separate work; admitting a recipe alone does not initialize a site.
+The native setup planner reviews exact published recipes and applies them through
+a durable, explicit initialization operation. Admission alone does not initialize
+a site. No CMS initialization ZIP format or bundled starter corpus is supplied;
+the Foundation ZIP utility has no collection semantics.
 
 ## Light DOM invariants
 
@@ -178,7 +180,7 @@ Admission requires a supplied `ReleaseCatalogue` whenever requirements exist.
 One non-yanked release must jointly satisfy every requirement to a given
 contract across a bloc and its transitive `uses`. Independent resources may
 have different witnesses. This is not full-site installability: contract
-transitive requirements, provider selection and readiness remain outside it.
+implementation dependencies, provider selection and readiness remain outside it.
 Admission does not choose or pin the site's provider. Installed collection APIs
 report requirement readiness separately from exact selected provider grants.
 Re-admission rechecks non-yanked witnesses.
@@ -223,8 +225,8 @@ and declared capability witnesses. Examples are reusable catalogue resources;
 they do not claim paths, get installed as a parallel Page model or contribute
 runtime capability grants on their own.
 
-An instance profile may copy an example into an ordinary Content Page during
-provisioning. That Page then owns its route, publication state, editable content
+Fresh profiles create no Pages. Explicit initialization may copy an example
+into an ordinary Content Page. That Page then owns its route, publication state, editable content
 and access analysis. Updating the collection never rewrites its stored document.
 See [collection examples](../../../../../docs/blocs/examples.md) and
 [instance initialization](../../../../../docs/architecture/provider-instance-initialization.md).

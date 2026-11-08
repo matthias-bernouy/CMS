@@ -8,9 +8,9 @@ resolves the instance's selected exact contracts and invokes their Provider
 implementations through the Gateway and HTTP. Remote selected capabilities exposed through MCP must also declare an
 HTTP binding. Tool arguments cannot supply a site identity or trusted actor.
 
-The current official profile exposes 68 tools: 28 Content operations, seven
-Files workspace operations, 21 installation/operation, documentation and resource
-discovery operations, nine Repository connection/collection authoring operations
+The current SDK-generated catalogue exposes 82 tools: 28 Content capabilities, seven
+Files workspace capabilities, 29 installation/operation, initialization, documentation
+and discovery capabilities, 15 Repository connection/resource authoring capabilities
 and three administrator observability reads (`logs.query`, `logs.get`,
 `logs.aggregate`). Account administration,
 Provider control, Secrets, Emailer, global file namespaces, log ingestion and
@@ -51,6 +51,11 @@ connection scopes are also future work.
 `ulvia/cms.authoring` exposes `get-connection`, `configure-connection`,
 `disconnect-connection`, `claim-namespace`, `list-namespaces`, `prepare-collection`,
 `publish-collection`, `get-collection-sources` and `discard-preparation`.
+It also exposes `prepare-contract`, `publish-contract`, `get-contract-sources`,
+`prepare-provider-manifest`, `publish-provider-manifest` and
+`get-provider-manifest-sources`. These use the same connection and reviewed
+preparation/publication boundary. See the contract-source and Provider-source
+guides in the selected Authoring release for their exact source formats.
 The Provider stores an ordinary Repository account PAT in the contract's encrypted
 secret namespace, pinned to the configured Repository origin and identity. Tools
 never return that saved secret. The publishing account remains separate from the
@@ -126,15 +131,15 @@ metadata. See [contract documentation](contract-documentation.md) for hybrid
 search, authoring and model operation.
 
 Prompts, packaged skills, persistent source workspaces, previews and a generic
-asset/context manifest are deferred. Contract and Provider source authoring
-remain CLI workflows; the new instance authoring tools focus on collections.
+asset/context manifest are deferred. Contract and Provider source preparation
+and publication are available through both CLI and instance Authoring capabilities.
 
 ## Versions and verification
 
-The authored Provider profile is `1.0.0`, pinned to `ulvia@1.0.0`:
-Access `1.0.0`, Content `1.0.0`, Files `1.0.0`, Installations `1.0.0` and
-Repository authoring `1.0.0`. Private snapshots require Repository protocol
-`ulvia/repository@2.0.0`. These are source artifacts until explicitly released;
+Current system profiles are `ulvia@1.3.0` and `repository@1.3.0`, with Provider
+manifest `1.2.0` and Installations `1.2.0`. Access, Content, Files and Authoring
+retain `1.0.0`; Registry uses `ulvia/repository@1.1.0` and the v1 protocol.
+These are source artifacts until explicitly released;
 editing them does not upgrade a deployed image or publish a catalogue release.
 This profile currently provisions fresh instances; automatic migration from
 older Provider profiles is not implemented.
@@ -143,8 +148,11 @@ Normal `bun run verify` includes domain, HTTP protocol and source-pipeline
 regressions. The opt-in real-image journey uses isolated local Docker containers
 for MongoDB, Provider and independent CMS/Repository Edges, plus Chromium. The harness lives in
 [`tests/integration/instance`](../../tests/integration/instance/README.md).
-It checks consent, publication, installation, rendering, file bytes, Provider
-connections, log isolation, account ownership, persistence and revocation.
+Its scenarios cover consent, publication, installation, rendering, file bytes,
+Provider connections, log isolation, account ownership, persistence and revocation.
+The current generic discovery adapter lists 82 tools from the generated artifact
+(in two pages). Some opt-in integration assertions still expect the earlier 68-tool
+snapshot; they require reconciliation before claiming a complete current-image pass.
 With matching local images already built, run:
 
 ```sh
@@ -154,4 +162,5 @@ bun test ./tests/integration/instance ./tests/images/repository
 ```
 
 The journey never uses the public Repository. It removes its own containers,
-volumes and network. The older CLI Edge smoke journey is a separate check.
+volumes and network. The CLI Edge smoke journey is a separate check with its own explicit test
+collection.

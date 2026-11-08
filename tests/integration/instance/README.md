@@ -29,7 +29,11 @@ its own resources on completion.
 
 The Repository-specific image lifecycle tests remain in
 [`tests/images/repository`](../../images/repository).
-They can run alongside this suite. The CLI Edge smoke journey exercised by
+They can run alongside this suite. Current generic MCP discovery returns 82 tools,
+but `instance.docker.test.ts` and `documentation/native.test.ts` still assert the
+earlier count of 68. The opt-in upgrade test also requests the retired `1.0.0`
+profile. Reconcile those assertions/targets before treating these journeys as a
+current candidate-image acceptance gate; an ordinary skipped run proves none of them. The CLI Edge smoke journey exercised by
 `bun run verify:full` is a separate integration check.
 
 See [Instance MCP V1](../../../docs/architecture/instance-mcp.md) and
@@ -41,7 +45,9 @@ protocols verified here.
 Supply `ULVIA_UPGRADE_BASELINE_PROVIDER_IMAGE` with a compatible baseline image,
 alongside the candidate Provider and Edge variables above. The upgrade case
 publishes current releases into its isolated local Repository, provisions the
-old instance, then replaces its Provider container and requests profile `1.0.0`, then restarts Edge to negotiate the new control contract.
+old instance, then replaces its Provider container and requests a profile transition,
+then restarts Edge to negotiate the new control contract. The current test hardcodes
+`1.0.0`, which the current profile catalogue no longer supports.
 It checks exact Page content, the existing MCP authorization, log queries and a
 subsequent restart. No test publishes to or reads from the public Repository.
 

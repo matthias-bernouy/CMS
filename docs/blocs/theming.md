@@ -9,7 +9,7 @@ them inside its validated scoped stylesheet.
 Theme settings contain token sources, named value sets and one active theme.
 Installed collections contribute immutable tokens whose IDs and CSS variables
 are derived from the collection namespace, for example
-`--ulvia--mossa--primary`. Unowned site token sources are supported by the
+`--example--ui--primary`. Unowned site token sources are supported by the
 Content model, but the current administration contract only edits values of
 installed collection tokens; it does not create arbitrary site tokens.
 
@@ -43,7 +43,7 @@ A font face points to one local WOFF2 asset:
 ```
 
 The projected family is prefixed with the collection namespace, for example
-`ulvia--mossa--interface`. Theme CSS emits the verified `@font-face`
+`example--ui--interface`. Theme CSS emits the verified `@font-face`
 declaration using the immutable installed-asset URL. Browsers see every declared
 face in the stylesheet but download only faces needed by rendered text and CSS.
 Collections therefore still avoid declaring unused families and weights.
@@ -69,14 +69,14 @@ An authored stylesheet therefore contains only the inner rules:
 
 ```css
 :scope {
-    --example-card-background: var(--ulvia--mossa--background-surface);
-    --example-card-color: var(--ulvia--mossa--text-primary);
-    --example-card-padding: var(--ulvia--mossa--spacing-md, 1rem);
+    --example--ui--card-background: var(--example--ui--background-surface);
+    --example--ui--card-color: var(--example--ui--text-primary);
+    --example--ui--card-padding: var(--example--ui--spacing-md, 1rem);
 
     display: grid;
-    padding: var(--example-card-padding);
-    color: var(--example-card-color);
-    background: var(--example-card-background);
+    padding: var(--example--ui--card-padding);
+    color: var(--example--ui--card-color);
+    background: var(--example--ui--card-background);
 }
 
 :scope[appearance="plain"] {
@@ -85,12 +85,12 @@ An authored stylesheet therefore contains only the inner rules:
 }
 
 [part~="description"] {
-    color: var(--ulvia--mossa--text-muted, currentColor);
+    color: var(--example--ui--text-muted, currentColor);
 }
 ```
 
 Use documented public variables for supported theme knobs. Prefix private
-implementation variables with the owning Bloc ID, such as `--example-card-*`. `part` tokens identify
+implementation variables with the owning Bloc ID, such as `--example--ui--card-*`. `part` tokens identify
 projected Light DOM structures that the owning scoped stylesheet needs to
 target; they are not Shadow DOM parts.
 
@@ -101,10 +101,10 @@ root. Nested Bloc scopes remain independently owned.
 ## Color Admission
 
 Raw UI colors belong only in theme-token defaults and site theme values. Bloc
-CSS consumes local tokens or explicitly imported tokens. Prefer the semantic
-roles exported by `ulvia/mossa` when they fit; define a translated, exported
-collection token for a genuinely new reusable role. Admission does not require
-an official dependency or rename another collection's tokens.
+CSS consumes local tokens or explicitly imported tokens. Define translated,
+exported collection tokens for reusable semantic roles, or explicitly import
+compatible tokens from a dependency. No default theme collection is bundled.
+The `example/ui` names below are illustrative and require matching declarations.
 
 Admission rejects hexadecimal and named colors (including system colors),
 absolute `rgb()`/`hsl()`/`oklch()` and other color constructors in paint values.
@@ -115,8 +115,8 @@ fallbacks, including `var(--example-accent, #fff)`. Cyclic color aliases,
 `attr()` color injection and unparsed color values are refused. Blocs cannot
 redefine theme tokens or register global `@property` values.
 
-Use `var(--ulvia--mossa--primary)`, or derive a translucent value with
-`color-mix(in srgb, var(--ulvia--mossa--primary) 20%, transparent)`.
+Use `var(--example--ui--primary)`, or derive a translucent value with
+`color-mix(in srgb, var(--example--ui--primary) 20%, transparent)`.
 `transparent`, `currentColor`, inheritance/reset keywords and `none` remain
 available where valid CSS permits them. Numeric geometry and opacity are
 unaffected. Local aliases remain owned by their Bloc or a declared `uses`
@@ -137,9 +137,8 @@ proof about arbitrary JavaScript, reflection or DOM aliases.
 Programmatic style elements, CSS rule injection and paint attributes such as
 `setAttribute("fill", value)` are also refused; the stylesheet owns UI paint.
 
-User-selected colors in color controls are business data: the official controls
-paint their dedicated canvas swatches. The hue spectrum is an immutable image
-asset. Neither path writes UI CSS or shared tokens. Intrinsic logo, photograph
+User-selected colors in color controls are business data. Controls can render
+canvas swatches or immutable spectrum assets without writing UI CSS or shared tokens. Intrinsic logo, photograph
 and illustration colors remain in their assets; no Bloc receives a blanket
 color exemption.
 

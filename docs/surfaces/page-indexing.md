@@ -10,16 +10,20 @@ is a synchronized `@param:` state identifies a candidate for the domain detector
 
 ```html
 <main
-  cms-query="commerce:product.get as product"
+  cms-query="shop/commerce:product.get as product"
   cms-query-input='{"slug":{"from":"state","key":"@param:commerce-product"}}'
 ></main>
 ```
+
+This is a binding fragment, not a complete admitted Page. Its contract and
+state declarations are illustrative; full content needs Bloc ownership and
+exhaustive query outcome/error branches.
 
 The detector matches selected
 query capabilities with an object output containing a property named like the
 bound input. Domain validation additionally checks scalar input/identity types
 and configured projection paths. These helpers do not establish a current
-administration picker: the official Page-detail UI and `pages.*` capability
+administration picker: no Page-detail UI is bundled, and `pages.*` capability
 inputs do not expose this configuration yet.
 
 `content` resolves metadata through a separate server-side call to the injected
@@ -34,7 +38,7 @@ Page settings store `indexing.enabled` and an optional `indexing.entity`:
 {
   "enabled": true,
   "entity": {
-    "contractId": "commerce",
+    "contractId": "shop/commerce",
     "label": "Product",
     "pageQueryParam": "commerce-product",
     "resolve": {

@@ -139,7 +139,7 @@ loading target transport configuration and fences its selection before returning
 The control connection is required for preparation; user and Provider actors
 cannot invoke this command as control authority. Business capabilities still
 traverse Edge and the authenticated HTTP listener. Edge verifies the exact ready
-Installations 1.0.0 control contract on startup.
+Installations control contract on startup.
 
 ## Shared Edge response cache
 
@@ -227,7 +227,7 @@ closed through control. A restart loses unused
 reservations and refuses those tickets. Consumed roots retain atomic budgets,
 live actor/key/selection checks and the original closure and expiry fences.
 
-Installations 1.0.0 exposes control-only `gateway.provider.prepare`. For explicit
+The current Installations contract exposes control-only `gateway.provider.prepare`. For explicit
 machine calls Edge groups authentication, authorization and signing into one
 control call. The broker derives the source from the opaque credential. A
 single-use host proof binds the source, request ID, installation, release,

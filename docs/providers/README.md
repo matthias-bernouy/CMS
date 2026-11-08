@@ -22,8 +22,8 @@ planning validates proposed choices against catalogue and installation revisions
 Runtime observations describe live state; they cannot approve a manifest or
 change the site's selection.
 
-These APIs exist in explicit `repository/contracts`, `/providers` and
-`/collections` subpaths. Mongo adapters use `/contracts/mongo` and
+These APIs use explicit subpaths such as
+`@bernouy/repository/contracts/catalogue`, `/providers/management` and `/collections`. Mongo adapters use `/contracts/mongo` and
 `/providers/mongo`. The package root exports types only. See the
 [repository package guide](../../packages/features/repository/README.md)
 for the public boundaries; its `package.json` defines the complete export map.
@@ -39,7 +39,7 @@ is a private CLI filesystem cache, not an HTTP server. Explicit `push` sends
 its artifacts to a configured CMS Repository. That instance exposes catalogues
 through `QUERY /.cms/call/ulvia/repository/v1/catalogue` with `kind` and optional
 coordinate filters. Exact downloads use `/v1/releases/{kind}/{publisherId}/{id}/{version}`
-relative to the same contract prefix. Administration Pages consume those
+relative to the same contract prefix. Authoring clients consume those
 catalogues. Importing a provider manifest resolves and preflights its exact
 implemented contract releases from the same configured repository before any
 catalogue publication. Releasing an artifact does not contact a provider or
@@ -54,10 +54,10 @@ return an opaque `nextCursor`. Repository clients consume all pages with global
 duplicate, loop and memory bounds. Exact-coordinate reads are independent of
 the metadata-only catalogue index.
 
-The official repository publishes the `ulvia/cms.*` CMS contracts, the
+The official SDK inventory generates the `ulvia/cms.*` CMS contracts, the
 `ulvia/provider.connections` return-channel contract, the provider-only
 `ulvia/provider.cms-instances` contract reserved for future instance providers,
-and the `ulvia` provider manifest. The local runtime implements the CMS
+and the `ulvia/primary-provider` manifest. Publication to a running Repository is explicit. The local runtime implements the CMS
 contracts and `ulvia/provider.connections`. The former `catalog.items`,
 `forms.submissions` and `media.assets` demonstration contracts are not official
 resources.
@@ -163,8 +163,8 @@ Logical routes reject URL parameters. A public capability can be called
 anonymously through its canonical binding without a Page or Referer grant;
 the Provider still applies its own business rules.
 Dynamic SEO invokes the gateway directly; see [page indexing](../surfaces/page-indexing.md).
-The `/admin/providers` Page lists provider installations and their exact
-contract selections. The `ulvia/cms.installations` contract is the shared
+Provider installation and exact contract selections are exposed through APIs;
+no Provider administration Pages are bundled. The `ulvia/cms.installations` contract is the shared
 administrative boundary for provider and collection installations. Its
 capabilities provide bounded list/detail, selection replacement, collection
 lifecycle and provider-status mutations. The control Provider's own
@@ -176,14 +176,13 @@ the admitted manifest, persists the credential through the injected secret
 store and records an observation. These workflows are not a second protocol and
 do not give collection JavaScript direct access to credentials.
 
-`/admin/collections` exposes repository discovery, installation, configuration
-and reviewed release upgrades through `ulvia/cms.installations`; collection theme editing uses
-the `theme.*` capabilities of `ulvia/cms.content`, and language/text editing
-uses its `localization.*` capabilities. `/admin/settings` uses the same content
-contract for non-secret site configuration; `/admin/access` only covers members,
-authentication and administrator grants.
+Repository discovery, collection installation, configuration and reviewed release
+upgrades use `ulvia/cms.installations`. Theme values use `theme.*` capabilities of
+`ulvia/cms.content`; languages and texts use `localization.*`. Non-secret site
+settings also belong to Content; members, authentication and administrator grants
+belong to Access. Clients assemble their own interfaces over these contracts.
 Provider health remains the last validated runtime
-observation shown by these Pages, not an implicit live probe of every
+observation returned by the API, not an implicit live probe of every
 capability. Collection requests use those same generic query, mutation or
 canonical binding transports.
 The selected API origin and token belong to installation state. Manifests list

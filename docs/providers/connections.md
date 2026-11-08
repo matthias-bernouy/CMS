@@ -25,10 +25,11 @@ and acknowledgement rules as remote Providers.
 ## Installation
 
 1. Publish the contract releases and Provider manifest to a configured Repository.
-2. Open `/admin/providers/connect`, import the exact manifest from the catalogue,
-   enter the Provider endpoint and its dedicated account connection credential.
+2. Import the exact manifest with `import-provider-manifest`, then call
+   `preview-provider-connection` with its Provider ID/version, endpoint and
+   dedicated account connection credential.
 3. Review the verified account, exact manifest digest, served contracts and
-   requested outbound capabilities, then approve.
+   requested outbound capabilities, then submit its ticket to `approve-provider-connection`.
 4. The CMS stores the upstream credential in its encrypted installation secret
    namespace. It probes the report again and rejects changed account/instance
    identity. The encrypted administrator-bound preview expires after five minutes
@@ -47,10 +48,10 @@ it must be distinct from an operator or user token. It authenticates report read
 and signed capability calls. The official runtime accepts its instance control
 token separately; possession of a report credential does not grant control access.
 
-`/admin/providers/access?ulvia--mossa--provider-access-id=<installation-id>` shows
-read-only requirements and pairing state. It allows return-key rotation and a
-reviewed reconnection with a replacement upstream credential. Disable or revoke an
-unselected installation through the Provider manager; selected contracts must be
+`get-provider-access` reads requirements and pairing state. `pair-provider-connection` accepts
+the installation ID, expected revision and explicit rotation choice. Reconnection
+uses a reviewed replacement upstream credential. Disable or revoke an
+unselected installation through the Installations capabilities; selected contracts must be
 rerouted first. Revocation is terminal. A revoked installation cannot be restored
 by replaying its approval ticket.
 

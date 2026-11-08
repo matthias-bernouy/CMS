@@ -4,6 +4,12 @@ Pages and Blocs use one declarative binding runtime for queries, forms,
 rendering, and shared browser state. Prefer this contract to an ad-hoc
 `fetch()` or DOM renderer whenever it can express the interaction.
 
+Examples below are illustrative binding fragments. They assume declared qualified
+contracts, imported capabilities and owned states. A complete admitted Page also
+requires Bloc roots and slots; abbreviated fragments (`…`) omit required outcome
+branches. Every real query/mutation must handle all declared errors and outcomes.
+Collection-authored labels must use declared collection texts.
+
 Bindings activate below one `<cms-binding-core>`. The Page shell normally owns
 that element. A Bloc contributes Light DOM inside the existing scope; it does
 not create a private core.
@@ -15,9 +21,9 @@ unique local alias:
 
 ```html
 <section
-  cms-query="catalog:products.list as products"
-  cms-query-input='{"category":{"from":"state","key":"@param:shop-category"},"limit":{"from":"literal","value":20}}'
-  cms-query-listen="@param:shop-category"
+  cms-query="example/catalog:products.list as products"
+  cms-query-input='{"category":{"from":"state","key":"@param:example--shop--category"},"limit":{"from":"literal","value":20}}'
+  cms-query-listen="@param:example--shop--category"
   cms-query-refresh="focus reconnect"
 >
   <p cms-condition="products.activity === 'fetching'">Loading products…</p>
@@ -59,7 +65,7 @@ reference to synchronized state:
 ```json
 {
   "limit": { "from": "literal", "value": 20 },
-  "category": { "from": "state", "key": "@param:shop-category" }
+  "category": { "from": "state", "key": "@param:example--shop--category" }
 }
 ```
 
@@ -73,14 +79,14 @@ may be `string`, `number`, `integer`, or `boolean`:
 {
   "page": {
     "from": "state",
-    "key": "@page:shop-filters",
+    "key": "@page:example--shop--filters",
     "path": ["pagination", "page"],
     "cast": "integer",
     "fallback": "1"
   },
   "search": {
     "from": "state",
-    "key": "@param:shop-search",
+    "key": "@param:example--shop--search",
     "optional": true
   }
 }
@@ -101,9 +107,9 @@ whose changes invalidate and rerun the query:
 
 ```html
 <section
-  cms-query="catalog:products.list as products"
-  cms-query-input='{"category":{"from":"state","key":"@param:shop-category"}}'
-  cms-query-listen="@param:shop-category @page:shop-product-mutation/lastSuccess/requestId"
+  cms-query="example/catalog:products.list as products"
+  cms-query-input='{"category":{"from":"state","key":"@param:example--shop--category"}}'
+  cms-query-listen="@param:example--shop--category @page:example--shop--product-mutation/lastSuccess/requestId"
 >…</section>
 ```
 
@@ -123,7 +129,7 @@ capability or its input.
 `cms-sync` connects a producer or form control to a named state:
 
 ```html
-<input type="search" cms-sync="@param:shop-category">
+<input type="search" cms-sync="@param:example--shop--category">
 ```
 
 The four scopes have distinct lifetimes:
@@ -146,15 +152,15 @@ A remote query can publish its complete lifecycle snapshot:
 
 ```html
 <section
-  cms-query="catalog:products.list as products"
-  cms-sync="@page:shop-products"
+  cms-query="example/catalog:products.list as products"
+  cms-sync="@page:example--shop--products"
 >…</section>
 ```
 
 Another binding can consume that snapshot without another HTTP request:
 
 ```html
-<aside cms-query="@page:shop-products as products">
+<aside cms-query="@page:example--shop--products as products">
   <span>{{ products.data.items.length }}</span>
 </aside>
 ```
@@ -164,7 +170,7 @@ starting additional requests:
 
 ```html
 <section
-  cms-queries="@page:shop-products as products @session:shop-user as user"
+  cms-queries="@page:example--shop--products as products @session:example--shop--user as user"
 >
   <span>{{ user.data.name }}</span>
   <span>{{ products.data.items.length }} products</span>
@@ -186,10 +192,11 @@ Local state queries cannot declare remote input or refresh policies and cannot
 republish the state they consume.
 
 State keys in a collection are namespaced by its collection ID. For example,
-state `category` declared by `shop` is addressed as `shop-category`. Collection
-admission rejects writes to undeclared or foreign states. Reading another
+state `category` declared by `example/shop` is addressed as
+`example--shop--category`. Illustrative shop state keys use that same prefix.
+Collection admission rejects writes to undeclared or foreign states. Reading another
 collection's state requires that state to be explicitly exported, imported,
-and generation-pinned by the collection dependency.
+and pinned through the exact installed collection dependency.
 
 ## Forms and mutations
 
@@ -201,14 +208,14 @@ the logical input.
 
 ```html
 <section
-  cms-query="newsletter:subscriptions.list as subscriptions"
-  cms-query-listen="@page:newsletter-form/lastSuccess/requestId"
+  cms-query="example/newsletter:subscriptions.list as subscriptions"
+  cms-query-listen="@page:example--newsletter--form/lastSuccess/requestId"
 >…</section>
 
 <form
-  cms-mutation="newsletter:subscriptions.create as result"
+  cms-mutation="example/newsletter:subscriptions.create as result"
   cms-mutation-reset="true"
-  cms-sync="@page:newsletter-form"
+  cms-sync="@page:example--newsletter--form"
 >
   <input name="email" type="email" required>
   <input name="returnTo" type="hidden" value="{{ page.path }}">

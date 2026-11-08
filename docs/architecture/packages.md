@@ -33,6 +33,7 @@ already been published to a registry.
 | `@bernouy/image-processing` | Generic image inspection and WebP transforms used by Files provider implementations. |
 | `@bernouy/text-search` | Backend-independent BM25, vector similarity, rank fusion, vector preparation/cache and abstract embedding ports. |
 | `@bernouy/text-embeddings` | Explicit local E5/ONNX subprocess adapter with native telemetry disabled; owns Transformers.js and its native dependencies. |
+| `@bernouy/zip` | Bounded ZIP archive reading and writing without CMS resource semantics. |
 | `@bernouy/logging` | Structured diagnostics, bounded attributes, central redaction, Node sinks and test loggers. |
 
 ## Platform
@@ -42,7 +43,7 @@ already been published to a registry.
 | `platform/contracts` | `@bernouy/ulvia-contracts` | Contract schemas, parsing, validation, admission, bindings, compatibility and release read ports. |
 | `platform/providers` | `@bernouy/ulvia-providers` | Manifest admission, Provider execution models, selection validation, readiness and read ports. |
 | `platform/gateway` | `@bernouy/cms-gateway` | Authorized generic capability invocation, HTTP/MCP transports, Provider SDK, authority, identities and audit. |
-| `platform/sdk` | `@bernouy/ulvia-sdk` | Typed feature capabilities/contracts, static Provider assembly, generated manifests and an explicit Gateway HTTP receiver adapter used by Emailer/SMTP, Secrets and Files. |
+| `platform/sdk` | `@bernouy/ulvia-sdk` | Zod-backed feature capabilities, inferred types, default executors, mocks, Markdown scanning, contract generation, Provider assembly and Gateway HTTP receivers. |
 
 Platform depends only on Platform and Foundation. Catalogue publication, installation
 approval and selection replacement remain feature-owned. Edge and the official
@@ -62,10 +63,11 @@ Provider remain surfaces; documentation search remains a feature.
 | `@bernouy/email-smtp` (`features/email/smtp`) | SMTP-specific administration, secret-backed configuration and the official Nodemailer implementation. |
 | `@bernouy/auth` | Provider-owned accounts, local credentials, PATs, persistent opaque sessions, account lifecycle and authentication email composition. It exposes no HTTP routes. |
 
-Collections own reusable examples, not live Pages or routes. Runtime profiles
-may copy selected examples into ordinary Content Pages once during provisioning.
+Collections own reusable examples, not live Pages or routes. Fresh runtime profiles create system APIs and an administrator without collections
+or Pages. Explicit initialization can copy a published recipe's examples into Pages.
 Content owns their route registry, rendering, access analysis and sitemap; Edge
-forwards native resources. Administration uses the same Page model and runtime.
+forwards native resources. Authored administration Pages use the same Page model
+and runtime; none are bundled.
 Collection Bloc compilation is available only through the explicit
 `@bernouy/repository/collections/build` tooling subpath. Site-owned Bloc
 source serialization remains in `content` because it publishes mutable CMS

@@ -39,11 +39,12 @@ are no `template.html`, `lightdom.html` or `shadowdom.html` sources.
 
 ## Bloc Documents
 
+The following fragments assume collection identity `example/ui`.
 Every Bloc declares a native `root` contract. Instances use a native element
 with the Bloc identity in `cms-bloc`:
 
 ```html
-<section cms-bloc="example-hero"></section>
+<section cms-bloc="example--ui--hero"></section>
 ```
 
 The fixed markup, Page-owned defaults and Page documents are all Light DOM.
@@ -135,7 +136,7 @@ reference instead:
 
 ```html
 <svg
-    cms-svg="{{ cms.asset.example.icons/check.svg }}"
+    cms-svg="{{ cms.asset.example/ui.icons/check.svg }}"
     role="img"
     aria-label="Completed"
 ></svg>
@@ -168,8 +169,9 @@ startup from the unbundled source CLI. The Repository container serves stored
 releases; it never scans authored folders. `dev` is no longer a CLI command.
 Releasing or rebuilding locally does not replace the running server images or
 an installed collection; installation and upgrade remain explicit actions.
-Do not prefill an empty installation with only a collection before starting the
-Repository: its official seed runs only against absent or empty storage.
+The local release cache and a running Repository catalogue are separate stores.
+Use `ulvia push` explicitly to publish locally prepared artifacts to a Repository.
+Fresh Repository instances contain system APIs but no collection releases.
 Push and pull transfer exact immutable releases and the receiving repository
 re-runs admission. A yank hides a release from new selection without deleting
 historical bytes.

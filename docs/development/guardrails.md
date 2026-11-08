@@ -39,15 +39,15 @@ heuristic Mongo-loop rules remain deferred until their cases are precise.
 
 `verify` runs ordinary tests (including `tests/performance/repository` and
 Content rendering budgets), then the checked `test:performance` suite.
-That suite uses current examples, read-only upgrade analysis and resolved
+That suite uses synthetic collection/compiler fixtures, read-only upgrade analysis and resolved
 Gateway contracts. Upgrade scans are capped at 500 Pages per batch and two
 passes. The validation growth ceiling is 12x for 4x the Blocs and examples;
-the new valid fixtures measure about 8–9x, unlike the removed Page fixtures.
-This records a baseline, not a linear-growth guarantee.
+measured ratios depend on the current synthetic fixture and host.
+This is a regression ceiling, not a linear-growth guarantee.
 
-`bun run test:performance:delivery` builds three local candidate images,
+`bun run test:performance:delivery` builds two local candidate images,
 checks their component/API/revision labels and runs an isolated Docker/Mongo
-journey. Supplying all three image variables documented in
+journey. Supplying both image variables documented in
 [instance tests](../../tests/integration/instance/README.md) reuses images;
 partial sets and revisions other than HEAD fail. Labels identify the commit;
 local uncommitted source is included when building images in this checkout.

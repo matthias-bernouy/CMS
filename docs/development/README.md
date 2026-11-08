@@ -13,7 +13,7 @@ reusable insertion examples and locally generated previews.
 Provider authors: see [HTTP context and streaming](provider-http.md) for the generic receiver,
 standard responses, validators and the compatible Content transition.
 
-SDK authors: see [SDK releases](sdk-releases.md) for Emailer/SMTP, Secrets and Files,
+SDK authors: see [SDK releases](sdk-releases.md) for feature definitions,
 inferred types and release preparation. [SDK runtime artifacts](sdk-runtime.md)
 explains build output, startup attachment and authorization before durable replay.
 
@@ -46,11 +46,10 @@ CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true bun run ulvia -- services start --versio
 ```
 
 In this example, `repository:3000` is a Repository CMS Edge address reachable
-from the Provider containers. Core profiles `ulvia@1.2.0` and `repository@1.2.0`
+from the Provider containers. Profiles `ulvia@1.3.0` and `repository@1.3.0`
 initialize system APIs and an administrator from bundled artifacts before that
-remote catalogue is available. They create no collections or Pages. Production
-images contain the API-only snapshot; full snapshots with optional starters are
-generated separately for authoring tests.
+remote catalogue is available. They create no collections or Pages. Images contain the SDK-generated system API snapshot. Tests publish their own
+small collection fixtures explicitly; there is no full starter snapshot.
 
 The connection is persisted in `services/installation.json` independently of
 network exposure and client PAT connections. The Edge smoke supplies this
@@ -96,9 +95,9 @@ upgrades process instances in sequence; a later failure can leave earlier
 instances upgraded. Collection, contract, and provider
 manifest releases remain Repository artifacts and do not become Docker images.
 
-Distribution versions are independent of official artifacts. Current core-only
-profiles use `1.3.0`; the installations contract, Provider manifest, Mossa and
-Repository collections use `1.2.0`; `ulvia/repository` uses `1.1.0`, and other
+Distribution versions are independent of official artifacts. Current
+profiles use `1.3.0`; the Installations contract and Provider manifest use `1.2.0`;
+`ulvia/repository` uses `1.1.0`, and other
 official contracts retain `1.0.0`. Existing npm
 versions and Docker tags are retained rather than reused.
 
@@ -147,7 +146,8 @@ ulvia instance logs default edge --follow
 ```
 
 CMS instance journals are collected through the selected `ulvia/cms.observability` contract.
-Use `/admin/observability` or `ulvia instance logs <name>` to search them. Filters run
+Use the Observability HTTP/MCP reads or `ulvia instance logs <name>` to search them.
+No observability administration Page is bundled. Filters run
 in the selected Provider rather than on downloaded journal files. Production
 processes also write structured stdout/stderr for startup and operator diagnosis;
 `ulvia services logs provider` reads that container output. Application file
@@ -290,15 +290,15 @@ The [root agent instructions](../../AGENTS.md) define editing/validation rules.
 performance regressions and the optional Cirrus framebuffer mitigation.
 
 [Repository performance](repository-performance.md) documents catalogue timings,
-HTTP/storage work budgets and the isolated official-collection benchmark.
+HTTP/storage work budgets and the isolated SDK/test-collection benchmark.
 
 The maintained test command scopes discovery to those three source trees.
 Generated historical copies under `artifacts/` are retained as evidence and are
 not executable inputs to the current suite. Plain `bun test` uses Bun's broader
 automatic discovery and can also execute those archival copies.
 
-Fresh core profiles expose optional native setup at `/.cms/setup`. The full Edge
-smoke explicitly publishes current collections, applies the Repository recipe
-through the API and selects Mossa through the native browser flow. See
+Fresh core profiles expose optional native setup at `/.cms/setup`. The Edge
+smoke completes empty setup, explicitly publishes and installs a test collection,
+then creates, publishes, reloads and deletes a Page through public APIs and Chromium. See
 [Provider instance initialization](../architecture/provider-instance-initialization.md)
 for review, authority, limits and recovery guarantees.

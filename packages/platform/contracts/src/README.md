@@ -2,7 +2,8 @@
 
 `@bernouy/ulvia-contracts` defines immutable, provider-neutral capabilities,
 their schemas and compiled HTTP bindings. It also admits mocks and binary
-assets, publishes releases in a catalogue and compares evolutions.
+assets and compares evolutions. Persistent publication catalogues belong to
+`@bernouy/repository`; this Platform package exposes admission rules and read ports.
 
 No provider is contacted by this package. Admission proves that a document is
 internally valid, not that an implementation passes its contract.
@@ -51,34 +52,19 @@ it without changing the original artifact's capability list.
 
 ## Release and dependency evolution
 
-A capability may declare mandatory requirements:
+Contracts define consumer-facing capabilities, not their implementations' outbound
+rights. Capability `requires` is rejected. Provider manifests own global and
+per-implementation `requires`, including target contract, capability and accepted
+version range. For example, an SMTP implementation can require Secrets while the
+generic Emailer contract remains independent of that service.
 
-```ts
-requires: [
-    {
-        contractId: "payment",
-        capabilityId: "payment.link.create",
-        versionRange: "^1.0.0 || ^2.0.0",
-    },
-]
-```
-
-Only the contract has a version; capability IDs have no independent version.
-Requirements accept bounded exact, caret, tilde, comparator intersections and
-OR unions: at most four branches and 256 characters. Prereleases need explicit
-opt-in for their release tuple.
-
-The compatibility checker compares accepted version sets, not their spelling.
-For example, changing `^1.0.0` to `>=1.0.0 <2.0.0` is patch-equivalent;
-adding `|| ^2.0.0` is minor; removing `^1.0.0` is major. Adding or removing a
-mandatory requirement on an existing capability is also major.
-
-`versionRange` declares a nonempty accepted version set. Publication requires
-one known release jointly exposing the required capabilities and satisfying all
-ranges targeting the same dependency contract. A union range needs one compatible
-release, not a representative for every alternative. Yanked releases remain
-historical references; installation separately checks current availability and
-the complete selected dependency graph.
+Only contract releases have versions; capabilities have stable IDs without
+independent versions. The shared version-range grammar accepts bounded exact,
+caret, tilde, comparator intersections and OR unions: at most four branches and
+256 characters. Prereleases require explicit opt-in for their release tuple.
+Provider admission resolves declared requirements against admitted releases;
+site selection checks the approved implementations' complete dependency graph.
+See [Provider requirements](../../../../docs/providers/connections.md).
 
 The catalogue keeps publisher ownership across all majors. It compares a
 candidate against the latest stable release in its own major and enforces

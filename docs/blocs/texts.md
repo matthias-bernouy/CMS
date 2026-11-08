@@ -1,134 +1,78 @@
 # Server-rendered Collection Texts
 
-Collection releases declare optional `texts`: JSON data included in validation
-and the immutable release digest. Collection authors keep definitions and locale values in ordinary `texts/` directories.
+Immutable collection releases contain text definitions and localized values.
+Definitions, locale values and their metadata participate in the release digest;
+site overrides live separately and do not change that release.
 
-```json
-{
-  "id": "checkout-title",
-  "values": { "en": "Checkout", "fr": "Paiement" }
-}
-```
-
-## Authored source layout
-
-The local release source separates text definitions from localized content:
+## Authored Sources
 
 ```text
 texts/
-├── definitions/
-│   ├── storefront/welcome.json
-│   └── support/faq.json
+├── definitions/storefront/welcome.json
 └── locales/
     ├── en/storefront/welcome.json
-    ├── en/support/faq.json
     └── fr/storefront/welcome.json
 ```
 
-Definition fragments are arrays containing `id` and optional administration
-metadata keys, without `values`. Locale fragments are objects from text ID to
-static content value. Both trees are scanned recursively. Paths organize the
-source but never prefix or otherwise change text IDs. Duplicate definitions,
-duplicate values within one locale and values for unknown IDs reject. The CLI
-assembles these fragments into the canonical release records shown above, so
-site overrides and repository transport do not depend on the source layout.
+Definition fragments are arrays with local `id`, `category`, `group`, `label`
+and optional `description`. Navigation fields reference administration translations
+under `translations/<locale>/**/*.json`. Locale fragments map text IDs to strings.
+Recursive paths organize sources without changing IDs. Duplicate definitions,
+duplicate locale values and values for unknown IDs refuse preparation.
 
-## Server ownership
+The compiler assembles canonical records with `id`, metadata and `values`.
+Each text needs its default-locale value. Category/group/label translations
+accept nonblank strings up to 120 characters; descriptions accept up to 500.
 
-`@bernouy/repository/collections/texts` provides pure parsing and locale
-resolution. `@bernouy/content/rendering` provides the shared
-server DOM pass `renderCollectionTexts(root, locale, sources)`. The Edge runs
-this pass after composition expansion, before serializing and caching HTML.
-The same helper renders installed administration Pages.
+## Rendering
 
-Templates reserve the `cms` root for server-owned expressions. The collection
-ID is always explicit:
+For collection `example/shop`, these are text fragments inside owned Bloc content:
 
 ```html
-<h2>{{ cms.i18n.shop.checkout-title }}</h2>
-<p>{{ cms.i18n.shop.checkout-greeting }} {{ order.total }}</p>
-<input placeholder="{{ cms.i18n.shop.checkout-placeholder }}">
+<h2>{{ cms.i18n.example/shop.checkout-title }}</h2>
+<p>{{ cms.i18n.example/shop.checkout-greeting }} {{ order.total }}</p>
+<input placeholder="{{ cms.i18n.example/shop.checkout-placeholder }}">
 ```
 
-A bounded expression scanner accepts exactly `cms.i18n.<collection>.<text>`.
-Filters, calls, bracket access and other `cms` paths are rejected. Collection
-and text IDs are lowercase names with optional hyphens. Expressions outside the
-reserved root remain unchanged, including in the same text node or attribute.
+The reserved syntax is `cms.i18n.<namespace/name>.<local-text-id>`. Collection
+identities are qualified; local text IDs are lowercase names without dots.
+Filters, calls and bracket access are refused. Ordinary business bindings remain
+outside the reserved `cms` root. Texts are static strings, without parameters,
+plural objects, HTML or brace expressions.
 
-Collection text values are intentionally static strings. They do not accept
-parameters, plural objects or braces. Dynamic names, counts, dates, prices and
-other request data belong to the bloc data-rendering model, not to the collection
-text catalogue. They remain ordinary business expressions outside the reserved
-`cms` root until that model defines translated dynamic sentences explicitly.
+Content owns `renderContentTexts` from `@bernouy/content/rendering`. Its injected
+`ContentTextSource` values contain a namespace and locale resolver. Installed
+collection contributions supply those sources through the Provider's Content
+composition. Edge receives the rendered native resource; it never loads text
+catalogues or runs a separate substitution pass.
 
-Collection admission rejects hardcoded user-facing copy in Bloc defaults,
-fixed Light DOM and Page documents. Text nodes and user-facing attributes such
-as `title`, `placeholder`, `alt`, `label` and accessible labels must consist only
-of business-data bindings or exact `cms.i18n` bindings. Even punctuation between
-bindings belongs in a translated value when it affects the rendered sentence.
-Technical attributes such as IDs, roles, routes, field names and enumerated
-control values remain literal.
+Resolution checks the requested locale, regional parents and collection default;
+a site override wins within its locale. DOM assignment escapes values. The
+supported targets are text nodes, `title`, `placeholder`, `alt`, `aria-label`
+and `aria-description`; raw-text/script/style/inert-template targets refuse.
+Unknown keys, duplicate namespaces and malformed reserved expressions refuse.
 
-The browser receives final translations, without catalogues or an i18n filter.
-Source and repeat aliases cannot be named `cms`; scope lookup cannot resolve
-that root from provider values or parent frames. Nested business fields such
-as `order.cms` remain ordinary data and render independently. Collection text
-substitution never reads them.
+Collection-owned fixed copy uses declared texts or business bindings. Site-owned
+Page slot copy may remain literal editorial content. An authoring client may
+explicitly replace a collection text reference with Page-owned wording; insertion
+and rendering do not silently make that change.
 
-Each render receives explicit collection sources with `collection` and optional
-`overrides`. There is no global current language or catalogue.
-For each key, resolution checks the requested locale, regional parents and the
-collection default. Overrides win within the same locale. Every definition
-requires the default-language value.
+## Site Overrides
 
-## HTML safety and limits
+Content capabilities `localization.texts.get` and `localization.text.save`
+read installed collection catalogues and set or clear one locale override.
+Writes use the current revision; stale writes refuse instead of overwriting
+newer values. The runtime injects contribution ports backed by Repository
+installation state. Rendering freshness follows contribution revisions and
+[Content delivery caching](../architecture/content-delivery.md).
 
-Server expressions are allowed in text nodes and these attributes: `title`,
-`placeholder`, `alt`, `aria-label` and `aria-description`. DOM text/attribute
-assignment preserves children and escapes values during HTML serialization.
-Script/style/raw-text targets and inert templates are unsupported. Unknown
-keys, duplicate collection IDs and malformed reserved expressions fail rendering.
-Values containing braces are rejected so a collection text cannot construct a
-browser expression, including across replacement boundaries.
+No Settings Page or visual Texts editor is bundled. Clients can build these
+interfaces through the admitted capabilities without accessing persistence.
+Complete site-language removal/migration workflows are not implemented.
 
-The catalogue permits at most 4,096 definitions and 32 locales per definition.
-Messages have at most 8192 UTF-16 code units; release-wide bounds also apply.
-IDs are lowercase names without dots. Unknown fields, duplicate IDs/locales,
-object values and dynamic text syntax reject. This is a static plain-text format,
-not HTML or an ICU message grammar.
+## Bounds
 
-## Installed catalogues and editing
-
-The runtime persists immutable collection releases and revisioned site installations
-in MongoDB. `createContentReader` exposes installed public text catalogues with
-site overrides and a collection revision. The Edge loads them on render,
-includes the revision in its Page-cache keys and requests HTTP revalidation. It
-invalidates cached Pages after saving translations. The static
-`EdgeCmsConfig.collectionTexts` option remains available for readers without
-an installed-catalogue implementation.
-
-The official Settings administration Page includes a working Texts editor: category sections contain
-groups, each displaying a table with Key, Label, immutable default-language value
-and editable selected-language value. Every definition must declare `category`,
-`group` and `label`; `description` is optional. These fields are keys in the
-collection's immutable administration catalogue assembled recursively from
-`translations/<locale>/**/*.json`. Collection admission requires all three
-navigation keys and verifies them against the default-locale catalogue, so an
-unclassifiable text cannot be released. Navigation keeps unsaved edits;
-language changes require saving
-first. Reset removes the site override after Save. Concurrent stale writes return
-409 and require reloading; they never overwrite newer translations.
-
-Resolved `category`, `group` and `label` values accept nonblank strings up to 120
-characters; `description` accepts up to 500. Metadata translations are not site
-overrides and may be reused by other resources. IDs and server expression syntax
-remain unchanged. The selector includes collection locales and configured site
-languages. Complete site-language removal/migration workflows are not implemented.
-
-## Examples and limits
-
-An authored collection's `texts/` directory contains its installable catalogue,
-split recursively by definition, locale, domain and group. Text metadata is
-validated independently from page-owned Bloc slot content. The checkout example
-remains an admission fixture. Only installed immutable releases have persisted
-translation editing.
+A release permits at most 4,096 texts and 32 locales per text. Values contain
+at most 8,192 UTF-16 code units, with release-wide bounds as well. Unknown
+fields, duplicate IDs/locales, objects and dynamic text syntax refuse admission.
+See [collections](collections.md) and [validation](validation.md).

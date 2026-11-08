@@ -40,7 +40,8 @@ site/instance scope and durable keyed execution. Unknown SMTP pins and missing
 Emailer services refuse mounting. Disabled SMTP requires neither its service nor
 its execution options. Official error localization belongs to this surface.
 Concrete Nodemailer and namespaced SecretStore wiring stay in the runtime.
-Other feature families retain their current explicit adapters and manifest claims.
+Access, Content, Authoring, Installations and Registry also use this inventory;
+there is no parallel family registrar or handwritten implementation claim list.
 
 Secrets is selected through the same inventory and receives an injected structural
 service port. Its 13 capabilities own their schemas, bindings and execution in the

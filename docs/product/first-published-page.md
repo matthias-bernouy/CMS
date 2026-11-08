@@ -1,94 +1,55 @@
 # First Published Page
 
-This is the target acceptance contract for the first complete authoring
-journey, reviewed on 2026-10-25. Implemented controls are listed separately
-from verified end-to-end behavior. The completion gate is not yet met.
+Fresh instances provide system APIs, an administrator and native setup at
+`/.cms/setup`. They contain no collections, Pages or visual administration editor.
+This guide describes the implemented publication path, not a shipped visual
+editing journey.
 
-## Target User Outcome
+## Current Development Flow
 
-Starting from an empty installation, one administrator can:
+1. Start shared services, create a named instance and retrieve its credentials
+   through the CLI. See [installation](../installation/README.md).
+2. Open `/.cms/setup`, authenticate and complete an empty site, or explicitly
+   review a recipe from a published collection. Setup is separate from provisioning.
+3. Publish and install a collection through the Repository and Installations APIs
+   or CLI. Installed Blocs provide the roots, slots and settings for Page content.
+4. Use Content capabilities to create and edit a Page with its current revision.
+   A blank document is valid; nonempty content must satisfy Bloc/document admission.
+   Native elements belong inside declared roots and slots.
+5. Set paths, metadata and publication through Content capabilities. Draft Pages
+   remain unavailable to anonymous readers.
+6. Open the public URL. Content renders the stored Page; Edge forwards the
+   resource and applies final HTTP security and cache policy.
+7. Restart and verify the same Page, installed collection and publication.
 
-1. start shared services, create a named instance and discover its credentials;
-2. sign in to administration;
-3. create a Page from a Landing Page starter;
-4. change the hero heading and insert a nested text section visually;
-5. upload an image to the site media library;
-6. select that image, provide alternative text and preview the saved result;
-7. configure `/`, search metadata and a native internal navigation link;
-8. save and publish the saved content with revision checks;
-9. open the public URL and see the expected content, image and link;
-10. restart and find the same publication, media and routes.
+Files upload, signatures and representations are available through the selected
+Files contract. A client may place their references in admitted Page content;
+there is no bundled visual media picker or Page editor.
 
-The administrator must not edit raw HTML, handle a Files namespace key, select
-a Provider or install an official dependency manually.
+## Executable Evidence
 
-## Target MVP Decisions
+The [CLI smoke flow](../../packages/runtimes/ulvia-cli/tests/stack/edgeSmoke/flows.ts)
+completes empty native setup, verifies zero initial Pages and collections,
+explicitly publishes and installs a small test collection, creates a draft Page,
+publishes it and checks the browser result. It also checks refused writes,
+instance separation, persistence after restart and HTTP 410 after deletion.
+It does not certify a visual editing or upload-to-Page browser journey.
 
-- One brochure website and one administrator form the initial product slice.
-- Content remains the existing HTML Page document; the editor projects that
-  model rather than persisting a second format.
-- Blank, Landing Page and Content Page starters are the target. Only blank
-  creation is currently exposed.
-- Saving is explicit; autosave and collaboration are deferred.
-- The outline and accessible move controls are sufficient; drag and drop is
-  not required.
-- Files credentials stay server-side. Browser controls receive file references
-  and previews.
-- Preview opens the saved Page URL through normal rendering and authorization.
-  Texts and assets are expanded through that renderer. Live local changes may
-  update mapped nodes; structural changes need saving and preview reload.
-- The iframe uses same-origin script access and is not a JavaScript isolation
-  boundary. Editor selection intercepts navigation and submission.
-- A local undo stack is available. Durable history is outside this slice.
-- Dynamic-data authoring, commerce, external identity providers and high
-  availability are outside this initial journey.
+The [instance integration harness](../../tests/integration/instance/README.md)
+contains separate API, media, MCP and delivery journeys. These tests require
+matching local images and explicit activation; ordinary unit verification does
+not establish their execution.
 
-## Current Checkpoints
+Run `bun run test:edge-smoke` for the fresh local browser journey or
+`bun run verify:full` to include static, unit and delivery performance checks.
+See [development](../development/README.md#checks-and-build) for prerequisites.
 
-| Checkpoint | Source or test evidence | State |
-| --- | --- | --- |
-| Startup and credentials | CLI services, named-instance provisioning and credentials commands | Implemented; fresh journey blocked as described below |
-| Sign-in and Page creation | Access/content capabilities and smoke journey | Implemented; current container run unverified |
-| Blank Page | Empty document without an implicit Bloc | Implemented |
-| Landing/Content starters | No exposed starter catalogue | Missing |
-| Nested editing | Slot-aware document model, outline, settings and native controls | Implemented; complete browser acceptance pending |
-| Media selection | Editor dialog mounts `ulvia--mossa--file-picker`; native and setting fields consume selections | Implemented; combined upload-to-public-Page journey pending |
-| Site compositions | Editor creates and publishes a site Bloc from selected authored content | Implemented; broader product flow pending |
-| Undo/redo | Bounded in-memory `EditorHistory`, reset on initialization | Implemented; not persistent history |
-| Saved Page preview | Same-origin iframe at the ordinary Page URL | Implemented with structural-refresh limitations |
-| Save and publication | Revision-checked capabilities and editor session checks | Implemented; failure journeys need expansion |
-| Public rendering and restart | Smoke contains heading publication, route/SEO edits and restart assertions | Authored coverage; no fresh pass in the current audit |
+## Visual Authoring Boundary
 
-The [smoke journey](../../packages/runtimes/ulvia-cli/tests/stack/edgeSmoke/flows.ts)
-also exercises administration, Files and collection upgrades, but its Page
-creation path inserts a Heading rather than completing the target hero/media
-journey. Domain tests and controls present in source do not replace that gate.
-
-## Verification Evidence
-
-Use the [development guide](../development/README.md#checks-and-build) for local
-verification commands. Exercise images built from the candidate source and
-record the actual journey; a general infrastructure pass does not establish
-completion of the editorial flow.
-
-## Required Failure Behavior
-
-- Preserve local edits after a revision conflict and explain reconciliation.
-- Reject invalid documents and incompatible Blocs before save/publication.
-- Recover from interrupted or rejected uploads without persisting broken refs.
-- Keep draft Pages inaccessible to anonymous visitors.
-- Make the saved/published state explicit; unsaved edits must never be
-  presented as the public revision.
-- Report unresolved required resources before publication.
-- Preserve the public result and URL after restart.
-- Exercise keyboard focus, narrow viewports and leaving with unsaved changes.
-
-## Completion Gate
-
-One fresh-install browser journey must perform the entire target outcome,
-assert the public result, restart and assert it again against the candidate
-container/proxy composition. Add focused two-tab, upload-interruption and
-rejected-save scenarios.
-
-Use accessible labels and public interfaces. Do not seed Page records through
-private persistence or inject Files namespace credentials into the browser.
+A visual client can project the existing Page document, use revision-checked
+capabilities and preview the saved Page at its ordinary URL. Starters, nested
+editing controls, media selection, undo/redo and conflict reconciliation need
+an authored client. They are not implied by the underlying domain APIs.
+A complete editorial acceptance journey would need to demonstrate editing,
+upload and selection, publication and restart through that client. No bundled
+client currently establishes that outcome.

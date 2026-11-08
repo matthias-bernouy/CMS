@@ -16,17 +16,16 @@ separately to `admitContractBundle` and verified before publication. They are
 not embedded in canonical release JSON, and mocks do not change capability
 compatibility.
 
-Capabilities may declare mandatory, provider-neutral `requires` entries naming
-an external contract, capability, and compatible SemVer range. The catalogue
-checks that one published release jointly satisfies requirements to the same
-contract, including historical yanked releases. Installation must later select
-an available release and provider for the whole graph.
+Capabilities reject `requires`. Provider manifests declare global and
+per-implementation requirements naming a target contract, capability and SemVer
+range. Provider admission resolves those references; installation checks the
+selected implementation dependency graph.
 
 [HTTP parameters](./http-parameters.md) specifies `json-percent` URL scalar transport and explicit header encoding,
 safe query methods and derived bodyless HEAD error identity. These are validated declarations and codecs,
 not a runner or a passing-provider attestation. Provider-specific call
 permissions belong to provider manifests.
-Initial collection authored bundles live in the repository's `src/collections/`
+Collection admission and build tooling live in Repository's `src/collections/`
 domain, with their own [fixtures](../../../../features/repository/fixtures/collections/v1/README.md). Resource
 packages may publish collection resources, including reusable examples;
 they must reference this contract format rather than extending it. The

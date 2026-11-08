@@ -1,7 +1,7 @@
 # Provider administration and persistence
 
-`@bernouy/ulvia-providers` defines immutable provider claims and the
-local domain workflows for connecting a CMS to a provider hub. Business setup happens
+`@bernouy/ulvia-providers` defines immutable provider claims and read models.
+`@bernouy/repository` owns local workflows for connecting a CMS to a provider hub. Business setup happens
 on the hub; connecting a CMS must not recreate it. Providers consume the
 [contracts domain](../../../../platform/contracts/src/README.md) through its export facade.
 
@@ -49,9 +49,9 @@ One provider may serve several exact releases simultaneously. Several CMS sites
 may also connect to the same remote account and thus share its business data;
 local installations and credentials remain independent.
 
-Contract `requires` describe an invariant of every compliant implementation.
-Manifest implementation `requires` describe only how that provider realizes
-the concrete contract. For example, the generic Emailer contract does not need
+Contracts reject capability `requires`. Global manifest requirements and
+per-implementation `requires` describe the Provider's machine authority and
+dependencies for its selected implementations. For example, the generic Emailer contract does not need
 Secrets, while the official SMTP Emailer implementation declares Secrets as an
 implementation dependency. A manifest claims the concrete specialization only;
 its inherited interfaces are derived from the admitted lineage.
@@ -97,8 +97,9 @@ for wire shapes, intended sequencing, and remaining transport obligations.
 Catalogue publication, manifest comparison, explicit preparation/approval,
 modification, disable/enable/revoke, report observation, full-site planning and
 memory/Mongo storage are implemented. The production runtime adds repository
-imports, a bounded runtime-report probe, secret-store persistence and administration
-routes/UI for importing and approving a connection. See
+imports, a bounded runtime-report probe and secret-store persistence. The
+Installations feature exposes preview/approval and connection lifecycle capabilities;
+no administration Page collection is bundled. See
 [provider workflows](workflows.md) for lifecycle sequencing, optimistic
 revisions and deliberate V1 policies.
 

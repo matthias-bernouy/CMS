@@ -21,13 +21,14 @@ Run the measured Repository journey separately:
 ULVIA_PERF_SAMPLES=3 bun run test:performance:repository
 ```
 
-It builds the current bootstrap, loads every indexed official contract and the
-Provider manifest, and admits the complete official collection with its assets.
+It builds the current SDK bootstrap, loads its contracts and Provider manifest,
+and admits an explicitly constructed small test collection. No bundled official
+collection or production collection corpus is required.
 An isolated filesystem Repository serves real loopback HTTP. Installed state
 uses `MemoryCollectionStorage`; the reported storage counts are method calls,
 not measured MongoDB operations. No public Repository or production mutation is
 used. The generated JSON report is written to
-`artifacts/performance/repository/report.json`.
+`artifacts/performance/repository/optimized.json`.
 
 The benchmark separates cold filesystem catalogue creation, the three catalogue types, bundle
 and asset downloads, installed-state snapshots, graph/example validation, cold
@@ -89,7 +90,7 @@ the same roughly 1.47 MB manifest. The real loopback benchmark measured a
 catalogue reads were below 0.5 ms. This identifies amplification in the read
 path; it does not attribute every millisecond to one filesystem operation.
 
-## Original investigation priorities (before implementation)
+### Original investigation priorities (before implementation)
 
 1. Introduce a lightweight installed catalogue view. Read current site state and
    the exact required release metadata without rendering or validating all
@@ -118,10 +119,10 @@ against production; write journeys use an isolated local Repository.
 
 The global `test:performance` suite was subsequently repaired to use current
 examples, read-only upgrade analysis and resolved Gateway contracts. It now
-runs in `verify` and CI. See [guardrails](guardrails.md) for the independent
+ran in that revision's verification pipeline. See [guardrails](guardrails.md) for the independent
 Docker delivery journey and remaining performance limits.
 
-## Authenticated local write journey
+### Authenticated local write journey
 
 A separate isolated Docker run recorded individual operations through the Edge:
 identity 172 ms, namespace claim 100 ms, valid preparation 65 ms, publication
@@ -140,7 +141,7 @@ Docker address-pool exhaustion was followed by an isolated retry timing out on
 the redirect after a collection upgrade. No runtime changes were made to mask
 that failure.
 
-## Implemented optimizations
+### Implemented optimizations
 
 - `CollectionStore.listInstalled()` reads live site state and batches narrow
   release summaries. Mongo computes counts in one projection without returning
@@ -186,7 +187,7 @@ The CollectionStore facade and filesystem reader retain their cohesive read/writ
 responsibilities despite file-size warnings; new summary, cache and catalogue
 logic is grouped into focused modules rather than enlarging those facades.
 
-## Results after optimization
+### Results after optimization
 
 Local medians on the complete official collection, using the same dedicated
 loopback benchmark:
@@ -208,7 +209,7 @@ These timings include the real Edge/Provider authorization and transport path.
 They are local observations, not deployed production results. The final suite
 also preserves existing MCP authorization across a real 1.0.0 instance upgrade.
 
-## Final validation
+### Final validation
 
 `check:all` passed all ten checks before and after the changes. The dedicated
 Repository benchmark and typecheck passed. `verify:full` passed 2,618 tests

@@ -28,6 +28,7 @@ boundaries. Reports remain observations, never authority to approve new releases
 | `@bernouy/ulvia-contracts/schema` | Bounded schema vocabulary, parsing and value validation |
 | `@bernouy/ulvia-contracts/bindings` | Explicit HTTP/MCP binding types, exposure selection, HTTP plans and pure scalar codecs |
 | `@bernouy/ulvia-contracts/compatibility` | Release evolution and consumer-compatibility checks |
+| `@bernouy/repository/features/installations` | `installationsFeature`, default synchronous/durable execution and structural host ports |
 | `@bernouy/repository/features/authoring` | `authoringFeature`, default execution and structural service ports |
 | `@bernouy/repository/features/repository` | `repositoryFeature`, default registry execution and structural service ports |
 | `@bernouy/repository/contracts/catalogue` | Mutable release catalogue and deterministic in-memory implementation |
@@ -39,7 +40,7 @@ boundaries. Reports remain observations, never authority to approve new releases
 | `@bernouy/repository/providers/installations` | Administrative preparation/approval lifecycle and revisioned memory store |
 | `@bernouy/repository/providers/selections` | Revisioned selection store, dependency source and reviewed upgrades |
 | `@bernouy/repository/providers/sources` | Exact remote manifest and contract-release sources used by provider discovery |
-| `@bernouy/repository/providers/http` | Provider repository HTTP route registration and bounded wire decoding |
+| `@bernouy/repository/providers/http` | Bounded HTTP Provider-manifest and contract Repository client |
 | `@bernouy/repository/providers/mongo` | Mongo manifest catalogue, installation and selection stores with revision-checked writes |
 | `@bernouy/repository/providers/management` | Provider installation and selection application services |
 | `@bernouy/repository/collections` | Authored release parsing, Light DOM structure, asset and requirement verification, bundle digests |
@@ -51,7 +52,7 @@ boundaries. Reports remain observations, never authority to approve new releases
 | `@bernouy/repository/collections/assets` | Verified collection asset projection and reads |
 | `@bernouy/repository/collections/texts` | Collection text definition, locale and site-override composition |
 | `@bernouy/repository/collections/sources` | Exact remote collection-release sources and dependency fetching |
-| `@bernouy/repository/collections/http` | Collection repository HTTP route registration and bounded wire decoding |
+| `@bernouy/repository/collections/http` | Bounded collection Repository client, installed asset serving and maintenance responses |
 | `@bernouy/repository/collections/mongo` | Mongo collection catalogues and installation stores |
 | `@bernouy/repository/repository/publication` | Account-bound staged publication, pinned PAT client and registry/upload-store ports |
 | `@bernouy/repository/repository/publication/transport` | Bounded response reads and Repository URL validation without loading artifact clients |

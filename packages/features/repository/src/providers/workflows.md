@@ -82,7 +82,8 @@ does not find a preferred version, upgrade dependencies or switch providers.
 Each contract has one exact version, digest and installation for a site. The
 planner checks enabled installations, exact approved published manifests,
 implemented releases, capability existence, accepted ranges and dependency
-cycles. It checks both contract requirements and additional manifest requirements.
+cycles. It checks global and per-implementation manifest requirements; contracts
+do not declare capability requirements.
 The selection planner checks the complete declared dependency graph. Site
 capability grants are separate: invocation and reviewed contract upgrades also
 check explicit denials against runtime consumers.
@@ -108,16 +109,17 @@ historical validation, not perpetual readiness or invocation authorization.
 
 ## Commerce and payment example
 
-With `commerce@1.0` requiring `payment@1`, a provider may publish a new manifest
-serving both payment majors and `commerce@1.1`, which accepts either major.
+Suppose a manifest implementation of `example/commerce@1.0.0` requires
+`example/payment@^1.0.0`. A new manifest can serve both payment majors and
+a commerce implementation accepting either major.
 
 1. Publishing that manifest changes no installation or site selection.
 2. Explicitly approving it changes the installation's manifest pin, not the
    site's contract pins. Retaining old functionality requires the new manifest
    to keep serving the selected old releases.
-3. Replacing only payment with V2 while retaining commerce V1.0 is rejected.
-4. Replacing commerce with V1.1 and payment with V2 together is accepted if the
-   rest of the site's graph also remains valid.
+3. Selecting payment V2 while approving an implementation requiring only V1 is rejected.
+4. Approving and selecting implementations with compatible requirements permits
+   payment V2 if the rest of the site's graph also remains valid.
 5. A subsequent disable or revoke is rejected until the site reroutes or removes
    every contract pin using that installation. Runtime invocation still rechecks
    current installation state.
@@ -138,7 +140,6 @@ or certify provider behavior. The caller chooses the maximum observation age.
 Memory catalogues and stores are reference adapters. `./providers/mongo` persists
 installation and selection records with revision-checked writes. Production
 composition supplies durable release and manifest catalogues plus a coherent
-dependency-revision source. Content renders ordinary management Pages through
-Edge native resource delivery, and the
-management workflow rotates local credentials. Provider-side credential
+dependency-revision source. Authored management Pages can use the ordinary Content
+rendering path, but none are bundled. The management workflow rotates local credentials. Provider-side credential
 revocation and registration/grants remain separate implementation work.

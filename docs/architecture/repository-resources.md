@@ -10,29 +10,27 @@ identity of its releases.
 Exact versions, digests, yanks, selections, invocation routes and identity aliases
 retain the namespace. Authored folders and filesystem storage use the local
 name below the publisher directory; a slash identity is never a relative path.
-The CLI prints and accepts `ulvia/mossa@1.0.0`, with the namespace once.
+The CLI prints and accepts `example/ui@1.0.0`, with the namespace once.
 
 ## Official Names
 
 | Resource | Identity |
 | --- | --- |
-| Reusable collection | `ulvia/mossa` (Mossa) |
-| Repository application collection | `ulvia/repository` |
 | Provider manifest | `ulvia/primary-provider` |
 | CMS contracts | `ulvia/cms.content`, `ulvia/cms.access`, `ulvia/cms.files`, etc. |
 | Connection contracts | `ulvia/provider.connections`, `ulvia/provider.cms-instances` |
 | Repository contract | `ulvia/repository` |
 
 The resource kind is part of a Repository coordinate. A contract and a collection
-may therefore both be named `ulvia/repository`.
+can share an identity. No official collection is bundled with the workspace.
 
 Collection names remain nonreserved kebab-case. HTML/CSS identifiers use
 `resourceRuntimeNamespace(collectionId)` and a `--` member separator:
-`ulvia--mossa--card`, `ulvia--mossa--accent` and `ulvia--mossa--selection`.
+`example--ui--card`, `example--ui--accent` and `example--ui--selection`.
 The shared helper escapes publisher punctuation so different namespaces cannot
 produce the same prefix. Text and asset expressions keep canonical ownership,
-for example `{{ cms.i18n.ulvia/mossa.submit }}` and
-`{{ cms.asset.ulvia/mossa.icons/check.svg }}`. Local translation and text IDs
+for example `{{ cms.i18n.example/ui.submit }}` and
+`{{ cms.asset.example/ui.icons/check.svg }}`. Local translation and text IDs
 remain local IDs.
 
 Native calls use `/.cms/call/ulvia/cms.content/<binding-path>`; logical calls use
@@ -54,7 +52,7 @@ collection identity or floating release pointer.
 - Historical catalogue listing defaults to all releases and accepts the same
   channel filters. Filters participate in pagination cursor identity.
 - Available collection installation discovery defaults to stable. Its channel
-  selector exposes prereleases explicitly and returns their channel for badges.
+  input permits prereleases explicitly and returns release-channel metadata.
 - Exact downloads, installed releases, Provider approvals and contract selections
   retain their exact versions and digests. A new beta never upgrades a site.
 
@@ -75,7 +73,8 @@ publisher names and previous persisted state are rejected; no aliases or silent
 backfills are provided. Deployments need fresh state and exact artifacts built
 from this baseline. This source change does not publish or deploy those releases.
 
-Official authored sources and the generated offline bootstrap remain in the
-workspace. Bundled application profile IDs are `ulvia` and `repository`; profiles
-are not a fourth Repository resource type. Moving authored releases entirely to
-the Repository and introducing exported installation packs are separate work.
+Official contracts and the Provider manifest are generated from SDK features;
+`infra/releases/ulvia.release.ts` is the trusted local build entry. The offline
+bootstrap contains system API artifacts only. Application profile IDs are `ulvia`
+and `repository`; profiles are not a fourth Repository resource type. Collections
+remain ordinary authored, published and installed Repository resources.

@@ -13,7 +13,7 @@ An implementation can opt into delegation:
 
 ```json
 {
-    "contractId": "example.content",
+    "contractId": "example/content",
     "version": "1.0.0",
     "digest": "sha256:...",
     "requires": [],

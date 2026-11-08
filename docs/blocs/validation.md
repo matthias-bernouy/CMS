@@ -69,8 +69,8 @@ These checks do not establish a distributed snapshot or guarantee that another
 write cannot later change a destination.
 
 Collection preparation also checks expanded example structure. The CLI prints
-preparation diagnostics; MCP returns structured feedback and the Page editor
-displays write diagnostics. These checks do not add a capability or change the
+preparation diagnostics; MCP and Content mutations return structured feedback
+for authoring clients. No visual Page editor is bundled. These checks do not add a capability or change the
 release digest based on diagnostics.
 
 New authoring policy is explicit and does not run on ordinary historical artifact

@@ -1,6 +1,6 @@
 # SDK runtime artifacts
 
-The official Provider executes SDK Emailer/SMTP, Secrets and Files capabilities from
+The official Provider executes its selected SDK feature capabilities from
 trusted build metadata shipped with their executor code. Installed catalogue data
 never grants executable support by itself.
 
