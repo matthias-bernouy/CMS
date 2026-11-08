@@ -1,3 +1,5 @@
+import { operationJsonSchema } from "ulvia-sdk/provider/execution/operations";
+import { operationRegistrations } from "ulvia-sdk/provider/execution/registrations";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import type {
     ProviderCapabilityRegistry,
@@ -7,7 +9,7 @@ import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { CompiledImplementations } from "ulvia-sdk/interfaces/providers";
 import type { ProviderRegistrationOptions } from "ulvia-sdk/interfaces/runtime";
 import { selectImplementations } from "ulvia-sdk/provider/selection";
-import { bindHandler } from "ulvia-sdk/provider/handlers";
+import { bindHandler } from "ulvia-sdk/provider/execution/handlers";
 
 type RoutingClaims = Pick<ProviderInvocationClaims, "contractId" | "contractVersion">;
 
@@ -20,19 +22,48 @@ export function registerProviderHandlers<Dependencies>(
     verifiedClaims?: (context: ProviderCapabilityInvocationContext) => RoutingClaims,
 ): void {
     const { plan, contracts } = selectImplementations(build, options.implementations);
-    const snapshot = Object.freeze({ ...options, scope: Object.freeze({ ...options.scope }) });
+    const adapter = options.operations;
+    if (adapter && (typeof adapter.register !== "function" || typeof adapter.enqueue !== "function")) {
+        throw new TypeError("Invalid durable operation adapter");
+    }
+    const snapshot = Object.freeze({
+        ...options,
+        scope: Object.freeze({ ...options.scope }),
+        ...(adapter
+            ? {
+                  operations: Object.freeze({
+                      register: adapter.register.bind(adapter),
+                      enqueue: adapter.enqueue.bind(adapter),
+                  }),
+              }
+            : {}),
+    });
     if (!snapshot.providerId || !snapshot.scope.siteId || !snapshot.scope.instanceId) {
         throw new TypeError("Exact Provider registration scope is required");
     }
     if (
         plan.some(
-            ({ capability }) => capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed",
+            ({ capability, defaultOperation }) =>
+                !defaultOperation &&
+                capability.behavior.effect === "command" &&
+                capability.behavior.idempotency === "keyed",
         ) &&
         !snapshot.executeKeyed
     ) {
         throw new TypeError("Keyed commands require a host-owned durable executeKeyed adapter");
     }
-    const claimsFor = (context: ProviderCapabilityInvocationContext): RoutingClaims => {
+    if (plan.some((entry) => entry.defaultOperation) && !snapshot.operations) {
+        throw new TypeError("Default operations require a host-owned durable operation adapter");
+    }
+    for (const entry of plan.filter((entry) => entry.defaultOperation)) {
+        if (!operationJsonSchema(entry.capability.input) || !operationJsonSchema(entry.capability.output)) {
+            throw new TypeError("Default durable operations require JSON input and terminal output");
+        }
+        if (!entry.capability.bindings.some((binding) => binding.transport === "http")) {
+            throw new TypeError("Default operations require an executable HTTP binding");
+        }
+    }
+    const storedClaimsFor = (context: ProviderCapabilityInvocationContext): RoutingClaims => {
         if (
             context.siteId !== snapshot.scope.siteId ||
             context.providerId !== snapshot.providerId ||
@@ -40,12 +71,11 @@ export function registerProviderHandlers<Dependencies>(
         ) {
             throw new TypeError("Invocation does not match the mounted Provider scope");
         }
-        return verifiedClaims
-            ? verifiedClaims(context)
-            : {
-                  contractId: context.invocation.contractId,
-                  contractVersion: context.contractVersion,
-              };
+        return { contractId: context.invocation.contractId, contractVersion: context.contractVersion };
+    };
+    const claimsFor = (context: ProviderCapabilityInvocationContext): RoutingClaims => {
+        const recorded = storedClaimsFor(context);
+        return verifiedClaims ? verifiedClaims(context) : recorded;
     };
     const routes = compileProviderRoutes(contracts);
     const groups = new Map<string, (typeof plan)[number][]>();
@@ -55,11 +85,21 @@ export function registerProviderHandlers<Dependencies>(
         group.push(entry);
         groups.set(key, group);
     }
-    for (const entries of groups.values()) {
-        const handlers = entries.map((entry) => ({
+    const prepared = [...groups.values()].map((entries) => ({
+        entries,
+        handlers: entries.map((entry) => ({
             entry,
-            invoke: bindHandler(entry, dependencies, routes, claimsFor, snapshot, snapshot.providerId),
-        }));
+            ...bindHandler(entry, dependencies, routes, claimsFor, snapshot, snapshot.providerId, storedClaimsFor),
+        })),
+    }));
+    const registrations = operationRegistrations(
+        prepared.flatMap(({ handlers }) => handlers),
+        routes,
+    );
+    for (const registration of registrations) {
+        snapshot.operations!.register(registration);
+    }
+    for (const { entries, handlers } of prepared) {
         dispatcher.register(entries[0]!.contractId, entries[0]!.capability.id, async (input, context) => {
             const claims = claimsFor(context);
             const selected = handlers.filter(({ entry }) =>

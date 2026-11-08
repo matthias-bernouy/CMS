@@ -1,4 +1,4 @@
-import { featureErrorMapper } from "ulvia-sdk/definitions/errorPolicy";
+import { featureErrorMapper } from "ulvia-sdk/definitions/execution/errorPolicy";
 import type { FeatureDefinition, FeatureServiceCompatibility } from "ulvia-sdk/interfaces/features";
 
 /** One immutable feature source drives contract generation and complete Provider execution. */

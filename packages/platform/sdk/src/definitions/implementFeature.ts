@@ -1,8 +1,9 @@
-import { executeWithErrorMapping, featureErrorMapper } from "ulvia-sdk/definitions/errorPolicy";
+import { defaultHandlerFactory } from "ulvia-sdk/definitions/execution/factories";
+import { executeWithErrorMapping, featureErrorMapper } from "ulvia-sdk/definitions/execution/errorPolicy";
 import { DEFAULT_RELEASE_LIMITS } from "@bernouy/ulvia-contracts";
 import type { FeatureDefinition, FeatureServices } from "ulvia-sdk/interfaces/features";
 import type { CapabilitySource } from "ulvia-sdk/interfaces/capabilities";
-import { authorizeHandler } from "ulvia-sdk/definitions/authorization";
+import { authorizeHandler } from "ulvia-sdk/definitions/execution/authorization";
 import type { CapabilityAuthorization, CapabilityExecutor } from "ulvia-sdk/interfaces/execution";
 import type { ContractImplementation, ImplementationOptions } from "ulvia-sdk/interfaces/providers";
 import { capabilityFailure } from "ulvia-sdk/definitions/errors";
@@ -51,7 +52,7 @@ export function implementFeature(
                 throw new SdkDefinitionError(`Missing execute for ${capability.id}`);
             }
             const fail = capabilityFailure(capability);
-            handlers[capability.id] = (dependencies) => {
+            handlers[capability.id] = defaultHandlerFactory((dependencies) => {
                 const services = selectServices ? selectServices(dependencies) : dependencies;
                 const handler = (input: never, context: never) =>
                     executeWithErrorMapping(capability, mapper, () => execute({ input, services, context, fail }));
@@ -62,7 +63,7 @@ export function implementFeature(
                           ),
                       )
                     : handler;
-            };
+            }, capability.behavior.execution);
         }
         current = current.extends;
     }

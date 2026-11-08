@@ -6,7 +6,8 @@ import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 export interface RuntimeCapabilityPlan<Dependencies> {
     readonly contractId: string;
     readonly version: string;
-    readonly requests: readonly Readonly<{ contractId: string; version: string }>[];
+    readonly requests: readonly Readonly<{ contractId: string; version: string; digest: string }>[];
+    readonly defaultOperation: boolean;
     readonly capability: CapabilityDefinition;
     readonly source: CapabilitySource;
     readonly createHandler: (dependencies: Dependencies) => unknown;

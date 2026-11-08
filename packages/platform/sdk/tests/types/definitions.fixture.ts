@@ -1,3 +1,4 @@
+import "./operations.fixture";
 import "./error-policy.fixture";
 import "./guards.fixture";
 import "./execution.fixture";

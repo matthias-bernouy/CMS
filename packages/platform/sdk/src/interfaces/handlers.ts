@@ -40,6 +40,13 @@ type HandlerOutput<Capability extends CapabilitySource> = Capability["behavior"]
       ? Uint8Array | Response | ProviderResourceResponse
       : CapabilityOutput<Capability> | ProviderCapabilityResponse<CapabilityOutput<Capability>>;
 
+/** Default operation execution produces its terminal DTO; complete alternative handlers still return handles. */
+export type CapabilityExecutionResult<Capability extends CapabilitySource> = Capability["behavior"] extends {
+    readonly execution: "operation";
+}
+    ? CapabilityOutput<Capability>
+    : HandlerOutput<Capability>;
+
 export type ProviderCapabilityHandler<Capability extends CapabilitySource> = (
     input: ProviderInput<Capability>,
     context: ProviderCapabilityContext<Capability>,

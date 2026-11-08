@@ -8,7 +8,7 @@ import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 
 import type { FeatureDefinition } from "ulvia-sdk/interfaces/features";
 import type { EffectiveCapabilities } from "ulvia-sdk/interfaces/handlers";
-import { executeWithErrorMapping, featureCapability } from "ulvia-sdk/definitions/errorPolicy";
+import { executeWithErrorMapping, featureCapability } from "ulvia-sdk/definitions/execution/errorPolicy";
 
 type Execution<Capability extends ExecutableCapability> = {
     readonly input: unknown;

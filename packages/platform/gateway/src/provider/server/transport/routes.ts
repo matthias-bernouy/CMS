@@ -4,7 +4,7 @@ import { effectiveLineageCapabilities } from "@bernouy/ulvia-contracts";
 import type { CapabilityDefinition, ResolvedContract } from "@bernouy/ulvia-contracts";
 
 export type HttpBoundCapability = CapabilityDefinition & {
-    readonly binding: HttpBindingDefinition;
+    readonly binding: HttpBindingDefinition & { readonly id: string };
 };
 
 export type ProviderRoute = {

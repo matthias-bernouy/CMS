@@ -57,3 +57,8 @@ Integration tests that compose Repository stores live in `tests/integration/gate
 - `./provider/responses` exposes adapter-light typed Provider response envelopes.
   Generic output types do not alter wire behavior or session authority. Session
   effects remain outside public JSON and browser cookie application belongs to Edge.
+
+- The Provider HTTP receiver records its selected admitted binding ID in
+  `context.invocation.bindingId`. This is host-owned evidence, never a caller header
+  or application request-context claim. Durable hosts may retain it when dropping
+  the live Request; operation workers must refuse missing or mismatched evidence.

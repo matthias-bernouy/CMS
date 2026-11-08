@@ -1,3 +1,4 @@
+import { createProviderOperationAdapter } from "./features/services/operations";
 import { repositoryAccountResolver } from "./features/services/repository";
 import type { ProviderCapabilityRegistry } from "../dispatch/registry";
 import type { UlviaProviderDependencies, UlviaProviderGateway, UlviaProviderManagement } from "../ports/index";
@@ -36,7 +37,14 @@ export async function registerOfficialProviderCapabilities(
                 contributions: dependencies.collections ? createContentContributions(dependencies) : undefined,
             },
             enabledContracts,
-            featureOptions,
+            featureOptions
+                ? {
+                      ...featureOptions,
+                      operations:
+                          featureOptions.operations ??
+                          (operations ? createProviderOperationAdapter(operations) : undefined),
+                  }
+                : featureOptions,
         );
     }
 }

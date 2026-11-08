@@ -1,3 +1,4 @@
+import type { ProviderOperationRegistration } from "@bernouy/ulvia-sdk/provider";
 import { defineFeature } from "@bernouy/ulvia-sdk";
 import { expect, test } from "bun:test";
 import { contractBinary, capabilitiesFor, implementFeature, z } from "@bernouy/ulvia-sdk";
@@ -55,7 +56,7 @@ test("default execute preserves streamed upload bounds and refuses oversized inp
     expect(writes).toBe(1);
 });
 
-test("default execute supports operation handles and streamed outputs while local JSON calls refuse unsupported modes", async () => {
+test("default execute produces terminal results through a host operation adapter while local JSON calls refuse unsupported modes", async () => {
     const defineCapability = capabilitiesFor<{}>();
     let starts = 0;
     const start = defineCapability({
@@ -76,7 +77,7 @@ test("default execute supports operation handles and streamed outputs while loca
         ],
         execute: () => {
             starts++;
-            return { operationId: "00000000-0000-4000-8000-000000000001" };
+            return true;
         },
     });
     const bytes = defineCapability({
@@ -106,7 +107,23 @@ test("default execute supports operation handles and streamed outputs while loca
         ...notesProviderDefinition("http://127.0.0.1:5103"),
         implementations: [implementFeature(feature)],
     });
-    const runtime = unitProvider(build, {});
+    let operation: ProviderOperationRegistration | undefined;
+    // Unit-only immediate adapter; durable recovery is verified with the real host executor in Surface tests.
+    const runtime = unitProvider(
+        build,
+        {},
+        {
+            operations: {
+                register(value) {
+                    operation = value;
+                },
+                enqueue: async ({ input, context }) => {
+                    expect(await operation!.execute(input, context)).toBe(true);
+                    return { operationId: "00000000-0000-4000-8000-000000000001" };
+                },
+            },
+        },
+    );
     const started = await runtime.call(meta.contractId, start.id, "/start", { method: "POST" });
     expect(started.status).toBe(202);
     expect(await started.json()).toEqual({ operationId: "00000000-0000-4000-8000-000000000001" });

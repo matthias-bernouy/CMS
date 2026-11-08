@@ -2,9 +2,7 @@
 
 Typed authoring and Provider assembly SDK. Depend only on Platform and Foundation.
 
-- Emailer/SMTP, Secrets, Files, Observability, Access, Content and Authoring are the production migration pilots. Keep other feature families
-  outside the SDK until their migration is explicitly requested. Release discovery
-  and publication remain CLI/infrastructure responsibilities.
+- Release discovery and publication remain CLI/infrastructure responsibilities.
 - Root definitions perform no filesystem, network, environment or runtime initialization.
   `./build` admits artifacts and emits `ulvia-sdk-runtime/v1` metadata; it does
   not publish or approve them. `./provider` attaches matching default/alternative
@@ -24,8 +22,10 @@ Typed authoring and Provider assembly SDK. Depend only on Platform and Foundatio
   Reject ambiguous inherited routes and conflicting coordinates.
 - `./provider` reuses the Gateway receiver. Hosts own authentication, explicit
   authorization, trusted site/instance scope, credentials, quotas and listeners.
-- Keyed commands require a host-owned durable executeKeyed adapter. Never silently
-  activate them with an in-memory deduplication fallback.
+- Synchronous keyed commands require a host-owned durable executeKeyed adapter.
+  Default operation executors return terminal JSON DTOs and require a host-owned
+  operations adapter for registration, queueing, receipts and recovery. Never add
+  an in-memory fallback or wrap that queue in a second keyed receipt adapter.
 - Keep the v1 UTF-16 and format rules unchanged. Native Zod string schemas differ;
   use the documented adapters and reject unrepresentable checks or transformations.
 - Account for registered adapter children in schema node/depth budgets. Snapshot
@@ -94,3 +94,13 @@ Typed authoring and Provider assembly SDK. Depend only on Platform and Foundatio
   Preserve native representation metadata, bound bodyful statuses, and reject metadata
   on ordinary binary outputs. Release readers/listeners on completion, cancellation,
   error and request abort, including pending reads and backpressured consumers.
+
+- Capture default executor modes before asynchronous artifact admission. Preflight
+  adapters, scope and exact pins before service projection, and prepare every
+  selected factory before any worker/dispatcher registration. Group durable workers
+  by requested coordinates with exact versions, including admitted inherited aliases.
+- Durable default workers require receiver-selected binding evidence retained in
+  the stored invocation. Refuse missing evidence, foreign scope, unsupported versions
+  and invalid persisted input before business execution. Reauthorize and validate
+  terminal DTOs. Preserve the actual binding's failure presentation after restart;
+  never fabricate transport Requests or repair missing persisted metadata.

@@ -1,3 +1,4 @@
+export { createProviderOperationAdapter } from "../capabilities/features/services/operations";
 export type { ProviderAdministration } from "../ports/providers";
 export {
     UlviaProvider,

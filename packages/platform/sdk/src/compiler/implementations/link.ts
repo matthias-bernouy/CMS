@@ -34,7 +34,7 @@ export async function linkImplementations<Dependencies>(
             ...(source.delegation ? { delegation: source.delegation } : {}),
         });
         for (const { definition: capability, owner } of view.capabilities) {
-            const requests = [{ contractId: source.contractId, version: source.version }];
+            const requests = [{ contractId: source.contractId, version: source.version, digest: view.digest }];
             for (let ancestorIndex = 1; ancestorIndex < view.lineage.length; ancestorIndex++) {
                 const ancestor = view.lineage[ancestorIndex]!;
                 if (
@@ -48,15 +48,20 @@ export async function linkImplementations<Dependencies>(
                         throw new SdkDefinitionError(`Ambiguous inherited handler for ${alias}`);
                     }
                     aliasOwners.set(alias, owner);
-                    requests.push({ contractId: ancestor.release.contractId, version: ancestor.release.version });
+                    requests.push({
+                        contractId: ancestor.release.contractId,
+                        version: ancestor.release.version,
+                        digest: ancestor.digest,
+                    });
                 }
             }
             plan.push(
                 Object.freeze({
                     contractId: source.contractId,
                     version: source.version,
-                    requests: Object.freeze(requests),
+                    requests: Object.freeze(requests.map((request) => Object.freeze(request))),
                     capability,
+                    defaultOperation: source.defaultOperations.has(capability.id),
                     source: source.capabilities.get(capability.id)!,
                     createHandler: source.handlers[capability.id]!,
                 }),

@@ -1,5 +1,9 @@
+import { selectedRoute } from "ulvia-sdk/provider/execution/routes";
+import { bindOperation } from "ulvia-sdk/provider/execution/operations";
+import { presentedHandler } from "ulvia-sdk/provider/execution/presentation";
+import type { RoutingClaims } from "ulvia-sdk/provider/execution/presentation";
 import { ProviderResourceResponse, resourceResponse } from "@bernouy/cms-gateway/provider/responses";
-import { handlerAuthorization } from "ulvia-sdk/definitions/authorization";
+import { handlerAuthorization } from "ulvia-sdk/definitions/execution/authorization";
 import type {
     ProviderCapabilityHandler,
     ProviderCapabilityInvocationContext,
@@ -9,36 +13,8 @@ import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import type { ProviderRegistrationOptions } from "ulvia-sdk/interfaces/runtime";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { RuntimeCapabilityPlan } from "ulvia-sdk/compiler/plan";
-import { presentCapabilityFailure } from "ulvia-sdk/provider/failures";
-import { CapabilityFailure } from "ulvia-sdk/definitions/errors";
-import { binaryInputLease, boundBinaryResponse } from "ulvia-sdk/provider/binary";
+import { binaryInputLease, boundBinaryResponse } from "ulvia-sdk/provider/execution/binary";
 import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
-
-function selectedRoute(
-    routes: readonly ProviderRoute[],
-    contractId: string,
-    capabilityId: string,
-    context: ProviderCapabilityInvocationContext,
-    claims: Pick<ProviderInvocationClaims, "contractId" | "contractVersion">,
-) {
-    const request = context.http?.transportRequest;
-    if (!request) {
-        throw new TypeError("Provider handler requires its trusted HTTP request context");
-    }
-    const path = new URL(request.url).pathname;
-    const selected = routes.find(
-        (route) =>
-            (route.dispatchContractId ?? route.contractId) === contractId &&
-            route.contractId === claims.contractId &&
-            route.contractVersion === claims.contractVersion &&
-            route.capability.id === capabilityId &&
-            route.match(request.method, path),
-    );
-    if (!selected) {
-        throw new TypeError("No admitted binding matches this invocation");
-    }
-    return selected;
-}
 
 export function bindHandler<Dependencies>(
     entry: RuntimeCapabilityPlan<Dependencies>,
@@ -49,7 +25,8 @@ export function bindHandler<Dependencies>(
     ) => Pick<ProviderInvocationClaims, "contractId" | "contractVersion">,
     options: ProviderRegistrationOptions,
     providerId: string,
-): ProviderCapabilityHandler {
+    storedClaimsFor: RoutingClaims,
+) {
     const created = entry.createHandler(dependencies);
     if (typeof created !== "function") {
         throw new SdkDefinitionError(`Handler factory did not return a function for ${entry.capability.id}`);
@@ -59,28 +36,17 @@ export function bindHandler<Dependencies>(
         context: ProviderCapabilityInvocationContext,
     ) => unknown;
     const authorize = handlerAuthorization(handler);
-    return async (input, context) => {
+    if (entry.defaultOperation) {
+        return bindOperation(entry, handler, authorize, routes, options, claimsFor, storedClaimsFor);
+    }
+    const execute = presentedHandler(entry, handler, routes, options, claimsFor);
+    const guard = authorize ? presentedHandler(entry, authorize, routes, options, claimsFor) : undefined;
+    const invoke: ProviderCapabilityHandler = async (input, context) => {
         const lease = binaryInputLease(entry.capability, context);
         try {
-            const invoke = async (execute = handler) => {
-                try {
-                    return await execute(input, lease.context);
-                } catch (error) {
-                    if (!(error instanceof CapabilityFailure) || error.capability !== entry.source) {
-                        throw error;
-                    }
-                    const route = selectedRoute(
-                        routes,
-                        entry.contractId,
-                        entry.capability.id,
-                        context,
-                        claimsFor(context),
-                    );
-                    throw presentCapabilityFailure(error, entry.capability, route, options, context);
-                }
-            };
-            if (authorize) {
-                await invoke(authorize);
+            const run = () => execute(input, lease.context);
+            if (guard) {
+                await guard(input, lease.context);
             }
             const behavior = entry.capability.behavior;
             const output =
@@ -97,9 +63,9 @@ export function bindHandler<Dependencies>(
                               input: structuredClone(input),
                               context: lease.context,
                           },
-                          invoke,
+                          run,
                       )
-                    : await invoke();
+                    : await run();
             if (entry.capability.behavior.execution === "operation" || entry.capability.output.type !== "binary") {
                 return output;
             }
@@ -127,6 +93,7 @@ export function bindHandler<Dependencies>(
             lease.close();
         }
     };
+    return { invoke };
 }
 
 function bytesResponse<Dependencies>(

@@ -55,7 +55,7 @@ export function createProviderContractRelay(
             input = decoded.input;
             validateProviderInput(capability, input, Boolean(decoded.binaryBody));
             context = {
-                ...providerInvocationContext(request, claims, scope, controlAuthority),
+                ...providerInvocationContext(request, claims, scope, controlAuthority, capability.binding.id),
                 ...(decoded.binaryBody ? { binaryBody: decoded.binaryBody } : {}),
             };
             validateIdempotencyContext(capability, context);

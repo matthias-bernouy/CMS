@@ -50,7 +50,9 @@ export class ProviderOperationExecutor {
         contractId: string,
         capabilityId: string,
         handler: ProviderOperationHandler,
-        errors: readonly CapabilityErrorDefinition[] = [],
+        errors:
+            | readonly CapabilityErrorDefinition[]
+            | ((version: string) => readonly CapabilityErrorDefinition[] | undefined) = [],
     ): void {
         const key = operationKey(contractId, capabilityId);
         if (this.#handlers.has(key)) {
@@ -60,7 +62,11 @@ export class ProviderOperationExecutor {
             key,
             validatedOperationHandler(
                 handler,
-                this.options.contracts ? (version) => this.#errors.get(`${key}\0${version}`) : errors,
+                typeof errors === "function"
+                    ? errors
+                    : this.options.contracts
+                      ? (version) => this.#errors.get(`${key}\0${version}`)
+                      : errors,
                 { contractId, capabilityId },
             ),
         );

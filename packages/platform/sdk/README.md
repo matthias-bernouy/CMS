@@ -186,12 +186,32 @@ claims. Ambiguous inherited routes fail at build time rather than choosing a
 handler implicitly. Compilation does not check release-version evolution against
 previously published history and does not publish or approve an installation.
 
-For `execution: "operation"`, Provider handlers return the standard operation
-handle; the declared output schema describes the terminal result. The host owns
-the operation lifecycle. Keyed commands require an explicit `executeKeyed` port
-before runtime activation. That host port must provide durable receipts, full
-scope/principal/input equivalence, replay protection and crash recovery. The SDK
-ships no in-memory idempotency implementation for production.
+For `execution: "operation"`, a default capability's `execute` returns the terminal
+DTO described by its output schema. The Provider adapter returns the standard
+operation handle. Hosts must supply `operations: ProviderOperationAdapter` before
+activation; the SDK ships no queue, storage or in-memory durability fallback.
+
+The host port registers captured workers and enqueues invocations. It owns durable
+receipts, scheduling, leases, resource retention and restart recovery. Workers are
+grouped by requested contract/capability with exact versions and digests, including
+admitted parent aliases. The default bridge accepts JSON inputs and terminal DTOs;
+stream-backed operations use a complete alternative implementation.
+
+The authenticated receiver records the selected binding ID in trusted invocation
+metadata. A recovered worker requires that evidence and matching Provider/site/
+instance/version scope; it never invents a Request or chooses an arbitrary binding.
+It validates persisted input and terminal output through the admitted schemas and
+checks the host cancellation signal before and after guarded business execution.
+Feature error classification and host presentation run before failure persistence.
+
+`authorize` runs before every queue/receipt access, including replays, and again
+before recovered business execution. Default operations use the operation port's
+receipts once; they are not wrapped in synchronous `executeKeyed` receipts.
+Synchronous keyed commands still require `executeKeyed`, with durable receipts,
+full scope/principal/input equivalence, replay protection and crash recovery.
+Complete alternative operation handlers retain their handle-returning API and own
+their lifecycle and authorization policy. Keyed alternatives continue to require
+the explicit `executeKeyed` port.
 
 ## Schema profile
 

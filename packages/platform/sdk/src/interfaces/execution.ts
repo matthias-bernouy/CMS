@@ -1,4 +1,4 @@
-import type { ProviderCapabilityHandler } from "ulvia-sdk/interfaces/handlers";
+import type { ProviderCapabilityHandler, CapabilityExecutionResult } from "ulvia-sdk/interfaces/handlers";
 import type { CapabilitySource } from "ulvia-sdk/interfaces/capabilities";
 import type { CapabilityFail } from "ulvia-sdk/definitions/errors";
 
@@ -17,7 +17,7 @@ export interface CapabilityExecutionContext<Capability extends CapabilitySource,
 
 export type CapabilityExecutor<Capability extends CapabilitySource, Services> = (
     execution: CapabilityExecutionContext<Capability, Services>,
-) => ReturnType<ProviderCapabilityHandler<Capability>>;
+) => CapabilityExecutionResult<Capability> | Promise<CapabilityExecutionResult<Capability>>;
 
 export type CapabilityAuthorization<Capability extends CapabilitySource, Services> = (
     execution: CapabilityExecutionContext<Capability, Services>,

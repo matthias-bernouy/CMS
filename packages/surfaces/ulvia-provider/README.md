@@ -80,3 +80,11 @@ an injected typed domain facade and authenticated account-alias resolver. Public
 reads need no account lookup; private methods retain their domain ownership checks.
 The old registry registrar and handwritten manifest claim are removed. Native
 streamed downloads retain immutable cache/ETag headers and admitted byte limits.
+
+`createProviderOperationAdapter(executor)` connects SDK default terminal executors
+to the host's existing `ProviderOperationExecutor`. The runtime still supplies its
+durable store and recovery lifecycle. Worker registration derives from selected
+SDK implementations, with exact version/error metadata and inherited routes. The
+receiver-selected binding ID survives context snapshots so recovered failures keep
+their admitted binding and request language. Missing binding evidence refuses; it
+is never replaced with a fabricated Request or an implicit default.

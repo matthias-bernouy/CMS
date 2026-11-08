@@ -10,3 +10,9 @@ export type {
     CapabilityFailurePresentation,
     CapabilityFailurePresentationContext,
 } from "ulvia-sdk/interfaces/runtime";
+
+export type {
+    ProviderOperationAdapter,
+    ProviderOperationRegistration,
+    ProviderOperationInvocation,
+} from "ulvia-sdk/interfaces/runtime";

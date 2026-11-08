@@ -61,3 +61,9 @@ behavior.
   publication ownership remains domain-owned. Never add a second registry registrar
   or convert unknown return values into DTOs with casts. Preserve bounded public
   publication evolution details while keeping unexpected storage failures private.
+
+- `createProviderOperationAdapter` connects SDK default workers to the existing
+  host-owned ProviderOperationExecutor. Registration comes from the same selected
+  SDK inventory; never maintain another operation-capability list. Retain durable
+  receipts, leases, instance retention, recovery and shutdown draining. Exact-version
+  declared errors may be supplied by an explicit registration reader.

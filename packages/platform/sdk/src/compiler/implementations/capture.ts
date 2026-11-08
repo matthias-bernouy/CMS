@@ -1,3 +1,4 @@
+import { factoryExecution } from "ulvia-sdk/definitions/execution/factories";
 import type { ContractImplementation } from "ulvia-sdk/interfaces/providers";
 import { captureLineage } from "ulvia-sdk/compiler/implementations/lineage";
 import { SDK_BUILD_LIMITS } from "ulvia-sdk/compiler/limits";
@@ -19,11 +20,21 @@ export function captureImplementations<Dependencies>(sources: readonly ContractI
         ) {
             throw new SdkDefinitionError(`Handler table does not match ${source.feature.contractId}`);
         }
+        const defaultOperations = new Set(
+            actual.filter((id) => {
+                const mode = factoryExecution(handlers[id]!);
+                if (mode !== undefined && mode !== capabilities.get(id)!.behavior.execution) {
+                    throw new SdkDefinitionError("Default executor mode differs from its capability definition");
+                }
+                return mode === "operation";
+            }),
+        );
         return {
             feature: source.feature,
             contractId: source.feature.contractId,
             version: source.feature.version,
             handlers,
+            defaultOperations,
             capabilities,
             lineage,
             requires: structuredClone(source.requires ?? []),
