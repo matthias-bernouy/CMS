@@ -11,7 +11,7 @@ existing component system. Visual checks and successful admission did not prove
 that the result reused the platform correctly or remained easy to edit.
 
 The expected discovery workflow already exists in
-[Working with Ulvia](../../packages/official-repository/contracts/cms.installations/docs/working-with-ulvia.md):
+[Working with Ulvia](../../packages/features/repository/docs/installations/working-with-ulvia.md):
 search documentation for the workflow, use `repository.search` to find existing
 resources, inspect candidates with `repository.get`, and verify their contracts,
 requirements and exports before authoring replacements. Documentation search
@@ -20,7 +20,7 @@ substitute for inspecting the candidates and making reuse decisions.
 
 The same guide already assigns editorial content to Pages, reusable structure
 to Blocs, assembly to compositions and visual identity to themes. The
-[authoring guide](../../packages/official-repository/contracts/cms.authoring/docs/collection-authoring.md)
+[authoring guide](../../packages/features/repository/docs/authoring/collection-authoring.md)
 already recommends suitable official semantic tokens and site theme values.
 The agent did not adequately apply these instructions. More documentation alone
 will not resolve that failure.
@@ -35,7 +35,7 @@ will not resolve that failure.
   had not resulted in actual reuse.
 - Cards and other structures rendered their own CTAs instead of composing a
   common Action. The existing
-  [official Mossa Card](../../packages/official-repository/collections/mossa/blocs/items/cards/ulvia--mossa--card/definition.json)
+  former official Mossa Card (archived outside the source tree)
   accepts `ulvia--mossa--action` in its `actions` slot.
 - Rejecting raw paint colors worked as intended. A separate custom palette
   still duplicated semantic roles; passing that rule did not prove theme reuse.

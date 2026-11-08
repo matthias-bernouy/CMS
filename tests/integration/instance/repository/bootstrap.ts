@@ -3,12 +3,7 @@ import { parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
 import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 
-export async function publishBundledReleases(
-    url: string,
-    providerUrl: string,
-    token: string,
-    includeCollections = true,
-) {
+export async function publishBundledReleases(url: string, providerUrl: string, token: string) {
     const root = resolve(import.meta.dir, "../../../../packages/runtimes/ulvia-cli/dist/bootstrap");
     const index = await Bun.file(resolve(root, "index.json")).json();
     const repositoryId = await new RepositoryNamespaceClient(url).identity();
@@ -38,14 +33,4 @@ export async function publishBundledReleases(
         throw new Error("Documentation Provider must use an origin admitted by the bundled manifest");
     }
     await client.push({ kind: "provider-manifest", canonicalJson: JSON.stringify(manifest), assets: [] });
-    for (const collection of includeCollections ? index.collections : []) {
-        await client.push({
-            kind: "collection",
-            canonicalJson: await Bun.file(resolve(root, collection.release)).text(),
-            assets: collection.assets.map((asset: { id: string; path: string }) => ({
-                id: asset.id,
-                bytes: Bun.file(resolve(root, asset.path)),
-            })),
-        });
-    }
 }

@@ -1,3 +1,4 @@
+import { writeSdkContractFixture } from "../../authoredContractFixture";
 import { expect, test } from "bun:test";
 import { lstat, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -13,7 +14,7 @@ test("CLI login, publication, transfer and suspension use the authenticated acco
         expect(config.repository).toMatchObject({ url: f.server.url.origin, repositoryId: f.application.repositoryId });
         expect((await lstat(join(f.config, "config.json"))).mode & 0o077).toBe(0);
         await f.run(["namespace", "claim", "ulvia"]);
-        const source = resolve(import.meta.dir, "../../../../../official-repository/contracts/cms.emailer");
+        const source = await writeSdkContractFixture(join(f.root, "sources", "cms.emailer"), "ulvia/cms.emailer");
         await f.run(["release", source]);
         const definition = JSON.parse(await readFile(join(source, "definition.json"), "utf8"));
         const coordinate = `${definition.contractId}@${definition.version}`;

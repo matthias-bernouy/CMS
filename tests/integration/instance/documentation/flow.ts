@@ -64,7 +64,8 @@ export async function exerciseDocumentation(connection: Awaited<ReturnType<typeo
     const content = await connection.call("ulvia/cms.content", "pages.update", {
         id: created.id,
         expectedRevision: updated.revision,
-        content: '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Documentation flow verified</h1>',
+        content:
+            '<div cms-bloc="ulvia-dtest--smoke-kit--card"><h1 slot="content">Documentation flow verified</h1></div>',
     });
     const published = await connection.call("ulvia/cms.content", "pages.publish", {
         id: created.id,

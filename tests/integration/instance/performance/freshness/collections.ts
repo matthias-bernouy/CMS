@@ -67,7 +67,7 @@ export async function exerciseCollectionFreshness(connection: Connection, cmsUrl
     await publishPage(
         connection,
         "/cache-collection",
-        '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Collections</h1>',
+        '<div cms-bloc="ulvia-dtest--smoke-kit--card"><h1 slot="content">Collections</h1></div>',
     );
     const page = cachedPage(cmsUrl, "/cache-collection");
     const initial = await page.warm();

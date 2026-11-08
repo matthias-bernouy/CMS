@@ -66,7 +66,7 @@ test("unfinished provisioning still requires its exact kit and cannot silently u
 test("the official manifest only claims exact implementations supported by this build", async () => {
     const manifest = JSON.parse(
         await readFile(
-            resolve(import.meta.dir, "../../../../../official-repository/providers/primary-provider/definition.json"),
+            resolve(import.meta.dir, "../../../../ulvia-cli/dist/bootstrap/providers/primary-provider/definition.json"),
             "utf8",
         ),
     );

@@ -1,25 +1,13 @@
-import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { expect, test } from "bun:test";
 import { mkdtemp, readdir, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../../src/cli";
 import { LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
-import { resolveCollectionTranslation } from "@bernouy/repository/collections";
 
 test("release publishes a folder explicitly, survives CLI runs, and prune clears only the repository", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-cli-release-"));
-    const source = resolve(import.meta.dir, "../../../../../official-repository/collections/mossa");
-    const coreContracts = [
-        "ulvia/cms.secrets",
-        "ulvia/cms.emailer",
-        "ulvia/cms.emailer.smtp",
-        "ulvia/cms.access",
-        "ulvia/cms.installations",
-        "ulvia/cms.content",
-        "ulvia/cms.files",
-        "ulvia/cms.observability",
-    ].map((id) => resolve(import.meta.dir, `../../../../../official-repository/contracts/${resourceName(id)}`));
+    const source = resolve(import.meta.dir, "../../stack/fixtures/smoke-kit");
     const definition = (await Bun.file(join(source, "definition.json")).json()) as {
         version: string;
         exports: { blocs: string[]; texts: string[] };
@@ -28,35 +16,13 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
     const options = { environment: { ULVIA_DATA_DIR: data }, log: (line: string) => output.push(line) };
     try {
         const repository = new LocalCollectionRepository(join(data, "repository"));
-        for (const contract of coreContracts) {
-            await runCli(["release", contract], options);
-        }
         await runCli(["release", source], options);
         const releases = await repository.list();
-        expect(releases.map((item) => item.release.collectionId)).toEqual(["ulvia/mossa"]);
-        expect(releases[0]!.release.theme?.categories.map((category) => category.id)).toEqual([
-            "surfaces-and-text",
-            "actions",
-            "feedback",
-            "typography",
-            "spacing",
-            "borders-and-shape",
-            "elevation",
-            "layout",
-            "motion",
-        ]);
-        expect(releases[0]!.release.theme?.label).toBe("theme.label");
-        expect(resolveCollectionTranslation(releases[0]!.release, releases[0]!.release.theme!.label)).toBe(
-            "Mossa foundation",
-        );
-        const releaseBlocIds = releases[0]!.release.blocs.map((bloc) => bloc.id);
-        expect([...(releases[0]!.release.exports?.blocs ?? [])].sort()).toEqual([...definition.exports.blocs].sort());
-        expect(definition.exports.blocs.every((id) => releaseBlocIds.includes(id))).toBe(true);
-        expect(releaseBlocIds).toContain("ulvia--mossa--choice-copy");
-        expect(releases[0]!.release.exports?.themeTokens).toHaveLength(124);
-        expect(releases[0]!.release.exports?.texts).toEqual(definition.exports.texts.slice().sort());
+        expect(releases.map((item) => item.release.collectionId)).toEqual(["ulvia.test/smoke-kit"]);
+        expect(releases[0]!.release.blocs.map(({ id }) => id)).toEqual(["ulvia-dtest--smoke-kit--card"]);
+        expect(releases[0]!.release.exports?.blocs).toEqual(["ulvia-dtest--smoke-kit--card"]);
         await runCli(["release", source], options);
-        expect(output.at(-1)).toStartWith(`= collection ulvia/mossa@${definition.version}`);
+        expect(output.at(-1)).toStartWith(`= collection ulvia.test/smoke-kit@${definition.version}`);
         const lockPath = join(data, "repository/.write-lock");
         const lock = await stat(lockPath, { bigint: true });
         await runCli(["prune"], options);

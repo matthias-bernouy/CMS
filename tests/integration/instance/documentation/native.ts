@@ -1,3 +1,4 @@
+import { installDeliveryFixture } from "../containers/deliveryFixture";
 import { randomBytes } from "node:crypto";
 import { cp, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -126,6 +127,7 @@ export async function documentationProcesses() {
             await connected.body?.cancel();
         };
         await startEdge("edge", cmsUrl, instance.credentials.instanceAccessToken);
+        await installDeliveryFixture(cmsUrl, administrator, { url: repositoryUrl, pat: { token: account.token } });
         return {
             cmsUrl,
             administrator,

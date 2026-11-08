@@ -8,7 +8,7 @@ import { prepareCollectionRelease } from "@bernouy/repository/collections/build"
 test("the complete collection snapshot printed in the contract guide builds without hidden fixture files", async () => {
     const path = resolve(
         import.meta.dir,
-        "../../../../packages/official-repository/contracts/cms.authoring/docs/collection-source.md",
+        "../../../../packages/features/repository/docs/authoring/collection-source.md",
     );
     const guide = await Bun.file(path).text();
     const example = guide.match(/```json\n([\s\S]*?)\n```/u)?.[1];

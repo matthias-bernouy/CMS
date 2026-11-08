@@ -41,7 +41,7 @@ bun run ulvia -- services stop
 bun run ulvia -- upgrade edge --version 0.0.1-beta
 bun run ulvia -- upgrade provider --version 0.0.1-beta
 bun run ulvia -- reset --yes
-bun run ulvia -- release packages/official-repository/collections/mossa
+bun run ulvia -- release ./my-collection
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
 bun run ulvia -- push contract ulvia/cms.installations@1.0.0 --repository https://repository.example
@@ -185,7 +185,7 @@ prepared canonical bytes and assets are bounded to 512 MiB. `push` remains an
 explicit separate command.
 
 ```bash
-ulvia release packages/official-repository/contracts --recursive
+ulvia release infra/releases
 bun run release:official
 # Equivalent SDK source entry:
 ulvia release infra/releases
@@ -298,17 +298,15 @@ and the Provider manifest, without authored collections or starter assets. An
 incomplete snapshot fails explicitly; bootstrap does not fall back to the network.
 Restart preserves existing accounts, namespace ownership and edited Pages and
 reopens ready instances from their persisted execution. Generate the API-only
-snapshot from the authoritative authored resources with:
+snapshot from the SDK feature inventory with:
 
 ```bash
-bun run generate:official-bootstrap --core-only
+bun run generate:official-bootstrap
 ```
 
 That command neither publishes to a running repository nor upgrades an existing
-instance. Without `--core-only`, generation includes optional starter collections
-for authoring and example tests. Exact `1.0.0` starter profiles retain their old
-resources and require an explicit matching historical snapshot; the current full
-generator does not reconstruct old resources.
+instance. Collections are built and published only from explicitly supplied
+sources; no starter collection is included in this command.
 For individual manual releases, use `release` in dependency order:
 exact contract dependencies before dependent contracts and provider manifests.
 Publication, provider profile transitions, collection upgrades and container
@@ -318,9 +316,9 @@ image replacement remain separate actions.
 API, then starts its Edge. Connection review validates the runtime report and
 exact manifest claims. Provider behavior is covered by implementation-owned tests.
 
-Official releases evolve independently: the current installations contract,
-Provider manifest, Mossa and Repository collections use `1.2.0`; local formats
-remain `v1`.
+Official releases evolve independently: the current installations contract and
+Provider manifest use `1.2.0`; local formats remain `v1`. Collections are supplied
+and versioned by their authors.
 Each named instance uses `<name>.localhost` unless an explicit domain is supplied;
 `default` is an ordinary name. Repository hosting uses a CMS instance with the
 `repository@1.3.0` profile. Client PAT connections and local release caches

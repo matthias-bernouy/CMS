@@ -29,7 +29,7 @@ integration(
             const cli = (args: string[]) => runCli(args, options);
             await cli(["repository", "login", url]);
             await cli(["namespace", "claim", "ulvia"]);
-            await cli(["release", resolve(import.meta.dir, "../../../packages/official-repository"), "--recursive"]);
+            await cli(["release", resolve(import.meta.dir, "../../../infra/releases")]);
             await cli(["push", "all", "--repository", url]);
         };
         let stack: Awaited<ReturnType<typeof mcpContainers>> | undefined;

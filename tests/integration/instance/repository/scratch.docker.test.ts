@@ -35,14 +35,13 @@ integration(
             const collections = new HttpCollectionRepository("scratch", stack.url, { allowInsecureHttp: true });
             expect(await collections.list()).toEqual([]);
             for (const path of [
-                "/app/packages/official-repository/collections",
+                "/app/packages/official-repository",
                 "/app/packages/runtimes/ulvia-cli/dist/bootstrap",
-                "/app/packages/runtimes/ulvia-cli/dist/bootstrap-core",
             ]) {
                 expect((await docker(["exec", stack.providerName, "test", "-e", path], true)).code).not.toBe(0);
             }
             const pat = await api.pat(session.cookie);
-            await publishBundledReleases(stack.url, "http://ulvia-provider:5103", pat.token, false);
+            await publishBundledReleases(stack.url, "http://ulvia-provider:5103", pat.token);
             expect(await collections.list()).toEqual([]);
             const identity = new RepositoryNamespaceClient(stack.url);
             const namespaces = new RepositoryNamespaceClient(stack.url, {

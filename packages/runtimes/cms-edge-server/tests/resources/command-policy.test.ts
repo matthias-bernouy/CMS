@@ -1,18 +1,20 @@
 import { expect, test } from "bun:test";
-import { resolve } from "node:path";
+import { compileOfficialFeatures } from "@bernouy/ulvia-provider/build";
 import { commandCacheEffect } from "../../src/runtime/resources/cache/commandPolicy";
 
 test("every official command has a deliberate cache classification; logs and authentication do not purge", async () => {
-    const root = resolve(import.meta.dir, "../../../../official-repository/contracts");
     let count = 0;
-    for await (const path of new Bun.Glob("**/capabilities/**/*.json").scan({ cwd: root })) {
-        const capability = await Bun.file(resolve(root, path)).json();
-        if (capability.behavior?.effect !== "command") {
-            continue;
+    for (const { release } of (await compileOfficialFeatures()).contracts) {
+        for (const capability of release.capabilities) {
+            if (capability.behavior.effect !== "command") {
+                continue;
+            }
+            expect(
+                commandCacheEffect(release.contractId, capability.id),
+                `${release.contractId}/${capability.id}`,
+            ).not.toBeNull();
+            count++;
         }
-        const contractId = path.split("/")[0]!;
-        expect(commandCacheEffect(contractId, capability.id), `${contractId}/${capability.id}`).not.toBeNull();
-        count++;
     }
     expect(count).toBeGreaterThan(50);
     expect(commandCacheEffect("ulvia/cms.observability", "logs.append")).toBe("neutral");

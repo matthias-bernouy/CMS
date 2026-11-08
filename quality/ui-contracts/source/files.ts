@@ -27,10 +27,7 @@ export function isProductionSource(path: string): boolean {
 
 export async function discoverUiSources(root: string): Promise<UiSource[]> {
     const packages = await discoverWorkspacePackages(root, []);
-    const sourceRoots = [
-        ...packages.map(({ root: packageRoot }) => packageRoot),
-        join(root, "packages", "official-repository", "collections"),
-    ];
+    const sourceRoots = [...packages.map(({ root: packageRoot }) => packageRoot)];
     const paths: string[] = [];
     async function visit(directory: string): Promise<void> {
         let entries;

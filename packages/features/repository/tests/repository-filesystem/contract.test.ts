@@ -1,9 +1,8 @@
 import { expect, test } from "bun:test";
-import { readdir, readFile } from "node:fs/promises";
-import { resolve, join } from "node:path";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 
-const source = resolve(import.meta.dir, "../../../../official-repository/contracts/repository");
 const compiled = resolve(
     import.meta.dir,
     "../../../../runtimes/ulvia-cli/dist/bootstrap/contracts/repository/definition.json",
@@ -36,19 +35,7 @@ test("the official Registry release uses authenticated account operations and ha
     );
 });
 
-test("Registry fragments live in the official repository and compile exactly once", async () => {
-    const metadata = JSON.parse(await readFile(join(source, "definition.json"), "utf8"));
-    expect(metadata).not.toHaveProperty("capabilities");
-    const entries = await readdir(join(source, "capabilities"), { recursive: true, withFileTypes: true });
-    const declarations = [];
-    for (const entry of entries) {
-        if (entry.isFile() && entry.name.endsWith(".json")) {
-            declarations.push(JSON.parse(await readFile(join(entry.parentPath, entry.name), "utf8")));
-        }
-    }
+test("Registry SDK generation retains the released digest", async () => {
     const artifact = await admitContractReleaseJson(await readFile(compiled));
-    expect(new Set(declarations.map((capability) => capability.id)).size).toBe(declarations.length);
-    expect(declarations.sort((a, b) => a.id.localeCompare(b.id))).toEqual(
-        [...artifact.release.capabilities].sort((a, b) => a.id.localeCompare(b.id)),
-    );
+    expect(artifact.digest).toBe("sha256:6c459684fb72e50e8e8093e74563c3f111d3f007639df12d5ad09379c2f834ef");
 });

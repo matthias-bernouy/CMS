@@ -1,8 +1,6 @@
-import { submitSiteUpgrade } from "../fixtures/operationCompletion";
 import { expect } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { Page } from "playwright";
 
 export async function verifySecondInstanceIsolation(
     dataRoot: string,
@@ -44,70 +42,4 @@ export async function verifySecondInstanceIsolation(
         ),
     );
     expect(reports.map((report) => report.instanceId)).toEqual([primary.instanceId, secondary.instance.id]);
-}
-
-export async function mutateProviders(page: Page): Promise<void> {
-    await adminPageLink(page, "providers").click();
-    await page.locator("#provider-installations").waitFor();
-    await page.locator('a[href="#contract-routing"]').click();
-    await page.waitForURL(/#contract-routing$/u);
-    await page.locator("#contract-routing").waitFor();
-    await page.locator('a[href^="/admin/providers/upgrade?ulvia--mossa--contract=ulvia%2Fcms.content&"]').click();
-    const apply = page.locator(
-        'form[cms-mutation="ulvia/cms.installations:apply-contract-upgrade as mutation"] button[type="submit"]',
-    );
-    await apply.waitFor();
-    await submitSiteUpgrade(page, apply, "apply-contract-upgrade");
-    await page.waitForURL(/\/admin\/providers$/u, { waitUntil: "domcontentloaded" });
-    await page.reload({ waitUntil: "domcontentloaded" });
-    await page.locator("#provider-installations").waitFor();
-    const installation = page.locator("#provider-installations [role=listitem]").first();
-    for (const action of ["disable", "revoke"]) {
-        const button = installation
-            .locator('form[cms-mutation^="ulvia/cms.installations:set-provider-status "]')
-            .filter({ has: page.locator(`input[name="action"][value="${action}"]`) })
-            .locator('button[type="submit"]');
-        if (await button.isEnabled()) {
-            throw new Error(`Selected provider installation unexpectedly allowed ${action}`);
-        }
-    }
-}
-
-export async function mutateAccess(page: Page, adminEmail: string): Promise<void> {
-    await adminPageLink(page, "access").click();
-    await page.locator("#access-members").waitFor();
-    const administrator = page.locator('#access-members [role="listitem"]').filter({ hasText: adminEmail });
-    const removeAdministrator = administrator
-        .locator('form[cms-mutation^="ulvia/cms.access:set-administrator "]')
-        .filter({ has: page.locator('input[name="enabled"][value="false"]') });
-    await expectMutationError(page, removeAdministrator, "set-administrator", ["CANNOT_REMOVE_SELF"]);
-    await expectMutationError(
-        page,
-        administrator.locator('form[cms-mutation^="ulvia/cms.access:delete-user "]'),
-        "delete-user",
-        ["CANNOT_REMOVE_SELF", "PROTECTED_USER"],
-    );
-}
-
-async function expectMutationError(
-    page: Page,
-    form: ReturnType<Page["locator"]>,
-    capability: string,
-    expectedCodes: string[],
-): Promise<void> {
-    const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes(`ulvia/cms.access/${capability}`)),
-        form.locator('button[type="submit"]').click(),
-    ]);
-    if (response.ok()) {
-        throw new Error(`${capability} unexpectedly succeeded for the current administrator`);
-    }
-    const body = (await response.json()) as { error?: { code?: string } };
-    if (!body.error?.code || !expectedCodes.includes(body.error.code)) {
-        throw new Error(`${capability} returned an unexpected error: ${JSON.stringify(body)}`);
-    }
-}
-
-function adminPageLink(page: Page, pageId: string) {
-    return page.locator(`a[href="/admin/${pageId}"]`).first();
 }

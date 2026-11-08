@@ -42,10 +42,13 @@ export async function measureResource(stack: Stack, path: string, requestCount =
 }
 export async function publishPerformancePages(connection: Connection) {
     for (const [path, content] of [
-        ["/performance-literal", '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Performance</h1>'],
+        [
+            "/performance-literal",
+            '<div cms-bloc="ulvia-dtest--smoke-kit--card"><h1 slot="content">Performance</h1></div>',
+        ],
         ...["/performance-image", "/performance-image-two", "/performance-image-three"].map(
             (path) =>
-                [path, '<div cms-bloc="ulvia--mossa--navigation"><span slot="brand">Performance</span></div>'] as const,
+                [path, '<div cms-bloc="ulvia-dtest--smoke-kit--card"><p slot="content">Performance</p></div>'] as const,
         ),
     ]) {
         const page = await connection.call("ulvia/cms.content", "pages.create", {
@@ -71,7 +74,9 @@ export async function exerciseLoad(stack: Stack, connection: Connection) {
             await Bun.sleep(due - performance.now());
         }
         if (i % 4 === 3) {
-            const response = await connection.page.request.get(`${stack.cmsUrl}/admin/pages`, { timeout: 10_000 });
+            const response = await connection.page.request.get(`${stack.cmsUrl}/performance-literal`, {
+                timeout: 10_000,
+            });
             expect(response.status(), `administrator request ${i}`).toBe(200);
             expect(response.headers()["cache-control"]).toBe("private, no-store");
             await response.dispose();

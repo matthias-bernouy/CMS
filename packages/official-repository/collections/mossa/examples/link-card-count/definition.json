@@ -1,9 +1,0 @@
-{
-    "id": "link-card-count",
-    "label": "example.link-card-count.label",
-    "description": "example.link-card-count.description",
-    "previews": [
-        { "id": "desktop", "frame": { "width": 800, "height": 200 } },
-        { "id": "mobile", "frame": { "width": 320, "height": 320 } }
-    ]
-}

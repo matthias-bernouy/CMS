@@ -1,15 +1,25 @@
 import { expect } from "bun:test";
 import type { connectBrowser } from "./oauth";
-import type { Page } from "playwright";
 
 /** Cookie-bearing asset requests must remain public; the administrator document never does. */
-export async function exercisePageDelivery(page: Page, cmsUrl: string) {
+export async function exercisePageDelivery(connection: Awaited<ReturnType<typeof connectBrowser>>, cmsUrl: string) {
+    const page = connection.page;
+    const draft = await connection.call("ulvia/cms.content", "pages.create", {
+        path: "/private-delivery",
+        title: "Private delivery",
+        content: '<div cms-bloc="ulvia-dtest--smoke-kit--card"><p slot="content">Asset delivery</p></div>',
+    });
+    await connection.call("ulvia/cms.content", "pages.publish", {
+        id: draft.id,
+        expectedRevision: draft.revision,
+        visible: true,
+    });
     const measurements = [];
     for (let iteration = 0; iteration < 2; iteration++) {
-        const response = await page.goto(`${cmsUrl}/admin/pages`, { waitUntil: "networkidle" });
+        const response = await page.goto(`${cmsUrl}/private-delivery`, { waitUntil: "networkidle" });
         expect(response?.status()).toBe(200);
         expect(response?.headers()["cache-control"]).toBe("private, no-store");
-        await page.locator("#pages-list a[href*='/admin/pages/detail']").first().waitFor({ timeout: 30_000 });
+        await page.getByText("Asset delivery", { exact: true }).waitFor();
         const assetUrls = await page
             .locator("link[rel='stylesheet'], script[src]")
             .evaluateAll((nodes) =>
@@ -46,7 +56,8 @@ export async function exerciseBasicPage(connection: Awaited<ReturnType<typeof co
     const created = await connection.call("ulvia/cms.content", "pages.create", {
         path: "/basic-delivery-regression",
         title: "Basic delivery regression",
-        content: '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Fresh publication regression</h1>',
+        content:
+            '<div cms-bloc="ulvia-dtest--smoke-kit--card"><h1 slot="content">Fresh publication regression</h1></div>',
     });
     const published = await connection.call("ulvia/cms.content", "pages.publish", {
         id: created.id,

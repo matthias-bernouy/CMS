@@ -11,11 +11,11 @@ The `provider.cms-instances` definition is a published template without an execu
 
 `infra/releases/ulvia.release.ts` is the explicit trusted local source entry.
 It generates every official contract and its assets from the SDK inventory,
-prepares the remaining authored collections, and derives manifest claims with exact
+and derives manifest claims with exact
 digests and implementation requirements. Compilation captures executors without
 invoking them. Runtime mounting binds injected service ports.
-Retained contract/provider JSON files are immutable parity references; generation
-never scans or falls back to those definitions.
+Release digests are covered by golden assertions. There is no retained authored
+contract/provider repository or prefabricated collection corpus to scan.
 
 ```sh
 bun run generate:official-bootstrap
@@ -30,7 +30,8 @@ regenerates the runtime's current execution support pins from the manifest and
 runtime package version. Executable support contains only those shipped SDK claims.
 Historical API signatures remain compatibility evidence; older digests absent from
 the runtime artifact refuse execution. Merely admitting a release cannot add support.
-The resource ZIP and removal of collections are separate work.
+Collections remain a generic domain: explicit collection builds, releases,
+installation and publication are independent of system API bootstrap.
 
 ## Versions and publication
 

@@ -29,19 +29,6 @@ integration(
             });
             expect(inspected.reference).toEqual(found.results[0].reference);
             expect(inspected.content).toContain('"kind": "contract"');
-            const blocs = await connection.call("ulvia/cms.installations", "repository.search", {
-                query: "ulvia/mossa",
-                kinds: ["bloc"],
-                limit: 1,
-            });
-            expect(blocs.partial).toBe(false);
-            expect(blocs.results[0]?.blocId).toBeString();
-            const bloc = await connection.call("ulvia/cms.installations", "repository.get", {
-                repositoryId: blocs.results[0].repositoryId,
-                reference: blocs.results[0].reference,
-                blocId: blocs.results[0].blocId,
-            });
-            expect(bloc.content).toContain(blocs.results[0].blocId);
             const result = await exerciseDocumentation(connection, f.cmsUrl);
             await exerciseFiles(connection.call, f.cmsUrl, connection.token.access_token);
             await f.restartProvider();

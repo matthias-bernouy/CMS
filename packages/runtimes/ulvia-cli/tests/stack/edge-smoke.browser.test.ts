@@ -64,7 +64,7 @@ smoke(
                 environment,
                 log: (message) => (output += `${message}\n`),
             });
-            await waitForHttp(`${EDGE_URL}/login`);
+            await waitForHttp(`${EDGE_URL}/readyz`);
             const credentials = JSON.parse(
                 await readFile(join(data, "instances", "default", "runtime.json"), "utf8"),
             ) as {
@@ -108,7 +108,7 @@ smoke(
             output += "\n--- persisted-state restart ---\n";
             report("persisted-state restart");
             await runCli(["start"], { environment, log: (message) => (output += `${message}\n`) });
-            await waitForHttp(`${EDGE_URL}/login`);
+            await waitForHttp(`${EDGE_URL}/readyz`);
             browser = await chromium.launch({ headless: true });
             const restartedPage = await browser.newPage({ locale: "en-US", viewport: { width: 1440, height: 1000 } });
             restartedPage.setDefaultTimeout(15_000);

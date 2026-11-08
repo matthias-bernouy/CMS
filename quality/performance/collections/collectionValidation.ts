@@ -1,6 +1,6 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import {
     admitCollectionReleaseJson,
     describeCollectionResources,
@@ -15,19 +15,10 @@ import {
 } from "@bernouy/repository/collections/installations";
 import { assertGrowth, assertMaximum, benchmark, printResults } from "../benchmark";
 import { admittedFixture, collectionFixture } from "./collectionFixtures";
-import { officialContractCatalogue } from "../officialContracts";
-
-const OFFICIAL_RELEASE = join(
-    import.meta.dir,
-    "../../../packages/runtimes/ulvia-cli/dist/bootstrap/collections/mossa/release.json",
-);
 
 export async function runCollectionValidationBenchmarks(): Promise<void> {
-    const officialJson = await Bun.file(OFFICIAL_RELEASE).text();
-    const officialAssets = parseCollectionReleaseJson(officialJson).assets.map(({ id }) => ({
-        id,
-        bytes: Bun.file(join(dirname(OFFICIAL_RELEASE), "assets", id)),
-    }));
+    const referenceJson = JSON.stringify(collectionFixture(128, 64));
+    const referenceAssets: { id: string; bytes: Uint8Array }[] = [];
     const synthetic = [
         { blocs: 32, examples: 16 },
         { blocs: 128, examples: 64 },
@@ -36,26 +27,25 @@ export async function runCollectionValidationBenchmarks(): Promise<void> {
         name: `${blocs} blocs / ${examples} examples`,
         value: collectionFixture(blocs, examples),
     }));
-    const results = [await benchmark("official JSON validation", () => parseCollectionReleaseJson(officialJson))];
+    const results = [await benchmark("128-bloc JSON validation", () => parseCollectionReleaseJson(referenceJson))];
     for (const { name, value } of synthetic) {
         results.push(await benchmark(`semantic validation: ${name}`, () => parseCollectionRelease(value)));
     }
     printResults("Collection validation", results);
-    assertMaximum("official collection validation p95", results[0]!.p95Ms, 2_500);
+    assertMaximum("128-bloc collection validation p95", results[0]!.p95Ms, 2_500);
     assertMaximum("maximum-size synthetic validation p95", results.at(-1)!.p95Ms, 2_500);
     assertGrowth("128 to 512 bloc validation growth", results[2]!, results[3]!, 12);
 
     const largest = parseCollectionRelease(synthetic.at(-1)!.value);
     const nextLargest = parseCollectionRelease(collectionFixture(512, 256, "1.0.1"));
-    const contracts = await officialContractCatalogue();
-    const officialAdmission = await admitCollectionReleaseJson(officialJson, officialAssets, { contracts });
+    const referenceAdmission = await admitCollectionReleaseJson(referenceJson, referenceAssets);
     const admissionResults = [
-        await benchmark("official JSON admission and digest", () =>
-            admitCollectionReleaseJson(officialJson, officialAssets, { contracts }),
+        await benchmark("128-bloc JSON admission and digest", () =>
+            admitCollectionReleaseJson(referenceJson, referenceAssets),
         ),
         await benchmark("512-bloc synthetic admission and digest", () => admittedFixture(512, 256, "1.0.0")),
-        await benchmark("describe official collection resources", () =>
-            describeCollectionResources(officialAdmission.release),
+        await benchmark("describe 128-bloc collection resources", () =>
+            describeCollectionResources(referenceAdmission.release),
         ),
         await benchmark("compare two 512-bloc collection releases", () =>
             verifyCollectionPublicationEvolution(largest, nextLargest),

@@ -9,13 +9,13 @@ export async function verifyPublicTrace(
 ): Promise<void> {
     // Trace the origin path explicitly; separate cache-hit probes require zero Provider work.
     const traceId = crypto.randomUUID();
-    const response = await fetch(`${cmsUrl}/login`, {
+    const response = await fetch(`${cmsUrl}/trace-probe`, {
         headers: { "x-request-id": traceId, "cache-control": "no-cache" },
     });
     expect(response.status).toBe(200);
     await response.arrayBuffer();
     const warmTraceId = crypto.randomUUID();
-    const warm = await fetch(`${cmsUrl}/login`, {
+    const warm = await fetch(`${cmsUrl}/trace-probe`, {
         headers: { "x-request-id": warmTraceId, "cache-control": "no-cache" },
     });
     expect(warm.status).toBe(200);

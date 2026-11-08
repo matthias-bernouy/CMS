@@ -119,3 +119,7 @@ Ulvia CMS installation runtime.
   assets. Require one real H1 per document; paths identify documents. Preserve
   exact bytes through bootstrap, release, push and pull. Reject authored
   manifests, source symlinks and dangling capability or internal document links.
+
+- Official bootstrap generation uses only the SDK feature inventory and Provider
+  metadata. Never scan an authored official repository or bundle starter collections.
+  Explicit user collection release/build/publication remains supported.

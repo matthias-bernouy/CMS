@@ -1,12 +1,19 @@
-import { join } from "node:path";
-import { buildCollectionBloc, type CollectionBlocBuildInput } from "@bernouy/repository/collections/build";
+import { buildCollectionBloc } from "@bernouy/repository/collections/build";
 import { assertMaximum, benchmark, printResults } from "../benchmark";
 
-const BLOC_ROOT = join(import.meta.dir, "../../../packages/official-repository/collections/mossa/blocs");
-
 export async function runCollectionBuildBenchmarks(): Promise<void> {
-    const colorInput = await blocSource("forms/fields/ulvia--mossa--color-input", "ulvia--mossa--color-input");
-    const pageEditor = await blocSource("admin/pages/ulvia--mossa--page-editor", "ulvia--mossa--page-editor");
+    // Synthetic modules measure source-map and import-graph compilation without a product kit.
+    const source = Object.fromEntries(
+        Array.from({ length: 64 }, (_, index) => [
+            `modules/value${index}.ts`,
+            Buffer.from(`export const value = ${index};`).toString("base64"),
+        ]),
+    );
+    const imports = Array.from(
+        { length: 64 },
+        (_, index) => `import { value as v${index} } from "./modules/value${index}";`,
+    );
+    const sum = Array.from({ length: 64 }, (_, index) => `v${index}`).join(" + ");
     const results = [
         await benchmark("compile minimal collection Bloc", () =>
             buildCollectionBloc({
@@ -14,24 +21,19 @@ export async function runCollectionBuildBenchmarks(): Promise<void> {
                 viewSource: 'export function mount(root) { root.dataset.ready = "true"; }',
             }),
         ),
-        await benchmark("compile official color input Bloc", () => buildCollectionBloc(colorInput)),
-        await benchmark("compile official Page editor Bloc", () => buildCollectionBloc(pageEditor)),
+        await benchmark("compile 64-module authored collection Bloc", () =>
+            buildCollectionBloc({
+                tag: "performance-modular",
+                viewPath: "bloc.ts",
+                source,
+                viewSource: [...imports, `export function mount(root) { root.textContent = String(${sum}); }`].join(
+                    "\n",
+                ),
+            }),
+        ),
     ];
     printResults("Collection Bloc compilation", results);
     for (const result of results) {
         assertMaximum(`${result.name} p95`, result.p95Ms, 10_000);
     }
-}
-
-async function blocSource(relativeRoot: string, tag: string): Promise<CollectionBlocBuildInput> {
-    const root = join(BLOC_ROOT, relativeRoot);
-    const viewSource = await Bun.file(join(root, "bloc.ts")).text();
-    const source: Record<string, string> = {};
-    const glob = new Bun.Glob("**/*");
-    for await (const path of glob.scan({ cwd: root, onlyFiles: true })) {
-        if (path !== "bloc.ts") {
-            source[path] = Buffer.from(await Bun.file(join(root, path)).bytes()).toString("base64");
-        }
-    }
-    return { tag, viewSource, viewPath: "bloc.ts", source };
 }

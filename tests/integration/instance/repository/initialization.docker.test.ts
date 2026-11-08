@@ -1,3 +1,4 @@
+import { publishInitializationFixture } from "./initializationFixture";
 import { expect, test } from "bun:test";
 import { chromium } from "playwright";
 import type { Page } from "playwright";
@@ -23,7 +24,7 @@ async function login(page: Page, site: { url: string; administrator: { email: st
 }
 
 integration(
-    "native setup authenticates, reviews and installs Mossa; an offline empty start stays empty after restart",
+    "native setup authenticates, reviews and installs an explicitly published recipe; an offline empty start stays empty after restart",
     async () => {
         const stack = await scratchRepository({ provider: provider!, edge: edge! });
         const browser = await chromium.launch({ headless: true });
@@ -38,6 +39,7 @@ integration(
             await setup.apply(null, empty.digest);
             const pat = await api.pat(session.cookie);
             await publishBundledReleases(stack.url, "http://ulvia-provider:5103", pat.token);
+            await publishInitializationFixture(stack.url, pat.token);
             const site = await stack.createSite("starter");
             const siteApi = repositoryApi(site.url);
             const siteSession = await siteApi.session(site.administrator.email, site.administrator.password);
@@ -53,10 +55,13 @@ integration(
             await page.screenshot({ path: `${screenshots}/choice-mobile.png`, fullPage: true });
             await page.setViewportSize({ width: 1360, height: 900 });
             await page.getByRole("button", { name: "Use a starter", exact: false }).click();
-            await page.getByRole("button", { name: /^Administration / }).click();
+            await page.getByRole("button", { name: /^Test starter / }).click();
             await page.getByRole("heading", { name: "Review your starting point." }).waitFor();
             await page.screenshot({ path: `${screenshots}/review.png`, fullPage: true });
-            await page.getByRole("checkbox").check();
+            const consent = page.getByRole("checkbox");
+            if (await consent.isVisible()) {
+                await consent.check();
+            }
             await page.getByRole("button", { name: "Confirm and install", exact: false }).click();
             await page.getByRole("heading", { name: "Your workspace is ready." }).waitFor({ timeout: 120_000 });
             const pages = await siteApi.request(
@@ -66,12 +71,12 @@ integration(
                 { limit: 100 },
                 siteSession,
             );
-            expect((await pages.json()).items.length).toBeGreaterThan(15);
+            expect((await pages.json()).items).toHaveLength(1);
             expect((await siteSetup.call("initialization/status").then((response) => response.json())).status).toBe(
                 "completed",
             );
             await page.getByRole("link", { name: "Open your site", exact: false }).click();
-            await page.waitForURL(`${site.url}/admin`);
+            await page.waitForURL(`${site.url}/`);
             const blank = await stack.createSite("blank");
             const blankSession = await repositoryApi(blank.url).session(
                 blank.administrator.email,

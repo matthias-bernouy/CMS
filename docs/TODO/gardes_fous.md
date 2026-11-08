@@ -122,8 +122,8 @@ Risk areas are declared and tested in `quality/ci/check-all/review.ts`:
 | Persistence | `**/mongo/**`, `Mongo*.ts` | operations per call, awaited loops, limits and pagination, indexes |
 | Authority | `**/gateway/**`, `**/access/**`, `**/authority/**`, `**/authentication/**` | fresh checks, quota consumers and rate, delegation, token claims |
 | Caches | `*Cache*.ts` | byte bounds, complete key, invalidation, negative entries |
-| Contracts | `packages/official-repository/contracts/**` | version bump, access levels, per-request cost |
-| Browser and collections | `**/browser/**`, `packages/official-repository/collections/**` | trusted JavaScript, network calls, bundle weight |
+| Contracts | SDK feature capability definitions | version bump, access levels, per-request cost |
+| Browser and collections | `**/browser/**`, collection source/build tooling | trusted JavaScript, network calls, bundle weight |
 
 Check semantics do not change: a directory-fanout error remains the only
 blocking repository-shape finding.

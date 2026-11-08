@@ -9,8 +9,7 @@ export function isBrowserEntrypoint(path: string): boolean {
         path === "packages/surfaces/cms-edge/src/browser/runtime.ts" ||
         path.startsWith("packages/surfaces/cms-edge/src/components/") ||
         path.startsWith("packages/features/content/src/browser/") ||
-        /\.client\.[cm]?[jt]sx?$/.test(path) ||
-        /^packages\/official-repository\/collections\/[^/]+\/blocs\/.+\/bloc\.ts$/.test(path)
+        /\.client\.[cm]?[jt]sx?$/.test(path)
     );
 }
 

@@ -1,14 +1,9 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import { checkWorkspaceArchitecture } from "../core/checkWorkspace";
 import { repositoryArchitectureOptions } from "../repository/repositoryPolicy";
 import { createWorkspaceFixture, manifest, ofKind } from "./checkWorkspace.fixture";
 
 const { createWorkspace } = createWorkspaceFixture();
-const REPOSITORY_ROOT = resolve(import.meta.dir, "../../..");
-const OFFICIAL_COLLECTIONS = resolve(REPOSITORY_ROOT, "packages/official-repository/collections");
-
 test("Delivery imports only public content capabilities, including type and dynamic imports", async () => {
     const root = await createWorkspace({
         "packages/features/content/package.json": manifest("@bernouy/content", {
@@ -47,33 +42,3 @@ test("browser graphs reject even lazy Sharp imports", async () => {
     });
     expect(ofKind(await checkWorkspaceArchitecture({ rootDir: root }), "browser-runtime-adapter")).toHaveLength(1);
 });
-
-test("official collection scripts use only the common capability transport", async () => {
-    const browserSources = await officialCollectionFiles("*/blocs/**/*.ts");
-    for (const path of browserSources) {
-        const source = await readFile(path, "utf8");
-        for (const match of source.matchAll(/\bfetch\s*\(\s*([^,\n)]+)/gu)) {
-            const expression = match[1]!.trim();
-            expect(expression, `${path}: dynamic or non-CMS fetch`).toMatch(
-                /^[`'"]\/\.cms\/(?:call|query|\$\{route\})\//u,
-            );
-        }
-    }
-
-    const pages = await officialCollectionFiles("*/pages/control/**/*.html");
-    for (const path of pages) {
-        const source = await readFile(path, "utf8");
-        for (const match of source.matchAll(/\bcms-mutation="([^"]+)"/gu)) {
-            const target = match[1]!.split(" as ", 1)[0]!;
-            expect(target.includes(":"), `${path}: ${target}`).toBeTrue();
-        }
-    }
-});
-
-async function officialCollectionFiles(pattern: string): Promise<string[]> {
-    const paths: string[] = [];
-    for await (const path of new Bun.Glob(pattern).scan({ cwd: OFFICIAL_COLLECTIONS, absolute: true })) {
-        paths.push(path);
-    }
-    return paths.sort();
-}

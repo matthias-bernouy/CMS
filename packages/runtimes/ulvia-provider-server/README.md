@@ -19,7 +19,7 @@ can therefore start before any public catalogue or browser interface exists.
 Authenticate through `ulvia/cms.access` and publish resources through CLI/API;
 initialization never publishes the bundled system releases to the catalogue.
 
-Run `bun run generate:official-bootstrap --core-only` from the workspace root
+Run `bun run generate:official-bootstrap` from the workspace root
 before native startup to stage admitted system contracts, documentation and the
 Provider manifest in this package's `dist/bootstrap`. Production images use
 this snapshot and omit authored collections and compiled starter assets.
@@ -28,12 +28,8 @@ resources and never falls back to the configured public Repository. Set an absol
 `ULVIA_BOOTSTRAP_DIR` to select another pre-built snapshot. Public resource
 discovery and explicit imports still use the configured Repository connection.
 
-The full `bun run generate:official-bootstrap` remains available for authoring
-and example tests. Exact `1.0.0` starter profiles retain their original meaning
-and require an explicit matching historical snapshot for new or unfinished provisioning. A
-core-only image refuses such provisioning when resources are absent. Existing
-ready instances reopen from persisted execution and do not read their old kit.
-The full generator emits current collections, not historical starter resources.
+Prefabricated starter profiles are no longer shipped. Existing ready instances
+reopen from persisted execution and do not read their old installation kit.
 Profile versions are independent of contract and collection release versions.
 
 New profiles persist a pending site-initialization marker. Edge serves native
@@ -69,7 +65,7 @@ keys isolate releases, and failed loads can be retried.
 The worker pool deliberately keeps queue, cancellation and lifecycle ownership in
 one cohesive controller despite the file-size advisory; transport conversion and
 wire types are separate modules. Responsiveness tests compare the host heartbeat
-while verifying the same official Mossa artifact inline and in the worker. This
+while verifying the same large synthetic collection inline and in the worker. This
 covers collection verification, not every authoring/compiler or documentation task.
 
 ## Paged collection catalogue
@@ -77,12 +73,9 @@ covers collection verification, not every authoring/compiler or documentation ta
 New profiles select `ulvia/cms.installations@1.2.0`, the Provider manifest at
 `1.2.0` and (for a Repository instance) `ulvia/repository@1.1.0`. Existing sites keep
 their exact approved manifests and selected releases; replacing an image does not
-implicitly adopt these releases. Upgrade the Repository API before using its new
-latest-collection route, then explicitly adopt the new installations API and
-Mossa `1.2.0` on consuming sites.
-For an existing Mossa site, create the ordinary Content Page at
-`/admin/collections/releases` from the `application/admin/collection-releases`
-example. A collection upgrade does not replay its bootstrap recipe or add Pages.
+implicitly adopt these releases. Discovery and installation remain available through
+the admitted API, independently of an authored administration website. A collection
+upgrade does not replay its bootstrap recipe or add Pages.
 
 Latest discovery indexes coordinate heads from filenames, excluding yanked and
 out-of-channel releases before pagination. It reads JSON only for the requested
@@ -95,6 +88,6 @@ waiters recheck revisions and repeated concurrent changes refuse after three att
 
 The installations facade returns at most 25 verified summaries, within a 1 MiB
 aggregate summary budget. No discovery assets are downloaded. Exact immutable
-metadata is cached, while site revision and actions remain fresh. Mossa displays
-one latest version per collection and opens history only on demand. Existing
+metadata is cached, while site revision and actions remain fresh. Latest discovery
+returns one version per collection; history is queried explicitly. Existing
 all-release capabilities retain their previous semantics.

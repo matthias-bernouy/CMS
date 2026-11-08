@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { admitCollectionRelease } from "@bernouy/repository/collections";
 import { expect, test } from "bun:test";
 import { inlineCollectionVerifier } from "@bernouy/repository/collections/sources";
 import { CollectionVerificationPool } from "../../../src/runtime/instances/verification/CollectionVerificationPool";
@@ -23,18 +23,26 @@ async function measure(operation: () => Promise<unknown>) {
     }
 }
 
-test("official collection verification keeps the host heartbeat responsive", async () => {
-    const root = new URL("../../../../ulvia-cli/dist/bootstrap/", import.meta.url);
-    const index = await Bun.file(new URL("index.json", root)).json();
-    const entry = index.collections.find(
-        (item: { release: string }) => item.release === "collections/mossa/release.json",
-    );
-    const json = (await Bun.file(new URL(entry.release, root)).text()).trim();
-    const value = JSON.parse(json);
-    const admitted = await inlineCollectionVerifier.metadata(
-        value,
-        `sha256:${createHash("sha256").update(json).digest("hex")}`,
-    );
+test("large synthetic collection verification keeps the host heartbeat responsive", async () => {
+    const admitted = await admitCollectionRelease({
+        kind: "collection",
+        protocol: "ulvia-collection/v1",
+        schemaDialect: "ulvia-schema/v1",
+        publisherId: "test",
+        collectionId: "test/large",
+        version: "1.0.0",
+        name: "name",
+        locale: "en",
+        translations: {
+            en: Object.fromEntries([
+                ["name", "Large verification fixture"],
+                ...Array.from({ length: 3000 }, (_, i) => [`label-${i}`, `Label ${i}`]),
+            ]),
+        },
+        blocs: [],
+        assets: [],
+    });
+    const value = admitted.release;
     const pool = new CollectionVerificationPool();
     try {
         await pool.metadata(value, admitted.digest);

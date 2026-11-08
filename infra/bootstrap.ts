@@ -1,30 +1,18 @@
 import { chmod, cp, mkdir, readdir, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 
-// Production stages core API artifacts only; full snapshots remain available for authoring tests.
-const args = Bun.argv.slice(2);
-if (args.some((arg) => arg !== "--core-only") || args.length > 1) {
-    throw new Error("Usage: generate:official-bootstrap [--core-only]");
+// Compile the SDK inventory; no authored collection corpus is bundled.
+if (Bun.argv.length > 2) {
+    throw new Error("Usage: generate:official-bootstrap");
 }
-const coreOnly = args.includes("--core-only");
-const child = Bun.spawn(
-    [
-        process.execPath,
-        "run",
-        "--cwd",
-        "packages/runtimes/ulvia-cli",
-        "generate:bootstrap",
-        ...(coreOnly ? ["--core-only"] : []),
-    ],
-    {
-        stdout: "inherit",
-        stderr: "inherit",
-    },
-);
+const child = Bun.spawn([process.execPath, "run", "--cwd", "packages/runtimes/ulvia-cli", "generate:bootstrap"], {
+    stdout: "inherit",
+    stderr: "inherit",
+});
 if (await child.exited) {
     throw new Error("Official bootstrap compilation failed");
 }
-const bootstrapRoot = resolve(`packages/runtimes/ulvia-cli/dist/${coreOnly ? "bootstrap-core" : "bootstrap"}`);
+const bootstrapRoot = resolve("packages/runtimes/ulvia-cli/dist/bootstrap");
 const source = resolve(bootstrapRoot, "repository");
 const destination = resolve("packages/runtimes/ulvia-provider-server/dist/bootstrap");
 await rm(destination, { recursive: true, force: true });

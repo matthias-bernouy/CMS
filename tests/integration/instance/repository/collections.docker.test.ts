@@ -1,12 +1,11 @@
 import { expect, test } from "bun:test";
-import { chromium } from "playwright";
 import { writeFile } from "node:fs/promises";
 import { admitCollectionRelease } from "@bernouy/repository/collections";
 import { RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
 import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 import { scratchRepository } from "../containers/scratch";
 import { repositoryApi } from "./client";
-import { initializationApi, installStarter } from "./initializationClient";
+import { initializationApi } from "./initializationClient";
 import { publishBundledReleases } from "./bootstrap";
 
 const provider = process.env.ULVIA_COLLECTIONS_PROVIDER_DOCKER_IMAGE;
@@ -17,10 +16,6 @@ integration(
     "latest discovery and paged history remain usable while cold collection validation runs",
     async () => {
         const stack = await scratchRepository({ provider: provider!, edge: edge! });
-        const browser = await chromium.launch({ headless: true });
-        const page = await browser.newPage({ viewport: { width: 1360, height: 900 }, locale: "en-US" });
-        const scriptErrors: string[] = [];
-        page.on("pageerror", (error) => scriptErrors.push(error.message));
         try {
             const root = repositoryApi(stack.url);
             const session = await root.session(stack.administrator.email, stack.administrator.password);
@@ -56,7 +51,6 @@ integration(
                 await publisher.push({ kind: "collection", canonicalJson: artifact.canonicalJson, assets: [] });
             }
             const site = await stack.createSite("collections");
-            await installStarter(site.url, site.administrator, "ulvia/mossa");
             const api = repositoryApi(site.url);
             const actor = await api.session(site.administrator.email, site.administrator.password);
             await stack.restart();
@@ -94,34 +88,39 @@ integration(
                 "/tmp/ulvia-collections-performance.json",
                 JSON.stringify({ samples, maximumMs: maximum }, null, 2),
             );
-            await page.goto(`${site.url}/login`);
-            await page.getByLabel(/^(Email address|Adresse e-mail)$/u).fill(site.administrator.email);
-            await page.getByLabel(/^(Password|Mot de passe)$/u).fill(site.administrator.password);
-            await page.getByRole("button", { name: /^(Sign in|Se connecter)$/u }).click();
-            await page.waitForURL(`${site.url}/admin`);
-            await page.goto(`${site.url}/admin/collections`);
-            const card = page
-                .locator('[role="listitem"]')
-                .filter({ has: page.getByRole("heading", { name: "Paged collection", exact: true }) });
-            await card.waitFor();
-            expect(await card.count()).toBe(1);
-            await card.getByText("load 1.0.30", { exact: true }).waitFor();
-            await page.screenshot({ path: "/tmp/ulvia-optis-catalogue.png", fullPage: true });
-            await card.getByRole("link", { name: /^(Release history|Historique des versions)$/u }).click();
-            await page.locator("tbody tr").nth(24).waitFor();
-            expect(await page.locator("tbody tr").count()).toBe(25);
-            await page.getByRole("link", { name: /^(Next page|Page suivante)$/u }).click();
-            await page.locator("tbody tr").nth(5).waitFor();
-            expect(await page.locator("tbody tr").count()).toBe(6);
-            await page.screenshot({ path: "/tmp/ulvia-optis-history.png", fullPage: true });
-            await page.setViewportSize({ width: 375, height: 812 });
-            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-            expect(scriptErrors).toEqual([]);
+            const versions = await api.request(
+                "ulvia/cms.installations",
+                "/collections/releases",
+                "QUERY",
+                {
+                    repositoryId: catalogue.releases[0].repositoryId,
+                    publisherId: "load",
+                    collectionId: "load/paged",
+                    limit: 25,
+                },
+                actor,
+            );
+            expect(versions.status).toBe(200);
+            const history = await versions.json();
+            expect(history.releases).toHaveLength(25);
+            const next = await api.request(
+                "ulvia/cms.installations",
+                "/collections/releases",
+                "QUERY",
+                {
+                    repositoryId: catalogue.releases[0].repositoryId,
+                    publisherId: "load",
+                    collectionId: "load/paged",
+                    limit: 25,
+                    cursor: history.cursor,
+                },
+                actor,
+            );
+            expect(next.status).toBe(200);
+            expect((await next.json()).releases).toHaveLength(6);
         } catch (error) {
-            await page.screenshot({ path: "/tmp/ulvia-optis-failure.png", fullPage: true }).catch(() => {});
             throw new Error(`${String(error)}\n${await stack.diagnostics()}`);
         } finally {
-            await browser.close();
             await stack.close();
         }
     },

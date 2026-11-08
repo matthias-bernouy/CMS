@@ -1,9 +1,0 @@
-:scope {
-    display: block;
-    min-width: 0;
-    height: 100%;
-}
-
-[data-navigation-root] {
-    min-height: 100%;
-}

@@ -81,13 +81,13 @@ export async function exerciseCli(root: string, origin: string, token: string) {
         true,
     );
     await run(["namespace", "claim", "ulvia"]);
-    await run(["release", resolve("packages/official-repository"), "--recursive"]);
+    await run(["release", resolve("infra/releases")]);
     await run(["push", "all"]);
     expect(
         (await new HttpCollectionRepository("journey", origin).list()).some(
             (entry) => entry.collectionId === "ulvia/mossa",
         ),
-    ).toBe(true);
+    ).toBe(false);
     await run(["repository", "logout"]);
     await expect(run(["push", "contract", coordinate, "--repository", origin])).rejects.toThrow("No credentials");
     expect(logs.join("\n")).not.toContain(token);
@@ -112,10 +112,7 @@ export async function exerciseCmsAuthoring(
     expect((await invalid.json()).error.code).toBe("INVALID_INPUT");
     expect(await (await call("/get-connection", undefined, "GET")).json()).toEqual(connection);
     expect((await call("/claim-namespace", { namespace: "journey.cms" })).status).toBe(200);
-    const guide = await readFile(
-        resolve("packages/official-repository/contracts/cms.authoring/docs/collection-source.md"),
-        "utf8",
-    );
+    const guide = await readFile(resolve("packages/features/repository/docs/authoring/collection-source.md"), "utf8");
     const sourceJson = JSON.stringify(
         JSON.parse(guide.split("```json\n")[1]!.split("```")[0]!.replaceAll("your-namespace", "journey.cms")),
     );

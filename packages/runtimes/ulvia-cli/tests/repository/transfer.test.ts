@@ -6,8 +6,7 @@ import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
 import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
 import { startTestRepository } from "./fixture";
-import { prepareContractSource } from "@bernouy/repository/repository/authoring/build";
-import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
+import { compileOfficialFeatures } from "@bernouy/ulvia-provider/build";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
 
 test("CLI push and pull preserve every official artifact kind through a remote repository", async () => {
@@ -15,15 +14,11 @@ test("CLI push and pull preserve every official artifact kind through a remote r
     const targetData = await mkdtemp(join(tmpdir(), "ulvia-pull-target-"));
     const remoteRoot = await mkdtemp(join(tmpdir(), "ulvia-push-target-"));
     const server = startTestRepository(remoteRoot);
-    const repositoryRoot = resolve(import.meta.dir, "../../../../official-repository");
+    const repositoryRoot = resolve(import.meta.dir, "../../dist/bootstrap");
     const providerDirectory = join(repositoryRoot, "providers", "primary-provider");
-    const providerDefinition = (await Bun.file(join(providerDirectory, "definition.json")).json()) as {
-        implementations: Array<{ contractId: string }>;
-    };
-    const contractIds = await publicationOrder(
-        repositoryRoot,
-        providerDefinition.implementations.map(({ contractId }) => contractId),
-    );
+    const contractIds = (
+        await publishContractSet(new InMemoryReleaseCatalogue(), (await compileOfficialFeatures()).contracts)
+    ).map(({ release }) => release.contractId);
     const environment = (data: string) => ({
         ULVIA_DATA_DIR: data,
         ULVIA_REPOSITORY_URL: server.url,
@@ -38,11 +33,20 @@ test("CLI push and pull preserve every official artifact kind through a remote r
         ).json()) as { releases: unknown[] };
     try {
         await server.connect(sourceData);
+        await server.claim("ulvia.test");
+        await runCli(["release", resolve(import.meta.dir, "../../../../../infra/releases")], {
+            environment: environment(sourceData),
+            log: () => undefined,
+        });
         for (const contractId of contractIds) {
-            const directory = join(repositoryRoot, "contracts", resourceName(contractId));
+            const directory = join(
+                repositoryRoot,
+                "contracts",
+                ...(contractId.startsWith("ulvia/cms.") ? ["cms"] : []),
+                resourceName(contractId),
+            );
             const definition = (await Bun.file(join(directory, "definition.json")).json()) as { version: string };
             const coordinate = `${contractId}@${definition.version}`;
-            await runCli(["release", directory], { environment: environment(sourceData), log: () => undefined });
             await runCli(["push", "contract", coordinate], {
                 environment: environment(sourceData),
                 log: () => undefined,
@@ -67,7 +71,7 @@ test("CLI push and pull preserve every official artifact kind through a remote r
             environment: environment(targetData),
             log: () => undefined,
         });
-        const accessVersion = await definitionVersion(join(repositoryRoot, "contracts", "cms.access"));
+        const accessVersion = await definitionVersion(join(repositoryRoot, "contracts", "cms", "cms.access"));
         const accessCoordinate = `ulvia/cms.access@${accessVersion}`;
         await runCli(["yank", "contract", accessCoordinate, "--reason", "Temporarily unavailable"], {
             environment: environment(sourceData),
@@ -96,9 +100,9 @@ test("CLI push and pull preserve every official artifact kind through a remote r
             log: () => undefined,
         });
 
-        const collectionDirectory = join(repositoryRoot, "collections", "mossa");
+        const collectionDirectory = resolve(import.meta.dir, "../stack/fixtures/smoke-kit");
         const collectionVersion = await definitionVersion(collectionDirectory);
-        const collectionCoordinate = `ulvia/mossa@${collectionVersion}`;
+        const collectionCoordinate = `ulvia.test/smoke-kit@${collectionVersion}`;
         await runCli(["release", collectionDirectory], {
             environment: environment(sourceData),
             log: () => undefined,
@@ -134,35 +138,9 @@ test("CLI push and pull preserve every official artifact kind through a remote r
             [sourceData, targetData, remoteRoot].map((path) => rm(path, { recursive: true, force: true })),
         );
     }
-    // Includes source compilation and repeated admission of every official example and font asset.
+    // Includes explicit authored collection compilation and transfer.
 }, 60_000);
 
 async function definitionVersion(directory: string): Promise<string> {
     return ((await Bun.file(join(directory, "definition.json")).json()) as { version: string }).version;
-}
-
-async function publicationOrder(repositoryRoot: string, contractIds: readonly string[]): Promise<readonly string[]> {
-    const admissions = new Map<string, AdmittedContractRelease>();
-    const load = async (contractId: string): Promise<AdmittedContractRelease> => {
-        const existing = admissions.get(contractId);
-        if (existing) {
-            return existing;
-        }
-        const directory = join(repositoryRoot, "contracts", resourceName(contractId));
-        const admission = (await prepareContractSource(directory)).admission;
-        admissions.set(contractId, admission);
-        if (admission.release.extends) {
-            const parent = await load(admission.release.extends.contractId);
-            if (
-                parent.release.version !== admission.release.extends.version ||
-                parent.digest !== admission.release.extends.digest
-            ) {
-                throw new Error(`Official specialization parent mismatch: ${contractId}`);
-            }
-        }
-        return admission;
-    };
-    await Promise.all(contractIds.map(load));
-    const ordered = await publishContractSet(new InMemoryReleaseCatalogue(), [...admissions.values()]);
-    return ordered.map(({ release }) => release.contractId);
 }

@@ -39,14 +39,14 @@ integration(
             connection = await connectBrowser(f.cmsUrl, f.administrator);
             expect(connection.tools).toHaveLength(68);
             await exerciseDocumentation(connection, f.cmsUrl);
-            await exercisePageDelivery(connection.page, f.cmsUrl);
+            await exercisePageDelivery(connection, f.cmsUrl);
             await exerciseBasicPage(connection, f.cmsUrl);
             await exerciseDelegationStore(f.providerName, f.id);
             await exerciseExecutionState(f.providerName, f.id);
             await exerciseAuthenticationMaterial(f.providerName, f.id);
             await exerciseNamedSecretResolution(f.providerName, f.id);
             await exerciseRenderingResources(f.providerName, f.id);
-            await exerciseProviders(f, connection.page);
+            await exerciseProviders(f);
             const namespace = f.id.replaceAll("-", "");
             await connection.call("ulvia/cms.authoring", "configure-connection", { token: f.repository.pat.token });
             const repositoryConnection = await exerciseCollections(connection.call, namespace, f.providerName);

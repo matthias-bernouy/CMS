@@ -20,13 +20,13 @@ const connection = await connectBrowser(processes.cmsUrl, processes.administrato
 const draft = await connection.call("ulvia/cms.content", "pages.create", {
     path: "/agent-concurrent",
     title: "Shared review",
-    content: '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Original heading</h1>',
+    content: '<div cms-bloc="ulvia-dtest--smoke-kit--card"><h1 slot="content">Original heading</h1></div>',
 });
 if (secondRound) {
     const appointment = await connection.call("ulvia/cms.content", "pages.create", {
         path: "/rendez-vous",
         title: "Prendre rendez-vous",
-        content: '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Prendre rendez-vous</h1>',
+        content: '<div cms-bloc="ulvia-dtest--smoke-kit--card"><h1 slot="content">Prendre rendez-vous</h1></div>',
     });
     await connection.call("ulvia/cms.content", "pages.publish", {
         id: appointment.id,

@@ -1,12 +1,9 @@
-import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { dirname } from "node:path";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { admitCollectionReleaseJson } from "@bernouy/repository/collections";
 import {
     LocalArtifactFiles,
-    LocalCollectionRepository,
     LocalContractReleases,
     LocalProviderReleases,
     withRepositoryWriteLock,
@@ -15,10 +12,6 @@ import {
 type BootstrapIndex = Readonly<{
     contracts: readonly string[];
     provider: string;
-    collections: readonly Readonly<{
-        release: string;
-        assets: readonly Readonly<{ id: string; path: string }>[];
-    }>[];
 }>;
 
 /** Admits pre-built official releases without reading authored source folders at runtime. */
@@ -42,21 +35,6 @@ export async function bootstrapOfficialRepository(
             await contracts.publish(source, assets);
         }
         await new LocalProviderReleases(files, contracts).release(await readFile(join(root, index.provider), "utf8"));
-        const catalogue = await contracts.catalogue();
-        const collections = new LocalCollectionRepository(repositoryRoot);
-        for (const entry of index.collections) {
-            const collection = await admitCollectionReleaseJson(
-                await readFile(join(root, entry.release), "utf8"),
-                await Promise.all(
-                    entry.assets.map(async ({ id, path }) => ({ id, bytes: await readFile(join(root, path)) })),
-                ),
-                { contracts: catalogue },
-            );
-            if (entry.release !== `collections/${resourceName(collection.release.collectionId)}/release.json`) {
-                throw new Error("Official collection index differs from its admitted identity");
-            }
-            await collections.store(collection);
-        }
     });
 }
 
@@ -68,7 +46,7 @@ function parseBootstrapIndex(value: unknown): BootstrapIndex {
     const contracts = index.contracts;
     const keys = Object.keys(index).toSorted();
     if (
-        keys.join(",") !== "collections,contracts,provider" ||
+        keys.join(",") !== "contracts,provider" ||
         !Array.isArray(contracts) ||
         contracts.length === 0 ||
         contracts.length > 128 ||
@@ -76,68 +54,12 @@ function parseBootstrapIndex(value: unknown): BootstrapIndex {
             (path) => typeof path !== "string" || !/^contracts\/(?:cms\/)?[a-z0-9.-]+\/definition\.json$/u.test(path),
         ) ||
         new Set(contracts).size !== contracts.length ||
-        index.provider !== "providers/primary-provider/definition.json" ||
-        !isCollectionIndex(index.collections)
+        index.provider !== "providers/primary-provider/definition.json"
     ) {
         throw new Error("Official bootstrap index is invalid");
     }
     return {
         contracts,
         provider: index.provider,
-        collections: index.collections,
     } as BootstrapIndex;
-}
-
-function isCollectionIndex(value: unknown): value is BootstrapIndex["collections"] {
-    if (!Array.isArray(value) || value.length > 32) {
-        return false;
-    }
-    const paths = new Set<string>();
-    for (const entry of value) {
-        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-            return false;
-        }
-        const record = entry as Record<string, unknown>;
-        if (
-            Object.keys(record).toSorted().join(",") !== "assets,release" ||
-            typeof record.release !== "string" ||
-            !/^collections\/[a-z0-9][a-z0-9-]*\/release\.json$/u.test(record.release) ||
-            paths.has(record.release) ||
-            !isCollectionAssetIndex(record.assets, dirname(record.release))
-        ) {
-            return false;
-        }
-        paths.add(record.release);
-    }
-    return true;
-}
-
-function isCollectionAssetIndex(value: unknown, collectionRoot: string): boolean {
-    if (!Array.isArray(value) || value.length > 512) {
-        return false;
-    }
-    const ids = new Set<string>();
-    const paths = new Set<string>();
-    for (const entry of value) {
-        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-            return false;
-        }
-        const record = entry as Record<string, unknown>;
-        const id = record.id;
-        const path = record.path;
-        if (
-            Object.keys(record).toSorted().join(",") !== "id,path" ||
-            typeof id !== "string" ||
-            !/^[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*$/u.test(id) ||
-            typeof path !== "string" ||
-            path !== `${collectionRoot}/assets/${id}` ||
-            ids.has(id) ||
-            paths.has(path)
-        ) {
-            return false;
-        }
-        ids.add(id);
-        paths.add(path);
-    }
-    return true;
 }

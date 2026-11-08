@@ -63,8 +63,7 @@
     "ignoreFiles": [
         "**/dist/**",
         "**/runtime/stack/orchestration/definitions/mongo/*.js",
-        "maquette/**",
-        "packages/official-repository/**"
+        "maquette/**"
     ],
     "ignoreIssues": {
         "**/tests/**": [
@@ -76,11 +75,6 @@
             "types"
         ],
         "quality/**": [
-            "exports",
-            "types"
-        ],
-        "packages/official-repository/**": [
-            "files",
             "exports",
             "types"
         ]

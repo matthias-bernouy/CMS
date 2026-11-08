@@ -26,9 +26,7 @@ test("loads the complete official profile and documentation from immutable files
                 ),
             ),
         ).toBe(true);
-        const [collection] = await sources.collections.list();
-        const bundle = await sources.collections.get(collection!);
-        expect(bundle.assets.length).toBeGreaterThan(0);
+        expect(await sources.collections.list()).toEqual([]);
         expect((await loadOfficialArtifacts(sources.providers, sources.collections)).defaultProfile).toEqual(
             loaded.defaultProfile,
         );

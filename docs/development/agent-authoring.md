@@ -18,53 +18,9 @@ arbitrary JavaScript is harmless. Repository publication never executes an
 author's build scripts or arbitrary test commands.
 
 Existing collection tests cover admission, styles, assets, dependency graphs,
-installation evolution and reviewed release upgrades. `quality/official-repository` tests
-exercise authored official controls and Page-editor behavior. The CLI's
-`packages/runtimes/ulvia-cli/tests/stack/edgeSmoke/` journey exercises installation, provider access,
-Pages, files and collection upgrades in a production-shaped Docker stack.
-`bun run verify:full` runs the local Edge browser journey after normal verify.
-These tests are repository tests, not a generic collection-authored browser
-scenario format.
-
-Contracts provide strict schemas, evolution checks, mocks and fixture assets.
-The Gateway validates each invocation against its selected immutable release.
-Provider implementations own their unit and integration tests; publishing a
-contract does not execute a provider or certify its behavior.
-
-## Recommended agent workflow today
-
-1. Give the agent a source-only Git worktree and read-only admitted dependencies.
-   Keep Repository PATs and production credentials in a separate host.
-   Start from a declarative collection unless behavior is actually needed.
-2. Author `definition.json`, recursive Bloc folders, translations, texts, themes
-   and immutable assets using current collection conventions. Run the explicit
-   local release command; inspect its admission/compiler diagnostics.
-3. Run focused admission and browser tests relevant to the changed behavior.
-   Use a dedicated named preview instance and disposable data for rendering,
-   accessibility, settings, locales, assets and dependency interactions.
-4. Review release digest, browser-risk summary, dependency pins, resource usage and
-   declared exports. Run normal workspace verification; use the complete Edge
-   journey when installation/rendering is affected.
-5. Promote the exact reviewed local artifact. An authenticated publisher claims or
-   uses its namespace and pushes the already admitted metadata/assets. Agents
-   without publication authority may prepare the artifact and verification
-   evidence; publication requires an owning account's PAT.
-
-No generic authoring sandbox or collection-authored test DSL is implemented.
-Instance MCP uses fixed collection compilation entrypoints; it does not accept
-arbitrary build commands.
-
-## Current instance authoring and next work
-
-The shared compiler extraction and bounded source preparation are implemented.
-The [Instance MCP V1](../architecture/instance-mcp.md) guide documents the exact
-tools, OAuth connection, source snapshot format and explicit publication /
-installation workflow. Registry capabilities are HTTP-only. Agents connect to
-their CMS instance; the host retains the Repository PAT in its encrypted
-authoring secrets.
-
-Persistent source workspaces, disposable preview workers, collection-authored
-browser scenarios and packaged skills remain future work. A future preview
-worker should isolate compilation and rendering from publication credentials with
-bounded CPU, memory, temporary storage, network and deadlines. Current static
-admission and Bun macro disabling do not provide an OS sandbox.
+installation evolution and reviewed release upgrades. The CLI's
+`packages/runtimes/ulvia-cli/tests/stack/edgeSmoke/` journey exercises empty native
+setup, explicit collection installation, Page publication, restart and instance
+isolation in a production-shaped Docker stack. `bun run verify:full` runs this
+local Edge browser journey after normal verify. These are repository tests, not
+a generic collection-authored browser scenario format.

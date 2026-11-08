@@ -1,5 +1,6 @@
+import { compileOfficialFeatures } from "@bernouy/ulvia-provider/build";
 import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 /** Convert canonical monolithic protocol fixtures into the authored source tree. */
 export async function writeAuthoredContractFixture(
@@ -34,4 +35,20 @@ export async function writeAuthoredContractFixture(
             );
         }
     }
+}
+
+/** Exercise the generic authored-contract CLI with SDK-generated declarations and exact docs. */
+export async function writeSdkContractFixture(directory: string, contractId: string): Promise<string> {
+    const admission = (await compileOfficialFeatures()).contracts.find(
+        ({ release }) => release.contractId === contractId,
+    )!;
+    const document = JSON.parse(admission.canonicalJson);
+    delete document.documentation;
+    await writeAuthoredContractFixture(directory, document);
+    for (const asset of admission.documentationAssets ?? []) {
+        const target = join(directory, asset.id);
+        await mkdir(dirname(target), { recursive: true });
+        await writeFile(target, new Uint8Array(await asset.bytes.arrayBuffer()));
+    }
+    return directory;
 }

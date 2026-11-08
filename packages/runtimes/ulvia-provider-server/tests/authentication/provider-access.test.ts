@@ -8,13 +8,10 @@ import { providerAdministration } from "../../src/runtime/gateway/providers/admi
 import type { ProviderStores } from "../../src/runtime/stores/providerStores";
 import type { ProviderManagement } from "@bernouy/repository/providers/management";
 import type { createProviderGateway } from "../../src/runtime/gateway/createProviderGateway";
-type OutputSchema = Parameters<typeof validateSchemaValue>[0];
 type AuthoredRequirement = { contractId: string; capabilityId: string; versionRange: string; optional: boolean };
 
-const schemaPath = new URL(
-    "../../../../official-repository/contracts/cms.installations/capabilities/queries/get-provider-access.json",
-    import.meta.url,
-);
+import { installationsFeature } from "@bernouy/repository/features/installations";
+import { compileContract } from "@bernouy/ulvia-sdk/build";
 
 async function accessFixture(longRange?: number, manyRequirements = false) {
     const site = await providerSite();
@@ -90,7 +87,9 @@ async function accessFixture(longRange?: number, manyRequirements = false) {
         {} as ProviderManagement,
         "https://cms.example.com",
     );
-    const definition = (await Bun.file(schemaPath).json()) as { output: OutputSchema };
+    const definition = (await compileContract(installationsFeature)).release.capabilities.find(
+        ({ id }) => id === "get-provider-access",
+    )!;
     return { result: await administration.access("source"), output: definition.output };
 }
 

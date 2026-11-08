@@ -77,13 +77,11 @@ collection initialization step makes no collection source or content-store calls
 A Repository can start before its own Edge or public catalogue exists; API
 authentication and publication then work without a browser login Page.
 
-Production images generate `bun run generate:official-bootstrap --core-only`
-and omit authored collections and starter assets. There is no required ZIP.
-The full generator includes the current Mossa and Repository `1.2.0` releases
-for explicit publication, authoring and example tests. Historical profile references
-remain advertised, but provisioning an old profile requires an explicit snapshot
-with its exact original manifest, contracts and optional collection resources. Missing resources refuse the operation rather than
-falling back to the network. They do not prevent ready instances from restarting.
+Production images generate `bun run generate:official-bootstrap` from the SDK
+inventory and bundle system contracts, documentation and the Provider manifest.
+The repository ships no prefabricated collection sources or starter profiles.
+Missing exact resources refuse provisioning without a network fallback; existing
+ready instances reopen from their persisted execution.
 Current profiles select the official Provider manifest and `ulvia/cms.installations`
 contract at `1.2.0`. Profile versions are independent from artifact versions.
 
@@ -105,10 +103,9 @@ or change setup; the public entry query reveals only the pending boolean.
 The administrator chooses an empty site or an exact collection bootstrap.
 Empty completion needs no Repository, collection or Page. Starter discovery uses
 the configured Repository, four latest stable collections per page and at most
-64 recipe cards. Mossa's `administration` recipe creates ordinary editable admin
-Pages. Repository's `repository` recipe includes the exact Mossa recipe, omits its
-login Page and supplies its own login and public catalogue Pages. Ordinary
-collection installation or upgrade never executes a bootstrap.
+64 recipe cards. Only explicitly published collections contribute recipes; the
+repository ships none. Ordinary collection installation or upgrade never executes
+a bootstrap.
 
 Review resolves exact dependency pins and includes, checks selected capabilities,
 route conflicts and browser-code risks, then simulates Pages against disposable
@@ -128,7 +125,7 @@ and prevents the empty-site choice from reopening setup indefinitely.
 
 The browser journey in
 `tests/integration/instance/repository/initialization.docker.test.ts` covers native
-login, Mossa review and application, mobile overflow, cross-instance review refusal,
+login, review and application of an explicitly published test recipe, mobile overflow, cross-instance review refusal,
 offline empty completion and restart. Domain fault-injection tests cover persisted
 checkpoints and local recovery. These are local validation flows, not evidence of
 a deployment to a public site.

@@ -1,8 +1,9 @@
+import { writeSdkContractFixture } from "../authoredContractFixture";
 import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { expect, test } from "bun:test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { runCli } from "../../src/cli";
 import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 import { startTestRepository } from "./fixture";
@@ -12,7 +13,7 @@ test("remote publication is account-authorized, immutable, atomic, and reversibl
     const data = await mkdtemp(join(tmpdir(), "ulvia-publication-source-"));
     const remoteRoot = await mkdtemp(join(tmpdir(), "ulvia-publication-target-"));
     const server = startTestRepository(remoteRoot);
-    const source = resolve(import.meta.dir, "../../../../official-repository/contracts/cms.installations");
+    const source = await writeSdkContractFixture(join(data, "sources", "cms.installations"), "ulvia/cms.installations");
     try {
         await runCli(["release", source], { environment: { ULVIA_DATA_DIR: data }, log: () => undefined });
         const definition = JSON.parse(await readFile(join(source, "definition.json"), "utf8")) as {

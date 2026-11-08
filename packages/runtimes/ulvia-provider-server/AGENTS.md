@@ -20,7 +20,8 @@ Production runtime for the official Ulvia Provider.
   explicit initialization marker only for a newly provisioned supporting profile.
   Native site setup then runs through admitted Gateway capabilities; never infer
   pending state from zero Pages or backfill ready instances. Production image
-  generation uses `--core-only`; exact `1.0.0` starters require explicit resources.
+  generation bundles only SDK contracts and the Provider manifest. Prefabricated
+  collection profiles are not shipped.
 - Enable `ulvia/repository` only for its explicit instance profile. Registry
   ownership uses ordinary CMS accounts and PATs, never a parallel signing-key
   authority. Bootstrap installation is not public catalogue publication and

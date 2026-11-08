@@ -1,3 +1,4 @@
+import { compileContract } from "@bernouy/ulvia-sdk/build";
 import { installationsFeature } from "@bernouy/repository/features/installations";
 import { mountInstallations } from "./mount";
 import { expect, test } from "bun:test";
@@ -50,12 +51,9 @@ test("contract plan projections match their wire schema and retain explicit sour
     expect(captured).toEqual([{ ...selection, siteId: context.siteId }]);
     expect(result.source).toEqual([selection]);
     expect(result.selections).toEqual([selection]);
-    const definition = await Bun.file(
-        new URL(
-            "../../../../../official-repository/contracts/cms.installations/capabilities/queries/plan-contract-upgrade.json",
-            import.meta.url,
-        ),
-    ).json();
+    const definition = (await compileContract(installationsFeature)).release.capabilities.find(
+        ({ id }) => id === "plan-contract-upgrade",
+    )!;
     validateSchemaValue(parseUlviaSchema(definition.output), result);
 });
 
@@ -98,12 +96,9 @@ test("usage pagination binds cursors to the analysed revision and exposes no Pag
     )) as Record<string, unknown>;
     expect(second.references).toEqual([expect.objectContaining({ location: "page:two" })]);
     expect(second).not.toHaveProperty("cursor");
-    const definition = await Bun.file(
-        new URL(
-            "../../../../../official-repository/contracts/cms.installations/capabilities/queries/list-site-usage.json",
-            import.meta.url,
-        ),
-    ).json();
+    const definition = (await compileContract(installationsFeature)).release.capabilities.find(
+        ({ id }) => id === "list-site-usage",
+    )!;
     validateSchemaValue(parseUlviaSchema(definition.output), first);
     revision = `sha256:${"b".repeat(64)}`;
     await expect(

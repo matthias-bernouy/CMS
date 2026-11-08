@@ -1,6 +1,4 @@
 import type { OfficialInstanceProfile } from "@bernouy/ulvia-provider";
-import { initialPages } from "./initialPages";
-import { repositoryPages } from "./repositoryPages";
 
 export type ProfileDefinition = Readonly<{
     id: string;
@@ -12,34 +10,13 @@ export type ProfileDefinition = Readonly<{
     initialPages: OfficialInstanceProfile["initialPages"];
 }>;
 
-// Exact v1 starters remain available for unfinished transitions and explicit selections.
-const EXAMPLE_PROFILE: ProfileDefinition = Object.freeze({
+/** System APIs only; authored collections are installed explicitly. */
+const EMPTY_PROFILE: ProfileDefinition = Object.freeze({
     id: "ulvia",
-    version: "1.0.0",
+    version: "1.1.0",
     upgradeFromVersions: Object.freeze([]),
     manifest: Object.freeze({ providerId: "ulvia/primary-provider", version: "1.0.0" }),
     repository: false,
-    collections: Object.freeze([
-        Object.freeze({ publisherId: "ulvia", collectionId: "ulvia/mossa", version: "1.0.0" }),
-    ]),
-    initialPages,
-});
-
-const REPOSITORY_EXAMPLE_PROFILE: ProfileDefinition = Object.freeze({
-    ...EXAMPLE_PROFILE,
-    id: "repository",
-    repository: true,
-    collections: Object.freeze([
-        ...EXAMPLE_PROFILE.collections,
-        Object.freeze({ publisherId: "ulvia", collectionId: "ulvia/repository", version: "1.0.0" }),
-    ]),
-    initialPages: Object.freeze([...initialPages.filter(({ id }) => id !== "login"), ...repositoryPages]),
-});
-
-/** Core-only initialization; no collection, Page or public catalogue publication. */
-const EMPTY_PROFILE: ProfileDefinition = Object.freeze({
-    ...EXAMPLE_PROFILE,
-    version: "1.1.0",
     collections: Object.freeze([]),
     initialPages: Object.freeze([]),
 });
@@ -69,8 +46,6 @@ export const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
 const REPOSITORY_PROFILE: ProfileDefinition = Object.freeze({ ...CURRENT_PROFILE, id: "repository", repository: true });
 export const CURRENT_PROFILES = Object.freeze([CURRENT_PROFILE, REPOSITORY_PROFILE]);
 export const SUPPORTED_PROFILES = Object.freeze([
-    EXAMPLE_PROFILE,
-    REPOSITORY_EXAMPLE_PROFILE,
     EMPTY_PROFILE,
     EMPTY_REPOSITORY_PROFILE,
     SETUP_PROFILE,

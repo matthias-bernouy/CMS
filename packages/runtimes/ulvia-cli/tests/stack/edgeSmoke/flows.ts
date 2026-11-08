@@ -1,221 +1,99 @@
 import { expect } from "bun:test";
-import { inspectObservability } from "./administration/observability";
 import type { Page } from "playwright";
-import {
-    inspectDiagnostics,
-    inspectLightDomIsolation,
-    inspectResponsiveAdministration,
-    mutateSettings,
-    verifyAdministrationAfterRestart,
-} from "./administration/views";
-import { exerciseCollectionUpgrades } from "./collectionUpgrades";
-import { mutateFiles, verifyFilesAfterRestart } from "./files";
-import { deleteSmokePage, verifyPublishedPage } from "./pageLifecycle";
-import { mutatePages } from "./pages";
-import { mutateAccess, mutateProviders } from "./providerAccess";
+import { repositoryApi } from "../../../../../../tests/integration/instance/repository/client";
 
-export async function runEdgeSmoke(
-    page: Page,
-    credentials: { adminEmail: string; adminPassword: string },
-    edgeOrigin: string,
-): Promise<void> {
-    await stage("native initialization", async () => {
-        await page.goto(`${edgeOrigin}/.cms/setup`);
-        await page.getByLabel("Email address").fill(credentials.adminEmail);
-        await page.getByLabel("Password", { exact: true }).fill(credentials.adminPassword);
-        await page.getByRole("button", { name: "Continue", exact: false }).click();
-        await page.getByRole("button", { name: "Use a starter", exact: false }).click();
-        await page.getByRole("button", { name: /^Administration / }).click();
-        await page.getByRole("checkbox").check();
-        await page.getByRole("button", { name: "Confirm and install", exact: false }).click();
-        await page.getByRole("heading", { name: "Your workspace is ready." }).waitFor({ timeout: 120_000 });
+const collectionId = "ulvia.test/smoke-kit";
+const content =
+    '<div cms-bloc="ulvia-dtest--smoke-kit--card"><h1 slot="content">Smoke Page</h1></div><div cms-bloc="ulvia-dtest--smoke-kit--card"><p slot="content">Explicit collection</p></div>';
+type Credentials = { adminEmail: string; adminPassword: string };
+
+async function session(origin: string, credentials: Credentials) {
+    const api = repositoryApi(origin);
+    const actor = await api.session(credentials.adminEmail, credentials.adminPassword);
+    const call = async (contract: string, path: string, method = "GET", input?: unknown) => {
+        const response = await api.request(contract, path, method, input, actor);
+        expect(response.ok, `${path}: ${response.status} ${response.ok ? "" : await response.text()}`).toBe(true);
+        return response.json();
+    };
+    return { api, actor, call };
+}
+
+export async function runEdgeSmoke(page: Page, credentials: Credentials, origin: string): Promise<void> {
+    await page.goto(`${origin}/.cms/setup`);
+    await page.getByLabel("Email address").fill(credentials.adminEmail);
+    await page.getByLabel("Password", { exact: true }).fill(credentials.adminPassword);
+    await page.getByRole("button", { name: "Continue", exact: false }).click();
+    await page.getByRole("button", { name: "Start from scratch", exact: false }).click();
+    await page.getByRole("button", { name: "Create an empty site", exact: false }).click();
+    await page.getByRole("heading", { name: "Your workspace is ready." }).waitFor({ timeout: 60_000 });
+    const { api, call } = await session(origin, credentials);
+    expect((await call("ulvia/cms.content", "/pages/list", "QUERY", { limit: 25 })).items).toEqual([]);
+    const initial = await call("ulvia/cms.installations", "/list-collection-installations");
+    expect(initial.items).toEqual([]);
+    expect((await fetch(origin, { redirect: "manual" })).status).toBe(404);
+    const refused = await api.request("ulvia/cms.content", "/pages/create", "POST", {
+        path: "/refused",
+        title: "Refused",
     });
-    await stage("sign in", () => signIn(page, credentials, edgeOrigin));
-    await stage("admin routes", () => inspectAdminRoutes(page, edgeOrigin));
-    await stage("responsive administration", () => inspectResponsiveAdministration(page, edgeOrigin));
-    await stage("Light DOM isolation", () => inspectLightDomIsolation(page));
-    await stage("Pages", () => mutatePages(page, edgeOrigin));
-    await stage("files", () => mutateFiles(page));
-    await stage("collections and theme", () => mutateCollections(page));
-    await stage("settings", () => mutateSettings(page));
-    await stage("provider routing", () => mutateProviders(page));
-    await stage("access", () => mutateAccess(page, credentials.adminEmail));
-    await stage("diagnostics", () => inspectDiagnostics(page));
-    await stage("observability", () => inspectObservability(page, edgeOrigin));
-}
-
-export async function verifyEdgeStateAfterRestart(
-    page: Page,
-    credentials: { adminEmail: string; adminPassword: string },
-    edgeOrigin: string,
-): Promise<void> {
-    await signIn(page, credentials, edgeOrigin);
-    await page.getByText("Smoke Page", { exact: true }).waitFor();
-    await stage("persisted files", () => verifyFilesAfterRestart(page));
-    await stage("persisted collection", () => verifyCollectionAfterRestart(page));
-    await stage("persisted administration", () => verifyAdministrationAfterRestart(page, credentials));
-    await verifyPublishedPage(page, edgeOrigin);
-    await stage("Page deletion", () => deleteSmokePage(page, edgeOrigin));
-}
-
-async function stage(name: string, operation: () => Promise<void>): Promise<void> {
-    console.info(`[edge-smoke] ${name}`);
-    try {
-        await operation();
-        console.info(`[edge-smoke] ${name}: done`);
-    } catch (error) {
-        throw new Error(`Edge smoke failed during ${name}: ${error instanceof Error ? error.message : String(error)}`);
-    }
-}
-
-async function signIn(
-    page: Page,
-    credentials: { adminEmail: string; adminPassword: string },
-    edgeOrigin: string,
-): Promise<void> {
-    await page.goto(`${edgeOrigin}/login`);
-    await page.getByRole("heading", { name: /^(Welcome back|Bon retour)$/u }).waitFor();
-    await page.getByLabel(/^(Email address|Adresse e-mail)$/u).fill(credentials.adminEmail);
-    await page.getByLabel(/^(Password|Mot de passe)$/u).fill(credentials.adminPassword);
-    const [response] = await Promise.all([
-        page.waitForResponse((response) => response.url().includes("/.cms/mutation/ulvia/cms.access/login-password")),
-        page.getByRole("button", { name: /^(Sign in|Se connecter)$/u }).click(),
-    ]);
-    if (!response.ok()) {
-        throw new Error(`login capability returned ${response.status()}`);
-    }
-    const cookies = await page.context().cookies(edgeOrigin);
-    if (!cookies.some((cookie) => cookie.name === "cms-session")) {
-        const headers = await response.allHeaders();
-        const signals = ["set-cookie", "x-ulvia-session-effect"].filter((name) => Object.hasOwn(headers, name));
-        throw new Error(
-            `login capability returned success without establishing the CMS session cookie (response signals: ${signals.join(", ") || "none"})`,
-        );
-    }
-    await page.waitForURL(/\/admin$/u);
-    await page.getByRole("heading", { name: /^(Dashboard|Tableau de bord)$/u }).waitFor();
-    await adminPageLink(page, "pages").click({ noWaitAfter: true });
-    await page.getByRole("heading", { name: "Pages", exact: true }).waitFor();
-}
-
-async function inspectAdminRoutes(page: Page, edgeOrigin: string): Promise<void> {
-    for (const path of [
-        "/admin",
-        "/admin/pages",
-        "/admin/files",
-        "/admin/collections",
-        "/admin/providers",
-        "/admin/access",
-        "/admin/settings",
-        "/admin/diagnostics",
-    ]) {
-        console.info(`[edge-smoke] admin route ${path}`);
-        const response = await page.goto(`${edgeOrigin}${path}`, { timeout: 15_000, waitUntil: "domcontentloaded" });
-        console.info(`[edge-smoke] admin route ${path}: response`);
-        if (!response?.ok()) {
-            throw new Error(`${path} returned ${response?.status() ?? "no response"}`);
-        }
-        await page.locator("h1").first().waitFor({ state: "attached" });
-        if (
-            await page
-                .getByText("Internal server error", { exact: true })
-                .isVisible()
-                .catch(() => false)
-        ) {
-            throw new Error(`${path} rendered an internal server error`);
-        }
-        console.info(`[edge-smoke] admin route ${path}: done`);
-    }
-    await page.goto(`${edgeOrigin}/admin/pages`);
-    await page.locator("#pages-list").waitFor();
-}
-
-async function mutateCollections(page: Page): Promise<void> {
-    await adminPageLink(page, "collections").click();
-    await page.getByRole("heading", { name: /^(Explore collections|Explorer les Collections)$/u }).waitFor();
-    const betaRelease = collectionReleaseCard(page, "ulvia.test 2.1.0-beta.1");
-    expect(await betaRelease.count()).toBe(0);
-    await page.getByRole("link", { name: /^(Beta|Bêta)$/u, exact: true }).click();
-    await betaRelease.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
-    await page.getByRole("link", { name: "Stable", exact: true }).click();
-    const latestRelease = collectionReleaseCard(page, "ulvia.test 2.0.0");
-    await latestRelease.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
-    expect(await collectionReleaseCard(page, "ulvia.test 1.0.0").count()).toBe(0);
-    await latestRelease.getByRole("link", { name: /^(Release history|Historique des versions)$/u }).click();
-    const initialRelease = page.locator("tbody tr").filter({ has: page.getByText("1.0.0", { exact: true }) });
-    const installResponse = page.waitForResponse((candidate) =>
-        candidate.url().includes("ulvia/cms.installations/install-collection"),
+    expect([401, 403]).toContain(refused.status);
+    expect((await call("ulvia/cms.content", "/pages/list", "QUERY", { limit: 25 })).items).toEqual([]);
+    const catalogue = await call("ulvia/cms.installations", "/collections/catalogue", "QUERY", { limit: 25 });
+    expect(catalogue.releases.some((entry: { version: string }) => entry.version.includes("beta"))).toBe(false);
+    const entry = catalogue.releases.find((entry: { collectionId: string }) => entry.collectionId === collectionId)!;
+    const installed = await call("ulvia/cms.installations", "/install-collection", "POST", {
+        expectedRevision: initial.revision,
+        targets: [
+            {
+                repositoryId: entry.repositoryId,
+                publisherId: entry.publisherId,
+                collectionId,
+                version: entry.version,
+                digest: entry.digest,
+                approvedBrowserRiskDigest: entry.browserRiskDigest,
+            },
+        ],
+    });
+    expect(installed.items.map((item: { collectionId: string }) => item.collectionId)).toEqual([collectionId]);
+    let draft = await call("ulvia/cms.content", "/pages/create", "POST", {
+        path: "/smoke-page",
+        title: "Smoke Page",
+        content,
+    });
+    expect((await fetch(`${origin}/smoke-page`, { redirect: "manual" })).status).toBe(404);
+    draft = await call("ulvia/cms.content", "/pages/publish", "POST", {
+        id: draft.id,
+        expectedRevision: draft.revision,
+        visible: true,
+    });
+    await verifyPublishedPage(page, origin);
+    const invalid = await api.request(
+        "ulvia/cms.content",
+        "/pages/update",
+        "POST",
+        { id: draft.id, expectedRevision: 0, title: "Invalid" },
+        (await session(origin, credentials)).actor,
     );
-    await initialRelease.getByRole("button", { name: /^(Install|Installer)$/u }).click();
-    if (!(await installResponse).ok()) {
-        throw new Error("Collection installation failed.");
-    }
-    await installedCollectionLink(page, "ulvia.test/smoke-kit").click({ noWaitAfter: true });
-    await page.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor({ timeout: 60_000 });
-    await page.locator('a[href="#collection-blocks"]').click();
-    await page.waitForURL(/#collection-blocks$/u, { waitUntil: "domcontentloaded" });
-    await page.getByText("ulvia-dtest--smoke-kit--card", { exact: true }).waitFor();
-    await page.getByRole("link", { name: /^(Explore collections|Explorer les Collections)$/u }).click();
-    await exerciseCollectionUpgrades(page);
-    await installedCollectionLink(page, "ulvia/mossa").click({ noWaitAfter: true });
-    await page.getByRole("heading", { name: "Mossa", exact: true }).waitFor({ timeout: 60_000 });
-    await page.locator('a[href="#collection-examples"]').click();
-    await page.locator("#collection-examples article").first().waitFor();
-    await page.locator('a[href="#collection-theme"]').click();
-    await page.locator("#collection-theme-search").waitFor();
-    await page
-        .getByRole("link", { name: /^(Edit token|Modifier le token)$/u })
-        .first()
-        .click();
-    const themeValue = page.locator("#collection-theme-token-value");
-    await themeValue.waitFor();
-    await themeValue.fill(await themeValue.inputValue());
-    await page.locator('form[cms-mutation^="ulvia/cms.content:theme.token.save "] button[type="submit"]').click();
-    await page
-        .locator(
-            'form[cms-mutation^="ulvia/cms.content:theme.token.save "] p[cms-condition*="savedThemeToken.outcome.kind === \'success\'"]',
-        )
-        .waitFor();
-    const resetTheme = page.locator('form[cms-mutation^="ulvia/cms.content:theme.token.reset "]');
-    await resetTheme.waitFor();
-    const [resetResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia/cms.content/theme.token.reset")),
-        resetTheme.locator('button[type="submit"]').click(),
-    ]);
-    if (!resetResponse.ok()) {
-        throw new Error(`Theme reset flow failed (${resetResponse.status()}).`);
-    }
-    await page.locator('a[href="#collection-texts"]').click();
-    await page.waitForURL(/#collection-texts$/u, { waitUntil: "domcontentloaded" });
-    const textForm = page.locator('form[cms-mutation^="ulvia/cms.content:localization.text.save "]').first();
-    await textForm.waitFor();
-    const textValue = textForm.locator('textarea[name="value"]');
-    await textValue.fill(await textValue.inputValue());
-    const [textResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia/cms.content/localization.text.save")),
-        textForm.locator('button[type="submit"]').click(),
-    ]);
-    if (!textResponse.ok()) {
-        throw new Error(`Collection text flow failed (${textResponse.status()}).`);
-    }
-    await page.getByRole("link", { name: /^(Explore collections|Explorer les Collections)$/u }).click();
+    expect(invalid.status).toBe(400);
+    expect((await call("ulvia/cms.content", "/pages/get", "QUERY", { id: draft.id })).revision).toBe(draft.revision);
 }
 
-function collectionReleaseCard(page: Page, identity: string) {
-    return page.locator('[role="listitem"]').filter({ has: page.getByText(identity, { exact: true }) });
+export async function verifyEdgeStateAfterRestart(page: Page, credentials: Credentials, origin: string): Promise<void> {
+    const { call } = await session(origin, credentials);
+    const installed = await call("ulvia/cms.installations", "/list-collection-installations");
+    expect(installed.items.map((item: { collectionId: string }) => item.collectionId)).toEqual([collectionId]);
+    const pages = await call("ulvia/cms.content", "/pages/list", "QUERY", { limit: 25 });
+    expect(pages.items).toHaveLength(1);
+    await verifyPublishedPage(page, origin);
+    const persisted = await call("ulvia/cms.content", "/pages/get", "QUERY", { id: pages.items[0].id });
+    await call("ulvia/cms.content", "/pages/delete", "POST", {
+        id: persisted.id,
+        expectedRevision: persisted.revision,
+    });
+    expect((await fetch(`${origin}/smoke-page`, { redirect: "manual" })).status).toBe(410);
 }
 
-async function verifyCollectionAfterRestart(page: Page): Promise<void> {
-    await adminPageLink(page, "collections").click();
-    await installedCollectionLink(page, "ulvia.test/smoke-kit").waitFor();
-}
-
-function adminPageLink(page: Page, pageId: string) {
-    return page.locator(`a[href="/admin/${pageId}"]`).first();
-}
-
-function installedCollectionLink(page: Page, collectionId: string) {
-    return page
-        .locator(`a[href="/admin/collections/detail?ulvia--mossa--collection=${encodeURIComponent(collectionId)}"]`)
-        .first();
+async function verifyPublishedPage(page: Page, origin: string): Promise<void> {
+    expect((await page.goto(`${origin}/smoke-page`))?.status()).toBe(200);
+    await page.getByRole("heading", { name: "Smoke Page", exact: true }).waitFor();
+    await page.getByText("Explicit collection", { exact: true }).waitFor();
 }

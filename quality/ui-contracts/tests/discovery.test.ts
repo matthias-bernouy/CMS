@@ -37,7 +37,7 @@ test("discovery follows browser helpers but excludes server-only code, tests and
     }
 });
 
-test("discovery audits authored official collection blocs and their browser helpers", async () => {
+test("discovery audits package browser entries and their helpers", async () => {
     const root = await mkdtemp(join(tmpdir(), "ui-contract-official-"));
     async function file(path: string, content: string): Promise<void> {
         const absolute = join(root, path);
@@ -45,8 +45,9 @@ test("discovery audits authored official collection blocs and their browser help
         await writeFile(absolute, content);
     }
     try {
-        const bloc = "packages/official-repository/collections/official/blocs/admin/example";
-        await file(`${bloc}/bloc.ts`, 'import { load } from "./runtime/client"; load();');
+        await file("packages/features/content/package.json", JSON.stringify({ name: "@bernouy/content" }));
+        const bloc = "packages/features/content/src/browser/example";
+        await file(`${bloc}/example.client.ts`, 'import { load } from "./runtime/client"; load();');
         await file(
             `${bloc}/runtime/client.ts`,
             'export const load = () => fetch("/.cms/call/example.official/example/list");',
@@ -56,7 +57,7 @@ test("discovery audits authored official collection blocs and their browser help
         const sources = await discoverUiSources(root);
 
         expect(sources.map(({ path }) => path)).toEqual([
-            `${bloc}/bloc.ts`,
+            `${bloc}/example.client.ts`,
             `${bloc}/markup.html`,
             `${bloc}/runtime/client.ts`,
         ]);

@@ -71,7 +71,7 @@ test("core profiles discover, resolve and initialize without reading optional co
     }
     expect(artifactReads).toBe(4);
     expect(collections.reads()).toBe(0);
-    await expect(profiles.resolve("ulvia", "1.0.0")).rejects.toThrow("unavailable");
+    expect(await profiles.resolve("ulvia", "1.0.0")).toBeNull();
     expect(collections.reads()).toBe(0);
 }, 30_000);
 

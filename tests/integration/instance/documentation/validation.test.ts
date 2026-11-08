@@ -5,7 +5,6 @@ import { stage } from "./scenarios/client";
 import { validationCollection } from "./scenarios/validation/collection";
 import { validationPages } from "./scenarios/validation/pages";
 import { incompatibleUpgrade } from "./scenarios/validation/upgrade";
-import { editorWarnings } from "./scenarios/validation/editor";
 
 const integration = process.env.ULVIA_RUN_DOCUMENTATION_NATIVE === "1" ? test : test.skip;
 
@@ -22,9 +21,6 @@ integration(
             const { source } = await stage(
                 "Expanded example refusal → duplicate structures accepted → stable digest → publication → installation",
                 () => validationCollection(client),
-            );
-            await stage("Visual editor → successful save → persistent warning → clean stored Page", () =>
-                editorWarnings(client, fixture.cmsUrl, fixture.administrator),
             );
             const page = await stage(
                 "Template links → draft → refusal → publication → browser → ARIA → incoming dependencies",

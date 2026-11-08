@@ -69,8 +69,8 @@ test("quality workflow keeps every G0 check visible", async () => {
     }
     for (const testPath of [
         "packages/foundation",
+        "packages/platform",
         "packages/features",
-        "packages/official-repository",
         "packages/surfaces",
         "packages/runtimes",
         "tests",

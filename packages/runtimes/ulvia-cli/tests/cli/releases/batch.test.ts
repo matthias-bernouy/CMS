@@ -36,7 +36,7 @@ test("recursive release respects semantic version order across grouped sources",
     }
 });
 
-test("recursive release prepares the official contracts, provider and collection without descending into owned sources", async () => {
+test("recursive release prepares the SDK contracts and provider without collections without descending into owned sources", async () => {
     const f = await batchFixture();
     const source = resolve(import.meta.dir, "../../../../../../infra/releases");
     try {
@@ -44,25 +44,9 @@ test("recursive release prepares the official contracts, provider and collection
         expect(await f.files.list("contracts")).toHaveLength(12);
         expect(await f.files.list("providers")).toHaveLength(1);
         const collections = await new LocalCollectionRepository(join(f.data, "repository")).list();
-        expect(collections.map(({ release }) => release.collectionId)).toEqual(["ulvia/mossa", "ulvia/repository"]);
-        expect(collections[0]!.assets).toHaveLength(58);
-        expect(collections[0]!.assets.map((asset) => asset.id)).toContain("icons/feedback/observability.svg");
-        expect(collections[0]!.release.examples).toHaveLength(113);
-        expect(collections[0]!.release.examples?.map((example) => example.id)).toContain("collection-releases");
-        expect(collections[0]!.release.examples?.map((example) => example.id)).toContain(
-            "ulvia--mossa--collection-history-default",
-        );
-        expect(collections[1]!.release.dependencies?.map(({ collectionId }) => collectionId)).toEqual(["ulvia/mossa"]);
-        expect(collections[1]!.release.bootstraps?.[0]?.includes?.[0]).toMatchObject({
-            collectionId: "ulvia/mossa",
-            version: collections[0]!.release.version,
-            digest: collections[0]!.digest,
-        });
-        expect(collections[1]!.release.examples).toHaveLength(9);
+        expect(collections).toEqual([]);
         expect(f.output[12]).toStartWith("+ provider ulvia/primary-provider@");
-        expect(f.output[13]).toStartWith("+ collection ulvia/mossa@");
-        expect(f.output[14]).toStartWith("+ collection ulvia/repository@");
-        expect(f.output.at(-1)).toBe("Prepared 15 local releases.");
+        expect(f.output.at(-1)).toBe("Prepared 13 local releases.");
     } finally {
         await f.close();
     }

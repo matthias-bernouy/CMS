@@ -151,7 +151,7 @@ describe("Ulvia CLI", () => {
             expect((await artifacts.list("providers")).map(({ id }) => id)).toEqual(["ulvia/primary-provider"]);
             expect(
                 (await new LocalCollectionRepository(root).list()).map(({ release }) => release.collectionId),
-            ).toEqual(["ulvia/mossa", "ulvia/repository"]);
+            ).toEqual([]);
             await bootstrapOfficialRepository(root);
         } finally {
             await rm(root, { recursive: true, force: true });

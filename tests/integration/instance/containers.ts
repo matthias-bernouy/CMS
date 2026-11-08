@@ -1,6 +1,8 @@
+import { createTraceProbe, installDeliveryFixture } from "./containers/deliveryFixture";
 import { containerCluster } from "./containers/cluster";
 import { repositoryApplication } from "./containers/repository";
-import { installStarter } from "./repository/initializationClient";
+import { initializationApi } from "./repository/initializationClient";
+import { repositoryApi } from "./repository/client";
 import { publishBundledReleases } from "./repository/bootstrap";
 import { provisionInstance } from "./provision";
 import { randomBytes } from "node:crypto";
@@ -81,7 +83,8 @@ export async function mcpContainers(
             await publishBundledReleases(repositoryUrl, "http://ulvia-provider:5103", repository.pat.token);
         }
         if (!legacyStarters) {
-            await installStarter(repositoryUrl, repository.administrator, "ulvia/repository");
+            await initializeEmpty(repositoryUrl, repository.administrator);
+            await installDeliveryFixture(repositoryUrl, repository.administrator, repository);
         }
         if (prepareRepository) {
             await prepareRepository(repositoryUrl, repository.pat.token);
@@ -119,7 +122,9 @@ export async function mcpContainers(
         await startEdge();
         await waitForHttp(`${cmsUrl}/readyz`);
         if (!legacyStarters) {
-            await installStarter(cmsUrl, administrator, "ulvia/mossa");
+            await initializeEmpty(cmsUrl, administrator);
+            await installDeliveryFixture(cmsUrl, administrator, repository);
+            await createTraceProbe(cmsUrl, administrator);
         }
         return {
             id,
@@ -184,4 +189,11 @@ export async function mcpContainers(
         await close();
         throw new Error(`${String(error)}\n${logs.join("\n")}`);
     }
+}
+
+async function initializeEmpty(origin: string, administrator: { email: string; password: string }) {
+    const session = await repositoryApi(origin).session(administrator.email, administrator.password);
+    const setup = initializationApi(origin, session.cookie);
+    const review = await setup.plan(null);
+    await setup.apply(null, review.digest);
 }

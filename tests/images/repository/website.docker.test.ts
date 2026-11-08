@@ -1,20 +1,14 @@
 import { expect, test } from "bun:test";
-import { mkdir, mkdtemp } from "node:fs/promises";
-import { join, resolve } from "node:path";
 import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 import { mcpContainers } from "../../integration/instance/containers";
 import { repositoryApi } from "../../integration/instance/repository/client";
 import { sampleContract } from "../../integration/instance/repository/publication/resource";
-import { exerciseRepositoryWebsite } from "../../integration/instance/repository/website";
 
 const images = { edge: process.env.ULVIA_MCP_EDGE_DOCKER_IMAGE, provider: process.env.ULVIA_MCP_PROVIDER_DOCKER_IMAGE };
 
 test.skipIf(!images.edge || !images.provider)(
-    "the shipped Repository website supports ordinary publishing accounts, refusals and real catalogue pagination",
+    "the shipped Repository API supports ordinary publishing accounts, refusal isolation and persistent authored Pages",
     async () => {
-        const base = resolve("artifacts/repository-cms-goal");
-        await mkdir(base, { recursive: true, mode: 0o700 });
-        const captures = await mkdtemp(join(base, "image-website-"));
         const f = await mcpContainers(images as Record<keyof typeof images, string>);
         try {
             const api = repositoryApi(f.repositoryUrl);
@@ -101,7 +95,19 @@ test.skipIf(!images.edge || !images.provider)(
                 assets: [{ id: sample.asset.id, bytes: sample.bytes }],
             });
             expect(publication.digest).toBe(sample.digest);
-            await exerciseRepositoryWebsite(f.repositoryUrl, captures, sample);
+            const created = await api.request(
+                "ulvia/cms.content",
+                "/pages/create",
+                "POST",
+                {
+                    path: "/",
+                    title: "Repository journey",
+                    content:
+                        '<div cms-bloc="ulvia-dtest--smoke-kit--card"><h1 slot="content">Repository journey</h1></div>',
+                },
+                administrator,
+            );
+            expect(created.status).toBe(201);
 
             const pages = await api.request("ulvia/cms.content", "/pages/list", "QUERY", { limit: 100 }, administrator);
             expect(pages.status).toBe(200);

@@ -96,7 +96,7 @@ export function evaluationBridge(
                             expectedRevision: result.structuredContent.output.revision,
                             title: "Colleague revision",
                             content:
-                                '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Colleague reviewed heading</h1>',
+                                '<div cms-bloc="ulvia-dtest--smoke-kit--card"><h1 slot="content">Colleague reviewed heading</h1></div>',
                         });
                         event.concurrentEditInjected = true;
                     }

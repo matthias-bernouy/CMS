@@ -37,7 +37,7 @@ test("the public Provider report rejects unavailable or substituted installation
 
 async function providerReport() {
     const manifest = await Bun.file(
-        new URL("../../../../official-repository/providers/primary-provider/definition.json", import.meta.url),
+        new URL("../../../ulvia-cli/dist/bootstrap/providers/primary-provider/definition.json", import.meta.url),
     ).json();
     const current = manifest.implementations.find(
         (item: { contractId: string }) => item.contractId === "ulvia/cms.installations",

@@ -1,3 +1,4 @@
+import { installDeliveryFixture } from "../containers/deliveryFixture";
 import { expect, test } from "bun:test";
 import { join } from "node:path";
 import { repositoryProcesses } from "./native";
@@ -5,7 +6,6 @@ import { repositoryApi } from "./client";
 import { exercisePublication } from "./publication/scenario";
 import { exerciseCli, exerciseCmsAuthoring } from "./clientFlows";
 import { publicDownload } from "./publication/assets";
-import { exerciseRepositoryWebsite } from "./website";
 
 const enabled = Boolean(process.env.ULVIA_REPOSITORY_TEST_MONGO_URL && process.env.ULVIA_REPOSITORY_TEST_MODEL_DIR);
 
@@ -53,7 +53,20 @@ test.skipIf(!enabled)(
             const publication = await exercisePublication(api, f.cmsUrl, token, b);
             await exerciseCli(f.root, f.cmsUrl, token.token);
             await exerciseCmsAuthoring(api, f.cmsUrl, admin, publication.token, token);
-            await exerciseRepositoryWebsite(f.cmsUrl, f.root, publication.sample);
+            const administratorPat = await api.pat(admin.cookie);
+            await installDeliveryFixture(f.cmsUrl, f.admin, { url: f.cmsUrl, pat: administratorPat });
+            const created = await api.request(
+                "ulvia/cms.content",
+                "/pages/create",
+                "POST",
+                {
+                    path: "/",
+                    title: "Journey Page",
+                    content: '<div cms-bloc="ulvia-dtest--smoke-kit--card"><h1 slot="content">Journey Page</h1></div>',
+                },
+                admin,
+            );
+            expect(created.status).toBe(201);
             const pages = await api.request("ulvia/cms.content", "/pages/list", "QUERY", { limit: 100 }, admin);
             expect(pages.status).toBe(200);
             const before = (await pages.json()).items as { id: string; path: string }[];

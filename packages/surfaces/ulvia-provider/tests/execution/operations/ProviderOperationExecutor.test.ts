@@ -1,3 +1,4 @@
+import { compileContract } from "@bernouy/ulvia-sdk/build";
 import { installationsFeature } from "@bernouy/repository/features/installations";
 import { mountInstallations } from "../installations/mount";
 import { parseUlviaSchema, validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
@@ -289,12 +290,9 @@ test("the installations contract exposes a completed operation result only from 
         ["get-operation", detail],
         ["list-operations", listed],
     ] as const) {
-        const definition = await Bun.file(
-            new URL(
-                `../../../../../official-repository/contracts/cms.installations/capabilities/queries/${name}.json`,
-                import.meta.url,
-            ),
-        ).json();
+        const definition = (await compileContract(installationsFeature)).release.capabilities.find(
+            ({ id }) => id === name,
+        )!;
         validateSchemaValue(parseUlviaSchema(definition.output), value);
     }
 

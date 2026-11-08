@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { admitCollectionRelease } from "@bernouy/repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/repository/collections/sources";
 import { admitContractBundleJson, parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
@@ -13,7 +12,6 @@ export async function repositoryFixture() {
     const index = JSON.parse(await readFile(resolve(ROOT, "index.json"), "utf8")) as {
         contracts: string[];
         provider: string;
-        collections: Array<{ release: string; assets: Array<{ id: string; path: string }> }>;
     };
     const catalogue = new InMemoryReleaseCatalogue();
     const entries: RepositoryArtifactEntry[] = [];
@@ -68,19 +66,6 @@ export async function repositoryFixture() {
             Buffer.from(admitted.canonicalJson),
         );
     }
-    const admittedCollections = await Promise.all(
-        index.collections.map(async (entry) => {
-            const release = JSON.parse(await readFile(resolve(ROOT, entry.release), "utf8"));
-            const assets = await Promise.all(
-                entry.assets.map(async ({ id, path }) => ({ id, bytes: await readFile(resolve(ROOT, path)) })),
-            );
-            return {
-                admission: await admitCollectionRelease(release, assets, { contracts: catalogue }),
-                release,
-                assets,
-            };
-        }),
-    );
     const providers: ProviderRepositorySource = {
         id: "official",
         list: async (kind) => entries.filter((entry) => entry.kind === kind),
@@ -97,23 +82,12 @@ export async function repositoryFixture() {
     };
     const collections: CollectionRepositorySource = {
         id: "official",
-        list: async () =>
-            admittedCollections.map(({ admission: collection }) => ({
-                repositoryId: "official",
-                publisherId: collection.release.publisherId,
-                collectionId: collection.release.collectionId,
-                version: collection.release.version,
-                digest: collection.digest,
-                name: collection.release.name,
-                description: collection.release.description,
-                blocCount: collection.release.blocs.length,
-                hasTheme: collection.release.theme !== undefined,
-            })),
-        getMetadata: async (entry) =>
-            admittedCollections.find(({ admission }) => admission.digest === entry.digest)!.release,
-        get: async (entry) => {
-            const { release, assets } = admittedCollections.find(({ admission }) => admission.digest === entry.digest)!;
-            return { release, assets };
+        list: async () => [],
+        getMetadata: async () => {
+            throw new Error("No bundled collection");
+        },
+        get: async () => {
+            throw new Error("No bundled collection");
         },
     };
     return {
@@ -122,8 +96,6 @@ export async function repositoryFixture() {
         catalogue,
         contracts: admissions,
         manifestDigest: manifest.digest,
-        collectionDigest: admittedCollections.find(({ admission }) => admission.release.collectionId === "ulvia/mossa")!
-            .admission.digest,
         contractDigests,
     };
 }

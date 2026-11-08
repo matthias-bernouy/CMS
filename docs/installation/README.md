@@ -249,7 +249,7 @@ For a local installation:
 
 ```bash
 ulvia services start
-ulvia instance create registry --profile repository@1.0.0
+ulvia instance create registry --profile repository@1.3.0
 ulvia instance status registry
 ulvia instance credentials registry
 ```
@@ -257,16 +257,15 @@ ulvia instance credentials registry
 The Registry API is available below
 `http://registry.localhost:5100/.cms/call/ulvia/repository`. Its public identity
 endpoint is `GET /v1/info` relative to that prefix. Ordinary CMS instances do not
-expose this contract. The profile creates ordinary CMS Pages for the public
-catalogue, search, resource details, registration/login and personal namespaces,
-publications and PAT management. These Pages use the `ulvia/repository` collection
-and shared `ulvia/mossa` resources.
+expose this contract. The profile starts with an administrator and system APIs,
+without any collection or Page. Publish resources through the CLI/API and install
+a website explicitly if needed.
 
 For public hosting, configure network exposure and ACME as described in section 6
 before creating instances, then create the application on its public domain:
 
 ```bash
-ulvia instance create registry --domain repository.example.com --profile repository@1.0.0
+ulvia instance create registry --domain repository.example.com --profile repository@1.3.0
 ```
 
 Replace the example domain with a domain routed to this host. The same shared

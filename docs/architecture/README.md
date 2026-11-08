@@ -19,10 +19,10 @@ A package can skip intermediate layers. Feature-to-feature imports use declared
 package exports. See the [package map](packages.md) and [import rules](imports.md).
 
 Products that are not CMS layers can live directly below `packages/`.
-`official-repository` contains the versioned catalogue of official contracts,
-provider manifests and collections; it is authored publication data, not an
-executable dependency layer. The `ulvia-provider` surface exposes admitted official
-CMS contracts through the same provider protocol used by every other provider.
+Official contract releases and Provider manifests are generated from SDK feature
+definitions. No authored official repository or prefabricated collection ships in
+the source tree. The `ulvia-provider` surface exposes admitted official CMS
+contracts through the same provider protocol used by every other provider.
 
 ## Domain Organization
 

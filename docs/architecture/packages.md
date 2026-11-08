@@ -14,8 +14,8 @@ package without workspace dependencies.
 
 Server composition roots are deployment units rather than reusable packages:
 `@bernouy/cms-edge-server` and `@bernouy/ulvia-provider-server` are private.
-`packages/official-repository` has no package manifest; its authored artifacts
-are admitted into the Provider snapshot and explicitly published to CMS Repository instances. A package being
+Official releases are generated from SDK features and explicitly published to CMS
+Repository instances. No prefabricated collection corpus is shipped. A package being
 publishable describes its intended boundary, not evidence that a release has
 already been published to a registry.
 
@@ -80,12 +80,13 @@ The removed `cms-source` transport grammar is not accepted.
 
 ## Official Products
 
-`packages/official-repository` contains the authored official contract releases,
-the retained manifest reference and official collections. Emailer/SMTP, Secrets and Files
-schemas, types and docs live in their feature packages; the Provider surface generates contracts and manifest
-claims through the [SDK release workflow](../development/sdk-releases.md). It has
-no runtime adapters or routes. The official Provider implements Registry operations
-for explicitly enabled CMS instances, exposed through their independent Edge.
+Official schemas, capabilities, mocks, types and Markdown live in feature packages.
+The Provider surface selects complete feature implementations; the SDK emits
+contracts and exact manifest claims through the [SDK release workflow](../development/sdk-releases.md).
+The build bundles system API artifacts only. Collections are authored, built and
+published explicitly through the generic Repository APIs and CLI.
+The official Provider implements Registry operations for explicitly enabled CMS
+instances, exposed through their independent Edge.
 
 ## Surfaces And Runtimes
 

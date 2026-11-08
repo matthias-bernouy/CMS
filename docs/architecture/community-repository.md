@@ -3,14 +3,14 @@
 ## CMS instance composition
 
 A Repository is an explicitly enabled `ulvia/repository` CMS application profile.
-Its Edge exposes the website and admitted API; the official Provider implements
+Its Edge exposes the admitted API and any explicitly authored Pages; the official Provider implements
 Repository operations and owns persistence. Edge, Provider and MongoDB remain
 independent processes. Ordinary CMS profiles do not expose Registry capabilities.
 
-`packages/official-repository/contracts/repository` contains the authored
-registry contract. Domain implementation and validation belong to
-`@bernouy/repository`; the Provider runtime chooses its adapters. Authored
-resources neither mount routes nor connect to databases.
+The Registry contract is generated from `@bernouy/repository/features/repository`.
+Domain implementation and validation belong to `@bernouy/repository`; the Provider
+runtime chooses its adapters. Authored resources neither mount routes nor connect
+to databases.
 
 The Provider image bundles the exact admitted artifacts required by its profiles.
 A local source supplies those artifacts through the normal provisioning flow,
@@ -21,7 +21,7 @@ resources into it remains an explicit authenticated action.
 
 ```sh
 ulvia services start
-ulvia instance create registry --profile repository@1.0.0
+ulvia instance create registry --profile repository@1.3.0
 ulvia instance status registry
 ulvia instance stop registry
 ulvia instance start registry
@@ -183,17 +183,12 @@ commit receipts and audit records. Storage growth, retention and large-catalogue
 indexes need production capacity policy; bounded response pages are not a claim
 of constant work over an unlimited repository.
 
-The Repository profile installs the `ulvia/repository` collection alongside
-`ulvia/mossa`. It copies examples once into ordinary Content Pages: `/` for
-the public catalogue, `/search`, `/resource`, `/signup`, `/login`, `/account`,
-`/account/namespaces`, `/account/publications` and `/account/tokens`. Pages reuse
-shared Access cookies, typed queries and mutations; publishing uses the CLI or
-a connected CMS. The personal token Page supports optional expiration and shows
-a new token secret only in the creation result. Public release downloads retain
-their existing API/CLI flow. Namespace/account Pages are not indexed. Collection
-upgrades do not turn those site-owned Pages into managed immutable templates.
-Federation, teams, SSO, additional PAT scopes and multi-replica storage are outside
-this work.
+The Repository profile starts with system APIs and an administrator, without
+collections or Pages. A website can be authored and installed explicitly through
+the same generic collection and Content APIs as any other site. Public releases
+and personal tokens remain available through the API and CLI independently of a
+browser interface. Federation, teams, SSO, additional PAT scopes and multi-replica
+storage are outside this work.
 Private immutable source snapshots use authenticated bindings below
 `/.cms/call/ulvia/repository/v1/source-snapshots`. Writes must match an existing
 collection release digest. They remain separate from public downloads.

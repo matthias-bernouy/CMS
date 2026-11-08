@@ -2,7 +2,7 @@ import { repositoryApplication } from "../../../../tests/fixtures/repository/app
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { admitCollectionReleaseJson } from "@bernouy/repository/collections";
+import { prepareCollectionRelease } from "@bernouy/repository/collections/build";
 import { admitContractBundleJson, parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
@@ -17,10 +17,9 @@ const BOOTSTRAP = join(import.meta.dir, "../../../../packages/runtimes/ulvia-cli
 type BootstrapIndex = {
     contracts: string[];
     provider: string;
-    collections: { release: string; assets: { id: string; path: string }[] }[];
 };
 
-/** Uses the complete generated official release, including browser assets and examples. */
+/** Uses SDK system contracts and an explicitly authored test collection. */
 export async function repositoryFixture() {
     const definition = (await Bun.file(join(BOOTSTRAP, "index.json")).json()) as BootstrapIndex;
     const contracts = new InMemoryReleaseCatalogue();
@@ -37,19 +36,10 @@ export async function repositoryFixture() {
         }),
     );
     await publishContractSet(contracts, admissions);
-    const collections = await Promise.all(
-        definition.collections.map(async ({ release, assets }) =>
-            admitCollectionReleaseJson(
-                await Bun.file(join(BOOTSTRAP, release)).text(),
-                assets.map(({ id, path }) => ({ id, bytes: Bun.file(join(BOOTSTRAP, path)) })),
-                { contracts },
-            ),
-        ),
+    const artifact = await prepareCollectionRelease(
+        join(import.meta.dir, "../../../../packages/runtimes/ulvia-cli/tests/stack/fixtures/smoke-kit"),
+        contracts,
     );
-    const artifact = collections.find(({ release }) => release.collectionId === "ulvia/mossa");
-    if (!artifact) {
-        throw new Error("Repository performance fixture requires the official collection");
-    }
     const root = await mkdtemp(join(tmpdir(), "ulvia--repository--performance-"));
     try {
         const files = new LocalArtifactFiles(root);

@@ -1,8 +1,7 @@
 # Server-rendered Collection Texts
 
 Collection releases declare optional `texts`: JSON data included in validation
-and the immutable release digest. The official catalogue examples live under
-[`texts/`](../../packages/official-repository/collections/mossa/texts/).
+and the immutable release digest. Collection authors keep definitions and locale values in ordinary `texts/` directories.
 
 ```json
 {
@@ -128,12 +127,8 @@ languages. Complete site-language removal/migration workflows are not implemente
 
 ## Examples and limits
 
-`packages/official-repository/collections/mossa/texts/` contains the installable Mossa
-catalogue, split recursively by definition, locale, domain and group. It also
-serves as the reference release for validating text metadata independently from
-page-owned Bloc slot content. Mossa ships complete English and French
-catalogues: its source-quality test requires identical administration keys in
-both locales and a nonblank `en` and `fr` value for every text definition.
-The checkout example remains an admission fixture. The temporary preview route
-has been removed. Existing private/code collections retain the earlier Texts
-mockup; only installed immutable releases have persisted translation editing.
+An authored collection's `texts/` directory contains its installable catalogue,
+split recursively by definition, locale, domain and group. Text metadata is
+validated independently from page-owned Bloc slot content. The checkout example
+remains an admission fixture. Only installed immutable releases have persisted
+translation editing.

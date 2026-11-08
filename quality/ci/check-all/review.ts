@@ -22,12 +22,12 @@ const areas: readonly RiskArea[] = [
     },
     {
         label: "Contracts",
-        matches: (p) => p.startsWith("packages/official-repository/contracts/"),
+        matches: (p) => /packages\/(?:features|surfaces)\/.+\/(?:application|feature|capabilities)\//.test(p),
         question: "Version, access levels and cost on each invocation?",
     },
     {
         label: "Browser and collections",
-        matches: (p) => /\/browser\/|official-repository\/collections\//.test(p),
+        matches: (p) => /\/browser\/|\/collections\//.test(p),
         question: "JavaScript trust, network calls and bundle size?",
     },
 ];

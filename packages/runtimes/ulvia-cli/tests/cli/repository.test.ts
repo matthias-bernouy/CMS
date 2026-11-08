@@ -23,7 +23,7 @@ test("local repository lists immutable metadata and serves matching release byte
         );
         expect(isValidRequestId(missing.headers.get(REQUEST_ID_HEADER) ?? "")).toBe(true);
         const artifact = await prepareCollectionRelease(
-            resolve(import.meta.dir, "../../../../official-repository/collections/mossa"),
+            resolve(import.meta.dir, "../stack/fixtures/smoke-kit"),
             contracts,
         );
         const version = artifact.release.version;
@@ -33,10 +33,10 @@ test("local repository lists immutable metadata and serves matching release byte
         const entries = await source.list();
         expect(entries).toHaveLength(1);
         expect(entries[0]).toMatchObject({
-            publisherId: "ulvia",
-            collectionId: "ulvia/mossa",
+            publisherId: "ulvia.test",
+            collectionId: "ulvia.test/smoke-kit",
             version,
-            hasTheme: true,
+            hasTheme: false,
         });
         const bundle = await source.get(entries[0]!);
         expect((await admitCollectionRelease(bundle.release, bundle.assets, { contracts })).digest).toBe(
@@ -46,98 +46,8 @@ test("local repository lists immutable metadata and serves matching release byte
             [...bundle.assets.map(({ id }) => id)].sort((left, right) => left.localeCompare(right)),
         );
         expect(bundle.assets).toHaveLength(artifact.assets.length);
-        expect(bundle.assets.map(({ id }) => id)).toContain("examples/landscape.svg");
-        expect(bundle.assets.map(({ id }) => id)).toContain("icons/navigation/collections.svg");
-        expect(bundle.assets.map(({ id }) => id)).toContain("fonts/sans/inter/normal.woff2");
-        expect(bundle.assets.map(({ id }) => id)).toContain("fonts/serif/source-serif-4/italic.woff2");
-        const svgAssets = bundle.release.assets.filter((asset) => asset.mediaType === "image/svg+xml");
-        expect(svgAssets.find((asset) => asset.id === "icons/controls/check-white.svg")?.profiles).toBeUndefined();
-        expect(
-            svgAssets
-                .filter((asset) => asset.id.startsWith("icons/") && asset.id !== "icons/controls/check-white.svg")
-                .every((asset) => asset.profiles?.includes("inline-svg")),
-        ).toBe(true);
-        expect(
-            bundle.release.assets
-                .filter((asset) => asset.id.endsWith(".woff2"))
-                .every((asset) => asset.mediaType === "font/woff2" && asset.profiles === undefined),
-        ).toBe(true);
-        expect(svgAssets.find((asset) => asset.id === "examples/landscape.svg")?.profiles).toBeUndefined();
-        const release = bundle.release;
-        expect(entries[0]?.blocCount).toBe(release.blocs.length);
-        expect(release.exports?.blocs).toEqual(
-            release.blocs
-                .filter((bloc) => bloc.catalogue !== "hidden")
-                .map((bloc) => bloc.id)
-                .sort(),
-        );
-        expect(release.exports?.themeTokens).toHaveLength(124);
-        expect(release.exports?.assets).toEqual(bundle.assets.map(({ id }) => id));
-        const themeEntries = release.theme?.categories.flatMap((category) => category.entries) ?? [];
-        expect(themeEntries.filter((entry) => entry.type === "font-face")).toHaveLength(23);
-        expect(themeEntries.filter((entry) => entry.type !== "font-face")).toHaveLength(124);
-        expect(themeEntries.find((entry) => entry.id === "inter-normal")).toMatchObject({
-            asset: "fonts/sans/inter/normal.woff2",
-            family: "inter",
-            weight: "100 900",
-        });
-        expect(themeEntries.find((entry) => entry.id === "font-family-main")).toMatchObject({
-            defaults: { light: expect.stringContaining('"ulvia--mossa--inter"') },
-        });
-        expect(themeEntries.find((entry) => entry.id === "font-family-secondary")).toMatchObject({
-            defaults: { light: expect.stringContaining('"ulvia--mossa--source-serif-4"') },
-        });
-        expect(Object.hasOwn(release, "pages")).toBe(false);
-        expect(release.examples?.some((example) => example.id === "login")).toBe(true);
-        const action = release.blocs.find((bloc) => bloc.id === "ulvia--mossa--action");
-        expect(action?.kind).toBe("component");
-        if (action?.kind === "component") {
-            expect(action.runtime?.viewJS).toBeUndefined();
-            expect(action.runtime?.styleCSS).toContain('@scope ([cms-bloc="ulvia--mossa--action"])');
-            expect(action.root).toEqual({ accepts: ["button", "a"], defaults: { type: "button" } });
-            expect(action.markup).toBe("<slot></slot>");
-            expect(action.defaultContent).toBeUndefined();
-            expect(action.defaultExample).toBe("action-default");
-            expect(release.examples?.find((example) => example.id === action.defaultExample)?.document.html).toContain(
-                "{{ cms.i18n.ulvia/mossa.ui-action-label }}",
-            );
-            expect(action.settings?.map((setting) => setting.id)).toEqual([
-                "variant",
-                "tone",
-                "size",
-                "wide",
-                "icon-only",
-                "active",
-            ]);
-        }
-        const heading = release.blocs.find((bloc) => bloc.id === "ulvia--mossa--heading");
-        expect(heading?.kind === "component" ? heading.root?.accepts : undefined).toEqual([
-            "h1",
-            "h2",
-            "h3",
-            "h4",
-            "h5",
-            "h6",
-        ]);
-        expect(heading?.kind === "component" ? heading.slots[""] : undefined).toEqual({
-            accepts: [{ kind: "native-content", profile: "phrasing" }],
-            min: 1,
-        });
-        const grid = release.blocs.find((bloc) => bloc.id === "ulvia--mossa--grid");
-        expect(grid?.settings?.find((setting) => setting.id === "columns")).toMatchObject({
-            type: "integer",
-            minimum: 1,
-            maximum: 6,
-            default: 3,
-        });
-        const textIds = new Set(release.texts?.map((entry) => entry.id));
-        for (const bloc of release.blocs) {
-            for (const html of [bloc.markup, bloc.defaultContent]) {
-                for (const match of html?.matchAll(/cms\.i18n\.ulvia\/mossa\.([a-z0-9-]+)/g) ?? []) {
-                    expect(textIds.has(match[1]!)).toBeTrue();
-                }
-            }
-        }
+        expect(entries[0]?.blocCount).toBe(bundle.release.blocs.length);
+        expect(bundle.release.exports?.blocs).toEqual(["ulvia-dtest--smoke-kit--card"]);
         expect(
             (await fetch(`${server.url}/.cms/call/ulvia/repository/v1/releases/collection/missing/test/${version}`))
                 .status,
@@ -183,7 +93,7 @@ test("local repository lists immutable metadata and serves matching release byte
         expect(
             (
                 await fetch(
-                    `${server.url}/.cms/call/ulvia/repository/v1/releases/collection/ulvia/ulvia%2Fmossa/${version}`,
+                    `${server.url}/.cms/call/ulvia/repository/v1/releases/collection/ulvia.test/ulvia.test%2Fsmoke-kit/${version}`,
                 )
             ).status,
         ).toBe(404);
@@ -198,7 +108,7 @@ test("a release coordinate cannot be replaced with different content", async () 
     try {
         const repository = new LocalCollectionRepository(root);
         const artifact = await prepareCollectionRelease(
-            resolve(import.meta.dir, "../../../../official-repository/collections/mossa"),
+            resolve(import.meta.dir, "../stack/fixtures/smoke-kit"),
             await officialContractCatalogue(),
         );
         await repository.store(artifact);
@@ -214,7 +124,9 @@ test("a release coordinate cannot be replaced with different content", async () 
             { contracts: await officialContractCatalogue() },
         );
         await expect(repository.store(changed)).rejects.toMatchObject({ publicationCode: "immutable_conflict" });
-        expect((await repository.get("ulvia", "ulvia/mossa", artifact.release.version))?.digest).toBe(artifact.digest);
+        expect((await repository.get("ulvia.test", "ulvia.test/smoke-kit", artifact.release.version))?.digest).toBe(
+            artifact.digest,
+        );
     } finally {
         await rm(root, { recursive: true, force: true });
     }

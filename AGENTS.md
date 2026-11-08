@@ -30,9 +30,9 @@ runtimes -> surfaces -> features -> platform -> foundation
   instantiate adapters, mount surfaces, and start listeners.
 
 Direct product packages may live at `packages/<product>/` when they are not a
-CMS layer. `packages/official-repository` contains authored official releases
-only; it is not a runtime dependency and does not mount routes, connect to
-databases or choose adapters.
+CMS layer. Official contracts and Provider manifests are generated from the SDK
+feature inventory. The repository ships no prefabricated collections. Collection
+authoring, admission, installation and publication remain generic domain APIs.
 
 `@bernouy/ulvia-provider` is the provider-facing surface for the official
 `ulvia/cms.*` contracts. It receives admitted releases and a capability

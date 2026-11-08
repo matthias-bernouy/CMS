@@ -31,32 +31,22 @@ test("push all orders inherited contracts and omits locally yanked releases", as
     }
 });
 
-test("push all publishes every official artifact kind, then inferred provider and collection pushes are idempotent", async () => {
+test("push all publishes SDK artifacts without builtin collections, then inferred provider pushes are idempotent", async () => {
     const f = await pushFixture();
-    const source = resolve(import.meta.dir, "../../../../../official-repository");
+    const source = resolve(import.meta.dir, "../../../dist/bootstrap");
     try {
         await f.run(["release", resolve(import.meta.dir, "../../../../../../infra/releases")]);
         f.output.length = 0;
         await f.run(["push", "all"]);
         expect(await f.remoteFiles.list("contracts")).toHaveLength(12);
         expect(await f.remoteFiles.list("providers")).toHaveLength(1);
-        expect(
-            (await new LocalCollectionRepository(f.remote).list()).map(({ release }) => release.collectionId),
-        ).toEqual(["ulvia/mossa", "ulvia/repository"]);
+        expect(await new LocalCollectionRepository(f.remote).list()).toEqual([]);
         expect(f.output.slice(1, 13).every((line) => line.startsWith("+ contract"))).toBe(true);
         expect(f.output[13]).toStartWith("+ provider-manifest");
-        expect(f.output[14]).toStartWith("+ collection ulvia/mossa@");
-        expect(f.output[15]).toStartWith("+ collection ulvia/repository@");
-        expect(f.output.at(-1)).toBe("Published 15 local releases.");
+        expect(f.output.at(-1)).toBe("Published 13 local releases.");
         const provider = JSON.parse(await readFile(join(source, "providers/primary-provider/definition.json"), "utf8"));
-        const collection = JSON.parse(await readFile(join(source, "collections/mossa/definition.json"), "utf8"));
         await f.run(["push", `${provider.providerId}@${provider.version}`]);
         expect(f.output.at(-1)).toStartWith("= provider-manifest");
-        await f.run(["push", `${collection.collectionId}@${collection.version}`]);
-        expect(f.output.at(-1)).toStartWith("= collection");
-        const registry = JSON.parse(await readFile(join(source, "collections/repository/definition.json"), "utf8"));
-        await f.run(["push", "collection", `${registry.collectionId}@${registry.version}`]);
-        expect(f.output.at(-1)).toStartWith("= collection");
     } finally {
         await f.close();
     }

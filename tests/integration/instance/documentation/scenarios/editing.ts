@@ -46,7 +46,7 @@ export async function concurrentEditing(connection: Connection, cmsUrl: string) 
         id: page.id,
         expectedRevision: winner.revision,
         title: "Merged review — 中文 🚀",
-        content: '<h1 cms-bloc="ulvia--mossa--heading" size="lg" text-align="start">Reviewed — 中文 🚀</h1>',
+        content: '<div cms-bloc="ulvia-dtest--smoke-kit--card"><h1 slot="content">Reviewed — 中文 🚀</h1></div>',
     });
     refusal(
         await invoke(connection, "ulvia/cms.content", "pages.publish", {
