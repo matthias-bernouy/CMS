@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test";
 import { preparedFixture } from "./fixture";
+import { responseTimeout } from "../../../src/runtime/gateway/dispatch/responseTimeout";
+import { gatewayRoute } from "../../../../../../tests/integration/gateway/fixtures";
+import type { GatewayActor } from "@bernouy/cms-gateway";
 
 test("Edge queries prepare identity, delegation and signing in one control request before real HTTP dispatch", async () => {
     const f = await preparedFixture();
@@ -24,6 +27,50 @@ test("Edge queries prepare identity, delegation and signing in one control reque
     } finally {
         f.close();
     }
+});
+
+test("only a direct administrator's full-site collection review receives the longer response budget", async () => {
+    const route = await gatewayRoute();
+    const request = {
+        release: { ...route.requestedRelease.admission.release, contractId: "ulvia/cms.installations" },
+        capability: { ...route.requestedRelease.admission.release.capabilities[0]!, id: "plan-collection-upgrade" },
+    };
+    const administrator = { kind: "administrator", subjectId: "admin" } as const;
+    expect(responseTimeout(request, administrator)).toBe(60_000);
+    const actors: GatewayActor[] = [
+        { kind: "anonymous" },
+        { kind: "user", subjectId: "user" },
+        { kind: "system", serviceId: "internal" },
+        { kind: "provider", installationId: "other", credentialFingerprint: "fingerprint" },
+    ];
+    for (const actor of actors) {
+        expect(responseTimeout(request, actor)).toBe(15_000);
+    }
+    expect(responseTimeout({ ...request, delegated: true }, administrator)).toBe(15_000);
+    expect(
+        responseTimeout(
+            { ...request, release: { ...request.release, contractId: "other/installations" } },
+            administrator,
+        ),
+    ).toBe(15_000);
+    expect(
+        responseTimeout(
+            { ...request, capability: { ...request.capability, id: "apply-collection-upgrade" } },
+            administrator,
+        ),
+    ).toBe(15_000);
+    expect(
+        responseTimeout(
+            {
+                ...request,
+                capability: {
+                    ...request.capability,
+                    behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "natural" },
+                },
+            },
+            administrator,
+        ),
+    ).toBe(15_000);
 });
 
 test("combined command dispatch preserves identity-before-audit and audit-before-business ordering", async () => {

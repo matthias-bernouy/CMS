@@ -48,6 +48,11 @@ Reviewed collection upgrades validate links against their captured Page snapshot
 They reuse bounded fragment indexes within that review (128 entries, 8 MiB),
 while preserving per-source document budgets and current route checks. Ordinary
 Page edits still read at most 32 destinations. Neither path crawls linked Pages.
+The inventory also reuses repeated immutable markup within an 8 MiB, 128-entry
+cache, retaining every reference location. The Edge waits up to 60 seconds for
+an administrator's direct `plan-collection-upgrade` query; other calls retain
+their 15-second first-byte limit. Delegation and invocation-token lifetimes are
+unchanged. The Provider uses a 60-second HTTP idle timeout.
 
 The CLI manages shared services and any number of named Edge instances through
 independent Docker Compose projects. It runs the same Edge and Provider images

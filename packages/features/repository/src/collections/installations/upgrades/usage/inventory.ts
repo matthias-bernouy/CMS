@@ -8,7 +8,7 @@ import type {
 import type { ContentRepository } from "@bernouy/content";
 import type { CollectionStore } from "../../core/CollectionStore";
 import { collectionUsageInventory } from "./catalogue";
-import { documentBlocIds, documentReferences } from "./scan";
+import { documentUsageScanner, documentReferences } from "./scan";
 import { localBlocDocuments } from "./localDocuments";
 import {
     readUsageSnapshot,
@@ -41,6 +41,7 @@ export function inventoryFromSnapshot(
 ): UsageInventory {
     const releases = snapshot.installed.collections.map(({ release }) => release);
     const referenceReleases = [...releases, ...fallbackReleases];
+    const scanner = documentUsageScanner(referenceReleases);
     const references = [...collectionUsageInventory(releases)];
     const unknown: string[] = [];
     const local = new Map(
@@ -52,13 +53,16 @@ export function inventoryFromSnapshot(
             unknown.push("Usage reference limit exceeded");
             return;
         }
+        let ids: readonly string[];
         try {
-            references.push(...documentReferences(html, location, "runtime", referenceReleases));
+            const scanned = scanner.read(html, location);
+            references.push(...scanned.references);
+            ids = scanned.ids;
         } catch (error) {
             unknown.push(`${location}: ${error instanceof Error ? error.message : "unanalysable document"}`);
             return;
         }
-        for (const id of documentBlocIds(html)) {
+        for (const id of ids) {
             if (seen.has(id)) {
                 continue;
             }

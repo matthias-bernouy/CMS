@@ -4,6 +4,7 @@ import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import type { DelegationContext } from "@bernouy/cms-gateway/access/delegation";
 import type { ControlProviderClient } from "../ControlProviderClient";
 import type { ControlGatewayRouteResolver } from "../RemoteGatewayServices";
+import { responseTimeout } from "./responseTimeout";
 
 /** Preparation is one control capability; the business request still uses pinned HTTP. */
 export function preparedEdgeDispatch(
@@ -32,6 +33,7 @@ export function preparedEdgeDispatch(
             }
         };
         const transport = new HttpGatewayTransport({
+            firstByteTimeoutMs: responseTimeout(request, context.actor),
             network: new NodeGatewayHttpNetwork({
                 allowPrivateAddresses: true,
                 authorize: async (exchange) => {

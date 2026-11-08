@@ -18,7 +18,7 @@ export function mountUlviaProvider(options: {
     logger: Logger;
 }): UlviaProviderServerHandle {
     const { env, authenticator, host, lifecycle, logger } = options;
-    const runner = new BunRunner({ hostname: env.ULVIA_PROVIDER_HOST, logger });
+    const runner = new BunRunner({ hostname: env.ULVIA_PROVIDER_HOST, logger, idleTimeoutSeconds: 60 });
     new ProviderOperatorApi(runner, env.ULVIA_PROVIDER_OPERATOR_TOKEN, lifecycle);
     new UlviaProvider(runner, {
         logger,

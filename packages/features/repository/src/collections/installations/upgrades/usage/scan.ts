@@ -113,3 +113,52 @@ export function documentBlocIds(html: string): readonly string[] {
         ),
     ];
 }
+
+/** Reuse immutable markup evidence only within one inventory, preserving every use's location. */
+export function documentUsageScanner(
+    releases: readonly CollectionRelease[],
+    maxEntries = 128,
+    maxBytes = 8 * 1024 * 1024,
+) {
+    if ([maxEntries, maxBytes].some((value) => !Number.isSafeInteger(value) || value < 1)) {
+        throw new TypeError("Invalid document scan cache limits");
+    }
+    const entries = new Map<string, { references: UsageReference[]; ids: readonly string[]; bytes: number }>();
+    let bytes = 0;
+    return {
+        get size() {
+            return entries.size;
+        },
+        get retainedBytes() {
+            return bytes;
+        },
+        read(html: string, location: string) {
+            let entry = entries.get(html);
+            if (entry) {
+                entries.delete(html);
+                entries.set(html, entry);
+            } else {
+                const references = documentReferences(html, "", "runtime", releases);
+                const ids = documentBlocIds(html);
+                entry = {
+                    references,
+                    ids,
+                    bytes: html.length * 2 + JSON.stringify({ references, ids }).length * 2 + 128,
+                };
+                if (entry.bytes <= maxBytes) {
+                    while (entries.size && (entries.size >= maxEntries || bytes + entry.bytes > maxBytes)) {
+                        const oldest = entries.keys().next().value!;
+                        bytes -= entries.get(oldest)!.bytes;
+                        entries.delete(oldest);
+                    }
+                    entries.set(html, entry);
+                    bytes += entry.bytes;
+                }
+            }
+            return {
+                references: entry.references.map((reference) => ({ ...reference, location })),
+                ids: [...entry.ids],
+            };
+        },
+    };
+}
