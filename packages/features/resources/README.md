@@ -25,3 +25,19 @@ Default text sources are bounded to 256 KiB, each stored source plus overrides t
 512 KiB, and snapshots to 32 namespaces. Mongo snapshots query at most 33 records
 to detect an exceeded namespace budget; batched asset lookups load only requested
 metadata. These stores do not mount an import endpoint or provide import authority.
+
+`./initialization` provides a one-time initialization service. `plan` produces
+actor/site/instance-bound evidence for an empty site or the host's local base ZIP.
+It checks the selected execution, hashes the candidate's normalized Page content
+and merged theme, and reports browser authority for explicit acknowledgement.
+Plans perform no live writes. `apply` reauthorizes before intent lookup and replay,
+rechecks the review, and copies ordinary entities under the host's maintenance
+fence. Exact retries recognize uncertain commits; missing completed entities and
+changed Page roles refuse rather than repair data. Completed replay needs no ZIP.
+
+The host must inject durable intents, worker lease/signal, private bounded ZIP
+retention, verification and disposable preview ports. Memory adapters are explicit
+preview/test composition only. The Mongo initialization adapter uses a mandatory
+scope-bound protocol record and compare-and-swap checkpoints, provisioned explicitly
+rather than inferred from an empty site. No runtime, HTTP/MCP or native setup flow
+is wired to this new service yet; legacy setup remains until that transition lands.

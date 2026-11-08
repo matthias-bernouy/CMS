@@ -18,7 +18,7 @@ function matches(row: Row, filter: Filter): boolean {
             : actual === expected;
     });
 }
-export function mongoFixture() {
+export function mongoFixture(collectionName = "cms_resource_entities") {
     const rows = new Map<string, Row>();
     const reads: { filter: Filter; limit: number; loaded: number }[] = [];
     const writes: { kind: string; filter?: Filter }[] = [];
@@ -75,13 +75,14 @@ export function mongoFixture() {
             if (!row) {
                 return { matchedCount: 0 };
             }
-            rows.set(input._id, structuredClone(input));
+            const replacement = { ...structuredClone(input), _id: row._id };
+            rows.set(row._id, replacement);
             return { matchedCount: 1 };
         },
     };
     const db = {
         collection: (name: string) => {
-            if (name !== "cms_resource_entities") {
+            if (name !== collectionName) {
                 throw new Error("Unexpected resource entity collection");
             }
             return collection;

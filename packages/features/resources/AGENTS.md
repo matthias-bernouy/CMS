@@ -28,3 +28,15 @@ resolution, upgrades, uninstallation or remote publication mechanism.
   backfill missing records. Exact asset retries refuse missing or inconsistent bytes.
 - Text defaults occupy at most 256 KiB per namespace; defaults plus site overrides
   occupy at most 512 KiB. Host initialization serializes creation under its write fence.
+
+- `initialization/` owns one-time review/copy semantics. The host supplies the
+  maintenance fence, durable intents, retained ZIP, verifier, disposable preview,
+  current execution and worker guard. Do not choose adapters or create queues here.
+- Capture the public review before awaits. Authorize before intent/receipt reads
+  and again in recovered execution. Browser risk acknowledgement covers its digest.
+- Explicit provisioning creates initialization state. Missing state must fail.
+  Persist monotonic checkpoints using scoped compare-and-swap; never repair a
+  missing completed resource or replace reviewed evidence during recovery.
+- Candidate validation must exercise ordinary Page writes before the append-only
+  raw Bloc copy port is used. Complete the ordinary entity copy before removing
+  retained ZIP bytes; rendering must not depend on those bytes.

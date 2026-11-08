@@ -9,7 +9,8 @@
         ".": "./src/exports/index.ts",
         "./storage": "./src/exports/storage.ts",
         "./memory": "./src/exports/memory.ts",
-        "./mongo": "./src/exports/mongo.ts"
+        "./mongo": "./src/exports/mongo.ts",
+        "./initialization": "./src/exports/initialization.ts"
     },
     "dependencies": {
         "@bernouy/content": "workspace:*",
@@ -26,6 +27,7 @@
         "mongodb": "^7.2.0"
     },
     "devDependencies": {
-        "@types/css-tree": "^3.2.0"
+        "@types/css-tree": "^3.2.0",
+        "@bernouy/repository": "workspace:*"
     }
 }
