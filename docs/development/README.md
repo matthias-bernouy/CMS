@@ -85,6 +85,11 @@ ulvia upgrade edge --version 1.0.7
 ulvia upgrade provider --version 1.0.7
 ```
 
+Publish both images under the same release version, even when only one component
+changed. A newly created instance initially chooses the Edge version from the
+shared Provider version. Existing instances keep their own pinned Edge image,
+so upgrading their Provider alone does not update those Edge pins.
+
 An upgrade pulls the canonical `docker.io/cyaxis` reference, validates its OCI
 labels, and persists its immutable digest. A regular `start` reuses that digest;
 it never upgrades by following a mutable tag. A failed activation attempts to
