@@ -1,8 +1,9 @@
 # Official Repository
 
-This directory is the authored source of official immutable releases published
-to CMS repositories. It contains provider-neutral contracts, provider manifests
-and collections. Admission, canonicalization, storage and installation belong
+This directory retains authored collection sources and immutable contract/provider
+JSON snapshots used for parity checks. Official contracts and Provider claims are
+generated from the SDK feature inventory; bootstrap never scans these JSON snapshots.
+Admission, canonicalization, storage and installation belong
 to `@bernouy/repository`; this directory only owns the official publications.
 The Provider consumes a generated admitted snapshot rather than scanning this
 authored directory at runtime. The release pipeline publishes reviewed exact

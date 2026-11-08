@@ -24,6 +24,10 @@ console.log(JSON.stringify(runtime.implementations.map(({contractId}) => contrac
         expect(built.metafile).toBeDefined();
         const inputs = Object.keys(built.metafile!.inputs);
         for (const forbidden of [
+            "sdk/src/schema/compile.ts",
+            "sdk/src/schema/visit.ts",
+            "sdk/src/schema/checks.ts",
+            "sdk/src/schema/scalars.ts",
             "sdk/src/compiler/contracts.ts",
             "sdk/src/compiler/contracts/documentDirectory.ts",
             "sdk/src/compiler/implementations/index.ts",

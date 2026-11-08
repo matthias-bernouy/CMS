@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { capabilityError, z } from "@bernouy/ulvia-sdk";
-import { executeCapability } from "@bernouy/ulvia-sdk/provider";
+import { executeCapability } from "@bernouy/ulvia-sdk/local";
 import { context, errorFeature, MissingNote, read } from "./fixture";
 
 test("local feature execution maps business errors with their exact owner and private original cause", async () => {

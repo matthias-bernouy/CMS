@@ -3,7 +3,7 @@ import { contractString, capabilitiesFor, implementFeature, z } from "@bernouy/u
 import { notesProviderDefinition } from "../../examples/provider";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
 import { createProvider } from "@bernouy/ulvia-sdk/provider";
-import { executeCapability } from "@bernouy/ulvia-sdk/provider";
+import { executeCapability } from "@bernouy/ulvia-sdk/local";
 
 interface Services {
     notes: { read(id: string): Promise<string> };

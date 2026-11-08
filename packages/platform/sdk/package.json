@@ -8,7 +8,8 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./build": "./src/exports/build.ts",
-        "./provider": "./src/exports/provider.ts"
+        "./provider": "./src/exports/provider.ts",
+        "./local": "./src/exports/local.ts"
     },
     "dependencies": {
         "@bernouy/ulvia-contracts": "workspace:*",

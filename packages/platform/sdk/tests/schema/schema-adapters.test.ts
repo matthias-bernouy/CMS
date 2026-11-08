@@ -37,9 +37,11 @@ test("bounded map schemas preserve key units, cardinality, nulls and nested valu
         expect(accepted).toBe(schema.nullable().safeParse(value).success);
     }
     expect(() =>
-        contractMap(
-            z.number().refine(() => true),
-            { maxProperties: 2, maxKeyLength: 2 },
+        compileSchema(
+            contractMap(
+                z.number().refine(() => true),
+                { maxProperties: 2, maxKeyLength: 2 },
+            ),
         ),
     ).toThrow();
     expect(() => contractMap(z.boolean(), { maxProperties: 257, maxKeyLength: 2 })).toThrow();

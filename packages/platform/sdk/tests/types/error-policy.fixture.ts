@@ -6,7 +6,7 @@ import {
     resourceResponse,
     contractBinary,
 } from "@bernouy/ulvia-sdk";
-import { executeCapability } from "@bernouy/ulvia-sdk/provider";
+import { executeCapability } from "@bernouy/ulvia-sdk/local";
 const author = capabilitiesFor<{ notes: { read(): string } }>();
 const read = author({
     id: "read",

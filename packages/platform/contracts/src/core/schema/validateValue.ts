@@ -1,4 +1,4 @@
-import type { UlviaSchema } from "../../interfaces/UlviaSchema";
+import type { UlviaSchema, UlviaMapSchema } from "../../interfaces/UlviaSchema";
 import { matchesStringFormat } from "./formats";
 
 export class SchemaValueError extends TypeError {
@@ -47,13 +47,7 @@ export function validateSchemaValue(schema: UlviaSchema, value: unknown, path = 
             validateNumber(schema, value, path);
             return;
         case "map": {
-            const record = asRecord(value, path);
-            const entries = Object.entries(record);
-            assertCount(entries.length, schema.minProperties, schema.maxProperties, path);
-            for (const [key, item] of entries) {
-                if (key.length > schema.maxKeyLength) {
-                    fail(`key ${JSON.stringify(key)} exceeds ${schema.maxKeyLength} characters`, path);
-                }
+            for (const [key, item] of validatedMapEntries(schema, value, path)) {
                 validateSchemaValue(schema.values, item, `${path}.${key}`);
             }
             return;
@@ -69,6 +63,23 @@ export function validateSchemaValue(schema: UlviaSchema, value: unknown, path = 
         case "string":
             validateString(schema, value, path);
             return;
+    }
+}
+
+/** Own plain-object entries with v1 cardinality and UTF-16 key bounds, checked in traversal order. */
+export function* validatedMapEntries(
+    schema: Pick<UlviaMapSchema, "minProperties" | "maxProperties" | "maxKeyLength">,
+    value: unknown,
+    path = "$",
+): IterableIterator<[string, unknown]> {
+    const entries = Object.entries(asRecord(value, path));
+    assertCount(entries.length, schema.minProperties, schema.maxProperties, path);
+    for (const entry of entries) {
+        const [key] = entry;
+        if (key.length > schema.maxKeyLength) {
+            fail(`key ${JSON.stringify(key)} exceeds ${schema.maxKeyLength} characters`, path);
+        }
+        yield entry;
     }
 }
 

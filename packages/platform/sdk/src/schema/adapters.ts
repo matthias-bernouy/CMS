@@ -1,15 +1,22 @@
 import { z } from "zod";
 import type { $ZodType } from "zod/v4/core";
-import { parseUlviaSchema, validateSchemaValue, SchemaValueError } from "@bernouy/ulvia-contracts/schema";
+import {
+    parseUlviaSchema,
+    validateSchemaValue,
+    validatedMapEntries,
+    SchemaValueError,
+} from "@bernouy/ulvia-contracts/schema";
 import type {
     UlviaSchema,
     UlviaStringSchema,
     UlviaBinarySchema,
     UlviaMapSchema,
 } from "@bernouy/ulvia-contracts/schema";
-import { compileSchema } from "ulvia-sdk/schema/compile";
 
-const registered = new WeakMap<object, UlviaSchema>();
+type RegisteredSchema =
+    | { readonly kind: "wire"; readonly schema: UlviaSchema }
+    | { readonly kind: "map"; readonly schema: UlviaMapSchema; readonly values: z.ZodType };
+const registered = new WeakMap<object, RegisteredSchema>();
 
 function adapter<Value>(definition: UlviaSchema): z.ZodType<Value, Value> {
     const schema = parseUlviaSchema(definition);
@@ -27,7 +34,7 @@ function adapter<Value>(definition: UlviaSchema): z.ZodType<Value, Value> {
             throw error;
         }
     });
-    registered.set(validator._zod.def, schema);
+    registered.set(validator._zod.def, { kind: "wire", schema });
     return validator;
 }
 
@@ -52,9 +59,30 @@ export function contractMap<Value extends z.ZodType>(
     values: Value,
     bounds: Omit<UlviaMapSchema, "type" | "values" | "nullable">,
 ): z.ZodType<Record<string, z.output<Value>>, Record<string, z.output<Value>>> {
-    return adapter<Record<string, z.output<Value>>>({ ...bounds, type: "map", values: compileSchema(values) });
+    // Validate/snapshot only the wire bounds here; Zod value conversion belongs exclusively to compilation.
+    const schema = parseUlviaSchema({ ...bounds, type: "map", values: { type: "null" } });
+    if (schema.type !== "map" || schema.nullable) {
+        throw new TypeError("Use .nullable() on the Zod schema instead of constructor metadata");
+    }
+    const validator = z.custom<Record<string, z.output<Value>>>((value) => {
+        try {
+            for (const [, item] of validatedMapEntries(schema, value)) {
+                if (!values.safeParse(item).success) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (error) {
+            if (error instanceof SchemaValueError) {
+                return false;
+            }
+            throw error;
+        }
+    });
+    registered.set(validator._zod.def, { kind: "map", schema, values });
+    return validator;
 }
 
-export function registeredSchema(schema: $ZodType): UlviaSchema | undefined {
+export function registeredSchema(schema: $ZodType): RegisteredSchema | undefined {
     return registered.get(schema._zod.def);
 }

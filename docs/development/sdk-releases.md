@@ -1,25 +1,21 @@
 # SDK release workflow
 
-The SDK pilots are Emailer/SMTP in `packages/features/email/base` and `smtp`,
-Secrets in `packages/features/secrets`, Files in `packages/features/files`,
-and Observability in `packages/features/observability`.
-Their documentation is authored as ordinary `docs/**/*.md` files and discovered
-during SDK compilation. Reusable Zod data schemas live in `src/schemas/` and the TypeScript
-ports infer their types from those schemas. Each capability declares its stable ID,
-access, behavior and bindings. The `./feature` export owns contract identity,
-version, parent and capability list. `@bernouy/ulvia-provider/build` assembles
-feature-owned capability executors and manifest requirements. Nodemailer and durable
-storage are injected by the runtime.
+The shared SDK inventory includes Emailer/SMTP, Access, Content, Authoring,
+Secrets, Files, Observability, Repository, Installations and Provider controls.
+Reusable Zod schemas, named mocks, bindings and default execution live with their
+owning feature. Normal `docs/**/*.md` files are discovered only during compilation.
+The Provider selects complete implementations and injects runtime-owned adapters.
+The `provider.cms-instances` definition is a published template without an execution claim.
 
 ## Sources and generated artifacts
 
 `infra/releases/ulvia.release.ts` is the explicit trusted local source entry.
-It prepares SDK Emailer/SMTP, Secrets, Files and Observability contracts, the remaining authored contracts and
-collections, and a manifest with computed exact contract digests. SDK executor functions are captured during authoring/compilation without being
-invoked. Runtime mounting binds injected service ports; invocations run the executors.
-Older pilot JSON and the authored manifest remain parity references; the new
-bootstrap and release entry do not use them as generation inputs. Other feature
-families continue using their authored JSON until their migration is requested.
+It generates every official contract and its assets from the SDK inventory,
+prepares the remaining authored collections, and derives manifest claims with exact
+digests and implementation requirements. Compilation captures executors without
+invoking them. Runtime mounting binds injected service ports.
+Retained contract/provider JSON files are immutable parity references; generation
+never scans or falls back to those definitions.
 
 ```sh
 bun run generate:official-bootstrap
@@ -31,8 +27,9 @@ bun run ulvia -- push all
 Bootstrap and local release preparation share `prepareOfficialResources`.
 Bootstrap emits admitted documents/assets and the Provider snapshot. It also
 regenerates the runtime's current execution support pins from the manifest and
-runtime package version. `supported-history.json` retains separately reviewed
-older executable releases; merely admitting a contract does not add runtime support.
+runtime package version. Executable support contains only those shipped SDK claims.
+Historical API signatures remain compatibility evidence; older digests absent from
+the runtime artifact refuse execution. Merely admitting a release cannot add support.
 The resource ZIP and removal of collections are separate work.
 
 ## Versions and publication
@@ -160,7 +157,7 @@ definitions remain compilable. Contracts and build artifacts never serialize exe
 Public Zod schemas retain v1 constraints and digest parity. Derived internal schemas
 own text/password normalization and enabled SMTP configuration checks. State checks
 still run after retaining the existing password. Handlers no longer carry repeated
-manual field checks. `executeCapability` from `@bernouy/ulvia-sdk/provider` validates
+manual field checks. `executeCapability` from `@bernouy/ulvia-sdk/local` validates
 local synchronous JSON calls using Zod; streaming/operation modes use the Provider.
 Provider calls retain admitted Ulvia validation; the bridge does not parse JSON again.
 

@@ -2,7 +2,7 @@ import { author, context, session, definitions, services } from "./sessionFixtur
 import { expect, test } from "bun:test";
 import { capabilityResponse, implementFeature, z } from "@bernouy/ulvia-sdk";
 import { compileContract, compileProvider } from "@bernouy/ulvia-sdk/build";
-import { executeCapability } from "@bernouy/ulvia-sdk/provider";
+import { executeCapability } from "@bernouy/ulvia-sdk/local";
 import { decodeSessionEffect, SESSION_EFFECT_HEADER } from "@bernouy/cms-gateway/protocol";
 import { notesProviderDefinition } from "../../../../examples/provider";
 import { unitProvider } from "../../support/runtime";

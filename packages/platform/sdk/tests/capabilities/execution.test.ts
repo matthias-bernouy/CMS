@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { contractString, capabilitiesFor, z } from "@bernouy/ulvia-sdk";
-import { executeCapability } from "@bernouy/ulvia-sdk/provider";
+import { executeCapability } from "@bernouy/ulvia-sdk/local";
 
 interface Services {
     values: { write(value: number): number };

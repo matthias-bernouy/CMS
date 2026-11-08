@@ -110,3 +110,9 @@ Typed authoring and Provider assembly SDK. Depend only on Platform and Foundatio
   The Gateway owns its closed metadata validation and HTTP header projection.
   The language tag carries no response-effect authority; local JSON execution
   continues to return the validated DTO only.
+
+- `./local` owns explicit local authoring execution, including schema compilation
+  before calling services. Keep it outside the `./provider` dependency graph.
+  Map adapters capture Zod child descriptors at definition and compile them only
+  under the build/local visitor, sharing its node/depth budget. Provider startup
+  must not import that visitor or convert authored schemas.

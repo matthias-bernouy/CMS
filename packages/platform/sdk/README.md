@@ -119,8 +119,9 @@ the SDK does not parse JSON DTOs a second time in the executor bridge. Dependenc
 factories or feature service projections run once per mounted effective capability. The captured plan cannot be replaced by mutating the
 source table after compilation.
 
-For direct local synchronous JSON calls, `executeCapability(feature, capabilityId,
-{ input, services, context })` from `./provider` resolves the declaring feature and
+For direct local synchronous JSON calls, import from `@bernouy/ulvia-sdk/local`.
+`executeCapability(feature, capabilityId,
+{ input, services, context })` from `./local` resolves the declaring feature and
 uses its error policy. The standalone `executeCapability(capability, { input,
 services, context })` form executes a capability independently, without feature policy.
 Both forms validate input and output with the capability's Zod schemas. The caller owns authorization; this does not activate a
@@ -284,7 +285,8 @@ The root and compiler do not read environment, initialize adapters or listen.
 The CLI discovers explicit trusted `ulvia.release.ts` entry modules, checks release
 evolution against its local catalogue and reuses ordinary artifact publication.
 See [the release workflow](../../../docs/development/sdk-releases.md). The replacement
-resource ZIP and migration of other feature families remain separate.
+resource ZIP remains separate. All twelve original official definitions are generated
+from the shared feature/template inventory.
 
 ## Validation
 

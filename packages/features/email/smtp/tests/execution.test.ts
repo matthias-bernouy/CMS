@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { ConfiguredSmtpEmailer } from "@bernouy/email-smtp/nodemailer";
-import { executeCapability } from "@bernouy/ulvia-sdk/provider";
+import { executeCapability } from "@bernouy/ulvia-sdk/local";
 import { getSmtpConfiguration } from "email-smtp/capabilities/configuration/get";
 import { updateSmtpConfiguration } from "email-smtp/capabilities/configuration/update";
 import { smtpEmailerFeature } from "email-smtp/feature";

@@ -3,7 +3,7 @@ import { defineFeature } from "@bernouy/ulvia-sdk";
 import { expect, test } from "bun:test";
 import { contractBinary, capabilitiesFor, implementFeature, z } from "@bernouy/ulvia-sdk";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
-import { executeCapability } from "@bernouy/ulvia-sdk/provider";
+import { executeCapability } from "@bernouy/ulvia-sdk/local";
 import { notesProviderDefinition } from "../../../../examples/provider";
 import { unitProvider } from "../../support/runtime";
 

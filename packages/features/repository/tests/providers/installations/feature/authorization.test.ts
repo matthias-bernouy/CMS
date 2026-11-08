@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { installationsFeature } from "@bernouy/repository/features/installations";
-import { executeCapability } from "@bernouy/ulvia-sdk/provider";
+import { executeCapability } from "@bernouy/ulvia-sdk/local";
 import { context, services } from "./fixture";
 const execute = (
     id: (typeof installationsFeature.capabilities)[number]["id"],

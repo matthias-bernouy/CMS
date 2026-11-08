@@ -44,9 +44,18 @@ export class SchemaCompiler {
         }
         const known = registeredSchema(source);
         if (known) {
-            this.accountForRegistered(known, path, depth);
+            let wire = known.schema;
+            if (known.kind === "map") {
+                const child = this.visit(known.values, `${path}.values`, depth + 1);
+                if (child.optional) {
+                    throw new SdkDefinitionError("Map values cannot be optional", `${path}.values`);
+                }
+                wire = { ...known.schema, values: child.schema };
+            } else {
+                this.accountForRegistered(known.schema, path, depth);
+            }
             const description = z.globalRegistry.get(source)?.description;
-            return { schema: description === undefined ? known : { ...known, description }, optional: false };
+            return { schema: description === undefined ? wire : { ...wire, description }, optional: false };
         }
         const schema = source as $ZodTypes;
         const def = schema._zod.def;

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { EmailDeliveryDisabledError } from "@bernouy/email";
 import type { EmailerServices } from "@bernouy/email/feature";
 import type { OutboundEmail } from "@bernouy/email";
-import { executeCapability } from "@bernouy/ulvia-sdk/provider";
+import { executeCapability } from "@bernouy/ulvia-sdk/local";
 import { emailerFeature } from "email/feature";
 import { sendEmail } from "email/capabilities/send";
 

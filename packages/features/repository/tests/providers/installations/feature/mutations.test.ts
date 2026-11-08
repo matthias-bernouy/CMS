@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { installationsFeature } from "@bernouy/repository/features/installations";
-import { executeCapability } from "@bernouy/ulvia-sdk/provider";
+import { executeCapability } from "@bernouy/ulvia-sdk/local";
 import { context, reference, services } from "./fixture";
 test("invalid installation inputs and stale revisions refuse before source transfer or installation mutation", async () => {
     const calls: string[] = [];

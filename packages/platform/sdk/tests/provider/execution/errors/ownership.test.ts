@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { capabilityError, defineFeature, implementFeature, implementContract } from "@bernouy/ulvia-sdk";
 import { compileProvider } from "@bernouy/ulvia-sdk/build";
-import { executeCapability } from "@bernouy/ulvia-sdk/provider";
+import { executeCapability } from "@bernouy/ulvia-sdk/local";
 import { notesProviderDefinition } from "../../../../examples/provider";
 import { unitProvider } from "../../support/runtime";
 import { author, context, errorFeature, metadata, read, unavailable } from "./fixture";

@@ -13,4 +13,4 @@ export type {
 } from "ulvia-contracts/interfaces/UlviaSchema";
 export { parseUlviaSchema } from "ulvia-contracts/core/schema/parseSchema";
 export { projectSchemaValue } from "ulvia-contracts/core/schema/projectValue";
-export { SchemaValueError, validateSchemaValue } from "ulvia-contracts/core/schema/validateValue";
+export { SchemaValueError, validateSchemaValue, validatedMapEntries } from "ulvia-contracts/core/schema/validateValue";
