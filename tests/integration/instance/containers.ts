@@ -62,6 +62,7 @@ export async function mcpContainers(
             `CMS_KEK_RING_JSON=${JSON.stringify({ control: randomBytes(32).toString("hex") })}`,
             "--env",
             "ULVIA_PROVIDER_PUBLIC_URL=http://ulvia-provider:5103",
+            ...(legacyStarters ? ["--env", "CMS_REPOSITORY_URL=https://repository-unavailable.invalid"] : []),
             "--env",
             `ULVIA_PROVIDER_OPERATOR_TOKEN=${operatorToken}`,
         ]);

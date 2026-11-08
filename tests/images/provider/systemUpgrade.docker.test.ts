@@ -19,7 +19,7 @@ test.skipIf(!baseline || !candidate || !edge)(
                 true,
             );
             const site = repositoryApi(stack.cmsUrl);
-            const session = await site.session(stack.administrator.email, stack.administrator.password);
+            let session = await site.session(stack.administrator.email, stack.administrator.password);
             const pages = await (
                 await site.request("ulvia/cms.content", "/pages/list", "QUERY", { limit: 100 }, session)
             ).json();
@@ -48,6 +48,9 @@ test.skipIf(!baseline || !candidate || !edge)(
                 .slice(1)
                 .join("=");
             await stack.upgradeProvider(candidate!, "1.0.0");
+            const administratorSub = session.accountId;
+            session = await site.session(stack.administrator.email, stack.administrator.password);
+            expect(session.accountId).toBe(administratorSub);
             const control = await stack.providerUrl();
             const operator = async (id: string, suffix = "", body?: unknown) => {
                 const response = await fetch(`${control}/ulvia/operator/instances/${encodeURIComponent(id)}${suffix}`, {
@@ -115,7 +118,7 @@ test.skipIf(!baseline || !candidate || !edge)(
                 session,
             );
             // The test has no remote Repository, so the bounded route must exist even when discovery fails.
-            expect(catalogue.status).not.toBe(404);
+            expect(catalogue.status).toBe(503);
             expect(
                 await (
                     await site.request(
@@ -141,6 +144,50 @@ test.skipIf(!baseline || !candidate || !edge)(
             ).toEqual(snapshots);
             await stack.restartProvider();
             expect((await operator(stack.instanceId)).body.systemPlan).toEqual(review.body.target);
+            const registry = repositoryApi(stack.repositoryUrl);
+            const registrySession = await registry.session(
+                stack.repository.administrator.email,
+                stack.repository.administrator.password,
+            );
+            const identity = await (await registry.request("ulvia/repository", "/v1/info")).json();
+            const claim = await registry.request(
+                "ulvia/repository",
+                "/v1/namespace-actions/claim",
+                "POST",
+                { namespace: "upgrade-proof" },
+                stack.repository.pat,
+            );
+            expect(claim.status).toBe(200);
+            const inventory = await (
+                await registry.request("ulvia/repository", "/v1/namespaces", "GET", undefined, stack.repository.pat)
+            ).json();
+            const registryId = stack.repository.instance.instance.id;
+            const registryBefore = await operator(registryId);
+            const registryInput = {
+                ...input,
+                expectedRevision: registryBefore.body.revision,
+                administratorSub: registrySession.accountId,
+            };
+            const registryReview = await operator(registryId, "/system/plan", registryInput);
+            expect(registryReview.status, JSON.stringify(registryReview.body)).toBe(200);
+            expect(
+                registryReview.body.target.contracts.find(
+                    (pin: { contractId: string }) => pin.contractId === "ulvia/repository",
+                ).version,
+            ).toBe("1.1.0");
+            const registryApplied = await operator(registryId, "/system", {
+                ...registryInput,
+                planDigest: registryReview.body.planDigest,
+            });
+            expect(registryApplied.status, JSON.stringify(registryApplied.body)).toBe(200);
+            await docker(["restart", stack.repository.name]);
+            await waitForHttp(`${stack.repositoryUrl}/readyz`);
+            expect(await (await registry.request("ulvia/repository", "/v1/info")).json()).toEqual(identity);
+            expect(
+                await (
+                    await registry.request("ulvia/repository", "/v1/namespaces", "GET", undefined, stack.repository.pat)
+                ).json(),
+            ).toEqual(inventory);
         } catch (error) {
             throw new Error(`${String(error)}\n${await stack?.diagnostics()}`);
         } finally {
