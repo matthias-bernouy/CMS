@@ -87,6 +87,9 @@
         },
         {
             "path": "packages/platform/sdk"
+        },
+        {
+            "path": "packages/foundation/zip"
         }
     ]
 }

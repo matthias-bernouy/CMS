@@ -1,0 +1,22 @@
+{
+    "name": "@bernouy/zip",
+    "version": "1.0.0",
+    "description": "Bounded deterministic ZIP construction and immutable in-memory decoding.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts"
+    },
+    "dependencies": {
+        "yauzl": "3.4.0",
+        "yazl": "3.3.1"
+    },
+    "devDependencies": {
+        "@types/yauzl": "3.4.0",
+        "@types/yazl": "3.3.1"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    }
+}
