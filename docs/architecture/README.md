@@ -68,7 +68,7 @@ documented in [Reviewed Release Upgrades](release-upgrades.md), without rewritin
 Container image upgrades are a separate operation: they replace executable
 components, not installed collection releases. A previous-image fallback does
 not reverse MongoDB writes. Internal persistence migrations and verified
-backup/restore remain [open operational work](../TODO.md).
+backup/restore remain operational gaps.
 
 ### Repository And Gateway
 

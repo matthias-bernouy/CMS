@@ -74,8 +74,7 @@ example documents, and rejects programmatic iframe creation.
 Catalogue entries expose a deterministic browser-risk report and digest.
 Install and upgrade requests acknowledge that precise digest; a repository
 change to browser authority therefore requires a fresh selection. Collections
-with JavaScript remain trusted code in the main document for the MVP, as
-documented in [Deferred Platform Work](../TODO.md).
+with JavaScript remain trusted code in the main document for the MVP.
 
 ## Page Grammar
 

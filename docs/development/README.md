@@ -77,8 +77,8 @@ separate stop and upgrade lifecycles.
 Credential commands print only administrator credentials; technical tokens
 remain private.
 
-The CLI consumes released software images; it never builds them. Workspace and
-CI authors build and publish the two official Docker Hub images explicitly:
+The CLI consumes released software images; it never builds them. Workspace
+authors build and publish the two official Docker Hub images explicitly:
 
 ```bash
 bun run images:build --version 1.0.7 all
@@ -210,7 +210,7 @@ explicit maintenance operation:
 The operation rewraps DEKs in bounded batches; it does not re-encrypt stored
 secret values. Replaying it is idempotent. Historical keys are never deleted
 automatically. Deployment-level restoration and historical-key recovery drills
-remain [open work](../TODO.md#backup-and-operational-recovery).
+still require deployment-level verification.
 
 ## Checks And Build
 
@@ -252,25 +252,22 @@ To reuse an already built matching pair, set
 `ULVIA_SMOKE_IMAGE_VERSION=<local-version>` explicitly. This skips image builds
 but still verifies each component, stack API, version and digest. Without that
 override, `bun run verify:full` builds and tests the candidate source directly.
-The smoke is opt-in locally. Quality runs on pull requests and pushes to
-`codex/alpha-v0`; a separate nightly/manual workflow runs the same journey
-without duplicating the PR/push run. Both also run the Docker delivery budgets.
+The smoke is opt-in locally. Run `bun run verify:full` explicitly for the smoke
+and Docker delivery budgets. This repository has no GitHub Actions workflows.
 See [security and performance guardrails](guardrails.md) for reports, scope
 selection, measured budgets and remaining limits.
 
 ### Known Verification Blockers
 
-The setup action now builds the browser runtime and official bootstrap with
-current commands. Candidate smoke images use an explicit version. The coverage
-baseline still needs reconciliation with the current package set; remote CI
-and dependency-security checks must not be described as passing based on local
-verification alone.
+Candidate smoke images use an explicit version. The coverage baseline still
+needs reconciliation with the current package set. Dependency-security checks
+are separate commands and must not be described as passing based on unrelated
+local verification.
 
 Many Mongo adapter tests use doubles. Namespace ownership and PAT quotas also
 have opt-in real Mongo tests covering concurrent processes, account/instance
 isolation and bounded indexed reads. Wider adapter interruption, transactions
-and full restore still need environment-level coverage. The
-[audit](../AUDIT.md) records successful local checks and confirmed gaps.
+and full restore still need environment-level coverage.
 Performance work should gate calls, transferred bytes and retained resources;
 `verify` now runs `test:performance` with machine-dependent timing ceilings,
 while `verify:full` also runs the real Docker delivery budget journey.

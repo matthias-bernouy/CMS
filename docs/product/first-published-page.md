@@ -64,12 +64,12 @@ also exercises administration, Files and collection upgrades, but its Page
 creation path inserts a Heading rather than completing the target hero/media
 journey. Domain tests and controls present in source do not replace that gate.
 
-## Verification Blockers
+## Verification Evidence
 
-The shared CI setup references a removed prebuild tool. The smoke starts the
-unbundled CLI without the now-required initial stack version. Restore these
-paths and exercise images built from the candidate commit before claiming a
-current container pass. See the [audit](../AUDIT.md#delivery-and-ci).
+Use the [development guide](../development/README.md#checks-and-build) for local
+verification commands. Exercise images built from the candidate source and
+record the actual journey; a general infrastructure pass does not establish
+completion of the editorial flow.
 
 ## Required Failure Behavior
 

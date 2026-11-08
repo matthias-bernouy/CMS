@@ -266,9 +266,8 @@ Static Page capability analysis and access derivation are implemented in
 `@bernouy/content/public-delivery`; live invocation authority remains
 independent of Page documents and belongs to Gateway.
 Remote publication uses account PATs through the CLI and official Provider
-server. Third-party JavaScript isolation remains open. The current first-party
-trust assumption and the required boundary before third-party collections are
-recorded in the repository
-[deferred-work documentation](../../../../../docs/TODO.md#collection-javascript-isolation).
+server. Third-party JavaScript isolation remains open. Collection JavaScript
+runs as trusted code in the main document; namespace ownership and verified
+release digests do not provide a browser sandbox.
 The [starter bundle](../../fixtures/collections/v1/README.md) exercises the
 authoring and admission path without requiring a running provider.

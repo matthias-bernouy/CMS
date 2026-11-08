@@ -162,8 +162,8 @@ and Edge images. A failed activation attempts
 to restart the previous image, but this does not restore changed database or
 file contents and is not an atomic rollback across all instances.
 Take a complete backup before an upgrade involving persisted data. Internal
-schema migrations and interrupted-upgrade/restore drills remain
-[open platform work](../TODO.md#internal-persistence-migrations).
+schema migrations and interrupted-upgrade/restore drills require explicit
+implementation and deployment-level verification.
 
 ## 6. Public Domain And HTTPS
 
@@ -204,7 +204,7 @@ The CLI has no general backup/restore command. Stop each Edge with
 `ulvia instance stop <name>`, then stop shared services before copying their
 data. Restore and verify a complete backup in an isolated installation before
 treating it as a recovery guarantee; do not rely on image fallback to recover
-data. See [operational recovery](../TODO.md#backup-and-operational-recovery).
+data.
 
 `reset` permanently removes Ulvia-owned local state:
 

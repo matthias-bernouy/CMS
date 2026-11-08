@@ -12,14 +12,11 @@ async function readPackageManifest(path: string): Promise<Record<string, unknown
     return JSON.parse(await readRepositoryFile(path)) as Record<string, unknown>;
 }
 
-test("the Bun runtime, types, CI, and container pins stay aligned", async () => {
+test("the Bun runtime, types, and container pins stay aligned", async () => {
     const version = (await readRepositoryFile(".bun-version")).trim();
     const rootPackage = await readPackageManifest("package.json");
     const contentPackage = await readPackageManifest("packages/features/content/package.json");
     const edgePackage = await readPackageManifest("packages/surfaces/cms-edge/package.json");
-    const qualityWorkflow = await readRepositoryFile(".github/workflows/quality.yml");
-    const integrationWorkflow = await readRepositoryFile(".github/workflows/quality-integration-contracts.yml");
-    const setupAction = await readRepositoryFile(".github/actions/setup-workspace/action.yml");
     const dockerfiles = await Promise.all(
         ["edge", "provider"].map((image) => readRepositoryFile(`infra/images/${image}/Dockerfile`)),
     );
@@ -36,9 +33,6 @@ test("the Bun runtime, types, CI, and container pins stay aligned", async () => 
     expect(contentDevDependencies["@types/bun"]).toBe(version);
     expect(edgeDevDependencies["@types/bun"]).toBe(version);
 
-    expect(setupAction).toContain("bun-version-file: .bun-version");
-    expect(qualityWorkflow).not.toContain("BUN_VERSION:");
-    expect(integrationWorkflow).not.toContain("BUN_VERSION:");
     for (const [index, dockerfile] of dockerfiles.entries()) {
         const variant = index === 0 ? "alpine" : "debian";
         const images = [...dockerfile.matchAll(/^FROM (oven\/bun:\S+)/gmu)].map((match) => match[1]!);

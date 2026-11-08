@@ -48,8 +48,8 @@ subsequent restart. No test publishes to or reads from the public Repository.
 ## Delivery work budgets
 
 `bun run test:performance:delivery` builds matching candidate images and runs
-`performance.docker.test.ts` explicitly. It also runs in `verify:full` and the
-CI smoke workflows. The ordinary suite skips this case unless
+`performance.docker.test.ts` explicitly. It also runs in `verify:full`.
+The ordinary suite skips this case unless
 `ULVIA_RUN_DELIVERY_PERFORMANCE=1`; the explicit runner refuses missing partial
 image sets. See [guardrails](../../../docs/development/guardrails.md) for
 instrumentation, budgets, timing interpretation and cache freshness limits.

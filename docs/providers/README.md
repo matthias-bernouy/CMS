@@ -212,7 +212,7 @@ transport rules. See [files and responsive images](../images/README.md).
   publish within their namespaces without administrator privileges.
 - Cookie-authenticated browser commands do not yet have one centralized
   Origin/Fetch Metadata policy. Cookie flags and capability authorization do
-  not replace that policy; see [open platform work](../TODO.md).
+  not replace that policy.
 - Administration Pages manage installed releases, approved provider connections and exact
   selections. The CLI can publish and retrieve exact contract and provider
   coordinates through an authenticated immutable repository; automated provider
@@ -231,8 +231,6 @@ The code establishing the production boundary is
 [createEdgeGateway](../../packages/runtimes/cms-edge-server/src/runtime/gateway/createEdgeGateway.ts),
 [public resource forwarding](../../packages/runtimes/cms-edge-server/src/runtime/resources/publicResource.ts)
 and [mountProductionEdge](../../packages/runtimes/cms-edge-server/src/runtime/mountEdge.ts).
-The [repository audit](../AUDIT.md) and [open platform work](../TODO.md)
-track the remaining implementation and activation gates.
 
 See [Connecting Providers from the CMS](connections.md) for approval, return credentials and SDK usage.
 

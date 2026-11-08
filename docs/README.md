@@ -8,8 +8,6 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 
 - [Install Ulvia](installation/README.md): Ubuntu prerequisites, first local
   instance, public HTTPS, upgrades, backups and troubleshooting.
-- [Repository audit](AUDIT.md): the 2026-10-25 verification snapshot, confirmed
-  CI defects, measured rendering costs, strengths and the delivery sequence.
 - [Workspace architecture](architecture/README.md): layers, dependency rules,
   domain boundaries and runtime composition.
 - [Contract documentation](architecture/contract-documentation.md): versioned
@@ -23,8 +21,6 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [Commit messages](development/commits.md): the recommended message convention.
 - [First published Page](product/first-published-page.md): locked MVP decisions,
   the administrator's golden path and its executable completion gate.
-- [Open platform work](TODO.md): current correctness and operational gaps,
-  trust assumptions and exit conditions.
 - [Provider instance initialization](architecture/provider-instance-initialization.md):
   operator API, exact official profile, isolated instance connection, local
   first run, restart and production composition boundaries.
@@ -48,10 +44,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   request correlation, local journals, redaction and CLI inspection.
 
 Use the architecture guides and their referenced source code to establish
-current behavior. The [repository audit](AUDIT.md) records its dated revision;
-its findings are not a substitute for current source inspection. An implemented API or passing local
-suite does not establish a completed browser journey or working CI delivery.
-Remaining activation gates are recorded in [Open platform work](TODO.md).
+current behavior. An implemented API or passing local suite does not establish a
+completed browser journey or deployment.
 
 ## HTTP Applications
 

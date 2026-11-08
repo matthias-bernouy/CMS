@@ -82,9 +82,8 @@ loads and 256 waiters per load. Immutable snapshots classify Page access;
 actual invocations retain fresh authorization. Dynamic indexing remains live
 and private/no-store, including after a capability restriction.
 
-`verify:full` runs the CLI browser smoke and this Docker budget journey. PR/push
-CI on `master` and `codex/alpha-v0`, plus nightly/manual smoke reuse explicitly built candidate
-images. See [Content delivery](../architecture/content-delivery.md#shared-edge-response-cache)
+`verify:full` runs the CLI browser smoke and this Docker budget journey locally
+with candidate images. See [Content delivery](../architecture/content-delivery.md#shared-edge-response-cache)
 for the implemented response cache, invalidation and process-local limits.
 
 
