@@ -84,9 +84,3 @@ behavior.
   again in recovered workers. Inject the structural initialization service; never
   restore the old registrar. Upgrade-operation queries retain their declared DTO's
   capability-ID set; initialization progress uses one scoped metadata-only latest read.
-
-- Resources is an SDK-owned feature selected by the same inventory. The runtime
-  supplies initialization and verified administrator ports; the surface supplies
-  the scoped metadata-only operation projection. Do not expose persisted private
-  failures through progress. Missing services or durable execution must refuse
-  registration before any handler is mounted.

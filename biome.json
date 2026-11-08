@@ -18,10 +18,7 @@
             "packages/official-repository/**/*.json",
             "packages/official-repository/**/*.css",
             "packages/official-repository/**/*.html",
-            "!!packages/features/content/src/runtime-assets/generated/*.js",
-            "resources/**/*.json",
-            "resources/**/*.css",
-            "resources/**/*.html"
+            "!!packages/features/content/src/runtime-assets/generated/*.js"
         ]
     },
     "formatter": {

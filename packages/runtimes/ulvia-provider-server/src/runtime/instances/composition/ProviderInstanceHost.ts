@@ -1,4 +1,3 @@
-import { bundledResourceSource } from "../../stores/resources/source";
 import { readInstalledExecution } from "../profiles/execution/installed";
 import { ProviderExecutionSupport, type ExecutionProfile } from "../profiles/execution/support";
 import type { LazyOfficialProfiles } from "../profiles/execution/LazyOfficialProfiles";
@@ -48,7 +47,7 @@ import { CmsFileWorkspace } from "../../stores/CmsFileWorkspace";
 import { createInstanceProvisioningTarget } from "../instanceProvisioning";
 import type { OfficialBootstrapSources } from "../profiles/bootstrap";
 import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from "../InstanceResourcePool";
-import { HostPreparationPool } from "../verification/HostPreparationPool";
+import { CollectionVerificationPool } from "../verification/CollectionVerificationPool";
 import { CollectionSourceCaches } from "@bernouy/ulvia-provider";
 import type { Logger } from "@bernouy/logging";
 import { correlatedRepositoryFetch } from "../../gateway/repositoryFetch";
@@ -83,7 +82,7 @@ export type InstanceComposition = Readonly<{
 }>;
 
 export class ProviderInstanceHost {
-    readonly #verification = new HostPreparationPool();
+    readonly #verification = new CollectionVerificationPool();
     readonly #collectionCaches = new CollectionSourceCaches();
     readonly #documentation: ProviderDocumentation;
     readonly #instances: InstanceResourcePool<InstanceComposition>;
@@ -365,29 +364,6 @@ export class ProviderInstanceHost {
                     repository: registry?.service,
                     providerConnections,
                     initialization: stores.createInitialization(this.#collectionSource),
-                    resources: {
-                        initialization: stores.createResourceInitialization({
-                            ...this.#verification.resources,
-                            source: bundledResourceSource(
-                                instance.profile.id,
-                                this.env.ULVIA_BOOTSTRAP_DIR
-                                    ? join(this.env.ULVIA_BOOTSTRAP_DIR, "resources")
-                                    : undefined,
-                            ),
-                            authorize: async (actorId) => {
-                                if (!(await gateway.administrators.get(actorId)).enabled) {
-                                    throw Object.assign(
-                                        new Error("Resource initialization requires an administrator"),
-                                        { status: 403 },
-                                    );
-                                }
-                            },
-                        }),
-                        administrators: {
-                            resolve: (providerId, subjectId) => gateway.identities.resolve({ providerId }, subjectId),
-                            enabled: async (actorId) => (await gateway.administrators.get(actorId)).enabled,
-                        },
-                    },
                     emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
                     files: stores.providerFiles,

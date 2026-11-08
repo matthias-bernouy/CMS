@@ -1,7 +1,7 @@
 import { chmod, cp, mkdir, readdir, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 
-// Production stages system APIs and inert base ZIPs; the full snapshot temporarily retains legacy collection releases.
+// Production stages core API artifacts only; full snapshots remain available for authoring tests.
 const args = Bun.argv.slice(2);
 if (args.some((arg) => arg !== "--core-only") || args.length > 1) {
     throw new Error("Usage: generate:official-bootstrap [--core-only]");
@@ -29,7 +29,6 @@ const source = resolve(bootstrapRoot, "repository");
 const destination = resolve("packages/runtimes/ulvia-provider-server/dist/bootstrap");
 await rm(destination, { recursive: true, force: true });
 await cp(source, destination, { recursive: true });
-await cp(resolve(bootstrapRoot, "resources"), resolve(destination, "resources"), { recursive: true });
 await makePublicSnapshotReadable(destination);
 await writeExecutionSupport(bootstrapRoot);
 const featureRuntime = resolve("packages/surfaces/ulvia-provider/src/capabilities/features/generated/runtime.json");

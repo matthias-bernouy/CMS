@@ -58,9 +58,6 @@
         },
         {
             "path": "../../platform/sdk"
-        },
-        {
-            "path": "../../features/resources"
         }
     ]
 }

@@ -1,4 +1,3 @@
-import { prepareResourceTask } from "./resources/preview";
 import { parentPort } from "node:worker_threads";
 import { CollectionValidationError, CollectionPublicationError } from "@bernouy/repository/collections";
 import { inlineCollectionVerifier } from "@bernouy/repository/collections/sources";
@@ -10,9 +9,7 @@ if (!parentPort) {
 parentPort.on("message", async ({ id, task }: VerificationRequest) => {
     const reply: VerificationReply = { id };
     try {
-        if (task.kind === "resource-archive" || task.kind === "resource-preview") {
-            reply.value = await prepareResourceTask(task);
-        } else if (task.kind === "json") {
+        if (task.kind === "json") {
             reply.value = await inlineCollectionVerifier.metadataJson(task.value, task.digest, undefined, task.limits);
         } else if (task.kind === "metadata") {
             reply.value = await inlineCollectionVerifier.metadata(task.value, task.digest, undefined, task.limits);
@@ -31,14 +28,6 @@ parentPort.on("message", async ({ id, task }: VerificationRequest) => {
     } catch (error) {
         reply.error = {
             message: error instanceof Error ? error.message.slice(0, 4096) : "Collection verification failed",
-            ...(task.kind === "resource-archive" || task.kind === "resource-preview"
-                ? {
-                      resource: true as const,
-                      ...(error && typeof error === "object" && "status" in error && typeof error.status === "number"
-                          ? { status: error.status }
-                          : {}),
-                  }
-                : {}),
             ...(error instanceof CollectionValidationError ? { code: error.code, path: error.path } : {}),
             ...(error instanceof CollectionPublicationError
                 ? { publicationCode: error.publicationCode, publicationResource: error.publicationResource }

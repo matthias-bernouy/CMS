@@ -63,7 +63,7 @@ test("only a missing home page checks the public setup flag through the Gateway"
     expect(f.model.calls[0]).toMatchObject({
         siteId: "site-a",
         actor: { kind: "anonymous" },
-        contractId: "ulvia/cms.resources",
+        contractId: "ulvia/cms.installations",
         capabilityId: "initialization.entry",
         input: {},
     });

@@ -330,7 +330,3 @@ export { derivePagePath } from "content/pages/core/paths/pagePath";
 export { sanitizeDomTree } from "content/blocs/core/markup/security/sanitizeDomTree";
 export { sanitizeSvgTree } from "content/blocs/core/markup/security/sanitizeSvgTree";
 export { escapeRegex } from "content/pages/core/queries/escapeRegex";
-
-export { validateCapabilityRequirements } from "content/blocs/core/validation/definition/requirements";
-
-export type { ContentCapabilityRequirement } from "content/application/interfaces/ContentCapabilityRequirement";

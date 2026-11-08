@@ -146,7 +146,6 @@ export function withInstalledCollections(
                                 : "",
                             ownership: { kind: "code-managed" },
                             uses: bloc.uses,
-                            ...(bloc.requires.length ? { requires: bloc.requires } : {}),
                             viewJS: bloc.kind === "component" ? (bloc.runtime?.viewJS ?? "") : "",
                             catalogue: bloc.catalogue,
                             root: bloc.root,
@@ -220,21 +219,12 @@ export function withInstalledCollections(
             ),
         getTextContributions: async (reads) => {
             const snapshot = reads ? await installedState(reads) : await installedSnapshot();
-            const local = await repository.getTextContributions?.(reads);
-            const installed = snapshot.collections.map(({ release, textOverrides }) =>
-                projectCollectionTextSource({ collection: release, overrides: textOverrides }),
-            );
-            if (!local?.texts.length) {
-                return { revision: snapshot.revision, texts: installed };
-            }
-            if (!installed.length) {
-                return local;
-            }
-            const texts = [...local.texts, ...installed];
-            if (new Set(texts.map(({ namespace }) => namespace)).size !== texts.length) {
-                throw new Error("Ordinary and installed text namespaces conflict");
-            }
-            return { revision: `${local.revision}:${snapshot.revision}`, texts };
+            return {
+                revision: snapshot.revision,
+                texts: snapshot.collections.map(({ release, textOverrides }) =>
+                    projectCollectionTextSource({ collection: release, overrides: textOverrides }),
+                ),
+            };
         },
         getPageRequirements: async (page, reads) => {
             const [local, installed] = await Promise.all([localRenderingBlocs(reads), installedState(reads)]);
@@ -249,10 +239,9 @@ export function withInstalledCollections(
                     return record ? record.artifact?.viewJS || null : repository.getBlocViewJS(tag);
                 },
             })(page.content);
-            const used = new Set(uses);
             return documentRequirements(
                 installed.collections.map(({ release }) => release),
-                { uses, requires: local.filter((bloc) => used.has(bloc.id)).flatMap((bloc) => bloc.requires ?? []) },
+                { uses, requires: [] },
             );
         },
         getBlocRecords: records,

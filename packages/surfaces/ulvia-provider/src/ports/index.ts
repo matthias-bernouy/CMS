@@ -1,4 +1,3 @@
-import type { ResourceServices } from "@bernouy/resources/feature";
 import type {
     InstallationServices,
     InstallationGateway,
@@ -47,16 +46,13 @@ export type UlviaProviderFeatureServices = Partial<
         AuthoringServices &
         ProviderConnectionServices &
         RepositoryServices &
-        InstallationServices &
-        ResourceServices
+        InstallationServices
 >;
 
 export type UlviaProviderDependencies = CmsContentDependencies &
     CmsCollectionDependencies &
     Omit<AccessServices, "governance"> &
-    Omit<UlviaProviderFeatureServices, "resources"> & {
-        readonly resources?: Omit<ResourceServices["resources"], "operation">;
-    };
+    UlviaProviderFeatureServices;
 
 type UlviaProviderAdministratorState = Readonly<{
     sub: string;

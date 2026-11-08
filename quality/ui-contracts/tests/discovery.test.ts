@@ -37,10 +37,7 @@ test("discovery follows browser helpers but excludes server-only code, tests and
     }
 });
 
-test.each([
-    "packages/official-repository/collections/official/blocs/admin/example",
-    "resources/base/official/blocs/admin/example",
-])("discovery audits authored Bloc entries and their browser helpers under %s", async (bloc) => {
+test("discovery audits authored official collection blocs and their browser helpers", async () => {
     const root = await mkdtemp(join(tmpdir(), "ui-contract-official-"));
     async function file(path: string, content: string): Promise<void> {
         const absolute = join(root, path);
@@ -48,6 +45,7 @@ test.each([
         await writeFile(absolute, content);
     }
     try {
+        const bloc = "packages/official-repository/collections/official/blocs/admin/example";
         await file(`${bloc}/bloc.ts`, 'import { load } from "./runtime/client"; load();');
         await file(
             `${bloc}/runtime/client.ts`,

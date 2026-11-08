@@ -14,7 +14,7 @@
             <a class="brand" href="setup" aria-label="Ulvia setup"><span aria-hidden="true">u</span> Ulvia</a>
             <p class="eyebrow">A fresh start</p>
             <h1>Your site,<br>your starting point.</h1>
-            <p>Start with an empty workspace or copy the base resources to make it yours.</p>
+            <p>Start with an empty workspace or choose a collection to make it yours.</p>
             <ol class="steps">
                 <li data-step="login"><span>1</span> Sign in</li>
                 <li data-step="choice"><span>2</span> Choose a starting point</li>
@@ -39,20 +39,28 @@
                 <p class="eyebrow">Step 2 of 3</p><h2>Where would you like to start?</h2>
                 <p class="intro">Choose a blank canvas or a starter you can make your own.</p>
                 <div class="choices">
-                    <button id="empty" class="choice" type="button"><span class="choice-icon" aria-hidden="true">＋</span><strong>Start from scratch</strong><span>No resources. No pages. Build at your own pace.</span><span class="choice-action">Choose an empty site →</span></button>
-                    <button id="base" class="choice" type="button"><span class="choice-icon" aria-hidden="true">▦</span><strong>Use a starter</strong><span>Copy the base pages, blocks, texts and assets into your site.</span><span class="choice-action">Review base resources →</span></button>
+                    <button id="empty" class="choice" type="button"><span class="choice-icon" aria-hidden="true">＋</span><strong>Start from scratch</strong><span>No collections. No pages. Build at your own pace.</span><span class="choice-action">Choose an empty site →</span></button>
+                    <button id="browse" class="choice" type="button"><span class="choice-icon" aria-hidden="true">▦</span><strong>Use a starter</strong><span>Choose a collection with a ready-to-use setup recipe.</span><span class="choice-action">Browse available starters →</span></button>
                 </div>
+            </section>
+            <section id="recipes" class="stage" hidden>
+                <button class="back" data-back type="button">← Starting point</button>
+                <p class="eyebrow">Choose a starter</p><h2>A useful place to begin.</h2>
+                <p class="intro">You will review every collection and page before anything is installed.</p>
+                <div id="recipe-list" class="recipe-list"></div>
+                <p id="no-recipes" class="notice" hidden>No starters on this page. You can browse further or start from scratch.</p>
+                <button id="more" class="secondary" type="button" hidden>Load more starters</button>
             </section>
             <section id="review" class="stage" hidden>
                 <button class="back" data-back type="button">← Starting point</button>
                 <p class="eyebrow">Step 3 of 3</p><h2 id="review-title">Review your starting point.</h2>
                 <p class="intro" id="review-description"></p>
                 <div id="review-summary" class="summary"></div>
-                <div id="review-resources" class="resource"></div>
-                <details id="page-details"><summary>Pages to create</summary><div class="table-wrap"><table><thead><tr><th>Route</th><th>Visibility</th></tr></thead><tbody id="review-pages"></tbody></table></div></details>
+                <div id="review-collections"></div>
+                <details id="page-details"><summary>Pages to create</summary><div class="table-wrap"><table><thead><tr><th>Page</th><th>Route</th><th>Visibility</th></tr></thead><tbody id="review-pages"></tbody></table></div></details>
                 <form id="apply-form" method="post" action="setup">
-                    <label id="risk-consent" class="notice consent" hidden><input id="approve-code" type="checkbox"><span>This starter includes browser code or embedded content. I approve the browser authority shown above.</span></label>
-                    <p class="muted">Copied resources belong to your site. This one-time setup will not run again.</p>
+                    <label id="risk-consent" class="notice consent" hidden><input id="approve-code" type="checkbox"><span>This starter includes browser code or embedded content. I approve the collection resources shown above.</span></label>
+                    <p class="muted">Created pages belong to your site. Updating a collection will not run this setup again.</p>
                     <button id="confirm" class="primary" type="submit">Confirm and install <span aria-hidden="true">→</span></button>
                 </form>
             </section>

@@ -59,7 +59,6 @@
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "@bernouy/resource-identity": "workspace:*",
-        "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
         "linkedom": "^0.18.15",
         "zod": "4.6.7",
@@ -166,30 +165,6 @@
       },
       "devDependencies": {
         "@bernouy/text-embeddings": "workspace:*",
-        "@types/css-tree": "^3.2.0",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^7.0.2",
-      },
-    },
-    "packages/features/resources": {
-      "name": "@bernouy/resources",
-      "version": "1.0.0",
-      "dependencies": {
-        "@bernouy/binary-media": "workspace:*",
-        "@bernouy/blob-store": "workspace:*",
-        "@bernouy/content": "workspace:*",
-        "@bernouy/ulvia-contracts": "workspace:*",
-        "@bernouy/ulvia-sdk": "workspace:*",
-        "@bernouy/zip": "workspace:*",
-        "css-tree": "^3.2.1",
-        "linkedom": "^0.18.15",
-        "zod": "4.6.7",
-      },
-      "devDependencies": {
-        "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/repository": "workspace:*",
         "@types/css-tree": "^3.2.0",
       },
       "peerDependencies": {
@@ -391,7 +366,6 @@
         "@bernouy/logging": "workspace:*",
         "@bernouy/observability": "workspace:*",
         "@bernouy/repository": "workspace:*",
-        "@bernouy/resources": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
@@ -407,7 +381,6 @@
       "version": "1.0.0",
       "dependencies": {
         "@bernouy/auth": "workspace:*",
-        "@bernouy/binary-media": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/content": "workspace:*",
@@ -421,7 +394,6 @@
         "@bernouy/observability": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/repository": "workspace:*",
-        "@bernouy/resources": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/secrets": "workspace:*",
         "@bernouy/text-embeddings": "workspace:*",
@@ -468,7 +440,6 @@
         "@bernouy/logging": "workspace:*",
         "@bernouy/observability": "workspace:*",
         "@bernouy/repository": "workspace:*",
-        "@bernouy/resources": "workspace:*",
         "@bernouy/secrets": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
@@ -517,8 +488,6 @@
     "@bernouy/repository": ["@bernouy/repository@workspace:packages/features/repository"],
 
     "@bernouy/resource-identity": ["@bernouy/resource-identity@workspace:packages/foundation/resource-identity"],
-
-    "@bernouy/resources": ["@bernouy/resources@workspace:packages/features/resources"],
 
     "@bernouy/secret-store": ["@bernouy/secret-store@workspace:packages/foundation/secret-store"],
 

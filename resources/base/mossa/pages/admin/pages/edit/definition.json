@@ -1,8 +1,0 @@
-{
-    "path": "/admin/pages/edit",
-    "title": "page.page-editor.name",
-    "description": "page.page-editor.description",
-    "visible": true,
-    "indexing": false,
-    "requires": []
-}

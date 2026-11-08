@@ -58,11 +58,6 @@ export function createInstanceProvisioningTarget(options: TargetOptions): Offici
                 await options.composition.stores.initializationState.initialize("default");
                 execution.throwIfLeaseLost();
             }
-            if (profile.contracts.some(({ contractId }) => contractId === "ulvia/cms.resources")) {
-                execution.throwIfLeaseLost();
-                await options.composition.stores.resourceStores.state.initialize();
-                execution.throwIfLeaseLost();
-            }
         },
         initializeAdministrator: (administrator, execution) =>
             initializeOfficialAdministrator(options.composition, administrator, execution),

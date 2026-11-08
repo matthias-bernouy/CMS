@@ -38,11 +38,6 @@
             "digest": "sha256:113758c81e4cdc774bba95c8f136a3a9650be5b6d59412ef51383bd15dd2de45"
         },
         {
-            "contractId": "ulvia/cms.resources",
-            "version": "1.0.0",
-            "digest": "sha256:33d7192b537a815562af4f653364ad806c46eee97e77e1d025695a7c9f46580e"
-        },
-        {
             "contractId": "ulvia/cms.secrets",
             "version": "1.0.0",
             "digest": "sha256:358b2e7e889f656320dd824a698c425a500211ea80695d120e5f4effe1255c08"

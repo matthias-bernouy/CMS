@@ -1,4 +1,3 @@
-import type { ContentCapabilityRequirement } from "content/application/interfaces/ContentCapabilityRequirement";
 import type {
     BlocSettings,
     ManagedNativeElement,
@@ -45,8 +44,6 @@ export type TBloc = {
     catalogue?: "listed" | "hidden";
     /** Explicit dependency closure seed for immutable contributed Blocs. */
     uses?: readonly string[];
-    /** Declared execution constraints retained with an ordinary stored artifact. */
-    requires?: readonly ContentCapabilityRequirement[];
     /** Allowed native tags for the element carrying `cms-bloc`. */
     root: ManagedNativeElement;
     /** Validated, fully scoped CSS ready to serve without JavaScript execution. */

@@ -90,9 +90,6 @@
         },
         {
             "path": "packages/foundation/zip"
-        },
-        {
-            "path": "packages/features/resources"
         }
     ]
 }

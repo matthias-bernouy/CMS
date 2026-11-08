@@ -1,8 +1,4 @@
 export const servicesMessages = {
-    "INITIALIZATION_BUSY": [
-        "Site setup is already being prepared. Refresh its status before retrying.",
-        "La configuration du site est déjà en préparation. Actualisez son état avant de réessayer.",
-    ],
     "PROVIDER_SHUTTING_DOWN": [
         "The Provider is restarting. Retry this operation when it is available again.",
         "Le Provider redémarre. Réessayez cette opération lorsqu’il est de nouveau disponible.",

@@ -10,7 +10,7 @@ bindings, validation, and read models.
   repository, validation, and authoring operations.
 - `@bernouy/content/public-delivery` owns `ContentDelivery.resolvePath`,
   the complete existing Page renderer and static Page capability analysis.
-  Runtime injects ordinary resource asset serving/resolution, admitted capability metadata, query execution
+  Runtime injects collection assets, admitted capability metadata, query execution
   and observation ports. Never import Gateway or Repository into Content code.
 - `@bernouy/content/rendering` exposes `ContentReader`, its composition
   factory and public rendering helpers. It has published-only page operations,
@@ -80,14 +80,7 @@ bindings, validation, and read models.
 - Collection admission, installation, projection and reviewed release upgrades
   belong to `@bernouy/repository`. Content exposes only generic persistence,
   validation and contribution inputs consumed by those projections.
-- Ordinary stored Bloc artifacts may retain bounded canonical capability `requires` metadata. It constrains host execution and never grants authority; memory/Mongo storage and catalogue/rendering projections preserve it.
 - Stored Page/Bloc documents, settings and binding contracts must remain stable;
   authored Blocs depend on them even while no visual editor is mounted.
 - When changing repository behavior, update both in-memory and Mongo behavior
   or document why only one implementation changes.
-
-- Mongo Bloc lists project only catalogue/rendering metadata at the database.
-  Compute the behavior-presence flag without returning JavaScript or source bundles;
-  keep explicit artifact/source/behavior reads unchanged. Memory uses the same output
-  projector but has no database transfer to narrow. Preserve hidden/draft handling,
-  declared execution constraints and published-revision metadata within render reads.

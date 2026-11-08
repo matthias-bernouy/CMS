@@ -1,5 +1,3 @@
-import { prepareOfficialBaseResources } from "./base";
-import type { OfficialBaseResource } from "./base";
 import { compileOfficialFeatures } from "@bernouy/ulvia-provider/build";
 import { createImplementationArtifact } from "@bernouy/ulvia-sdk/build";
 import type { ImplementationArtifact } from "@bernouy/ulvia-sdk/build";
@@ -11,7 +9,6 @@ import { bootstrapOfficialRepository } from "../commands/bootstrap";
 
 export type OfficialBootstrapArtifacts = Readonly<{
     runtimeArtifact: ImplementationArtifact;
-    baseResources: readonly OfficialBaseResource[];
     contracts: Readonly<Record<string, string>>;
     contractAssets: readonly { contractId: string; id: string; bytes: Uint8Array }[];
     provider: string;
@@ -58,7 +55,6 @@ export async function buildOfficialBootstrapArtifacts(
 
     return {
         runtimeArtifact: createImplementationArtifact(await compileOfficialFeatures()),
-        baseResources: await prepareOfficialBaseResources(),
         contracts,
         contractAssets,
         provider: provider.canonicalJson,
@@ -86,11 +82,6 @@ export async function writeOfficialBootstrapArtifacts(
             ? `contracts/cms/${resourceName(asset.contractId)}`
             : `contracts/${resourceName(asset.contractId)}`;
         await writeBytes(root, `${contractRoot}/${asset.id}`, asset.bytes);
-    }
-    for (const resource of artifacts.baseResources) {
-        const path = `resources/${resource.profileId}/${resource.locale}.zip`;
-        await writeBytes(root, path, new Uint8Array(await resource.bytes.arrayBuffer()));
-        await writeArtifact(root, path + ".sha256", resource.digest);
     }
     const provider = "providers/primary-provider/definition.json";
     await writeArtifact(root, provider, artifacts.provider);

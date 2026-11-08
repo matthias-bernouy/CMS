@@ -1,4 +1,3 @@
-import { declaredPageRequirements } from "content/blocs/core/usage/declaredPageRequirements";
 import type { RenderingResourceReads } from "./RenderingResourceReads";
 import {
     readPublishedRoute,
@@ -24,11 +23,7 @@ export function createContentReader(repository: ContentRepository): ContentReade
         reference: { pageId: page.id },
         page,
         source: { kind: "site", pageId: page.id, revision: page.revision },
-        requirements: [
-            ...(repository.getPageRequirements
-                ? await repository.getPageRequirements(page, reads)
-                : await declaredPageRequirements(repository, page, reads)),
-        ],
+        requirements: [...((await repository.getPageRequirements?.(page, reads)) ?? [])],
     });
     const getRenderablePage = async (path: string): Promise<RenderablePage | null> => {
         const page = projectPublishedPage(await repository.getPublishedPage(path));

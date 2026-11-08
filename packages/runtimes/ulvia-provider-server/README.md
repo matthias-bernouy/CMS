@@ -13,7 +13,7 @@ resolved through the official `ulvia/cms.access` contract; outbound delivery
 uses the `ulvia/cms.emailer.smtp` specialization of `ulvia/cms.emailer`, and no authentication store or session secret is
 shared with the Edge.
 
-New `ulvia@1.4.0` (default) and `repository@1.4.0` instances start with system
+New `ulvia@1.3.0` (default) and `repository@1.3.0` instances start with system
 contracts and an administrator, but no collections or Pages. A Repository API
 can therefore start before any public catalogue or browser interface exists.
 Authenticate through `ulvia/cms.access` and publish resources through CLI/API;
@@ -22,7 +22,7 @@ initialization never publishes the bundled system releases to the catalogue.
 Run `bun run generate:official-bootstrap --core-only` from the workspace root
 before native startup to stage admitted system contracts, documentation and the
 Provider manifest in this package's `dist/bootstrap`. Production images use
-this snapshot, include localized inert base ZIPs and omit authored collections.
+this snapshot and omit authored collections and compiled starter assets.
 Discovery reads profile references only; provisioning reads the selected profile's
 resources and never falls back to the configured public Repository. Set an absolute
 `ULVIA_BOOTSTRAP_DIR` to select another pre-built snapshot. Public resource
@@ -36,21 +36,12 @@ ready instances reopen from persisted execution and do not read their old kit.
 The full generator emits current collections, not historical starter resources.
 Profile versions are independent of contract and collection release versions.
 
-New profiles explicitly provision a scoped Resource initialization marker.
-Native Edge setup at `/.cms/setup` uses `ulvia/cms.resources@1.0.0` for empty/base
-review, browser-risk consent and asynchronous copy of ordinary content. Current
-verified administrator authority precedes receipts and recovered execution.
-Plans use the existing bounded preparation worker; application owns the durable
-maintenance fence and per-entity checkpoints. Completed replay needs no ZIP or
-worker, and ready reads never provision a missing marker.
-
-The host reads local `resources/<profile>/<locale>.zip` and `.zip.sha256`
-files from the bootstrap root. Missing files safely refuse a base review; empty
-setup makes no source request. The generator compiles ordinary sources from
-`resources/base/`; it performs no collection admission or installation for these ZIPs.
-Ordinary asset delivery is still being transitioned. Private
-per-instance retention belongs to one host process and holds at most two 64-MiB
-archives plus one bounded atomic-write temporary. See
+New profiles persist a pending site-initialization marker. Edge serves native
+setup at `/.cms/setup`; its ordinary Gateway calls use `ulvia/cms.installations@1.2.0`
+for review and explicit asynchronous application. Starting empty works offline.
+Optional bootstrap application imports exact verified releases, creates ordinary
+Content Pages and checkpoints recovery under the site maintenance fence. Ready
+instances with no marker are never silently initialized or backfilled. See
 [initialization architecture](../../../docs/architecture/provider-instance-initialization.md).
 
 ```bash
@@ -84,7 +75,7 @@ covers collection verification, not every authoring/compiler or documentation ta
 ## Paged collection catalogue
 
 New profiles select `ulvia/cms.installations@1.2.0`, the Provider manifest at
-`1.3.0` and (for a Repository instance) `ulvia/repository@1.1.0`. Existing sites keep
+`1.2.0` and (for a Repository instance) `ulvia/repository@1.1.0`. Existing sites keep
 their exact approved manifests and selected releases; replacing an image does not
 implicitly adopt these releases. Upgrade the Repository API before using its new
 latest-collection route, then explicitly adopt the new installations API and

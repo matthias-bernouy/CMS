@@ -35,7 +35,7 @@
         "format": "biome check --write --unsafe --reporter=concise --max-diagnostics=none .",
         "typecheck": "tsc --build",
         "clean": "bun run quality/ci/clean.ts",
-        "test": "bun --no-macros test ./quality ./tests ./packages",
+        "test": "bun test ./quality ./tests ./packages",
         "test:performance:repository": "bun run build:browser && bun run generate:official-bootstrap && bun x tsc --project quality/performance/collections/repository/tsconfig.json && bun run quality/performance/collections/repository/run.ts",
         "test:performance": "bun run build:browser && bun run generate:official-bootstrap && bun x tsc --project quality/performance/tsconfig.json && bun run quality/performance/run.ts",
         "test:edge-smoke": "bun run generate:official-bootstrap && ULVIA_RUN_EDGE_SMOKE=1 bun test packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts",

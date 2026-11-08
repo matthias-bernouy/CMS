@@ -1,4 +1,3 @@
-import { validateCapabilityRequirements } from "./requirements";
 import { isResourceId } from "@bernouy/resource-identity";
 import { forbiddenBlocBehaviorIssues } from "./behavior";
 export { forbiddenBlocBehaviorIssues } from "./behavior";
@@ -26,7 +25,6 @@ const BLOC_WRITE_KEYS = new Set<keyof TBlocWrite>([
     "thumbnail",
     "catalogue",
     "uses",
-    "requires",
     "root",
     "styleCSS",
     "styleCollectionId",
@@ -73,7 +71,6 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     if (value.ownership !== undefined) {
         validateOwnership(value.ownership);
     }
-    validateCapabilityRequirements(value.requires);
     const bloc = normalizeBlocWrite(value);
     assertBlocArtifactBudgets(bloc.viewJS, bloc.source, bloc.styleCSS);
     validateBlocRuntime(bloc.viewJS);

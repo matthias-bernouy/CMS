@@ -41,7 +41,7 @@ test("recursive release prepares the official contracts, provider and collection
     const source = resolve(import.meta.dir, "../../../../../../infra/releases");
     try {
         await f.run(["release", source, "--recursive"]);
-        expect(await f.files.list("contracts")).toHaveLength(13);
+        expect(await f.files.list("contracts")).toHaveLength(12);
         expect(await f.files.list("providers")).toHaveLength(1);
         const collections = await new LocalCollectionRepository(join(f.data, "repository")).list();
         expect(collections.map(({ release }) => release.collectionId)).toEqual(["ulvia/mossa", "ulvia/repository"]);
@@ -59,10 +59,10 @@ test("recursive release prepares the official contracts, provider and collection
             digest: collections[0]!.digest,
         });
         expect(collections[1]!.release.examples).toHaveLength(9);
-        expect(f.output[13]).toStartWith("+ provider ulvia/primary-provider@");
-        expect(f.output[14]).toStartWith("+ collection ulvia/mossa@");
-        expect(f.output[15]).toStartWith("+ collection ulvia/repository@");
-        expect(f.output.at(-1)).toBe("Prepared 16 local releases.");
+        expect(f.output[12]).toStartWith("+ provider ulvia/primary-provider@");
+        expect(f.output[13]).toStartWith("+ collection ulvia/mossa@");
+        expect(f.output[14]).toStartWith("+ collection ulvia/repository@");
+        expect(f.output.at(-1)).toBe("Prepared 15 local releases.");
     } finally {
         await f.close();
     }

@@ -58,7 +58,7 @@ export async function setupEntryResponse(edge: EdgeCms, request: Request, respon
     try {
         const result = await edge.capabilityGateway.invoker.invoke({
             siteId: edge.capabilityGateway.siteId,
-            contractId: "ulvia/cms.resources",
+            contractId: "ulvia/cms.installations",
             capabilityId: "initialization.entry",
             input: {},
             actor: { kind: "anonymous" },
@@ -82,7 +82,7 @@ export async function setupEntryResponse(edge: EdgeCms, request: Request, respon
             });
         }
     } catch {
-        /* A site without the selected Resources API has no native setup redirect. */
+        /* Older selected installations contracts have no setup entry capability. */
     }
     return response;
 }

@@ -1,4 +1,3 @@
-import type { ContentCapabilityRequirement } from "./ContentCapabilityRequirement";
 import type { ContentTextSource } from "content/pages/core/rendering/contentTexts";
 import type { TBloc } from "content/blocs/interfaces/blocs";
 import type { TPage } from "content/pages/interfaces/pages";
@@ -17,7 +16,11 @@ export type RenderableBloc = {
     hasBehavior: boolean;
 };
 
-export type PageCapabilityRequirement = ContentCapabilityRequirement;
+export type PageCapabilityRequirement = {
+    readonly contractId: string;
+    readonly capabilityId: string;
+    readonly versionRange: string;
+};
 
 export type RenderablePageSource = {
     readonly kind: "site";

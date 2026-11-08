@@ -13,7 +13,7 @@ test("builds the official profile from verified repository releases", async () =
     expect(loaded.profiles[1]!.collections).toEqual([]);
     expect(loaded.defaultProfile.collections).toHaveLength(0);
     expect(loaded.defaultProfile.initialPages).toHaveLength(0);
-    expect(loaded.defaultProfile.version).toBe("1.4.0");
+    expect(loaded.defaultProfile.version).toBe("1.3.0");
     expect(loaded.defaultProfile.manifest.digest).toBe(fixture.manifestDigest);
     expect(loaded.defaultProfile.contracts).toEqual(
         loaded.contracts
@@ -63,11 +63,11 @@ test("rejects repository metadata that does not match the official bytes", async
 test("the official baseline contains explicit application profiles and one version of every contract", async () => {
     const fixture = await repositoryFixture();
     const loaded = await loadOfficialArtifacts(fixture.providers, fixture.collections);
-    expect(loaded.profiles.map(({ version }) => version)).toEqual(["1.4.0", "1.4.0"]);
+    expect(loaded.profiles.map(({ version }) => version)).toEqual(["1.3.0", "1.3.0"]);
     expect(loaded.defaultProfile.upgradeFromVersions).toEqual([]);
-    expect(loaded.defaultProfile.manifest.version).toBe("1.3.0");
+    expect(loaded.defaultProfile.manifest.version).toBe("1.2.0");
     expect(loaded.defaultProfile.collections).toEqual([]);
-    expect(fixture.contracts).toHaveLength(13);
+    expect(fixture.contracts).toHaveLength(12);
     expect(
         fixture.contracts.every(
             ({ release }) =>

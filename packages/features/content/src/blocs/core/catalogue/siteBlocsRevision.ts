@@ -1,10 +1,6 @@
-import type { BlocRecord, SiteBlocDefinition } from "content/blocs/interfaces/blocs";
+import type { BlocRecord } from "content/blocs/interfaces/blocs";
 
-export function siteBlocsRevision(
-    records: readonly (Pick<BlocRecord, "tag" | "ownership"> & {
-        readonly siteDefinition?: Pick<SiteBlocDefinition, "publishedRevision">;
-    })[],
-): string {
+export function siteBlocsRevision(records: readonly BlocRecord[]): string {
     return JSON.stringify(
         records
             .filter((record) => record.ownership.kind === "site-builder")

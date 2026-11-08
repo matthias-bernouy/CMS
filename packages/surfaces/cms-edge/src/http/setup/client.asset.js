@@ -30,5 +30,5 @@ export async function request(path, method = "GET", input, operation = false) {
     return body;
 }
 export const setup = (path, method = "GET", input, operation = false) =>
-    request(`cms.resources/initialization/${path}`, method, input, operation);
+    request(`cms.installations/initialization/${path}`, method, input, operation);
 export const stopped = () => navigation.signal.aborted;

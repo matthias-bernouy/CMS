@@ -1,4 +1,3 @@
-import { themeResourceOwner } from "content/theme/core/ownership";
 import type {
     ThemeDefinition,
     ThemeMode,
@@ -92,12 +91,10 @@ function compatibleTokenTypes(current: ThemeToken, target: ThemeToken): boolean 
 function compatibleTokenOwners(current: ThemeTokenEntry, target: ThemeTokenEntry): boolean {
     const currentOwner = current.source.owner;
     const targetOwner = target.source.owner;
-    const resourceOwner = themeResourceOwner(currentOwner);
-    const targetResourceOwner = themeResourceOwner(targetOwner);
-    if (resourceOwner && targetResourceOwner) {
+    if (currentOwner?.kind === "contribution" && targetOwner?.kind === "contribution") {
         return (
-            resourceOwner.namespace === targetResourceOwner.namespace ||
-            resourceOwner.tokenImports?.includes(target.token.id) === true
+            currentOwner.contributionId === targetOwner.contributionId ||
+            currentOwner.tokenImports?.includes(target.token.id) === true
         );
     }
     return (

@@ -1,9 +1,0 @@
-{
-    "setting.caption-visibility.label": "Visibilité de la légende",
-    "setting.option.visible": "Visible",
-    "setting.option.visually-hidden": "Accessible uniquement",
-    "setting.striped-rows.label": "Lignes alternées",
-    "setting.option.table-scroll": "Défilement horizontal",
-    "setting.option.table-stack": "Empilé",
-    "setting.content-layout.label": "Disposition du contenu"
-}

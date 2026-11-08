@@ -7,10 +7,7 @@ import type {
     CollectionPublicationResource,
 } from "@bernouy/repository/collections";
 
-import type { ResourcePreparationTask } from "./resources/protocol";
-
 export type VerificationTask =
-    | ResourcePreparationTask
     | { kind: "json"; value: string | Uint8Array; digest: unknown; limits?: Readonly<CollectionLimits> }
     | { kind: "metadata"; value: unknown; digest: unknown; limits?: Readonly<CollectionLimits> }
     | {
@@ -28,8 +25,6 @@ export type VerificationReply = {
     value?: unknown;
     error?: {
         message: string;
-        resource?: true;
-        status?: number;
         code?: CollectionValidationCode;
         path?: string;
         publicationCode?: CollectionPublicationCode;

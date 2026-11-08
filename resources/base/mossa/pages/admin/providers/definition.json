@@ -1,8 +1,0 @@
-{
-    "path": "/admin/providers",
-    "title": "page.providers.name",
-    "description": "page.providers.description",
-    "visible": true,
-    "indexing": false,
-    "requires": []
-}

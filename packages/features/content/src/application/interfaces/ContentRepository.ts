@@ -37,7 +37,6 @@ export type BlocListItemResponse = {
     settings?: TBloc["settings"];
     catalogue?: TBloc["catalogue"];
     uses?: TBloc["uses"];
-    requires?: TBloc["requires"];
     root: TBloc["root"];
     styleCSS?: TBloc["styleCSS"];
     styleCollectionId?: TBloc["styleCollectionId"];

@@ -1,6 +1,3 @@
-import { declaredPageRequirements } from "content/blocs/core/usage/declaredPageRequirements";
-import type { TPage } from "content/pages/interfaces/pages";
-import { projectBlocList } from "content/application/core/projectBlocList";
 import { siteBlocsRevision } from "content/blocs/core/catalogue/siteBlocsRevision";
 import type { RenderingResourceReads } from "content/application/core/RenderingResourceReads";
 import type { BlocListItemResponse, SiteBlocPublicationGuard } from "content/application/interfaces/ContentRepository";
@@ -28,7 +25,7 @@ import {
     replaceSiteBlocRecord,
 } from "content/application/default-implementation/mongo/repositories/blocPersistence";
 import {
-    readBlocListRecords,
+    projectBlocList,
     requireBlocRecord,
 } from "content/application/default-implementation/mongo/repositories/blocReadModels";
 import { MongoRepositoryStorage } from "content/application/default-implementation/mongo/repositories/MongoRepositoryStorage";
@@ -140,26 +137,10 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
         return withMongoSiteBlocPublicationLock(this.db, this.siteBlocPublicationLocks, operation);
     }
 
-    async getPageRequirements(page: TPage, reads?: RenderingResourceReads) {
-        return declaredPageRequirements(this, page, reads);
-    }
-
     async getBlocsList(options: BlocListOptions = {}, reads?: RenderingResourceReads): Promise<BlocListItemResponse[]> {
-        const captured: BlocListOptions = {
-            projection: options.projection ?? "catalogue",
-            includeHidden: options.includeHidden === true,
-        };
-        const load = async () => {
-            const records = await readBlocListRecords(this.blocs, captured);
-            reads?.rememberRevision(this, "blocs", siteBlocsRevision(records));
-            return projectBlocList(records, captured);
-        };
-        if (!reads) {
-            return load();
-        }
-        return structuredClone(
-            await reads.resource(this, `bloc-list:${captured.projection}:${captured.includeHidden}`, load),
-        );
+        const records = await this.getBlocRecords();
+        reads?.rememberRevision(this, "blocs", siteBlocsRevision(records));
+        return projectBlocList(records, options);
     }
 
     async getBlocViewJS(htmlTag: string): Promise<string | null> {

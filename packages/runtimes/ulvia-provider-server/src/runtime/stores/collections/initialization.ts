@@ -8,7 +8,7 @@ import type { ContractSelectionStore } from "@bernouy/repository/providers/selec
 import type { ProviderExecutionStateReader } from "@bernouy/ulvia-providers/selections";
 import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import type { SiteUpgradeStorage } from "@bernouy/repository/upgrades";
-import { initializationExecution } from "../selections/initializationExecution";
+import { initializationExecution } from "./initializationExecution";
 import { previewInitialization } from "./previewInitialization";
 
 export function initializationFactory(

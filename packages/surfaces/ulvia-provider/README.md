@@ -88,9 +88,3 @@ SDK implementations, with exact version/error metadata and inherited routes. The
 receiver-selected binding ID survives context snapshots so recovered failures keep
 their admitted binding and request language. Missing binding evidence refuses; it
 is never replaced with a fabricated Request or an implicit default.
-
-Resources is selected from the same inventory through `@bernouy/resources/feature`.
-The runtime supplies initialization and verified administrator ports. The surface
-adds a metadata-only operation query after feature authorization, preserving the
-actual invocation contract for specializations and returning safe progress messages.
-Manifest `1.3.0` adds this implementation without changing earlier contract bytes.

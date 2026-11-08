@@ -1,9 +1,0 @@
-{
-    "setting.caption-visibility.label": "Caption visibility",
-    "setting.option.visible": "Visible",
-    "setting.option.visually-hidden": "Accessible only",
-    "setting.striped-rows.label": "Striped rows",
-    "setting.option.table-scroll": "Horizontal scroll",
-    "setting.option.table-stack": "Stacked",
-    "setting.content-layout.label": "Content layout"
-}

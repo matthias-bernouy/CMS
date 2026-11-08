@@ -21,7 +21,6 @@ export interface ContentDeliveryOptions
     extends Omit<ContentDeliveryHost, "resolveActor" | "executeQuery" | "basePath" | "cmsPathPrefix"> {
     readonly publicUrl: string;
     readonly sitemapStore?: BlobStore;
-    readonly serveResourceAsset?: (request: Request) => Promise<Response>;
     readonly serveCollectionAsset: (request: Request) => Promise<Response>;
     readonly guard?: (request: Request) => Promise<Response | null>;
 }
@@ -72,7 +71,7 @@ export class ContentDelivery {
                 content,
                 basePath: "",
                 cmsPathPrefix: "/.cms",
-                publicAssetPaths: ["/_content/collections", "/_content/resources"],
+                collectionAssetsPath: "/_content/collections",
                 publicRuntimePaths: [
                     "/_content/style",
                     "/_content/blocset",
@@ -124,9 +123,6 @@ export class ContentDelivery {
         }
         if (path === PUBLISHED_PAGE_SNAPSHOT_ROUTE) {
             return servePublishedPageSnapshot(content, request);
-        }
-        if (path.startsWith("/_content/resources/")) {
-            return this.options.serveResourceAsset?.(request) ?? new Response(null, { status: 404 });
         }
         if (path.startsWith("/_content/collections/")) {
             return this.options.serveCollectionAsset(request);
