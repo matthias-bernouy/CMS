@@ -70,7 +70,7 @@ try {
         const provisioner = new OfficialInstanceProvisioner(
             instances,
             transitions,
-            (instance) => instanceHost.target(instance),
+            (instance, transition, execution) => instanceHost.target(instance, transition, execution),
             {
                 read: (instanceId) => credentials.readAdministrator(instanceId),
                 clear: (instanceId) => credentials.clearAdministrator(instanceId),
@@ -95,6 +95,23 @@ try {
             provisioner,
             system,
             env.CMS_SESSION_SECRET,
+            {
+                review: (instance, input) => instanceHost.reviewSystemUpgrade(instance, input),
+                apply: async (instance, input) => {
+                    const review = await instanceHost.reviewSystemUpgrade(instance, input);
+                    if (review.planDigest !== input.planDigest) {
+                        throw new TypeError("System upgrade review changed");
+                    }
+                    return provisioner.upgradeSystem(
+                        instance.id,
+                        review.source,
+                        review.target,
+                        input.expectedRevision,
+                        input.administratorSub,
+                    );
+                },
+                resume: (instance, administratorSub) => provisioner.resumeSystemUpgrade(instance.id, administratorSub),
+            },
         );
         const authenticator = new ProviderInstanceAuthenticator(
             new MongoInstanceAuthenticationReader(controlDb, "ulvia-provider-control", secretCrypto),

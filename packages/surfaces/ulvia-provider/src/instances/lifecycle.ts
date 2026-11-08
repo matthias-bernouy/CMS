@@ -1,5 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import type { SystemInstallationSource } from "./installationPlan";
+import type { SystemInstallationSource, SystemUpgradeInput, SystemUpgradeOperations } from "./installationPlan";
 import type { OfficialInstanceProvisioner, ProviderInstanceAdministrator } from "./provisioning";
 import type { ProviderInstanceRegistry } from "./registry";
 import type { ProviderInstanceRecord } from "./types";
@@ -43,6 +43,7 @@ export class ProviderInstanceLifecycle {
         private readonly provisioner: OfficialInstanceProvisioner,
         private readonly system: SystemInstallationSource,
         private readonly idempotencySecret: string,
+        private readonly upgrades?: SystemUpgradeOperations,
     ) {}
 
     async create(idempotencyKey: string, input: CreateProviderInstance): Promise<CreatedProviderInstance> {
@@ -86,6 +87,33 @@ export class ProviderInstanceLifecycle {
 
     list(): Promise<readonly ProviderInstanceRecord[]> {
         return this.instances.list();
+    }
+
+    async reviewSystemUpgrade(instanceId: string, input: SystemUpgradeInput) {
+        return this.requiredUpgrades().review(await this.requiredInstance(instanceId), input);
+    }
+
+    async upgradeSystem(instanceId: string, input: SystemUpgradeInput & { planDigest: string }) {
+        return this.requiredUpgrades().apply(await this.requiredInstance(instanceId), input);
+    }
+
+    async resumeSystemUpgrade(instanceId: string, administratorSub: string) {
+        return this.requiredUpgrades().resume(await this.requiredInstance(instanceId), administratorSub);
+    }
+
+    private requiredUpgrades() {
+        if (!this.upgrades) {
+            throw new Error("System upgrades are unavailable");
+        }
+        return this.upgrades;
+    }
+
+    private async requiredInstance(instanceId: string) {
+        const instance = await this.instances.get(instanceId);
+        if (!instance) {
+            throw new TypeError("Unknown Provider instance");
+        }
+        return instance;
     }
 
     async disable(instanceId: string): Promise<ProviderInstanceRecord | null> {

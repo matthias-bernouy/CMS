@@ -8,11 +8,14 @@ import {
     executeProvisioningStep,
     PROVISION_STEPS,
     REGISTRY_STEPS,
+    SYSTEM_UPGRADE_STEPS,
+    assertSystemUpgrade,
     type OfficialInstanceProvisioningTarget,
     type ProviderInstanceAdministrator,
     type TransitionStep,
 } from "./provisioningTarget";
 import { ProviderInstanceTransitionLease, transitionLeaseExpiry } from "./transitionLease";
+import type { ProviderInstanceTransitionExecution } from "./transitionLease";
 
 const DEFAULT_LEASE_MS = 30_000;
 
@@ -23,7 +26,11 @@ export class OfficialInstanceProvisioner {
     constructor(
         private readonly instances: ProviderInstanceRegistry,
         private readonly transitions: InstanceTransitionStore,
-        private readonly openTarget: (instance: ProviderInstanceRecord) => Promise<OfficialInstanceProvisioningTarget>,
+        private readonly openTarget: (
+            instance: ProviderInstanceRecord,
+            transition: InstanceTransitionRecord,
+            execution: ProviderInstanceTransitionExecution,
+        ) => Promise<OfficialInstanceProvisioningTarget>,
         private readonly administratorCredentials: Readonly<{
             read(instanceId: string): Promise<ProviderInstanceAdministrator | null>;
             clear(instanceId: string): Promise<void>;
@@ -76,6 +83,57 @@ export class OfficialInstanceProvisioner {
             : null;
     }
 
+    async upgradeSystem(
+        instanceId: string,
+        source: SystemInstallationPlan,
+        target: SystemInstallationPlan,
+        expectedRevision: number,
+        administratorSub: string,
+    ): Promise<ProviderInstanceRecord> {
+        source = structuredClone(source);
+        target = structuredClone(target);
+        const instance = await requiredInstance(this.instances, instanceId);
+        if (instance.status !== "ready") {
+            throw new Error("Instance is not ready for a system upgrade");
+        }
+        assertSystemUpgrade(source, target);
+        await this.assertExtensionAuthority(instance, administratorSub);
+        if (instance.revision !== expectedRevision) {
+            throw Object.assign(new Error("System upgrade revision conflict"), { status: 409 });
+        }
+        return this.transition(instanceId, target, administratorSub, expectedRevision, "upgrade", source);
+    }
+
+    async resumeSystemUpgrade(instanceId: string, administratorSub: string): Promise<ProviderInstanceRecord> {
+        const instance = await requiredInstance(this.instances, instanceId);
+        if (!["upgrading", "ready"].includes(instance.status) || !instance.systemPlan) {
+            throw new Error("Instance has no interrupted system upgrade");
+        }
+        await this.assertExtensionAuthority(instance, administratorSub);
+        const transition = await this.transitions.get(transitionId(instanceId, instance.systemPlan, "upgrade"));
+        if (!transition?.sourcePlan || transition.kind !== "upgrade") {
+            throw new Error("Exact system upgrade journal is unavailable");
+        }
+        if (transition.status === "succeeded") {
+            return instance;
+        }
+        assertSystemUpgrade(transition.sourcePlan, transition.targetPlan);
+        const executable =
+            transition.status === "failed"
+                ? await this.transitions.requeue(
+                      transition.id,
+                      transition.revision,
+                      this.now().toISOString(),
+                      administratorSub,
+                      transition.sourceRevision,
+                  )
+                : transition;
+        if (!executable) {
+            throw new Error("System upgrade changed during recovery");
+        }
+        return this.execute(executable);
+    }
+
     async recover(limit = 100): Promise<number> {
         const transitions = await this.transitions.listRecoverable(this.now().toISOString(), limit);
         for (const transition of transitions) {
@@ -89,6 +147,8 @@ export class OfficialInstanceProvisioner {
         requestedTarget: SystemInstallationPlan | undefined,
         administratorSub?: string,
         sourceRevision?: number,
+        requestedKind: "registry" | "upgrade" = "registry",
+        sourcePlan?: SystemInstallationPlan,
     ): Promise<ProviderInstanceRecord> {
         const instance = await requiredInstance(this.instances, instanceId);
         if (instance.status === "disabled") {
@@ -98,15 +158,16 @@ export class OfficialInstanceProvisioner {
         if (!target) {
             throw new Error("Unfinished legacy provisioning requires its original Provider image");
         }
-        const kind = requestedTarget ? "registry" : "provision";
+        const kind = requestedTarget ? requestedKind : "provision";
         const transition = await this.transitions.createOrGet({
             id: transitionId(instanceId, target, kind),
             instanceId,
             kind,
             targetPlan: structuredClone(target),
+            ...(sourcePlan ? { sourcePlan: structuredClone(sourcePlan) } : {}),
             ...(administratorSub ? { administratorSub, sourceRevision } : {}),
             planVersion: 1,
-            steps: kind === "registry" ? REGISTRY_STEPS : PROVISION_STEPS,
+            steps: kind === "upgrade" ? SYSTEM_UPGRADE_STEPS : kind === "registry" ? REGISTRY_STEPS : PROVISION_STEPS,
             completedSteps: [],
             status: "queued",
         });
@@ -139,8 +200,18 @@ export class OfficialInstanceProvisioner {
     }
 
     private async execute(initial: InstanceTransitionRecord): Promise<ProviderInstanceRecord> {
-        if (!initial.targetPlan || initial.planVersion !== 1 || !["provision", "registry"].includes(initial.kind)) {
+        if (
+            !initial.targetPlan ||
+            initial.planVersion !== 1 ||
+            !["provision", "registry", "upgrade"].includes(initial.kind)
+        ) {
             throw new Error("Unfinished legacy transition requires its original Provider image");
+        }
+        if (initial.kind === "upgrade") {
+            if (!initial.sourcePlan) {
+                throw new Error("System upgrade has no exact source plan");
+            }
+            assertSystemUpgrade(initial.sourcePlan, initial.targetPlan);
         }
         let transition = initial;
         const owner = randomUUID();
@@ -174,14 +245,14 @@ export class OfficialInstanceProvisioner {
             }
             ownsState = instance.status === "upgrading" || instance.status === "provisioning";
             execution.throwIfLeaseLost();
-            if (transition.kind === "registry") {
+            if (transition.kind !== "provision") {
                 await this.assertExtensionAuthority(instance, transition.administratorSub);
             }
             if (
-                transition.kind === "registry" &&
+                transition.kind !== "provision" &&
                 instance.status === "ready" &&
-                instance.repository?.configured &&
-                instance.repository.url === instance.cmsUrl &&
+                (transition.kind === "upgrade" ||
+                    (instance.repository?.configured && instance.repository.url === instance.cmsUrl)) &&
                 instance.systemPlan?.manifest.digest === transition.targetPlan.manifest.digest &&
                 transition.steps.every((step) => transition.completedSteps.includes(step))
             ) {
@@ -191,7 +262,7 @@ export class OfficialInstanceProvisioner {
                 return instance;
             }
             if (
-                transition.kind === "registry" &&
+                transition.kind !== "provision" &&
                 instance.status === "ready" &&
                 instance.revision !== transition.sourceRevision
             ) {
@@ -199,7 +270,7 @@ export class OfficialInstanceProvisioner {
             }
             if (instance.status === "failed" || instance.status === "ready") {
                 instance = await this.instances.update(instance.id, instance.revision, {
-                    status: transition.kind === "registry" ? "upgrading" : "provisioning",
+                    status: transition.kind !== "provision" ? "upgrading" : "provisioning",
                     systemPlan: transition.targetPlan,
                     failure: null,
                 });
@@ -212,13 +283,13 @@ export class OfficialInstanceProvisioner {
             if (!plan) {
                 throw new Error("Unfinished legacy transition requires its original Provider image");
             }
-            target = await this.openTarget(instance);
+            target = await this.openTarget(instance, transition, execution);
             execution.throwIfLeaseLost();
             for (const step of transition.steps as readonly TransitionStep[]) {
                 if (transition.completedSteps.includes(step)) {
                     continue;
                 }
-                if (transition.kind === "registry") {
+                if (transition.kind !== "provision") {
                     await this.assertExtensionAuthority(instance, transition.administratorSub);
                 }
                 await executeProvisioningStep(
@@ -262,9 +333,20 @@ export class OfficialInstanceProvisioner {
                 lease.lose(transition.id);
             }
             const latest = await this.instances.get(transition.instanceId);
-            if (ownsState && latest && latest.status !== "disabled") {
+            if (
+                ownsState &&
+                latest &&
+                latest.status !== "disabled" &&
+                (transition.kind !== "upgrade" || latest.status === "upgrading") &&
+                latest.systemPlan?.manifest.digest === transition.targetPlan.manifest.digest
+            ) {
                 await this.instances.update(latest.id, latest.revision, {
-                    status: transition.kind === "registry" ? "ready" : "failed",
+                    status:
+                        transition.kind === "registry"
+                            ? "ready"
+                            : transition.kind === "upgrade"
+                              ? "upgrading"
+                              : "failed",
                     failure: message,
                 });
             }
@@ -294,7 +376,11 @@ export class OfficialInstanceProvisioner {
     }
 }
 
-function transitionId(instanceId: string, target: SystemInstallationPlan, kind: "provision" | "registry"): string {
+function transitionId(
+    instanceId: string,
+    target: SystemInstallationPlan,
+    kind: "provision" | "registry" | "upgrade",
+): string {
     return `${kind}:${instanceId}:${createHash("sha256").update(canonicalizeIJson(target)).digest("hex")}`;
 }
 

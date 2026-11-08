@@ -4,6 +4,7 @@ import { readBoundedRequestBody, RequestBodyTooLargeError } from "@bernouy/http-
 import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { assertProviderConnectionToken } from "@bernouy/ulvia-providers/installations";
 import type { CreateProviderInstance, ProviderInstanceLifecycle } from "../instances/lifecycle";
+import { mountSystemUpgradeRoutes } from "./systemUpgradeRoutes";
 
 const MAX_BODY_BYTES = 4_096;
 
@@ -16,6 +17,7 @@ export class ProviderOperatorApi {
             }
             return handler(request);
         };
+        mountSystemUpgradeRoutes(runner, lifecycle, authorized, operatorError);
 
         runner.get(
             "/ulvia/operator/instances",
@@ -104,8 +106,30 @@ function operatorAuthorized(request: Request, expected: string): boolean {
 }
 
 function operatorError(error: unknown): Response {
-    const status = error instanceof RequestBodyTooLargeError ? 413 : error instanceof TypeError ? 400 : 503;
-    return Response.json({ error: { code: status === 503 ? "PROVISIONING_FAILED" : "INVALID_REQUEST" } }, { status });
+    const refusal = error && typeof error === "object" && "status" in error ? error.status : undefined;
+    const status =
+        error instanceof RequestBodyTooLargeError
+            ? 413
+            : error instanceof TypeError
+              ? 400
+              : refusal === 403 || refusal === 409
+                ? refusal
+                : 503;
+    return Response.json(
+        {
+            error: {
+                code:
+                    status === 503
+                        ? "PROVISIONING_FAILED"
+                        : status === 409
+                          ? "REVISION_CONFLICT"
+                          : status === 403
+                            ? "FORBIDDEN"
+                            : "INVALID_REQUEST",
+            },
+        },
+        { status, headers: noStore().headers },
+    );
 }
 
 function noStore(): ResponseInit {

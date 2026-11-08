@@ -59,7 +59,13 @@ export type {
     InstanceTransitionStatus,
     InstanceTransitionStore,
 } from "../instances/transitions";
-export type { SystemInstallationPlan, SystemInstallationSource } from "../instances/installationPlan";
+export type {
+    SystemInstallationPlan,
+    SystemInstallationSource,
+    SystemUpgradeInput,
+    SystemUpgradeReview,
+    SystemUpgradeOperations,
+} from "../instances/installationPlan";
 export {
     OfficialInstanceProvisioner,
     type OfficialInstanceProvisioningTarget,
@@ -75,3 +81,4 @@ export {
     type ProviderInstanceRuntimeCredentials,
 } from "../instances/lifecycle";
 export { ProviderOperatorApi } from "../transport/ProviderOperatorApi";
+export { assertSystemUpgrade } from "../instances/provisioningTarget";

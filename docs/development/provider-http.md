@@ -181,8 +181,8 @@ validate missing outputs, rather than accepting an incomplete declared failure.
 ## Official baseline
 
 Official contracts and the Provider manifest are generated from SDK features.
-Current system profiles are `1.3.0`, the manifest and Installations are `1.2.0`,
-Registry is `1.1.0`, and the remaining contracts are `1.0.0`. No administration
+The current manifest and Installations are `1.3.0`, Registry and Authoring are
+`1.1.0`, Content is `1.0.1`, and the remaining contracts are `1.0.0`. No administration
 collection is bundled. For native delivery, Content exposes
 `delivery.resolve-resource`, carrying path/method/query as business input and
 HTTP metadata through the common context. Edge follows exact parent pins and

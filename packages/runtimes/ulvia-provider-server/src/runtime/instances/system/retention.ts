@@ -29,13 +29,16 @@ export async function assertHostedReleaseRetention(
     readRequired: (
         instance: ProviderInstanceRecord,
         retained?: readonly SystemInstallationPlan[],
+        targetNotAdmitted?: boolean,
     ) => Promise<readonly RequiredRelease[]>,
     system: SystemInstallationSource,
 ): Promise<void> {
     for (const transition of transitions) {
         if (
             transition.status !== "succeeded" &&
-            (!transition.targetPlan || !["provision", "registry"].includes(transition.kind))
+            (!transition.targetPlan ||
+                !["provision", "registry", "upgrade"].includes(transition.kind) ||
+                (transition.kind === "upgrade" && !transition.sourcePlan))
         ) {
             throw new Error(
                 `Provider image cannot recover transition:${transition.id}; finish it with the original image`,
@@ -45,6 +48,25 @@ export async function assertHostedReleaseRetention(
     for (const instance of instances) {
         if (instance.status === "upgrading" && !instance.systemPlan) {
             throw new Error(`Provider image cannot recover instance:${instance.id}; finish it with the original image`);
+        }
+    }
+    const unstaged = transitions.filter(
+        (transition) =>
+            transition.kind === "upgrade" &&
+            transition.status !== "succeeded" &&
+            !transition.completedSteps.includes("manifest"),
+    );
+    if (unstaged.length) {
+        const available = await system.current();
+        for (const transition of unstaged) {
+            if (transition.targetPlan.manifest.digest !== available.manifest.digest) {
+                throw new Error(
+                    `Provider image cannot stage transition:${transition.id}; finish it with the original image`,
+                );
+            }
+            for (const pin of transition.targetPlan.contracts) {
+                support.assert(pin, `transition:${transition.id}`);
+            }
         }
     }
     const plans = [
@@ -72,9 +94,15 @@ export async function assertHostedReleaseRetention(
                 (transition) =>
                     transition.instanceId === instance.id &&
                     transition.status !== "succeeded" &&
-                    transition.kind === "registry",
+                    (transition.kind === "registry" || transition.kind === "upgrade"),
             )
-            .map(({ targetPlan }) => targetPlan);
+            .flatMap((transition) => {
+                const plans = transition.sourcePlan ? [transition.sourcePlan] : [];
+                if (!unstaged.some(({ id }) => id === transition.id)) {
+                    plans.push(transition.targetPlan);
+                }
+                return plans;
+            });
         for (const plan of registryPlans) {
             if (!plan) {
                 throw new Error("Registry transition has no exact admitted plan");
@@ -83,7 +111,11 @@ export async function assertHostedReleaseRetention(
                 support.assert(pin, `transition:${instance.id}`);
             }
         }
-        for (const release of await readRequired(instance, registryPlans)) {
+        for (const release of await readRequired(
+            instance,
+            registryPlans,
+            unstaged.some(({ instanceId }) => instanceId === instance.id),
+        )) {
             support.assert(release, release.location);
         }
     }
@@ -93,6 +125,7 @@ export function managedReleaseReader(mongo: MongoClient, support: ProviderExecut
     return async (
         instance: ProviderInstanceRecord,
         retainedPlans: readonly SystemInstallationPlan[] = [],
+        targetNotAdmitted = false,
     ): Promise<readonly RequiredRelease[]> => {
         const db = mongo.db(instanceDatabaseName(instance.storageKey));
         const releases = new MongoReleaseCatalogue(db);
@@ -105,7 +138,9 @@ export function managedReleaseReader(mongo: MongoClient, support: ProviderExecut
         const upgrades = new MongoSiteUpgradeStorage(db);
         const plans = [
             ...retainedPlans,
-            ...(instance.status === "upgrading" && instance.systemPlan ? [instance.systemPlan] : []),
+            ...(instance.status === "upgrading" && instance.systemPlan && !targetNotAdmitted
+                ? [instance.systemPlan]
+                : []),
         ];
         for (const plan of plans) {
             await readStoredPlan(plan, { releases, manifests }, support);

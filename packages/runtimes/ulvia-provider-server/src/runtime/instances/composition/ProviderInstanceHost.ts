@@ -1,4 +1,8 @@
 import { registryInstallationPlan } from "../system/execution/registry";
+import { reviewSystemUpgrade } from "../system/execution/upgrades";
+import { importProviderManifest } from "@bernouy/repository/providers/sources";
+import { loadOfficialManifest } from "../system/artifacts";
+import type { SystemUpgradeInput, SystemInstallationPlan } from "@bernouy/ulvia-provider";
 import { readStoredPlan } from "../system/execution/plan";
 import type { InstanceTransitionRecord } from "@bernouy/ulvia-provider";
 import { readInstalledExecution } from "../system/execution/installed";
@@ -150,7 +154,24 @@ export class ProviderInstanceHost {
         };
     }
 
-    async target(instance: ProviderInstanceRecord): Promise<OfficialInstanceProvisioningTarget> {
+    async target(
+        instance: ProviderInstanceRecord,
+        transition?: InstanceTransitionRecord,
+        execution?: ProviderInstanceTransitionExecution,
+    ): Promise<OfficialInstanceProvisioningTarget> {
+        if (transition?.kind === "upgrade" && !transition.completedSteps.includes("manifest")) {
+            if (!transition.sourcePlan || !transition.sourceRevision || !execution) {
+                throw new Error("System upgrade staging requires its exact journal and lease");
+            }
+            execution.throwIfLeaseLost();
+            const source = {
+                ...instance,
+                status: "ready" as const,
+                revision: transition.sourceRevision,
+                systemPlan: transition.sourcePlan,
+            };
+            await this.admitSystemUpgrade(source, transition.targetPlan, execution);
+        }
         const lease = await this.open(instance);
         return {
             ...createInstanceProvisioningTarget({
@@ -174,6 +195,49 @@ export class ProviderInstanceHost {
                 this.support,
                 this.env.ULVIA_PROVIDER_PUBLIC_URL,
             );
+        } finally {
+            lease.release();
+        }
+    }
+
+    async reviewSystemUpgrade(instance: ProviderInstanceRecord, input: SystemUpgradeInput) {
+        const lease = await this.open(instance);
+        try {
+            if (!(await lease.resource.administrators.get(input.administratorSub)).enabled) {
+                throw Object.assign(new Error("System upgrade requires a current local administrator"), {
+                    status: 403,
+                });
+            }
+            return await reviewSystemUpgrade(
+                instance,
+                input,
+                lease.resource.stores,
+                this.support,
+                this.system,
+                this.env.ULVIA_PROVIDER_PUBLIC_URL,
+            );
+        } finally {
+            lease.release();
+        }
+    }
+
+    private async admitSystemUpgrade(
+        instance: ProviderInstanceRecord,
+        target: SystemInstallationPlan,
+        execution: ProviderInstanceTransitionExecution,
+    ) {
+        const lease = await this.open(instance);
+        try {
+            execution.throwIfLeaseLost();
+            const bytes = await loadOfficialManifest(this.bootstrap.providers, target);
+            execution.throwIfLeaseLost();
+            await importProviderManifest(
+                bytes,
+                [this.bootstrap.providers],
+                lease.resource.gateway.releases,
+                lease.resource.gateway.manifests,
+            );
+            execution.throwIfLeaseLost();
         } finally {
             lease.release();
         }

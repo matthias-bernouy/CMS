@@ -5,8 +5,9 @@ export type InstanceTransitionStatus = "queued" | "running" | "succeeded" | "fai
 export type InstanceTransitionRecord = Readonly<{
     id: string;
     instanceId: string;
-    kind: "provision" | "registry";
+    kind: "provision" | "registry" | "upgrade";
     targetPlan: SystemInstallationPlan;
+    sourcePlan?: SystemInstallationPlan;
     administratorSub?: string;
     sourceRevision?: number;
     planVersion: 1;

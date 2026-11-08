@@ -142,6 +142,23 @@ All endpoints require `Authorization: Bearer <ULVIA_PROVIDER_OPERATOR_TOKEN>`:
 - `POST /ulvia/operator/instances` creates/resumes with `Idempotency-Key`.
 - `GET /ulvia/operator/instances/:instanceId` reads one lifecycle record.
 - `POST /ulvia/operator/instances/:instanceId/disable` disables its connection.
+- `POST /ulvia/operator/instances/:instanceId/system/plan` reviews the image's
+  exact system manifest with `{ expectedRevision, administratorSub, manifestDigest }`.
+- `POST /ulvia/operator/instances/:instanceId/system` applies the same input plus
+  the returned `planDigest`, after recomputing the review.
+- `POST /ulvia/operator/instances/:instanceId/system/resume` resumes an interrupted
+  upgrade with `{ administratorSub }`.
+
+System upgrade requires both operator authorization and a current administrator
+of that exact instance. Review preserves enabled families, including Registry,
+and refuses unsupported, downgraded or consumer-incompatible contracts. Applying
+fences the instance before admission, approval and selection. Its durable journal
+checkpoints those three steps; it neither initializes setup nor changes accounts,
+Pages, collections or the Repository address. Failure leaves the instance fenced
+until explicit resume. Recovery rechecks administrator authority. Before admission,
+recovery requires the original exact image kit; after its checkpoint it uses the
+stored admitted resources. Restart each stateless Edge after successful completion
+to negotiate the new control contract. Image replacement alone remains independent.
 
 Creation returns the opaque instance access token. Edge never receives the
 operator secret, database credentials, KEKs or session signing secrets. Backup,

@@ -7,6 +7,9 @@ import type { OfficialBootstrapSources } from "../bootstrap";
 export class SystemBootstrap implements SystemInstallationSource {
     private pending?: Promise<LoadedSystemArtifacts>;
     constructor(private readonly sources: OfficialBootstrapSources) {}
+    async available(): Promise<SystemInstallationPlan> {
+        return (await this.artifacts()).plan;
+    }
     async current(): Promise<SystemInstallationPlan> {
         const { plan } = await this.artifacts();
         return deepFreeze({
