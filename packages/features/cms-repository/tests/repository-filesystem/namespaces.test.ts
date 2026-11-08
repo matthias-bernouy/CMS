@@ -101,32 +101,63 @@ test("direct capability calls enforce authentication and ownership before privat
             namespaceRevision: 1,
             targetAccountId: f.b.accountId,
         };
+        const source = {
+            namespace: input.namespace,
+            namespaceRevision: 1,
+            collectionId: "community/sample",
+            version: "1.0.0",
+        };
+        const upload = { namespace: input.namespace, namespaceRevision: 1, uploadId: crypto.randomUUID() };
         const owned = [
-            "namespace-transfer",
-            "namespace-suspend",
-            "publication-check-collection",
-            "source-get",
-            "source-put",
-            "publication-yank",
-            "publication-begin",
-            "publication-status",
-            "publication-asset",
-            "publication-commit",
-            "publication-abort",
+            (account?: string) => service.namespaces.transfer(input, account),
+            (account?: string) => service.namespaces.suspend(input, account),
+            (account?: string) => service.publications.checkCollection({ ...input, canonicalJson: "{}" }, account),
+            (account?: string) => service.sources.getCollection(source, account),
+            (account?: string) =>
+                service.sources.putCollection(
+                    { ...source, sourceJson: "{}", releaseDigest: "sha256:" + "0".repeat(64) },
+                    account,
+                ),
+            (account?: string) =>
+                service.publications.yank(
+                    {
+                        kind: "collection",
+                        publisherId: input.namespace,
+                        id: "community/sample",
+                        version: "1.0.0",
+                        namespaceRevision: 1,
+                        expectedRevision: 1,
+                        reason: null,
+                    },
+                    account,
+                ),
+            (account?: string) => service.publications.begin(input, account),
+            (account?: string) => service.publications.status(upload, account),
+            (account?: string) =>
+                service.publications.asset(
+                    { ...upload, assetId: "asset", contentDigest: "sha256:" + "0".repeat(64) },
+                    account,
+                ),
+            (account?: string) => service.publications.commit(upload, account),
+            (account?: string) => service.publications.abort(upload, account),
         ];
-        for (const id of ["namespace-list", "namespace-claim", ...owned]) {
-            await expect(service.invoke(id, input)).rejects.toThrow("An authenticated account is required");
+        for (const call of [
+            (account?: string) => service.namespaces.list(account),
+            (account?: string) => service.namespaces.claim(input, account),
+            ...owned,
+        ]) {
+            await expect(Promise.resolve().then(() => call())).rejects.toThrow("An authenticated account is required");
         }
-        for (const id of owned) {
-            await expect(service.invoke(id, input, undefined, { accountId: f.b.accountId })).rejects.toThrow(
+        for (const call of owned) {
+            await expect(Promise.resolve().then(() => call(f.b.accountId))).rejects.toThrow(
                 "Namespace ownership is unavailable or stale",
             );
         }
         expect(await namespaces.get("community")).toEqual(before);
-        expect(await service.invoke("namespace-list", {}, undefined, { accountId: f.b.accountId })).toEqual({
+        expect(await service.namespaces.list(f.b.accountId)).toEqual({
             namespaces: [],
         });
-        expect(await service.invoke("catalogue-list", { kind: "contract", limit: 20 })).toEqual({ releases: [] });
+        expect(await service.reads.catalogue({ kind: "contract", limit: 20 })).toEqual({ releases: [] });
     } finally {
         await f.close();
     }

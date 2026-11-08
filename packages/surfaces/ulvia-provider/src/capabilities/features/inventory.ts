@@ -1,4 +1,5 @@
-import { authoringImplementation } from "./implementations/authoring";
+import { repositoryImplementation } from "./implementations/repository/registry";
+import { authoringImplementation } from "./implementations/repository/authoring";
 import { contentImplementation } from "./implementations/content";
 import { accessImplementation } from "./implementations/access";
 import { observabilityImplementation } from "./implementations/observability";
@@ -25,6 +26,7 @@ const officialFeatureInventory: readonly OfficialFeatureSource[] = Object.freeze
     { implementation: filesImplementation },
     { implementation: observabilityImplementation },
     { implementation: providerConnectionsImplementation },
+    { implementation: repositoryImplementation },
     { definition: providerCmsInstancesFeature },
 ]);
 export const officialFeatureImplementations = officialFeatureInventory.flatMap((source) =>

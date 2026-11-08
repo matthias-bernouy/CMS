@@ -42,13 +42,13 @@ export function repositoryApplication(
         release: (coordinate) => reads.release(coordinate),
         asset: (coordinate, id) => reads.asset(coordinate, id),
     });
-    const handle = repositoryFixtureHttp(service, async (token) => {
+    const ready = repositoryFixtureHttp(service, async (token) => {
         const principal = await pats.verify(token);
         return principal && accounts.has(principal.sub) ? principal.sub : null;
     });
     return {
         index,
-        handle,
+        handle: async (request: Request) => (await ready)(request),
         service,
         namespaces,
         repositoryId,

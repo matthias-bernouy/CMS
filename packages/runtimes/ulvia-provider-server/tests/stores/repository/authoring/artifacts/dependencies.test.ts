@@ -66,9 +66,9 @@ test("unresolved contract pins refuse manifest preparation and dependency transp
         await expect(
             f.artifacts.prepareArtifact("provider-manifest", providerSnapshot(`sha256:${"0".repeat(64)}`)),
         ).rejects.toThrow("temporarily unavailable");
-        expect(
-            await f.application.service.invoke("catalogue-list", { kind: "provider-manifest", limit: 10 }),
-        ).toMatchObject({ releases: [] });
+        expect(await f.application.service.reads.catalogue({ kind: "provider-manifest", limit: 10 })).toMatchObject({
+            releases: [],
+        });
     } finally {
         globalThis.fetch = original;
         await f.close();

@@ -54,3 +54,10 @@ behavior.
   registrar. `provider.cms-instances` is a published template without an execution
   claim; reject selected template pins before service projection or registry writes.
   Do not expose private instance lifecycle/storage records through that template.
+
+- `ulvia/repository` is selected from the shared SDK inventory only for explicit
+  Repository execution profiles. Inject its typed domain facade and the host's
+  account-alias resolver; public reads do not resolve accounts. Namespace/source/
+  publication ownership remains domain-owned. Never add a second registry registrar
+  or convert unknown return values into DTOs with casts. Preserve bounded public
+  publication evolution details while keeping unexpected storage failures private.

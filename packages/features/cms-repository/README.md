@@ -29,6 +29,7 @@ boundaries. Reports remain observations, never authority to approve new releases
 | `@bernouy/ulvia-contracts/bindings` | Explicit HTTP/MCP binding types, exposure selection, HTTP plans and pure scalar codecs |
 | `@bernouy/ulvia-contracts/compatibility` | Release evolution and consumer-compatibility checks |
 | `@bernouy/cms-repository/features/authoring` | `authoringFeature`, default execution and structural service ports |
+| `@bernouy/cms-repository/features/repository` | `repositoryFeature`, default registry execution and structural service ports |
 | `@bernouy/cms-repository/contracts/catalogue` | Mutable release catalogue and deterministic in-memory implementation |
 | `@bernouy/cms-repository/contracts/mongo` | Mongo release artifacts and revisioned publication metadata |
 | `@bernouy/ulvia-contracts/protocol` | Strict I-JSON parsing, canonicalization and freezing primitives |
@@ -136,3 +137,16 @@ through a derived SHA-256 pointer. Expiration cleanup visits at most eight queue
 sessions per invocation and persists its position; committed history is not
 parsed during cleanup. Active asset transfers and commits hold the same upload
 lock. Closing the upload store waits for pending maintenance.
+
+`application/registry/` authors the 22-capability `ulvia/repository` API. The
+feature calls typed `RepositoryCapabilityService` groups (`reads`, `namespaces`,
+`sources`, `publications`); public search, catalogue, namespace, source and upload
+receipt DTOs derive from schemas. Its injected account resolver receives verified
+Provider context, while the domain services enforce active accounts, namespace
+ownership revisions and upload ownership even for direct calls.
+
+The Provider selects this implementation only for an explicit Repository profile.
+It supplies account alias resolution and localized errors; the runtime constructs
+the filesystem/Mongo adapters. Downloads preserve immutable headers and stream
+through admitted byte limits. Build-only scans discover `docs/repository/`;
+runtime mounting uses generated metadata without reading Markdown.

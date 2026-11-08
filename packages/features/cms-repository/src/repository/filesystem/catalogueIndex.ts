@@ -11,7 +11,16 @@ import { LocalRepositoryYanks } from "./yanks";
 import { compareCatalogueKeys } from "./core/catalogue";
 
 export type RepositoryCatalogueType = "collections" | "contracts" | "providers";
-export type RepositoryCatalogueEntry = Readonly<Record<string, unknown>>;
+export type RepositoryCatalogueEntry = RepositoryCatalogueMetadata &
+    Readonly<{
+        publisherId: string;
+        version: string;
+        digest: string;
+        collectionId?: string;
+        contractId?: string;
+        providerId?: string;
+    }>;
+import type { RepositoryCatalogueMetadata } from "cms-repository/application/registry/interfaces/outputs";
 
 export interface RepositoryCatalogueReader {
     list(type: RepositoryCatalogueType, refresh?: boolean): Promise<readonly RepositoryCatalogueEntry[]>;
@@ -142,10 +151,13 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
     }
 }
 
-function sorted(entries: RepositoryCatalogueEntry[], idKey: string): readonly RepositoryCatalogueEntry[] {
+function sorted(
+    entries: RepositoryCatalogueEntry[],
+    idKey: "collectionId" | "contractId" | "providerId",
+): readonly RepositoryCatalogueEntry[] {
     return Object.freeze(entries.sort((left, right) => compareCatalogueKeys(key(left, idKey), key(right, idKey))));
 }
 
-function key(entry: RepositoryCatalogueEntry, idKey: string): string {
+function key(entry: RepositoryCatalogueEntry, idKey: "collectionId" | "contractId" | "providerId"): string {
     return `${entry.publisherId}\0${entry[idKey]}\0${entry.version}`;
 }

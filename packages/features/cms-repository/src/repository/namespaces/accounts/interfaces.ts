@@ -1,5 +1,4 @@
-import type { z } from "zod";
-import type { claimedNamespaceSchema } from "cms-repository/application/authoring/schemas/namespaces";
+import type { NamespaceClaimOutput } from "cms-repository/application/registry/interfaces/outputs";
 export type RepositoryOwnedNamespace = Readonly<{
     namespace: string;
     ownerAccountId: string;
@@ -8,7 +7,7 @@ export type RepositoryOwnedNamespace = Readonly<{
     updatedAt: string;
 }>;
 
-export type RepositoryNamespaceView = z.output<typeof claimedNamespaceSchema>;
+export type RepositoryNamespaceView = NamespaceClaimOutput;
 
 /** Membership existence is supplied by the runtime; authentication stays outside this domain. */
 export interface RepositoryNamespaceAccounts {

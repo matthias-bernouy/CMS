@@ -29,26 +29,14 @@ export class FilesystemRegistryReads {
                 input.kind === "collection" ? "collections" : input.kind === "contract" ? "contracts" : "providers";
             const page = await cataloguePage(type, this.index, String(input.limit), input.cursor ?? null, false, input);
             return {
-                releases: page.releases.map((entry) => ({
-                    kind: input.kind,
-                    publisherId: entry.publisherId as string,
-                    id: (entry.collectionId ?? entry.contractId ?? entry.providerId) as string,
-                    version: entry.version as string,
-                    digest: entry.digest as string,
-                    metadata: Object.fromEntries(
-                        Object.entries(entry).filter(
-                            ([key, value]) =>
-                                ![
-                                    "publisherId",
-                                    "collectionId",
-                                    "contractId",
-                                    "providerId",
-                                    "version",
-                                    "digest",
-                                ].includes(key) && value !== undefined,
-                        ),
-                    ),
-                })),
+                releases: page.releases.map((entry) => {
+                    const { publisherId, collectionId, contractId, providerId, version, digest, ...metadata } = entry;
+                    const id = collectionId ?? contractId ?? providerId;
+                    if (!id) {
+                        throw new RepositoryRequestError("REJECTED", "Invalid catalogue coordinate");
+                    }
+                    return { kind: input.kind, publisherId, id, version, digest, metadata: definedMetadata(metadata) };
+                }),
                 ...(page.nextCursor ? { nextCursor: page.nextCursor } : {}),
             };
         } catch (error) {
@@ -97,4 +85,15 @@ export class FilesystemRegistryReads {
               }
             : null;
     }
+}
+
+/** Preserve the inferred metadata shape while omitting absent optional wire fields. */
+function definedMetadata<Value extends object>(value: Value): Value {
+    const result = { ...value };
+    for (const [key, entry] of Object.entries(result)) {
+        if (entry === undefined) {
+            Reflect.deleteProperty(result, key);
+        }
+    }
+    return result;
 }

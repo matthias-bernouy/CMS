@@ -1,3 +1,4 @@
+import type { RepositoryServices } from "@bernouy/cms-repository/features/repository";
 import type { ProviderConnectionServices } from "../capabilities/features/provider/connections/interfaces";
 import type { ContentServices } from "@bernouy/cms-content/feature";
 import type { RepositoryDiscovery } from "@bernouy/cms-repository/repository/search";
@@ -53,7 +54,8 @@ export type UlviaProviderFeatureServices = Partial<
         AccessServices &
         ContentServices &
         AuthoringServices &
-        ProviderConnectionServices
+        ProviderConnectionServices &
+        RepositoryServices
 >;
 
 export type UlviaProviderDependencies = CmsContentDependencies &

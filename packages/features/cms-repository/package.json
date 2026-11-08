@@ -41,7 +41,8 @@
         "./repository/search/http": "./src/exports/repository/search/http.ts",
         "./repository/capabilities": "./src/exports/repository/capabilities.ts",
         "./repository/authoring/build": "./src/exports/repository/authoring/build.ts",
-        "./features/authoring": "./src/application/authoring/feature.ts"
+        "./features/authoring": "./src/application/authoring/feature.ts",
+        "./features/repository": "./src/application/registry/feature.ts"
     },
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",

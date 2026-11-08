@@ -1,30 +1,10 @@
+import type { CatalogueSearchInput } from "cms-repository/application/registry/interfaces/inputs";
+import type { CatalogueSearchOutput } from "cms-repository/application/registry/interfaces/outputs";
 import type { VectorStore } from "@bernouy/text-search";
 
-type RepositoryResourceKind = "collection" | "bloc" | "contract" | "provider-manifest";
-export interface RepositorySearchQuery {
-    readonly query: string;
-    readonly channel?: "stable" | "beta" | "all";
-    readonly kinds?: readonly RepositoryResourceKind[];
-    readonly publisherId?: string;
-    readonly contractId?: string;
-    readonly limit?: number;
-    readonly cursor?: string;
-}
-export interface RepositoryResourceReference {
-    readonly kind: Exclude<RepositoryResourceKind, "bloc">;
-    readonly publisherId: string;
-    readonly id: string;
-    readonly version: string;
-    readonly digest: string;
-}
-export interface RepositorySearchResult {
-    readonly reference: RepositoryResourceReference;
-    readonly blocId?: string;
-    readonly name: string;
-    readonly description: string;
-    readonly categories: readonly string[];
-    readonly contractIds: readonly string[];
-}
+export type RepositorySearchQuery = CatalogueSearchInput;
+export type RepositoryResourceReference = RepositorySearchResult["reference"];
+export type RepositorySearchResult = CatalogueSearchOutput["results"][number];
 export interface RepositorySearchRow extends RepositorySearchResult {
     readonly text: string;
 }
@@ -35,13 +15,7 @@ export interface RepositorySearchSnapshot {
 export interface RepositorySearchSource {
     load(): Promise<RepositorySearchSnapshot>;
 }
-export interface RepositorySearchPage {
-    readonly revision: string;
-    readonly mode: "hybrid" | "lexical";
-    readonly degraded: boolean;
-    readonly results: readonly RepositorySearchResult[];
-    readonly nextCursor?: string;
-}
+export type RepositorySearchPage = CatalogueSearchOutput;
 export interface RepositoryDiscoverySource {
     readonly id: string;
     search(query: RepositorySearchQuery): Promise<RepositorySearchPage>;

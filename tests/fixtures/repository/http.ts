@@ -1,91 +1,38 @@
 import { randomUUID } from "node:crypto";
-import { resolve } from "node:path";
-import { admitContractReleaseJson, resolveContract } from "@bernouy/ulvia-contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import {
-    compileProviderRoutes,
-    createProviderContractRelay,
-    DefaultProviderCapabilityDispatcher,
-    ProviderCapabilityDispatchError,
-} from "@bernouy/cms-gateway/provider/server";
-import { RepositoryCapabilityError } from "@bernouy/cms-repository/repository/capabilities";
+import { compileProviderRoutes, createProviderContractRelay } from "@bernouy/cms-gateway/provider/server";
+import { DefaultProviderCapabilityDispatcher, ProviderCapabilityDispatchError } from "@bernouy/ulvia-provider";
+import { loadOfficialFeatures, registerOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
 import type { RepositoryCapabilityService } from "@bernouy/cms-repository/repository/capabilities";
-import { RepositoryDiscoveryError } from "@bernouy/cms-repository/repository/search";
 import { NOOP_LOGGER } from "@bernouy/logging";
 
-const path = resolve(
-    import.meta.dir,
-    "../../../packages/runtimes/ulvia-cli/dist/bootstrap/contracts/repository/definition.json",
-);
-const contract = await resolveContract(
-    new InMemoryReleaseCatalogue(),
-    await admitContractReleaseJson(await Bun.file(path).text()),
-);
-const routes = compileProviderRoutes([contract]);
 const PREFIX = "/.cms/call/ulvia/repository";
-
-/** Real admitted binding codecs and domain service; the test host supplies verified PAT subjects. */
-export function repositoryFixtureHttp(
+/** Real SDK implementation and admitted HTTP codecs; this host verifies PATs into account subjects. */
+export async function repositoryFixtureHttp(
     service: RepositoryCapabilityService,
     authenticate: (token: string) => Promise<string | null>,
 ) {
+    const build = await loadOfficialFeatures();
+    const contracts = build.implementedContracts.filter(({ release }) => release.contractId === "ulvia/repository");
+    const contract = contracts[0]!;
+    const routes = compileProviderRoutes(contracts);
+    const providerId = "ulvia/fixture.repository";
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    for (const capability of contract.release.capabilities) {
-        dispatcher.register(contract.release.contractId, capability.id, async (input, context) => {
-            try {
-                const result = await service.invoke(capability.id, input, context.binaryBody, {
-                    accountId: context.subjectId,
-                });
-                if (capability.output.type !== "binary") {
-                    return result;
-                }
-                const bytes = result as {
-                    stream: ReadableStream<Uint8Array>;
-                    contentLength: number;
-                    contentType: string;
-                    digest: string;
-                };
-                return {
-                    kind: "binary",
-                    ...bytes,
-                    contentType: capability.id === "asset-download" ? "application/octet-stream" : bytes.contentType,
-                    headers: { etag: `"${bytes.digest}"`, "cache-control": "public, max-age=31536000, immutable" },
-                };
-            } catch (error) {
-                if (error instanceof RepositoryCapabilityError || error instanceof RepositoryDiscoveryError) {
-                    const status = capability.bindings.find((binding) => binding.transport === "http")!.response
-                        .errorStatuses[error.code];
-                    if (status) {
-                        throw new ProviderCapabilityDispatchError(
-                            error.code,
-                            status,
-                            error.code,
-                            {},
-                            {
-                                message: error.message.slice(0, 2048),
-                                ...(error instanceof RepositoryCapabilityError && error.publicationCode
-                                    ? {
-                                          publicationCode: error.publicationCode,
-                                          ...(error.publicationResource
-                                              ? { publicationResource: error.publicationResource }
-                                              : {}),
-                                      }
-                                    : {}),
-                            },
-                        );
-                    }
-                }
-                throw error;
-            }
-        });
-    }
-    dispatcher.seal([contract]);
-    const relay = createProviderContractRelay(
-        routes,
+    await registerOfficialFeatures(
         dispatcher,
-        { siteId: "fixture", providerId: "ulvia/fixture.repository" },
-        NOOP_LOGGER,
+        {
+            repository: service,
+            resolveRepositoryAccount: async (context) => {
+                if (!context.subjectId) {
+                    throw new ProviderCapabilityDispatchError("ACTOR_UNAVAILABLE", 403);
+                }
+                return context.subjectId;
+            },
+        },
+        build.implementations.filter(({ contractId }) => contractId === "ulvia/repository"),
+        { providerId, scope: { siteId: "fixture", instanceId: "fixture-instance" } },
     );
+    dispatcher.seal(contracts);
+    const relay = createProviderContractRelay(routes, dispatcher, { siteId: "fixture", providerId }, NOOP_LOGGER);
     return async (request: Request): Promise<Response> => {
         const url = new URL(request.url);
         if (!url.pathname.startsWith(`${PREFIX}/`)) {

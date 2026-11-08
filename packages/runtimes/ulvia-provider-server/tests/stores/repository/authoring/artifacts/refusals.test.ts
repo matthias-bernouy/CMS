@@ -66,7 +66,7 @@ test("invalid source trees and unresolved manifests leave Repository business st
             await expect(f.artifacts.prepareArtifact("contract", source)).rejects.toThrow();
         }
         await expect(f.artifacts.prepareArtifact("provider-manifest", contractSnapshot())).rejects.toThrow();
-        expect(await f.application.service.invoke("catalogue-list", { kind: "contract", limit: 10 })).toMatchObject({
+        expect(await f.application.service.reads.catalogue({ kind: "contract", limit: 10 })).toMatchObject({
             releases: [],
         });
         expect((await f.application.namespaces.get("community"))?.revision).toBe(1);

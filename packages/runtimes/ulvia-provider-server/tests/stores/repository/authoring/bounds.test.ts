@@ -101,24 +101,18 @@ test("authoritative preflight checks account ownership and candidate namespace b
             await readFile(join(f.root, "preparations", prepared.preparationId, "prepared.json"), "utf8"),
         );
         const input = { namespace: "community", namespaceRevision: 1, canonicalJson: value.canonicalJson };
-        await expect(f.application.service.invoke("publication-check-collection", input)).rejects.toThrow(
+        await expect(f.application.service.publications.checkCollection(input, undefined)).rejects.toThrow(
             "authenticated",
         );
         const other = await f.application.account("other-account");
-        await expect(
-            f.application.service.invoke("publication-check-collection", input, undefined, {
-                accountId: other.accountId,
-            }),
-        ).rejects.toThrow();
+        await expect(f.application.service.publications.checkCollection(input, other.accountId)).rejects.toThrow();
         const changed = JSON.parse(value.canonicalJson.replaceAll("community--sample--", "foreign--sample--"));
         changed.publisherId = "foreign";
         changed.collectionId = "foreign/sample";
         await expect(
-            f.application.service.invoke(
-                "publication-check-collection",
+            f.application.service.publications.checkCollection(
                 { ...input, canonicalJson: canonicalizeIJson(changed) },
-                undefined,
-                { accountId: f.account.accountId },
+                f.account.accountId,
             ),
         ).rejects.toThrow("outside the owned namespace");
         expect(await f.authoring.sources("community", "community/sample", "1.0.0")).toBeNull();

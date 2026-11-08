@@ -73,3 +73,10 @@ template. Its generated release and Markdown are published, but the official
 Provider has no implementation claim, routes or discovery service. Selecting its
 exact release for execution fails before handlers or services are constructed.
 Private host lifecycle records are not an account-visible discovery API.
+
+Repository uses the same generated inventory and exact-pin registration. Its
+implementation is mounted only by an explicit Repository execution profile, with
+an injected typed domain facade and authenticated account-alias resolver. Public
+reads need no account lookup; private methods retain their domain ownership checks.
+The old registry registrar and handwritten manifest claim are removed. Native
+streamed downloads retain immutable cache/ETag headers and admitted byte limits.

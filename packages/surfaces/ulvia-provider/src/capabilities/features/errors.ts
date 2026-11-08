@@ -1,3 +1,4 @@
+import { CollectionPublicationError } from "@bernouy/cms-repository/collections";
 import { CollectionPublicationRecoveryError } from "@bernouy/cms-repository/repository/authoring";
 import { RepositoryRequestError } from "@bernouy/cms-repository/repository/publication";
 import { CmsFilesError } from "@bernouy/cms-files";
@@ -11,6 +12,13 @@ export function formatOfficialCapabilityFailure(
     failure: CapabilityFailure,
     { contractId, status, invocation }: CapabilityFailurePresentationContext,
 ): CapabilityFailurePresentation {
+    if (
+        contractId === "ulvia/repository" &&
+        (failure.cause instanceof CollectionPublicationError ||
+            (failure.cause instanceof RepositoryRequestError && failure.cause.publicationCode))
+    ) {
+        return { output: failure.output };
+    }
     if (
         contractId === "ulvia/cms.authoring" &&
         (failure.cause instanceof CollectionPublicationRecoveryError ||

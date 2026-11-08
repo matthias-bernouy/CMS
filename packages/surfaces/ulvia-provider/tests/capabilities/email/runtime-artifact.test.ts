@@ -53,6 +53,7 @@ console.log(JSON.stringify(runtime.implementations.map(({contractId}) => contrac
             "ulvia/cms.observability",
             "ulvia/cms.secrets",
             "ulvia/provider.connections",
+            "ulvia/repository",
         ]);
     } finally {
         await rm(root, { recursive: true, force: true });

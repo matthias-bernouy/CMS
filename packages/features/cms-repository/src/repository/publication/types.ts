@@ -1,11 +1,10 @@
-export type RepositoryArtifactKind = "collection" | "contract" | "provider-manifest";
-
-export type RemoteCoordinate = Readonly<{
-    kind: RepositoryArtifactKind;
-    publisherId: string;
-    id: string;
-    version: string;
-}>;
+import type { PublicationStateInput } from "cms-repository/application/registry/interfaces/inputs";
+import type {
+    PublicationStateOutput,
+    PublicationBeginOutput,
+} from "cms-repository/application/registry/interfaces/outputs";
+export type RemoteCoordinate = Readonly<PublicationStateInput>;
+export type RepositoryArtifactKind = RemoteCoordinate["kind"];
 
 export type PublicationAsset = Readonly<{ id: string; bytes: Uint8Array | Blob }>;
 
@@ -29,7 +28,7 @@ export type RepositoryPublicationResult = Readonly<{
     release: unknown;
 }>;
 
-export type RepositoryYank = Readonly<{ reason: string; yankedAt: string }>;
+export type RepositoryYank = NonNullable<PublicationStateOutput["yank"]>;
 export type RepositoryYankResult = RemoteCoordinate & Readonly<{ yank: RepositoryYank | null }>;
 
 export type PublicationUploadAsset = Readonly<{
@@ -44,12 +43,7 @@ export type PublicationUploadManifest = Readonly<{
     assets: readonly PublicationUploadAsset[];
 }>;
 
-export type PublicationUploadReceipt = Readonly<{
-    uploadId: string;
-    expiresAt: string;
-    /** Assets already durably staged and verified for this manifest. */
-    uploadedAssetIds: readonly string[];
-}>;
+export type PublicationUploadReceipt = PublicationBeginOutput;
 
 export type RepositoryUploadOwner = Readonly<{
     accountId: string;

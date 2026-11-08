@@ -30,7 +30,7 @@ test("collections, contracts and Provider manifests share one atomic preparation
         expect(refused).toHaveLength(2);
         expect(refused.every((result) => result.reason.message.includes("limit reached"))).toBeTrue();
         expect(await directories(f.host.root)).toHaveLength(64);
-        expect(await f.application.service.invoke("catalogue-list", { kind: "contract", limit: 10 })).toMatchObject({
+        expect(await f.application.service.reads.catalogue({ kind: "contract", limit: 10 })).toMatchObject({
             releases: [{ digest: published.digest }],
         });
         expect((await f.application.namespaces.get("community"))?.revision).toBe(1);

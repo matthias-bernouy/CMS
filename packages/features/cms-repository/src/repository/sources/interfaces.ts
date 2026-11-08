@@ -1,6 +1,5 @@
-import type { z } from "zod";
-import type { sourceSnapshotSchema } from "cms-repository/application/authoring/schemas/sources";
-export type RepositorySourceSnapshot = z.output<typeof sourceSnapshotSchema>;
+import type { SourceGetOutput } from "cms-repository/application/registry/interfaces/outputs";
+export type RepositorySourceSnapshot = NonNullable<SourceGetOutput>;
 
 export type ArtifactSourceKind = "contract" | "provider-manifest";
 

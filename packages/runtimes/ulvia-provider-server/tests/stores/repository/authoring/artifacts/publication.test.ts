@@ -7,11 +7,11 @@ test("contract docs and Provider manifests publish with retained sources without
     try {
         const contract = await f.artifacts.prepareArtifact("contract", contractSnapshot());
         expect(await f.artifacts.artifactSources("contract", "community", contractId, "1.0.0")).toBeNull();
-        expect(await f.application.service.invoke("catalogue-list", { kind: "contract", limit: 10 })).toMatchObject({
+        expect(await f.application.service.reads.catalogue({ kind: "contract", limit: 10 })).toMatchObject({
             releases: [],
         });
         expect(await f.artifacts.publishArtifact("contract", contract.preparationId, contract.digest)).toMatchObject({
-            kind: "contract",
+            kind: "contract" as const,
             added: true,
             contractId,
         });
@@ -23,7 +23,7 @@ test("contract docs and Provider manifests publish with retained sources without
         });
         const remote = new RemoteRepositoryClient(f.base);
         const pulled = await remote.pull({
-            kind: "contract",
+            kind: "contract" as const,
             publisherId: "community",
             id: contractId,
             version: "1.0.0",
@@ -59,35 +59,31 @@ test("private artifact sources reject other accounts and namespace/resource mism
         const prepared = await f.artifacts.prepareArtifact("contract", contractSnapshot());
         await f.artifacts.publishArtifact("contract", prepared.preparationId, prepared.digest);
         const input = {
-            kind: "contract",
+            kind: "contract" as const,
             namespace: "community",
             namespaceRevision: 1,
             id: contractId,
             version: "1.0.0",
         };
-        await expect(f.application.service.invoke("artifact-source-get", input)).rejects.toThrow("authenticated");
+        await expect(f.application.service.sources.getArtifact(input, undefined)).rejects.toThrow("authenticated");
         const other = await f.application.account("other-owner");
-        for (const capability of ["artifact-source-get", "artifact-source-put"]) {
-            await expect(
-                f.application.service.invoke(
-                    capability,
+        for (const call of [
+            () => f.application.service.sources.getArtifact(input, other.accountId),
+            () =>
+                f.application.service.sources.putArtifact(
                     { ...input, sourceJson: "malicious", releaseDigest: prepared.digest },
-                    undefined,
-                    { accountId: other.accountId },
+                    other.accountId,
                 ),
-            ).rejects.toThrow();
+        ]) {
+            await expect(call()).rejects.toThrow();
         }
         await expect(
-            f.application.service.invoke("artifact-source-get", { ...input, id: "foreign/notes" }, undefined, {
-                accountId: f.account.accountId,
-            }),
+            f.application.service.sources.getArtifact({ ...input, id: "foreign/notes" }, f.account.accountId),
         ).rejects.toThrow("Invalid source coordinate");
         await expect(
-            f.application.service.invoke(
-                "artifact-source-put",
+            f.application.service.sources.putArtifact(
                 { ...input, releaseDigest: `sha256:${"0".repeat(64)}`, sourceJson: "changed" },
-                undefined,
-                { accountId: f.account.accountId },
+                f.account.accountId,
             ),
         ).rejects.toThrow();
         expect((await f.artifacts.artifactSources("contract", "community", contractId, "1.0.0"))?.releaseDigest).toBe(

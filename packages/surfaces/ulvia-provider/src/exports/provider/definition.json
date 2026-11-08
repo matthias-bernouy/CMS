@@ -66,11 +66,6 @@
                     "optional": false
                 }
             ]
-        },
-        {
-            "contractId": "ulvia/repository",
-            "version": "1.0.0",
-            "requires": []
         }
     ],
     "requires": [

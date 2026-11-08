@@ -1,6 +1,6 @@
 import { implementFeature } from "@bernouy/ulvia-sdk";
 import { authoringFeature } from "@bernouy/cms-repository/features/authoring";
-import type { UlviaProviderFeatureServices } from "../../../ports/index";
+import type { UlviaProviderFeatureServices } from "../../../../ports/index";
 export const authoringImplementation = implementFeature(authoringFeature, {
     services: (dependencies: UlviaProviderFeatureServices) => {
         if (!dependencies.authoring) {

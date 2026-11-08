@@ -1,3 +1,5 @@
+import type { CatalogueListInput } from "cms-repository/application/registry/interfaces/inputs";
+import type { CatalogueListOutput } from "cms-repository/application/registry/interfaces/outputs";
 import type { RepositorySearch } from "../search/core/service";
 import type { RepositorySourceStore } from "../sources/interfaces";
 import type { RepositoryNamespaces } from "../namespaces/accounts/RepositoryNamespaces";
@@ -14,18 +16,7 @@ export interface RepositoryCapabilityPorts {
     readonly namespaces: RepositoryNamespaces;
     readonly registry: RepositoryPublicationRegistry;
     readonly uploads: RepositoryPublicationUploadStore;
-    readonly catalogue: (input: {
-        kind: RemoteCoordinate["kind"];
-        limit: number;
-        cursor?: string;
-        publisherId?: string;
-        channel?: "stable" | "beta" | "all";
-        id?: string;
-        version?: string;
-    }) => Promise<{
-        releases: readonly (RemoteCoordinate & { digest: string; metadata: Readonly<Record<string, unknown>> })[];
-        nextCursor?: string;
-    }>;
+    readonly catalogue: (input: CatalogueListInput) => Promise<CatalogueListOutput>;
     readonly release: (coordinate: RemoteCoordinate) => Promise<{
         stream: ReadableStream<Uint8Array>;
         contentType: string;
@@ -35,5 +26,4 @@ export interface RepositoryCapabilityPorts {
     readonly asset: (coordinate: RemoteCoordinate, assetId: string) => ReturnType<RepositoryCapabilityPorts["release"]>;
 }
 
-export type RepositoryCapabilityContext = Readonly<{ accountId?: string }>;
 export type RepositoryBinaryInput = Readonly<{ stream: ReadableStream<Uint8Array>; contentLength?: number }>;

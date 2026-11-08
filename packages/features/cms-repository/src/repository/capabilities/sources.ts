@@ -1,59 +1,80 @@
 import { RepositoryRequestError } from "../core/errors";
 import type { RepositoryCapabilityPorts } from "./interfaces";
+import type {
+    SourceGetInput,
+    SourcePutInput,
+    ArtifactSourceGetInput,
+    ArtifactSourcePutInput,
+} from "cms-repository/application/registry/interfaces/inputs";
+import type { RemoteCoordinate } from "../publication/types";
 import { isResourceId, resourcePublisher } from "@bernouy/ulvia-contracts/protocol";
+import { repositoryAccount } from "./account";
 
-export async function invokeRepositorySource(
-    ports: RepositoryCapabilityPorts,
-    id: string,
-    input: Readonly<Record<string, unknown>>,
-) {
-    if (!ports.sources) {
-        throw new RepositoryRequestError("NOT_FOUND");
-    }
-    const namespace = input.namespace as string;
-    const artifact = id.startsWith("artifact-");
-    const kind = artifact ? input.kind : "collection";
-    const collectionId = (artifact ? input.id : input.collectionId) as string;
-    const version = input.version as string;
-    if (
-        (artifact && kind !== "contract" && kind !== "provider-manifest") ||
-        !isResourceId(collectionId) ||
-        resourcePublisher(collectionId) !== namespace ||
-        !["collection", "contract", "provider-manifest"].includes(kind as string)
-    ) {
-        throw new RepositoryRequestError("REJECTED", "Invalid source coordinate");
-    }
-    if (kind !== "collection") {
-        if (kind !== "contract" && kind !== "provider-manifest") {
+export function repositorySources(ports: RepositoryCapabilityPorts) {
+    const owned = async <T>(
+        input: SourceGetInput | ArtifactSourceGetInput,
+        accountId: string | undefined,
+        operation: () => Promise<T>,
+    ) =>
+        ports.namespaces.execute(repositoryAccount(accountId), input.namespace, input.namespaceRevision, async () => {
+            if (!ports.sources) {
+                throw new RepositoryRequestError("NOT_FOUND");
+            }
+            const id = "collectionId" in input ? input.collectionId : input.id;
+            if (
+                ("kind" in input && input.kind !== "contract" && input.kind !== "provider-manifest") ||
+                !isResourceId(id) ||
+                resourcePublisher(id) !== input.namespace
+            ) {
+                throw new RepositoryRequestError("REJECTED", "Invalid source coordinate");
+            }
+            return operation();
+        });
+    const verifyRelease = async (coordinate: RemoteCoordinate, digest: string) => {
+        const release = await ports.release(coordinate);
+        if (!release) {
+            throw new RepositoryRequestError("NOT_FOUND");
+        }
+        await release.stream.cancel();
+        if (release.digest !== digest) {
             throw new RepositoryRequestError("REJECTED");
         }
-        if (id === "artifact-source-get") {
-            return ports.sources.getArtifact(kind, namespace, collectionId, version);
-        }
-    } else if (id === "source-get") {
-        return ports.sources.get(namespace, collectionId, version);
-    }
-    const release = await ports.release({
-        kind: kind as "collection" | "contract" | "provider-manifest",
-        publisherId: namespace,
-        id: collectionId,
-        version,
-    });
-    if (!release) {
-        throw new RepositoryRequestError("NOT_FOUND");
-    }
-    await release.stream.cancel();
-    if (release.digest !== input.releaseDigest) {
-        throw new RepositoryRequestError("REJECTED");
-    }
-    const snapshot = {
-        sourceJson: input.sourceJson as string,
-        releaseDigest: input.releaseDigest as string,
     };
-    if (kind === "contract" || kind === "provider-manifest") {
-        await ports.sources.putArtifact(kind, namespace, collectionId, version, snapshot);
-    } else {
-        await ports.sources.put(namespace, collectionId, version, snapshot);
-    }
-    return null;
+    return Object.freeze({
+        getCollection: (input: SourceGetInput, accountId?: string) =>
+            owned(input, accountId, () => ports.sources!.get(input.namespace, input.collectionId, input.version)),
+        getArtifact: (input: ArtifactSourceGetInput, accountId?: string) =>
+            owned(input, accountId, () =>
+                ports.sources!.getArtifact(input.kind, input.namespace, input.id, input.version),
+            ),
+        putCollection: (input: SourcePutInput, accountId?: string) =>
+            owned(input, accountId, async () => {
+                await verifyRelease(
+                    {
+                        kind: "collection",
+                        publisherId: input.namespace,
+                        id: input.collectionId,
+                        version: input.version,
+                    },
+                    input.releaseDigest,
+                );
+                await ports.sources!.put(input.namespace, input.collectionId, input.version, {
+                    sourceJson: input.sourceJson,
+                    releaseDigest: input.releaseDigest,
+                });
+                return null;
+            }),
+        putArtifact: (input: ArtifactSourcePutInput, accountId?: string) =>
+            owned(input, accountId, async () => {
+                await verifyRelease(
+                    { kind: input.kind, publisherId: input.namespace, id: input.id, version: input.version },
+                    input.releaseDigest,
+                );
+                await ports.sources!.putArtifact(input.kind, input.namespace, input.id, input.version, {
+                    sourceJson: input.sourceJson,
+                    releaseDigest: input.releaseDigest,
+                });
+                return null;
+            }),
+    });
 }

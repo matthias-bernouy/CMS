@@ -52,7 +52,6 @@ import { correlatedRepositoryFetch } from "../../gateway/repositoryFetch";
 import { createInstanceDiagnostics, connectInstanceDiagnostics } from "./diagnostics";
 import { createInstanceAuth } from "../../authentication/createInstanceAuth";
 import { createInstanceRepository } from "../../stores/repository/registry";
-import { registerRepositoryCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
 import { createRepositoryAuthoring } from "../../stores/repository/composition";
 import { McpAuthorization } from "@bernouy/cms-auth/oauth";
@@ -354,6 +353,7 @@ export class ProviderInstanceHost {
                     ]),
                     ...createPublicDelivery(stores, gateway, instance.cmsUrl),
                     authoring,
+                    repository: registry?.service,
                     providerConnections,
                     emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
@@ -390,18 +390,6 @@ export class ProviderInstanceHost {
                     executeKeyed: keyedExecution.execute,
                 },
             );
-            if (registry && registryPin) {
-                const contract = contracts.find(
-                    ({ release, digest }) =>
-                        release.contractId === registryPin.contractId &&
-                        release.version === registryPin.version &&
-                        digest === registryPin.digest,
-                );
-                if (!contract) {
-                    throw new Error("Repository profile contract is unavailable");
-                }
-                registerRepositoryCapabilities(dispatcher, registry.service, contract, gateway);
-            }
             operationRecovery = new RecoverySupervisor(
                 (limit) => instanceOperations.recover(limit),
                 undefined,

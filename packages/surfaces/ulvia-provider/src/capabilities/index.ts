@@ -1,3 +1,4 @@
+import { repositoryAccountResolver } from "./features/services/repository";
 import type { ProviderCapabilityRegistry } from "../dispatch/registry";
 import type { UlviaProviderDependencies, UlviaProviderGateway, UlviaProviderManagement } from "../ports/index";
 import { createContentContributions } from "./features/services/content";
@@ -30,6 +31,8 @@ export async function registerOfficialProviderCapabilities(
             {
                 ...dependencies,
                 governance: gateway,
+                resolveRepositoryAccount:
+                    dependencies.resolveRepositoryAccount ?? (gateway ? repositoryAccountResolver(gateway) : undefined),
                 contributions: dependencies.collections ? createContentContributions(dependencies) : undefined,
             },
             enabledContracts,
@@ -42,7 +45,6 @@ export { loadOfficialFeatures } from "./features";
 
 export { registerOfficialFeatures, registerInstallationCapabilities };
 export type { UlviaProviderFeatureServices } from "../ports/index";
-export { registerRepositoryCapabilities } from "./registry";
 export {
     CollectionSources,
     registerCollectionInstallationCapabilities,
