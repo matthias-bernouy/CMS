@@ -16,7 +16,7 @@ export class ProviderDocumentation {
         modelOptions: EmbeddingModelOptions,
         private readonly open: (
             instance: ProviderInstanceRecord,
-        ) => Promise<ResourceLease<{ documentation: CmsDocumentation }>>,
+        ) => Promise<ResourceLease<{ documentation: Pick<CmsDocumentation, "prepare"> }>>,
         private readonly logger: Logger,
     ) {
         this.model = new TransformersEmbeddings({ ...modelOptions, threads: 2 });
@@ -25,23 +25,15 @@ export class ProviderDocumentation {
         );
     }
 
-    start(instances: readonly ProviderInstanceRecord[]): void {
+    start(): void {
         if (this.startup || this.stopping) {
             return;
         }
         this.queue.request("model", (signal) => this.model.initialize(signal));
-        this.startup = (async () => {
-            await this.queue.idle();
-            for (const instance of instances) {
-                if (this.stopping) {
-                    break;
-                }
-                if (instance.status === "ready") {
-                    this.request(instance);
-                    await this.queue.idle();
-                }
-            }
-        })().catch((error) => this.logger.warn("provider.documentation.startup.failed", {}, error));
+        // Tenant indexing is requested by its lazy composition or an actual documentation query.
+        this.startup = this.queue
+            .idle()
+            .catch((error) => this.logger.warn("provider.documentation.startup.failed", {}, error));
     }
 
     request(instance: ProviderInstanceRecord, changed = false): void {

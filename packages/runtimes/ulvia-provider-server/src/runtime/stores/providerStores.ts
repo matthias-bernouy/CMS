@@ -28,7 +28,11 @@ import { MongoClient } from "mongodb";
 import { CmsObservability } from "@bernouy/observability";
 import { MongoJournalStore } from "@bernouy/observability/mongo";
 import type { RuntimeKekConfig } from "../../runtimeEnvKek";
-import { CMS_REPOSITORY_FENCED_MUTATIONS, COLLECTION_STORE_FENCED_MUTATIONS } from "./collections/siteWritePolicy";
+import {
+    CMS_REPOSITORY_FENCED_MUTATIONS,
+    COLLECTION_STORE_FENCED_MUTATIONS,
+    FILES_FENCED_MUTATIONS,
+} from "./collections/siteWritePolicy";
 import { createEnvelopeSecretCrypto } from "./envelopeCrypto";
 import { CmsFilesService, CmsImageDerivatives } from "@bernouy/files";
 import { MongoCmsFilesStore } from "@bernouy/files/mongo";
@@ -155,18 +159,23 @@ export async function createProviderStores(
         await crypto.subtle.digest("SHA-256", new TextEncoder().encode(env.CMS_SESSION_SECRET + ":cms-files")),
     );
     const providerBlobs = new LocalFsBlobStore(join(env.CMS_FILES_DIR, "blobs"));
-    const providerFiles = new CmsFilesService({
-        store: providerFilesStore,
-        blobs: providerBlobs,
-        signingKey,
-        publicBaseUrl: env.CMS_PUBLIC_URL,
-        derivatives: new CmsImageDerivatives({
+    const providerFiles = withSiteWriteFence(
+        new CmsFilesService({
             store: providerFilesStore,
             blobs: providerBlobs,
-            transformer: new SharpImageTransformer(),
-            reportError: (error) => logger.error("file.image.derivative.failed", {}, error),
+            signingKey,
+            publicBaseUrl: env.CMS_PUBLIC_URL,
+            derivatives: new CmsImageDerivatives({
+                store: withSiteWriteFence(providerFilesStore, upgradeStorage, SCOPE_ID, ["putFile"]),
+                blobs: providerBlobs,
+                transformer: new SharpImageTransformer(),
+                reportError: (error) => logger.error("file.image.derivative.failed", {}, error),
+            }),
         }),
-    });
+        upgradeStorage,
+        SCOPE_ID,
+        FILES_FENCED_MUTATIONS,
+    );
 
     const users = new MongoUsersRepository(db, fieldCrypto);
     const credentials = new MongoLocalCredentialStore(db, fieldCrypto);

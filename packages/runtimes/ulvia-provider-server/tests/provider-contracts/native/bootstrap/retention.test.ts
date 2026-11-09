@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { ProviderExecutionSupport } from "../../../../src/runtime/instances/system/execution/support";
 import { assertHostedReleaseRetention } from "../../../../src/runtime/instances/system/retention";
 import { installedFixture } from "../installedFixture";
+import { retentionRecords } from "../../../hosting/persistence/retentionFixture";
 
 test("retention of ready and disabled instances never opens an unavailable installation kit", async () => {
     const f = await installedFixture();
@@ -18,9 +19,11 @@ test("retention of ready and disabled instances never opens an unavailable insta
     for (const status of ["ready", "disabled"] as const) {
         await assertHostedReleaseRetention(
             f.support,
-            [{ ...f.instance, status }],
-            [],
-            async () => f.support.releases.map((pin) => ({ ...pin, location: f.instance.id })),
+            retentionRecords([{ ...f.instance, status }]),
+            {
+                assertPlan: async () => undefined,
+                required: async () => f.support.releases.map((pin) => ({ ...pin, location: f.instance.id })),
+            },
             system,
         );
     }
@@ -37,9 +40,8 @@ test("unfinished provisioning still requires its exact kit and cannot silently u
     await expect(
         assertHostedReleaseRetention(
             f.support,
-            [{ ...f.instance, status: "provisioning" }],
-            [],
-            async () => [],
+            retentionRecords([{ ...f.instance, status: "provisioning" }]),
+            { assertPlan: async () => undefined, required: async () => [] },
             system,
         ),
     ).rejects.toThrow("Missing exact kit");
@@ -84,11 +86,21 @@ test("unsupported unfinished transition formats refuse before catalogue reads or
             throw new Error("Must not select new image resources");
         },
     };
-    await expect(assertHostedReleaseRetention(f.support, [f.instance], [unsupported], read, image)).rejects.toThrow(
-        "original image",
-    );
     await expect(
-        assertHostedReleaseRetention(f.support, [{ ...f.instance, status: "upgrading" }], [], read, image),
+        assertHostedReleaseRetention(
+            f.support,
+            retentionRecords([f.instance], [unsupported]),
+            { assertPlan: async () => undefined, required: read },
+            image,
+        ),
+    ).rejects.toThrow("original image");
+    await expect(
+        assertHostedReleaseRetention(
+            f.support,
+            retentionRecords([{ ...f.instance, status: "upgrading" }]),
+            { assertPlan: async () => undefined, required: read },
+            image,
+        ),
     ).rejects.toThrow("original image");
     expect(reads).toBe(0);
 });

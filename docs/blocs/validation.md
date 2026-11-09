@@ -10,11 +10,12 @@ Content-owned rendering pipeline exposed through native delivery resources.
 Run the local CMS with:
 
 ```bash
-bun run ulvia -- services start --version 0.0.1-beta
-bun run ulvia -- instance create preview
+bun run images:build --version 0.1.0-shared-hosting all
+bun run ulvia -- start --domain control.localhost --version 0.1.0-shared-hosting
 ```
 
-Choose an exact published stack version on first startup from source. Later
+Create the preview site through Control's Hosting capabilities and configure it
+at its own `/.cms/setup`. First startup requires an exact compatible image version. Later
 `bun run ulvia -- start` reuses the installed digests. Source builds and
 `release` do not update running server images or installed collections; use
 the explicit image and collection upgrade workflows. See

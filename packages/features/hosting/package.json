@@ -1,0 +1,29 @@
+{
+    "name": "@bernouy/hosting",
+    "version": "1.0.0",
+    "description": "Provider-owned hosting authority, domain admission and bounded instance routing.",
+    "license": "MIT",
+    "type": "module",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./memory": "./src/exports/memory.ts",
+        "./mongo": "./src/exports/mongo.ts",
+        "./instances": "./src/exports/instances.ts",
+        "./feature": "./src/application/feature.ts",
+        "./routing": "./src/exports/routing.ts",
+        "./tls": "./src/exports/tls.ts",
+        "./caddy": "./src/exports/caddy.ts"
+    },
+    "dependencies": {
+        "zod": "4.6.7",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*"
+    },
+    "peerDependencies": {
+        "mongodb": "^7.8.0",
+        "typescript": "^7.0.2"
+    },
+    "devDependencies": {
+        "@bernouy/cms-gateway": "workspace:*"
+    }
+}

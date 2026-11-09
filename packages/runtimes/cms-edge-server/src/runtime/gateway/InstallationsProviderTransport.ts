@@ -5,22 +5,39 @@ export class InstallationsProviderTransport {
 
     constructor(
         endpoint: string,
-        private readonly token: string,
+        private readonly token: string | (() => Promise<string>),
         private readonly fetcher: typeof fetch = fetch,
+        private readonly renewToken?: () => Promise<string>,
     ) {
-        assertProviderConnectionToken(token);
+        if (typeof token === "string") {
+            assertProviderConnectionToken(token);
+        }
         this.#endpoint = providerEndpoint(endpoint);
     }
 
-    request(path: string, init: RequestInit = {}): Promise<Response> {
+    async request(path: string, init: RequestInit = {}): Promise<Response> {
         const headers = new Headers(init.headers);
         headers.delete("host");
-        headers.set("authorization", `Bearer ${this.token}`);
-        return this.fetcher(this.url(path), {
-            ...init,
-            headers,
-            redirect: "manual",
-        });
+        const token = typeof this.token === "string" ? this.token : await this.token();
+        assertProviderConnectionToken(token);
+        headers.set("authorization", `Bearer ${token}`);
+        const send = () =>
+            this.fetcher(this.url(path), {
+                ...init,
+                headers,
+                redirect: "manual",
+            });
+        const response = await send();
+        // Authentication rejects before capability execution. Never retry a business refusal
+        // or a body which cannot be replayed; capability dispatch itself uses another transport.
+        if (response.status !== 401 || !this.renewToken || (init.body !== undefined && typeof init.body !== "string")) {
+            return response;
+        }
+        await response.body?.cancel();
+        const renewed = await this.renewToken();
+        assertProviderConnectionToken(renewed);
+        headers.set("authorization", `Bearer ${renewed}`);
+        return send();
     }
 
     private url(path: string): URL {

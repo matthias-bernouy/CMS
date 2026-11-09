@@ -55,6 +55,7 @@ Provider remain surfaces; documentation search remains a feature.
 | --- | --- |
 | `@bernouy/documentation` | Selection-bound Markdown retrieval and hybrid lexical/semantic search, with explicit runtime adapters for multilingual embeddings and derived Mongo vectors. |
 | `@bernouy/content` | Provider-neutral Pages, routes, Blocs, settings, themes, metadata, structured data, indexing, sitemap snapshots, rendering and generic contribution inputs. |
+| `@bernouy/hosting` | Persisted Control authority, instance lifecycle and recoverable provisioning, exclusive domain admission and bounded routing reads; SDK hosting management and explicit memory/Mongo adapters. |
 | `@bernouy/observability` | Instance-scoped journal validation, bounded collection, query and retention services; explicit memory and Mongo adapters. |
 | `@bernouy/files` | SDK feature and default implementation for namespaces, credentials, streaming uploads, immutable files, private signatures and image representations. |
 | `@bernouy/repository` | Persistent release catalogues, publication, installation/selection workflows, authored collection admission, content projections, upgrades and build tooling. |

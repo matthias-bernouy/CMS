@@ -1,3 +1,4 @@
+import type { RepositoryFetch } from "repository/repository-http/getBytes";
 import { publishSourceBuild } from "./transport/build";
 import { createHash } from "node:crypto";
 import { isSha256Digest } from "@bernouy/binary-media";
@@ -20,9 +21,11 @@ export class RemoteRepositoryWriter {
     constructor(
         base: URL,
         private readonly credential?: RepositoryNamespaceCredential,
+        request?: RepositoryFetch,
     ) {
         this.connection = new RepositoryConnection(base.origin, credential, {
             allowInsecureHttp: base.protocol === "http:",
+            request,
         });
     }
     async push(envelope: PublicationEnvelope): Promise<{ added: boolean; digest: string }> {

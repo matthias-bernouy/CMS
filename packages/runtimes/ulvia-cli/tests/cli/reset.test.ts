@@ -25,7 +25,6 @@ describe("Ulvia local data lifecycle", () => {
             expect(await readFile(join(root, "keep.txt"), "utf8")).toBe("keep");
             expect(await Array.fromAsync(new Bun.Glob("**/*").scan(paths.repository))).toEqual([]);
             expect(await Array.fromAsync(new Bun.Glob("**/*").scan(paths.services))).toEqual([]);
-            expect(await Array.fromAsync(new Bun.Glob("**/*").scan(paths.instances))).toEqual([]);
         } finally {
             await rm(root, { recursive: true, force: true });
         }
@@ -51,16 +50,16 @@ describe("Ulvia local data lifecycle", () => {
         }
     });
 
-    test("resets an instance directory left empty by an interrupted creation", async () => {
-        const root = await mkdtemp(join(tmpdir(), "ulvia-stack-partial-instance-"));
+    test("preserves unknown root directories instead of treating them as local Edge state", async () => {
+        const root = await mkdtemp(join(tmpdir(), "ulvia-stack-foreign-root-"));
         const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
         try {
             await ensureUlviaPaths(paths);
-            await mkdir(join(paths.instances, "preview"), { recursive: true });
-
+            const foreign = join(root, "instances", "preview");
+            await mkdir(foreign, { recursive: true });
+            await writeFile(join(foreign, "runtime.json"), "foreign data");
             await resetLocalData(paths);
-
-            expect(await Array.fromAsync(new Bun.Glob("**/*").scan(paths.instances))).toEqual([]);
+            expect(await readFile(join(foreign, "runtime.json"), "utf8")).toBe("foreign data");
         } finally {
             await rm(root, { recursive: true, force: true });
         }

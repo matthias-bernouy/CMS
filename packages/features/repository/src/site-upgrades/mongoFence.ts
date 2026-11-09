@@ -27,6 +27,7 @@ export class MongoSiteWriteFence implements SiteWriteFence {
         private readonly maintenance: Collection<MaintenanceDocument>,
         private readonly permits: Collection<WritePermitDocument>,
         timing: WriteFenceTiming = {},
+        private readonly invalidateResources?: (siteId: string) => Promise<void>,
     ) {
         this.leaseMs = timing.leaseMs ?? LEASE_MS;
         this.heartbeatMs = timing.heartbeatMs ?? HEARTBEAT_MS;
@@ -114,6 +115,7 @@ export class MongoSiteWriteFence implements SiteWriteFence {
     async releaseMaintenance(siteId: string, upgradeId: string): Promise<void> {
         const owner = this.owners.get(`${siteId}:${upgradeId}`);
         if (owner && !owner.lost) {
+            await this.invalidateResources?.(siteId);
             await this.maintenance.updateOne(
                 { _id: siteId, "maintenance.id": upgradeId, "maintenance.token": owner.token },
                 { $set: {}, $unset: { maintenance: "" } },
@@ -143,6 +145,8 @@ export class MongoSiteWriteFence implements SiteWriteFence {
         } finally {
             clearInterval(heartbeat);
             this.permitOwners.delete(permitId);
+            // Keep the durable permit if invalidation fails: an uncertain write cannot become cacheable.
+            await this.invalidateResources?.(siteId);
             await this.permits.deleteOne({ _id: permitId });
         }
     }
@@ -242,6 +246,7 @@ export class MongoSiteWriteFence implements SiteWriteFence {
         }
         const active = await this.hasActiveUpgrade(siteId);
         if (!active) {
+            await this.invalidateResources?.(siteId);
             await this.maintenance.updateOne(
                 { _id: siteId, "maintenance.token": document.maintenance.token },
                 { $set: {}, $unset: { maintenance: "" } },

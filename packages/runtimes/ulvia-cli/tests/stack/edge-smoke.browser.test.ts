@@ -1,9 +1,7 @@
-import { localEdgeProjectName } from "../../src/runtime/stack/orchestration/state";
-import { resolveUlviaPaths } from "../../src/runtime/paths";
 import { publishSmokeRepository } from "./fixtures/repositoryBootstrap";
 import { captureCapabilityFailures } from "./fixtures/browserDiagnostics";
 import { expect, test } from "bun:test";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
@@ -14,13 +12,16 @@ import { prepareSmokeRuntimeImages } from "./fixtures/runtimeImages";
 import { prepareSmokeCollectionRelease } from "./fixtures/collectionReleases";
 import { runEdgeSmoke, verifyEdgeStateAfterRestart } from "./edgeSmoke/flows";
 import { verifySecondInstanceIsolation } from "./edgeSmoke/providerAccess";
+import { initializeSmokeRegistry, prepareHostedSites, siteCredentials } from "./edgeSmoke/hosting";
+import { assertEmptySite } from "./edgeSmoke/setup";
+import { verifyPublishedAcrossEdges } from "./edgeSmoke/lifecycle";
+import { assertPortAvailable, writeFailureArtifacts } from "./edgeSmoke/diagnostics";
 
 const smoke = process.env.ULVIA_RUN_EDGE_SMOKE === "1" ? test : test.skip;
 const PORTS = { edge: 15_100, registryBridge: 15_102, provider: 15_103 } as const;
-const EDGE_URL = `http://default.localhost:${PORTS.edge}`;
 
 smoke(
-    "fresh local installation publishes a Page and preserves Edge state",
+    "fresh shared hosting configures empty Control, publishes an isolated site and preserves it across restart and two Edges",
     async () => {
         assertPortAvailable(PORTS.edge, "shared proxy");
         assertPortAvailable(PORTS.registryBridge, "test Registry ingress");
@@ -38,131 +39,71 @@ smoke(
         let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
         let browserErrors: string[] = [];
         let browserFailures = () => "(none)";
+        const options = {
+            environment,
+            log: (message: string) => {
+                output += `${message}\n`;
+            },
+        };
         try {
-            report("prepare local runtime image pins");
+            console.info("[edge-smoke] prepare immutable resources and fresh shared services");
             const version = await prepareSmokeRuntimeImages(environment);
             await bootstrapOfficialRepository(join(data, "repository"));
             await runCli(["release", smokeCollection], { environment, log: () => undefined });
-            const compatibleUpgrade = await prepareSmokeCollectionRelease(smokeCollection, data, "1.1.0");
-            const majorUpgrade = await prepareSmokeCollectionRelease(smokeCollection, data, "2.0.0");
-            const beta = await prepareSmokeCollectionRelease(smokeCollection, data, "2.1.0-beta.1");
-            await runCli(["release", compatibleUpgrade], { environment, log: () => undefined });
-            await runCli(["release", majorUpgrade], { environment, log: () => undefined });
-            await runCli(["release", beta], { environment, log: () => undefined });
-            await runCli(["services", "start", "--version", version], {
-                environment,
-                log: (message) => (output += `${message}\n`),
-            });
-            await runCli(["instance", "create", "registry"], {
-                environment,
-                log: (message) => (output += `${message}\n`),
-            });
+            for (const version of ["1.1.0", "2.0.0", "2.1.0-beta.1"]) {
+                const source = await prepareSmokeCollectionRelease(smokeCollection, data, version);
+                await runCli(["release", source], { environment, log: () => undefined });
+            }
+            await runCli(["start", "--version", version], options);
             browser = await chromium.launch({ headless: true });
-            const registryPage = await browser.newPage();
-            const registryCredentials = JSON.parse(
-                await readFile(join(data, "instances/registry/runtime.json"), "utf8"),
-            );
-            await registryPage.goto(`http://registry.localhost:${PORTS.edge}/.cms/setup`);
-            await registryPage.getByLabel("Email address").fill(registryCredentials.adminEmail);
-            await registryPage.getByLabel("Password", { exact: true }).fill(registryCredentials.adminPassword);
-            await registryPage.getByRole("button", { name: "Continue", exact: false }).click();
-            await registryPage.getByRole("button", { name: "A new Repository", exact: false }).waitFor();
-            await registryPage.screenshot({ path: "/tmp/ulvia-setup-repository.png", fullPage: true });
-            await registryPage.setViewportSize({ width: 375, height: 812 });
-            expect(await registryPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
-                true,
-            );
-            await registryPage.screenshot({ path: "/tmp/ulvia-setup-repository-mobile.png", fullPage: true });
-            await registryPage.setViewportSize({ width: 1440, height: 1000 });
-            await registryPage.getByRole("button", { name: "A new Repository", exact: false }).click();
-            await registryPage
-                .getByRole("button", { name: "Start from scratch", exact: false })
-                .waitFor({ timeout: 120_000 });
-            await registryPage.close();
+            console.info("[edge-smoke] native empty Control and two logical sites through hosting contracts");
+            const { control, registry, primary } = await prepareHostedSites(browser, data, PORTS.edge);
+            await initializeSmokeRegistry(browser, registry);
             await publishSmokeRepository(environment, PORTS.registryBridge);
-            await runCli(["instance", "create", "default"], {
-                environment,
-                log: (message) => (output += `${message}\n`),
-            });
-            await waitForHttp(`${EDGE_URL}/readyz`);
-            const credentials = JSON.parse(
-                await readFile(join(data, "instances", "default", "runtime.json"), "utf8"),
-            ) as {
-                adminEmail: string;
-                adminPassword: string;
-            };
             const page = await browser.newPage({ locale: "en-US", viewport: { width: 1440, height: 1000 } });
             page.setDefaultTimeout(15_000);
             browserFailures = captureCapabilityFailures(page);
             page.on("pageerror", (error) => browserErrors.push(error.stack ?? error.message));
-
-            report("initial browser journey");
-            await runEdgeSmoke(
-                page,
-                credentials,
-                EDGE_URL,
-                `http://${localEdgeProjectName(resolveUlviaPaths(environment), "registry")}-edge:3000`,
-            );
-            const journal: string[] = [];
-            await runCli(["instance", "logs", "default", "edge", "--event", "edge.started", "--json"], {
-                environment,
-                log: (line) => journal.push(line),
-            });
-            expect(journal.some((line) => JSON.parse(line).event === "edge.started")).toBe(true);
-            report("second instance isolation");
-            await verifySecondInstanceIsolation(data, credentials, EDGE_URL, `http://127.0.0.1:${PORTS.provider}`);
-
+            console.info("[edge-smoke] explicit collection publication and Page isolation");
+            await runEdgeSmoke(page, siteCredentials(primary), primary.origin, registry.origin);
+            await verifySecondInstanceIsolation(primary, registry);
+            await assertEmptySite(control);
             expect(browserErrors).toEqual([]);
             await browser.close();
             browser = undefined;
-            report("first runtime shutdown");
             const status: string[] = [];
             await runCli(["services", "status"], { environment, log: (message) => status.push(message) });
-            await runCli(["instance", "status", "default"], { environment, log: (message) => status.push(message) });
             expect(status).toContain("Shared services: running");
-            expect(status).toContain("Instance default: running");
-            expect(status).toContain("Ulvia Provider: running / healthy");
-            expect(status.some((line) => line.startsWith("Repository:"))).toBe(false);
-            await runCli(["instance", "stop", "default"], { environment, log: () => undefined });
-            await runCli(["services", "stop"], { environment, log: () => undefined });
-            const stoppedStatus: string[] = [];
-            await runCli(["services", "status"], { environment, log: (message) => stoppedStatus.push(message) });
-            expect(stoppedStatus).toContain("Shared services: stopped");
-
-            output += "\n--- persisted-state restart ---\n";
-            report("persisted-state restart");
-            await runCli(["start"], { environment, log: (message) => (output += `${message}\n`) });
-            await waitForHttp(`${EDGE_URL}/readyz`);
+            expect(status).toContain("edge-1: running / healthy");
+            expect(status.some((line) => line.startsWith("edge-2:"))).toBe(false);
+            await runCli(["services", "stop"], options);
+            const stopped: string[] = [];
+            await runCli(["services", "status"], { environment, log: (message) => stopped.push(message) });
+            expect(stopped).toContain("Shared services: stopped");
+            console.info("[edge-smoke] persisted-state restart");
+            await runCli(["start"], options);
             browser = await chromium.launch({ headless: true });
             const restartedPage = await browser.newPage({ locale: "en-US", viewport: { width: 1440, height: 1000 } });
-            restartedPage.setDefaultTimeout(15_000);
             browserFailures = captureCapabilityFailures(restartedPage);
-            const restartErrors: string[] = [];
-            browserErrors = restartErrors;
-            restartedPage.on("pageerror", (error) => restartErrors.push(error.stack ?? error.message));
-
-            report("persisted browser journey");
-            await verifyEdgeStateAfterRestart(restartedPage, credentials, EDGE_URL);
-            expect(restartErrors).toEqual([]);
-            await browser.close();
-            browser = undefined;
-            report("second runtime shutdown");
-            await runCli(["instance", "stop", "default"], { environment, log: () => undefined });
-            await runCli(["services", "stop"], { environment, log: () => undefined });
-        } catch (error) {
-            await runCli(["services", "logs", "provider"], {
-                environment,
-                log: (message) => (output += `${message}\n`),
-            }).catch(() => undefined);
-            await runCli(["instance", "logs", "default", "provider", "--level", "error", "--json", "--stack"], {
-                environment,
-                log: (message) => (output += `${message}\n`),
-            }).catch(() => undefined);
+            browserErrors = [];
+            restartedPage.on("pageerror", (error) => browserErrors.push(error.stack ?? error.message));
+            await verifyEdgeStateAfterRestart(restartedPage, siteCredentials(primary), primary.origin);
+            await assertEmptySite(control);
+            await assertEmptySite(registry);
+            console.info("[edge-smoke] two warmed Edge processes and content invalidation");
+            await runCli(["configure", "hosting", "--edges", "2"], options);
+            await runCli(["start"], options);
+            await verifyPublishedAcrossEdges(environment, primary, control);
+            expect(browserErrors).toEqual([]);
+        } catch (cause) {
+            for (const service of ["provider", "edge-1", "proxy"]) {
+                await runCli(["services", "logs", service], options).catch(() => undefined);
+            }
             output += `\nCapability HTTP failures:\n${browserFailures()}\n`;
             await writeFailureArtifacts(output, browser);
             throw new Error(
-                `${error instanceof Error ? error.message : String(error)}\n\nBrowser errors:\n${browserErrors.join("\n") || "(none)"}\n\nRuntime output:\n${output}`,
-                { cause: error },
+                `${cause instanceof Error ? cause.message : String(cause)}\nBrowser errors:\n${browserErrors.join("\n") || "(none)"}\nRuntime output:\n${output}`,
+                { cause },
             );
         } finally {
             await browser?.close();
@@ -172,68 +113,3 @@ smoke(
     },
     900_000,
 );
-
-function report(step: string): void {
-    console.info(`[edge-smoke] ${step}`);
-}
-
-async function waitForHttp(url: string): Promise<void> {
-    const deadline = Date.now() + 90_000;
-    while (Date.now() < deadline) {
-        const ready = await fetch(url, { redirect: "manual" }).then(
-            (response) => response.status < 500,
-            () => false,
-        );
-        if (ready) {
-            return;
-        }
-        await Bun.sleep(250);
-    }
-    throw new Error("Local Edge did not become ready");
-}
-
-function assertPortAvailable(port: number, label: string): void {
-    try {
-        const probe = Bun.serve({
-            hostname: "127.0.0.1",
-            port,
-            fetch: () => new Response(null, { status: 204 }),
-        });
-        probe.stop(true);
-    } catch (error) {
-        const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
-        if (code === "EADDRINUSE") {
-            throw new Error(
-                `Edge smoke cannot start because the ${label} port ${port} is already in use. Stop the existing local Ulvia installation and retry.`,
-            );
-        }
-        throw error;
-    }
-}
-
-async function writeFailureArtifacts(
-    output: string,
-    browser: Awaited<ReturnType<typeof chromium.launch>> | undefined,
-): Promise<void> {
-    const directory = resolve(process.env.ULVIA_SMOKE_ARTIFACTS_DIR ?? "artifacts/edge-smoke");
-    await mkdir(directory, { recursive: true });
-    await writeFile(join(directory, "runtime.log"), output, "utf8");
-    const page = browser
-        ?.contexts()
-        .flatMap((context) => context.pages())
-        .find((page) => !page.isClosed());
-    if (page) {
-        await Promise.all([
-            page
-                .screenshot({ path: join(directory, "failure.png"), fullPage: true, timeout: 5_000 })
-                .catch(() => undefined),
-            Promise.race([
-                page
-                    .content()
-                    .then((html) => writeFile(join(directory, "failure.html"), html, "utf8"))
-                    .catch(() => undefined),
-                Bun.sleep(5_000),
-            ]),
-        ]);
-    }
-}

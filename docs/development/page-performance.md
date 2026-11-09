@@ -101,9 +101,10 @@ It combines identity resolution, optional root delegation and token issuance.
 The Edge sends the resulting business request through ordinary pinned HTTP.
 Commands still resolve identity before their start audit. Failed preparation or
 transport closes any issued root ticket; a binary response retains it until
-completion or cancellation. New system installations use manifest and Installations `1.3.0`; Registry is enabled
-explicitly during native setup. There is no named profile catalogue. After changing the control contract,
-restart the stateless Edge so its startup report selects the exact ready pin.
+completion or cancellation. New system installations use manifest and Installations
+`1.4.0`; Registry is enabled explicitly during native setup. Shared Edges resolve
+current instance revisions at each ingress and reopen affected contexts after an
+explicit system upgrade. No named profile catalogue exists.
 
 Repository execution metadata can be read through `ProviderExecutionStateReader`.
 The Mongo adapter reads only the requested installation revision headers, then

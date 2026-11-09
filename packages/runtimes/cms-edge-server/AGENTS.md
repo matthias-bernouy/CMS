@@ -1,33 +1,53 @@
 # @bernouy/cms-edge-server
 
-Production runtime composition root.
+Production composition root for a shared, stateless CMS Edge listener.
 
 ## Responsibilities
 
-- Read environment variables.
-- Validate the public report and exact pinned `ulvia/cms.installations` release
-  exposed by the independently running installations Provider.
-- Compose the provider-neutral Gateway locally from remote route, identity,
-  audit and invocation-token capabilities.
-- Forward public paths through selected `ulvia/cms.content/delivery.resolve-resource`. Do not receive Content projections or mount its internal handlers.
-- Instantiate only the stateless Edge HTTP composition.
-- Refuse to start unless the Provider instance and official resources were provisioned beforehand.
+- Read environment in the runtime. `CMS_HOSTING_PROVIDER_URL` is the trusted
+  hosting Provider origin; `CMS_HOSTING_EDGE_SECRET` signs machine routing calls.
+  Reject the former single-instance public URL and credential configuration.
+- Resolve each request hostname through the exact admitted
+  `ulvia/provider.routing` contract before opening a context or resource cache.
+  Unknown or inactive domains never select a default tenant.
+- Keep one listener in `src/index.ts`. `createTenantEdge` constructs independent
+  HTTP route trees without listening. Tenant creation starts no Edge process.
+- Forward public resources through selected Content capabilities; never receive
+  a ContentRepository, Content projections or a Content rendering engine.
 
-## Rules
+## Authority and isolation
 
-- Keep the Edge process stateless. It receives only its public URL,
-  installations Provider endpoint and opaque control token; persistence,
-  authentication state, Gateway state, files and migrations remain behind
-  contracts.
-- Validate required environment early and fail fast.
-- Never log secrets, passwords, PATs, KEKs, DEKs, or session signing material.
-- Consume the installations control Bearer only at that Provider boundary.
-  Never send it to a selected capability Provider: request a scoped,
-  short-lived invocation token through `ulvia/cms.installations`.
-- Changes here usually need an integration-style test or a clear manual
-  verification path.
-- Resolve request actors and public capability calls through the local Gateway.
-  Do not add private Gateway operations to the Provider instance API.
-- Never mount or start the Ulvia Provider surface from this package.
+- The Edge routing key grants only machine domain resolution, never CMS user or
+  hosting administrator authority. No operator credential or persistent tenant
+  signing secret belongs here. Never log credentials or control leases.
+- A short-lived control lease belongs to one domain/instance revision and origin.
+  Consume it only at the central Provider boundary. Request scoped invocation
+  tokens through Installations before calling any selected capability Provider.
+- Validate the instance identity and exact supported Installations pin in each
+  fetched report. Never accept an arbitrary instance header or a changed origin
+  during lease renewal. Failed routing/renewal cannot reuse previous authority.
+- Keep Gateways, credentials, route caches, public resource caches, OAuth/MCP,
+  cookie policy, CSP and journal sinks inside the tenant context. Host diagnostics
+  stay operator-owned. Signed subject resolution remains behind contracts.
+- Preserve one canonical CMS origin. Registered aliases redirect there before
+  constructing a context. Ignore caller-supplied forwarding headers for routing;
+  preserve the captured TCP peer when rebuilding a scoped Request.
 
-- Require the selected `ulvia/cms.observability` read/ingestion surface at startup. Collect asynchronously with a bounded memory queue; never add a persistent Edge journal. Machine ingestion authority is distinct from user identity.
+## Resources and coherence
+
+- Hard-bound contexts, concurrent loads, context leases and routing requests.
+  Coalesce context loads; release idle contexts without interrupting active bodies.
+  A response retains its context through completion, cancellation or request abort.
+- Route again at every ingress, even for a warm context/cache. Domain/instance
+  revisions select contexts; the Provider fences lease use against current state.
+- Routing returns a resource revision separate from domain/instance authority.
+  Purge a context's public cache and pending fills before handling an ingress
+  whose revision changed. Content, collection, selection and file writes advance
+  the shared clock before releasing their durable write permit. Busy/maintenance
+  reads receive unique revisions, preventing cache reuse. A request overlapping a
+  write may finish with the earlier representation; routing after an acknowledged
+  write must invalidate every warmed Edge. Keep ordinary cache HITs when quiet.
+- Connect each context's bounded diagnostics queue only to its own selected
+  Observability contract and drain it before disposal. Keep no persistent journal.
+- New cross-process operations require admitted contracts. Never mount the Provider
+  surface here or restore a private instance protocol.

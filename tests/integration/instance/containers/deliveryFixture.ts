@@ -1,6 +1,7 @@
 import { parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { resolve } from "node:path";
 import { prepareCollectionRelease } from "@bernouy/repository/collections/build";
+import { captureCollectionSources } from "@bernouy/repository/repository/authoring/build";
 import { RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
 import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 import { repositoryApi } from "../repository/client";
@@ -12,20 +13,27 @@ export async function installDeliveryFixture(
     registry: { url: string; pat: { token: string } },
 ) {
     const namespaces = new RepositoryNamespaceClient(registry.url, {
+        allowInsecureHttp: true,
         credential: {
             origin: registry.url,
-            repositoryId: await new RepositoryNamespaceClient(registry.url).identity(),
+            repositoryId: await new RepositoryNamespaceClient(registry.url, { allowInsecureHttp: true }).identity(),
             resolveToken: async () => registry.pat.token,
         },
     });
     await namespaces.claim("ulvia.test");
-    const artifact = await prepareCollectionRelease(
-        resolve(import.meta.dir, "../../../../packages/runtimes/ulvia-cli/tests/stack/fixtures/smoke-kit"),
+    const directory = resolve(
+        import.meta.dir,
+        "../../../../packages/runtimes/ulvia-cli/tests/stack/fixtures/smoke-kit",
     );
-    await new RemoteRepositoryClient(registry.url, await namespaces.ownedCredential("ulvia.test")).push({
+    const source = await captureCollectionSources(directory);
+    const artifact = await prepareCollectionRelease(directory);
+    await new RemoteRepositoryClient(registry.url, await namespaces.ownedCredential("ulvia.test"), {
+        allowInsecureHttp: true,
+    }).push({
         kind: "collection",
         canonicalJson: artifact.canonicalJson,
-        assets: artifact.assets,
+        sourceJson: source.sourceJson,
+        assets: source.assets,
     });
     const api = repositoryApi(origin);
     const actor = await api.session(administrator.email, administrator.password);

@@ -1,3 +1,4 @@
+import type { RepositoryFetch } from "repository/repository-http/getBytes";
 import { RepositoryRequestError } from "../../core/errors";
 import { RepositoryConnection } from "../../publication/transport/connection";
 import type {
@@ -11,7 +12,11 @@ export class RepositoryNamespaceClient {
     private readonly connection: RepositoryConnection;
     constructor(
         url: string,
-        options: Readonly<{ allowInsecureHttp?: boolean; credential?: RepositoryConnectionCredential }> = {},
+        options: Readonly<{
+            allowInsecureHttp?: boolean;
+            credential?: RepositoryConnectionCredential;
+            request?: RepositoryFetch;
+        }> = {},
     ) {
         this.connection = new RepositoryConnection(url, options.credential, options);
         this.credential = options.credential;

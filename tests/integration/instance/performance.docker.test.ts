@@ -68,7 +68,8 @@ integration(
             ] as const) {
                 expect(sample.mongoPerRequest).toBeGreaterThan(0); // This budget deliberately disables the Edge cache.
                 expect(sample.mongoByCollection?.gateway_delegations ?? 0).toBe(0);
-                expect(sample.mongoPerRequest).toBeLessThanOrEqual(operations);
+                // Preserve the previous delivery ceiling after charging the separately verified routing floor.
+                expect(sample.mongoPerRequest - sample.routingMongoPerRequest).toBeLessThanOrEqual(operations);
                 expect(sample.internalCallsPerRequest).toBeGreaterThan(0);
                 expect(sample.internalCallsPerRequest).toBeLessThanOrEqual(calls);
                 expect(sample.bytesPerRequest).toBeLessThan(512 * 1024);
@@ -79,7 +80,10 @@ integration(
             report.cachedAsset = await measureCached(stack, path!);
             report.loadWithCache = await exerciseLoad(stack, connection);
             report.freshness = await exerciseFreshness(connection, stack.cmsUrl);
-            report.mutations = await exerciseMutationFreshness(connection, stack.cmsUrl);
+            report.mutations = await exerciseMutationFreshness(connection, stack.cmsUrl, {
+                origin: stack.namedUrl,
+                administrator: stack.administrator,
+            });
             const authenticated = await connection.page.request.get(`${stack.cmsUrl}/performance-image`);
             expect(authenticated.status()).toBe(200);
             expect(authenticated.headers()["cache-control"]).toBe("private, no-store");

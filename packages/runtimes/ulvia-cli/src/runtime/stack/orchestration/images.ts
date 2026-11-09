@@ -89,6 +89,9 @@ export function parseOfficialImageInspection(
     if (labels["io.ulvia.stack-api"] !== SUPPORTED_STACK_API) {
         throw new Error(`Ulvia ${component} image uses an unsupported stack API`);
     }
+    if (labels["io.ulvia.hosting-api"] !== "1") {
+        throw new Error(`Ulvia ${component} image does not support shared hosting API v1`);
+    }
     if (labels["org.opencontainers.image.version"] !== version) {
         throw new Error(`Ulvia ${component} image version does not match the requested tag`);
     }

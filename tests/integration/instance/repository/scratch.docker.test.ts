@@ -1,6 +1,6 @@
 import { initializationApi } from "./initializationClient";
 import { expect, test } from "bun:test";
-import { admitCollectionRelease } from "@bernouy/repository/collections";
+import { emptyCollectionFixture } from "./emptyFixture";
 import { HttpCollectionRepository } from "@bernouy/repository/collections/http";
 import { RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
 import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
@@ -43,8 +43,9 @@ integration(
             const pat = await api.pat(session.cookie);
             await publishBundledReleases(stack.url, "http://ulvia-provider:5103", pat.token);
             expect(await collections.list()).toEqual([]);
-            const identity = new RepositoryNamespaceClient(stack.url);
+            const identity = new RepositoryNamespaceClient(stack.url, { allowInsecureHttp: true });
             const namespaces = new RepositoryNamespaceClient(stack.url, {
+                allowInsecureHttp: true,
                 credential: {
                     origin: stack.url,
                     repositoryId: await identity.identity(),
@@ -52,23 +53,30 @@ integration(
                 },
             });
             await namespaces.claim("scratch");
-            const release = await admitCollectionRelease({
-                kind: "collection",
-                protocol: "ulvia-collection/v1",
-                schemaDialect: "ulvia-schema/v1",
-                collectionId: "scratch/empty",
-                publisherId: "scratch",
-                version: "1.0.0",
-                name: "collection.name",
-                locale: "en",
-                translations: { en: { "collection.name": "Empty" } },
-                assets: [],
-                blocs: [],
+            const release = await emptyCollectionFixture("scratch", "empty", "1.0.0");
+            const publisher = new RemoteRepositoryClient(stack.url, await namespaces.ownedCredential("scratch"), {
+                allowInsecureHttp: true,
             });
-            const publisher = new RemoteRepositoryClient(stack.url, await namespaces.ownedCredential("scratch"));
-            await publisher.push({ kind: "collection", canonicalJson: release.canonicalJson, assets: [] });
+            await publisher.push({
+                kind: "collection",
+                canonicalJson: release.canonicalJson,
+                sourceJson: release.sourceJson,
+                assets: [],
+            });
             const [entry] = await collections.list();
             expect(entry!.collectionId).toBe("scratch/empty");
+            const catalogue = await api.request(
+                "ulvia/cms.installations",
+                "/collections/catalogue",
+                "QUERY",
+                { limit: 25 },
+                session,
+            );
+            expect(catalogue.status).toBe(200);
+            const selected = (await catalogue.json()).releases.find(
+                (item: { collectionId: string }) => item.collectionId === "scratch/empty",
+            );
+            expect(selected).toBeDefined();
             const install = await api.request(
                 "ulvia/cms.installations",
                 "/install-collection",
@@ -77,18 +85,18 @@ integration(
                     expectedRevision: initial.revision,
                     targets: [
                         {
-                            repositoryId: "ulvia-provider-bootstrap",
-                            publisherId: entry!.publisherId,
-                            collectionId: entry!.collectionId,
-                            version: entry!.version,
-                            digest: entry!.digest,
-                            approvedBrowserRiskDigest: entry!.browserRiskDigest,
+                            repositoryId: selected.repositoryId,
+                            publisherId: selected.publisherId,
+                            collectionId: selected.collectionId,
+                            version: selected.version,
+                            digest: selected.digest,
+                            approvedBrowserRiskDigest: selected.browserRiskDigest,
                         },
                     ],
                 },
                 session,
             );
-            expect(install.status).toBe(200);
+            expect(install.status, await install.clone().text()).toBe(200);
             expect((await install.json()).items.map((item: { collectionId: string }) => item.collectionId)).toEqual([
                 "scratch/empty",
             ]);

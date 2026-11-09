@@ -1,3 +1,4 @@
+import type { RepositoryFetch } from "@bernouy/repository/providers/http";
 import { PublisherConnection } from "./connection";
 import { namespaceInventory, validateNamespaceQuery } from "./NamespaceInventory";
 import { RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
@@ -12,8 +13,9 @@ export class RepositoryPublisher implements CollectionPublisher {
         readonly repositorySourceId: string,
         secrets: SecretStore,
         readonly allowInsecureHttp = false,
+        readonly request?: RepositoryFetch,
     ) {
-        this.connection = new PublisherConnection(secrets, repositoryUrl, allowInsecureHttp);
+        this.connection = new PublisherConnection(secrets, repositoryUrl, allowInsecureHttp, request);
     }
     connectionStatus() {
         return this.connection.view();
@@ -35,6 +37,7 @@ export class RepositoryPublisher implements CollectionPublisher {
         const credential = await this.connection.credential();
         const entries = await new RepositoryNamespaceClient(this.repositoryUrl, {
             allowInsecureHttp: this.allowInsecureHttp,
+            request: this.request,
             credential,
         }).list();
         return namespaceInventory(credential.repositoryId, entries, input);
@@ -42,6 +45,7 @@ export class RepositoryPublisher implements CollectionPublisher {
     private async client() {
         return new RepositoryNamespaceClient(this.repositoryUrl, {
             allowInsecureHttp: this.allowInsecureHttp,
+            request: this.request,
             credential: await this.connection.credential(),
         });
     }

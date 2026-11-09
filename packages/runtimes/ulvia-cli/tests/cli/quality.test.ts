@@ -17,7 +17,7 @@ function officialArtifacts() {
 
 test("SDK bootstrap retains the exact system APIs without a collection index", async () => {
     const artifacts = await buildOfficialBootstrapArtifacts();
-    expect(Object.keys(artifacts.contracts)).toHaveLength(12);
+    expect(Object.keys(artifacts.contracts)).toHaveLength(15);
     const root = await mkdtemp(join(tmpdir(), "ulvia-bootstrap-core-"));
     try {
         await writeOfficialBootstrapArtifacts(root, artifacts);
@@ -25,7 +25,7 @@ test("SDK bootstrap retains the exact system APIs without a collection index", a
         const repository = join(root, "repository");
         expect(await new FilesystemCollectionRepository("core", repository).list()).toEqual([]);
         const providers = new FilesystemProviderRepository("core", repository);
-        expect(await providers.list("contract")).toHaveLength(12);
+        expect(await providers.list("contract")).toHaveLength(15);
         expect(await providers.list("provider-manifest")).toHaveLength(1);
     } finally {
         await rm(root, { recursive: true, force: true });

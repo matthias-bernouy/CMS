@@ -1,3 +1,4 @@
+import type { NodeGatewayHttpNetworkFactory } from "@bernouy/cms-gateway/http/node";
 import { createDescriptionCache } from "./descriptionCache";
 import { contentGatewayClient } from "./gatewayClient";
 import { contentPhaseObserver } from "./observe";
@@ -18,6 +19,7 @@ export function createPublicDelivery(
     stores: ProviderStores,
     gateway: Awaited<ReturnType<typeof createProviderGateway>>,
     publicUrl: string,
+    createNetwork?: NodeGatewayHttpNetworkFactory,
 ): Pick<CmsContentDependencies, "publicDelivery" | "contentQuery"> {
     const cache = new InMemoryCache();
     const readSelectionRevision = async () =>
@@ -26,7 +28,7 @@ export function createPublicDelivery(
     const analyzer = new PageCapabilityAnalyzer({ satisfiesVersionRange, resolveCapability: async () => null });
     const content = createContentReader(stores.repo);
     const assets = { siteId: gateway.siteId, store: stores.collections };
-    const connections = new ProviderConnections(stores.providerConnections);
+    const connections = new ProviderConnections(stores.providerConnections, createNetwork);
     const client = (context: ProviderCapabilityInvocationContext) => {
         return contentGatewayClient({
             connections,

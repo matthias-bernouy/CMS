@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { mountProductionEdge, type ProductionEdgeRuntime } from "../../src/runtime/mountEdge";
+import { createTenantEdge, type ProductionEdgeRuntime } from "../../src/runtime/mountEdge";
 import { createMemoryLogger } from "@bernouy/logging/testing";
 
 describe("production Edge mounting", () => {
-    test("mounts and stops one runtime", async () => {
+    test("builds an independent tenant route tree without opening a listener", async () => {
         const events: string[] = [];
         const logs = createMemoryLogger({ service: "edge-test" });
         let edgeConfig: Record<string, unknown> | undefined;
@@ -19,11 +19,9 @@ describe("production Edge mounting", () => {
             get(path: string, handler: () => Response): void {
                 endpoints.set(path, handler);
             }
-            start(options: unknown): void {
-                events.push(`start:${JSON.stringify(options)}`);
-            }
-            async stopGracefully(): Promise<void> {
-                events.push("stop");
+            async handle(request: Request): Promise<Response> {
+                events.push("handle");
+                return new Response(request.url);
             }
         }
 
@@ -65,10 +63,9 @@ describe("production Edge mounting", () => {
             logger: logs.logger,
         };
 
-        const mounted = await mountProductionEdge(options as never, runtime);
-        expect(events.slice(0, 3)).toEqual(["runner", "edge", 'start:{"port":3100,"hostname":"127.0.0.1"}']);
-        expect(endpoints.get("/healthz")?.().status).toBe(204);
-        expect(endpoints.get("/readyz")?.().status).toBe(204);
+        const mounted = await createTenantEdge(options as never, runtime);
+        expect(events).toEqual(["runner", "edge"]);
+        expect(endpoints.size).toBe(0);
         expect(runnerOptions).toMatchObject({ idleTimeoutSeconds: 60, logger: logs.logger });
 
         expect(edgeConfig).toMatchObject({
@@ -87,10 +84,8 @@ describe("production Edge mounting", () => {
         expect(edgeConfig).not.toHaveProperty("content");
         expect(edgeConfig).not.toHaveProperty("collectionAssets");
         expect(edgeConfig).not.toHaveProperty("pageCapabilities");
-        expect(events).toContain('start:{"port":3100,"hostname":"127.0.0.1"}');
-        expect(logs.records.some((record) => record.event === "edge.started")).toBeTrue();
-
-        await mounted.stop();
-        expect(events.at(-1)).toBe("stop");
+        const response = await mounted.handle(new Request("https://www.example.test/path"));
+        expect(await response.text()).toBe("https://www.example.test/path");
+        expect(events.at(-1)).toBe("handle");
     });
 });

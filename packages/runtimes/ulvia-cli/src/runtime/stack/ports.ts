@@ -19,10 +19,6 @@ export function resolveServicePorts(environment: Record<string, string | undefin
     return ports;
 }
 
-export function localInstanceHostname(name: string): string {
-    return `${name}.localhost`;
-}
-
 export function instancePublicUrl(
     hostname: string,
     network: Readonly<{

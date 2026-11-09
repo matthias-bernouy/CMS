@@ -8,15 +8,18 @@ resolves the instance's selected exact contracts and invokes their Provider
 implementations through the Gateway and HTTP. Remote selected capabilities exposed through MCP must also declare an
 HTTP binding. Tool arguments cannot supply a site identity or trusted actor.
 
-The current SDK-generated catalogue exposes 82 tools: 28 Content capabilities, seven
-Files workspace capabilities, 29 installation/operation, initialization, documentation
-and discovery capabilities, 15 Repository connection/resource authoring capabilities
-and three administrator observability reads (`logs.query`, `logs.get`,
-`logs.aggregate`). Account administration,
-Provider control, Secrets, Emailer, global file namespaces, log ingestion and
-internal delivery operations are HTTP-only. MCP bindings have specific
-descriptions and behavior annotations; the admitted schemas still govern
-inputs, outputs and declared errors.
+The SDK-generated catalogue exposes selected Content operations, Files workspace
+operations, installation/initialization/documentation/discovery operations,
+Repository authoring and administrator observability reads. The Hosting contract
+adds eight instance/domain administration tools on Control. Selection alone grants
+no hosting authority: its default executors require the persisted Control identity
+and a current administrator grant. Installing a collection cannot grant this role.
+
+Account administration, Provider return-channel pairing, Secrets, Emailer, global
+file namespaces, log ingestion and internal delivery operations remain HTTP-only.
+MCP bindings have specific descriptions and behavior annotations; the admitted
+schemas still govern inputs, outputs and declared errors. The number of visible
+tools depends on the instance's exact selected releases.
 
 Connect a compatible OAuth client to `https://<instance>/.cms/mcp`. Discovery
 uses `/.well-known/oauth-protected-resource` and
@@ -136,21 +139,22 @@ and publication are available through both CLI and instance Authoring capabiliti
 
 ## Versions and verification
 
-New system installations use Provider manifest and Installations `1.3.0`, Content
-`1.0.1` and Authoring `1.1.0`. Registry `1.1.0` is installed explicitly through
+New system installations use Provider manifest and Installations `1.4.0`, Content
+`1.1.0` and Authoring `1.2.0`. Registry `1.2.0` is installed explicitly through
 native setup. Other system contracts retain their existing versions. Named
 profiles are removed. Existing sites keep their admitted pins and use explicitly
 verified retained SDK execution; source edits do not publish or deploy releases.
 
 Normal `bun run verify` includes domain, HTTP protocol and source-pipeline
 regressions. The opt-in real-image journey uses isolated local Docker containers
-for MongoDB, Provider and independent CMS/Repository Edges, plus Chromium. The harness lives in
+for MongoDB, Provider and shared Edges serving distinct CMS/Registry domains,
+plus Chromium. The harness lives in
 [`tests/integration/instance`](../../tests/integration/instance/README.md).
 Its scenarios cover consent, publication, installation, rendering, file bytes,
 Provider connections, log isolation, account ownership, persistence and revocation.
-The current generic discovery adapter lists 82 tools from the generated artifact
-(in two pages). Some opt-in integration assertions still expect the earlier 68-tool
-snapshot; they require reconciliation before claiming a complete current-image pass.
+The discovery catalogue derives from the exact selected releases. Some opt-in
+integration assertions still hardcode a 68-tool snapshot; verify them against
+their selected catalogue before claiming a complete current-image pass.
 With matching local images already built, run:
 
 ```sh

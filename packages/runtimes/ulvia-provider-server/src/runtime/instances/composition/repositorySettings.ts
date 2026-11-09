@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { ProviderInstanceRecord, ProviderInstanceRegistry } from "@bernouy/ulvia-provider";
+import { assertInstanceRepository } from "@bernouy/hosting/instances";
 import type { InstallationServices } from "@bernouy/repository/features/installations";
 import {
     InstallationError,
@@ -7,11 +8,11 @@ import {
 } from "@bernouy/repository/features/installations";
 
 type Settings = NonNullable<InstallationServices["repositorySettings"]>;
-const OFFICIAL_REPOSITORY = "https://repo.ulvia.fr";
 
 /** The public address remains persisted; only the known self-origin uses the instance's private Edge transport. */
 export function repositoryTransport(instance: ProviderInstanceRecord) {
-    const publicUrl = repositoryAddress(instance.repository?.url ?? OFFICIAL_REPOSITORY);
+    assertInstanceRepository(instance.repository);
+    const publicUrl = repositoryAddress(instance.repository.url);
     const url = publicUrl === instance.cmsUrl ? instance.gatewayUrl : publicUrl;
     return {
         id: `site-${createHash("sha256").update(publicUrl).digest("hex")}`,
@@ -39,14 +40,16 @@ export function createRepositorySettings(options: {
         if (!instance || instance.status === "disabled") {
             throw new InstallationError("NOT_FOUND");
         }
+        assertInstanceRepository(instance.repository);
         return instance;
     };
     const view = async (instance: ProviderInstanceRecord) => {
+        assertInstanceRepository(instance.repository);
         const [repositoryEnabled, creation] = await Promise.all([options.enabled(), options.creation(instance)]);
         return {
             revision: instance.revision,
-            url: instance.repository?.url ?? OFFICIAL_REPOSITORY,
-            configured: instance.repository?.configured ?? false,
+            url: instance.repository.url,
+            configured: instance.repository.configured,
             repositoryEnabled,
             creationStatus: creation.status,
             errorMessage: creation.status === "failed" ? "Repository creation stopped. Resume it to retry safely." : "",

@@ -19,6 +19,18 @@ export const defaultsMessages = {
         "You are not authorized to access this resource.",
         "Vous n’êtes pas autorisé à accéder à cette ressource.",
     ],
+    "CONFLICT": [
+        "This request conflicts with the current assignment or revision. Reload the hosting state before retrying.",
+        "Cette demande est incompatible avec l’affectation ou la révision actuelle. Rechargez l’état de l’hébergement avant de réessayer.",
+    ],
+    "DOMAIN_UNVERIFIED": [
+        "The domain ownership proof could not be verified. Check its exact TXT record before retrying.",
+        "La propriété du domaine n’a pas pu être vérifiée. Vérifiez son enregistrement TXT exact avant de réessayer.",
+    ],
+    "TLS_NOT_ALLOWED": [
+        "Certificate issuance is not allowed for this domain or its current configuration.",
+        "L’émission d’un certificat n’est pas autorisée pour ce domaine ou sa configuration actuelle.",
+    ],
     "REVISION_CONFLICT": [
         "The data changed since it was loaded. Reload it before trying again.",
         "Les données ont été modifiées depuis leur chargement. Rechargez-les avant de réessayer.",

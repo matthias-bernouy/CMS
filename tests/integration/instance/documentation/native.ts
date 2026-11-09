@@ -1,3 +1,4 @@
+import { createContainerHosting } from "../containers/hosting";
 import { configureRepository } from "../repository/initializationClient";
 import { installDeliveryFixture } from "../containers/deliveryFixture";
 import { randomBytes } from "node:crypto";
@@ -23,16 +24,18 @@ export async function documentationProcesses() {
     reservations.forEach((server) => {
         server.stop(true);
     });
+    const hosting = await createContainerHosting(edgePort!);
     const processes = documentationChildren(root, workspace);
     const { start, stop } = processes;
     const close = async () => {
         await processes.close();
+        await hosting.close();
         await rm(root, { recursive: true, force: true });
     };
     const mongoUrl = `mongodb://127.0.0.1:${mongoPort}/documentation_control?retryWrites=false`;
     const repositoryUrl = `http://127.0.0.1:${repositoryPort}`;
     const providerUrl = `http://127.0.0.1:${providerPort}`;
-    const cmsUrl = `http://127.0.0.1:${edgePort}`;
+    const cmsUrl = `http://site.localhost:${edgePort}`;
     try {
         await mkdir(join(root, "mongo"));
         start("mongo", [
@@ -77,6 +80,7 @@ export async function documentationProcesses() {
             ULVIA_PROVIDER_HOST: "127.0.0.1",
             ULVIA_PROVIDER_PUBLIC_URL: providerUrl,
             ULVIA_PROVIDER_OPERATOR_TOKEN: operatorToken,
+            ...hosting.providerEnvironment,
             ...(process.env.ULVIA_DOCUMENTATION_MODEL_CACHE
                 ? { ULVIA_EMBEDDING_MODEL_DIR: join(root, "files/.documentation-models") }
                 : {}),
@@ -93,6 +97,15 @@ export async function documentationProcesses() {
             email: "documentation@ulvia.local",
             password: `Docs-${randomBytes(24).toString("base64url")}!`,
         };
+        start("edge", [process.execPath, "run", "packages/runtimes/cms-edge-server/src/index.ts"], {
+            MODE: "PROD",
+            CMS_PORT: String(edgePort),
+            CMS_HOST: "127.0.0.1",
+            CMS_HOSTING_PROVIDER_URL: providerUrl,
+            CMS_HOSTING_EDGE_SECRET: hosting.edgeSecret,
+        });
+        await waitForHttp(`${hosting.origin}/readyz`);
+        await hosting.initialize(repositoryUrl);
         const instance = await provisionInstance(
             providerUrl,
             operatorToken,
@@ -101,16 +114,8 @@ export async function documentationProcesses() {
             administrator,
             cmsUrl,
         );
-        const startEdge = async (name: string, url: string, token: string) => {
-            start(name, [process.execPath, "run", "packages/runtimes/cms-edge-server/src/index.ts"], {
-                MODE: "PROD",
-                CMS_PORT: new URL(url).port,
-                CMS_HOST: "127.0.0.1",
-                CMS_PUBLIC_URL: url,
-                CMS_INSTALLATIONS_PROVIDER_URL: providerUrl,
-                CMS_INSTALLATIONS_PROVIDER_TOKEN: token,
-            });
-            await waitForHttp(`${url}/readyz`);
+        await hosting.claimDomain(instance.instance.id, cmsUrl);
+        const configureSite = async (url: string) => {
             await configureRepository(url, administrator, repositoryUrl);
             const api = repositoryApi(url);
             const admin = await api.session(administrator.email, administrator.password);
@@ -126,7 +131,7 @@ export async function documentationProcesses() {
             }
             await connected.body?.cancel();
         };
-        await startEdge("edge", cmsUrl, instance.credentials.instanceAccessToken);
+        await configureSite(cmsUrl);
         await installDeliveryFixture(cmsUrl, administrator, { url: repositoryUrl, pat: { token: account.token } });
         return {
             cmsUrl,
@@ -138,9 +143,7 @@ export async function documentationProcesses() {
             waitForDocumentation: (afterCount = 0, revision?: string) =>
                 waitForDocumentationPreparation(root, instance.instance.id, afterCount, revision),
             async createNeighbour() {
-                const reservation = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(null) });
-                const neighbourUrl = `http://127.0.0.1:${reservation.port}`;
-                reservation.stop(true);
+                const neighbourUrl = `http://neighbour.localhost:${edgePort}`;
                 const neighbour = await provisionInstance(
                     providerUrl,
                     operatorToken,
@@ -149,7 +152,8 @@ export async function documentationProcesses() {
                     administrator,
                     neighbourUrl,
                 );
-                await startEdge("neighbour", neighbourUrl, neighbour.credentials.instanceAccessToken);
+                await hosting.claimDomain(neighbour.instance.id, neighbourUrl);
+                await configureSite(neighbourUrl);
                 return { cmsUrl: neighbourUrl, administrator };
             },
             async restartProvider(beforeStart?: () => Promise<unknown>) {

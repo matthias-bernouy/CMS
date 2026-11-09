@@ -7,5 +7,3 @@ export function createCorrelatedRepositoryFetch(request: RepositoryFetch = fetch
         return request(url, { ...init, headers: currentRequestHeaders(init.headers) });
     };
 }
-
-export const correlatedRepositoryFetch = createCorrelatedRepositoryFetch();

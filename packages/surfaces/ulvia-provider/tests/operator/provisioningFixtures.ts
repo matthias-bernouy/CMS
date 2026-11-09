@@ -53,9 +53,12 @@ export function target(calls: string[], initializeSetup: () => Promise<void>): O
 
 export function instance(status: ProviderInstanceRecord["status"] = "provisioning") {
     return {
+        repository: { url: "https://repo.ulvia.fr", configured: false },
+
         id: "instance:one",
         idempotencyKey: "create-one",
         idempotencyFingerprint: "fingerprint",
+        creationAuthority: { kind: "operator" },
         storageKey: "one",
         cmsUrl: "http://127.0.0.1:5100",
         gatewayUrl: "http://edge.internal:3000",
@@ -82,6 +85,10 @@ export class MemoryRegistry implements ProviderInstanceRegistry {
     }
     async list() {
         return [this.record];
+    }
+    async page(input: { after: string | null; limit: number }) {
+        const records = (await this.list()).filter((record) => input.after === null || record.id > input.after);
+        return { items: records.slice(0, input.limit), nextCursor: null };
     }
     async update(_id: string, revision: number, changes: UpdateProviderInstanceRecord) {
         expect(revision).toBe(this.record.revision);

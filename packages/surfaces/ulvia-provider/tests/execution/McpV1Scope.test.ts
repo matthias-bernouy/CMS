@@ -9,11 +9,12 @@ const allowed = new Set([
     "ulvia/cms.content",
     "ulvia/cms.files",
     "ulvia/cms.installations",
+    "ulvia/cms.hosting",
     "ulvia/cms.observability",
 ]);
 const bootstrap = resolve(import.meta.dir, "../../../../runtimes/ulvia-cli/dist/bootstrap");
 
-test("official MCP V1 exposes authoring, collection lifecycle and administrator observability reads", async () => {
+test("official MCP V1 exposes authoring, collection lifecycle, hosting and administrator observability reads", async () => {
     const index = JSON.parse(await readFile(resolve(bootstrap, "index.json"), "utf8")) as { contracts: string[] };
     let tools = 0;
     for (const path of index.contracts) {
@@ -26,6 +27,10 @@ test("official MCP V1 exposes authoring, collection lifecycle and administrator 
             tools += 1;
             expect(allowed.has(release.contractId)).toBe(true);
             expect(bindings.some((binding) => binding.transport === "http")).toBe(true);
+            if (release.contractId === "ulvia/cms.hosting") {
+                expect(capability.access).toBe("admin");
+                expect(/^(?:instances|domains)\./u.test(capability.id)).toBe(true);
+            }
             if (release.contractId === "ulvia/cms.observability") {
                 expect(["logs.query", "logs.get", "logs.aggregate"]).toContain(capability.id);
                 expect(capability.access).toBe("admin");
@@ -59,5 +64,5 @@ test("official MCP V1 exposes authoring, collection lifecycle and administrator 
             }
         }
     }
-    expect(tools).toBe(94);
+    expect(tools).toBe(102);
 });

@@ -153,11 +153,12 @@ anonymous immutable SVG with a strong ETag.
 ## Releases And Installation
 
 ```bash
-bun run ulvia -- services start --version 1.0.0
-bun run ulvia -- instance create preview
+bun run images:build --version 0.1.0-shared-hosting all
+bun run ulvia -- start --domain control.localhost --version 0.1.0-shared-hosting
 ```
 
-Once the Repository has initialized, validate and store a new authored release:
+Create sites through Control, then explicitly activate Registry on the chosen
+site through native setup. Once the Repository has initialized, validate and store a new authored release:
 
 ```bash
 bun run ulvia -- release /path/to/new-collection-version

@@ -1,3 +1,4 @@
+import type { NodeGatewayHttpNetworkFactory } from "cms-gateway/invocation/node-http/NodeGatewayHttpNetwork";
 import { ProviderConnectionConflict } from "./interfaces";
 import { GatewayProviderClient } from "./GatewayProviderClient";
 
@@ -14,7 +15,10 @@ export interface ProviderConnectionStorage {
 
 /** Inject an encrypted, account-bound store at the receiving Provider runtime. */
 export class ProviderConnections {
-    constructor(private readonly storage: ProviderConnectionStorage) {}
+    constructor(
+        private readonly storage: ProviderConnectionStorage,
+        private readonly createNetwork?: NodeGatewayHttpNetworkFactory,
+    ) {}
     async configure(value: ProviderConnection) {
         if (
             !Number.isSafeInteger(value.generation) ||
@@ -69,7 +73,11 @@ export class ProviderConnections {
                 if (!connection) {
                     throw new Error("Provider connection is not configured");
                 }
-                return new GatewayProviderClient({ ...connection, allowPrivateAddresses }).invoke(...args);
+                return new GatewayProviderClient({
+                    ...connection,
+                    allowPrivateAddresses,
+                    createNetwork: this.createNetwork,
+                }).invoke(...args);
             },
         };
     }

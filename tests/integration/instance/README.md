@@ -8,6 +8,16 @@ account ownership, persistence and revocation.
 The directory contains test harnesses. Image builds remain in
 [`infra/images`](../../../infra/images/build.ts); there is no separate MCP image.
 
+The main Docker fixture starts a Provider that bootstraps empty Control, then one
+shared Edge. Control, Registry, the primary site and a neighbouring site use
+distinct localhost hostnames on one mapped port. Control selects the isolated
+Registry and explicitly remains empty. Direct operator provisioning is retained
+only to obtain private test credentials for scoped Provider trace/log assertions;
+Control's admitted Hosting API assigns their domains. Edge receives only its
+routing machine secret. Registry activation and collection/source publication
+remain explicit test setup. The test collection includes its editable source
+snapshot and uses the ordinary admitted build workflow.
+
 ## Run
 
 Run from the workspace root with Bun dependencies, Docker and the Playwright
@@ -29,10 +39,9 @@ its own resources on completion.
 
 The Repository-specific image lifecycle tests remain in
 [`tests/images/repository`](../../images/repository).
-They can run alongside this suite. Current generic MCP discovery returns 82 tools,
-but `instance.docker.test.ts` and `documentation/native.test.ts` still assert the
-earlier count of 68. The opt-in upgrade test also requests the retired `1.0.0`
-profile. Reconcile those assertions/targets before treating these journeys as a
+They can run alongside this suite. `instance.docker.test.ts` and
+`documentation/native.test.ts` still hardcode a 68-tool snapshot. Reconcile those
+assertions against their exact selected catalogue before treating these journeys as a
 current candidate-image acceptance gate; an ordinary skipped run proves none of them. The CLI Edge smoke journey exercised by
 `bun run verify:full` is a separate integration check.
 
@@ -44,10 +53,11 @@ protocols verified here.
 
 Supply `ULVIA_UPGRADE_BASELINE_PROVIDER_IMAGE` with a compatible baseline image,
 alongside the candidate Provider and Edge variables above. The upgrade case
-publishes current releases into its isolated local Repository, provisions the
-old instance, then replaces its Provider container and requests a profile transition,
-then restarts Edge to negotiate the new control contract. The current test hardcodes
-`1.0.0`, which the current profile catalogue no longer supports.
+publishes current releases into its isolated local Repository, explicitly creates
+its test Pages and installs its test collection, then replaces the Provider image.
+It keeps the same shared Edge, approved selections and exact release pins. Image
+replacement does not request an implicit system or collection upgrade. The
+baseline must support the same fresh shared-hosting state format.
 It checks exact Page content, the existing MCP authorization, log queries and a
 subsequent restart. No test publishes to or reads from the public Repository.
 
@@ -70,7 +80,8 @@ undeclared SVG binding or browser-cache revocation.
 ## Native documentation journey
 
 The opt-in native journey uses a local `mongod`, separate Provider and Edge
-processes, an isolated filesystem Repository HTTP process, and a Chromium
+processes with distinct local domains on one shared listener, an isolated
+filesystem Repository HTTP process, and a Chromium
 browser. It publishes the generated bootstrap with a shared CMS PAT into a private
 Repository, uses temporary loopback ports and removes its files and processes.
 The test manifest authorizes only its temporary Provider origin. It does not

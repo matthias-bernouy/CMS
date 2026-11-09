@@ -1,3 +1,6 @@
+import { routingImplementation } from "./implementations/provider/routing";
+import { hostingTlsImplementation } from "./implementations/provider/tls";
+import { hostingImplementation } from "./implementations/provider/hosting";
 import { installationsImplementation } from "./implementations/repository/installations";
 import { repositoryImplementation } from "./implementations/repository/registry";
 import { authoringImplementation } from "./implementations/repository/authoring";
@@ -8,7 +11,7 @@ import { filesImplementation } from "./implementations/files";
 import { secretsImplementation } from "./implementations/secrets";
 import { smtpEmailerImplementation } from "./implementations/emailer";
 
-import { providerConnectionsImplementation } from "./implementations/connections";
+import { providerConnectionsImplementation } from "./implementations/provider/connections";
 import { providerCmsInstancesFeature } from "./provider/instances/feature";
 import type { ContractImplementation, FeatureDefinition } from "@bernouy/ulvia-sdk";
 import type { UlviaProviderFeatureServices } from "../../ports/index";
@@ -29,6 +32,9 @@ const officialFeatureInventory: readonly OfficialFeatureSource[] = Object.freeze
     { implementation: providerConnectionsImplementation },
     { implementation: repositoryImplementation },
     { implementation: installationsImplementation },
+    { implementation: hostingImplementation },
+    { implementation: routingImplementation },
+    { implementation: hostingTlsImplementation },
     { definition: providerCmsInstancesFeature },
 ]);
 export const officialFeatureImplementations = officialFeatureInventory.flatMap((source) =>

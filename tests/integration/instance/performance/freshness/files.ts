@@ -1,7 +1,14 @@
 import { expect } from "bun:test";
 import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 import { cachedPage, publishPage, type Connection } from "./context";
-export async function exerciseFileFreshness(connection: Connection, cmsUrl: string, collectionId: string) {
+import { verifyFileIsolation } from "./fileIsolation";
+import type { FileIsolationTarget } from "./fileIsolation";
+export async function exerciseFileFreshness(
+    connection: Connection,
+    cmsUrl: string,
+    collectionId: string,
+    foreignSite: FileIsolationTarget,
+) {
     const call = (capability: string, input: Record<string, unknown> = {}) =>
         connection.call("ulvia/cms.files", capability, input);
     const bytes = new TextEncoder().encode(
@@ -48,6 +55,7 @@ export async function exerciseFileFreshness(connection: Connection, cmsUrl: stri
         }
     };
     await readFile(200);
+    await verifyFileIsolation(connection, foreignSite, file);
     await call("workspace.files.update", { fileId: file.fileId, name: "renamed.svg" });
     expect((await page.read("MISS")).status).toBe(200);
     const renamed = await call("workspace.get");
@@ -63,5 +71,12 @@ export async function exerciseFileFreshness(connection: Connection, cmsUrl: stri
     await call("workspace.files.delete", { fileId: file.fileId });
     expect((await page.read("MISS")).status).toBe(200);
     await readFile(404);
-    return { completeImmediate: true, updateImmediate: true, visibilityImmediate: true, deleteImmediate: true };
+    return {
+        completeImmediate: true,
+        updateImmediate: true,
+        visibilityImmediate: true,
+        deleteImmediate: true,
+        foreignReadRefused: true,
+        foreignAdministratorMutationRefused: true,
+    };
 }

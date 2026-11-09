@@ -12,8 +12,8 @@ ULVIA_DOCUMENTATION_MODEL_CACHE="/absolute/path/to/populated/model-cache" \
 bun test ./tests/integration/instance/documentation
 ```
 
-The current `native.test.ts` still asserts the previous 68-tool catalogue rather
-than the generated 82-tool catalogue. See the [parent guide](../README.md) for
+The current `native.test.ts` still hardcodes a 68-tool catalogue snapshot; verify
+it against the exact selected releases before using this optional acceptance gate. See the [parent guide](../README.md) for
 known acceptance mismatches. Its scenarios cover linked documentation, Page drafting and verification,
 publication at mobile/desktop widths, file transfer, persistence and revocation.
 `exotic.test.ts` runs the following more demanding scenarios:

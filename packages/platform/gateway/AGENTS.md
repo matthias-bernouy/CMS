@@ -34,6 +34,9 @@ publish releases or choose providers.
   signature and representation semantics. Binary response headers come from the provider.
 - Runtime adapters select HTTP, persistence, DNS policy, secret storage and
   worker implementations. Keep optional adapters in explicit domain subpaths.
+  Node Provider clients and account-bound ProviderConnections accept a network
+  factory. Preserve fresh credential resolution and ordinary admitted HTTP
+  validation; transport injection never grants identity or capability authority.
 - Core invocation validates domain inputs/outcomes, access and audit without
   requiring HTTP bindings or statuses. HTTP routing and wire validation belong
   in the HTTP adapter; protocol adapters pass the selected binding ID/protocol

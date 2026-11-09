@@ -6,21 +6,20 @@ import type { Logger } from "@bernouy/logging";
 import type { createEdgeGateway } from "./gateway/createEdgeGateway";
 import { createPublicResourceHandler } from "./resources/publicResource";
 export type { ProductionEdgeRuntime } from "./edgeRuntime";
-export type ProductionEdgeHandle = { stop(): Promise<void> };
+export type ProductionEdgeHandle = { handle(request: Request): Promise<Response> };
 type MountOptions = {
-    env: RuntimeEnv;
+    env: Pick<RuntimeEnv, "MODE" | "CMS_CSP_ALLOWED_ORIGINS"> & { CMS_PUBLIC_URL: string };
     gateway: ReturnType<typeof createEdgeGateway>;
     logger: Logger;
     cache?: ResponseCache;
 };
-export async function mountProductionEdge(
+export function createTenantEdge(
     options: MountOptions,
     runtime: ProductionEdgeRuntime = PRODUCTION_EDGE_RUNTIME,
-): Promise<ProductionEdgeHandle> {
+): ProductionEdgeHandle {
     const { env, gateway, logger } = options;
     const runner = new runtime.Runner({ logger, idleTimeoutSeconds: 60 });
-    runner.get("/healthz", () => new Response(null, { status: 204 }));
-    runner.get("/readyz", () => new Response(null, { status: 204 }));
+
     new runtime.Edge({
         runner,
         logger,
@@ -48,14 +47,5 @@ export async function mountProductionEdge(
             resolveCapability: gateway.resolveCapability,
         },
     });
-    runner.start({ port: env.CMS_PORT, hostname: env.CMS_HOST });
-    logger.info("edge.started", {
-        publicUrl: env.CMS_PUBLIC_URL,
-        installationsProviderUrl: env.CMS_INSTALLATIONS_PROVIDER_URL,
-    });
-    return {
-        async stop() {
-            await runner.stopGracefully();
-        },
-    };
+    return { handle: (request) => runner.handle(request) };
 }

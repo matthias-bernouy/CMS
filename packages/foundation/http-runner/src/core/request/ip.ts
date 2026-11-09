@@ -23,8 +23,8 @@ const requestIPs = new WeakMap<Request, string>();
 
 /**
  * Records the TCP-level remote address for an incoming Request. Called by
- * Runner implementations at request ingress; not part of the public
- * package barrel.
+ * Runner implementations at request ingress and by composed runtimes when
+ * rebuilding a Request. Caller-supplied headers are not peer-address evidence.
  */
 export function setRequestIP(req: Request, ip: string): void {
     requestIPs.set(req, ip);

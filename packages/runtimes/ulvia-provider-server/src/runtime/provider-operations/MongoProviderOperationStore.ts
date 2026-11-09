@@ -93,6 +93,13 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
         return documents.map(fromDocument);
     }
 
+    async hasPending(): Promise<boolean> {
+        // Retain running leases too: their owner may have crashed before the lease expires.
+        return Boolean(
+            await this.#records.findOne({ status: { $in: ["queued", "running"] } }, { projection: { _id: 1 } }),
+        );
+    }
+
     async claim(id: string, revision: number, token: string, expiresAt: string, now: string): Promise<boolean> {
         const result = await this.#records.updateOne(
             {

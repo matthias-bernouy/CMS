@@ -99,3 +99,38 @@ test("only the host can change the control installation status", async () => {
     ).rejects.toMatchObject({ code: "control_installation_protected" });
     expect(statusChanges).toEqual([alternativeChange]);
 });
+
+test("an enabled hosting selection cannot be removed or redirected to another Provider", async () => {
+    let replacements = 0;
+    const hosting = { ...content, contractId: "ulvia/cms.hosting" };
+    const management = createProtectedProviderManagement(
+        {
+            list: async () => ({ installations: [systemInstallation] }),
+            replaceSelections: async () => {
+                replacements++;
+                return { revision: 2, selected: [] };
+            },
+        } as never,
+        { id: systemInstallation.accountId } as never,
+        { manifest: { providerId: systemInstallation.providerId }, contracts: [control, hosting] } as never,
+    );
+    const selections = [
+        { ...control, installationId: systemInstallation.id },
+        { ...content, contractId: "ulvia/cms.observability", installationId: systemInstallation.id },
+    ];
+    for (const extra of [
+        [],
+        [{ ...hosting, installationId: "another-provider" }],
+        [{ ...hosting, version: "1.1.0", installationId: systemInstallation.id }],
+    ]) {
+        await expect(
+            management.replaceSelections({ expectedRevision: 1, selections: [...selections, ...extra] }),
+        ).rejects.toMatchObject({ code: "hosting_selection_protected" });
+    }
+    expect(replacements).toBe(0);
+    await management.replaceSelections({
+        expectedRevision: 1,
+        selections: [...selections, { ...hosting, installationId: systemInstallation.id }],
+    });
+    expect(replacements).toBe(1);
+});

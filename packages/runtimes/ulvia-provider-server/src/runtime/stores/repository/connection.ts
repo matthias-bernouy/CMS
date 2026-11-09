@@ -1,3 +1,4 @@
+import type { RepositoryFetch } from "@bernouy/repository/providers/http";
 import { NamespaceAccessError } from "@bernouy/repository/repository/authoring";
 import { randomUUID } from "node:crypto";
 import type { SecretStore } from "@bernouy/secret-store";
@@ -20,8 +21,9 @@ export class PublisherConnection {
         private readonly secrets: SecretStore,
         url: string,
         readonly allowInsecureHttp: boolean,
+        readonly request?: RepositoryFetch,
     ) {
-        this.origin = new RepositoryConnection(url, undefined, { allowInsecureHttp }).base.origin;
+        this.origin = new RepositoryConnection(url, undefined, { allowInsecureHttp, request }).base.origin;
     }
     async view() {
         const stored = await this.read();
@@ -46,6 +48,7 @@ export class PublisherConnection {
         // Verify membership before replacing a working connection.
         await new RepositoryNamespaceClient(this.origin, {
             allowInsecureHttp: this.allowInsecureHttp,
+            request: this.request,
             credential,
         }).list();
         await this.secrets.set(

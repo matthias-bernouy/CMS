@@ -1,5 +1,14 @@
+import { EDGE_LEASE_PREFIX } from "@bernouy/hosting/routing";
+import type { RoutingAuthority } from "@bernouy/hosting/routing";
+import type { UlviaProviderOptions, ProviderInstanceRegistry } from "@bernouy/ulvia-provider";
 import { BunRunner } from "@bernouy/http-runner";
-import { ProviderOperatorApi, UlviaProvider, type ProviderInstanceLifecycle } from "@bernouy/ulvia-provider";
+import {
+    ProviderOperatorApi,
+    UlviaProvider,
+    mountPublicCapabilities,
+    type ProviderInstanceLifecycle,
+} from "@bernouy/ulvia-provider";
+import type { UlviaProviderInstanceRuntime } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../../runtimeEnv";
 import type { ProviderInstanceAuthenticator } from "../authentication/ProviderInstanceAuthenticator";
 import type { ProviderInstanceHost } from "../instances/composition/ProviderInstanceHost";
@@ -16,23 +25,58 @@ export function mountUlviaProvider(options: {
     host: ProviderInstanceHost;
     lifecycle: ProviderInstanceLifecycle;
     logger: Logger;
+    tls?: UlviaProviderInstanceRuntime;
+    readiness?: () => Promise<boolean>;
+    routing: {
+        authority: RoutingAuthority;
+        instances: ProviderInstanceRegistry;
+        authenticate: UlviaProviderOptions["authenticateInvocationToken"];
+    };
 }): UlviaProviderServerHandle {
-    const { env, authenticator, host, lifecycle, logger } = options;
+    const { env, authenticator, host, lifecycle, logger, routing } = options;
+    const controlInstance = async (token: string) => {
+        if (!token.startsWith(EDGE_LEASE_PREFIX)) {
+            return authenticator.authenticateControlToken(token);
+        }
+        const route = await routing.authority.authorizeControlToken(token);
+        if (!route) {
+            return null;
+        }
+        const instance = await routing.instances.get(route.instanceId);
+        return instance?.status === "ready" && instance.revision === route.instanceRevision ? instance : null;
+    };
     const runner = new BunRunner({ hostname: env.ULVIA_PROVIDER_HOST, logger, idleTimeoutSeconds: 60 });
+    runner.get("/healthz", () => new Response(null, { status: 204 }));
+    runner.get("/readyz", async () => {
+        try {
+            return new Response(null, { status: !options.readiness || (await options.readiness()) ? 204 : 503 });
+        } catch {
+            return new Response(null, { status: 503 });
+        }
+    });
     new ProviderOperatorApi(runner, env.ULVIA_PROVIDER_OPERATOR_TOKEN, lifecycle);
+    if (options.tls) {
+        mountPublicCapabilities(runner, options.tls, logger);
+    }
     new UlviaProvider(runner, {
         logger,
         authenticateReportToken: async (token) => {
-            const instance = await authenticator.authenticateReportToken(token);
+            const instance = token.startsWith(EDGE_LEASE_PREFIX)
+                ? await controlInstance(token)
+                : await authenticator.authenticateReportToken(token);
             return instance ? host.runtime(instance) : null;
         },
         authenticateControlToken: async (token) => {
             const startedAt = performance.now();
-            const instance = await authenticator.authenticateControlToken(token);
+            const instance = await controlInstance(token);
             reportAuthentication(logger, "control", performance.now() - startedAt, Boolean(instance));
             return instance ? host.runtime(instance) : null;
         },
         authenticateInvocationToken: async (token) => {
+            const machine = await routing.authenticate(token);
+            if (machine) {
+                return machine;
+            }
             const startedAt = performance.now();
             const authentication = await authenticator.authenticateInvocationToken(token);
             reportAuthentication(logger, "invocation", performance.now() - startedAt, Boolean(authentication));

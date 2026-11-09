@@ -39,9 +39,9 @@ test("rejects repository metadata that does not match the official bytes", async
 test("the image contains a complete system plan with Registry available explicitly", async () => {
     const fixture = await repositoryFixture();
     const loaded = await loadSystemArtifacts(fixture.providers);
-    expect(loaded.plan.manifest.version).toBe("1.3.0");
+    expect(loaded.plan.manifest.version).toBe("1.4.0");
     expect(loaded.plan.contracts.some(({ contractId }) => contractId === "ulvia/repository")).toBe(true);
-    expect(fixture.contracts).toHaveLength(12);
+    expect(fixture.contracts).toHaveLength(15);
     const content = loaded.contracts.find(({ release }) => release.contractId === "ulvia/cms.content")!;
     expect(content.capabilities.some(({ definition }) => definition.deprecation)).toBe(false);
     expect(content.capabilities.some(({ definition }) => definition.id === "delivery.resolve-resource")).toBe(true);

@@ -5,7 +5,37 @@ import {
     type InstanceTransitionRecord,
 } from "@bernouy/ulvia-provider";
 import { ProviderExecutionSupport } from "../../../src/runtime/instances/system/execution/support";
-import { assertHostedReleaseRetention } from "../../../src/runtime/instances/system/retention";
+import { assertHostedReleaseRetention as verifyRetention } from "../../../src/runtime/instances/system/retention";
+
+async function assertHostedReleaseRetention(
+    support: ProviderExecutionSupport,
+    instances: readonly ProviderInstanceRecord[],
+    transitions: readonly InstanceTransitionRecord[],
+    required: () => Promise<readonly { contractId: string; version: string; digest: string; location: string }[]>,
+    system: { current(): Promise<SystemInstallationPlan> },
+) {
+    return verifyRetention(
+        support,
+        {
+            instances: (async function* () {
+                yield* instances;
+            })(),
+            transitions: async function* (id?: string) {
+                yield* transitions.filter((value) => id === undefined || value.instanceId === id);
+            },
+            hasUnstagedUpgrade: async (id) =>
+                transitions.some(
+                    (value) =>
+                        value.instanceId === id &&
+                        value.kind === "upgrade" &&
+                        value.status !== "succeeded" &&
+                        !value.completedSteps.includes("manifest"),
+                ),
+        },
+        { assertPlan: async () => undefined, required },
+        system,
+    );
+}
 
 const digest = `sha256:${"a".repeat(64)}`;
 const plan: SystemInstallationPlan = {
@@ -19,9 +49,12 @@ const support = new ProviderExecutionSupport({
     releases: [...plan.contracts],
 });
 const instance: ProviderInstanceRecord = {
+    repository: { url: "https://repo.ulvia.fr", configured: false },
+
     id: "instance:one",
     idempotencyKey: "one",
     idempotencyFingerprint: digest,
+    creationAuthority: { kind: "operator" },
     storageKey: "one",
     cmsUrl: "http://127.0.0.1:5100",
     label: "One",

@@ -1,14 +1,30 @@
 import type { UlviaPaths } from "../../runtime/paths";
-import { loadOrCreateInstallationConfig } from "../../runtime/stack/installation";
-import { listLocalInstanceNames, startLocalEdge } from "../../runtime/stack/orchestration/instances";
-import { startLocalServices } from "../../runtime/stack/orchestration/services";
+import { withRepositoryWriteLock } from "@bernouy/repository/repository/filesystem/lock";
 import { configureCommand } from "./configure";
-import { instanceCommand } from "./instances";
 import { resetLocalInstallation } from "./reset";
-import { parseStartVersion, servicesCommand } from "./services";
+import { startShared, servicesCommand } from "./services";
 import { upgradeCommand } from "./upgrade";
 
 export async function localCommand(
+    command: string,
+    args: readonly string[],
+    paths: UlviaPaths,
+    log: (message: string) => void,
+    environment: Record<string, string | undefined>,
+): Promise<void> {
+    const mutates =
+        ["start", "configure", "upgrade", "reset"].includes(command) ||
+        (command === "services" && ["start", "stop"].includes(args[0] ?? ""));
+    const execute = () => dispatchLocalCommand(command, args, paths, log, environment);
+    if (mutates) {
+        // Keep the root lock inode across reset; process death releases the native lease.
+        await withRepositoryWriteLock(paths.data, execute);
+        return;
+    }
+    await execute();
+}
+
+async function dispatchLocalCommand(
     command: string,
     args: readonly string[],
     paths: UlviaPaths,
@@ -21,10 +37,6 @@ export async function localCommand(
     }
     if (command === "services") {
         await servicesCommand(args, paths, environment, log);
-        return;
-    }
-    if (command === "instance") {
-        await instanceCommand(args, paths, environment, log);
         return;
     }
     if (command === "upgrade") {
@@ -41,34 +53,14 @@ export async function localCommand(
         return;
     }
     if (command !== "start") {
-        throw new Error("Usage: ulvia start [--version <version>]");
+        throw new Error("Usage: ulvia start [--version <version>] [--domain <hostname>]");
     }
     if (args.length === 1 && ["help", "--help", "-h"].includes(args[0] ?? "")) {
-        log(`Usage: ulvia start [--version <version>]
+        log(`Usage: ulvia start [--version <version>] [--domain <hostname>]
 
-Start shared services and every existing instance. The exact version only
-selects the Provider image when shared services are uninitialized.`);
+Start Provider, MongoDB, Caddy and shared Edges. The Provider initializes empty Control.`);
         return;
     }
-    const requestedVersion = parseStartVersion(args, "Usage: ulvia start [--version <version>]");
-    const installation = await loadOrCreateInstallationConfig(paths, environment);
-    await startLocalServices(paths, installation, log, requestedVersion);
-    const instances = await listLocalInstanceNames(paths);
-    if (instances.length === 0) {
-        log("Shared services are ready. Create an instance with: ulvia instance create <name>");
-    } else {
-        const failures: string[] = [];
-        for (const name of instances) {
-            try {
-                await startLocalEdge(paths, name, log);
-            } catch (error) {
-                failures.push(name);
-                log(`Instance ${name} failed to start: ${error instanceof Error ? error.message : String(error)}`);
-            }
-        }
-        if (failures.length > 0) {
-            throw new Error(`Failed to start ${failures.length} local instance(s): ${failures.join(", ")}`);
-        }
-    }
+    await startShared(args, paths, environment, log);
     log(`Persistent data: ${paths.data}`);
 }

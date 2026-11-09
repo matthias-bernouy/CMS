@@ -2,9 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { parsePort, readRuntimeEnv } from "../../src/runtimeEnv";
 
 const validEnv = () => ({
-    CMS_PUBLIC_URL: "https://www.example.com",
-    CMS_INSTALLATIONS_PROVIDER_URL: "http://127.0.0.1:5103",
-    CMS_INSTALLATIONS_PROVIDER_TOKEN: "opaque-ulvia-instance-token",
+    CMS_HOSTING_PROVIDER_URL: "http://127.0.0.1:5103",
+    CMS_HOSTING_EDGE_SECRET: "opaque-ulvia-edge-routing-key-material",
 });
 
 describe("stateless Edge runtime env", () => {
@@ -15,17 +14,17 @@ describe("stateless Edge runtime env", () => {
             CMS_CSP_ALLOWED_ORIGINS: { connectExtras: [], mediaExtras: [] },
             CMS_PORT: 3000,
             CMS_HOST: "0.0.0.0",
-            CMS_PUBLIC_URL: "https://www.example.com",
-            CMS_INSTALLATIONS_PROVIDER_URL: "http://127.0.0.1:5103",
-            CMS_INSTALLATIONS_PROVIDER_TOKEN: "opaque-ulvia-instance-token",
+            CMS_EDGE_MAX_CONTEXTS: 16,
+            CMS_HOSTING_PROVIDER_URL: "http://127.0.0.1:5103",
+            CMS_HOSTING_EDGE_SECRET: "opaque-ulvia-edge-routing-key-material",
         });
     });
 
     test("validates listener and Provider credentials", () => {
         expect(() => parsePort("65536", "CMS_PORT", 3000)).toThrow(/between 1 and 65535/);
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_HOST: "bad host" })).toThrow(/hostname or IP/);
-        expect(() => readRuntimeEnv({ ...validEnv(), CMS_INSTALLATIONS_PROVIDER_TOKEN: "invalid" })).toThrow(
-            /CMS_INSTALLATIONS_PROVIDER_TOKEN is invalid/,
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_HOSTING_EDGE_SECRET: "invalid" })).toThrow(
+            /Invalid provider token/,
         );
     });
 });

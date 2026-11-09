@@ -15,7 +15,7 @@ describe("Ulvia persistent data paths", () => {
         expect(paths.repository).toBe("/var/tmp/ulvia-data/repository");
         expect(paths.services).toBe("/var/tmp/ulvia-data/services");
         expect(paths.mongo).toBe("/var/tmp/ulvia-data/services/mongo");
-        expect(paths.instances).toBe("/var/tmp/ulvia-data/instances");
+        expect(paths.proxy.certificates).toBe("/var/tmp/ulvia-data/services/proxy/certificates");
     });
 
     test("uses the XDG data home before the home fallback", () => {
@@ -36,7 +36,7 @@ describe("Ulvia persistent data paths", () => {
             await ensureUlviaPaths(paths);
             expect((await stat(root)).mode & 0o777).toBe(0o700);
             expect((await stat(paths.services)).mode & 0o777).toBe(0o700);
-            expect((await stat(paths.instances)).mode & 0o777).toBe(0o700);
+            expect((await stat(paths.proxy.certificates)).mode & 0o777).toBe(0o700);
         } finally {
             await rm(root, { recursive: true, force: true });
         }

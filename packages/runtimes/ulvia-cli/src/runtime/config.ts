@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
-import { chmod, readFile, readdir, writeFile } from "node:fs/promises";
+import { chmod, readFile, readdir, writeFile, lstat } from "node:fs/promises";
 import { join } from "node:path";
+import { prepareControlAdministrator } from "./controlBootstrap";
 
 export const LOCAL_SERVICES_SCHEMA = "ulvia.services.v1" as const;
 
@@ -12,6 +13,7 @@ export type LocalServicesConfig = Readonly<{
     mongoPassword: string;
     mongoProviderUsername: string;
     mongoProviderPassword: string;
+    edgeRoutingSecret: string;
 }>;
 
 export async function loadOrCreateLocalServicesConfig(servicesRoot: string): Promise<LocalServicesConfig> {
@@ -21,6 +23,8 @@ export async function loadOrCreateLocalServicesConfig(servicesRoot: string): Pro
         return existing;
     }
     await assertNoOrphanedEncryptedState(servicesRoot);
+    await prepareControlAdministrator(servicesRoot);
+    await loadOrCreateProviderOperatorToken(servicesRoot);
     const config: LocalServicesConfig = {
         schema: LOCAL_SERVICES_SCHEMA,
         sessionSecret: randomBytes(48).toString("base64url"),
@@ -29,15 +33,47 @@ export async function loadOrCreateLocalServicesConfig(servicesRoot: string): Pro
         mongoPassword: randomBytes(32).toString("base64url"),
         mongoProviderUsername: "ulvia_provider",
         mongoProviderPassword: randomBytes(32).toString("base64url"),
+        edgeRoutingSecret: randomBytes(32).toString("base64url"),
     };
     return await writeExclusiveConfig(path, config);
 }
 
 export async function loadOrCreateProviderOperatorToken(servicesRoot: string): Promise<string> {
+    const path = join(servicesRoot, "provider-operator-token");
+    if (
+        await lstat(join(servicesRoot, "runtime.json")).then(
+            () => true,
+            (cause: NodeJS.ErrnoException) => {
+                if (cause.code === "ENOENT") {
+                    return false;
+                }
+                throw cause;
+            },
+        )
+    ) {
+        const existing = await readSecret(path);
+        if (!existing) {
+            throw new Error("Provider operator credential is missing; explicit operator recovery is required");
+        }
+        return existing;
+    }
     return await loadOrCreateToken(join(servicesRoot, "provider-operator-token"), "Ulvia Provider operator");
 }
 
 async function assertNoOrphanedEncryptedState(servicesRoot: string): Promise<void> {
+    if (
+        await lstat(join(servicesRoot, "stack.json")).then(
+            () => true,
+            (cause: NodeJS.ErrnoException) => {
+                if (cause.code === "ENOENT") {
+                    return false;
+                }
+                throw cause;
+            },
+        )
+    ) {
+        throw new Error("Service keys are missing from existing launch state; operator recovery is required");
+    }
     const entries = await readdir(join(servicesRoot, "mongo")).catch((error: NodeJS.ErrnoException) => {
         if (error.code === "ENOENT") {
             return [];
@@ -86,7 +122,8 @@ async function readConfig(path: string): Promise<LocalServicesConfig | null> {
         value.mongoUsername !== "ulvia" ||
         !/^[A-Za-z0-9_-]{43}$/u.test(value.mongoPassword ?? "") ||
         value.mongoProviderUsername !== "ulvia_provider" ||
-        !/^[A-Za-z0-9_-]{43}$/u.test(value.mongoProviderPassword ?? "")
+        !/^[A-Za-z0-9_-]{43}$/u.test(value.mongoProviderPassword ?? "") ||
+        !/^[A-Za-z0-9_-]{43}$/u.test(value.edgeRoutingSecret ?? "")
     ) {
         throw new Error("Ulvia local service configuration is invalid");
     }

@@ -1,7 +1,7 @@
 import { parseCspPolicy } from "./cspPolicy";
 import type { CspExtras } from "@bernouy/http-runner";
 import { parseHttpUrl, parsePort, requiredEnv, type RuntimeEnvSource } from "./runtimeEnvParsing";
-import { assertProviderConnectionToken } from "@bernouy/ulvia-providers/installations";
+import { assertProviderInvocationSecret } from "@bernouy/cms-gateway/protocol";
 
 export { parsePort } from "./runtimeEnvParsing";
 
@@ -11,15 +11,17 @@ export type RuntimeEnv = {
     CMS_CSP_ALLOWED_ORIGINS: CspExtras;
     CMS_PORT: number;
     CMS_HOST: string;
-    CMS_PUBLIC_URL: string;
-    CMS_INSTALLATIONS_PROVIDER_URL: string;
-    CMS_INSTALLATIONS_PROVIDER_TOKEN: string;
+    CMS_HOSTING_PROVIDER_URL: string;
+    CMS_HOSTING_EDGE_SECRET: string;
+    CMS_EDGE_MAX_CONTEXTS: number;
 };
 
 export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     const MODE = parseRuntimeMode(source.MODE);
     const CMS_PORT = parsePort(source.CMS_PORT, "CMS_PORT", 3000);
-    const CMS_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "CMS_PUBLIC_URL"), "CMS_PUBLIC_URL");
+    if (source.CMS_PUBLIC_URL || source.CMS_INSTALLATIONS_PROVIDER_TOKEN || source.CMS_INSTALLATIONS_PROVIDER_URL) {
+        throw new Error("Single-instance Edge configuration is incompatible; configure shared hosting instead");
+    }
     const providerConfiguration = parseUlviaProviderConfig(source);
 
     return {
@@ -29,7 +31,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         CMS_PORT,
         CMS_HOST: parseListenerHost(source.CMS_HOST, "CMS_HOST"),
         ...providerConfiguration,
-        CMS_PUBLIC_URL,
+        CMS_EDGE_MAX_CONTEXTS: parseContextCount(source.CMS_EDGE_MAX_CONTEXTS),
     };
 }
 
@@ -56,24 +58,26 @@ function parseListenerHost(raw: string | undefined, name: string): string {
 
 function parseUlviaProviderConfig(
     source: RuntimeEnvSource,
-): Pick<RuntimeEnv, "CMS_INSTALLATIONS_PROVIDER_URL" | "CMS_INSTALLATIONS_PROVIDER_TOKEN"> {
-    const token = source.CMS_INSTALLATIONS_PROVIDER_TOKEN;
-    requiredEnv(source, "CMS_INSTALLATIONS_PROVIDER_TOKEN");
-    try {
-        if (token !== token?.trim()) {
-            throw new TypeError("token whitespace");
-        }
-        assertProviderConnectionToken(token!);
-    } catch {
-        throw new Error("CMS_INSTALLATIONS_PROVIDER_TOKEN is invalid");
+): Pick<RuntimeEnv, "CMS_HOSTING_PROVIDER_URL" | "CMS_HOSTING_EDGE_SECRET"> {
+    const token = requiredEnv(source, "CMS_HOSTING_EDGE_SECRET");
+    if (token !== source.CMS_HOSTING_EDGE_SECRET) {
+        throw new Error("CMS_HOSTING_EDGE_SECRET is invalid");
     }
-    return {
-        CMS_INSTALLATIONS_PROVIDER_URL: parseHttpUrl(
-            requiredEnv(source, "CMS_INSTALLATIONS_PROVIDER_URL"),
-            "CMS_INSTALLATIONS_PROVIDER_URL",
-        ),
-        CMS_INSTALLATIONS_PROVIDER_TOKEN: token!,
-    };
+    assertProviderInvocationSecret(token);
+    const endpoint = new URL(parseHttpUrl(requiredEnv(source, "CMS_HOSTING_PROVIDER_URL"), "CMS_HOSTING_PROVIDER_URL"));
+    if (endpoint.pathname !== "/" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) {
+        throw new Error("CMS_HOSTING_PROVIDER_URL must be an HTTP origin");
+    }
+    return { CMS_HOSTING_PROVIDER_URL: endpoint.origin, CMS_HOSTING_EDGE_SECRET: token };
+}
+function parseContextCount(raw: string | undefined): number {
+    if (raw === undefined) {
+        return 16;
+    }
+    if (!/^[0-9]+$/u.test(raw) || Number(raw) < 1 || Number(raw) > 128) {
+        throw new Error("CMS_EDGE_MAX_CONTEXTS must be between 1 and 128");
+    }
+    return Number(raw);
 }
 
 function parseCacheEnabled(raw: string | undefined, mode: RuntimeEnv["MODE"]): boolean {

@@ -4,7 +4,6 @@ import { chromium } from "playwright";
 import type { Page } from "playwright";
 import { mkdir } from "node:fs/promises";
 import { scratchRepository } from "../containers/scratch";
-import { docker } from "../docker";
 import { repositoryApi } from "./client";
 import { initializationApi } from "./initializationClient";
 import { publishBundledReleases } from "./bootstrap";
@@ -14,14 +13,18 @@ const edge = process.env.ULVIA_SETUP_EDGE_DOCKER_IMAGE;
 const integration = provider && edge ? test : test.skip;
 const screenshots = "/tmp/ulvia-setup-screens";
 
-async function login(page: Page, site: { url: string; administrator: { email: string; password: string } }) {
+async function login(
+    page: Page,
+    site: { url: string; administrator: { email: string; password: string } },
+    repositoryUrl: string,
+) {
     await page.goto(site.url);
     await page.waitForURL(`${site.url}/.cms/setup`);
     await page.getByLabel("Email address").fill(site.administrator.email);
     await page.getByLabel("Password", { exact: true }).fill(site.administrator.password);
     await page.getByRole("button", { name: "Continue", exact: false }).click();
     await page.getByRole("button", { name: "A Repository address", exact: false }).click();
-    await page.getByLabel("Repository address", { exact: true }).fill("http://repository:3000");
+    await page.getByLabel("Repository address", { exact: true }).fill(repositoryUrl);
     await page.getByRole("button", { name: "Use this Repository", exact: false }).click();
     await page.getByRole("heading", { name: "Where would you like to start?" }).waitFor();
 }
@@ -50,7 +53,7 @@ integration(
             const foreignReview = await siteSetup.plan(null);
             const anonymous = await initializationApi(site.url).call("initialization/status");
             expect([401, 403]).toContain(anonymous.status);
-            await login(page, site);
+            await login(page, site, stack.url);
             await mkdir(screenshots, { recursive: true });
             await page.screenshot({ path: `${screenshots}/choice.png`, fullPage: true });
             await page.setViewportSize({ width: 375, height: 812 });
@@ -90,8 +93,8 @@ integration(
             expect((await blankSetup.call("initialization/status").then((response) => response.json())).status).toBe(
                 "pending",
             );
-            await docker(["stop", stack.edgeName]);
-            await login(page, blank);
+            await stack.disableRepository();
+            await login(page, blank, stack.url);
             await page.locator("#change-repository").click();
             await page.getByRole("button", { name: "The official Repository", exact: false }).click();
             await page.getByRole("heading", { name: "Where would you like to start?" }).waitFor();

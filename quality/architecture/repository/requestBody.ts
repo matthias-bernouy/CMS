@@ -2,7 +2,7 @@ import { resolve, relative } from "node:path";
 import * as ts from "@typescript/typescript6";
 
 const READERS = new Set(["json", "text", "arrayBuffer", "blob", "bytes", "formData"]);
-const BOUNDED_READER = "packages/foundation/http-runner/src/core/request/body.ts";
+const BOUNDED_READER = "packages/foundation/http-runner/src/core/request/body/readRequestBody.ts";
 
 /** Only proven built-in Request receivers are blocking; any/unresolved types require human review. */
 export function requestBodyFindings(program: ts.Program, files: readonly string[]): string[] {

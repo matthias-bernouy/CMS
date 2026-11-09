@@ -1,5 +1,0 @@
-services:
-    edge:
-        environment:
-            ACME_HOST: ${ULVIA_INSTANCE_HOSTNAME}
-            LETSENCRYPT_HOST: ${ULVIA_INSTANCE_HOSTNAME}

@@ -15,8 +15,12 @@ const OPERATOR_TOKEN = "operator-token-that-is-long-enough";
 test("the operator API protects and exposes instance lifecycle operations", async () => {
     const instance = readyInstance();
     const creates: unknown[] = [];
+    const pages: unknown[] = [];
     const lifecycle = {
-        list: async () => [instance],
+        page: async (after: string | null, limit: number) => {
+            pages.push({ after, limit });
+            return { items: [instance], nextCursor: null };
+        },
         get: async (id: string) => (id === instance.id ? instance : null),
         create: async (key: string, input: unknown) => {
             creates.push({ key, input });
@@ -38,6 +42,21 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
         expect((await server.request("GET", "/ulvia/operator/profiles", { headers: authorization })).status).toBe(404);
         const listing = await server.request("GET", "/ulvia/operator/instances", { headers: authorization });
         expect((await listing.json()).instances).toHaveLength(1);
+        expect(pages).toEqual([{ after: null, limit: 50 }]);
+        const next = await server.request("GET", "/ulvia/operator/instances?after=instance:one&limit=2", {
+            headers: authorization,
+        });
+        expect(next.status).toBe(200);
+        await next.body?.cancel();
+        expect(pages.at(-1)).toEqual({ after: "instance:one", limit: 2 });
+        for (const suffix of ["?limit=51", "?limit=0", "?limit=1&limit=2", "?after=unknown", "?unexpected=1"]) {
+            const refused = await server.request("GET", `/ulvia/operator/instances${suffix}`, {
+                headers: authorization,
+            });
+            expect(refused.status).toBe(400);
+            await refused.body?.cancel();
+        }
+        expect(pages).toHaveLength(2);
 
         const created = await server.request("POST", "/ulvia/operator/instances", {
             headers: { ...authorization, "content-type": "application/json", "idempotency-key": "create-one" },
@@ -86,6 +105,7 @@ test("an idempotency key can only replay the exact instance request", async () =
             clearAdministrator: async () => undefined,
         },
         {
+            assertCreationAuthority: async () => undefined,
             provision: async (id: string) => {
                 provisions++;
                 const current = required(await registry.get(id));
@@ -112,23 +132,30 @@ test("an idempotency key can only replay the exact instance request", async () =
         administrator: { email: "admin@example.test", password: "long-enough-password" },
     };
 
-    const created = await lifecycle.create("create-one", input);
-    expect((await lifecycle.create("create-one", input)).instance.id).toBe(created.instance.id);
+    const created = await lifecycle.create("create-one", input, { kind: "operator" });
+    expect((await lifecycle.create("create-one", input, { kind: "operator" })).instance.id).toBe(created.instance.id);
     expect(stagedAdministrators).toBe(1);
     expect(provisions).toBe(1);
     await expect(
-        lifecycle.create("create-one", {
-            ...input,
-            administrator: { ...input.administrator, password: "different-password" },
-        }),
+        lifecycle.create(
+            "create-one",
+            {
+                ...input,
+                administrator: { ...input.administrator, password: "different-password" },
+            },
+            { kind: "operator" },
+        ),
     ).rejects.toThrow("different request");
 });
 
 function readyInstance(): ProviderInstanceRecord {
     return {
+        repository: { url: "https://repo.ulvia.fr", configured: false },
+
         id: "instance:one",
         idempotencyKey: "create-one",
         idempotencyFingerprint: "fingerprint",
+        creationAuthority: { kind: "operator" },
         storageKey: "one",
         cmsUrl: "http://127.0.0.1:5100",
         gatewayUrl: "http://edge.internal:3000",
@@ -165,6 +192,10 @@ class MemoryRegistry implements ProviderInstanceRegistry {
     }
     async list(): Promise<readonly ProviderInstanceRecord[]> {
         return this.#record ? [this.#record] : [];
+    }
+    async page(input: { after: string | null; limit: number }) {
+        const records = (await this.list()).filter((record) => input.after === null || record.id > input.after);
+        return { items: records.slice(0, input.limit), nextCursor: null };
     }
     async update(
         _instanceId: string,

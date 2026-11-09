@@ -1,175 +1,124 @@
 # Ulvia CLI
 
-Ulvia installation and release CLI.
+Ulvia installation and release CLI. The shared-hosting implementation requires
+compatible Provider and Edge images labelled `io.ulvia.hosting-api=1`.
 
-For the operator journey from a fresh Ubuntu host to a running local or public
-site, follow the [canonical installation guide](../../../docs/installation/README.md).
+For the operator journey, follow the
+[installation guide](../../../docs/installation/README.md). Current verification
+and outstanding integration work are recorded in
+[shared hosting](../../../docs/architecture/shared-hosting.md).
 
-The workspace package contains private source code. Official releases are
-bundled without workspace dependencies and published publicly as
-`@cyaxis/ulvia`:
+The workspace package is private source. Official distribution bundles workspace
+dependencies into `@cyaxis/ulvia`; it does not publish this workspace package.
+Build one exact CLI release and its compatible default stack version with:
 
 ```bash
-bun add --global @cyaxis/ulvia@latest
-ulvia --help
+bun run cli:build --version CLI_VERSION --stack-version STACK_VERSION
 ```
 
-From the workspace, build and publish one exact release with:
+Replace those placeholders with exact release versions. This creates a checked
+npm archive and SHA-256 receipt below `artifacts/cli`. Publishing is a separate
+explicit `cli:publish --version CLI_VERSION` operation.
+
+## Shared infrastructure
+
+From workspace source, supply an exact initial image version:
 
 ```bash
-bun run cli:build --version 0.0.3 --stack-version 0.0.1-beta
-bun run cli:publish --version 0.0.3
-```
-
-The build creates a checked npm archive and SHA-256 receipt below
-`artifacts/cli`. The CLI package version and its compatible initial Docker stack
-version are independent and both are sealed into that receipt. Publishing
-accepts only the exact pair, targets the public npm registry, and uses the
-`next` tag for prereleases or `latest` for stable versions. It requires npm
-credentials configured outside the repository.
-
-```bash
-bun run ulvia -- configure network
-bun run ulvia -- services start --version 0.0.1-beta
+bun run ulvia -- configure hosting --domain control.localhost --edges 1
+bun run ulvia -- start --version STACK_VERSION
 bun run ulvia -- services status
-bun run ulvia -- instance create preview --label "Preview site"
-bun run ulvia -- instance list
-bun run ulvia -- instance credentials preview
-bun run ulvia -- instance stop preview
-bun run ulvia -- instance delete preview --yes
+bun run ulvia -- services logs provider
+bun run ulvia -- services logs edge-1 --follow
 bun run ulvia -- services stop
-bun run ulvia -- upgrade edge --version 0.0.1-beta
-bun run ulvia -- upgrade provider --version 0.0.1-beta
-bun run ulvia -- reset --yes
-bun run ulvia -- release ./my-collection
-bun run ulvia -- release /path/to/contract-directory
-bun run ulvia -- release /path/to/provider-directory
-bun run ulvia -- push contract ulvia/cms.installations@1.3.0 --repository https://repository.example
-bun run ulvia -- pull collection example/ui@1.0.0 --repository https://repository.example
-bun run ulvia -- yank collection example/ui@1.0.0 --repository https://repository.example --reason "Superseded"
-bun run ulvia -- restore collection example/ui@1.0.0 --repository https://repository.example
-bun run ulvia -- prune
+bun run ulvia -- start
 ```
 
-`example/ui` is a hypothetical collection to be authored and published explicitly;
-no official starter collection is bundled.
+The CLI starts one Compose project with MongoDB, Provider, Caddy and a configured
+pool of shared Edge processes. The Provider automatically creates empty Control.
+The default public URL is `http://control.localhost:5100/.cms/setup`. Initial
+administrator credentials are in the private file announced at startup, never
+printed. Control uses native setup and can explicitly remain without collections
+or Pages. Create other logical sites through its admitted `ulvia/cms.hosting`
+HTTP/MCP capabilities; no CLI instance lifecycle commands remain.
 
-The stack version above is an example of an exact published image tag. Workspace
-source has no embedded initial stack version: its first `services start`
-requires `--version`. Packaged releases embed that default at build time. Later
-starts reuse installed digests. Building workspace source does not replace
-running images or upgrade installed collections.
+`configure hosting --edges 2` followed by `start` scales the pool. Site creation
+does not create containers. Reducing the configured count removes obsolete shared
+Edge containers. Stopping infrastructure makes all its logical sites unavailable
+while retaining their persistent data.
 
-The lifecycle commands manage the same Docker Compose projects for loopback and
-public installations from any directory. Persistent
-data lives below `$XDG_DATA_HOME/ulvia` or `~/.local/share/ulvia`;
-`ULVIA_DATA_DIR` remains an explicit isolation override for tests and CI. The
-CLI stores authored releases in `<data>/repository`. Shared Provider,
-MongoDB, proxy, files, secrets and logs live below `<data>/services`; each
-stateless Edge has independent state and logs below `<data>/instances/<name>`.
-The CLI never starts application servers, supervises their PIDs, or builds
-software images. It pulls only the canonical public images under
-`docker.io/cyaxis`, validates their Ulvia component and stack-API labels, and
-stores the immutable repository digest selected for each component.
+Persistent data lives below `$XDG_DATA_HOME/ulvia` or
+`~/.local/share/ulvia`. `ULVIA_DATA_DIR` provides explicit installation isolation.
+`services/installation.json` holds mandatory hosting and network configuration;
+`services/stack.json` holds launch intent and both immutable image pins;
+`services/runtime.json` holds private infrastructure keys. MongoDB and CMS file
+storage belong to the shared services. There is no per-site Edge runtime state.
+The local release cache remains in `<data>/repository`.
 
-The first lifecycle command creates a safe installation configuration bound to
-`127.0.0.1:5100`. Configure public exposure before creating an instance:
+The CLI reuses validated cached exact-version images and pulls missing ones.
+It checks component, stack API, hosting API, version and repository digest. A
+mismatched cached image refuses startup. Source builds require `--version` on
+first start; bundled releases carry an exact default. Subsequent starts preserve
+pins. Explicit image updates use:
 
 ```bash
-ulvia configure network \
-  --bind 0.0.0.0 \
-  --http-port 80 \
-  --tls acme \
-  --https-port 443 \
-  --acme-email ops@example.com
+ulvia upgrade provider --version STACK_VERSION
+ulvia upgrade edge --version STACK_VERSION
+```
+
+Provider replacement checks retained execution support first. Failed activation
+attempts to restore previous images; it does not restore mutated database data.
+Contract and collection upgrades remain explicit admitted operations.
+
+## Domains and initial access
+
+Configure public listeners before first launch:
+
+```bash
+ulvia configure network --bind 0.0.0.0 --http-port 80 --tls acme --https-port 443 --acme-email ops@example.com
+ulvia configure hosting --domain control.example.com --public-addresses 203.0.113.10
 ulvia start
-ulvia instance create website --domain example.com
 ```
 
-The configuration is persisted under `<data>/services/installation.json` and
-is not a per-start mode. ACME requires `0.0.0.0` and every instance in an ACME
-installation requires an explicit DNS domain. Network configuration is locked
-after the first instance because its canonical Edge URL is part of Provider
-provisioning. The Provider operator port remains loopback-only; a Repository instance is
-exposed through its own Edge and the shared proxy.
+Use the installation's real domain and addresses. Network settings and Control's
+origin lock after the first launch. Hosting settings can change the shared Edge
+count, operator-managed suffixes and public-address allowlist; apply them with
+`start`. Customer domain claims use Control's contracts and ownership validation.
+Caddy uses the admitted TLS permission binding and persistent certificate storage.
+DNS/TLS pending state is distinct from a provisioned instance and healthy backend.
+The Provider operator listener remains on loopback.
 
-`services start` starts only the shared proxy, MongoDB and Provider.
-On first initialization it uses the exact version embedded by `cli:build`, or
-an explicit `services start --version <version>` override. Later starts reuse
-the persisted digests and reject a conflicting `--version`; component changes
-must go through `upgrade`.
-`instance create` provisions one isolated Provider tenant and immediately starts
-its dedicated Edge. `instance start` restarts only an already-provisioned
-instance's Edge. All Edges use the shared proxy port: an instance named
-`default` is available at `http://default.localhost:5100`, while an instance such
-as `preview` uses `http://preview.localhost:5100`.
-`ULVIA_HTTP_PORT` and `ULVIA_PROVIDER_PORT` provide
-initial isolation defaults for tests and CI. Interactive configuration belongs
-to `ulvia configure network`. The Provider still listens on its canonical port
-5103 inside the private Docker network; only its operator port on the host
-changes.
-`start` is the idempotent convenience command for shared services plus every
-previously created local instance; it never creates an implicit instance.
+Native setup offers a custom Repository, the official Repository, or creating a
+Registry on that instance. Registry activation is explicit, through its exact
+installed selection; it has no separate image, container, profile or service.
+All sites begin without collections. Completing an empty site leaves `/` at 404.
 
-The lifecycle boundary is deliberate:
+Infrastructure mutations share a native process lock at the installation root.
+Missing mandatory configuration or keys over existing state fail without repair;
+startup never replaces an existing Control administrator. `reset --yes` deletes
+Ulvia-owned installation data and the local release cache. Keep a complete matching
+backup of database, files and credentials before destructive recovery.
 
-A Repository is an ordinary named CMS instance:
+## Repository account connections and releases
+
+`repository login URL` saves a CMS PAT supplied by `--token-stdin` or
+`ULVIA_REPOSITORY_TOKEN`, pinned to the origin and Repository identity. Ordinary
+Repository accounts can claim namespaces and publish. Logout removes the local
+connection without revoking the remote token. Client configuration uses
+`$XDG_CONFIG_HOME/ulvia`, `~/.config/ulvia` or explicit `ULVIA_CONFIG_DIR`;
+`ULVIA_DATA_DIR` alone isolates it under `<data>/config`. Files are private.
 
 ```bash
-ulvia services start
-ulvia instance create registry
-ulvia instance status registry
-ulvia instance credentials registry
+ulvia repository login https://repository.example.com --token-stdin
+ulvia namespace claim example
+ulvia release /path/to/resources --recursive
+ulvia push all
+ulvia repository logout
 ```
 
-Open its `/.cms/setup`, sign in and choose **A new Repository**. The other
-buttons accept a Repository address or select `https://repo.ulvia.fr`.
-Creation installs system APIs and the administrator, with zero collections and
-Pages. Repository settings belong to this instance; there is no `--profile`,
-`upgrade-profile`, or shared Repository environment setting. Changing sources
-preserves installed pins. An empty site can finish setup offline.
+Client connections and authored release caches are independent of site Repository
+settings. Publication never installs resources into a site automatically.
 
-`upgrade provider --version VERSION` replaces the shared image with retention
-checks and rollback on activation failure. Installed resources and credentials
-remain in Provider storage; explicit contract/collection upgrades use their
-admitted workflows. Registry needs no separate image, service or port.
-
-`repository login URL` verifies the Repository identity and saves a shared CMS
-PAT supplied through `ULVIA_REPOSITORY_TOKEN` or `--token-stdin`. Ordinary
-Repository accounts can claim namespaces and publish without CMS administrator
-privileges. Login pins both the origin and Repository identity; writes refuse
-redirects and identity changes. Logout deletes the connection and saved PAT
-without revoking the remote token.
-
-Client configuration lives in `$XDG_CONFIG_HOME/ulvia/config.json` or
-`~/.config/ulvia/config.json`. Files use mode 0600, directories 0700.
-`ULVIA_CONFIG_DIR` overrides that location; `ULVIA_DATA_DIR` alone isolates
-client configuration under `<data>/config`. Namespaces, accounts, uploads and
-releases belong to their CMS instance's Provider storage. Startup never claims
-or reassigns a namespace. See the
-[installation guide](../../../docs/installation/README.md#9-repository-cms-instance)
-and [Repository architecture](../../../docs/architecture/community-repository.md).
-
-| Command | Provider tenant | Edge container |
-| --- | --- | --- |
-| `services start` | Does not create one | Does not start one |
-| `instance create <name>` | Provisions one durable tenant | Creates and starts its Edge |
-| `instance start <name>` | Reuses the existing tenant | Starts only that Edge |
-| `start` | Never provisions | Starts every existing Edge after shared services |
-
-`instance credentials <name>` prints only that administrator's email and
-password. Provider operator and instance bearer tokens remain in
-private runtime files. Shared services and every instance have independent
-`stop`, `status`, and `logs` boundaries. Software upgrades are explicit and
-component-scoped through `upgrade <component> --version <exact-version>`.
-Normal starts always reuse the installed digest and never follow a newer tag.
-First startup validates cached exact-version images and downloads only missing
-images. Explicit upgrades still pull their requested tag.
-`reset --yes`
-removes shared Compose projects, instances, shared state and local repository
-releases, including accounts hosted by this local Provider. Independently deployed
-Repositories and the CLI's saved Repository connection are preserved. It does not
-inspect or modify the current working directory.
 `release <resource-directory>` accepts a trusted local `ulvia.release.ts` entry
 or reads `definition.json` and routes by `kind`:
 `collection`, `contract`, or `provider-manifest`. It validates and stores one
@@ -315,17 +264,10 @@ exact parent contracts before specializations, then Provider manifests and colle
 Publication, system installation transitions, collection upgrades and container
 image replacement remain separate actions.
 
-`instance create` provisions the named instance through the Provider operator
-API, then starts its Edge. Connection review validates the runtime report and
-exact manifest claims. Provider behavior is covered by implementation-owned tests.
-
-Official releases evolve independently: the current installations contract and
-Provider manifest use `1.3.0`; local formats remain `v1`. Collections are supplied
-and versioned by their authors.
-Each named instance uses `<name>.localhost` unless an explicit domain is supplied;
-`default` is an ordinary name. Repository hosting uses a CMS instance with the
-explicit Registry installation. Client PAT connections and local release caches
-are separate from the shared services and instance lifecycle.
+Official releases evolve independently. The current branch's Provider manifest
+uses `1.4.0`; Installations uses `1.4.0`, Hosting uses `1.0.0` and local state
+formats remain `v1`. This is source metadata, not evidence that a matching image
+has been published. Collections are supplied and versioned by their authors.
 
 ## Collection examples
 

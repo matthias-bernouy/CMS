@@ -23,7 +23,8 @@ test("the Provider owns every persistent instance service while remaining indepe
 
     expect(entrypoint).not.toContain("cms-edge-server");
     expect(entrypoint).not.toContain("cms-instance-runtime");
-    expect(entrypoint).toContain("instanceHost.recoverOperations");
+    expect(entrypoint).toContain(".recoverOperations(instances.scan()");
+    expect(entrypoint).not.toContain("instances.list()");
     expect(stores).toContain("MongoAuthTokenStore");
     expect(stores).toContain("MongoRateLimiter");
     expect(stores).toContain("sitemapStore");

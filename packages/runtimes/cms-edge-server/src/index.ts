@@ -1,62 +1,57 @@
-import { ResponseCache } from "./runtime/resources/cache/ResponseCache";
-import { commandCacheEffect, commandCacheTags } from "./runtime/resources/cache/commandPolicy";
-import { mountProductionEdge } from "./runtime/mountEdge";
-import { ControlProviderClient } from "./runtime/gateway/ControlProviderClient";
-import { createEdgeGateway } from "./runtime/gateway/createEdgeGateway";
-import { fetchInstallationsProviderReport, installationsControlContract } from "./runtime/gateway/controlReport";
-import { InstallationsProviderTransport } from "./runtime/gateway/InstallationsProviderTransport";
+import { BunRunner } from "@bernouy/http-runner";
+import { createNodeLogger } from "@bernouy/logging/node";
 import { readRuntimeEnv } from "./runtimeEnv";
-import { createEdgeDiagnostics, connectEdgeDiagnostics } from "./runtime/diagnostics";
+import { RoutingClient } from "./runtime/hosting/client/RoutingClient";
+import { SharedEdge } from "./runtime/hosting/SharedEdge";
+import { createTenantContext } from "./runtime/hosting/context";
 
-const diagnostics = createEdgeDiagnostics(process.env);
-const { logger } = diagnostics;
+const logger = createNodeLogger({ service: "cms-edge-host", format: "json", level: "info", includeErrorStack: true });
 try {
-    await startEdge();
-} catch (error) {
-    logger.fatal("edge.startup.failed", {}, error);
-    throw error;
-}
-
-async function startEdge(): Promise<void> {
     const env = readRuntimeEnv(process.env);
-    const transport = new InstallationsProviderTransport(
-        env.CMS_INSTALLATIONS_PROVIDER_URL,
-        env.CMS_INSTALLATIONS_PROVIDER_TOKEN,
-    );
-    const report = await fetchInstallationsProviderReport(transport);
-    const cache = new ResponseCache({
-        enabled: env.CMS_EDGE_RESPONSE_CACHE,
-        event: (outcome) => logger.debug("edge.resource.cache", { outcome }),
+    const routing = new RoutingClient(env.CMS_HOSTING_PROVIDER_URL, env.CMS_HOSTING_EDGE_SECRET);
+    await routing.resolve("readiness.invalid");
+    const edge = new SharedEdge(routing, (route) => createTenantContext(env, route, routing), logger, {
+        maxEntries: env.CMS_EDGE_MAX_CONTEXTS,
+        maxPending: 4,
+        maxWaiters: 64,
+        idleMs: 60_000,
     });
-    const gateway = createEdgeGateway(
-        new ControlProviderClient(transport, logger, installationsControlContract(report)),
-        logger,
-        (contractId, capabilityId) => {
-            const effect = commandCacheEffect(contractId, capabilityId);
-            if (effect !== "neutral") {
-                cache.purge(commandCacheTags(contractId));
-            }
-        },
-    );
-    await connectEdgeDiagnostics(diagnostics, gateway);
-    const edge = await mountProductionEdge({ env, gateway, logger, cache });
-
+    const runner = new BunRunner({ logger, idleTimeoutSeconds: 60 });
+    runner.get("/healthz", () => new Response(null, { status: 204 }));
+    runner.get("/readyz", async () => {
+        try {
+            await routing.resolve("readiness.invalid");
+            return new Response(null, { status: 204 });
+        } catch {
+            return new Response(null, { status: 503 });
+        }
+    });
+    for (const method of ["GET", "HEAD", "QUERY", "POST", "PUT", "PATCH", "DELETE"] as const) {
+        runner.setDefaultEndpoint(method, (request) => edge.handle(request));
+    }
+    runner.start({ port: env.CMS_PORT, hostname: env.CMS_HOST });
+    logger.info("edge.started", {
+        hostingProviderUrl: env.CMS_HOSTING_PROVIDER_URL,
+        maxContexts: env.CMS_EDGE_MAX_CONTEXTS,
+    });
     let stopping = false;
-    const shutdown = async (signal: string) => {
+    const shutdown = async () => {
         if (stopping) {
             return;
         }
         stopping = true;
-        logger.info("edge.stopping", { signal });
-        await edge.stop();
-        await diagnostics.collector.close();
+        await runner.stopGracefully();
+        await edge.close();
     };
-    const handleSignal = (signal: string): void => {
-        void shutdown(signal).catch((error) => {
-            logger.fatal("edge.shutdown.failed", {}, error);
-            process.exitCode = 1;
+    for (const signal of ["SIGINT", "SIGTERM"]) {
+        process.on(signal, () => {
+            void shutdown().catch((error) => {
+                logger.fatal("edge.shutdown.failed", {}, error);
+                process.exitCode = 1;
+            });
         });
-    };
-    process.on("SIGINT", () => handleSignal("SIGINT"));
-    process.on("SIGTERM", () => handleSignal("SIGTERM"));
+    }
+} catch (error) {
+    logger.fatal("edge.startup.failed", {}, error);
+    throw error;
 }

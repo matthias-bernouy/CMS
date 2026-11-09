@@ -46,7 +46,8 @@
         "packages/runtimes/ulvia-provider-server": {
             "entry": [
                 "src/index.ts",
-                "src/checkRetention.ts"
+                "src/checkRetention.ts",
+                "tests/hosting/tls/run.ts"
             ]
         },
         "packages/platform/sdk": {

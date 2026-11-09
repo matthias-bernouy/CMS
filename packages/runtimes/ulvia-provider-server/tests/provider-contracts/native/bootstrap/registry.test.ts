@@ -5,6 +5,7 @@ import { readStoredPlan } from "../../../../src/runtime/instances/system/executi
 import { ProviderExecutionSupport } from "../../../../src/runtime/instances/system/execution/support";
 import { assertHostedReleaseRetention } from "../../../../src/runtime/instances/system/retention";
 import { historicalRegistryFixture } from "./registryFixture";
+import { retentionRecords } from "../../../hosting/persistence/retentionFixture";
 
 test("Registry activation after an image replacement uses the old approved manifest and its exact Registry pin", async () => {
     const f = await historicalRegistryFixture();
@@ -42,13 +43,12 @@ test("Registry activation after an image replacement uses the old approved manif
     };
     await assertHostedReleaseRetention(
         f.support,
-        [recovering],
-        [transition],
-        async (_instance, plans = []) => {
-            for (const plan of plans) {
+        retentionRecords([recovering], [transition]),
+        {
+            assertPlan: async (_instance, plan) => {
                 await readStoredPlan(plan, f.stores, f.support);
-            }
-            return target.contracts.map((pin) => ({ ...pin, location: "stored Registry transition" }));
+            },
+            required: async () => target.contracts.map((pin) => ({ ...pin, location: "stored Registry transition" })),
         },
         {
             current: async () => {

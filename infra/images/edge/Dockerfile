@@ -23,6 +23,7 @@ LABEL org.opencontainers.image.title="Ulvia Edge" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}" \
       io.ulvia.component="edge" \
+      io.ulvia.hosting-api="1" \
       io.ulvia.stack-api="1"
 
 WORKDIR /app
@@ -41,6 +42,6 @@ ENV NODE_ENV=production \
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
-    CMD ["bun", "-e", "const port=process.env.CMS_PORT||'3000'; const r=await fetch(`http://127.0.0.1:${port}/login`,{signal:AbortSignal.timeout(9000)}); if(r.status>=500) process.exit(1); await r.body?.cancel()"]
+    CMD ["bun", "-e", "const port=process.env.CMS_PORT||'3000'; const r=await fetch(`http://127.0.0.1:${port}/readyz`,{signal:AbortSignal.timeout(9000)}); if(r.status!==204) process.exit(1); await r.body?.cancel()"]
 
 CMD ["bun", "run", "packages/runtimes/cms-edge-server/src/index.ts"]

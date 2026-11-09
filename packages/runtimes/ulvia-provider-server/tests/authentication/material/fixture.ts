@@ -28,9 +28,12 @@ export function authenticationDocument(): AuthenticationDocument {
         updatedAt: time,
         secret: { _id: "ULVIA_INSTANCE_ALPHA", ciphertext: Buffer.from("ciphertext"), iv: Buffer.alloc(12) },
         instance: {
+            repository: { url: "https://repo.ulvia.fr", configured: false },
+
             id: INSTANCE_ID,
             idempotencyKey: "create-alpha",
             idempotencyFingerprint: "fingerprint",
+            creationAuthority: { kind: "operator" },
             storageKey: "alpha",
             cmsUrl: "http://127.0.0.1:5100",
             label: "Alpha",

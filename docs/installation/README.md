@@ -1,27 +1,20 @@
 # Install Ulvia
 
-This guide installs the Ulvia CLI and runs CMS instances on Ubuntu, including
-a Repository application. For a dedicated Repository host, use the same shared
-services and follow section 9.
-It is for operators and site owners; workspace contributors should use the
-[development guide](../development/README.md).
+This guide describes the shared-hosting implementation in this checkout. Use a
+CLI release paired with Provider and Edge images supporting hosting API v1;
+older images using the per-site Edge model are incompatible. See
+[shared-hosting verification](../architecture/shared-hosting.md) for the current
+integration coverage and deployment limits.
 
-> **Prerelease availability:** `@cyaxis/ulvia` is the official release package.
-> Prereleases use the npm `next` tag; stable releases use `latest`.
+## 1. Prepare the server
 
-## 1. Prerequisites On Ubuntu
+Install Docker Engine, its Compose plugin and Bun. The workspace toolchain uses
+Bun 1.4.4. Docker must run and be accessible to the account launching Ulvia.
 
-Ulvia requires a supported Ubuntu host, Docker Engine with the Docker Compose
-plugin, and Bun. Follow the upstream instructions rather than copying an
-unversioned third-party installation script:
-
-- [Install Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
-- [Install the Docker Compose plugin on Linux](https://docs.docker.com/compose/install/linux/)
-- [Run Docker without `sudo` and configure startup](https://docs.docker.com/engine/install/linux-postinstall/)
-- [Install Bun on Linux](https://bun.com/docs/installation)
-
-Docker's Ubuntu packages include the Compose plugin when
-`docker-compose-plugin` is installed. Verify the complete toolchain:
+- [Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
+- [Docker Compose plugin](https://docs.docker.com/compose/install/linux/)
+- [Docker Linux post-installation](https://docs.docker.com/engine/install/linux-postinstall/)
+- [Bun installation](https://bun.com/docs/installation)
 
 ```bash
 docker version
@@ -29,292 +22,171 @@ docker compose version
 bun --version
 ```
 
-The current release toolchain targets Bun 1.4.4 or newer. Docker must be running
-and accessible to the account that executes `ulvia`.
+Install the chosen compatible CLI release with
+`bun add --global @cyaxis/ulvia@CLI_VERSION`, replacing `CLI_VERSION` with its
+exact version. Workspace contributors can use `bun run ulvia --` instead;
+see [development](../development/README.md).
 
-## 2. Install The CLI
-
-Install the current stable CLI globally from the public npm registry:
-
-```bash
-bun add --global @cyaxis/ulvia@latest
-ulvia --help
-```
-
-If `ulvia` is not found, reopen the terminal and check that `~/.bun/bin` is in
-`PATH`, as described by the Bun installation guide.
-
-Use an exact version, for example `@cyaxis/ulvia@1.0.7`, when reproducing an
-installation. The `next` tag is reserved for explicitly tested prereleases.
-
-## 3. Create A Local Site
-
-Start the shared infrastructure, then create one named instance:
+## 2. Start a local installation
 
 ```bash
-ulvia services start
-ulvia instance create my-site --label "My site"
-ulvia instance credentials my-site
-```
-
-The first start uses the exact software version bundled into the installed CLI.
-To select an exact initial version explicitly, use
-`ulvia services start --version 1.0.7`. This option never upgrades an
-existing installation.
-
-First startup reuses locally cached exact-version images after checking their
-component, stack API, version and immutable digest. It downloads missing images.
-With the runtime and infrastructure images already present, initial provisioning
-can run without Internet access. Explicit image upgrades still pull the requested tag.
-
-The site is available at `http://my-site.localhost:5100`. The credentials
-command prints the initial administrator email and password. It never prints
-the Provider, Repository, encryption, or instance service secrets.
-
-Open `http://my-site.localhost:5100/.cms/setup` and use those credentials. Fresh
-instances create zero collections and Pages. Choose an empty site or explicitly
-review a recipe from a published collection; no starter or administration site
-is bundled. Empty completion leaves `/` returning 404 until a Page is published.
-See [first published Page](../product/first-published-page.md) for the current API flow.
-
-Setup first offers **A Repository address**, **The official Repository**
-(`https://repo.ulvia.fr`), or **A new Repository** on this instance. Then choose
-an empty site or review a published collection recipe. The URL is stored per
-instance; there is no global Repository environment variable or service setting.
-The address must be reachable from the Provider. HTTP origins are an explicit
-choice; credentials, queries and fragments are forbidden in settings URLs.
-
-A new Repository installs Registry from the system resources already in the
-image and selects this site’s public Edge origin. Its catalogue starts empty.
-Self-origin calls use the known private Edge transport; no remote catalogue is
-needed for creation or empty completion. Changing a Repository URL affects future
-discovery/imports, preserving installed resources and Pages.
-
-## 4. Daily Operations
-
-```bash
+ulvia configure hosting --domain control.localhost --edges 1
 ulvia start
-ulvia instance stop my-site
-ulvia instance start my-site
-ulvia services logs all --level warn
-ulvia instance logs my-site edge
+ulvia services status
+```
+
+A packaged CLI contains its exact initial stack version. Workspace source needs
+`ulvia start --version STACK_VERSION`, with an exact version of locally built or
+published compatible images. First startup reuses valid cached images and pulls
+missing images. It checks component, stack API, hosting API, version and immutable
+repository digest. Later starts keep both stored image pins.
+
+One Compose project contains Provider, MongoDB, Caddy and the shared Edge pool.
+The Provider creates Control automatically. Its default address is
+`http://control.localhost:5100/.cms/setup`. The CLI announces a private file
+containing the initial administrator email and password:
+
+```text
+<data>/services/credentials/control-administrator.json
+```
+
+Read that file locally to sign in. The CLI prints only its path. Credentials use
+mode 0600 in a private directory. A ready restart does not recreate a removed
+bootstrap file or reset the account. Preserve infrastructure keys separately
+from this one-time administrator bootstrap input.
+
+## 3. Configure Control and create sites
+
+Open Control's `/.cms/setup`, authenticate and choose a Repository. Native setup
+supports a custom Repository, the official Repository, or creating a new Registry
+on Control. Then explicitly choose an empty site or a published collection recipe.
+No console collection, starter, Page or administration application is bundled.
+An empty completed site legitimately returns 404 at `/`.
+
+Create sites through Control's admitted `ulvia/cms.hosting` capabilities. The
+HTTP binding for `instances.create` is:
+
+```text
+POST /.cms/call/ulvia/cms.hosting/hosting/instances.create
+```
+
+```json
+{
+  "requestId": "10000000-0000-4000-8000-000000000001",
+  "label": "Example site",
+  "origin": "http://example.localhost:5100",
+  "administrator": {
+    "email": "owner@example.test",
+    "password": "replace-with-a-private-password"
+  }
+}
+```
+
+Use an authenticated current Control administrator and the site's ordinary
+Origin/session protections. Each new creation needs its own UUID; an exact retry
+with the same UUID recovers that operation. Check `instance.status`: provisioning
+acceptance alone is not readiness. The contract also exposes bounded listing,
+state inspection, disable and domain administration through HTTP/MCP bindings.
+An ordinary site's administrator cannot manage hosting.
+
+All logical sites use the shared pool. Their creation launches no additional
+process. Sites use native setup with their own accounts and Repository settings.
+A collection selected later grants no hosting authority.
+
+## 4. Operate and resize the infrastructure
+
+```bash
+ulvia services status
+ulvia services logs provider
+ulvia services logs edge-1 --follow
+ulvia services logs proxy
 ulvia services stop
+ulvia start
+ulvia configure hosting --edges 2
+ulvia start
 ```
 
-Stopping containers preserves persistent data. `services stop` also makes every
-site unavailable because Edges depend on the shared Provider and proxy.
+Stopping services retains data and makes all sites unavailable. Resizing changes
+shared Edge processes independently of the number of sites; reducing the count
+removes obsolete Edge containers. Domain and instance disable operations belong
+to Control's contracts, not container lifecycle commands.
 
-## 5. Upgrade Ulvia
+Persistent data defaults to `$XDG_DATA_HOME/ulvia` or `~/.local/share/ulvia`.
+`ULVIA_DATA_DIR` explicitly isolates an installation. The CLI keeps hosting/network
+configuration, launch intent, exact image pins, database, file storage and private
+keys below that directory. Infrastructure mutations share a native process lock.
 
-Upgrade the host CLI through Bun. Naming `latest` explicitly also replaces an
-installation that was originally attached to the `next` channel:
+## 5. Configure a public domain and HTTPS
+
+Before first launch:
 
 ```bash
-bun add --global @cyaxis/ulvia@latest
-hash -r
-ulvia --version
+ulvia configure network --bind 0.0.0.0 --http-port 80 --tls acme --https-port 443 --acme-email ops@example.com
+ulvia configure hosting --domain control.example.com --public-addresses 203.0.113.10
+ulvia start
 ```
 
-Upgrade deployable components independently with exact versions:
+Replace the example domain and address with your deployment values. Point all
+A/AAAA records at the configured entrypoints and permit inbound TCP 80/443.
+Provider operator access stays on loopback; MongoDB publishes no host port.
+
+The domain is registered during Control bootstrap, before certificate readiness.
+Caddy asks the admitted TLS permission binding for authorization. Unknown,
+unverified or disabled domains cannot obtain permission. Its certificate store
+persists independently of containers. Instance provisioning, DNS/domain readiness,
+HTTPS readiness and backend health are distinct; startup reports pending access.
+
+Network settings and Control origin lock after the first infrastructure launch.
+The public-address allowlist can be updated with `configure hosting`, then
+`start`. Explicitly configure operator-owned suffixes with `--managed-suffixes`
+only for DNS space controlled by this installation. Other customer domains require
+the ownership proof supplied through Control's domain capabilities.
+
+## 6. Update, back up or remove
 
 ```bash
-ulvia upgrade edge --version 1.0.7
-ulvia upgrade provider --version 1.0.7
+ulvia upgrade provider --version STACK_VERSION
+ulvia upgrade edge --version STACK_VERSION
 ```
 
-Ulvia resolves each official Docker Hub tag to an immutable digest and reuses
-that digest on subsequent starts. Registry channels such as `next` or `latest`
-may identify releases for humans, but an installation never persists or
-silently follows those mutable tags.
+Replace `STACK_VERSION` with an exact available version. Explicit updates pull
+that tag and store its immutable digest. Provider updates check retained execution
+support. Failed activation attempts the previous images; this does not roll back
+mutated database or file contents. Contract and collection upgrades remain
+separate, explicit admitted workflows.
 
-`upgrade edge` visits every local Edge instance in sequence. A Provider
-upgrade affects shared services; Repository instances use those same Provider
-and Edge images. A failed activation attempts
-to restart the previous image, but this does not restore changed database or
-file contents and is not an atomic rollback across all instances.
-Take a complete backup before an upgrade involving persisted data. Internal
-schema migrations and interrupted-upgrade/restore drills require explicit
-implementation and deployment-level verification.
-
-## 6. Public Domain And HTTPS
-
-Configure public networking before creating the first instance because the
-public Edge URLs become part of Provider provisioning. The CLI separately configures
-a private Gateway callback URL and a unique Docker alias for each instance:
-
-```bash
-ulvia configure network \
-  --bind 0.0.0.0 \
-  --http-port 80 \
-  --tls acme \
-  --https-port 443 \
-  --acme-email ops@example.com
-
-ulvia services start
-ulvia instance create website --domain example.com
-ulvia instance credentials website
-```
-
-Before starting, point the domain's DNS records to the host and allow inbound
-TCP traffic on ports 80 and 443. Review Docker's documented firewall behavior:
-published container ports can bypass some `ufw` and `firewalld` rules unless
-the host policy uses Docker's supported chains.
-
-The Provider operator endpoint remains bound to loopback. A Repository is a
-named CMS instance exposed through its Edge and the same shared proxy; it has
-no separate management listener.
-
-## 7. Backup, Reset, And Removal
-
-Stop the installation before taking a filesystem-level backup of the Ulvia data
-directory. Preserve the complete directory, including MongoDB, files,
-credentials, encryption material, Repository state, and instance definitions.
-Do not restore only selected secret or database files from different snapshots.
-
-The CLI has no general backup/restore command. Stop each Edge with
-`ulvia instance stop <name>`, then stop shared services before copying their
-data. Restore and verify a complete backup in an isolated installation before
-treating it as a recovery guarantee; do not rely on image fallback to recover
-data.
-
-`reset` permanently removes Ulvia-owned local state:
+Stop all shared services before a filesystem backup. Preserve the complete
+matching data directory, including MongoDB, file storage and encryption material.
+Validate restores in isolation. Missing mandatory settings or keys over existing
+state refuse startup; no silent historical import or key regeneration occurs.
 
 ```bash
 ulvia reset --yes
-```
-
-Remove the CLI separately after stopping or resetting the installation:
-
-```bash
 bun remove --global @cyaxis/ulvia
 ```
 
-Removing the CLI alone does not delete persistent CMS data or Docker resources.
+Reset permanently deletes Ulvia-owned installation data and the local release
+cache. Removing the CLI alone does not delete data or Docker resources.
 
-## 8. Troubleshooting
+## 7. Publish to a Repository
 
-- **Docker permission denied:** complete Docker's Linux post-installation steps,
-  then start a new login session.
-- **`docker compose` is unknown:** install the official Compose plugin rather
-  than the retired standalone `docker-compose` package.
-- **Port 5100, 80, or 443 is occupied:** inspect the owner before changing the
-  persisted network configuration.
-- **An image cannot be pulled:** verify network access and that the requested
-  exact Cyaxis image version has been published.
-- **An instance returns 503:** check `ulvia services status`, then the Provider
-  and instance Edge logs.
-- **Stored encrypted data cannot be opened:** do not generate replacement keys
-  over an existing data directory; restore the matching complete backup.
+Any logical site can explicitly activate Registry during native setup. It uses
+the same Provider, shared Edges and proxy, with its own CMS accounts, catalogue
+and namespace ownership. It has no separate Repository image or signing setup.
 
-For implementation diagnostics and contributor-only environment overrides, see
-the [development and validation guide](../development/README.md).
-
-
-## 9. Repository CMS Instance
-
-A Repository uses the normal Edge, official Provider and MongoDB deployment.
-It has its own CMS accounts, namespace ownership, uploads and catalogue. No
-separate Repository image or signing-key configuration is required.
-
-For a local installation:
-
-```bash
-ulvia services start
-ulvia instance create registry
-ulvia instance status registry
-ulvia instance credentials registry
-```
-
-The Registry API is available below
-`http://registry.localhost:5100/.cms/call/ulvia/repository`. Its public identity
-endpoint is `GET /v1/info` relative to that prefix. Ordinary CMS instances do not
-expose this contract. Open `/.cms/setup`, sign in and choose **A new Repository**
-to activate it. Creation starts with an administrator and system APIs,
-without any collection or Page. Publish resources through the CLI/API and install
-a website explicitly if needed.
-
-For public hosting, configure network exposure and ACME as described in section 6
-before creating instances, then create the application on its public domain:
-
-```bash
-ulvia instance create registry --domain repository.example.com
-```
-
-Replace the example domain with a domain routed to this host. The same shared
-proxy handles its HTTPS certificate. Provider management remains on loopback.
-
-### Publisher Accounts And Credentials
-
-Registration, password login and PAT management use the normal Access bindings
-under `/.cms/call/ulvia/cms.access`. Registration follows the instance policy.
-An ordinary account can claim and publish; it does not need CMS administrator
-privileges. The protected publisher operations use a shared CMS PAT.
-
-The current API flow is:
-
-1. `POST /signup` with `email` and `password`.
-2. `POST /login-password` with the same credentials; retain its session cookies.
-3. `POST /personal-access-tokens` with the session cookies and a token `name`.
-   An optional `expiresAt` bounds its lifetime. The plaintext token is returned
-   only at creation.
-4. Supply that token to the CLI using bounded stdin or `ULVIA_REPOSITORY_TOKEN`.
-
-Browser/session mutations use the instance's normal Origin and cookie
-protections. Tokens can be listed with `GET /personal-access-tokens` and revoked
-with `DELETE /personal-access-tokens/:id` by their owning account.
+Ordinary Repository accounts can register/login through `ulvia/cms.access` and
+create a personal access token. Supply that token through bounded stdin:
 
 ```bash
 ulvia repository login https://repository.example.com --token-stdin
-ulvia namespace claim acme
-ulvia namespace status acme
+ulvia namespace claim example
 ulvia release /path/to/resources --recursive
 ulvia push all
+ulvia repository logout
 ```
 
-Each published resource's `publisherId` must match a namespace owned by the
-account. Contract, Provider manifest and collection dependencies must be present
-before dependent publication; `push all` orders locally available releases.
-Publication never installs a collection on a site.
-
-Namespace claims are atomic and limited to 32 owned names per account. Transfer
-uses an explicit target account and expected revision. Suspension retains the
-name; account deletion is refused while it owns namespaces. Startup does not
-reserve or reclaim names, including `ulvia`.
-
-### Restart And Updates
-
-```bash
-ulvia instance stop registry
-ulvia instance start registry
-ulvia services status
-ulvia instance status registry
-ulvia upgrade provider --version VERSION
-ulvia upgrade edge --version VERSION
-```
-
-Replace `VERSION` with an exact available image version. The CLI pins image
-digests, checks Provider retention before replacing it, and attempts to restore
-the previous image if activation fails. Accounts, ownership, releases, Pages and
-credentials remain in the normal CMS storage.
-
-Installed contract and collection upgrades are separate from image replacement.
-They use explicit admitted Installations workflows; restart never selects new pins.
-
-Back up the Provider database, file storage, matching encryption credentials and
-private instance configuration together, following section 7. The Repository is
-part of this installation: `reset --yes` deletes its data with the other CMS
-instances. Client `repository logout` removes its saved PAT connection without
-revoking the token remotely.
-
-### Contributor Verification
-
-Build Edge and Provider together. The Repository tests create an instance on an
-internal Docker network and use ordinary account PATs; they do not publish
-images or contact the public Repository.
-
-```bash
-bun run images:build --version 0.1.0-integration all
-ULVIA_MCP_EDGE_DOCKER_IMAGE=docker.io/cyaxis/ulvia-edge:0.1.0-integration \
-ULVIA_MCP_PROVIDER_DOCKER_IMAGE=docker.io/cyaxis/ulvia-provider:0.1.0-integration \
-bun test ./tests/images/repository
-```
+Login pins the Repository origin and identity. Publication refuses cross-origin
+credential forwarding and redirects, validates namespace ownership and dependencies,
+and does not install resources into any site. Logout removes the saved connection
+without revoking its remote PAT. Site Repository settings and CLI publisher
+connections are independent.

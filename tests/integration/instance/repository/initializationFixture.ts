@@ -1,63 +1,77 @@
-import { resolve } from "node:path";
+import { cp, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { prepareCollectionRelease } from "@bernouy/repository/collections/build";
-import { admitCollectionRelease } from "@bernouy/repository/collections";
+import { captureCollectionSources } from "@bernouy/repository/repository/authoring/build";
 import { RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
 import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 
-/** Deliberately tiny test-authored recipe; production ships no starter collection. */
+/** Author a disposable recipe; production ships no starter collection. */
 export async function publishInitializationFixture(origin: string, token: string) {
     const namespaces = new RepositoryNamespaceClient(origin, {
+        allowInsecureHttp: true,
         credential: {
             origin,
-            repositoryId: await new RepositoryNamespaceClient(origin).identity(),
+            repositoryId: await new RepositoryNamespaceClient(origin, { allowInsecureHttp: true }).identity(),
             resolveToken: async () => token,
         },
     });
     await namespaces.claim("ulvia.test");
-    const base = await prepareCollectionRelease(
-        resolve(import.meta.dir, "../../../../packages/runtimes/ulvia-cli/tests/stack/fixtures/smoke-kit"),
-    );
-    const release = await admitCollectionRelease({
-        ...base.release,
-        name: "name",
-        translations: { en: { ...base.release.translations.en, name: "Test starter", description: "One test Page" } },
-        examples: [
-            ...(base.release.examples ?? []),
-            {
-                id: "home",
-                label: "name",
-                description: "description",
-                document: {
-                    html: '<div cms-bloc="ulvia-dtest--smoke-kit--card"><h1 slot="content">Test starter</h1></div>',
-                },
-                previews: [{ id: "desktop", frame: { width: 640, height: 240 } }],
-            },
-        ],
-        bootstraps: [
-            {
-                id: "home",
-                label: "name",
-                description: "description",
-                requires: [],
-                includes: [],
-                pages: [
+    const root = await mkdtemp(join(tmpdir(), "ulvia-setup-recipe-"));
+    const directory = join(root, "smoke-kit");
+    try {
+        await cp(
+            resolve(import.meta.dir, "../../../../packages/runtimes/ulvia-cli/tests/stack/fixtures/smoke-kit"),
+            directory,
+            { recursive: true },
+        );
+        const definition = await Bun.file(join(directory, "definition.json")).json();
+        await writeFile(
+            join(directory, "definition.json"),
+            JSON.stringify({ ...definition, name: "setup.name", description: "setup.description" }),
+        );
+        await mkdir(join(directory, "translations/en"), { recursive: true });
+        await writeFile(
+            join(directory, "translations/en/setup.json"),
+            JSON.stringify({ "setup.name": "Test starter", "setup.description": "One test Page" }),
+        );
+        await writeFile(
+            join(directory, "bootstrap.json"),
+            JSON.stringify({
+                bootstraps: [
                     {
                         id: "home",
-                        exampleId: "home",
-                        path: "/",
-                        title: "name",
-                        description: "description",
-                        indexing: false,
-                        visible: true,
+                        label: "setup.name",
+                        description: "setup.description",
+                        requires: [],
+                        includes: [],
+                        pages: [
+                            {
+                                id: "home",
+                                exampleId: "card",
+                                path: "/",
+                                title: "setup.name",
+                                description: "setup.description",
+                                indexing: false,
+                                visible: true,
+                            },
+                        ],
                     },
                 ],
-            },
-        ],
-    });
-    await new RemoteRepositoryClient(origin, await namespaces.ownedCredential("ulvia.test")).push({
-        kind: "collection",
-        canonicalJson: release.canonicalJson,
-        assets: [],
-    });
-    return release;
+            }),
+        );
+        const source = await captureCollectionSources(directory);
+        const release = await prepareCollectionRelease(directory);
+        await new RemoteRepositoryClient(origin, await namespaces.ownedCredential("ulvia.test"), {
+            allowInsecureHttp: true,
+        }).push({
+            kind: "collection",
+            canonicalJson: release.canonicalJson,
+            sourceJson: source.sourceJson,
+            assets: source.assets,
+        });
+        return release;
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
 }

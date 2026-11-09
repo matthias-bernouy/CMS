@@ -22,6 +22,9 @@ export function isOfficialContract(id: string): boolean {
         "ulvia/cms.secrets",
         "ulvia/provider.connections",
         "ulvia/provider.cms-instances",
+        "ulvia/cms.hosting",
+        "ulvia/provider.routing",
+        "ulvia/provider.tls",
     ].includes(id);
 }
 

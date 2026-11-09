@@ -36,6 +36,7 @@ LABEL org.opencontainers.image.title="Ulvia Provider" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}" \
       io.ulvia.component="provider" \
+      io.ulvia.hosting-api="1" \
       io.ulvia.stack-api="1"
 
 WORKDIR /app
@@ -58,6 +59,6 @@ VOLUME ["/var/lib/cms/files"]
 EXPOSE 5103
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
-    CMD ["bun", "-e", "const port=process.env.ULVIA_PROVIDER_PORT||'5103'; const token=process.env.ULVIA_PROVIDER_OPERATOR_TOKEN||''; const r=await fetch(`http://127.0.0.1:${port}/ulvia/operator/instances`,{headers:{authorization:`Bearer ${token}`},signal:AbortSignal.timeout(9000)}); if(!r.ok) process.exit(1); await r.body?.cancel()"]
+    CMD ["bun", "-e", "const port=process.env.ULVIA_PROVIDER_PORT||'5103'; const r=await fetch(`http://127.0.0.1:${port}/readyz`,{signal:AbortSignal.timeout(9000)}); if(r.status!==204) process.exit(1); await r.body?.cancel()"]
 
 CMD ["bun", "--no-macros", "run", "packages/runtimes/ulvia-provider-server/src/index.ts"]

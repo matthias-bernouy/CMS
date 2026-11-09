@@ -1,3 +1,5 @@
+import type { RoutingServices } from "@bernouy/hosting/routing";
+import type { HostingServices } from "@bernouy/hosting/feature";
 import type {
     InstallationServices,
     InstallationGateway,
@@ -38,7 +40,10 @@ export interface CmsCollectionDependencies {
 
 /** Ports supplied by the runtime for SDK feature implementations. */
 export type UlviaProviderFeatureServices = Partial<
-    SmtpEmailerServices &
+    RoutingServices &
+        HostingTlsServices &
+        HostingServices &
+        SmtpEmailerServices &
         SecretsServices &
         FilesServices &
         ObservabilityServices &
@@ -84,3 +89,4 @@ export interface UlviaProviderManagement extends InstallationManagement {
         }[];
     }): Promise<{ revision: number; selected: readonly ContractSelection[] }>;
 }
+import type { HostingTlsServices } from "@bernouy/hosting/tls";

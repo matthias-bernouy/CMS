@@ -20,9 +20,17 @@ models and validation for CMS-owned installations and site selections.
 - `src/repository/` owns namespace authority, staged publication, filesystem storage,
   source retention, discovery and bounded authoring preparations.
 - `src/site-upgrades/` owns durable intents and write fencing for reviewed switches.
+  The Mongo adapter also owns reconstructible resource cache revisions. Settle
+  the clock before releasing write/maintenance fencing. On invalidation failure,
+  retain the durable write permit. Revision reads bracket indexed maintenance
+  and permit lookups; expired permits remain unsafe. Missing cache metadata
+  disables reuse without repairing state; malformed persisted revisions refuse.
 - `src/repository-http/` is bounded transport shared by discovery clients.
 - Runtime composition chooses adapters and configuration. No business Provider
-  invocation or environment reads belong in this package.
+  invocation or environment reads belong in this package. Discovery, namespace
+  and publication clients accept an injected RepositoryFetch for runtime routing.
+  Keep the logical origin/Repository identity and PAT checks, redirects, immutable
+  digests and byte bounds independent of that transport choice.
 - Treat all inputs as untrusted; retain strict parsing, byte/depth/count limits,
   immutable snapshots, ownership fences and artifact-last publication visibility.
 - The package root is type-only. Executable APIs use declared explicit subpaths.

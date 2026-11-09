@@ -1,3 +1,10 @@
+import { createRoutingRuntime } from "./runtime/instances/system/hosting/routingRuntime";
+import { MongoSiteUpgradeStorage } from "@bernouy/repository/upgrades/mongo";
+import { MongoProviderOperationStore } from "./runtime/provider-operations/MongoProviderOperationStore";
+import { createTlsRuntime } from "./runtime/instances/system/hosting/tlsRuntime";
+import { readHostingConfiguration } from "./runtime/instances/system/hosting/configuration";
+import { composeHosting } from "./runtime/instances/system/hosting/compose";
+import { authorizeHostedCreation } from "./runtime/instances/system/hosting/creationAuthority";
 import { SystemBootstrap } from "./runtime/instances/system/execution/SystemBootstrap";
 import { ProviderExecutionSupport } from "./runtime/instances/system/execution/support";
 import { assertHostedReleaseRetention, managedReleaseReader } from "./runtime/instances/system/retention";
@@ -30,6 +37,7 @@ try {
         );
     }
     const env = readProviderRuntimeEnv(process.env);
+    const hostingConfiguration = readHostingConfiguration(process.env);
     await validateCmsStorageRoots(env.CMS_FILES_DIR);
 
     const mongo = new MongoClient(env.MONGO_URL);
@@ -53,15 +61,18 @@ try {
     let host: ProviderInstanceHost | undefined;
     let transitionRecovery: RecoverySupervisor | undefined;
     let operationRecovery: Promise<void> | undefined;
+    let tlsDelivery: { start(): void; stop(): Promise<void> } | undefined;
     try {
         const bootstrap = bundledBootstrapSources(env.ULVIA_BOOTSTRAP_DIR);
         const system = new SystemBootstrap(bootstrap);
         const support = new ProviderExecutionSupport();
-        const managedInstances = await instances.list();
         await assertHostedReleaseRetention(
             support,
-            managedInstances,
-            await transitions.listRetained(),
+            {
+                instances: instances.scan(),
+                transitions: (id) => transitions.scanRetained(id),
+                hasUnstagedUpgrade: (id) => transitions.hasUnstagedUpgrade(id),
+            },
             managedReleaseReader(mongo, support, env.ULVIA_PROVIDER_PUBLIC_URL),
             system,
         );
@@ -74,6 +85,7 @@ try {
             {
                 read: (instanceId) => credentials.readAdministrator(instanceId),
                 clear: (instanceId) => credentials.clearAdministrator(instanceId),
+                authorizeCreation: (actor) => authorizeHostedCreation(instanceHost, actor),
                 authorizeExtension: async (instance, sub) =>
                     (
                         await new MongoAdministratorGrantStore(mongo.db(instanceDatabaseName(instance.storageKey))).get(
@@ -113,17 +125,47 @@ try {
                 resume: (instance, administratorSub) => provisioner.resumeSystemUpgrade(instance.id, administratorSub),
             },
         );
+        const hosting = await composeHosting({
+            resourceRevision: (storageKey) =>
+                new MongoSiteUpgradeStorage(mongo.db(instanceDatabaseName(storageKey))).readResourceRevision("default"),
+            db: controlDb,
+            host: instanceHost,
+            instances,
+            credentials,
+            provisioner,
+            system,
+            lifecycle,
+            idempotencySecret: env.CMS_SESSION_SECRET,
+            configuration: hostingConfiguration,
+            logger,
+        });
+        tlsDelivery = hosting.delivery;
+        instanceHost.hosting = hosting.services;
+        const control = await hosting.initialize();
+        logger.info("provider.control.initialized", {
+            instanceId: control.instance.id,
+            origin: control.domain.origin,
+            instanceStatus: control.instance.status,
+            domainStatus: control.domain.state,
+            tlsStatus: control.domain.tls,
+        });
         const authenticator = new ProviderInstanceAuthenticator(
             new MongoInstanceAuthenticationReader(controlDb, "ulvia-provider-control", secretCrypto),
         );
+        const routing = await createRoutingRuntime(system, hosting.routing, hostingConfiguration.edgeSecret);
+        const tls = await createTlsRuntime(system, hosting.delivery.authority);
         provider = mountUlviaProvider({
             env,
             authenticator,
             host: instanceHost,
             lifecycle,
             logger,
+            tls,
+            readiness: async () => (await hosting.store.readInstallation())?.phase === "ready",
+            routing: { authority: hosting.routing, instances, authenticate: routing.authenticate },
         });
-        instanceHost.startDocumentation(managedInstances);
+        tlsDelivery.start();
+        instanceHost.startDocumentation();
         transitionRecovery = new RecoverySupervisor(
             (limit) => provisioner.recover(limit),
             undefined,
@@ -131,13 +173,15 @@ try {
             (error) => logger.error("provider.transition.recovery.failed", {}, error),
         );
         await transitionRecovery.start(false);
-        operationRecovery = instances
-            .list()
-            .then((records) => instanceHost.recoverOperations(records))
+        operationRecovery = instanceHost
+            .recoverOperations(instances.scan(), async (instance) =>
+                new MongoProviderOperationStore(mongo.db(instanceDatabaseName(instance.storageKey))).hasPending(),
+            )
             .then(() => undefined)
             .catch((error) => logger.error("provider.operation.startup-recovery.failed", {}, error));
     } catch (error) {
         await settleCleanup("startup", [
+            ["tls-delivery", tlsDelivery?.stop()],
             ["transition-recovery", transitionRecovery?.stop()],
             ["operation-recovery", operationRecovery],
             ["listener", provider?.stop()],
@@ -155,6 +199,7 @@ try {
         stopping = true;
         logger.info("provider.stopping", { signal });
         const failures = [
+            ...(await settleCleanup("shutdown-tls", [["tls-delivery", tlsDelivery?.stop()]])),
             ...(await settleCleanup("shutdown-listener", [["listener", provider.stop()]])),
             ...(await settleCleanup("shutdown-background", [
                 ["transition-recovery", transitionRecovery?.stop()],

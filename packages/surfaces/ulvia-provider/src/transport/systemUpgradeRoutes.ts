@@ -1,8 +1,8 @@
 import type { Runner } from "@bernouy/http-runner";
 import { readBoundedRequestBody } from "@bernouy/http-runner";
 import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
-import type { ProviderInstanceLifecycle } from "../instances/lifecycle";
-import type { SystemUpgradeInput } from "../instances/installationPlan";
+import type { ProviderInstanceLifecycle } from "@bernouy/hosting/instances";
+import type { SystemUpgradeInput } from "@bernouy/hosting/instances";
 
 type Handler = (request: Request) => Promise<Response>;
 type Operation = "review" | "apply" | "resume";

@@ -5,7 +5,6 @@ import { docker, waitForHttp } from "./docker";
 export async function upgradeProvider(
     name: string,
     image: string,
-    _version: string,
     operatorToken: string,
     instanceId: string,
     cleanupNames: string[],

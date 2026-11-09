@@ -16,7 +16,8 @@
         "@bernouy/cms-edge": "workspace:*",
         "@bernouy/observability": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
-        "@bernouy/ulvia-providers": "workspace:*"
+        "@bernouy/ulvia-providers": "workspace:*",
+        "@bernouy/hosting": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

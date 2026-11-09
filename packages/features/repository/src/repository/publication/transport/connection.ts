@@ -1,3 +1,4 @@
+import type { RepositoryFetch } from "repository/repository-http/getBytes";
 import { COLLECTION_PUBLICATION_ISSUES } from "repository/collections/core/errors";
 import type { CollectionPublicationCode, CollectionPublicationResource } from "repository/collections/core/errors";
 import { RepositoryRequestError } from "../../core/errors";
@@ -8,11 +9,13 @@ import type { RepositoryConnectionCredential } from "./credentials";
 
 export class RepositoryConnection {
     readonly base: URL;
+    private readonly fetcher: RepositoryFetch;
     constructor(
         origin: string,
         private readonly credential?: RepositoryConnectionCredential,
-        options: Readonly<{ allowInsecureHttp?: boolean }> = {},
+        options: Readonly<{ allowInsecureHttp?: boolean; request?: RepositoryFetch }> = {},
     ) {
+        this.fetcher = options.request ?? ((url, init) => fetch(url, init));
         this.base = repositoryUrl(origin, options);
         if (credential && credential.origin !== this.base.origin) {
             throw new Error("Repository credentials belong to a different origin");
@@ -129,6 +132,11 @@ export class RepositoryConnection {
             }
             headers.set("authorization", `Bearer ${token}`);
         }
-        return fetch(url, { ...init, headers, redirect: "error", signal: init.signal ?? AbortSignal.timeout(120_000) });
+        return this.fetcher(url, {
+            ...init,
+            headers,
+            redirect: "error",
+            signal: init.signal ?? AbortSignal.timeout(120_000),
+        });
     }
 }

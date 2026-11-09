@@ -4,17 +4,14 @@ import { CLI_VERSION } from "./runtime/stack/version";
 const HELP = `Ulvia CMS CLI
 
 Usage:
-  ulvia start [--version <version>]
+  ulvia start [--version <version>] [--domain <hostname>]
   ulvia configure network [network options]
-  ulvia services start [--version <version>]
+  ulvia configure hosting [--domain <hostname>] [--edges <1..16>] [--public-addresses <ip,ip>]
+  ulvia services start [--version <version>] [--domain <hostname>]
   ulvia services <stop | status | logs>
   ulvia repository login <url> [--token-stdin]
   ulvia repository logout
   ulvia namespace <list | claim | status | transfer | suspend> [options]
-  ulvia instance create <name> [--label <label>] [--domain <domain>]
-  ulvia instance <start | stop | status | credentials | logs> <name>
-  ulvia instance list
-  ulvia instance delete <name> --yes
   ulvia upgrade <edge | provider> --version <version>
   ulvia reset --yes
   ulvia release <resource-directory> [--recursive]
@@ -26,12 +23,11 @@ Usage:
   ulvia prune
 
 Commands:
-  start        Start shared services and every existing instance
-  configure    Configure persistent network exposure and TLS before creating instances
-  services     Manage the shared proxy, MongoDB, and Provider
+  start        Start shared infrastructure and initialize empty Control
+  configure    Configure persistent network exposure and TLS before starting infrastructure
+  services     Manage Caddy, MongoDB, Provider and shared Edges
   repository   Manage a pinned Repository PAT connection
   namespace    Manage account-owned Repository namespaces
-  instance     Create and manage independent Edge instances
   upgrade      Pull and install one exact official Docker image version
   reset        Delete all instances, services data, and repository releases after --yes
   preview      Generate example frames, captures, and a local explorer
@@ -133,4 +129,4 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     await pruneCommand(args.slice(1), repository, log);
 }
 
-const LOCAL_COMMANDS = new Set(["start", "configure", "services", "instance", "upgrade", "reset"]);
+const LOCAL_COMMANDS = new Set(["start", "configure", "services", "upgrade", "reset"]);

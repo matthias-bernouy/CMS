@@ -6,8 +6,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 
 ## Architecture And Development
 
-- [Install Ulvia](installation/README.md): Ubuntu prerequisites, first local
-  instance, public HTTPS, upgrades, backups and troubleshooting.
+- [Install Ulvia](installation/README.md): prerequisites, automatic empty Control,
+  shared services, public HTTPS, upgrades and backups.
 - [Workspace architecture](architecture/README.md): layers, dependency rules,
   domain boundaries and runtime composition.
 - [Contract documentation](architecture/contract-documentation.md): versioned
@@ -17,6 +17,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [Imports](architecture/imports.md): public exports, local aliases, adapters and
   browser boundaries.
 - [Development](development/README.md): local startup, builds and validation.
+- [Shared hosting validation](development/shared-hosting-validation.md): requirement
+  evidence, reproducible checks and deployment limits for the fresh baseline.
 - [Infrastructure tooling](../infra/README.md): release packaging, images, models
   and optional host operations.
 - [Workspace tests](../tests/README.md): cross-component journeys and image checks.
@@ -24,8 +26,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [First published Page](product/first-published-page.md): the current setup-to-publication API
   journey, its checks and the visual editing boundary.
 - [Provider instance initialization](architecture/provider-instance-initialization.md):
-  operator API, exact official profile, isolated instance connection, local
-  first run, restart and production composition boundaries.
+  Control bootstrap, admitted Hosting management, exact system plans, isolated
+  instance contexts, native setup and recovery.
 
 ## Providers And Collections
 

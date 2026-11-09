@@ -1,3 +1,4 @@
+import type { NodeGatewayHttpNetworkFactory } from "@bernouy/cms-gateway/http/node";
 import { createMachinePreparer } from "./providers/authority/prepareMachine";
 import { createDispatchPreparer } from "./providers/authority/prepareDispatch";
 import { gatewayObservability } from "@bernouy/cms-gateway/observability/node";
@@ -26,6 +27,7 @@ export async function createProviderGateway(
     stores: ProviderStores,
     siteId: string,
     observations: { readReport: ProviderReportReader; reportFailure(installationId: string, error: unknown): void },
+    createNetwork: NodeGatewayHttpNetworkFactory = (options) => new NodeGatewayHttpNetwork(options),
 ) {
     const { db, releases, manifests, installations, selections } = stores;
     const resolveSecret = createSecretResolver(stores.contractSecrets.installations);
@@ -39,7 +41,7 @@ export async function createProviderGateway(
     const captureAuthority = (ids: readonly string[]) =>
         GatewayAuthorityReads.capture(siteId, selections, installations, stores.executionState, ids);
     const routes = new RefreshingProviderRoutes(catalogue, { installations, resolveSecret, ...observations });
-    const network = new NodeGatewayHttpNetwork({
+    const network = createNetwork({
         allowPrivateAddresses: true,
         authorize: async (request) => {
             try {

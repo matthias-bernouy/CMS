@@ -8,14 +8,15 @@ export type ComposeServiceState = Readonly<{
 }>;
 
 export type ComposeProject = Readonly<{
-    definition: "services" | "edge";
-    overlays?: readonly ("services-tls" | "edge-tls")[];
+    definition: "services";
+    overlays?: readonly "services-tls"[];
     projectName: string;
     environment: Record<string, string | undefined>;
+    generatedFile?: string;
 }>;
 
 export async function composeUp(project: ComposeProject): Promise<void> {
-    await compose(project, ["up", "--detach", "--wait"], true);
+    await compose(project, ["up", "--detach", "--wait", "--remove-orphans"], true);
 }
 
 export async function checkProviderImageRetention(project: ComposeProject): Promise<void> {
@@ -62,6 +63,9 @@ function compose(project: ComposeProject, args: readonly string[], inherit: bool
         "--file",
         join(import.meta.dir, "definitions", `${definition}.yml`),
     ]);
+    if (project.generatedFile) {
+        files.push("--file", project.generatedFile);
+    }
     return runCommand(["docker", "compose", "--project-name", project.projectName, ...files, ...args], {
         env: { ...process.env, ...project.environment },
         inherit,

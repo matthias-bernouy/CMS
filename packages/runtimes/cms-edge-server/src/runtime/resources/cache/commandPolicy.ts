@@ -6,6 +6,14 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
     "ulvia/cms.observability": {
         "logs.append": "neutral",
     },
+    // Hosting changes the Provider routing registry, not the calling Control site's public resources.
+    "ulvia/cms.hosting": {
+        "instances.create": "neutral",
+        "instances.disable": "neutral",
+        "domains.claim": "neutral",
+        "domains.verify": "neutral",
+        "domains.disable": "neutral",
+    },
     "ulvia/provider.connections": {
         "connections.configure": "neutral",
     },

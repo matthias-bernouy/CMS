@@ -12,9 +12,9 @@ import { DEFAULT_STACK_VERSION } from "../../runtime/stack/version";
 
 const SERVICES_HELP = `Usage: ulvia services <start | stop | status | logs>
 
-Manage the shared proxy, MongoDB, and Provider.`;
+Manage Caddy, MongoDB, Provider and shared Edges.`;
 
-const START_HELP = `Usage: ulvia services start [--version <version>]
+const START_HELP = `Usage: ulvia services start [--version <version>] [--domain <hostname>]
 
 Start shared services. On their first start, use the bundled stack version by
 default or the exact version supplied here. Existing installations keep their
@@ -38,9 +38,7 @@ export async function servicesCommand(
             log(START_HELP);
             return;
         }
-        const requestedVersion = parseStartVersion(rest);
-        const installation = await loadOrCreateInstallationConfig(paths, environment);
-        await startLocalServices(paths, installation, log, requestedVersion);
+        await startShared(rest, paths, environment, log);
         return;
     }
     if (action === "stop") {
@@ -63,7 +61,7 @@ export async function servicesCommand(
 
 export function parseStartVersion(
     args: readonly string[],
-    usage = "Usage: ulvia services start [--version <version>]",
+    usage = "Usage: ulvia services start [--version <version>] [--domain <hostname>]",
 ): string | undefined {
     if (args.length === 0) {
         return undefined;
@@ -81,9 +79,18 @@ function isHelp(args: readonly string[]): boolean {
 
 async function printServicesStatus(paths: UlviaPaths, log: (message: string) => void): Promise<void> {
     const { state, services } = await describeLocalServices(paths);
-    const expected = ["proxy", "mongo", "provider"];
+    const expected = [
+        "proxy",
+        "mongo",
+        "provider",
+        ...Array.from({ length: state?.installation.hosting.edgeCount ?? 0 }, (_, index) => `edge-${index + 1}`),
+    ];
     log(`Shared services: ${allHealthy(expected, services) ? "running" : aggregateStatus(services)}`);
     log(`Provider version: ${state?.images.provider.version ?? "not initialized"}`);
+    log(`Edge version: ${state?.images.edge.version ?? "not initialized"}`);
+    if (state) {
+        log(`Control: ${state.installation.hosting.controlOrigin}`);
+    }
     for (const name of expected) {
         const service = services.find((candidate) => candidate.service === name);
         log(`${serviceLabel(name)}: ${serviceStatus(service)}`);
@@ -116,4 +123,31 @@ function expectNone(args: readonly string[], usage: string): void {
     if (args.length > 0) {
         throw new Error(usage);
     }
+}
+
+export async function startShared(
+    args: readonly string[],
+    paths: UlviaPaths,
+    environment: Record<string, string | undefined>,
+    log: (message: string) => void,
+) {
+    const values = new Map<string, string>();
+    if (args.length % 2) {
+        throw new Error("Usage: ulvia start [--version <version>] [--domain <hostname>]");
+    }
+    for (let index = 0; index < args.length; index += 2) {
+        const key = args[index]!;
+        const value = args[index + 1];
+        if (!["--version", "--domain"].includes(key) || !value || values.has(key)) {
+            throw new Error("Usage: ulvia start [--version <version>] [--domain <hostname>]");
+        }
+        values.set(key, value);
+    }
+    const version = parseStartVersion(values.has("--version") ? ["--version", values.get("--version")!] : []);
+    if (values.has("--domain")) {
+        const { configureCommand } = await import("./configure");
+        await configureCommand(["hosting", "--domain", values.get("--domain")!], paths, environment, log);
+    }
+    const installation = await loadOrCreateInstallationConfig(paths, environment);
+    await startLocalServices(paths, installation, log, version);
 }

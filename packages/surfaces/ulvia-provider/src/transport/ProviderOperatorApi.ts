@@ -3,7 +3,7 @@ import type { Runner } from "@bernouy/http-runner";
 import { readBoundedRequestBody, RequestBodyTooLargeError } from "@bernouy/http-runner";
 import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { assertProviderConnectionToken } from "@bernouy/ulvia-providers/installations";
-import type { CreateProviderInstance, ProviderInstanceLifecycle } from "../instances/lifecycle";
+import type { CreateProviderInstance, ProviderInstanceLifecycle } from "@bernouy/hosting/instances";
 import { mountSystemUpgradeRoutes } from "./systemUpgradeRoutes";
 
 const MAX_BODY_BYTES = 4_096;
@@ -21,15 +21,43 @@ export class ProviderOperatorApi {
 
         runner.get(
             "/ulvia/operator/instances",
-            authorized(async () => Response.json({ instances: await lifecycle.list() }, noStore())),
+            authorized(async (request) => {
+                try {
+                    const query = new URL(request.url).searchParams;
+                    if (
+                        [...query.keys()].some(
+                            (key) => !["after", "limit"].includes(key) || query.getAll(key).length !== 1,
+                        )
+                    ) {
+                        throw new TypeError("Invalid instance page parameters");
+                    }
+                    const after = query.get("after");
+                    const limit = query.get("limit") ?? "50";
+                    if (
+                        !/^(?:[1-9]|[1-4][0-9]|50)$/u.test(limit) ||
+                        (after !== null && !/^instance:[A-Za-z0-9-]{1,100}$/u.test(after))
+                    ) {
+                        throw new TypeError("Invalid instance page cursor or limit");
+                    }
+                    const page = await lifecycle.page(after, Number(limit));
+                    return Response.json({ instances: page.items, nextCursor: page.nextCursor }, noStore());
+                } catch (error) {
+                    return operatorError(error);
+                }
+            }),
         );
         runner.post(
             "/ulvia/operator/instances",
             authorized(async (request) => {
                 const idempotencyKey = request.headers.get("idempotency-key") ?? "";
                 try {
-                    const created = await lifecycle.create(idempotencyKey, await parseCreateInput(request));
-                    return Response.json(created, { status: 201, headers: noStore().headers });
+                    const created = await lifecycle.create(idempotencyKey, await parseCreateInput(request), {
+                        kind: "operator",
+                    });
+                    return Response.json(created, {
+                        status: created.instance.status === "ready" ? 201 : 202,
+                        headers: noStore().headers,
+                    });
                 } catch (error) {
                     return operatorError(error);
                 }

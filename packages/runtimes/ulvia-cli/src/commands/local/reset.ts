@@ -1,37 +1,24 @@
 import { LOCAL_SERVICES_SCHEMA } from "../../runtime/config";
 import { chmod, lstat, opendir, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { loadLocalInstanceConfig } from "../../runtime/instances/config";
-import { loadLocalInstanceConnection } from "../../runtime/instances/connection";
 import { ensureUlviaPaths, type UlviaPaths } from "../../runtime/paths";
 import { loadInstallationConfig } from "../../runtime/stack/installation";
-import { destroyLocalEdge, listLocalInstanceNames } from "../../runtime/stack/orchestration/instances";
+import { loadLocalServicesState } from "../../runtime/stack/orchestration/state";
 import { destroyLocalServices } from "../../runtime/stack/orchestration/services";
 
 export async function resetLocalInstallation(paths: UlviaPaths, log: (message: string) => void): Promise<void> {
     await assertRecognizedData(paths);
-    for (const name of await listLocalInstanceNames(paths)) {
-        const root = join(paths.instances, name);
-        const [config, connection] = await Promise.all([
-            loadLocalInstanceConfig(root),
-            loadLocalInstanceConnection(root),
-        ]);
-        if (connection && !config) {
-            throw new Error(`Refusing to reset incomplete Ulvia instance data at ${root}`);
-        }
-        if (config && connection) {
-            await destroyLocalEdge(paths, name);
-        }
+    if (await loadLocalServicesState(paths)) {
+        await destroyLocalServices(paths);
     }
-    await destroyLocalServices(paths);
     await resetLocalData(paths);
     log(`Reset local Ulvia installation: ${paths.data}`);
-    log("Run ulvia start, then provision a fresh instance with: ulvia instance create <name>");
+    log("Run ulvia start to initialize a fresh empty Control.");
 }
 
 export async function resetLocalData(paths: UlviaPaths): Promise<void> {
     await assertRecognizedData(paths);
-    for (const path of [paths.repository, paths.services, paths.instances]) {
+    for (const path of [paths.repository, paths.services]) {
         await makeTreeOwnerRemovable(path);
         await rm(path, { recursive: true, force: true });
     }
@@ -42,18 +29,9 @@ async function assertRecognizedData(paths: UlviaPaths): Promise<void> {
     const serviceSchema = await readSchema(join(paths.services, "runtime.json"));
     const installation = await loadInstallationConfig(paths);
     if (serviceSchema === null && installation === null) {
-        await assertEmptySkeleton(paths.services, new Set(["cms-files", "domains", "mongo", "proxy"]));
+        await assertEmptySkeleton(paths.services, new Set(["cms-files", "mongo", "proxy"]));
     } else if (serviceSchema !== LOCAL_SERVICES_SCHEMA) {
         throw new Error(`Refusing to reset unrecognized Ulvia data (shared services) at ${paths.data}`);
-    }
-    for (const name of await listLocalInstanceNames(paths)) {
-        const root = join(paths.instances, name);
-        const schema = await readSchema(join(root, "runtime.json"));
-        if (schema === null) {
-            await assertEmptySkeleton(root, new Set());
-        } else if (schema !== "ulvia.local-instance-runtime.v1") {
-            throw new Error(`Refusing to reset unrecognized Ulvia instance data at ${root}`);
-        }
     }
 }
 

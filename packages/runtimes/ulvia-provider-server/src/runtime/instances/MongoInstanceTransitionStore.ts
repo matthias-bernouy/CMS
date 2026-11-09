@@ -25,6 +25,7 @@ export class MongoInstanceTransitionStore implements InstanceTransitionStore {
             await this.#transitions.dropIndex("instance_target_profile");
         }
         await this.#transitions.createIndex({ status: 1, "lease.expiresAt": 1 }, { name: "transition_recovery" });
+        await this.#transitions.createIndex({ status: 1, instanceId: 1, _id: 1 }, { name: "transition_retention" });
     }
 
     async createOrGet(
@@ -52,8 +53,27 @@ export class MongoInstanceTransitionStore implements InstanceTransitionStore {
         return value ? fromDocument(value) : null;
     }
 
-    async listRetained(): Promise<readonly InstanceTransitionRecord[]> {
-        return (await this.#transitions.find({ status: { $ne: "succeeded" } }).toArray()).map(fromDocument);
+    async *scanRetained(instanceId?: string): AsyncIterable<InstanceTransitionRecord> {
+        const cursor = this.#transitions
+            .find({ status: { $ne: "succeeded" }, ...(instanceId ? { instanceId } : {}) })
+            .sort({ status: 1, instanceId: 1, _id: 1 })
+            .batchSize(50);
+        try {
+            for await (const document of cursor) {
+                yield fromDocument(document);
+            }
+        } finally {
+            await cursor.close();
+        }
+    }
+
+    async hasUnstagedUpgrade(instanceId: string): Promise<boolean> {
+        return Boolean(
+            await this.#transitions.findOne(
+                { instanceId, kind: "upgrade", status: { $ne: "succeeded" }, completedSteps: { $ne: "manifest" } },
+                { projection: { _id: 1 } },
+            ),
+        );
     }
 
     async listRecoverable(now: string, limit: number): Promise<readonly InstanceTransitionRecord[]> {

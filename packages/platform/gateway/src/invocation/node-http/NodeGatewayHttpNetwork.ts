@@ -42,6 +42,8 @@ export interface NodeGatewayHttpNetworkOptions {
     readonly sendPinned?: (request: PinnedHttpRequest) => Promise<Response>;
 }
 
+export type NodeGatewayHttpNetworkFactory = (options: NodeGatewayHttpNetworkOptions) => GatewayHttpNetwork;
+
 export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
     readonly #options: NodeGatewayHttpNetworkOptions;
 

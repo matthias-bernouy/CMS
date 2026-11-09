@@ -7,6 +7,7 @@ import { HttpProviderRepository } from "@bernouy/repository/providers/http";
 import { mcpContainers, waitForHttp } from "./containers";
 import { connectBrowser } from "./oauth";
 import { repositoryApi } from "./repository/client";
+import { createTraceProbe } from "./containers/deliveryFixture";
 
 const baselineProvider = process.env.ULVIA_UPGRADE_BASELINE_PROVIDER_IMAGE;
 const candidate = process.env.ULVIA_MCP_PROVIDER_DOCKER_IMAGE;
@@ -28,20 +29,17 @@ integration(
             };
             const cli = (args: string[]) => runCli(args, options);
             await cli(["repository", "login", url]);
-            await cli(["namespace", "claim", "ulvia"]);
-            await cli(["release", resolve(import.meta.dir, "../../../infra/releases")]);
+            await cli(["namespace", "claim", "ulvia.test"]);
+            await cli([
+                "release",
+                resolve(import.meta.dir, "../../../packages/runtimes/ulvia-cli/tests/stack/fixtures/smoke-kit"),
+            ]);
             await cli(["push", "all", "--repository", url]);
         };
         let stack: Awaited<ReturnType<typeof mcpContainers>> | undefined;
         let connection: Awaited<ReturnType<typeof connectBrowser>> | undefined;
         try {
-            stack = await mcpContainers(
-                { edge: edge!, provider: baselineProvider! },
-                publish,
-                undefined,
-                undefined,
-                true,
-            );
+            stack = await mcpContainers({ edge: edge!, provider: baselineProvider! }, publish);
             connection = await connectBrowser(stack.cmsUrl, stack.administrator);
             expect(connection.tools.length).toBeGreaterThan(0);
             const initialToolCount = connection.tools.length;
@@ -67,10 +65,11 @@ integration(
                 stack.repository.administrator.email,
                 stack.repository.administrator.password,
             );
+            await createTraceProbe(stack.repositoryUrl, stack.repository.administrator);
             const registryPages = await (
                 await registry.request("ulvia/cms.content", "/pages/list", "QUERY", { limit: 100 }, admin)
             ).json();
-            const pageId = registryPages.items.find(({ path }: { path: string }) => path === "/").id;
+            const pageId = registryPages.items.find(({ path }: { path: string }) => path === "/trace-probe").id;
             const original = await (
                 await registry.request("ulvia/cms.content", "/pages/get", "QUERY", { id: pageId }, admin)
             ).json();
@@ -85,7 +84,7 @@ integration(
                     )
                 ).status,
             ).toBe(200);
-            await stack.upgradeProvider(candidate!, "1.0.0");
+            await stack.upgradeProvider(candidate!);
             await waitForHttp(`${stack.repositoryUrl}/.cms/call/ulvia/repository/v1/info`);
             expect(await (await registry.request("ulvia/repository", "/v1/info")).json()).toEqual(identity);
             const retained = await inventory();

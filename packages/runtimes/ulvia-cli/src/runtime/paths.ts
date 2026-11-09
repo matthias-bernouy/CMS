@@ -10,15 +10,7 @@ export type UlviaPaths = Readonly<{
     cmsFiles: string;
     proxy: Readonly<{
         certificates: string;
-        virtualHosts: string;
-        challenge: string;
-        acme: string;
     }>;
-    instances: string;
-}>;
-
-export type LocalInstancePaths = Readonly<{
-    root: string;
 }>;
 
 export function resolveUlviaPaths(
@@ -36,24 +28,8 @@ export function resolveUlviaPaths(
         cmsFiles: join(services, "cms-files"),
         proxy: {
             certificates: join(services, "proxy", "certificates"),
-            virtualHosts: join(services, "proxy", "virtual-hosts"),
-            challenge: join(services, "proxy", "challenge"),
-            acme: join(services, "proxy", "acme"),
         },
-        instances: join(data, "instances"),
     });
-}
-
-export function resolveLocalInstancePaths(paths: UlviaPaths, name: string): LocalInstancePaths {
-    assertLocalInstanceName(name);
-    const root = join(paths.instances, name);
-    return Object.freeze({ root });
-}
-
-export function assertLocalInstanceName(name: string): void {
-    if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(name) || name.length > 48) {
-        throw new Error("Instance name must be lowercase kebab-case and at most 48 characters");
-    }
 }
 
 function resolveUlviaDataHome(
@@ -66,34 +42,14 @@ function resolveUlviaDataHome(
 
 export async function ensureUlviaPaths(paths: UlviaPaths): Promise<void> {
     await ensureDirectory(paths.data);
+    await ensureDirectory(paths.services);
+    await ensureDirectory(join(paths.services, "proxy"));
     await Promise.all([
         ensureDirectory(paths.repository),
-        ensureDirectory(paths.services),
         ensureDirectory(paths.mongo),
         ensureDirectory(paths.cmsFiles),
         ensureDirectory(paths.proxy.certificates),
-        ensureDirectory(paths.proxy.virtualHosts),
-        // Nginx workers serve public HTTP-01 tokens through this dedicated bind mount.
-        ensureDirectory(paths.proxy.challenge, 0o755),
-        ensureDirectory(paths.proxy.acme),
-        ensureDirectory(paths.instances),
     ]);
-}
-
-export async function ensureLocalInstancePaths(paths: LocalInstancePaths): Promise<void> {
-    await ensureDirectory(paths.root);
-}
-
-export async function assertLocalInstancePaths(paths: LocalInstancePaths): Promise<void> {
-    const metadata = await lstat(paths.root).catch((error: NodeJS.ErrnoException) => {
-        if (error.code === "ENOENT") {
-            return null;
-        }
-        throw error;
-    });
-    if (!metadata?.isDirectory() || metadata.isSymbolicLink()) {
-        throw new Error(`Unknown or unsafe local instance directory: ${paths.root}`);
-    }
 }
 
 async function ensureDirectory(path: string, mode = 0o700): Promise<void> {

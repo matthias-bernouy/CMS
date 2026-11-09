@@ -15,12 +15,15 @@ try {
     const bootstrap = bundledBootstrapSources(env.ULVIA_BOOTSTRAP_DIR);
     const system = new SystemBootstrap(bootstrap);
     const support = new ProviderExecutionSupport();
-    const instances = await new MongoProviderInstanceRegistry(mongo.db()).list();
-    const transitions = await new MongoInstanceTransitionStore(mongo.db()).listRetained();
+    const instances = new MongoProviderInstanceRegistry(mongo.db());
+    const transitions = new MongoInstanceTransitionStore(mongo.db());
     await assertHostedReleaseRetention(
         support,
-        instances,
-        transitions,
+        {
+            instances: instances.scan(),
+            transitions: (id) => transitions.scanRetained(id),
+            hasUnstagedUpgrade: (id) => transitions.hasUnstagedUpgrade(id),
+        },
         managedReleaseReader(mongo, support, env.ULVIA_PROVIDER_PUBLIC_URL),
         system,
     );

@@ -45,34 +45,34 @@ export type {
     ProviderOperationExecutorOptions,
     ProviderOperationFailureObservation,
 } from "../operations/ProviderOperationExecutor";
-export type { ProviderInstanceRegistry } from "../instances/registry";
-export { ProviderInstanceRevisionConflictError } from "../instances/registry";
+export type { ProviderInstanceRegistry } from "@bernouy/hosting/instances";
+export { ProviderInstanceRevisionConflictError } from "@bernouy/hosting/instances";
 export type {
     CreateProviderInstanceRecord,
     SiteRepositoryConfiguration,
     ProviderInstanceRecord,
     ProviderInstanceStatus,
     UpdateProviderInstanceRecord,
-} from "../instances/types";
-export { PROVIDER_INSTANCE_STATUSES } from "../instances/types";
+} from "@bernouy/hosting/instances";
+export { PROVIDER_INSTANCE_STATUSES } from "@bernouy/hosting/instances";
 export type {
     InstanceTransitionRecord,
     InstanceTransitionStatus,
     InstanceTransitionStore,
-} from "../instances/transitions";
+} from "@bernouy/hosting/instances";
 export type {
     SystemInstallationPlan,
     SystemInstallationSource,
     SystemUpgradeInput,
     SystemUpgradeReview,
     SystemUpgradeOperations,
-} from "../instances/installationPlan";
+} from "@bernouy/hosting/instances";
 export {
     OfficialInstanceProvisioner,
     type OfficialInstanceProvisioningTarget,
     type ProviderInstanceAdministrator,
     type ProviderInstanceTransitionExecution,
-} from "../instances/provisioning";
+} from "@bernouy/hosting/instances";
 export {
     ProviderInstanceLifecycle,
     type CreateProviderInstance,
@@ -80,6 +80,7 @@ export {
     type ProviderInstanceCredentials,
     type ProviderInstanceAccessCredentials,
     type ProviderInstanceRuntimeCredentials,
-} from "../instances/lifecycle";
+} from "@bernouy/hosting/instances";
 export { ProviderOperatorApi } from "../transport/ProviderOperatorApi";
-export { assertSystemUpgrade } from "../instances/provisioningTarget";
+export { mountPublicCapabilities } from "../transport/public/mountPublicCapabilities";
+export { assertSystemUpgrade } from "@bernouy/hosting/instances";

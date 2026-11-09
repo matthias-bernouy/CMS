@@ -1,136 +1,173 @@
 import { expect, test } from "bun:test";
-import { resolve } from "node:path";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { ensureUlviaPaths, resolveUlviaPaths } from "../../../src/runtime/paths";
+import { defaultInstallationConfig, parseInstallationConfig } from "../../../src/runtime/stack/installation";
+import { localServicesEnvironment } from "../../../src/runtime/stack/orchestration/environment";
+import { localServicesIdentity } from "../../../src/runtime/stack/orchestration/state";
+import { writeSharedComposeFiles } from "../../../src/runtime/stack/orchestration/shared/files";
+import type { InstallationConfig } from "../../../src/runtime/stack/installation";
 
 const definitions = resolve(import.meta.dir, "../../../src/runtime/stack/orchestration/definitions");
-const dockerAvailable = commandSucceeds(["docker", "compose", "version"]);
+const dockerAvailable =
+    Bun.spawnSync(["docker", "compose", "version"], { stdout: "ignore", stderr: "ignore" }).exitCode === 0;
 const composeTest = dockerAvailable ? test : test.skip;
 
-composeTest("one Compose model renders loopback HTTP and public ACME exposure", () => {
-    const base = render(["services.yml"]);
-    expect(Object.keys(base.services).sort()).toEqual(["mongo", "mongo-provision", "provider", "proxy"]);
-    expect(base.services.proxy.ports).toEqual([
-        { mode: "ingress", host_ip: "127.0.0.1", target: 80, published: "15100", protocol: "tcp" },
-    ]);
-    expect(base.services.provider.environment.MODE).toBe("PROD");
-    expect(base.services.provider.environment.CMS_REPOSITORY_URL).toBeUndefined();
-    expect(base.services.provider.environment.CMS_REPOSITORY_ALLOW_INSECURE_HTTP).toBeUndefined();
-    expect(base.services.provider.environment.MONGO_URL).toContain("ulvia_provider:bbbb");
-    expect(base.services.provider.environment.MONGO_URL).not.toContain("ulvia:aaaa");
-    expect(base.services.mongo.ports).toBeUndefined();
-    expect(base.services.proxy.volumes).toContainEqual(
-        expect.objectContaining({ type: "volume", target: "/var/cache/nginx" }),
+composeTest("shared Compose renders persistent Caddy and loopback Provider without per-site services", async () => {
+    await withRendered(
+        defaultInstallationConfig({ ULVIA_HTTP_PORT: "15100", ULVIA_PROVIDER_PORT: "15103" }),
+        (model, caddy) => {
+            expect(Object.keys(model.services).sort()).toEqual([
+                "edge-1",
+                "mongo",
+                "mongo-provision",
+                "provider",
+                "proxy",
+            ]);
+            const { provider, proxy, mongo } = model.services;
+            expect(proxy!.ports).toEqual([
+                { mode: "ingress", host_ip: "127.0.0.1", target: 80, published: "15100", protocol: "tcp" },
+            ]);
+            expect(proxy!.image).toMatch(/^caddy:2\.11\.9-alpine@sha256:/u);
+            expect(proxy!.volumes).toContainEqual(expect.objectContaining({ type: "bind", target: "/data" }));
+            expect(proxy!.volumes?.some(({ target }) => String(target).includes("docker.sock"))).toBe(false);
+            expect(provider!.ports?.[0]).toMatchObject({ host_ip: "127.0.0.1", target: 5103, published: "15103" });
+            expect(provider!.environment).toMatchObject({
+                MODE: "PROD",
+                ULVIA_CONTROL_ORIGIN: "http://control.localhost:15100",
+                ULVIA_CONTROL_BOOTSTRAP_FILE: "/run/ulvia/control-administrator.json",
+            });
+            expect(provider!.environment.MONGO_URL).toContain("ulvia_provider:");
+            expect(provider!.healthcheck?.test.join(" ")).toContain("/readyz");
+            expect(provider!.environment.CMS_REPOSITORY_URL).toBeUndefined();
+            expect(provider!.environment.CMS_REPOSITORY_ALLOW_INSECURE_HTTP).toBeUndefined();
+            expect(mongo!.ports).toBeUndefined();
+            expect(mongo!.ulimits).toEqual({ nofile: { soft: 65536, hard: 65536 } });
+            expect(caddy.admin).toEqual({ disabled: true });
+            expect(JSON.stringify(caddy)).toContain(":8080");
+            expect(provider!.environment.ULVIA_HOSTING_PROXY_URL).toBe("http://proxy:8080");
+            expect(proxy!.ports?.some((port) => port.target === 8080)).toBe(false);
+            expect(JSON.stringify(caddy)).toContain("edge-1:3000");
+            expect(JSON.stringify(caddy)).not.toContain("nginx");
+        },
     );
-
-    const tls = render(["services.yml", "services-tls.yml"]);
-    expect(Object.keys(tls.services).sort()).toEqual(["acme", "mongo", "mongo-provision", "provider", "proxy"]);
-    expect(tls.services.proxy.ports).toHaveLength(2);
-    expect(tls.services.proxy.ports?.[1]).toMatchObject({ host_ip: "127.0.0.1", target: 443, published: "15443" });
-    expect(tls.services.acme.environment.DEFAULT_EMAIL).toBe("ops@example.com");
 });
 
-composeTest("one isolated Edge receives no shared persistence credentials", () => {
-    const config = render(["edge.yml", "edge-tls.yml"]);
-    expect(Object.keys(config.services)).toEqual(["edge"]);
-    const edge = config.services.edge;
-    expect(edge.environment).toMatchObject({
-        MODE: "PROD",
-        CMS_PUBLIC_URL: "https://example.com",
-        CMS_INSTALLATIONS_PROVIDER_URL: "http://ulvia-provider:5103",
-        ACME_HOST: "example.com",
+composeTest("configured shared Edges receive no persistence or operator credentials", async () => {
+    const initial = defaultInstallationConfig();
+    const installation = parseInstallationConfig({ ...initial, hosting: { ...initial.hosting, edgeCount: 2 } });
+    await withRendered(installation, (model, caddy) => {
+        expect(Object.keys(model.services).filter((name) => name.startsWith("edge-"))).toEqual(["edge-1", "edge-2"]);
+        for (const name of ["edge-1", "edge-2"]) {
+            const edge = model.services[name]!;
+            expect(Object.keys(edge.environment).sort()).toEqual([
+                "CMS_HOST",
+                "CMS_HOSTING_EDGE_SECRET",
+                "CMS_HOSTING_PROVIDER_URL",
+                "CMS_PORT",
+                "MODE",
+                "NODE_ENV",
+            ]);
+            expect(edge.environment.CMS_HOSTING_PROVIDER_URL).toBe("http://ulvia-provider:5103");
+            expect(edge.read_only).toBe(true);
+            expect(edge.cap_drop).toEqual(["ALL"]);
+            expect(edge.volumes).toBeUndefined();
+            expect(edge.depends_on?.provider).toMatchObject({ condition: "service_healthy" });
+        }
+        expect(model.services.proxy!.depends_on).toMatchObject({
+            "edge-1": { condition: "service_healthy" },
+            "edge-2": { condition: "service_healthy" },
+        });
+        expect(JSON.stringify(caddy)).toContain("edge-2:3000");
     });
-    for (const secret of ["MONGO_URL", "CMS_SESSION_SECRET", "CMS_KEK_RING_JSON", "ULVIA_PROVIDER_OPERATOR_TOKEN"]) {
-        expect(edge.environment[secret]).toBeUndefined();
-    }
-    expect(edge.read_only).toBe(true);
-    expect(edge.cap_drop).toEqual(["ALL"]);
+});
+
+composeTest("ACME uses the same Caddy service and an admitted anonymous permission contract", async () => {
+    const initial = defaultInstallationConfig();
+    const installation = parseInstallationConfig({
+        ...initial,
+        bindAddress: "0.0.0.0",
+        tls: { mode: "acme", email: "ops@example.com", httpsPort: 15443 },
+        hosting: {
+            ...initial.hosting,
+            controlOrigin: "https://control.example.com:15443",
+            publicAddresses: ["203.0.113.10"],
+        },
+    });
+    await withRendered(installation, (model, caddy) => {
+        expect(model.services.acme).toBeUndefined();
+        expect(model.services.proxy!.ports?.[1]).toMatchObject({ host_ip: "0.0.0.0", target: 443, published: "15443" });
+        expect(model.services.provider!.environment.ULVIA_TLS_ENTRYPOINTS).toBe('[{"host":"proxy","port":443}]');
+        expect(model.services.provider!.environment.ULVIA_TLS_PUBLIC_ADDRESSES).toBe('["203.0.113.10"]');
+        expect(JSON.stringify(caddy)).toContain("/hosting/tls/permission");
+        expect(JSON.stringify(caddy)).toContain("https://acme-v02.api.letsencrypt.org/directory");
+        expect(JSON.stringify(caddy)).not.toContain("operator");
+    });
 });
 
 type RenderedService = {
+    image: string;
     environment: Record<string, string>;
     ports?: Array<Record<string, unknown>>;
     read_only?: boolean;
     cap_drop?: string[];
     volumes?: Array<Record<string, unknown>>;
+    depends_on?: Record<string, unknown>;
+    healthcheck?: { test: string[] };
+    ulimits?: unknown;
 };
-
 type RenderedCompose = { services: Record<string, RenderedService> };
-
-function render(files: readonly string[], overrides: Record<string, string> = {}): RenderedCompose {
-    const result = Bun.spawnSync({
-        cmd: [
-            "docker",
-            "compose",
-            "--env-file",
-            "/dev/null",
-            ...files.flatMap((file) => ["--file", resolve(definitions, file)]),
-            "config",
-            "--format",
-            "json",
-        ],
-        cwd: definitions,
-        env: { ...minimalEnvironment(), ...composeEnvironment(), ...overrides },
-        stdout: "pipe",
-        stderr: "pipe",
-    });
-    if (result.exitCode !== 0) {
-        throw new Error(result.stderr.toString());
+async function withRendered(
+    installation: InstallationConfig,
+    assert: (model: RenderedCompose, caddy: Record<string, unknown>) => void,
+) {
+    const root = await mkdtemp(join(tmpdir(), "ulvia-compose-shared-"));
+    const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
+    await ensureUlviaPaths(paths);
+    try {
+        await writeSharedComposeFiles(paths, installation);
+        const digest = `sha256:${"a".repeat(64)}`;
+        const state = {
+            ...localServicesIdentity(paths),
+            images: {
+                provider: { component: "provider" as const, version: "1.0.0", digest },
+                edge: { component: "edge" as const, version: "1.0.0", digest },
+            },
+        };
+        const files = [
+            resolve(definitions, "services.yml"),
+            ...(installation.tls.mode === "acme" ? [resolve(definitions, "services-tls.yml")] : []),
+            join(paths.services, "shared-edges.json"),
+        ];
+        const result = Bun.spawnSync({
+            cmd: [
+                "docker",
+                "compose",
+                "--env-file",
+                "/dev/null",
+                ...files.flatMap((path) => ["--file", path]),
+                "config",
+                "--format",
+                "json",
+            ],
+            cwd: definitions,
+            env: {
+                PATH: process.env.PATH,
+                ...localServicesEnvironment(paths, installation, state),
+                CMS_REPOSITORY_URL: "http://unselected.invalid",
+            },
+            stdout: "pipe",
+            stderr: "pipe",
+        });
+        if (result.exitCode !== 0) {
+            throw new Error(result.stderr.toString());
+        }
+        assert(
+            JSON.parse(result.stdout.toString()),
+            JSON.parse(await readFile(join(paths.services, "proxy/caddy.json"), "utf8")),
+        );
+    } finally {
+        await rm(root, { recursive: true, force: true });
     }
-    return JSON.parse(result.stdout.toString()) as RenderedCompose;
 }
-
-function composeEnvironment(): Record<string, string> {
-    return {
-        PROVIDER_IMAGE: "ulvia-provider:test",
-        EDGE_IMAGE: "ulvia-edge:test",
-        ULVIA_BIND_ADDRESS: "127.0.0.1",
-        ULVIA_HTTP_PORT: "15100",
-        ULVIA_HTTPS_PORT: "15443",
-        ULVIA_PROVIDER_PORT: "15103",
-        ULVIA_UID: "1000",
-        ULVIA_GID: "1000",
-        ULVIA_PRIVATE_NETWORK: "ulvia-test-private",
-        ULVIA_INSTANCE_NETWORK: "ulvia-test-instances",
-        ULVIA_MONGO_DIR: "/tmp/ulvia-test/mongo",
-        ULVIA_FILES_DIR: "/tmp/ulvia-test/files",
-        ULVIA_LOGS_DIR: "/tmp/ulvia-test/logs",
-        ULVIA_PROXY_CERTIFICATES_DIR: "/tmp/ulvia-test/proxy/certificates",
-        ULVIA_PROXY_VHOST_DIR: "/tmp/ulvia-test/proxy/vhosts",
-        ULVIA_PROXY_CHALLENGE_DIR: "/tmp/ulvia-test/proxy/challenge",
-        ULVIA_PROXY_ACME_DIR: "/tmp/ulvia-test/proxy/acme",
-        ULVIA_MONGO_USERNAME: "ulvia",
-        ULVIA_MONGO_PASSWORD: "a".repeat(43),
-        ULVIA_MONGO_PROVIDER_USERNAME: "ulvia_provider",
-        ULVIA_MONGO_PROVIDER_PASSWORD: "b".repeat(43),
-        ULVIA_PROVIDER_SESSION_SECRET: "c".repeat(43),
-        ULVIA_PROVIDER_KEK_ACTIVE_ID: "control",
-        ULVIA_PROVIDER_KEK_RING_JSON: JSON.stringify({ control: "d".repeat(64) }),
-        ULVIA_PROVIDER_OPERATOR_TOKEN: "f".repeat(43),
-        ULVIA_ACME_EMAIL: "ops@example.com",
-        ULVIA_INSTANCE_HOSTNAME: "example.com",
-        ULVIA_INSTANCE_URL: "https://example.com",
-        CMS_INSTALLATIONS_PROVIDER_TOKEN: "g".repeat(43),
-    };
-}
-
-function minimalEnvironment(): Record<string, string> {
-    return {
-        PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin",
-        HOME: process.env.HOME ?? "/tmp",
-        ...(process.env.DOCKER_CONFIG ? { DOCKER_CONFIG: process.env.DOCKER_CONFIG } : {}),
-    };
-}
-
-function commandSucceeds(command: string[]): boolean {
-    return (
-        Bun.spawnSync({ cmd: command, env: minimalEnvironment(), stdout: "ignore", stderr: "ignore" }).exitCode === 0
-    );
-}
-
-composeTest("an explicit local Repository override reaches the Provider without contacting the public service", () => {
-    const config = render(["services.yml"], {
-        CMS_REPOSITORY_URL: "http://repository:3000",
-        CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true",
-    });
-    expect(config.services.provider.environment.CMS_REPOSITORY_URL).toBeUndefined();
-    expect(config.services.provider.environment.CMS_REPOSITORY_ALLOW_INSECURE_HTTP).toBeUndefined();
-});

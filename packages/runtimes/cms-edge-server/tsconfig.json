@@ -35,6 +35,9 @@
         },
         {
             "path": "../../surfaces/cms-edge"
+        },
+        {
+            "path": "../../features/hosting"
         }
     ]
 }

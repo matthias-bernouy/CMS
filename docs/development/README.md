@@ -21,20 +21,26 @@ explains build output, startup attachment and authorization before durable repla
 
 ```bash
 bun run ulvia -- configure network
-bun run ulvia -- services start --version 1.0.7
+bun run images:build --version 0.1.0-shared-hosting all
+bun run ulvia -- start --domain control.localhost --version 0.1.0-shared-hosting
 bun run ulvia -- services status
-bun run ulvia -- instance create preview
-bun run ulvia -- instance credentials preview
-bun run ulvia -- instance stop preview
+bun run ulvia -- configure hosting --edges 2
+bun run ulvia -- start
 bun run ulvia -- services stop
 ```
 
-`1.0.7` is an example exact image version; choose a published version of
-all required components. The source CLI reports `development` and has no
+The example builds compatible local images without publishing. Released images
+must advertise the shared-hosting API. The source CLI reports `development` and has no
 embedded default stack version, so first startup requires `--version`.
 After initialization, `bun run ulvia -- start` reuses the installed digests.
 Building workspace sources does not update those containers; follow the
 explicit image build/publish and upgrade workflow below.
+
+Control is created automatically and starts empty. Startup prints the path to its
+private initial administrator file; it never prints the password. Open
+`http://control.localhost/.cms/setup`, authenticate, select a Repository and choose
+an empty site or an explicitly authored collection. Create other logical sites
+through `ulvia/cms.hosting` HTTP/MCP bindings; the CLI manages infrastructure.
 
 The native `/.cms/setup` offers a custom Repository address, the official
 Repository (`https://repo.ulvia.fr`), or a new Registry on this instance. Settings
@@ -54,26 +60,16 @@ an administrator's direct `plan-collection-upgrade` query; other calls retain
 their 15-second first-byte limit. Delegation and invocation-token lifetimes are
 unchanged. The Provider uses a 60-second HTTP idle timeout.
 
-The CLI manages shared services and any number of named Edge instances through
-independent Docker Compose projects. It runs the same Edge and Provider images
-for loopback and public installations, plus Nginx and MongoDB. A Repository is
-an instance with explicitly installed Registry and its own Edge. The CLI never starts
-application servers inside its process. Data lives below `$XDG_DATA_HOME/ulvia` or
-`~/.local/share/ulvia`; commands work from any directory. `ULVIA_DATA_DIR` is an
-explicit isolation override for tests and CI. `ULVIA_HTTP_PORT`
-and `ULVIA_PROVIDER_PORT` provide initial port defaults
-for isolated tests. Persistent exposure is managed with
-`ulvia configure network`; loopback HTTP and public HTTPS/ACME use the same
-orchestrator and lifecycle commands. The Provider's internal Docker endpoint remains
-`ulvia-provider:5103`. `start` is an
-idempotent shortcut for the shared services and every previously created local
-instance. It creates no default instance. `instance create` provisions the
-Provider tenant and starts its dedicated Edge. Named instances use
-`<name>.localhost` by default; public instances use
-`instance create <name> --domain <domain>`. Services and instances have
-separate stop and upgrade lifecycles.
-Credential commands print only administrator credentials; technical tokens
-remain private.
+The CLI manages one Compose project containing Provider, MongoDB, Caddy and a
+configured shared Edge pool. Every CMS instance, including Registry, uses this
+pool. Creating or disabling a tenant changes domain state without starting or
+stopping an infrastructure process. The CLI owns no application listener.
+Data lives below `$XDG_DATA_HOME/ulvia` or `~/.local/share/ulvia`;
+`ULVIA_DATA_DIR` isolates tests. `ULVIA_HTTP_PORT` and `ULVIA_PROVIDER_PORT`
+provide initial test ports. `ulvia configure network` persists exposure;
+`ulvia configure hosting` persists Control origin and Edge count. The Provider's
+internal endpoint is `ulvia-provider:5103`. Repeated `start` reopens the same
+installation, Control identity, credentials and exact image pins.
 
 The CLI consumes released software images; it never builds them. Workspace
 authors build and publish the two official Docker Hub images explicitly:
@@ -85,23 +81,21 @@ ulvia upgrade edge --version 1.0.7
 ulvia upgrade provider --version 1.0.7
 ```
 
-Publish both images under the same release version, even when only one component
-changed. A newly created instance initially chooses the Edge version from the
-shared Provider version. Existing instances keep their own pinned Edge image,
-so upgrading their Provider alone does not update those Edge pins.
+Publish both images under the same release version. Installation state keeps
+independent exact Edge and Provider image pins. Logical sites have no Edge image
+or process ownership of their own.
 
 An upgrade pulls the canonical `docker.io/cyaxis` reference, validates its OCI
 labels, and persists its immutable digest. A regular `start` reuses that digest;
 it never upgrades by following a mutable tag. A failed activation attempts to
 restart the previous image. This is best-effort image recovery, not a rollback
-of persisted data, an automatic backup or a fleet-wide transaction. Edge
-upgrades process instances in sequence; a later failure can leave earlier
-instances upgraded. Collection, contract, and provider
+of persisted data, an automatic backup or a fleet-wide transaction. Edge updates
+replace the shared pool. Collection, contract, and provider
 manifest releases remain Repository artifacts and do not become Docker images.
 
 Distribution versions are independent of official artifacts. Current Installations
-and Provider manifest use `1.3.0`; Content uses `1.0.1`, Authoring `1.1.0` and
-Registry `1.1.0`. Other system contracts retain their existing versions. Existing
+and Provider manifest use `1.4.0`; Content uses `1.1.0`, Authoring `1.2.0` and
+Registry `1.2.0`. Hosting, Routing and TLS use `1.0.0`. Existing
 npm versions and Docker tags are never reused.
 
 The host CLI is a separate public npm artifact. Its private workspace sources
@@ -221,7 +215,7 @@ still require deployment-level verification.
 | --- | --- |
 | `bun run check:all` | Architecture, UI contracts, repository shape, style, workspace types, dead code and tooling types. |
 | `bun run verify` | Run static checks, build browser assets, regenerate official bootstrap artifacts, run the Bun test suite and check performance budgets. |
-| `bun run verify:full` | Run `verify`, then the complete local Edge browser journey and Docker delivery performance budgets. |
+| `bun run verify:full` | Run `verify`, the shared-hosting browser journey, Docker delivery budgets and isolated ACME issuance/restart. |
 | `bun run check:dead-code` | Report unused declarations, exports, exported types and package dependencies. |
 | `bun run check:logging` | Reject server-side `console` references and unstable logger event names outside approved presentation boundaries. |
 | `bun run check:style` | Read-only Biome check. |
@@ -233,7 +227,8 @@ still require deployment-level verification.
 | `bun run images:build --version <version> all` | Build all official Cyaxis/Ulvia Docker images locally. |
 | `bun run images:publish --version <version> all` | Publish verified official images to Docker Hub. |
 | `bun run test` | Run maintained tests under `quality/`, `tests/` and `packages/`. |
-| `bun run test:edge-smoke` | Exercise a fresh local Edge installation, representative mutations and restart through Chromium. |
+| `bun run test:edge-smoke` | Configure empty Control, create sites over HTTP/MCP, publish explicitly, restart and check two warmed Edges. |
+| `bun run test:hosting:tls` | Run two Caddy entrypoints with Pebble, shared certificates and restart preservation. |
 | `bun run clean` | Clean TypeScript build state, then remove every package `dist` and `tsconfig.tsbuildinfo`. |
 
 `check:all` remains the fast aggregate static check; it does not execute the
@@ -256,7 +251,9 @@ To reuse an already built matching pair, set
 but still verifies each component, stack API, version and digest. Without that
 override, `bun run verify:full` builds and tests the candidate source directly.
 The smoke is opt-in locally. Run `bun run verify:full` explicitly for the smoke
-and Docker delivery budgets. This repository has no GitHub Actions workflows.
+and Docker delivery budgets plus the two-entrypoint ACME fixture. The TLS runner
+defaults to the candidate Provider image built by delivery budgets; set
+`ULVIA_TLS_TEST_IMAGE` to reuse another matching candidate. This repository has no GitHub Actions workflows.
 See [security and performance guardrails](guardrails.md) for reports, scope
 selection, measured budgets and remaining limits.
 

@@ -1,3 +1,4 @@
+import { retainResponseResource } from "@bernouy/http-runner";
 import type { HttpMethod, Runner } from "@bernouy/http-runner";
 import type { Logger } from "@bernouy/logging";
 import type { ResolvedContract } from "@bernouy/ulvia-contracts";
@@ -93,9 +94,12 @@ export class UlviaProvider {
                         );
                         relays.set(runtime.dispatcher, relay);
                     }
-                    return (await relay(request, claims, Boolean(controlLease))) ?? new Response(null, { status: 404 });
-                } finally {
+                    const response =
+                        (await relay(request, claims, Boolean(controlLease))) ?? new Response(null, { status: 404 });
+                    return retainResponseResource(response, lease.release, request.signal);
+                } catch (error) {
                     lease.release();
+                    throw error;
                 }
             });
         }

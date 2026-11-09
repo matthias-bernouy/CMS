@@ -17,6 +17,9 @@ utilities.
 - `BunRunner` matches routes lazily per request. Routes added after `start()`
   are honored.
 - `start()` accepts only `{ port, hostname }` listener options. Composition roots own listener hosts.
+- `BunRunner.handle(request)` dispatches mounted routes without starting a listener.
+  Composed hosts can therefore keep independent route trees behind one socket.
+  The outer listener remains responsible for capturing the request's peer address.
 - Exact and `:param` path segments are supported. No regex or catch-all routing.
 - Route lookup is linear by method/path registration order. First match wins.
 - Default endpoints run only when no route matches. The deepest matching prefix
@@ -44,3 +47,9 @@ errors retain their status, safe message and public code; unknown errors are
 logged and become a generic 500 body. Every response carries its request ID and
 returned 5xx responses are logged even when no exception was thrown. Do not leak
 internal error fields in the response body.
+
+- `retainResponseResource` owns a borrowed resource until the response body ends,
+  errors, is cancelled or the request aborts. It is CMS-agnostic and used by both
+  Provider and Edge; do not release their runtime leases immediately on returning
+  a streamed Response. Bounded request body readers live beside it under
+  `core/request/body/`; the architecture checker names that exact implementation.

@@ -1,3 +1,4 @@
+import type { NodeGatewayHttpNetworkFactory } from "@bernouy/cms-gateway/http/node";
 import type { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
 import { readRemoteProviderReport } from "../readReport";
 import {
@@ -25,6 +26,8 @@ export class ProviderPairing {
             readonly providerId: string;
             readonly connections: Pick<ProviderConnections, "configure">;
         },
+        private readonly createNetwork: NodeGatewayHttpNetworkFactory = (options) =>
+            new NodeGatewayHttpNetwork(options),
     ) {}
     async configure(input: PairingInput, actorId: string, operationId?: string) {
         const { stores, gateway } = this;
@@ -48,7 +51,7 @@ export class ProviderPairing {
                 await stores.installations.recordObservation(
                     { siteId: gateway.siteId, installationId: source.installation.id },
                     source.revision,
-                    await readRemoteProviderReport(source.installation.endpoint, upstream),
+                    await readRemoteProviderReport(source.installation.endpoint, upstream, this.createNetwork),
                 );
             }
             await gateway.providers.registerCredential(
@@ -80,7 +83,7 @@ export class ProviderPairing {
                 throw new TypeError("Provider pairing contract is unavailable");
             }
             await gateway.providers.beginCredential(source.installation.id, credentialRef, token, intent.baseDigest);
-            const network = new NodeGatewayHttpNetwork({
+            const network = this.createNetwork({
                 resolveToken: async (reference) => {
                     const key = secretRefToKey(reference);
                     const value = key && (await stores.contractSecrets.installations.get(key));

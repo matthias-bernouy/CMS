@@ -2,20 +2,53 @@ import { validateUpgradeIntent, sameUpgradeIntent } from "./validation";
 import type { Collection, Db } from "mongodb";
 import type { SiteUpgradeStorage, SiteUpgradeIntent, SiteUpgradeActive } from "./interfaces";
 import { MongoSiteWriteFence } from "./mongoFence";
+import { randomUUID } from "node:crypto";
 
 type IntentDocument = SiteUpgradeIntent<unknown> & { _id: string; active: boolean; ready: boolean };
+type ResourceRevisionDocument = { _id: string; revision: string };
 
 /** Durable release-switch intents contain pins and explicit values, never Page snapshots. */
 export class MongoSiteUpgradeStorage extends MongoSiteWriteFence implements SiteUpgradeStorage {
     private readonly records: Collection<IntentDocument>;
+    private readonly database: Db;
     constructor(db: Db) {
         const records = db.collection<IntentDocument>("site_upgrades");
         super(
             async (siteId) => Boolean(await records.findOne({ siteId, active: true })),
             db.collection("site_upgrade_maintenance"),
             db.collection("site_write_permits"),
+            {},
+            async (siteId) => {
+                await db
+                    .collection<ResourceRevisionDocument>("site_resource_revisions")
+                    .replaceOne({ _id: siteId }, { revision: randomUUID() }, { upsert: true });
+            },
         );
         this.records = records;
+        this.database = db;
+    }
+
+    /** Four bounded indexed reads, without opening Content or loading any business resources. */
+    async readResourceRevision(siteId: string): Promise<string> {
+        const revisions = this.database.collection<ResourceRevisionDocument>("site_resource_revisions");
+        const before = await revisions.findOne({ _id: siteId });
+        const maintenance = await this.database
+            .collection<{ _id: string; maintenance?: unknown }>("site_upgrade_maintenance")
+            .findOne({ _id: siteId }, { projection: { maintenance: 1 } });
+        // Even expired permits block reuse: a paused writer is not necessarily dead.
+        const permit = await this.database
+            .collection("site_write_permits")
+            .findOne({ siteId }, { projection: { _id: 1 } });
+        const after = await revisions.findOne({ _id: siteId });
+        for (const value of [before, after]) {
+            if (value && (typeof value.revision !== "string" || !/^[0-9a-f-]{36}$/u.test(value.revision))) {
+                throw new TypeError("Invalid persisted resource revision");
+            }
+        }
+        // No clock exists before the first write. Refuse cache reuse, without repairing state.
+        return before && after?.revision === before.revision && !maintenance?.maintenance && !permit
+            ? before.revision
+            : randomUUID();
     }
     override async init(): Promise<void> {
         await super.init();

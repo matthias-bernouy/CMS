@@ -1,6 +1,7 @@
 import { currentTraceContext } from "@bernouy/logging/tracing";
 import type { ContractRelease } from "@bernouy/ulvia-contracts";
 import { HttpGatewayTransport } from "cms-gateway/invocation/http/transport/HttpGatewayTransport";
+import type { NodeGatewayHttpNetworkFactory } from "cms-gateway/invocation/node-http/NodeGatewayHttpNetwork";
 import { NodeGatewayHttpNetwork } from "cms-gateway/invocation/node-http/NodeGatewayHttpNetwork";
 import { validDelegationTicket } from "cms-gateway/access/delegation/wire";
 import type { ProviderInvocationOptions } from "./interfaces";
@@ -12,7 +13,12 @@ import { ProviderClientError } from "./interfaces";
 export class GatewayProviderClient {
     private readonly transport;
     private readonly origin;
-    constructor(options: { cmsUrl: string; token: string; allowPrivateAddresses?: boolean }) {
+    constructor(options: {
+        cmsUrl: string;
+        token: string;
+        allowPrivateAddresses?: boolean;
+        createNetwork?: NodeGatewayHttpNetworkFactory;
+    }) {
         const url = new URL(options.cmsUrl);
         if (
             url.username ||
@@ -25,7 +31,7 @@ export class GatewayProviderClient {
             throw new TypeError("Invalid CMS connection");
         }
         this.origin = url.origin;
-        const network = new NodeGatewayHttpNetwork({
+        const network = (options.createNetwork ?? ((value) => new NodeGatewayHttpNetwork(value)))({
             authorize: async (request) => ({
                 token: options.token,
                 providerAuthority: request.delegated ? "delegated" : "provider",

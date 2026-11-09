@@ -1,3 +1,4 @@
+import type { RepositoryFetch } from "repository/repository-http/getBytes";
 import { contractAssetDefinitions } from "@bernouy/ulvia-contracts/documentation";
 import { isSha256Digest } from "@bernouy/binary-media";
 import { parseCollectionReleaseJson } from "repository/collections/core/parsing/parseCollectionRelease";
@@ -27,14 +28,16 @@ export interface RepositoryAssetDownloadSink {
 export class RemoteRepositoryClient {
     private readonly base: URL;
     private readonly writer: RemoteRepositoryWriter;
+    private readonly request: RepositoryFetch;
 
     constructor(
         baseUrl: string,
         credential?: RepositoryNamespaceCredential,
-        options: Readonly<{ allowInsecureHttp?: boolean }> = {},
+        options: Readonly<{ allowInsecureHttp?: boolean; request?: RepositoryFetch }> = {},
     ) {
         this.base = repositoryUrl(baseUrl, options);
-        this.writer = new RemoteRepositoryWriter(this.base, credential);
+        this.request = options.request ?? ((url, init) => fetch(url, init));
+        this.writer = new RemoteRepositoryWriter(this.base, credential, this.request);
     }
 
     async pull(
@@ -108,7 +111,7 @@ export class RemoteRepositoryClient {
         if (cached && (await verifiedAsset(cached, definition))) {
             return cached;
         }
-        const response = await fetch(new URL(path, this.base), {
+        const response = await this.request(new URL(path, this.base), {
             headers: { Accept: definition.mediaType },
             redirect: "error",
             signal: AbortSignal.timeout(120_000),
@@ -137,7 +140,7 @@ export class RemoteRepositoryClient {
     }
 
     private async get(path: string, maxBytes: number, accept: string) {
-        const response = await fetch(new URL(path, this.base), {
+        const response = await this.request(new URL(path, this.base), {
             headers: { Accept: accept },
             redirect: "error",
             signal: AbortSignal.timeout(30_000),

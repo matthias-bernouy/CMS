@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { MongoClient } from "mongodb";
 import { documentationChildren } from "../documentation/processes";
 import { waitForHttp } from "../docker";
+import { createContainerHosting } from "../containers/hosting";
 import { configureRepository } from "./initializationClient";
 import { provisionInstance } from "../provision";
 import { instanceDatabaseName } from "../../../../packages/runtimes/ulvia-provider-server/src/runtime/stores/storageRoots";
@@ -16,10 +17,15 @@ export async function repositoryProcesses() {
     const root = join(workspace, "artifacts/repository-cms-goal/flows", randomUUID());
     await mkdir(join(root, "files"), { recursive: true, mode: 0o700 });
     // The shipped manifest admits this exact loopback Provider origin.
-    const ports = Array.from({ length: 3 }, (_, index) =>
+    const ports = Array.from({ length: 2 }, (_, index) =>
         Bun.serve({ hostname: "127.0.0.1", port: index === 0 ? 5103 : 0, fetch: () => new Response(null) }),
     );
-    const [providerUrl, cmsUrl, neighbourUrl] = ports.map((server) => server.url.origin);
+    const providerUrl = ports[0]!.url.origin;
+    const edgePort = ports[1]!.port!;
+    const hosting = await createContainerHosting(edgePort);
+    const cmsUrl = hosting.registryOrigin;
+    const neighbourUrl = `http://neighbour.localhost:${edgePort}`;
+    const privateOrigin = `http://127.0.0.1:${edgePort}`;
     ports.forEach((server) => server.stop(true));
     const processes = documentationChildren(root, workspace);
     const mongoUrl = new URL(mongo);
@@ -27,7 +33,7 @@ export async function repositoryProcesses() {
     const client = new MongoClient(mongoUrl.href);
     const operatorToken = randomBytes(32).toString("base64url");
     const network: OfflineRuntimeNetwork = {
-        ULVIA_TEST_HTTP_ORIGINS: JSON.stringify([providerUrl, cmsUrl, neighbourUrl]),
+        ULVIA_TEST_HTTP_ORIGINS: JSON.stringify([providerUrl, cmsUrl, neighbourUrl, hosting.origin, privateOrigin]),
         ULVIA_TEST_DENIED_NETWORK: join(root, "denied-network.txt"),
     };
     const admin = { email: "administrator@example.test", password: `Admin-${randomBytes(24).toString("base64url")}` };
@@ -43,6 +49,7 @@ export async function repositoryProcesses() {
         ULVIA_PROVIDER_PUBLIC_URL: providerUrl!,
         ULVIA_PROVIDER_OPERATOR_TOKEN: operatorToken,
         ULVIA_EMBEDDING_MODEL_DIR: model,
+        ...hosting.providerEnvironment,
         ...network,
     };
     const preload = resolve(import.meta.dir, "network.ts");
@@ -59,6 +66,7 @@ export async function repositoryProcesses() {
     );
     const close = async () => {
         await processes.close();
+        await hosting.close();
         try {
             await client.connect();
             const records = await client
@@ -76,31 +84,29 @@ export async function repositoryProcesses() {
     };
     try {
         await waitForHttp(`${providerUrl}/ulvia/operator/instances`, { Authorization: `Bearer ${operatorToken}` });
+        processes.start(
+            "edge",
+            [process.execPath, "run", `--preload=${preload}`, "packages/runtimes/cms-edge-server/src/index.ts"],
+            {
+                MODE: "PROD",
+                CMS_PORT: String(edgePort),
+                CMS_HOST: "127.0.0.1",
+                CMS_HOSTING_PROVIDER_URL: providerUrl,
+                CMS_HOSTING_EDGE_SECRET: hosting.edgeSecret,
+                ...network,
+            },
+        );
+        await waitForHttp(`${hosting.origin}/readyz`);
+        await hosting.initialize();
         const registry = await provisionInstance(
-            providerUrl!,
+            providerUrl,
             operatorToken,
             "repository-journey",
-            cmsUrl!,
+            cmsUrl,
             admin,
-            cmsUrl!,
+            cmsUrl,
         );
-        const edge = async (name: string, url: string, token: string) => {
-            processes.start(
-                name,
-                [process.execPath, "run", `--preload=${preload}`, "packages/runtimes/cms-edge-server/src/index.ts"],
-                {
-                    MODE: "PROD",
-                    CMS_PORT: new URL(url).port,
-                    CMS_HOST: "127.0.0.1",
-                    CMS_PUBLIC_URL: url,
-                    CMS_INSTALLATIONS_PROVIDER_URL: providerUrl!,
-                    CMS_INSTALLATIONS_PROVIDER_TOKEN: token,
-                    ...network,
-                },
-            );
-            await waitForHttp(`${url}/healthz`);
-        };
-        await edge("edge", cmsUrl!, registry.credentials.instanceAccessToken);
+        await hosting.claimDomain(registry.instance.id, cmsUrl);
         await configureRepository(cmsUrl!, admin, cmsUrl!, true);
         return {
             root,
@@ -118,7 +124,7 @@ export async function repositoryProcesses() {
                     admin,
                     neighbourUrl!,
                 );
-                await edge("neighbour", neighbourUrl!, created.credentials.instanceAccessToken);
+                await hosting.claimDomain(created.instance.id, neighbourUrl);
                 await configureRepository(neighbourUrl!, admin, cmsUrl!);
                 return neighbourUrl!;
             },

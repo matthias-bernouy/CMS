@@ -24,6 +24,7 @@ test("Compose receives explicit user-owned storage and loopback port configurati
     const identity = {
         ...localServicesIdentity(paths),
         images: {
+            edge: { component: "edge" as const, version: "1.2.3", digest },
             provider: {
                 component: "provider" as const,
                 version: "1.2.3",

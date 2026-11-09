@@ -26,6 +26,9 @@ test("the surface shares one compiled feature inventory for releases, manifest c
         "ulvia/provider.connections",
         "ulvia/repository",
         "ulvia/cms.installations",
+        "ulvia/cms.hosting",
+        "ulvia/provider.routing",
+        "ulvia/provider.tls",
         "ulvia/provider.cms-instances",
     ]);
     expect(build.implementations.map(({ contractId }) => contractId)).toEqual([
@@ -39,6 +42,9 @@ test("the surface shares one compiled feature inventory for releases, manifest c
         "ulvia/provider.connections",
         "ulvia/repository",
         "ulvia/cms.installations",
+        "ulvia/cms.hosting",
+        "ulvia/provider.routing",
+        "ulvia/provider.tls",
     ]);
     expect(build.implementedContracts[0]!.capabilities.map(({ definition }) => definition.id).sort()).toEqual([
         "emailer.send",

@@ -5,7 +5,6 @@ export async function provisionInstance(
     cmsUrl: string,
     administrator: { email: string; password: string },
     gatewayUrl: string,
-    profile?: { id: string; version: string },
 ) {
     const created = await fetch(`${providerUrl}/ulvia/operator/instances`, {
         method: "POST",
@@ -19,7 +18,6 @@ export async function provisionInstance(
             cmsUrl,
             gatewayUrl,
             administrator,
-            ...(profile ? { profile } : {}),
         }),
         signal: AbortSignal.timeout(90_000),
     });

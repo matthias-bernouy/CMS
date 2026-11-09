@@ -28,6 +28,11 @@
             "digest": "sha256:f5be7d20f375d96cc97d4454bdb570fc87fabe755dff1850cbaeb26e508809a8"
         },
         {
+            "contractId": "ulvia/cms.hosting",
+            "version": "1.0.0",
+            "digest": "sha256:afa1b95ffb2cb7c23f3c233bb195cdeb0bb9026abfd0df933a9ff2798c99144c"
+        },
+        {
             "contractId": "ulvia/cms.installations",
             "version": "1.4.0",
             "digest": "sha256:dbfaafe02234c64828b1fc8b0ced559a6ec75ebe185db6ade639def9edcd876f"
@@ -46,6 +51,16 @@
             "contractId": "ulvia/provider.connections",
             "version": "1.0.0",
             "digest": "sha256:0cfc85a809d4078e5e95adc94d023d65fa6d626074093f1a880090ce02b8f9f2"
+        },
+        {
+            "contractId": "ulvia/provider.routing",
+            "version": "1.0.0",
+            "digest": "sha256:0e312b93bdd939df59e4b837aba02be5f0b750485cf88db41fcec0411cdd9437"
+        },
+        {
+            "contractId": "ulvia/provider.tls",
+            "version": "1.0.0",
+            "digest": "sha256:41dbd3a81aa4d4d6eea2053c5dc7f097ac7003cd683a0c86341fbc4fb5bafa01"
         },
         {
             "contractId": "ulvia/repository",

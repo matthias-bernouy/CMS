@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-test("help, version and local instance listing do not initialize authoring or publication modules", async () => {
+test("help, version and services status do not initialize authoring or publication modules", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-cli-startup-"));
     const entry = new URL("../../../src/cli.ts", import.meta.url).href;
     const script = String.raw`
@@ -11,7 +11,7 @@ test("help, version and local instance listing do not initialize authoring or pu
         const options = { environment: { ULVIA_DATA_DIR: Bun.argv.at(-1) }, log() {} };
         await runCli(["--help"], options);
         await runCli(["--version"], options);
-        await runCli(["instance", "list"], options);
+        await runCli(["services", "status"], options);
         console.log(JSON.stringify(Object.keys(require.cache).filter(path =>
             /repository\/src\/collections\/|ulvia-cli\/src\/commands\/(release|remote)\//.test(path))));
     `;

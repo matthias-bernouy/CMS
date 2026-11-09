@@ -7,7 +7,7 @@ export async function verifyPublicTrace(
     cmsUrl: string,
     requireDescriptionMiss = false,
 ): Promise<void> {
-    // Trace the origin path explicitly; separate cache-hit probes require zero Provider work.
+    // Trace the origin path explicitly; separate cache-hit probes require only scoped routing work.
     const traceId = crypto.randomUUID();
     const response = await fetch(`${cmsUrl}/trace-probe`, {
         headers: { "x-request-id": traceId, "cache-control": "no-cache" },

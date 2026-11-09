@@ -13,6 +13,7 @@
         "src/**/*.ts"
     ],
     "references": [
+        { "path": "../../features/hosting" },
         {
             "path": "../../features/content"
         },

@@ -1,3 +1,4 @@
+import type { NodeGatewayHttpNetworkFactory } from "@bernouy/cms-gateway/http/node";
 import { activeProviderRequirements } from "@bernouy/ulvia-providers/selections";
 import { satisfiesVersionRange } from "@bernouy/ulvia-providers";
 import type { ProviderManagement } from "@bernouy/repository/providers/management";
@@ -11,8 +12,9 @@ export function providerAdministration(
     gateway: Awaited<ReturnType<typeof createProviderGateway>>,
     management: ProviderManagement,
     cmsUrl: string,
+    createNetwork?: NodeGatewayHttpNetworkFactory,
 ): ProviderAdministration {
-    const pairing = new ProviderPairing(stores, gateway, cmsUrl);
+    const pairing = new ProviderPairing(stores, gateway, cmsUrl, undefined, createNetwork);
     return {
         catalogue: () => management.catalogue(),
         importReference: (input) => management.importReference(input),

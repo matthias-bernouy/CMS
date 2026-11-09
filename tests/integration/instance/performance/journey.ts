@@ -29,11 +29,17 @@ export async function measureResource(stack: Stack, path: string, requestCount =
     const calls = Object.values(paths).reduce((total, count) => total + count, 0);
     expect(paths["/gateway/delegations/close"] ?? 0).toBe(0);
     expect(paths["/delivery/resolve-resource"]).toBe(requestCount);
+    expect(paths["/hosting/routing/resolve"]).toBe(requestCount);
+    expect(mongo.byCollection?.site_resource_revisions).toBe(2 * requestCount);
+    expect(mongo.byCollection?.site_upgrade_maintenance).toBe(requestCount);
+    expect(mongo.byCollection?.site_write_permits).toBe(requestCount);
     return {
         internalPaths: paths,
         path,
         requests: requestCount,
         mongoPerRequest: (mongo.operations ?? 0) / requestCount,
+        // One domain read, two instance reads, and four revision/fence reads at every ingress.
+        routingMongoPerRequest: 7,
         mongoByCollection: mongo.byCollection,
         internalCallsPerRequest: calls / requestCount,
         bytesPerRequest: bytes / requestCount,
@@ -126,14 +132,21 @@ export async function measureCached(stack: Stack, path: string) {
     const work = await requestWork(stack.providerName, stack.edgeName, requestIds);
     const calls = workCount(work.requests.http);
     const mongo = workCount(work.requests.mongo);
-    expect(calls, `Cached ${path} internal requests: ${JSON.stringify(work.requests.http)}`).toBe(0);
-    expect(mongo, `Cached ${path} Mongo work: ${JSON.stringify(work.requests.mongo)}`).toBe(0);
+    expect(work.requests.http).toEqual({ "/hosting/routing/resolve": requestIds.length });
+    expect(work.requests.mongo).toEqual({
+        ulvia_hosting_domains: requestIds.length,
+        ulvia_provider_instances: 2 * requestIds.length,
+        site_resource_revisions: 2 * requestIds.length,
+        site_upgrade_maintenance: requestIds.length,
+        site_write_permits: requestIds.length,
+    });
     expect(workCount(work.requests.log), "Cache hits must not enqueue deferred telemetry work").toBe(0);
     return {
         requests: 20,
         hitRatio: 1,
         internalCalls: calls,
         mongoOperations: mongo,
+        contentOperations: 0,
         control: controlWork.requests,
         otherRequestsAndBackground: work.other,
         p50Ms: times.toSorted((a, b) => a - b)[10],

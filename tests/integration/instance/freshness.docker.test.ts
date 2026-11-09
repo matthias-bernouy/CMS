@@ -15,7 +15,10 @@ integration(
         try {
             connection = await connectBrowser(stack.cmsUrl, stack.administrator);
             await connection.call("ulvia/cms.authoring", "configure-connection", { token: stack.repository.pat.token });
-            await exerciseMutationFreshness(connection, stack.cmsUrl);
+            await exerciseMutationFreshness(connection, stack.cmsUrl, {
+                origin: stack.namedUrl,
+                administrator: stack.administrator,
+            });
         } catch (error) {
             throw new Error(`${String(error)}\n${await stack.diagnostics()}`);
         } finally {

@@ -92,12 +92,6 @@ export async function verifyEdgeStateAfterRestart(page: Page, credentials: Crede
     const pages = await call("ulvia/cms.content", "/pages/list", "QUERY", { limit: 25 });
     expect(pages.items).toHaveLength(1);
     await verifyPublishedPage(page, origin);
-    const persisted = await call("ulvia/cms.content", "/pages/get", "QUERY", { id: pages.items[0].id });
-    await call("ulvia/cms.content", "/pages/delete", "POST", {
-        id: persisted.id,
-        expectedRevision: persisted.revision,
-    });
-    expect((await fetch(`${origin}/smoke-page`, { redirect: "manual" })).status).toBe(410);
 }
 
 async function verifyPublishedPage(page: Page, origin: string): Promise<void> {

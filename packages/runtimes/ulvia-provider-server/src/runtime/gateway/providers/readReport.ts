@@ -1,8 +1,13 @@
+import type { NodeGatewayHttpNetworkFactory } from "@bernouy/cms-gateway/http/node";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { parseProviderRuntimeReportJson } from "@bernouy/ulvia-providers/installations";
 
-export async function readRemoteProviderReport(endpoint: string, token: string) {
-    const network = new NodeGatewayHttpNetwork({ resolveToken: async () => token, allowPrivateAddresses: true });
+export async function readRemoteProviderReport(
+    endpoint: string,
+    token: string,
+    createNetwork: NodeGatewayHttpNetworkFactory = (options) => new NodeGatewayHttpNetwork(options),
+) {
+    const network = createNetwork({ resolveToken: async () => token, allowPrivateAddresses: true });
     const response = await network.exchange({
         origin: endpoint,
         pathAndQuery: "/ulvia/report",

@@ -1,21 +1,16 @@
 import { runCli } from "../../../src/cli";
-import { resolveUlviaPaths, resolveLocalInstancePaths } from "../../../src/runtime/paths";
-import { loadLocalInstanceConfig } from "../../../src/runtime/instances/config";
-import { loadLocalInstanceConnection } from "../../../src/runtime/instances/connection";
-import { destroyLocalEdge, listLocalInstanceNames } from "../../../src/runtime/stack/orchestration/instances";
+import { resolveUlviaPaths } from "../../../src/runtime/paths";
 import { destroyLocalServices } from "../../../src/runtime/stack/orchestration/services";
+import { loadLocalServicesState } from "../../../src/runtime/stack/orchestration/state";
 
-/** A failed first start may have image pins without a complete instance marker. */
+/** Launch intent is persisted before Compose creates any durable service. */
 export async function cleanupSmokeRuntime(environment: Record<string, string | undefined>) {
     try {
         await runCli(["reset", "--yes"], { environment, log: () => undefined });
-    } catch {
+    } catch (cause) {
         const paths = resolveUlviaPaths(environment);
-        for (const name of await listLocalInstanceNames(paths)) {
-            const instance = resolveLocalInstancePaths(paths, name);
-            if ((await loadLocalInstanceConfig(instance.root)) && (await loadLocalInstanceConnection(instance.root))) {
-                await destroyLocalEdge(paths, name);
-            }
+        if (!(await loadLocalServicesState(paths))) {
+            throw cause;
         }
         await destroyLocalServices(paths);
     }

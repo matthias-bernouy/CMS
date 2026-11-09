@@ -44,6 +44,7 @@ if (import.meta.main) {
                         Labels: {
                             "io.ulvia.component": image.component,
                             "io.ulvia.stack-api": "1",
+                            "io.ulvia.hosting-api": "1",
                             "org.opencontainers.image.version": image.version,
                         },
                     },
@@ -52,14 +53,21 @@ if (import.meta.main) {
         );
     } else if (args[0] === "compose") {
         if (args.includes("ps")) {
+            const generated = args.find((arg) => arg.endsWith("shared-edges.json"));
+            const edges = generated
+                ? Object.keys(JSON.parse(await readFile(generated, "utf8")).services).filter((name) =>
+                      name.startsWith("edge-"),
+                  )
+                : [];
             const services = args.some((arg) => arg.endsWith("services.yml"))
-                ? ["proxy", "mongo", "provider"]
+                ? ["proxy", "mongo", "provider", ...edges]
                 : ["edge"];
             process.stdout.write(
                 JSON.stringify(services.map((Service) => ({ Service, State: "running", Health: "healthy" }))),
             );
         }
-        const reference = process.env.PROVIDER_IMAGE;
+        const reference =
+            process.env[process.env.ULVIA_TEST_DOCKER_FAIL_COMPONENT === "edge" ? "EDGE_IMAGE" : "PROVIDER_IMAGE"];
         if (
             args.includes("up") &&
             reference &&

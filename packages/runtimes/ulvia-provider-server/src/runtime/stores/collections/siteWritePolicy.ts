@@ -1,5 +1,37 @@
 import type { CollectionStore } from "@bernouy/repository/collections/installations";
 import type { ContentRepository } from "@bernouy/content";
+import type { CmsFilesService } from "@bernouy/files";
+
+export const FILES_FENCED_MUTATIONS = [
+    "createNamespace",
+    "createNamespaceKey",
+    "rotateNamespaceKey",
+    "revokeNamespaceKey",
+    "deleteNamespace",
+    "createUpload",
+    "writeUpload",
+    "completeUpload",
+    "updateFile",
+    "setFileVisibility",
+    "deleteFile",
+    "cleanupExpiredUploads",
+] as const satisfies readonly (keyof CmsFilesService)[];
+const FILES_READS = [
+    "getNamespace",
+    "signFile",
+    "listFiles",
+    "getFile",
+    "listRepresentations",
+    "readRepresentation",
+    "signRepresentations",
+    "readFile",
+] as const satisfies readonly (keyof CmsFilesService)[];
+type FilesUnclassified = Exclude<
+    keyof CmsFilesService,
+    (typeof FILES_FENCED_MUTATIONS)[number] | (typeof FILES_READS)[number]
+>;
+const filesCoverage: Record<FilesUnclassified, never> = {};
+void filesCoverage;
 
 export const CMS_REPOSITORY_FENCED_MUTATIONS = [
     "updateSiteBlocGroup",

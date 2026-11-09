@@ -158,3 +158,6 @@ See [development](../development/README.md),
 [responsive images](../images/README.md).
 
 [CMS observability](observability.md) describes instance-scoped journal collection and queries.
+
+See [shared hosting](shared-hosting.md) for Control authority, host routing,
+short-lived Edge credentials and the current deployment integration boundary.

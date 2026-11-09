@@ -130,6 +130,22 @@
         "typescript": "^7.0.2",
       },
     },
+    "packages/features/hosting": {
+      "name": "@bernouy/hosting",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "zod": "4.6.7",
+      },
+      "devDependencies": {
+        "@bernouy/cms-gateway": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.8.0",
+        "typescript": "^7.0.2",
+      },
+    },
     "packages/features/observability": {
       "name": "@bernouy/observability",
       "version": "1.0.0",
@@ -346,6 +362,7 @@
       "dependencies": {
         "@bernouy/cms-edge": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/hosting": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "@bernouy/observability": "workspace:*",
@@ -362,6 +379,7 @@
       "dependencies": {
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/content": "workspace:*",
+        "@bernouy/hosting": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "@bernouy/observability": "workspace:*",
@@ -388,6 +406,7 @@
         "@bernouy/email-smtp": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/files": "workspace:*",
+        "@bernouy/hosting": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
         "@bernouy/logging": "workspace:*",
@@ -436,6 +455,7 @@
         "@bernouy/documentation": "workspace:*",
         "@bernouy/email-smtp": "workspace:*",
         "@bernouy/files": "workspace:*",
+        "@bernouy/hosting": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "@bernouy/observability": "workspace:*",
@@ -474,6 +494,8 @@
     "@bernouy/envelope-crypto": ["@bernouy/envelope-crypto@workspace:packages/foundation/envelope-crypto"],
 
     "@bernouy/files": ["@bernouy/files@workspace:packages/features/files"],
+
+    "@bernouy/hosting": ["@bernouy/hosting@workspace:packages/features/hosting"],
 
     "@bernouy/http-runner": ["@bernouy/http-runner@workspace:packages/foundation/http-runner"],
 

@@ -47,6 +47,7 @@ describe("OfficialInstanceProvisioner", () => {
 
     test("Registry uses one durable transition, resumes completed steps, and commits the address only at completion", async () => {
         const registry = new MemoryRegistry(instance("ready"));
+        const initialRepository = structuredClone((await registry.get("instance:one"))!.repository);
         const transitions = new MemoryTransitions();
         const calls: string[] = [];
         let fail = true;
@@ -74,7 +75,7 @@ describe("OfficialInstanceProvisioner", () => {
         await expect(provisioner.createRepository("instance:one", SYSTEM_PLAN, plan, 1, "local:admin")).rejects.toThrow(
             "Interrupted",
         );
-        expect((await registry.get("instance:one"))?.repository).toBeUndefined();
+        expect((await registry.get("instance:one"))?.repository).toEqual(initialRepository);
         expect(transitions.record?.completedSteps).toEqual(["provider"]);
         fail = false;
         const latest = (await registry.get("instance:one"))!;

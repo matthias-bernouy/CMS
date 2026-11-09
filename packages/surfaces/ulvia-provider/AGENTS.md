@@ -11,6 +11,13 @@ provider selection or domain stores.
 Runtimes inject resolved views of admitted contract releases, an instance runtime report and the
 feature ports used by those adapters.
 
+Instance lifecycle and provisioning belong to `@bernouy/hosting/instances`.
+The operator transport only validates requests and calls that feature; it must
+not own the lifecycle, transition leases or instance-domain business logic.
+It supplies explicit internal operator creation provenance after authentication;
+reject caller-supplied provenance. Return HTTP 202 for a pending creation and
+201 only for a ready instance.
+
 Keep domain operations in their owning features. A capability adapter may
 coordinate several feature ports, project the official wire response and map
 domain failures, but it must not import a runtime or select a persistence
@@ -89,3 +96,23 @@ behavior.
   Registry creation awaits the host's durable instance transition; do not queue a
   second SDK operation or add a parallel pending-choice record. Project creation
   status from that transition and keep recovery authority checks in its owner.
+
+- `ulvia/cms.hosting` is feature-owned at `@bernouy/hosting/feature`. Project its
+  injected authority, instance and domain services from the inventory. Every
+  capability requires signed user authority from persisted Control and a fresh
+  local administrator grant. Raw Edge control credentials, system actors and
+  collection delegations cannot invoke hosting administration. Never add an
+  `operator` access level or return private provisioning credentials in its DTOs.
+
+- The official namespace allowlist includes the exact host-level
+  `ulvia/provider.routing` contract. Mount it from the inventory in an isolated
+  technical account, never as an ordinary CMS selection. Inject machine
+  authentication; caller headers cannot select its instance or service identity.
+- Retain the borrowed instance runtime through streamed response completion or
+  cancellation using Foundation's generic response-resource lease helper.
+
+- `mountPublicCapabilities` mounts only exact admitted static public GET queries
+  in an injected technical runtime. Strip caller transport/identity headers and
+  construct anonymous scope on the server. Do not make signed CMS or routing
+  capabilities public. TLS permission uses the SDK binding, validation and
+  declared errors; it is not an unadmitted Caddy-specific API.

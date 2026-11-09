@@ -14,7 +14,39 @@ export class SystemBootstrap implements SystemInstallationSource {
         const { plan } = await this.artifacts();
         return deepFreeze({
             ...plan,
-            contracts: plan.contracts.filter(({ contractId }) => contractId !== "ulvia/repository"),
+            contracts: plan.contracts.filter(
+                ({ contractId }) =>
+                    contractId !== "ulvia/repository" &&
+                    contractId !== "ulvia/cms.hosting" &&
+                    contractId !== "ulvia/provider.routing" &&
+                    contractId !== "ulvia/provider.tls",
+            ),
+        });
+    }
+    async control(): Promise<SystemInstallationPlan> {
+        const { plan } = await this.artifacts();
+        return deepFreeze({
+            ...plan,
+            contracts: plan.contracts.filter(
+                ({ contractId }) =>
+                    contractId !== "ulvia/repository" &&
+                    contractId !== "ulvia/provider.routing" &&
+                    contractId !== "ulvia/provider.tls",
+            ),
+        });
+    }
+    async routing(): Promise<SystemInstallationPlan> {
+        const { plan } = await this.artifacts();
+        return deepFreeze({
+            ...plan,
+            contracts: plan.contracts.filter(({ contractId }) => contractId === "ulvia/provider.routing"),
+        });
+    }
+    async tls(): Promise<SystemInstallationPlan> {
+        const { plan } = await this.artifacts();
+        return deepFreeze({
+            ...plan,
+            contracts: plan.contracts.filter(({ contractId }) => contractId === "ulvia/provider.tls"),
         });
     }
     async contracts(plan: SystemInstallationPlan) {

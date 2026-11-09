@@ -35,6 +35,22 @@ test("repository base URLs reject credentials and non-HTTPS remote hosts", () =>
     expect(() => repositoryBaseUrl("https://user:pass@example.com", "Provider")).toThrow("URL credentials");
 });
 
+test("shared local tenants keep HTTP transport confined to localhost names", () => {
+    expect(repositoryBaseUrl("http://registry.localhost:5100", "Provider").origin).toBe(
+        "http://registry.localhost:5100",
+    );
+    expect(() => new RepositoryNamespaceClient("http://registry.localhost:5100")).not.toThrow();
+    expect(() => new RemoteRepositoryClient("http://registry.localhost:5100")).not.toThrow();
+    for (const origin of [
+        "http://registry.localhost.example",
+        "http://localhost-example.com",
+        "http://user:password@registry.localhost",
+        "http://registry.localhost/path",
+    ]) {
+        expect(() => repositoryBaseUrl(origin, "Provider")).toThrow();
+    }
+});
+
 test("repository transport accepts runtime-owned outbound request decoration", async () => {
     let observed: Headers | undefined;
     const request = async (_url: URL, init: RequestInit) => {

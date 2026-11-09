@@ -1,3 +1,4 @@
+export { retainResponseResource } from "http-runner/core/request/body/retainResponseResource";
 /**
  * @bernouy/http-runner — the HTTP mounting seam.
  *
@@ -19,7 +20,7 @@ export {
     readBoundedFormData,
     readBoundedRequestBody,
     RequestBodyTooLargeError,
-} from "http-runner/core/request/body";
+} from "http-runner/core/request/body/readRequestBody";
 export {
     ClientAddressUnavailableError,
     InvalidForwardedChainError,

@@ -1,7 +1,11 @@
-import { chmod, readFile, writeFile } from "node:fs/promises";
+import { chmod, readFile, writeFile, lstat, opendir } from "node:fs/promises";
 import { join } from "node:path";
 import type { UlviaPaths } from "../paths";
 import { resolveServicePorts, type ServicePorts } from "./ports";
+import { parseHosting } from "./hosting";
+import type { InstallationHosting } from "./hosting";
+import { instancePublicUrl } from "./ports";
+import { hostingOrigin } from "@bernouy/hosting";
 const SCHEMA = "ulvia.installation.v1" as const;
 
 type InstallationTls = Readonly<{ mode: "disabled" }> | Readonly<{ mode: "acme"; email: string; httpsPort: number }>;
@@ -11,14 +15,22 @@ export type InstallationConfig = Readonly<{
     bindAddress: string;
     ports: ServicePorts;
     tls: InstallationTls;
+    hosting: InstallationHosting;
 }>;
 
 export function defaultInstallationConfig(environment: Record<string, string | undefined> = {}): InstallationConfig {
+    const ports = resolveServicePorts(environment);
     return Object.freeze({
         schema: SCHEMA,
         bindAddress: "127.0.0.1",
-        ports: resolveServicePorts(environment),
+        ports,
         tls: Object.freeze({ mode: "disabled" }),
+        hosting: parseHosting({
+            controlOrigin: instancePublicUrl("control.localhost", { ports, tls: { mode: "disabled" } }),
+            edgeCount: 1,
+            managedSuffixes: [],
+            publicAddresses: [],
+        }),
     });
 }
 
@@ -30,8 +42,49 @@ export async function loadOrCreateInstallationConfig(
     if (existing) {
         return existing;
     }
+    await assertFreshInstallation(paths);
     const defaults = defaultInstallationConfig(environment);
     return await saveInstallationConfig(paths, defaults, true);
+}
+
+export async function assertFreshInstallation(paths: UlviaPaths): Promise<void> {
+    for (const name of ["stack.json", "runtime.json"]) {
+        if (
+            await lstat(join(paths.services, name)).then(
+                () => true,
+                (cause: NodeJS.ErrnoException) => {
+                    if (cause.code === "ENOENT") {
+                        return false;
+                    }
+                    throw cause;
+                },
+            )
+        ) {
+            throw new Error(
+                "Installation configuration is missing from existing infrastructure state; operator recovery is required",
+            );
+        }
+    }
+    for (const path of [paths.mongo, paths.cmsFiles, join(paths.data, "instances")]) {
+        const directory = await opendir(path).catch((cause: NodeJS.ErrnoException) => {
+            if (cause.code === "ENOENT") {
+                return null;
+            }
+            throw cause;
+        });
+        if (!directory) {
+            continue;
+        }
+        try {
+            if (await directory.read()) {
+                throw new Error(
+                    "Installation configuration is missing from populated state; operator recovery is required",
+                );
+            }
+        } finally {
+            await directory.close();
+        }
+    }
 }
 
 export async function loadInstallationConfig(paths: UlviaPaths): Promise<InstallationConfig | null> {
@@ -80,20 +133,20 @@ export function parseInstallationConfig(value: unknown): InstallationConfig {
         throw new Error("Ulvia installation configuration is invalid");
     }
     const record = value as Record<string, unknown>;
-    if (
-        Object.keys(record)
-            .filter((key) => key !== "repository")
-            .sort()
-            .join(",") !== "bindAddress,ports,schema,tls"
-    ) {
+    if (Object.keys(record).sort().join(",") !== "bindAddress,hosting,ports,schema,tls") {
         throw new Error("Ulvia installation configuration is invalid");
     }
     const ports = parsePorts(record.ports);
     const tls = parseTls(record.tls);
+    const hosting = parseHosting(record.hosting);
+    const origin = hostingOrigin(hosting.controlOrigin);
+    if (instancePublicUrl(origin.hostname, { ports, tls }) !== hosting.controlOrigin) {
+        throw new Error("Control origin does not match the configured public listeners");
+    }
     if (record.schema !== SCHEMA || !validBindAddress(record.bindAddress)) {
         throw new Error("Ulvia installation configuration is invalid");
     }
-    return Object.freeze({ schema: SCHEMA, bindAddress: record.bindAddress, ports, tls });
+    return Object.freeze({ schema: SCHEMA, bindAddress: record.bindAddress, ports, tls, hosting });
 }
 
 function parsePorts(value: unknown): ServicePorts {

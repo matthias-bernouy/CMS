@@ -4,16 +4,16 @@ Ulvia CMS installation runtime.
 
 ## Responsibilities
 
-- Orchestrate shared services and independent named Edge instances through Docker Compose.
+- Orchestrate one installation with Provider, MongoDB, Caddy and a configured pool of shared Edge processes through Docker Compose.
 - Keep runtime data and generated credentials private and persistent.
-- Standard Provider connections default to `https://repo.ulvia.fr`. Persist the
-  selected Repository connection with installation configuration. Local tests
+- Site Repository settings default to `https://repo.ulvia.fr`. Keep each site's
+  source selection separate from CLI publisher PAT configuration. Local tests
   must explicitly select their isolated Repository and opt into HTTP; never
   let their default setup contact the public Repository.
 - Expose lifecycle commands for starting, inspecting, and stopping the stack.
-- Shared services are proxy, MongoDB and Provider. A Repository is an explicitly
-  named CMS instance with explicitly installed Registry with its own Edge, not another shared server or
-  image. Keep `upgrade` targets limited to Edge and Provider.
+- A Repository is an ordinary logical CMS instance with explicitly installed
+  Registry. It uses the shared Edges and proxy, without another server or image.
+  Keep `upgrade` targets limited to Edge and Provider.
 - Source CLI startup requires an explicit initial image version. Bundled system
   provisioning must work without remote Repository access, while later discovery
   and publication still use the persisted Repository connection.
@@ -26,8 +26,9 @@ Ulvia CMS installation runtime.
 - Never print session secrets, encryption keys, or infrastructure credentials.
 - Keep external process invocation behind the runtime process abstraction.
 - Load command-specific authoring, preview and publication code only after
-  dispatch. Local instance operations use the narrow filesystem lock and
-  publication transport exports; they must not initialize collection tooling.
+  dispatch. Infrastructure mutations use the narrow native filesystem lock at
+  the data root. Preserve its inode through reset; status and following logs
+  must not hold that mutation lock. Never initialize collection authoring on startup.
 - Reuse immutable catalogue evidence only within one push preflight. Re-read
   current file bytes and local yanks, verify every asset and let each receiving
   publication recheck current ownership and admission. Never retain credentials
@@ -88,13 +89,22 @@ Ulvia CMS installation runtime.
   invalidates active credential resolvers. Never silently generate credentials.
   Push metadata first, stream separately verified assets and finish with an
   idempotent commit. Preserve bounded transfers and artifact-last atomic visibility.
-- Deploy Repository as an ordinary named CMS instance. Native setup activates
+- Create logical sites through Control's admitted hosting capabilities. No
+  instance command may provision a tenant or start a dedicated Edge. Provider
+  bootstrap creates empty Control; the CLI writes its protected initial
+  administrator to a private file before recording runtime keys. Ready restarts
+  must not recreate a removed administrator file or missing operator credential.
+- Persist mandatory hosting settings and both exact image pins. Missing settings
+  over existing launch or database state require explicit recovery, never defaults.
+  Save launch intent before Compose can create durable database state. Resize
+  shared Edges without creating any per-site deployment or Docker discovery labels.
+- Deploy Repository as an ordinary logical CMS instance. Native setup activates
   Registry after creation. Do not add profiles, profile discovery/upgrade commands,
   a standalone runtime, or a global Repository URL to service configuration.
   `repository` commands manage client PAT connections only. Keep those independent
   from per-instance source settings. Image updates retain data and credentials.
 - First services/Edge startup must reuse cached exact-version images after the
-  normal component, stack API, version and digest checks. Pull only when absent;
+  normal component, stack API, shared hosting API, version and digest checks. Pull only when absent;
   an invalid cached image must refuse rather than silently replace itself.
   Explicit image upgrades still pull their requested tag. The fresh Compose
   smoke test must not pre-seed installation or image-pin state.

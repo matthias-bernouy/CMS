@@ -1,27 +1,19 @@
 import { createHash } from "node:crypto";
 import { chmod, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { LocalInstancePaths, UlviaPaths } from "../../paths";
+import type { UlviaPaths } from "../../paths";
 import { parseInstallationConfig, type InstallationConfig } from "../installation";
 import { isOfficialImage, type OfficialImage } from "./images";
 
 const SERVICES_SCHEMA = "ulvia.local-services-stack.v1" as const;
-const INSTANCE_SCHEMA = "ulvia.local-edge-stack.v1" as const;
 
 export type LocalServicesState = Readonly<{
     schema: typeof SERVICES_SCHEMA;
     projectName: string;
     privateNetwork: string;
     instanceNetwork: string;
-    images: Readonly<{ provider: OfficialImage }>;
+    images: Readonly<{ provider: OfficialImage; edge: OfficialImage }>;
     installation: InstallationConfig;
-}>;
-
-export type LocalEdgeState = Readonly<{
-    schema: typeof INSTANCE_SCHEMA;
-    projectName: string;
-    image: OfficialImage;
-    hostname: string;
 }>;
 
 export function localServicesIdentity(paths: UlviaPaths) {
@@ -31,10 +23,6 @@ export function localServicesIdentity(paths: UlviaPaths) {
         privateNetwork: `ulvia-services-private-${suffix}`,
         instanceNetwork: `ulvia-instances-${suffix}`,
     } as const;
-}
-
-export function localEdgeProjectName(paths: UlviaPaths, name: string): string {
-    return `ulvia-${name}-${dataSuffix(paths)}`;
 }
 
 export async function loadLocalServicesState(paths: UlviaPaths): Promise<LocalServicesState | null> {
@@ -78,38 +66,6 @@ export async function saveLocalServicesState(
     return state;
 }
 
-export async function loadLocalEdgeState(instance: LocalInstancePaths): Promise<LocalEdgeState | null> {
-    const value = await readState(join(instance.root, "stack.json"));
-    if (value === null) {
-        return null;
-    }
-    if (
-        value.schema !== INSTANCE_SCHEMA ||
-        typeof value.projectName !== "string" ||
-        typeof value.hostname !== "string" ||
-        !isOfficialImage(value.image, "edge")
-    ) {
-        throw new Error("Ulvia local Edge state is invalid");
-    }
-    return value as LocalEdgeState;
-}
-
-export async function saveLocalEdgeState(
-    instance: LocalInstancePaths,
-    projectName: string,
-    hostname: string,
-    image: OfficialImage,
-): Promise<LocalEdgeState> {
-    const state: LocalEdgeState = {
-        schema: INSTANCE_SCHEMA,
-        projectName,
-        image,
-        hostname,
-    };
-    await writeState(join(instance.root, "stack.json"), state);
-    return state;
-}
-
 async function readState(path: string): Promise<Record<string, unknown> | null> {
     const source = await readFile(path, "utf8").catch((error: NodeJS.ErrnoException) => {
         if (error.code === "ENOENT") {
@@ -138,5 +94,9 @@ function validServiceImages(value: unknown): value is LocalServicesState["images
         return false;
     }
     const record = value as Record<string, unknown>;
-    return Object.keys(record).join(",") === "provider" && isOfficialImage(record.provider, "provider");
+    return (
+        Object.keys(record).sort().join(",") === "edge,provider" &&
+        isOfficialImage(record.provider, "provider") &&
+        isOfficialImage(record.edge, "edge")
+    );
 }

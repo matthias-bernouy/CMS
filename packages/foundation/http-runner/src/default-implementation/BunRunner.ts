@@ -122,6 +122,18 @@ export class BunRunner implements Runner {
         this.defaultEndpoints = this.defaultEndpoints.filter((d) => !matches(d.prefix));
     }
 
+    /** Dispatch mounted routes without opening a listener, for composed HTTP hosts. */
+    handle(request: Request): Promise<Response> {
+        return dispatchBunRunnerRequest(
+            request,
+            { requestIP: () => null },
+            this.routes,
+            this.defaultEndpoints,
+            this.globalMiddlewares,
+            this.options.logger,
+        );
+    }
+
     private _registerDefaultEndpoint(
         method: string,
         prefix: string,

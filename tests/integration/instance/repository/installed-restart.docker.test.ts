@@ -10,7 +10,7 @@ const integration = baseline && candidate && edge ? test : test.skip;
 integration(
     "an installed site survives image replacement without a Repository or initialization kit",
     async () => {
-        const stack = await mcpContainers({ provider: baseline!, edge: edge! }, undefined, undefined, undefined, true);
+        const stack = await mcpContainers({ provider: baseline!, edge: edge! });
         try {
             const api = repositoryApi(stack.cmsUrl);
             const session = await api.session(stack.administrator.email, stack.administrator.password);
@@ -19,12 +19,14 @@ integration(
             expect(before.status).toBe(200);
             const snapshot = await before.json();
             expect(snapshot.items.length).toBeGreaterThan(0);
-            await docker(["stop", stack.repository.name]);
-            await stack.upgradeProvider(candidate!, "1.0.0");
+            await stack.repository.disable();
+            await stack.upgradeProvider(candidate!);
             const after = await pages();
             expect(after.status).toBe(200);
             expect(await after.json()).toEqual(snapshot);
-            expect((await fetch(`${stack.cmsUrl}/admin`, { headers: { cookie: session.cookie } })).status).toBe(200);
+            expect((await fetch(`${stack.cmsUrl}/trace-probe`, { headers: { cookie: session.cookie } })).status).toBe(
+                200,
+            );
             await stack.restartProvider();
             expect((await pages()).status).toBe(200);
             // This candidate is deliberately built without the installation snapshot.

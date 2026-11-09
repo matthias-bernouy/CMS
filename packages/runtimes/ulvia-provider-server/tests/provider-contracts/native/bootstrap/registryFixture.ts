@@ -32,9 +32,12 @@ export async function historicalRegistryFixture() {
         catalogue,
     );
     const instance: ProviderInstanceRecord = {
+        repository: { url: "https://repo.ulvia.fr", configured: false },
+
         id: "instance:historical",
         idempotencyKey: "historical",
         idempotencyFingerprint: "historical",
+        creationAuthority: { kind: "operator" },
         storageKey: "historical",
         label: "Historical",
         cmsUrl: "https://historical.example",

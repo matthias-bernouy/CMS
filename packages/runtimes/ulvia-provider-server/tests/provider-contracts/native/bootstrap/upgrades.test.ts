@@ -5,6 +5,7 @@ import { assertHostedReleaseRetention } from "../../../../src/runtime/instances/
 import type { InstanceTransitionRecord } from "@bernouy/ulvia-provider";
 import { repositoryFixture } from "../../official/fixture";
 import { historicalRegistryFixture } from "./registryFixture";
+import { retentionRecords } from "../../../hosting/persistence/retentionFixture";
 
 test("review pins the shipped manifest, preserves enabled Registry and binds source revision and administrator", async () => {
     const f = await historicalRegistryFixture();
@@ -24,7 +25,7 @@ test("review pins the shipped manifest, preserves enabled Registry and binds sou
         f.installed.installation.endpoint,
     );
     expect(review.source.manifest.version).toBe("1.2.0");
-    expect(review.target.manifest.version).toBe("1.3.0");
+    expect(review.target.manifest.version).toBe("1.4.0");
     expect(review.target.contracts.find(({ contractId }) => contractId === "ulvia/repository")?.version).toBe("1.2.0");
     expect(review.planDigest).toMatch(/^sha256:[a-f0-9]{64}$/u);
     const other = await reviewSystemUpgrade(
@@ -91,31 +92,44 @@ test("unfinished system admission retains its source and needs the exact kit; ad
     const reads: unknown[] = [];
     await assertHostedReleaseRetention(
         f.support,
-        [instance],
-        [transition],
-        async (_instance, plans, unstaged) => {
-            reads.push({ plans, unstaged });
-            return [];
+        retentionRecords([instance], [transition]),
+        {
+            assertPlan: async (_instance, plan) => {
+                reads.push({ plan });
+            },
+            required: async (_instance, unstaged) => {
+                reads.push({ unstaged });
+                return [];
+            },
         },
         system,
     );
-    expect(reads).toEqual([{ plans: [review.source], unstaged: true }]);
+    expect(reads).toEqual([{ plan: review.source }, { unstaged: true }]);
     await expect(
-        assertHostedReleaseRetention(f.support, [instance], [transition], async () => [], {
-            current: async () => ({
-                ...review.target,
-                manifest: { ...review.target.manifest, digest: `sha256:${"f".repeat(64)}` },
-            }),
-        }),
+        assertHostedReleaseRetention(
+            f.support,
+            retentionRecords([instance], [transition]),
+            { assertPlan: async () => undefined, required: async () => [] },
+            {
+                current: async () => ({
+                    ...review.target,
+                    manifest: { ...review.target.manifest, digest: `sha256:${"f".repeat(64)}` },
+                }),
+            },
+        ),
     ).rejects.toThrow("original image");
     reads.length = 0;
     await assertHostedReleaseRetention(
         f.support,
-        [instance],
-        [{ ...transition, completedSteps: ["manifest"] }],
-        async (_instance, plans, unstaged) => {
-            reads.push({ plans, unstaged });
-            return [];
+        retentionRecords([instance], [{ ...transition, completedSteps: ["manifest"] }]),
+        {
+            assertPlan: async (_instance, plan) => {
+                reads.push({ plan });
+            },
+            required: async (_instance, unstaged) => {
+                reads.push({ unstaged });
+                return [];
+            },
         },
         {
             current: async () => {
@@ -123,5 +137,5 @@ test("unfinished system admission retains its source and needs the exact kit; ad
             },
         },
     );
-    expect(reads).toEqual([{ plans: [review.source, review.target], unstaged: false }]);
+    expect(reads).toEqual([{ plan: review.source }, { plan: review.target }, { unstaged: false }]);
 });

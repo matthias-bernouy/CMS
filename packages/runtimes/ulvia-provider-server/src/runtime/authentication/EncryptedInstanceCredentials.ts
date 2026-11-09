@@ -19,6 +19,9 @@ export class EncryptedInstanceCredentials implements ProviderInstanceCredentials
     async ensure(instance: ProviderInstanceRecord): Promise<ProviderInstanceRuntimeCredentials> {
         const existing = await this.credentials.getByInstanceId(instance.id);
         if (existing) {
+            if (!existing.enabled) {
+                throw new Error("Instance credentials are disabled");
+            }
             const credentials = await this.readSecret(existing.secretKey);
             if (!credentials) {
                 throw new Error(`Instance credential secret is unavailable: ${instance.id}`);
@@ -44,7 +47,13 @@ export class EncryptedInstanceCredentials implements ProviderInstanceCredentials
             });
         } catch (error) {
             await this.secrets.delete(secretKey).catch(() => undefined);
-            throw error;
+            // A concurrent process may have installed the winning credential first.
+            const winner = await this.credentials.getByInstanceId(instance.id);
+            const value = winner?.enabled ? await this.readSecret(winner.secretKey) : null;
+            if (!value) {
+                throw error;
+            }
+            return value;
         }
         return runtimeCredentials;
     }

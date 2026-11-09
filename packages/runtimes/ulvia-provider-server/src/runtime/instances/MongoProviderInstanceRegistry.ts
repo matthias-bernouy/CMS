@@ -6,6 +6,7 @@ import {
     type UpdateProviderInstanceRecord,
 } from "@bernouy/ulvia-provider";
 import type { Collection, Db } from "mongodb";
+import { assertInstanceCreationAuthority, assertInstanceRepository } from "@bernouy/hosting/instances";
 
 export type ProviderInstanceDocument = Omit<ProviderInstanceRecord, "createdAt" | "updatedAt"> & {
     createdAt: Date;
@@ -28,6 +29,8 @@ export class MongoProviderInstanceRegistry implements ProviderInstanceRegistry {
     }
 
     async create(record: CreateProviderInstanceRecord): Promise<ProviderInstanceRecord> {
+        assertInstanceCreationAuthority(record.creationAuthority);
+        assertInstanceRepository(record.repository);
         const now = new Date();
         const document: ProviderInstanceDocument = {
             ...record,
@@ -53,11 +56,48 @@ export class MongoProviderInstanceRegistry implements ProviderInstanceRegistry {
         return (await this.#instances.find().sort({ createdAt: 1 }).toArray()).map(serializeProviderInstance);
     }
 
+    async *scan(): AsyncIterable<ProviderInstanceRecord> {
+        const cursor = this.#instances.find({}).sort({ id: 1 }).batchSize(50);
+        try {
+            for await (const document of cursor) {
+                yield serializeProviderInstance(document);
+            }
+        } finally {
+            await cursor.close();
+        }
+    }
+
+    async page(input: { after: string | null; limit: number }) {
+        if (
+            !Number.isSafeInteger(input.limit) ||
+            input.limit < 1 ||
+            input.limit > 50 ||
+            (input.after !== null && !/^instance:[A-Za-z0-9-]{1,100}$/u.test(input.after))
+        ) {
+            throw new TypeError("Invalid instance page cursor or limit");
+        }
+        const records = await this.#instances
+            .find(input.after === null ? {} : { id: { $gt: input.after } })
+            .sort({ id: 1 })
+            .limit(input.limit + 1)
+            .toArray();
+        const items = records.slice(0, input.limit).map(serializeProviderInstance);
+        return { items, nextCursor: records.length > input.limit ? items.at(-1)!.id : null };
+    }
+
     async update(
         instanceId: string,
         expectedRevision: number,
         changes: UpdateProviderInstanceRecord,
     ): Promise<ProviderInstanceRecord> {
+        // Validate mandatory provenance before any mutation; CAS also fences its immutable value.
+        const current = await this.get(instanceId);
+        if (!current || current.revision !== expectedRevision) {
+            throw new ProviderInstanceRevisionConflictError(instanceId);
+        }
+        if (changes.repository !== undefined) {
+            assertInstanceRepository(changes.repository);
+        }
         const set: Partial<ProviderInstanceDocument> = {
             ...(changes.status ? { status: changes.status } : {}),
             ...(changes.systemPlan ? { systemPlan: changes.systemPlan } : {}),
@@ -67,7 +107,7 @@ export class MongoProviderInstanceRegistry implements ProviderInstanceRegistry {
         };
         const unset = changes.failure === null ? { failure: "" as const } : undefined;
         const document = await this.#instances.findOneAndUpdate(
-            { id: instanceId, revision: expectedRevision },
+            { id: instanceId, revision: expectedRevision, creationAuthority: current.creationAuthority },
             { $set: set, ...(unset ? { $unset: unset } : {}), $inc: { revision: 1 } },
             { returnDocument: "after" },
         );
@@ -83,6 +123,7 @@ export function serializeProviderInstance(document: ProviderInstanceDocument): P
         id,
         idempotencyKey,
         idempotencyFingerprint,
+        creationAuthority,
         storageKey,
         cmsUrl,
         gatewayUrl,
@@ -93,17 +134,20 @@ export function serializeProviderInstance(document: ProviderInstanceDocument): P
         failure,
         revision,
     } = document;
+    assertInstanceCreationAuthority(creationAuthority);
+    assertInstanceRepository(repository);
     return {
         id,
         idempotencyKey,
         idempotencyFingerprint,
+        creationAuthority,
         storageKey,
         cmsUrl,
         gatewayUrl,
         label,
         status,
         ...(systemPlan ? { systemPlan } : {}),
-        ...(repository ? { repository } : {}),
+        repository,
         ...(failure ? { failure } : {}),
         revision,
         createdAt: document.createdAt.toISOString(),

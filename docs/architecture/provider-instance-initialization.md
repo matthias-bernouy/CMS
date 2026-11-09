@@ -1,23 +1,27 @@
 # Provider Instance Initialization
 
-The Provider installs the image-owned system APIs for every new instance. The
-Edge is a separate stateless process; it receives an opaque instance token and
-uses the public Provider report and admitted capabilities. It neither provisions
-databases nor implements a second authentication system.
+The Provider installs the image-owned system APIs for every new instance. Shared
+Edges are separate stateless processes. Each ingress resolves its domain through
+the admitted routing contract and receives a short-lived scoped control lease.
+Edges neither provision databases nor implement a second authentication system.
 
 ## Technical creation
 
-`ulvia instance create <name>` calls `POST /ulvia/operator/instances` with a stable
-idempotency key, the public and private Edge addresses, and initial administrator
-credentials. The Provider allocates isolated storage and encrypted credentials,
-imports its SDK-generated manifest and system contracts, connects its own account,
-selects those contracts and grants the administrator. It installs no collection,
-creates no Page and publishes nothing into a public Repository catalogue.
+`ulvia start --domain control.localhost --version VERSION` starts shared MongoDB,
+Provider, Caddy and the configured Edge pool. The Provider automatically creates
+empty Control using a protected operator-supplied administrator file and persists
+its installation authority and domain. Ready restarts reopen that state.
 
-The CLI saves the returned connection privately and starts that instance’s Edge.
-Services startup owns shared MongoDB, proxy and Provider processes; the CLI owns
-no listener. Restart reuses stored credentials and installed pins. Deleting an
-Edge disables its instance and retains Provider data; it is not tenant erasure.
+Control's authorized `ulvia/cms.hosting` HTTP/MCP capabilities create logical sites
+through the existing lifecycle. The Provider allocates isolated storage and
+encrypted credentials, imports its SDK-generated manifest and system contracts,
+connects its own account, selects those contracts and grants the administrator.
+It installs no collection, creates no Page and publishes no catalogue resources.
+Site creation adds no listener, Edge or container. The CLI manages infrastructure;
+the authenticated operator API remains a separate recovery surface.
+
+Disabling a logical instance revokes its routes while retaining data. Stopping or
+resizing the shared Edge pool is an infrastructure operation, not tenant erasure.
 
 There are no named application profiles, profile discovery endpoint, `--profile`
 option or `upgrade-profile` command. A durable system installation plan records
@@ -36,10 +40,11 @@ After ordinary Access login, `/.cms/setup` offers three separate buttons:
 The URL belongs to the instance, in `ProviderInstanceRecord.repository.url`.
 New instances start with the official URL and `configured: false`; no `local` or
 `remote` mode is persisted. `CMS_REPOSITORY_URL` and the shared CLI installation’s
-Repository connection are removed. Older ready instance records can omit this
-new optional setting: reading the default neither writes state nor restarts setup.
+Repository connection are removed. Repository settings are mandatory persisted
+state: missing or malformed settings refuse without substituting a default or
+repairing the record. Creation explicitly persists the initial settings.
 
-The `ulvia/cms.installations@1.3.0` setup capabilities are:
+The `ulvia/cms.installations@1.4.0` setup capabilities are:
 
 - `initialization.repository.get`: `GET /initialization/repository` reads settings
   and projects Registry creation status from its instance transition.
@@ -66,9 +71,11 @@ ordinary CMS accounts and PATs. System bootstrap metadata is not catalogue
 publication. Choosing a remote source needs no network request; an empty site can
 finish setup while that source is unavailable.
 
-The public self-origin is retained in settings. For this exact origin only, the
-runtime connects to the known private Edge URL, avoiding host/container loopback
-confusion. Other origins are used as supplied. Selecting an HTTP origin explicitly
+The public origin is retained in settings and credential scopes. For an active
+origin owned by this installation, the runtime can connect through the configured
+private shared proxy, preserving the logical Host after indexed domain and instance
+checks. Known inactive hosted origins refuse; other origins use normal networking.
+Selecting an HTTP origin explicitly
 permits HTTP transport; redirect refusal and PAT origin/identity pinning still
 apply. Changing the source affects future discovery/imports and authoring
 connections. It never replaces installed release pins or forwards an existing
@@ -134,11 +141,19 @@ request. Existing leases finish before resource disposal. Runtime authentication
 already joins fresh instance metadata; this change adds no catalogue or remote
 Repository lookup to each authenticated request.
 
+Startup streams instance and retained-transition metadata with indexed cursor
+batches of at most 50. Exact-pin checks do not open idle CMS compositions.
+Operation recovery projects one pending identifier per instance and only opens
+instances with unfinished work. Documentation prepares on demand through its
+bounded queue. Cursors close on early exit and refusal.
+
 ## Operator API
 
 All endpoints require `Authorization: Bearer <ULVIA_PROVIDER_OPERATOR_TOKEN>`:
 
-- `GET /ulvia/operator/instances` lists lifecycle records.
+- `GET /ulvia/operator/instances?limit=50&after=INSTANCE_ID` returns a bounded
+  `{ instances, nextCursor }` lifecycle page. `after` is optional; malformed or
+  repeated parameters refuse after operator authentication.
 - `POST /ulvia/operator/instances` creates/resumes with `Idempotency-Key`.
 - `GET /ulvia/operator/instances/:instanceId` reads one lifecycle record.
 - `POST /ulvia/operator/instances/:instanceId/disable` disables its connection.
@@ -157,9 +172,12 @@ checkpoints those three steps; it neither initializes setup nor changes accounts
 Pages, collections or the Repository address. Failure leaves the instance fenced
 until explicit resume. Recovery rechecks administrator authority. Before admission,
 recovery requires the original exact image kit; after its checkpoint it uses the
-stored admitted resources. Restart each stateless Edge after successful completion
-to negotiate the new control contract. Image replacement alone remains independent.
+stored admitted resources. Shared Edges resolve current revisions at ingress and
+reopen the affected context after completion. Image replacement alone remains
+independent of an explicit instance upgrade.
 
-Creation returns the opaque instance access token. Edge never receives the
-operator secret, database credentials, KEKs or session signing secrets. Backup,
+Operator creation returns an opaque instance access token; Hosting DTOs exclude
+it. Shared Edges use only scoped routing leases and never receive persistent
+instance credentials, the operator secret, database credentials, KEKs or session
+signing secrets. Backup,
 restore, tenant erasure and token rotation remain explicit lifecycle work.

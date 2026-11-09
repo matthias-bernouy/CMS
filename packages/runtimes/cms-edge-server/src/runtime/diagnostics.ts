@@ -4,7 +4,10 @@ import { createObservabilityLogger, LogDeliveryError } from "@bernouy/observabil
 import { currentRequestLogAttributes } from "@bernouy/http-runner/observability";
 import type { createEdgeGateway } from "./gateway/createEdgeGateway";
 
-export function createEdgeDiagnostics(environment: Record<string, string | undefined>) {
+export function createEdgeDiagnostics(
+    environment: Record<string, string | undefined>,
+    scope?: { instanceId: string; origin: string },
+) {
     const development = environment.MODE === "DEV";
     const fallback = createNodeLogSink({
         service: "cms-edge",
@@ -16,7 +19,7 @@ export function createEdgeDiagnostics(environment: Record<string, string | undef
         service: "cms-edge",
         level: development ? "debug" : "info",
         includeErrorStack: true,
-        context: currentRequestLogAttributes,
+        context: () => ({ ...scope, ...currentRequestLogAttributes() }),
         fallback,
     });
 }

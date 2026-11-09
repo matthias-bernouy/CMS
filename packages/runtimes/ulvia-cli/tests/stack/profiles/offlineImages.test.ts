@@ -13,9 +13,7 @@ test("fresh example--cached--image startup needs no registry pull while an expli
         const services = await fixture.run(["services", "start", "--version", version]);
         expect(services.stderr).toBe("");
         expect(services.exitCode).toBe(0);
-        const instance = await fixture.run(["instance", "create", "registry"]);
-        expect(instance.stderr).toBe("");
-        expect(instance.exitCode).toBe(0);
+        expect((await fixture.run(["start"])).exitCode).toBe(0);
         expect((await calls(fixture.root)).filter(({ args }) => args[0] === "pull")).toEqual([]);
         expect((await fixture.run(["upgrade", "provider", "--version", version])).exitCode).toBe(0);
         expect((await calls(fixture.root)).filter(({ args }) => args[0] === "pull").map(({ args }) => args)).toEqual([

@@ -22,12 +22,19 @@ test("installation configuration defaults to loopback HTTP and persists explicit
             bindAddress: "127.0.0.1",
             ports: { http: 5100, provider: 5103 },
             tls: { mode: "disabled" },
+            hosting: {
+                controlOrigin: "http://control.localhost:5100",
+                edgeCount: 1,
+                managedSuffixes: [],
+                publicAddresses: [],
+            },
         });
         const publicConfig = parseInstallationConfig({
             ...defaultInstallationConfig(),
             bindAddress: "0.0.0.0",
             ports: { http: 80, provider: 5103 },
             tls: { mode: "acme", email: "ops@example.com", httpsPort: 443 },
+            hosting: { ...defaultInstallationConfig().hosting, controlOrigin: "https://control.example" },
         });
         await saveInstallationConfig(paths, publicConfig);
         expect(await loadInstallationConfig(paths)).toEqual(publicConfig);
@@ -49,10 +56,10 @@ test("fresh configuration does not import historical stack ports", async () => {
                 ports: { http: 5200, repository: 5202, provider: 5203 },
             }),
         );
-        expect((await loadOrCreateInstallationConfig(paths)).ports).toEqual({
-            http: 5100,
-            provider: 5103,
-        });
+        await expect(loadOrCreateInstallationConfig(paths)).rejects.toThrow(
+            "missing from existing infrastructure state",
+        );
+        expect(await Bun.file(join(paths.services, "installation.json")).exists()).toBe(false);
     } finally {
         await rm(root, { recursive: true, force: true });
     }
@@ -73,25 +80,14 @@ test("installation configuration rejects ambiguous exposure", () => {
     ).toThrow(/ports must be distinct/);
 });
 
-test("ACME challenge roots stay readable by Nginx workers across CLI invocations", async () => {
+test("Caddy certificate storage stays private across CLI invocations", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-acme-permissions-"));
     const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
     try {
         await ensureUlviaPaths(paths);
-        await chmod(paths.proxy.challenge, 0o700);
         await chmod(paths.proxy.certificates, 0o755);
         await ensureUlviaPaths(paths);
-        expect((await stat(paths.proxy.challenge)).mode & 0o777).toBe(0o755);
-        for (const path of [
-            paths.data,
-            paths.services,
-            paths.mongo,
-            paths.cmsFiles,
-            paths.instances,
-            paths.proxy.certificates,
-            paths.proxy.virtualHosts,
-            paths.proxy.acme,
-        ]) {
+        for (const path of [paths.data, paths.services, paths.mongo, paths.cmsFiles, paths.proxy.certificates]) {
             expect((await stat(path)).mode & 0o777).toBe(0o700);
         }
     } finally {
@@ -104,10 +100,10 @@ test("service configuration no longer owns a Repository connection", async () =>
     expect(defaultInstallationConfig({ CMS_REPOSITORY_URL: "http://obsolete.invalid" })).toEqual(
         defaultInstallationConfig(),
     );
-    expect(
+    expect(() =>
         parseInstallationConfig({
             ...defaultInstallationConfig(),
             repository: { url: "https://old.example", allowInsecureHttp: false },
         }),
-    ).toEqual(defaultInstallationConfig());
+    ).toThrow("configuration is invalid");
 });

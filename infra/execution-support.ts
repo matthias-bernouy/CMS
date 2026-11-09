@@ -38,6 +38,18 @@ export async function writeExecutionSupport(bootstrapRoot: string): Promise<void
             4,
         )}\n`,
     );
+    const routingPath = resolve(bootstrapRoot, "contracts/provider.routing/definition.json");
+    const routing = releases.find(({ contractId }) => contractId === "ulvia/provider.routing");
+    if (!routing) {
+        throw new Error("The official inventory has no host routing contract");
+    }
+    await writeFile(
+        resolve(
+            import.meta.dir,
+            "../packages/runtimes/cms-edge-server/src/runtime/hosting/client/routing-contract.json",
+        ),
+        `${JSON.stringify({ ...routing, canonicalJson: (await readFile(routingPath, "utf8")).trim() }, null, 4)}\n`,
+    );
     await writeFile(
         resolve(source, "supported-releases.json"),
         `${JSON.stringify({ providerId: manifest.providerId, buildVersion, releases }, null, 4)}\n`,

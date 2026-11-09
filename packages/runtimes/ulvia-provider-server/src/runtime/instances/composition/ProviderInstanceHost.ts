@@ -1,3 +1,5 @@
+import type { HostedTransport } from "../system/hosting/transport/HostedTransport";
+import type { HostingServices } from "@bernouy/hosting/feature";
 import { registryInstallationPlan } from "../system/execution/registry";
 import { reviewSystemUpgrade } from "../system/execution/upgrades";
 import { importProviderManifest } from "@bernouy/repository/providers/sources";
@@ -58,7 +60,7 @@ import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from 
 import { CollectionVerificationPool } from "../verification/CollectionVerificationPool";
 import { CollectionSourceCaches } from "@bernouy/ulvia-provider";
 import type { Logger } from "@bernouy/logging";
-import { correlatedRepositoryFetch } from "../../gateway/repositoryFetch";
+import { createCorrelatedRepositoryFetch } from "../../gateway/repositoryFetch";
 import { createInstanceDiagnostics, connectInstanceDiagnostics } from "./diagnostics";
 import { createInstanceAuth } from "../../authentication/createInstanceAuth";
 import { createInstanceRepository } from "../../stores/repository/registry";
@@ -87,9 +89,12 @@ export type InstanceComposition = Readonly<{
 }>;
 
 export class ProviderInstanceHost {
+    hosting?: HostingServices["hosting"];
+    transport?: HostedTransport;
     readonly #verification = new CollectionVerificationPool();
     readonly #collectionCaches = new CollectionSourceCaches();
     readonly #documentation: ProviderDocumentation;
+    #closing = false;
     readonly #instances: InstanceResourcePool<InstanceComposition>;
     repositoryCreation?: {
         create(
@@ -132,6 +137,23 @@ export class ProviderInstanceHost {
 
     readonly #records = new Map<string, ProviderInstanceRecord>();
     readonly #registryVectors = new MemoryVectorStore(8192);
+
+    async isCurrentAdministrator(instanceId: string, providerSubjectId: string): Promise<boolean> {
+        const instance = await this.instances.get(instanceId);
+        if (!instance || instance.status !== "ready") {
+            return false;
+        }
+        const lease = await this.open(instance);
+        try {
+            const sub = await lease.resource.gateway.identities.resolve(
+                { providerId: lease.resource.runtime.report.providerId },
+                providerSubjectId,
+            );
+            return Boolean(sub && (await lease.resource.administrators.get(sub)).enabled);
+        } finally {
+            lease.release();
+        }
+    }
 
     async runtime(instance: ProviderInstanceRecord): Promise<ResourceLease<UlviaProviderInstanceRuntime>> {
         const startedAt = performance.now();
@@ -244,6 +266,7 @@ export class ProviderInstanceHost {
     }
 
     async close(): Promise<void> {
+        this.#closing = true;
         try {
             try {
                 await this.#documentation.stop();
@@ -260,17 +283,34 @@ export class ProviderInstanceHost {
         }
     }
 
-    startDocumentation(instances: readonly ProviderInstanceRecord[]): void {
-        this.#documentation.start(instances);
+    startDocumentation(): void {
+        this.#documentation.start();
     }
 
-    async recoverOperations(instances: readonly ProviderInstanceRecord[], limit = 100): Promise<number> {
+    async recoverOperations(
+        instances: AsyncIterable<ProviderInstanceRecord>,
+        hasPending: (instance: ProviderInstanceRecord) => Promise<boolean>,
+        limit = 100,
+    ): Promise<number> {
+        if (this.#closing) {
+            return 0;
+        }
         let recovered = 0;
-        for (const instance of instances) {
-            if (instance.status !== "ready") {
+        for await (const instance of instances) {
+            if (this.#closing) {
+                break;
+            }
+            if (instance.status !== "ready" || !(await hasPending(instance))) {
                 continue;
             }
-            const lease = await this.open(instance);
+            const current = await this.instances.get(instance.id);
+            if (this.#closing) {
+                break;
+            }
+            if (current?.status !== "ready") {
+                continue;
+            }
+            const lease = await this.open(current);
             try {
                 recovered += await lease.resource.operations.recover(limit);
             } finally {
@@ -302,13 +342,14 @@ export class ProviderInstanceHost {
             throw new Error(`Provider instance credentials are unavailable: ${instance.id}`);
         }
         const repository = repositoryTransport(instance);
+        const request = createCorrelatedRepositoryFetch(this.transport?.request);
         const providerSource = new HttpProviderRepository(repository.id, repository.url, {
-            request: correlatedRepositoryFetch,
+            request,
             allowInsecureHttp: repository.allowInsecureHttp,
         });
         const collectionSource = new HttpCollectionRepository(repository.id, repository.url, {
             verifier: this.#verification,
-            request: correlatedRepositoryFetch,
+            request,
             allowInsecureHttp: repository.allowInsecureHttp,
         });
         const filesDirectory = join(this.env.CMS_FILES_DIR, instance.storageKey);
@@ -359,12 +400,17 @@ export class ProviderInstanceHost {
             const readReport = async (endpoint: string, token: string) =>
                 endpoint === this.env.ULVIA_PROVIDER_PUBLIC_URL && token === credentials.invocationSecret
                     ? providerReport(instance, plan, this.support.buildVersion)
-                    : readRemoteProviderReport(endpoint, token);
-            const gateway = await createProviderGateway(stores, SITE_ID, {
-                readReport,
-                reportFailure: (installationId, error) =>
-                    instanceLogger.warn("provider.observation.refresh.failed", { installationId }, error),
-            });
+                    : readRemoteProviderReport(endpoint, token, this.transport?.network);
+            const gateway = await createProviderGateway(
+                stores,
+                SITE_ID,
+                {
+                    readReport,
+                    reportFailure: (installationId, error) =>
+                        instanceLogger.warn("provider.observation.refresh.failed", { installationId }, error),
+                },
+                this.transport?.network,
+            );
             const managementForPlan = (plan: ExecutionPlan, execution?: ProviderInstanceTransitionExecution) => {
                 const retention = createProviderRetention(gateway, stores.upgradeStorage, plan, instance.id);
                 return new ProviderManagement(gateway, stores.contractSecrets.installations, {
@@ -376,7 +422,7 @@ export class ProviderInstanceHost {
                     readReport: async (endpoint, token) =>
                         endpoint === this.env.ULVIA_PROVIDER_PUBLIC_URL && token === credentials.invocationSecret
                             ? providerReport(instance, plan, this.support.buildVersion)
-                            : readRemoteProviderReport(endpoint, token),
+                            : readRemoteProviderReport(endpoint, token, this.transport?.network),
                 });
             };
             const management = managementForPlan(plan);
@@ -396,13 +442,19 @@ export class ProviderInstanceHost {
             });
             operations = instanceOperations;
             const dispatcher = new DefaultProviderCapabilityDispatcher(contracts);
-            const providerConnections = new ProviderConnections(stores.providerConnections);
-            const officialPairing = new ProviderPairing(stores, gateway, instance.gatewayUrl, {
-                endpoint: this.env.ULVIA_PROVIDER_PUBLIC_URL,
-                instanceId: instance.id,
-                providerId: plan.manifest.providerId,
-                connections: providerConnections,
-            });
+            const providerConnections = new ProviderConnections(stores.providerConnections, this.transport?.network);
+            const officialPairing = new ProviderPairing(
+                stores,
+                gateway,
+                instance.gatewayUrl,
+                {
+                    endpoint: this.env.ULVIA_PROVIDER_PUBLIC_URL,
+                    instanceId: instance.id,
+                    providerId: plan.manifest.providerId,
+                    connections: providerConnections,
+                },
+                this.transport?.network,
+            );
             const authentication = await createInstanceAuth(stores, instance.cmsUrl);
             const fileWorkspace = new CmsFileWorkspace(
                 stores.providerFiles,
@@ -416,6 +468,7 @@ export class ProviderInstanceHost {
                 collectionSource,
                 fileWorkspace,
                 repository.allowInsecureHttp,
+                request,
             );
             documentation = await createInstanceDocumentation(stores, this.#documentation.model, () =>
                 this.#documentation.request(instance),
@@ -438,11 +491,11 @@ export class ProviderInstanceHost {
                     documentation: instanceDocumentation,
                     repositoryDiscovery: new RepositoryDiscovery([
                         new HttpRepositoryDiscovery(repository.id, repository.url, {
-                            request: correlatedRepositoryFetch,
+                            request,
                             allowInsecureHttp: repository.allowInsecureHttp,
                         }),
                     ]),
-                    ...createPublicDelivery(stores, gateway, instance.cmsUrl),
+                    ...createPublicDelivery(stores, gateway, instance.cmsUrl, this.transport?.network),
                     authoring,
                     repository: registry?.service,
                     providerConnections,
@@ -481,6 +534,7 @@ export class ProviderInstanceHost {
                             status: (await this.repositoryCreation?.read(instance))?.status ?? "none",
                         }),
                     }),
+                    hosting: this.hosting,
                     emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
                     files: stores.providerFiles,
@@ -506,7 +560,13 @@ export class ProviderInstanceHost {
                 instanceOperations,
                 {
                     ...createProtectedProviderManagement(management, instance, plan),
-                    administration: providerAdministration(stores, gateway, management, instance.gatewayUrl),
+                    administration: providerAdministration(
+                        stores,
+                        gateway,
+                        management,
+                        instance.gatewayUrl,
+                        this.transport?.network,
+                    ),
                 },
                 new CollectionSources(
                     stores.collections,

@@ -16,6 +16,7 @@ test("official image metadata resolves a mutable tag to an immutable digest", ()
                     Labels: {
                         "io.ulvia.component": "edge",
                         "io.ulvia.stack-api": "1",
+                        "io.ulvia.hosting-api": "1",
                         "org.opencontainers.image.version": "0.0.1-beta",
                     },
                 },
@@ -36,6 +37,7 @@ test("official image metadata rejects component, API, version, and digest mismat
     const validLabels = {
         "io.ulvia.component": "provider",
         "io.ulvia.stack-api": "1",
+        "io.ulvia.hosting-api": "1",
         "org.opencontainers.image.version": "1.2.3",
     };
 

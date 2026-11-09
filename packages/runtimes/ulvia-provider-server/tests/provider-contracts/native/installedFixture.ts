@@ -12,9 +12,12 @@ export async function installedFixture() {
     report.instanceId = "instance:one";
     report.account.id = "instance:one";
     const instance: ProviderInstanceRecord = {
+        repository: { url: "https://repo.ulvia.fr", configured: false },
+
         id: "instance:one",
         idempotencyKey: "one",
         idempotencyFingerprint: "fingerprint",
+        creationAuthority: { kind: "operator" },
         storageKey: "one",
         label: "One",
         cmsUrl: "https://cms.example",

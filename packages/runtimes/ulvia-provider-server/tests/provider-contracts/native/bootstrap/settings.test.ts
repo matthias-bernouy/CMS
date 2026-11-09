@@ -18,6 +18,21 @@ test("source URL changes need one atomic write, no Registry creation and no remo
     expect(f.writes()).toBe(1);
 });
 
+test("missing persisted Repository settings refuse reads and writes without restoring a default", async () => {
+    const f = repositorySettingsFixture();
+    delete (f.current() as unknown as { repository?: unknown }).repository;
+    const before = structuredClone(f.current());
+    await expect(f.service.get()).rejects.toThrow("Repository configuration");
+    await expect(f.service.configure({ expectedRevision: 1, url: "https://valid.example" })).rejects.toThrow(
+        "Repository configuration",
+    );
+    await expect(f.service.create({ expectedRevision: 1 }, "local:admin")).rejects.toThrow("Repository configuration");
+    expect(() => repositoryTransport(f.current())).toThrow("Repository configuration");
+    expect(f.current()).toEqual(before);
+    expect(f.writes()).toBe(0);
+    expect(f.calls).toEqual([]);
+});
+
 test("invalid addresses and stale revisions do not change instance state", async () => {
     const f = repositorySettingsFixture();
     const before = structuredClone(f.current());

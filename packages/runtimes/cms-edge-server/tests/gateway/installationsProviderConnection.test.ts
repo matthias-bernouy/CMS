@@ -77,3 +77,65 @@ test("the control contract refuses a substituted digest and an unselected versio
     report.implementations[0]!.version = "1.0.1";
     await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("required control contract");
 });
+
+test("a rejected control lease is renewed once before the final audit without replaying capability dispatch", async () => {
+    const headers: string[] = [];
+    let renewals = 0;
+    let cancelled = false;
+    const transport = new InstallationsProviderTransport(
+        "http://provider:5103",
+        "old-control-lease-credential",
+        (async (_url, init) => {
+            headers.push(new Headers(init?.headers).get("authorization")!);
+            return headers.length === 1
+                ? new Response(
+                      new ReadableStream({
+                          cancel() {
+                              cancelled = true;
+                          },
+                      }),
+                      { status: 401 },
+                  )
+                : Response.json({ accepted: true });
+        }) as typeof fetch,
+        async () => {
+            renewals++;
+            return "renewed-control-lease-credential";
+        },
+    );
+    expect((await transport.request("/gateway/audit", { method: "POST", body: '{"event":"completed"}' })).status).toBe(
+        200,
+    );
+    expect(headers).toEqual(["Bearer old-control-lease-credential", "Bearer renewed-control-lease-credential"]);
+    expect(renewals).toBe(1);
+    expect(cancelled).toBe(true);
+});
+
+test("control renewal never retries business refusals, unreplayable bodies or a second authentication failure", async () => {
+    for (const status of [401, 403, 409]) {
+        let calls = 0;
+        let renewals = 0;
+        const transport = new InstallationsProviderTransport(
+            "http://provider:5103",
+            "old-control-lease-credential",
+            (async () => {
+                calls++;
+                return new Response(null, { status });
+            }) as typeof fetch,
+            async () => {
+                renewals++;
+                return "renewed-control-lease-credential";
+            },
+        );
+        expect((await transport.request("/gateway/audit", { method: "POST", body: "{}" })).status).toBe(status);
+        expect(calls).toBe(status === 401 ? 2 : 1);
+        expect(renewals).toBe(status === 401 ? 1 : 0);
+        calls = 0;
+        renewals = 0;
+        expect((await transport.request("/gateway/audit", { method: "POST", body: new ReadableStream() })).status).toBe(
+            status,
+        );
+        expect(calls).toBe(1);
+        expect(renewals).toBe(0);
+    }
+});

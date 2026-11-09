@@ -50,6 +50,7 @@ async function verifyImage(reference: string, component: Component, version: str
         values.length !== 1 ||
         labels?.["io.ulvia.component"] !== component ||
         labels?.["io.ulvia.stack-api"] !== "1" ||
+        labels?.["io.ulvia.hosting-api"] !== "1" ||
         labels?.["org.opencontainers.image.version"] !== version
     ) {
         throw new Error(`Refusing invalid ${component} image: ${reference}`);

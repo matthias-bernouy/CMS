@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
 import { writeFile } from "node:fs/promises";
-import { admitCollectionRelease } from "@bernouy/repository/collections";
+import { emptyCollectionFixture } from "./emptyFixture";
 import { RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
 import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
 import { scratchRepository } from "../containers/scratch";
 import { repositoryApi } from "./client";
-import { initializationApi } from "./initializationClient";
+import { initializationApi, configureRepository } from "./initializationClient";
 import { publishBundledReleases } from "./bootstrap";
 
 const provider = process.env.ULVIA_COLLECTIONS_PROVIDER_DOCKER_IMAGE;
@@ -24,8 +24,9 @@ integration(
             await setup.apply(null, blank.digest);
             const pat = await root.pat(session.cookie);
             await publishBundledReleases(stack.url, "http://ulvia-provider:5103", pat.token);
-            const identity = await new RepositoryNamespaceClient(stack.url).identity();
+            const identity = await new RepositoryNamespaceClient(stack.url, { allowInsecureHttp: true }).identity();
             const namespaces = new RepositoryNamespaceClient(stack.url, {
+                allowInsecureHttp: true,
                 credential: {
                     origin: stack.url,
                     repositoryId: identity,
@@ -33,24 +34,20 @@ integration(
                 },
             });
             await namespaces.claim("load");
-            const publisher = new RemoteRepositoryClient(stack.url, await namespaces.ownedCredential("load"));
+            const publisher = new RemoteRepositoryClient(stack.url, await namespaces.ownedCredential("load"), {
+                allowInsecureHttp: true,
+            });
             for (let version = 0; version < 31; version++) {
-                const artifact = await admitCollectionRelease({
+                const artifact = await emptyCollectionFixture("load", "paged", `1.0.${version}`);
+                await publisher.push({
                     kind: "collection",
-                    protocol: "ulvia-collection/v1",
-                    schemaDialect: "ulvia-schema/v1",
-                    publisherId: "load",
-                    collectionId: "load/paged",
-                    version: `1.0.${version}`,
-                    name: "name",
-                    locale: "en",
-                    translations: { en: { name: "Paged collection" } },
-                    blocs: [],
+                    canonicalJson: artifact.canonicalJson,
+                    sourceJson: artifact.sourceJson,
                     assets: [],
                 });
-                await publisher.push({ kind: "collection", canonicalJson: artifact.canonicalJson, assets: [] });
             }
             const site = await stack.createSite("collections");
+            await configureRepository(site.url, site.administrator, stack.url);
             const api = repositoryApi(site.url);
             const actor = await api.session(site.administrator.email, site.administrator.password);
             await stack.restart();
@@ -103,6 +100,7 @@ integration(
             expect(versions.status).toBe(200);
             const history = await versions.json();
             expect(history.releases).toHaveLength(25);
+            expect(history.nextCursor).not.toBe("");
             const next = await api.request(
                 "ulvia/cms.installations",
                 "/collections/releases",
@@ -112,12 +110,18 @@ integration(
                     publisherId: "load",
                     collectionId: "load/paged",
                     limit: 25,
-                    cursor: history.cursor,
+                    cursor: history.nextCursor,
                 },
                 actor,
             );
             expect(next.status).toBe(200);
-            expect((await next.json()).releases).toHaveLength(6);
+            const last = await next.json();
+            expect(last.releases).toHaveLength(6);
+            expect(last.nextCursor).toBe("");
+            expect(
+                new Set([...history.releases, ...last.releases].map((release: { version: string }) => release.version))
+                    .size,
+            ).toBe(31);
         } catch (error) {
             throw new Error(`${String(error)}\n${await stack.diagnostics()}`);
         } finally {

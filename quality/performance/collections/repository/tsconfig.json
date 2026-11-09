@@ -2,6 +2,7 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "paths": {
+            "hosting/*": ["../../../../packages/features/hosting/src/*"],
             "ulvia-provider/*": [
                 "../../../../packages/surfaces/ulvia-provider/src/*"
             ],

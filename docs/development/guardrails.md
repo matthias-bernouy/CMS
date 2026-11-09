@@ -56,10 +56,16 @@ The journey measures warm literal Pages, image-capable Pages and immutable
 Bloc styles. It gates Mongo operations, internal HTTP requests and response bytes,
 records p50 elapsed response-body time, and executes 420 requests over 126
 seconds across three Pages and administrator reads with the Edge cache disabled,
-then repeats with it enabled. The mean origin ceilings are 26/30/22 Mongo
-operations and 5 internal HTTP requests, with a 512 KiB response ceiling. Unused roots
+then repeats with it enabled. The previous delivery ceilings remain 26/30/22 Mongo
+operations after charging the separately verified shared-routing floor of seven
+indexed reads: one domain, two instance records and four revision/fence reads.
+The fixture asserts the four revision/fence operations for every ingress.
+Internal HTTP requests remain bounded to 5, with a 512 KiB response ceiling. Unused roots
 must perform neither delegation writes nor a standalone closure control call.
-Cache-hit probes assert 100% hits, zero internal calls and zero Mongo work.
+Cache-hit probes require 100% hits, exactly one routing HTTP call and seven
+routing metadata reads per request, with zero Content reads or queued telemetry.
+Routing forwards the active diagnostic request ID so its work is charged to the
+originating ingress independently of its signed machine request identity.
 Reports include counts by collection and internal route. Background journal
 activity can add fractional operations to these averages. Latency remains
 diagnostic to avoid hardware-dependent CI failures.

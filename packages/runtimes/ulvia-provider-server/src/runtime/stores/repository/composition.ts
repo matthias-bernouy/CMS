@@ -1,3 +1,4 @@
+import type { RepositoryFetch } from "@bernouy/repository/providers/http";
 import { verifyStoredCollectionArtifact } from "@bernouy/repository/collections";
 import { join } from "node:path";
 import { RemoteRepositoryClient } from "@bernouy/repository/repository/publication";
@@ -14,6 +15,7 @@ export function createRepositoryAuthoring(
     source: HttpCollectionRepository,
     fileWorkspace: CmsFileWorkspace,
     allowInsecureHttp = false,
+    request?: RepositoryFetch,
 ) {
     return new RepositoryAuthoring(
         {
@@ -26,6 +28,7 @@ export function createRepositoryAuthoring(
                 if (asset.contractId) {
                     const bytes = await new RemoteRepositoryClient(repositoryUrl, undefined, {
                         allowInsecureHttp,
+                        request,
                     }).pullContractAsset(
                         {
                             kind: "contract",
@@ -56,6 +59,12 @@ export function createRepositoryAuthoring(
                 return found.bytes instanceof Blob ? found.bytes : new Blob([new Uint8Array(found.bytes)]);
             },
         },
-        new RepositoryPublisher(repositoryUrl, source.id, stores.contractSecrets.repository, allowInsecureHttp),
+        new RepositoryPublisher(
+            repositoryUrl,
+            source.id,
+            stores.contractSecrets.repository,
+            allowInsecureHttp,
+            request,
+        ),
     );
 }

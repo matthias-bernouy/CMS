@@ -112,7 +112,10 @@ function validateClientConfig(value: ClientConfig): void {
     if (
         url.origin !== saved.url ||
         (url.protocol !== "https:" &&
-            !(url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)))
+            !(
+                url.protocol === "http:" &&
+                (["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) || url.hostname.endsWith(".localhost"))
+            ))
     ) {
         throw new Error("Invalid saved Repository origin");
     }

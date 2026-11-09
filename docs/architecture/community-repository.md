@@ -20,20 +20,19 @@ Pages. The public catalogue is separate from this technical bootstrap: publishin
 resources into it remains an explicit authenticated action.
 
 ```sh
-ulvia services start
-ulvia instance create registry
-ulvia instance status registry
-ulvia instance stop registry
-ulvia instance start registry
+ulvia start --domain control.localhost
+ulvia services status
 ```
 
-Open `/.cms/setup` and choose **A new Repository** to install Registry. The other
+Create a logical site through Control's admitted Hosting capabilities; this adds
+no Edge or container. Open that site's `/.cms/setup` and choose **A new Repository**
+to install Registry. The other
 choices select a custom address or `https://repo.ulvia.fr` for this instance.
 System bootstrap uses local SDK artifacts; Registry’s public catalogue starts
 empty. Provider and Edge image upgrades use the normal `ulvia upgrade` commands.
 The installed image pins and database/files credentials persist across restarts.
 There is no separate Repository runtime, image, Compose service or signing-key
-compatibility protocol. See the [installation guide](../installation/README.md#9-repository-cms-instance).
+compatibility protocol. See the [installation guide](../installation/README.md#7-publish-to-a-repository).
 
 ## Authentication and ownership
 

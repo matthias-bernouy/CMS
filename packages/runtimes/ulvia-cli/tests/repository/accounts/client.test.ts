@@ -80,3 +80,26 @@ test("a saved Repository identity cannot silently change during login or namespa
         await f.close();
     }
 });
+
+test("shared localhost tenants keep saved PAT authority bound to their exact origin", async () => {
+    const f = await accountFixture();
+    try {
+        const origin = new URL(f.server.url);
+        origin.hostname = "registry.localhost";
+        await f.run(["repository", "login", origin.origin]);
+        expect((await readClientConfig(f.config)).repository?.url).toBe(origin.origin);
+        await f.run(["namespace", "claim", "localtenant"]);
+        const before = await readFile(join(f.config, "config.json"), "utf8");
+        await expect(f.run(["repository", "login", "http://registry.localhost.example"])).rejects.toThrow("HTTPS");
+        const foreign = new URL(origin);
+        foreign.hostname = "foreign.localhost";
+        await expect(f.run(["namespace", "claim", "foreign", "--repository", foreign.origin])).rejects.toThrow(
+            "No credentials",
+        );
+        expect(await f.application.namespaces.get("foreign")).toBeNull();
+        expect(await readFile(join(f.config, "config.json"), "utf8")).toBe(before);
+        expect(f.output.join("\n")).not.toContain(f.owner.token);
+    } finally {
+        await f.close();
+    }
+});

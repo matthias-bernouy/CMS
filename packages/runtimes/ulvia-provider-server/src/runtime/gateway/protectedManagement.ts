@@ -35,6 +35,19 @@ export function createProtectedProviderManagement(
             ) {
                 throw policyError("control_selection_protected");
             }
+            const hosting = plan.contracts.find(({ contractId }) => contractId === "ulvia/cms.hosting");
+            if (
+                hosting &&
+                !input.selections.some(
+                    (selection) =>
+                        selection.contractId === hosting.contractId &&
+                        selection.installationId === control.id &&
+                        selection.version === hosting.version &&
+                        selection.digest === hosting.digest,
+                )
+            ) {
+                throw policyError("hosting_selection_protected");
+            }
             if (!input.selections.some(({ contractId }) => contractId === "ulvia/cms.observability")) {
                 throw policyError("observability_selection_protected");
             }

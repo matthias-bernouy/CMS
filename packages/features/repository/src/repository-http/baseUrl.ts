@@ -5,7 +5,7 @@ export function repositoryBaseUrl(
     options: Readonly<{ allowInsecureHttp?: boolean }> = {},
 ): URL {
     const url = new URL(baseUrl);
-    const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+    const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) || url.hostname.endsWith(".localhost");
     if (
         (url.protocol !== "https:" &&
             !(url.protocol === "http:" && (loopback || options.allowInsecureHttp === true))) ||

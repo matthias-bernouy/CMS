@@ -28,14 +28,19 @@ troubleshooting. The released CLI is installed with:
 
 ```bash
 bun add --global @cyaxis/ulvia@latest
-ulvia services start
-ulvia instance create my-site
-ulvia instance credentials my-site
+ulvia start --domain control.localhost
+ulvia services status
 ```
 
 Stable releases use the npm `latest` tag. An explicitly tested prerelease may
 instead be installed through `next`. Workspace contributors can run the same
 CLI through the development commands below.
+
+Use a CLI and images supporting shared hosting (`io.ulvia.hosting-api=1`); this
+flow requires fresh installation state. Control is created automatically. Read
+its protected initial administrator file, open `http://control.localhost/.cms/setup`,
+and create sites through its admitted Hosting API. Source startup requires an
+explicit compatible image version; see the development guide.
 
 ## Layout
 
@@ -140,14 +145,14 @@ straight to `src/` outside the explicit `content` browser bundles.
 
 `infra/images/` ships distinct Edge and Provider images. A Repository runs as
 an explicitly enabled Registry on these same images, with ordinary accounts
-and account-owned namespaces; see the [Repository setup](docs/installation/README.md#9-repository-cms-instance).
+and account-owned namespaces; see the [Repository setup](docs/installation/README.md#7-publish-to-a-repository).
 The Provider boots from exact admitted resources bundled in its image, without
 a running Repository. Remote discovery and publication use the separately
 configured Repository connection; creating a Registry instance does not replace it.
 The Ulvia CLI owns one parameterized Compose definition for loopback and public
 installations. The design hosts **many instances on one server**: durable
-instance data and files remain behind the Provider, while each domain routes
-published Pages to its own Edge process. Fresh instances start with zero Pages
+instance data and files remain behind the Provider, while domains select logical
+tenants on a shared Edge pool. Creating a site starts no process. Fresh instances start with zero Pages
 and collections; native initialization lives at `/.cms/setup`. Network binding,
 ports and ACME TLS are persisted installation configuration rather than a
 runtime development/production switch.
