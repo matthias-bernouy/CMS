@@ -76,10 +76,10 @@ Credential commands print only administrator credentials; technical tokens
 remain private.
 
 The CLI consumes released software images; it never builds them. Workspace
-authors build and publish the two official Docker Hub images explicitly:
+authors build a complete distribution and publish its artifacts explicitly:
 
 ```bash
-bun run images:build --version 1.0.7 all
+bun run build --version 1.0.7
 bun run images:publish --version 1.0.7 all
 ulvia upgrade edge --version 1.0.7
 ulvia upgrade provider --version 1.0.7
@@ -99,16 +99,14 @@ upgrades process instances in sequence; a later failure can leave earlier
 instances upgraded. Collection, contract, and provider
 manifest releases remain Repository artifacts and do not become Docker images.
 
-Distribution versions are independent of official artifacts. Current Installations
-and Provider manifest use `1.3.0`; Content uses `1.0.1`, Authoring `1.1.0` and
-Registry `1.1.0`. Other system contracts retain their existing versions. Existing
-npm versions and Docker tags are never reused.
+The versioned workspace build gives Edge, Provider and the CLI one shared
+distribution version. Contract and Provider manifest versions evolve independently.
+Existing npm versions and Docker tags are never reused.
 
 The host CLI is a separate public npm artifact. Its private workspace sources
 are bundled so the published package has no `workspace:*` dependencies:
 
 ```bash
-bun run cli:build --version 1.0.7 --stack-version 1.0.7
 bun run cli:publish --version 1.0.7
 bun add --global @cyaxis/ulvia@1.0.7
 ```
@@ -116,9 +114,9 @@ bun add --global @cyaxis/ulvia@1.0.7
 The build writes the package archive and a SHA-256 release receipt below
 `artifacts/cli`. Publication targets `https://registry.npmjs.org/` explicitly,
 requires npm credentials outside the repository, and refuses a changed archive.
-The CLI and initial Docker stack versions are independent and both are sealed
-into the receipt. Prereleases use the npm `next` tag; stable versions use
-`latest`.
+The unified build sets the CLI and initial Docker stack versions to the same
+release version and seals both into the receipt. Prereleases use the npm `next`
+tag; stable versions use `latest`.
 
 ## Instance integration verification
 
@@ -228,6 +226,7 @@ still require deployment-level verification.
 | `bun run format` | Apply Biome formatting and configured safe/unsafe fixes; inspect the diff. |
 | `bun run typecheck` | TypeScript project-reference check/build. |
 | `bun run build` | Build TypeScript references and Content browser runtimes, then regenerate the official CLI bootstrap snapshot. |
+| `bun run build --version <version>` | Build the workspace, both Docker images and the CLI with one distribution version. |
 | `bun run cli:build --version <cli-version> --stack-version <stack-version>` | Bundle and verify the installable `@cyaxis/ulvia` npm archive with its independent initial stack version. |
 | `bun run cli:publish --version <version>` | Publish an unchanged, previously built CLI archive to the public npm registry. |
 | `bun run images:build --version <version> all` | Build all official Cyaxis/Ulvia Docker images locally. |
