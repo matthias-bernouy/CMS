@@ -1,6 +1,8 @@
+import { AUTHORING_SOURCE_LIMITS } from "../authoring/preparations/source/limits";
+import { SOURCE_SNAPSHOT_RECORD_BYTES } from "./bounds";
 import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "repository/repository/filesystem/core/durable";
 import { RepositoryRequestError } from "../core/errors";
-import { readFile, link, rm } from "node:fs/promises";
+import { readFile, link, rm, stat } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 import {
@@ -33,7 +35,14 @@ export class FilesystemRepositorySourceStore implements RepositorySourceStore {
     }
     private async read(path: string): Promise<RepositorySourceSnapshot | null> {
         try {
-            return parseStrictJson(await readFile(path), 4 * 1024 * 1024, 32) as unknown as RepositorySourceSnapshot;
+            if ((await stat(path)).size > SOURCE_SNAPSHOT_RECORD_BYTES) {
+                throw new Error("Stored source snapshot exceeds its byte limit");
+            }
+            return parseStrictJson(
+                await readFile(path),
+                SOURCE_SNAPSHOT_RECORD_BYTES,
+                32,
+            ) as unknown as RepositorySourceSnapshot;
         } catch (error) {
             if ((error as NodeJS.ErrnoException).code === "ENOENT") {
                 return null;
@@ -46,7 +55,13 @@ export class FilesystemRepositorySourceStore implements RepositorySourceStore {
         return this.write(path, snapshot);
     }
     private async write(path: string, snapshot: RepositorySourceSnapshot) {
+        if (Buffer.byteLength(snapshot.sourceJson) > AUTHORING_SOURCE_LIMITS.snapshotBytes) {
+            throw new RepositoryRequestError("REJECTED", "Source snapshot exceeds 8 MiB");
+        }
         const bytes = canonicalizeIJson(snapshot);
+        if (Buffer.byteLength(bytes) > SOURCE_SNAPSHOT_RECORD_BYTES) {
+            throw new RepositoryRequestError("REJECTED", "Source snapshot envelope exceeds its byte limit");
+        }
         await ensureDurableDirectory(dirname(path), this.root);
         const temporary = `${path}.${randomUUID()}.tmp`;
         try {

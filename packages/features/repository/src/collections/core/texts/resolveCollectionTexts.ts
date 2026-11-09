@@ -23,10 +23,11 @@ export function resolveCollectionTexts(
         candidate = candidate.includes("-") ? candidate.slice(0, candidate.lastIndexOf("-")) : "";
     }
     candidates.push(fallback);
+    const languages = [...new Set(candidates)];
     return Object.freeze(
         Object.fromEntries(
             definitions.map((definition) => {
-                for (const language of new Set(candidates)) {
+                for (const language of languages) {
                     const overridden = site[definition.id];
                     const origin = overridden && Object.hasOwn(overridden, language) ? "site" : "collection";
                     const value = origin === "site" ? overridden![language] : definition.values[language];

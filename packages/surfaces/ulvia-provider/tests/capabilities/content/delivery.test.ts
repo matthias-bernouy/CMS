@@ -3,7 +3,7 @@ import { DefaultProviderCapabilityDispatcher, type ProviderCapabilityInvocationC
 import { mountContentForTest } from "./mount";
 const context: ProviderCapabilityInvocationContext = {
     requestId: crypto.randomUUID(),
-    contractVersion: "1.0.1",
+    contractVersion: "1.1.0",
     siteId: "default",
     providerId: "ulvia/primary-provider",
     actorKind: "anonymous",
@@ -71,7 +71,7 @@ test("Delivery reads HTTP metadata outside input and rejects representation fiel
     const { dispatcher, calls } = await fixture();
     const modern = {
         ...context,
-        contractVersion: "1.0.1",
+        contractVersion: "1.1.0",
         http: { headers: new Headers({ "accept-language": "fr", "if-none-match": 'W/"v1"', range: "bytes=-12" }) },
     };
     const result = (await dispatcher.invoke(

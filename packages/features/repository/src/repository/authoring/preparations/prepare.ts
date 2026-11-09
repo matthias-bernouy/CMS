@@ -1,15 +1,12 @@
+import { materializeSourceSnapshot } from "./source/materialize";
+import { retainedSourceSnapshot } from "./source/retained";
 import { isResourceId, resourceName } from "@bernouy/ulvia-contracts/protocol";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join, dirname } from "node:path";
+import { join } from "node:path";
 import { writePreparation, sourceDigest } from "./record";
 import type { PublicationPreflight } from "../preflight";
 import type { AdmittedCollectionRelease } from "repository/collections/interfaces/CollectionAdmission";
 import { prepareCollectionRelease } from "repository/collections/tooling/authoring/source";
-import {
-    parseSourceSnapshot,
-    canonicalSourceSnapshot,
-    type SourceAsset,
-} from "repository/repository/authoring/snapshot";
+import { parseSourceSnapshot, type SourceAsset } from "repository/repository/authoring/snapshot";
 import type { ReleaseCatalogue } from "repository/exports/contracts/catalogue";
 import {
     collectionBrowserRisk,
@@ -41,39 +38,19 @@ export async function prepareRemoteCollection(
     }
     const work = await reservePreparationWorkspace(host.root);
     const directory = join(work, resourceName(collectionId));
-    let bytes = Buffer.byteLength(sourceJson);
     try {
-        for (const file of snapshot.files) {
-            const path = join(directory, file.path);
-            await mkdir(dirname(path), { recursive: true, mode: 0o700 });
-            await writeFile(path, file.content, { flag: "wx", mode: 0o600 });
-        }
-        for (const asset of snapshot.assets) {
-            const blob = await host.readAsset(asset);
-            bytes += blob.size;
-            if (blob.size > 16 * 1024 * 1024 || bytes > 64 * 1024 * 1024) {
-                throw new Error("Collection source assets exceed the preparation limit");
-            }
-            const path = join(directory, asset.path);
-            await mkdir(dirname(path), { recursive: true, mode: 0o700 });
-            await writeFile(path, new Uint8Array(await blob.arrayBuffer()), { flag: "wx", mode: 0o600 });
-        }
+        await materializeSourceSnapshot(directory, snapshot, (asset) => host.readAsset(asset));
         const artifact = await prepareCollectionRelease(directory, host.contracts);
         const preflight = await inspect(artifact);
         const digest = artifact.digest;
         const id = randomUUID();
-        const assets = snapshot.assets.map((asset) => ({
-            path: asset.path,
+        const retainedSources = retainedSourceSnapshot(snapshot, {
+            kind: "collection",
             publisherId: artifact.release.publisherId,
-            collectionId,
+            id: collectionId,
             version: artifact.release.version,
-            releaseDigest: digest,
-            assetId: asset.path.slice(7),
-        }));
-        const retainedSources = canonicalSourceSnapshot({ files: snapshot.files, assets });
-        if (Buffer.byteLength(retainedSources) > 1024 * 1024) {
-            throw new Error("Retained collection sources exceed 1 MiB");
-        }
+            digest,
+        });
         await writePreparation(work, {
             schema: "ulvia.collection-preparation.v1",
             id,

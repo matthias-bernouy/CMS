@@ -74,7 +74,7 @@ test("depth, node, object fanout and declared bounds are bounded during compilat
     const manyNodes = z.strictObject(Object.fromEntries(Array.from({ length: 130 }, (_, i) => [`field${i}`, subtree])));
     expect(() => compileSchema(manyNodes)).toThrow("budget");
     expect(() => compileSchema(z.array(z.boolean()).max(10001))).toThrow();
-    expect(() => contractString({ maxLength: 1048577 })).toThrow();
+    expect(() => contractString({ maxLength: 8 * 1024 * 1024 + 1 })).toThrow();
     expect(() => contractString({ minLength: 4, maxLength: 2 })).toThrow();
 });
 

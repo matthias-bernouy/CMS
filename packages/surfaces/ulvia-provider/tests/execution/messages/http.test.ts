@@ -14,7 +14,7 @@ function claims(contractId: string, capabilityId: string): ProviderInvocationCla
         requestId: crypto.randomUUID(),
         instanceId: "instance-a",
         contractId,
-        contractVersion: contractId === "ulvia/cms.content" ? "1.0.1" : "1.0.0",
+        contractVersion: contractId === "ulvia/cms.content" ? "1.1.0" : "1.0.0",
         capabilityId,
         issuedAt: 0,
         expiresAt: 9999999999,

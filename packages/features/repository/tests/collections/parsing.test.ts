@@ -130,13 +130,13 @@ describe("collection release parsing", () => {
     test("uses independent resource ceilings instead of the Bloc limit for every list", () => {
         expect(DEFAULT_COLLECTION_LIMITS).toMatchObject({
             maxDocumentBytes: 8 * 1024 * 1024,
-            maxBlocs: 512,
+            maxBlocs: 1_024,
             maxAssets: 1_024,
-            maxTexts: 4_096,
+            maxTexts: 8_192,
             maxStates: 512,
             maxDependencies: 128,
             maxThemeCategories: 64,
-            maxThemeTokens: 4_096,
+            maxThemeTokens: 8_192,
         });
         const tokens = ["accent", "surface", "border"].map((id) => ({
             id,

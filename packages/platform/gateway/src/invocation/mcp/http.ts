@@ -1,4 +1,4 @@
-import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
+import { parseStrictJson, MAX_CAPABILITY_JSON_BYTES } from "@bernouy/ulvia-contracts/protocol";
 import { readGatewayHttpInput } from "cms-gateway/invocation/http/readHttpInput";
 import { CapabilityMcpBinding, McpProtocolError } from "./CapabilityMcpBinding";
 import type { McpInvocationContext } from "./interfaces";
@@ -75,7 +75,10 @@ export function createCapabilityMcpHttpHandler(options: {
             const params =
                 message.params === undefined
                     ? {}
-                    : (parseStrictJson(JSON.stringify(message.params), 8 * 1024 * 1024, 64) as Record<string, unknown>);
+                    : (parseStrictJson(JSON.stringify(message.params), MAX_CAPABILITY_JSON_BYTES, 64) as Record<
+                          string,
+                          unknown
+                      >);
             if (!params || typeof params !== "object" || Array.isArray(params)) {
                 throw new McpProtocolError(-32602, "Invalid JSON-RPC parameters");
             }

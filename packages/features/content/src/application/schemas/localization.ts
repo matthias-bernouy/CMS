@@ -101,3 +101,21 @@ export const localizationTextsGetOutputSchema = z
             .readonly(),
     })
     .readonly();
+
+export const localizationTextsReadOutputSchema = localizationTextsGetOutputSchema
+    .unwrap()
+    .extend({
+        groups: localizationTextsGetOutputSchema
+            .unwrap()
+            .shape.groups.unwrap()
+            .element.unwrap()
+            .extend({
+                count: z.int().min(0).max(8192),
+            })
+            .readonly()
+            .array()
+            .max(8192)
+            .readonly(),
+        items: localizationTextsGetOutputSchema.unwrap().shape.items.unwrap().element.array().max(8192).readonly(),
+    })
+    .readonly();

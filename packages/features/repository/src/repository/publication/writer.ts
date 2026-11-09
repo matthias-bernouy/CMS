@@ -1,3 +1,4 @@
+import { publishSourceBuild } from "./transport/build";
 import { createHash } from "node:crypto";
 import { isSha256Digest } from "@bernouy/binary-media";
 import { encodePublicationUpload, type PublicationUploadManifest } from "repository/repository/publication/protocol";
@@ -33,6 +34,7 @@ export class RemoteRepositoryWriter {
         const manifest: PublicationUploadManifest = {
             kind: envelope.kind,
             canonicalJson: envelope.canonicalJson,
+            ...(envelope.sourceJson === undefined ? {} : { sourceJson: envelope.sourceJson }),
             assets: await concurrentlyMap(assets, TRANSFER_CONCURRENCY, describeAsset),
         };
         const created = await this.connection.readJson(
@@ -79,12 +81,15 @@ export class RemoteRepositoryWriter {
                 }
             },
         );
-        const result = await this.connection.json(
-            "v1/uploads/commit",
-            "POST",
-            { ...owner, uploadId: created.uploadId },
-            true,
-        );
+        const result =
+            envelope.sourceJson === undefined
+                ? await this.connection.json(
+                      "v1/uploads/commit",
+                      "POST",
+                      { ...owner, uploadId: created.uploadId },
+                      true,
+                  )
+                : await publishSourceBuild(this.connection, { ...owner, uploadId: created.uploadId });
         if (!plainRecord(result) || typeof result.added !== "boolean" || !isSha256Digest(result.digest)) {
             throw new Error("Repository returned an invalid publication result");
         }

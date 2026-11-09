@@ -2,10 +2,10 @@ import { expect, test } from "bun:test";
 import { installationsFeature } from "@bernouy/repository/features/installations";
 import { implementFeature } from "@bernouy/ulvia-sdk";
 import { compileContract, compileImplementations } from "@bernouy/ulvia-sdk/build";
-test("Installations SDK authoring preserves all 53 canonical capabilities, exact digest and document bytes", async () => {
+test("Installations SDK authoring preserves all 57 canonical capabilities, exact digest and document bytes", async () => {
     const compiled = await compileContract(installationsFeature);
-    expect(compiled.release.capabilities).toHaveLength(53);
-    expect(compiled.digest).toBe("sha256:b03756c83c522da525803d72eadee171cbb4153b9f6d5881efbf23798f6ea745");
+    expect(compiled.release.capabilities).toHaveLength(57);
+    expect(compiled.digest).toBe("sha256:dbfaafe02234c64828b1fc8b0ced559a6ec75ebe185db6ade639def9edcd876f");
     expect(compiled.documentationAssets).toHaveLength(7);
 });
 test("compiling Installations captures all defaults without constructing services or running business code", async () => {
@@ -17,7 +17,7 @@ test("compiling Installations captures all defaults without constructing service
         },
     });
     const compiled = await compileImplementations([implementation]);
-    expect(compiled.contracts[0]!.release.capabilities).toHaveLength(53);
+    expect(compiled.contracts[0]!.release.capabilities).toHaveLength(57);
     expect(
         compiled.contracts[0]!.release.capabilities.filter(
             (capability) => capability.behavior.execution === "operation",

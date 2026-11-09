@@ -1,3 +1,4 @@
+import { runSourceSnapshotBenchmarks } from "./collections/sourceSnapshots";
 import { runBrowserBindingBenchmarks } from "./browser/browserBinding";
 import { runBrowserWorkloadBenchmarks } from "./browser/browserWorkloads";
 import { runCollectionBuildBenchmarks } from "./collections/collectionBuild";
@@ -10,6 +11,7 @@ import { runNetworkTransportBenchmarks } from "./contracts/networkTransport";
 console.log("Ulvia performance suite (results are machine-dependent; growth and generous ceilings are gated)");
 await runCollectionValidationBenchmarks();
 await runCollectionBuildBenchmarks();
+await runSourceSnapshotBenchmarks();
 await runCollectionUpgradeBenchmarks();
 await runContractValidationBenchmarks();
 await runNetworkTransportBenchmarks();

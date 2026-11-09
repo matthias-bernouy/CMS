@@ -1,3 +1,4 @@
+import { legacySourceSnapshot } from "repository/repository/sources/bounds";
 import { defineCapability } from "repository/application/authoring/capabilities/define";
 import { getContractSourcesInputSchema, sourceSnapshotSchema } from "repository/application/authoring/schemas/sources";
 import { authoringErrors as errors } from "repository/application/authoring/schemas/errors";
@@ -34,10 +35,12 @@ export const getContractSources = defineCapability({
     output: sourceSnapshotSchema,
     errors,
     execute: ({ services, input }) =>
-        services.authoring.artifactSources(
-            "contract",
-            requiredText(input.namespace),
-            requiredText(input.contractId),
-            requiredText(input.version),
+        legacySourceSnapshot(
+            services.authoring.artifactSources(
+                "contract",
+                requiredText(input.namespace),
+                requiredText(input.contractId),
+                requiredText(input.version),
+            ),
         ),
 });

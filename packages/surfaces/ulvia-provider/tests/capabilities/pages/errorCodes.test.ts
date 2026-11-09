@@ -21,7 +21,7 @@ test("example pagination is invalid input while an invalid Page remains INVALID_
     } as never);
     const context = {
         requestId: crypto.randomUUID(),
-        contractVersion: "1.0.1",
+        contractVersion: "1.1.0",
         siteId: "default",
         providerId: "ulvia/primary-provider",
     };

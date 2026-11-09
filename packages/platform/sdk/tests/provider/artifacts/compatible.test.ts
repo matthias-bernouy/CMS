@@ -46,7 +46,7 @@ test("retention rejects changed access, behavior, bounds, ownership and corrupte
                             ...capability.input,
                             properties: {
                                 ...capability.input.properties,
-                                id: { type: "string", maxLength: 64 },
+                                id: { type: "string", maxLength: 256 },
                             },
                         },
                     };
@@ -73,4 +73,31 @@ test("retained selection rejects duplicates, unknown claims and conflicting coor
     expect(() => selectImplementationBuilds([f.build, old], [f.source, old.implementations[0]!])).toThrow();
     expect(() => selectImplementationBuilds([f.build], [{ ...f.source, digest: f.old.digest }])).toThrow();
     expect(() => selectImplementationBuilds([old, old], [old.implementations[0]!])).toThrow();
+});
+
+test("retained inputs keep their smaller string ceiling while reusing the broader executor", async () => {
+    const f = await retainedFixture();
+    const release = structuredClone(f.old.release);
+    const capability = release.capabilities[0]!;
+    capability.input.properties.id = { type: "string", maxLength: 64 };
+    const old = await admitContractRelease(release);
+    const build = await loadCompatibleImplementation(f.build, f.source, old);
+    expect(build.implementedContracts[0]!.capabilities[0]!.definition.input.properties.id).toMatchObject({
+        maxLength: 64,
+    });
+    let calls = 0;
+    const call = mounted(build, {
+        allowed: async () => true,
+        read: async () => {
+            calls++;
+            return "Accepted";
+        },
+    });
+    expect(await call()).toBe("Accepted");
+    expect(calls).toBe(1);
+    const changed = structuredClone(release);
+    changed.capabilities[0]!.output = { type: "string", maxLength: 64 };
+    await expect(loadCompatibleImplementation(f.build, f.source, await admitContractRelease(changed))).rejects.toThrow(
+        "differs from its executor",
+    );
 });

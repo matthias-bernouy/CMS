@@ -1,3 +1,4 @@
+import { MAX_PUBLICATION_METADATA_BYTES } from "repository/repository/publication/protocol";
 import { z } from "zod";
 import { contractString, contractBinary } from "@bernouy/ulvia-sdk";
 import { assetDownloadOutputSchema } from "repository/application/registry/schemas/downloads";
@@ -18,7 +19,7 @@ export const publicationAssetInputSchema = z.strictObject({
 
 export const publicationBeginInputSchema = z.strictObject({
     namespace: contractString({ minLength: 1, maxLength: 96 }),
-    manifest: contractBinary({ maxBytes: 20971520 }),
+    manifest: contractBinary({ maxBytes: MAX_PUBLICATION_METADATA_BYTES }),
     namespaceRevision: z.int().min(1),
 });
 

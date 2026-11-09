@@ -1,3 +1,4 @@
+import { legacySourceSnapshot } from "repository/repository/sources/bounds";
 import { defineCapability } from "repository/application/registry/capabilities/define";
 import { sourceGetInputSchema, artifactSourceGetOutputSchema } from "repository/application/registry/schemas/sources";
 import { namespaceClaimErrors as errors } from "repository/application/registry/schemas/errors";
@@ -25,5 +26,7 @@ export const sourceGet = defineCapability({
     output: artifactSourceGetOutputSchema,
     errors,
     execute: async ({ services, input, context }) =>
-        services.repository.sources.getCollection(input, await services.resolveRepositoryAccount(context)),
+        legacySourceSnapshot(
+            services.repository.sources.getCollection(input, await services.resolveRepositoryAccount(context)),
+        ),
 });

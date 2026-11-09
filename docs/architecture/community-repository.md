@@ -173,9 +173,9 @@ and [HTTP transport](https://modelcontextprotocol.io/specification/2025-11-25/ba
 
 ## Limits and next work
 
-Publication metadata uses a raw binary envelope bounded to 20 MiB, canonical
+Publication metadata uses a raw binary envelope bounded to 40 MiB, canonical
 releases remain bounded to 8 MiB, and raw assets to 100 MiB. Other JSON
-envelopes retain the existing 8 MiB Gateway budget. Public catalogue pages contain
+envelopes use the 20 MiB Gateway budget, allowing escaped source snapshots. Public catalogue pages contain
 at most 256 entries; exact artifact reads survive yanking.
 
 Public first-claim naming needs deployment-specific rate limits, storage quotas,

@@ -1,3 +1,4 @@
+import { AUTHORING_SOURCE_LIMITS } from "./source/limits";
 import { durableWriteFile, durableRename } from "../../filesystem/core/durable";
 import { constants } from "node:fs";
 import { parseSourceSnapshot } from "../snapshot";
@@ -6,6 +7,8 @@ import { readFile, open, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { RepositoryRequestError } from "../../core/errors";
+
+export const MAX_PREPARATION_RECORD_BYTES = 40 * 1024 * 1024;
 
 export interface PreparedCollection {
     readonly schema: "ulvia.collection-preparation.v1";
@@ -53,10 +56,14 @@ export async function readPreparation(
     let prepared: PreparedCollection;
     try {
         const file = join(path, "prepared.json");
-        if ((await stat(file)).size > 32 * 1024 * 1024) {
+        if ((await stat(file)).size > MAX_PREPARATION_RECORD_BYTES) {
             throw refuse();
         }
-        prepared = parseStrictJson(await readFile(file), 32 * 1024 * 1024, 16) as unknown as PreparedCollection;
+        prepared = parseStrictJson(
+            await readFile(file),
+            MAX_PREPARATION_RECORD_BYTES,
+            16,
+        ) as unknown as PreparedCollection;
         if (
             prepared.schema !== "ulvia.collection-preparation.v1" ||
             prepared.id !== id ||
@@ -94,7 +101,11 @@ export async function verifyPreparedSources(path: string, prepared: PreparedColl
             );
             try {
                 const info = await handle.stat();
-                if (!info.isFile() || info.size > 1024 * 1024 || (await handle.readFile("utf8")) !== file.content) {
+                if (
+                    !info.isFile() ||
+                    info.size > AUTHORING_SOURCE_LIMITS.fileBytes ||
+                    (await handle.readFile("utf8")) !== file.content
+                ) {
                     throw refuse();
                 }
             } finally {

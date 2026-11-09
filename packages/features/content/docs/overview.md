@@ -45,3 +45,11 @@ Branch on the declared error code. `error.output.message` explains a refusal in 
 ## Verify the result
 
 Read back the affected resource using its owning contract, verify the requested state and inspect asynchronous operation details when a handle was returned. Report any checks that could not be performed. Diagnostic journal records help explain failures but are not durable business audit or proof of visual quality.
+
+
+## Large resource catalogues
+
+Content 1.1 exposes `localization.texts.read` and `theme.read` with the same inputs,
+authorization and filters as the corresponding `*.get` operations, supporting up
+to 8,192 texts and theme tokens. Existing getters retain their released output
+bounds. Use the new operations when administering larger installed collections.

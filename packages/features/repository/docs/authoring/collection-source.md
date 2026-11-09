@@ -61,6 +61,6 @@ Keep those references when preparing the next version. Each asset uses either th
 
 ## Validate and recover
 
-The official Provider limits source JSON to 1 MiB, 2,048 files and 64 binary references. Paths are relative, cannot overlap by case or traverse directories, and include a root `definition.json`. Each text file is bounded to 512 Ki UTF-16 code units; binary references are further limited to 16 MiB per asset and a 64 MiB preparation budget including source JSON.
+The official Provider limits source JSON to 8 MiB UTF-8, 16,384 files including binary references, and 1,024 binary references. Paths are relative, cannot overlap by case or traverse directories, and include a root `definition.json`. Each text file is bounded to 1 MiB UTF-8 in both CLI capture and CMS preparation. Collection assets are limited to 10 MiB each and 50 MiB combined, independently of the source JSON budget. Collections admit up to 1,024 Blocs, 8,192 texts and 8,192 theme tokens. Each locale may define up to 65,536 metadata translation messages.
 
 Keep source-only example files under `examples/`, not `default.html`. Collections do not define site Pages, and authored `migrations/` are unsupported. Treat `valid: false` and its diagnostics as a failed preparation even when the tool itself returned successfully. Correct sources, prepare again, then follow [publication and installation](collection-authoring.md).

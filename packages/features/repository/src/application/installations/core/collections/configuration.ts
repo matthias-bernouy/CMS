@@ -1,3 +1,7 @@
+import type { InstallationServices } from "repository/application/installations/interfaces/services";
+import type { UpdateCollectionConfigurationInput } from "repository/application/installations/interfaces/inputs";
+import { projectSnapshot } from "./projection";
+import { assertResourceCounts } from "./resourceBounds";
 import {
     MAX_CAPABILITY_JSON_BYTES,
     MAX_CAPABILITY_JSON_DEPTH,
@@ -31,4 +35,25 @@ export function textOverrides(value: string): Record<string, Record<string, stri
         Object.defineProperty(result, locale, { value: strings, enumerable: true });
     }
     return result;
+}
+
+export async function configureCollection(
+    services: InstallationServices,
+    siteId: string,
+    input: UpdateCollectionConfigurationInput,
+    maximumResourceCount = 4096,
+) {
+    const before = await services.collections.listInstalled(siteId);
+    if (before.revision !== input.expectedRevision) {
+        throw new InstallationError("REVISION_CONFLICT");
+    }
+    assertResourceCounts(before.items, maximumResourceCount);
+    return projectSnapshot(
+        await services.collections.saveConfiguration(
+            siteId,
+            input.collectionId,
+            input.expectedRevision,
+            parseConfiguration(input.configurationJson),
+        ),
+    );
 }

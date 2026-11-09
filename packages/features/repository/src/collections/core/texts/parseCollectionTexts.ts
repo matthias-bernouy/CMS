@@ -69,11 +69,14 @@ export function parseCollectionTextOverrides(
     if (entries.length > TEXT_LIMITS.definitions) {
         throw new TypeError("Too many text overrides");
     }
+    if (entries.length === 0) {
+        return Object.freeze({});
+    }
+    const known = new Set(definitions.map(({ id }) => id));
     return Object.freeze(
         Object.fromEntries(
             entries.sort().map(([id, values]) => {
-                const definition = definitions.find((text) => text.id === id);
-                if (!definition) {
+                if (!known.has(id)) {
                     throw new TypeError(`Unknown overridden text: ${id}`);
                 }
                 return [id, parseTextLocales(values)];

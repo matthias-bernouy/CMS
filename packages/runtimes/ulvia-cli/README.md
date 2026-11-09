@@ -335,3 +335,24 @@ provenance manifest. Screenshots require the Playwright Chromium browser
 (`bunx playwright@1.64.1 install chromium`). Dependencies and required contracts are
 resolved explicitly from local sources/cache; preview never publishes. See
 [collection examples](../../../docs/blocs/examples.md) for source and release formats.
+
+### Editable collection publication
+
+Collection `release` captures a bounded immutable source snapshot before building
+it in the local Repository cache. It retains sources alongside the admitted
+release before making it visible locally. This uses the same source build engine
+as the remote Repository and works offline with the local contract catalogue;
+it starts no additional Repository server.
+
+Collection `push` uploads the retained source snapshot and its exact binary
+assets, then follows the remote Repository's durable build operation. Editing the
+working directory after `release` does not alter the pushed version. The server
+must reproduce the reviewed release digest before publication; a compiler or
+contract-catalogue difference refuses publication rather than silently changing
+the release. Collection release modules must also supply `sourceJson`.
+
+Pulled or older compiled-only cache entries remain readable, but can only be
+replayed to a Repository already containing that exact release. Publishing one
+to a new Repository requires its original editable sources and an explicit
+release. No source reconstruction runs. Contract and Provider manifest flows
+are unchanged.

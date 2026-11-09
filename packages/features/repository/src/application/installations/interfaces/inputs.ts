@@ -1,3 +1,4 @@
+import type { updateCollectionConfigurationInputSchema } from "repository/application/installations/schemas/collections/update-collection-configuration";
 import type { listCollectionReleasesInputSchema } from "repository/application/installations/schemas/collections/discovery/list-collection-releases";
 import type { listCollectionCatalogueInputSchema } from "repository/application/installations/schemas/collections/discovery/list-collection-catalogue";
 import type { getCollectionReleaseInputSchema } from "repository/application/installations/schemas/collections/discovery/get-collection-release";
@@ -34,3 +35,5 @@ export type GetCollectionReleaseInput = z.output<typeof getCollectionReleaseInpu
 export type ListCollectionCatalogueInput = z.output<typeof listCollectionCatalogueInputSchema>;
 
 export type ListCollectionReleasesInput = z.output<typeof listCollectionReleasesInputSchema>;
+
+export type UpdateCollectionConfigurationInput = z.output<typeof updateCollectionConfigurationInputSchema>;

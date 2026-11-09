@@ -25,9 +25,9 @@ export const DEFAULT_RELEASE_LIMITS: Readonly<ReleaseLimits> = Object.freeze({
     maxProperties: 256,
     maxSchemaDepth: 24,
     maxSchemaNodes: 4096,
-    maxStringLength: 1024 * 1024,
+    maxStringLength: 8 * 1024 * 1024,
 });
 
-/** Shared JSON envelope budget for gateway, provider relay and local Core calls. */
-export const MAX_CAPABILITY_JSON_BYTES = 8 * 1024 * 1024;
+/** Shared JSON envelope budget, including escaped strings from an 8 MiB source snapshot. */
+export const MAX_CAPABILITY_JSON_BYTES = 20 * 1024 * 1024;
 export const MAX_CAPABILITY_JSON_DEPTH = 64;

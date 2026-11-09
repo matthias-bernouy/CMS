@@ -1,3 +1,6 @@
+import { sourceRead } from "./capabilities/sources/source-read";
+import { publicationBuild } from "./capabilities/builds/publication-build";
+import { publicationBuildStatus } from "./capabilities/builds/publication-build-status";
 import { collectionCatalogue } from "repository/application/registry/capabilities/catalogue/collection-catalogue";
 import { defineFeature } from "@bernouy/ulvia-sdk";
 import { mapRepositoryError } from "repository/application/registry/capabilities/mapError";
@@ -27,11 +30,12 @@ export const repositoryFeature = defineFeature({
     contractId: "ulvia/repository",
     name: "Ulvia Repository",
     description: "Public discovery and account-owned namespaces for immutable contracts, providers and collections.",
-    version: "1.1.0",
+    version: "1.2.0",
     publisherId: "ulvia",
     documents: new URL("../../../docs/repository/", import.meta.url),
     mapError: mapRepositoryError,
     capabilities: [
+        sourceRead,
         collectionCatalogue,
         namespaceClaim,
         namespaceSuspend,
@@ -41,6 +45,8 @@ export const repositoryFeature = defineFeature({
         publicationAsset,
         publicationBegin,
         publicationCommit,
+        publicationBuild,
+        publicationBuildStatus,
         publicationYank,
         sourcePut,
         artifactSourceGet,

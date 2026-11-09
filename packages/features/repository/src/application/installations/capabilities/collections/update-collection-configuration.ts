@@ -2,8 +2,7 @@ import { defineCapability } from "repository/application/installations/capabilit
 import { installCollectionOutputSchema } from "repository/application/installations/schemas/collections/install-collection";
 import { updateCollectionConfigurationInputSchema } from "repository/application/installations/schemas/collections/update-collection-configuration";
 import { updateCollectionConfigurationErrors as errors } from "repository/application/installations/schemas/common/failures";
-import { projectSnapshot } from "repository/application/installations/core/collections/projection";
-import { parseConfiguration } from "repository/application/installations/core/collections/configuration";
+import { configureCollection } from "repository/application/installations/core/collections/configuration";
 export const updateCollectionConfiguration = defineCapability({
     id: "update-collection-configuration",
     access: "admin",
@@ -35,13 +34,5 @@ export const updateCollectionConfiguration = defineCapability({
     input: updateCollectionConfigurationInputSchema,
     output: installCollectionOutputSchema,
     errors,
-    execute: async ({ services, input, context }) =>
-        projectSnapshot(
-            await services.collections.saveConfiguration(
-                context.siteId,
-                input.collectionId,
-                input.expectedRevision,
-                parseConfiguration(input.configurationJson),
-            ),
-        ),
+    execute: ({ services, input, context }) => configureCollection(services, context.siteId, input),
 });

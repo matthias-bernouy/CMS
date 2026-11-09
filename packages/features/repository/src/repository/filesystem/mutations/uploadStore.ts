@@ -177,6 +177,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
             const result = await publish({
                 kind: document.manifest.kind,
                 canonicalJson: document.manifest.canonicalJson,
+                ...(document.manifest.sourceJson === undefined ? {} : { sourceJson: document.manifest.sourceJson }),
                 assets,
             });
             await lock.assertOwnership();

@@ -17,13 +17,15 @@ Call `configure-connection` with the PAT. The runtime controls the target origin
 - `list-namespaces` reads the remote account inventory, bounded to 32 names. Follow `nextCursor`. Transferred names disappear from this account's inventory; suspended names remain reserved and cannot publish.
 - `claim-namespace` claims an available name for the authenticated Repository account.
 - `prepare-collection` validates and builds a complete collection source snapshot. Preparation does not require publication credentials.
-- `publish-collection` publishes the exact prepared digest and retains its private sources. It does not install the release on this CMS instance.
+- `publish-collection-operation` submits durable publication of the exact prepared digest. Follow `get-publication-operation`; the Repository compiles and retains verified sources before exposing the release. It does not install the release. The synchronous `publish-collection` keeps its existing response shape.
 - `get-collection-sources` reads the private source snapshot for a namespace currently owned by the configured Repository account.
 - `prepare-contract`, `publish-contract` and `get-contract-sources` provide the equivalent contract workflow, including versioned Markdown documentation and fixture assets.
 - `prepare-provider-manifest`, `publish-provider-manifest` and `get-provider-manifest-sources` provide manifest authoring against exact contract pins.
 - `discard-preparation` removes an unpublished local preparation of any supported kind; published releases remain intact.
 
 Read [artifact authoring](artifact-authoring.md), [contract sources](contract-source.md) and [Provider manifest sources](provider-manifest-source.md) before these workflows.
+
+Durable collection publication checks the current local administrator grant before queueing and again in recovered workers.
 
 The remote Repository checks account ownership and namespace revision for every protected upload stage. Namespace transfer, token expiration or token revocation can prevent an in-progress publication from completing. Reconnecting to another account does not transfer ownership or resume another account's upload.
 
@@ -32,3 +34,10 @@ The remote Repository checks account ownership and namespace revision for every 
 Discover the selected capability schemas before calling tools. Documentation does not grant execution rights. Branch on declared error codes rather than translated messages. A transport failure can leave a mutation outcome unknown; inspect remote state before repeating it.
 
 Read back the published release and its digest. Verify installation separately when the workflow also requires using the release on this site. Report any checks that could not be performed.
+
+
+Use `get-source-snapshot` through its HTTP or MCP binding with `kind`,
+`namespace`, `id` and `version` for private sources up to 8 MiB. The kind is
+`collection`, `contract` or `provider-manifest`; administrator and connected
+Repository account checks still apply. Existing kind-specific source getters
+retain their 1,048,576 UTF-16-unit output bounds and refuse larger snapshots.

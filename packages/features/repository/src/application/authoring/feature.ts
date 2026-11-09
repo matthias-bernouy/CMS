@@ -1,3 +1,6 @@
+import { getSourceSnapshot } from "./capabilities/sources/get-source-snapshot";
+import { publishCollectionOperation } from "./capabilities/publication/publish-collection-operation";
+import { getPublicationOperation } from "./capabilities/publication/get-publication-operation";
 import { defineFeature } from "@bernouy/ulvia-sdk";
 import { mapAuthoringError } from "repository/application/authoring/capabilities/mapError";
 import { prepareContract } from "repository/application/authoring/capabilities/preparations/prepare-contract";
@@ -20,12 +23,13 @@ export const authoringFeature = defineFeature({
     name: "CMS Authoring",
     description:
         "Prepare immutable collection, contract and Provider manifest sources and publish through a pinned Repository account connection.",
-    version: "1.1.0",
+    version: "1.2.0",
     publisherId: "ulvia",
     catalogue: { icon: "package", categories: ["administration", "authoring"] },
     documents: new URL("../../../docs/authoring/", import.meta.url),
     mapError: mapAuthoringError,
     capabilities: [
+        getSourceSnapshot,
         prepareContract,
         prepareProviderManifest,
         publishContract,
@@ -36,6 +40,8 @@ export const authoringFeature = defineFeature({
         disconnectConnection,
         prepareCollection,
         publishCollection,
+        publishCollectionOperation,
+        getPublicationOperation,
         getContractSources,
         getProviderManifestSources,
         getCollectionSources,

@@ -53,7 +53,7 @@ export async function sitePagesFixture() {
                 try {
                     const output = await dispatcher.invoke(CONTRACT, request.capability.id, request.input, {
                         requestId: request.requestId,
-                        contractVersion: "1.0.1",
+                        contractVersion: "1.1.0",
                         siteId: "site-a",
                         providerId: "ulvia/ulvia.example",
                     });

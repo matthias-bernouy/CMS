@@ -123,3 +123,10 @@ export const themeGetOutputSchema = z
             .readonly(),
     })
     .readonly();
+
+export const themeReadOutputSchema = themeGetOutputSchema
+    .unwrap()
+    .extend({
+        tokens: themeGetOutputSchema.unwrap().shape.tokens.unwrap().element.array().max(8192).readonly(),
+    })
+    .readonly();

@@ -17,4 +17,20 @@ export type AuthoringService = Pick<
 >;
 export interface AuthoringServices {
     readonly authoring: AuthoringService;
+    readonly authoringAuthority?: {
+        administrator(actor: { providerId: string; subjectId: string }): Promise<boolean>;
+    };
+    readonly authoringOperations?: {
+        get(
+            siteId: string,
+            input: { operationId: string; preparationId: string; expectedDigest: string },
+            actor: { providerId: string; subjectId?: string },
+        ): Promise<{
+            operationId: string;
+            status: "queued" | "running" | "succeeded" | "failed";
+            result?: unknown;
+            errorCode?: string;
+            errorOutput?: unknown;
+        }>;
+    };
 }

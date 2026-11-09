@@ -33,3 +33,8 @@ export const getCollectionInstallationOutputSchema = z.strictObject({
         .readonly(),
     repositoryId: contractString({ maxLength: 96 }).optional(),
 });
+
+export const getCollectionDetailsOutputSchema = getCollectionInstallationOutputSchema.extend({
+    textCount: z.int().min(0).max(8192),
+    themeTokenCount: z.int().min(0).max(8192),
+});

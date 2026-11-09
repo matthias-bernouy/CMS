@@ -23,6 +23,7 @@ export async function runCollectionValidationBenchmarks(): Promise<void> {
         { blocs: 32, examples: 16 },
         { blocs: 128, examples: 64 },
         { blocs: 512, examples: 256 },
+        { blocs: 1024, examples: 256 },
     ].map(({ blocs, examples }) => ({
         name: `${blocs} blocs / ${examples} examples`,
         value: collectionFixture(blocs, examples),
@@ -35,25 +36,26 @@ export async function runCollectionValidationBenchmarks(): Promise<void> {
     assertMaximum("128-bloc collection validation p95", results[0]!.p95Ms, 2_500);
     assertMaximum("maximum-size synthetic validation p95", results.at(-1)!.p95Ms, 2_500);
     assertGrowth("128 to 512 bloc validation growth", results[2]!, results[3]!, 12);
+    assertGrowth("512 to 1024 bloc validation growth", results[3]!, results[4]!, 6);
 
     const largest = parseCollectionRelease(synthetic.at(-1)!.value);
-    const nextLargest = parseCollectionRelease(collectionFixture(512, 256, "1.0.1"));
+    const nextLargest = parseCollectionRelease(collectionFixture(1024, 256, "1.0.1"));
     const referenceAdmission = await admitCollectionReleaseJson(referenceJson, referenceAssets);
     const admissionResults = [
         await benchmark("128-bloc JSON admission and digest", () =>
             admitCollectionReleaseJson(referenceJson, referenceAssets),
         ),
-        await benchmark("512-bloc synthetic admission and digest", () => admittedFixture(512, 256, "1.0.0")),
+        await benchmark("1024-bloc synthetic admission and digest", () => admittedFixture(1024, 256, "1.0.0")),
         await benchmark("describe 128-bloc collection resources", () =>
             describeCollectionResources(referenceAdmission.release),
         ),
-        await benchmark("compare two 512-bloc collection releases", () =>
+        await benchmark("compare two 1024-bloc collection releases", () =>
             verifyCollectionPublicationEvolution(largest, nextLargest),
         ),
-        await benchmark("check compatible upgrade across 512 blocs", () =>
+        await benchmark("check compatible upgrade across 1024 blocs", () =>
             assertCompatibleCollectionUpgrade(largest, nextLargest),
         ),
-        await benchmark("scan breaking resources across 512 blocs", () =>
+        await benchmark("scan breaking resources across 1024 blocs", () =>
             collectionUpgradeBreakingResources(largest, nextLargest),
         ),
     ];

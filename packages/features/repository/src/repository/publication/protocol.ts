@@ -1,3 +1,5 @@
+import { AUTHORING_SOURCE_LIMITS } from "../authoring/preparations/source/limits";
+import { parseSourceSnapshot } from "../authoring/snapshot";
 import { RepositoryRequestError } from "../core/errors";
 import { isSha256Digest } from "@bernouy/binary-media";
 import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
@@ -6,7 +8,7 @@ import type { PublicationUploadManifest, RepositoryArtifactKind } from "./types"
 
 export type { PublicationUploadManifest } from "./types";
 
-export const MAX_PUBLICATION_METADATA_BYTES = 20 * 1024 * 1024;
+export const MAX_PUBLICATION_METADATA_BYTES = 40 * 1024 * 1024;
 export const MAX_PUBLICATION_ASSET_BYTES = 100 * 1024 * 1024;
 export const MAX_PUBLICATION_BUNDLE_BYTES = 100 * 1024 * 1024;
 const MAX_CANONICAL_JSON_BYTES = MAX_REPOSITORY_RESPONSE_BYTES;
@@ -25,7 +27,9 @@ export function parsePublicationUpload(bytes: Uint8Array): PublicationUploadMani
     const value = parseStrictJson(bytes, MAX_PUBLICATION_METADATA_BYTES, 8) as Record<string, unknown>;
     if (
         !plainRecord(value) ||
-        Object.keys(value).some((key) => !["protocol", "kind", "canonicalJson", "assets"].includes(key)) ||
+        Object.keys(value).some(
+            (key) => !["protocol", "kind", "canonicalJson", "assets", "sourceJson"].includes(key),
+        ) ||
         value.protocol !== "ulvia-repository-upload/v1" ||
         !isKind(value.kind) ||
         typeof value.canonicalJson !== "string" ||
@@ -35,15 +39,37 @@ export function parsePublicationUpload(bytes: Uint8Array): PublicationUploadMani
     ) {
         throw new RepositoryRequestError("REJECTED", "Invalid publication upload manifest");
     }
+    if (value.sourceJson !== undefined) {
+        if (value.kind !== "collection" || typeof value.sourceJson !== "string") {
+            throw new RepositoryRequestError("REJECTED", "Only collection uploads accept source snapshots");
+        }
+        try {
+            parseSourceSnapshot(value.sourceJson);
+        } catch {
+            throw new RepositoryRequestError("REJECTED", "Invalid collection source snapshot");
+        }
+    }
     const assets = value.assets.map(parseUploadAsset);
     if (new Set(assets.map((asset) => asset.id)).size !== assets.length) {
         throw new RepositoryRequestError("REJECTED", "Publication asset IDs must be unique");
     }
     const totalBytes = assets.reduce((total, asset) => total + asset.byteLength, 0);
+    if (
+        value.kind === "collection" &&
+        (totalBytes > AUTHORING_SOURCE_LIMITS.assetBundleBytes ||
+            assets.some((asset) => asset.byteLength > AUTHORING_SOURCE_LIMITS.assetBytes))
+    ) {
+        throw new RepositoryRequestError("REJECTED", "Collection asset declarations exceed the collection limits");
+    }
     if (totalBytes > MAX_PUBLICATION_BUNDLE_BYTES || (value.kind === "provider-manifest" && assets.length)) {
         throw new RepositoryRequestError("REJECTED", "Publication asset bundle exceeds its limits");
     }
-    return { kind: value.kind, canonicalJson: value.canonicalJson, assets };
+    return {
+        kind: value.kind,
+        canonicalJson: value.canonicalJson,
+        assets,
+        ...(value.sourceJson === undefined ? {} : { sourceJson: value.sourceJson as string }),
+    };
 }
 
 export async function readPublicationMetadata(

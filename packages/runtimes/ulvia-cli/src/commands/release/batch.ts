@@ -1,3 +1,4 @@
+import { collectionSourceAssets } from "@bernouy/repository/repository/publication";
 import {
     LocalArtifactFiles,
     LocalContractReleases,
@@ -8,7 +9,9 @@ import { planContractPublications } from "@bernouy/repository/contracts/catalogu
 import { prepareReleaseModule } from "./module";
 import { admitContractBundleJson } from "@bernouy/ulvia-contracts";
 import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
-import { admitCollectionRelease } from "@bernouy/repository/collections";
+import { compileCollectionSources } from "@bernouy/repository/repository/authoring/build";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
 import type { ResourceSource } from "./discovery";
 import {
@@ -94,12 +97,16 @@ export async function releaseBatch(
                 admission: await admitProviderManifestJson(resource.admission.canonicalJson, catalogue),
             });
         } else if (resource.kind === "collection") {
-            remaining.push({
-                kind: "collection",
-                admission: await admitCollectionRelease(resource.admission.release, resource.admission.assets, {
-                    contracts: catalogue,
-                }),
-            });
+            const built = await compileCollectionSources(
+                join(tmpdir(), "ulvia-collection-builds"),
+                resource.sourceJson,
+                collectionSourceAssets(resource.sourceJson, resource.admission.assets),
+                catalogue,
+            );
+            if (built.admission.canonicalJson !== resource.admission.canonicalJson) {
+                throw new Error("Collection release module sources differ from its admitted release");
+            }
+            remaining.push({ kind: "collection", ...built });
         }
     }
     for (const source of sources.filter((source) => source.kind !== "contract" && source.kind !== "sdk")) {

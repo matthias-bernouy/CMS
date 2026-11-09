@@ -26,7 +26,7 @@ test("configuration writes report the site upgrade fence through the declared wi
             { expectedRevision: 0, name: "changed" },
             {
                 requestId: crypto.randomUUID(),
-                contractVersion: "1.0.1",
+                contractVersion: "1.1.0",
                 siteId: "default",
                 providerId: "ulvia/primary-provider",
             },

@@ -1,9 +1,10 @@
+import { AUTHORING_SOURCE_LIMITS } from "repository/repository/authoring/preparations/source/limits";
 import { z } from "zod";
 import { contractString } from "@bernouy/ulvia-sdk";
 import { authoringDiagnosticSchema } from "repository/application/authoring/schemas/common";
 export const prepareInputSchema = z.strictObject({
     sourceJson: contractString({
-        maxLength: 1048576,
+        maxLength: AUTHORING_SOURCE_LIMITS.snapshotBytes,
         sensitive: true,
         description:
             "Complete JSON source snapshot with files: [{path, content}] and optional immutable fixture asset references. Read the linked source guide first.",
@@ -50,10 +51,10 @@ export const discardPreparationOutputSchema = z
 
 export const prepareCollectionInputSchema = z.strictObject({
     sourceJson: contractString({
-        maxLength: 1048576,
+        maxLength: AUTHORING_SOURCE_LIMITS.snapshotBytes,
         sensitive: true,
         description:
-            "JSON object with files: [{path, content}] and optional exact asset references. Read collection-source.md and bloc-design.md first. Maximum 1 MiB of source JSON.",
+            "JSON object with files: [{path, content}] and optional exact asset references. Read collection-source.md and bloc-design.md first. Maximum 8 MiB of source JSON.",
     }),
 });
 

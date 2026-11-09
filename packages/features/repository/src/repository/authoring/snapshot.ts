@@ -1,5 +1,16 @@
+import { SourcePathIndex } from "./preparations/source/paths";
+import { AUTHORING_SOURCE_LIMITS } from "./preparations/source/limits";
 import { parseStrictJson, canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import type { RepositoryArtifactKind } from "../publication/types";
+
+export const COLLECTION_SOURCE_DIRECTORIES: readonly string[] = Object.freeze([
+    "blocs",
+    "translations",
+    "assets",
+    "texts",
+    "theme",
+    "examples",
+]);
 
 export interface SourceAsset {
     readonly path: string;
@@ -21,28 +32,36 @@ export function parseSourceSnapshot(
     json: string,
     kind: RepositoryArtifactKind = "collection",
 ): AuthoringSourceSnapshot {
-    const value = parseStrictJson(json, 1024 * 1024, 16) as unknown as AuthoringSourceSnapshot;
+    const value = parseStrictJson(
+        json,
+        AUTHORING_SOURCE_LIMITS.snapshotBytes,
+        AUTHORING_SOURCE_LIMITS.jsonDepth,
+    ) as unknown as AuthoringSourceSnapshot;
     if (
         !value ||
         !Array.isArray(value.files) ||
         value.files.length < 1 ||
-        value.files.length > 2048 ||
-        (value.assets !== undefined && (!Array.isArray(value.assets) || value.assets.length > 64)) ||
+        value.files.length > AUTHORING_SOURCE_LIMITS.files ||
+        (value.assets !== undefined &&
+            (!Array.isArray(value.assets) || value.assets.length > AUTHORING_SOURCE_LIMITS.assets)) ||
         Object.keys(value).some((key) => !["files", "assets"].includes(key))
     ) {
         throw new Error("Invalid authoring source snapshot");
     }
-    const paths = new Set<string>();
+    if (value.files.length + (value.assets?.length ?? 0) > AUTHORING_SOURCE_LIMITS.files) {
+        throw new Error("Authoring source snapshot contains too many files");
+    }
+    const paths = new SourcePathIndex();
     for (const file of value.files) {
         sourcePath(file.path, kind);
         if (
             typeof file.content !== "string" ||
-            file.content.length > 512 * 1024 ||
+            Buffer.byteLength(file.content, "utf8") > AUTHORING_SOURCE_LIMITS.fileBytes ||
             Object.keys(file).some((key) => !["path", "content"].includes(key))
         ) {
             throw new Error("Invalid authoring source file");
         }
-        addPath(paths, file.path);
+        paths.add(file.path);
     }
     for (const asset of value.assets ?? []) {
         sourcePath(asset.path, kind);
@@ -81,7 +100,7 @@ export function parseSourceSnapshot(
         if (file === release || Object.values(asset).some((item) => typeof item !== "string" || item.length > 512)) {
             throw new Error("An asset needs one exact site file or Repository release reference");
         }
-        addPath(paths, asset.path);
+        paths.add(asset.path);
     }
     if (!paths.has("definition.json")) {
         throw new Error("Authoring source snapshot requires definition.json");
@@ -96,20 +115,10 @@ export function canonicalSourceSnapshot(snapshot: AuthoringSourceSnapshot) {
     return canonicalizeIJson(snapshot);
 }
 
-function addPath(paths: Set<string>, path: string) {
-    const normalized = path.toLowerCase();
-    if (
-        paths.has(normalized) ||
-        [...paths].some((item) => item.startsWith(`${normalized}/`) || normalized.startsWith(`${item}/`))
-    ) {
-        throw new Error("Source paths overlap or are duplicated");
-    }
-    paths.add(normalized);
-}
 function sourcePath(path: string, kind: RepositoryArtifactKind) {
     const directories =
         kind === "collection"
-            ? ["blocs", "translations", "assets", "texts", "theme", "examples"]
+            ? COLLECTION_SOURCE_DIRECTORIES
             : kind === "contract"
               ? ["capabilities", "mocks", "docs", "fixtures"]
               : [];

@@ -1,3 +1,8 @@
+import {
+    MemoryProviderOperationStore,
+    ProviderOperationExecutor,
+    createProviderOperationAdapter,
+} from "@bernouy/ulvia-provider";
 import { registerOfficialFeatures, loadOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
 import type { AuthoringService } from "@bernouy/repository/features/authoring";
 import type { ProviderCapabilityRegistry } from "@bernouy/ulvia-provider";
@@ -12,6 +17,9 @@ export async function mountAuthoringForTest(
         authoringServices(service),
         build.implementations.filter(({ contractId }) => contractId === "ulvia/cms.authoring"),
         {
+            operations: createProviderOperationAdapter(
+                new ProviderOperationExecutor(new MemoryProviderOperationStore()),
+            ),
             providerId: "ulvia/primary-provider",
             scope: { siteId: "default", instanceId: "instance-a" },
         },

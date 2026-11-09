@@ -1,9 +1,8 @@
 import { join } from "node:path";
-import { prepareCollectionRelease } from "repository/collections/tooling/authoring/source";
+import { parseSourceSnapshot } from "../snapshot";
 import { parseCollectionReleaseJson } from "repository/collections/core/parsing/parseCollectionRelease";
 import { RepositoryRequestError } from "../../core/errors";
 import { RemoteRepositoryClient } from "../../publication/client";
-import { RepositorySourceClient } from "../../sources/client";
 import type { CollectionPublisher } from "../CollectionAuthoring";
 import type { AuthoringHost } from "../preparations/prepare";
 import {
@@ -35,20 +34,19 @@ export async function publishPreparedCollection(
     }
     let receipt = await readReceipt(path, expectedDigest, credential);
     let added = false;
-    if (!receipt) {
+    if (!receipt || !receipt.sourcesStored) {
         await verifyPreparedSources(path, prepared);
-        const artifact = await prepareCollectionRelease(join(path, prepared.directory), host.contracts);
-        if (artifact.digest !== expectedDigest || artifact.canonicalJson !== prepared.canonicalJson) {
-            throw new RepositoryRequestError(
-                "REJECTED",
-                "Prepared collection digest changed. Prepare again before publishing.",
-            );
-        }
+        const snapshot = parseSourceSnapshot(prepared.sourceJson);
+        const assets = snapshot.assets.map((asset) => ({
+            id: asset.path.slice(7),
+            bytes: Bun.file(join(path, prepared.directory, asset.path)),
+        }));
         try {
             const published = await new RemoteRepositoryClient(publisher.repositoryUrl, credential, publisher).push({
                 kind: "collection",
-                canonicalJson: artifact.canonicalJson,
-                assets: artifact.assets,
+                canonicalJson: prepared.canonicalJson,
+                sourceJson: prepared.sourceJson,
+                assets,
             });
             if (published.digest !== expectedDigest) {
                 throw new Error("Publication digest mismatch");
@@ -61,7 +59,7 @@ export async function publishPreparedCollection(
                 repositoryId: credential.repositoryId,
                 namespace: credential.namespace,
                 added: published.added,
-                sourcesStored: false,
+                sourcesStored: true,
             } satisfies PublicationReceipt;
         } catch (error) {
             if (error instanceof RepositoryRequestError) {
@@ -71,16 +69,10 @@ export async function publishPreparedCollection(
         }
     }
     try {
-        // Persist the exact receipt before source retention. A retry can finish without recompilation or re-upload.
+        // The Repository retained verified sources before exposing the release.
         await writeRecord(path, "publication.json", receipt);
-        await new RepositorySourceClient(publisher.repositoryUrl, credential, publisher).put(
-            release.collectionId,
-            release.version,
-            { sourceJson: prepared.sourceJson, releaseDigest: expectedDigest },
-        );
-        await writeRecord(path, "publication.json", { ...receipt, sourcesStored: true });
     } catch (error) {
-        throw new CollectionPublicationRecoveryError(id, expectedDigest, "sources-pending", { cause: error });
+        throw new CollectionPublicationRecoveryError(id, expectedDigest, "unknown", { cause: error });
     }
     return {
         added,

@@ -18,6 +18,8 @@ export type RepositoryDownloadAsset = Readonly<{
 export type PublicationEnvelope = Readonly<{
     kind: RepositoryArtifactKind;
     canonicalJson: string;
+    /** Exact editable sources for Repository-owned collection compilation. */
+    sourceJson?: string;
     assets: readonly PublicationAsset[];
 }>;
 
@@ -40,6 +42,8 @@ export type PublicationUploadAsset = Readonly<{
 export type PublicationUploadManifest = Readonly<{
     kind: RepositoryArtifactKind;
     canonicalJson: string;
+    /** Exact editable sources for Repository-owned collection compilation. */
+    sourceJson?: string;
     assets: readonly PublicationUploadAsset[];
 }>;
 
@@ -57,6 +61,12 @@ export type OwnedPublicationUploadManifest = PublicationUploadManifest & Readonl
 /** Storage-independent mutation boundary implemented by a repository server adapter. */
 export interface RepositoryPublicationRegistry {
     publish(envelope: PublicationEnvelope): Promise<RepositoryPublicationResult>;
+    buildCollection?(
+        envelope: PublicationEnvelope,
+        finalize: (publish: () => Promise<RepositoryPublicationResult>) => Promise<RepositoryPublicationResult>,
+        signal?: AbortSignal,
+    ): Promise<RepositoryPublicationResult>;
+    retainCollectionSources?(coordinate: RemoteCoordinate, sourceJson: string, releaseDigest: string): Promise<void>;
     checkCollection?(canonicalJson: string, namespace: string): Promise<{ complete: boolean; digest: string }>;
     setYank(
         coordinate: RemoteCoordinate,

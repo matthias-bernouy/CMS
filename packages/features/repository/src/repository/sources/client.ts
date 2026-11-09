@@ -1,3 +1,4 @@
+import { SOURCE_SNAPSHOT_RECORD_BYTES } from "./bounds";
 import { RepositoryConnection } from "../publication/transport/connection";
 import type { RepositoryNamespaceCredential } from "../publication/transport/credentials";
 import type { ArtifactSourceKind, RepositorySourceSnapshot } from "./interfaces";
@@ -12,8 +13,9 @@ export class RepositorySourceClient {
         this.connection = new RepositoryConnection(baseUrl, credential, options);
     }
     async get(collectionId: string, version: string): Promise<RepositorySourceSnapshot | null> {
-        return (await this.request("v1/source-snapshots", "QUERY", {
-            collectionId,
+        return (await this.request("v1/source-snapshots/read", "QUERY", {
+            kind: "collection",
+            id: collectionId,
             version,
         })) as RepositorySourceSnapshot | null;
     }
@@ -21,7 +23,7 @@ export class RepositorySourceClient {
         return this.request("v1/source-snapshots/put", "POST", { collectionId, version, ...snapshot });
     }
     async getArtifact(kind: ArtifactSourceKind, id: string, version: string): Promise<RepositorySourceSnapshot | null> {
-        return (await this.request("v1/artifact-source-snapshots", "QUERY", {
+        return (await this.request("v1/source-snapshots/read", "QUERY", {
             kind,
             id,
             version,
@@ -40,7 +42,7 @@ export class RepositorySourceClient {
                 namespaceRevision: this.credential.revision,
             },
             true,
-            4 * 1024 * 1024,
+            SOURCE_SNAPSHOT_RECORD_BYTES,
         );
     }
 }

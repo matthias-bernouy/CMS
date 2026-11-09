@@ -6,6 +6,10 @@ export const authoringImplementation = implementFeature(authoringFeature, {
         if (!dependencies.authoring) {
             throw new TypeError("Authoring requires an injected authoring service");
         }
-        return { authoring: dependencies.authoring };
+        return {
+            authoring: dependencies.authoring,
+            authoringOperations: dependencies.authoringOperations,
+            authoringAuthority: dependencies.authoringAuthority,
+        };
     },
 });

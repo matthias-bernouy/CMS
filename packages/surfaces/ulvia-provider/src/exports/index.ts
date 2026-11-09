@@ -1,3 +1,4 @@
+export { createRepositoryOperationQueries } from "../capabilities/features/services/publicationOperations";
 export { default as systemManifest } from "./provider/definition.json";
 export { createInstallationOperationQueries } from "../capabilities/features/services/installations/operations";
 export { createProviderOperationAdapter } from "../capabilities/features/services/operations";

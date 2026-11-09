@@ -72,7 +72,9 @@ Complete site-language removal/migration workflows are not implemented.
 
 ## Bounds
 
-A release permits at most 4,096 texts and 32 locales per text. Values contain
+A release permits at most 8,192 texts and 32 locales per text. Values contain
 at most 8,192 UTF-16 code units, with release-wide bounds as well. Unknown
 fields, duplicate IDs/locales, objects and dynamic text syntax refuse admission.
 See [collections](collections.md) and [validation](validation.md).
+
+Collection metadata translations allow up to 65,536 messages per locale, independently of the 8,192 text definitions.

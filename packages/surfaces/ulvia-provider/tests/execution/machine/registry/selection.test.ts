@@ -1,3 +1,8 @@
+import {
+    MemoryProviderOperationStore,
+    ProviderOperationExecutor,
+    createProviderOperationAdapter,
+} from "@bernouy/ulvia-provider";
 import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { registerOfficialFeatures, loadOfficialFeatures } from "@bernouy/ulvia-provider/capabilities";
@@ -8,7 +13,11 @@ import { repositoryServices } from "./services";
 test("Repository mounting requires its exact pin and services while unselected profiles require neither", async () => {
     const build = await loadOfficialFeatures();
     const pin = build.implementations.find(({ contractId }) => contractId === "ulvia/repository")!;
-    const options = { providerId: "ulvia/primary-provider", scope: { siteId: "default", instanceId: "instance-a" } };
+    const options = {
+        operations: createProviderOperationAdapter(new ProviderOperationExecutor(new MemoryProviderOperationStore())),
+        providerId: "ulvia/primary-provider",
+        scope: { siteId: "default", instanceId: "instance-a" },
+    };
     let reads = 0;
     const services = {
         get repository(): never {

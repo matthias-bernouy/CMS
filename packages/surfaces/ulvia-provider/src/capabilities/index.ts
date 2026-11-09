@@ -1,3 +1,7 @@
+import {
+    createRepositoryOperationQueries,
+    createAuthoringOperationQueries,
+} from "./features/services/publicationOperations";
 import { createInstallationOperationQueries } from "./features/services/installations/operations";
 import { createProviderOperationAdapter } from "./features/services/operations";
 import { repositoryAccountResolver } from "./features/services/repository";
@@ -28,6 +32,19 @@ export async function registerOfficialProviderCapabilities(
                 management: providerManagement,
                 sources: collectionSources,
                 discovery: dependencies.repositoryDiscovery,
+                authoringAuthority: gateway
+                    ? {
+                          administrator: async (actor: { providerId: string; subjectId: string }) => {
+                              const sub = await gateway.identities.resolve(
+                                  { providerId: actor.providerId },
+                                  actor.subjectId,
+                              );
+                              return Boolean(sub && (await gateway.administrators.get(sub)).enabled);
+                          },
+                      }
+                    : undefined,
+                authoringOperations: operations ? createAuthoringOperationQueries(operations) : undefined,
+                repositoryOperations: operations ? createRepositoryOperationQueries(operations) : undefined,
                 operations: operations ? createInstallationOperationQueries(operations) : undefined,
                 resolveRepositoryAccount:
                     dependencies.resolveRepositoryAccount ?? (gateway ? repositoryAccountResolver(gateway) : undefined),

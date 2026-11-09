@@ -33,6 +33,8 @@ export function repositoryServices(overrides: Overrides = {}): RepositoryService
             ...overrides.sources,
         },
         publications: {
+            authorize: unexpected,
+            build: unexpected,
             begin: unexpected,
             status: unexpected,
             asset: unexpected,

@@ -1,3 +1,4 @@
+import { legacySourceSnapshot } from "repository/repository/sources/bounds";
 import { defineCapability } from "repository/application/authoring/capabilities/define";
 import {
     getCollectionSourcesInputSchema,
@@ -38,9 +39,11 @@ export const getCollectionSources = defineCapability({
     output: sourceSnapshotSchema,
     errors,
     execute: ({ services, input }) =>
-        services.authoring.sources(
-            requiredText(input.namespace),
-            requiredText(input.collectionId),
-            requiredText(input.version),
+        legacySourceSnapshot(
+            services.authoring.sources(
+                requiredText(input.namespace),
+                requiredText(input.collectionId),
+                requiredText(input.version),
+            ),
         ),
 });

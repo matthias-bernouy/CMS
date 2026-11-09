@@ -1,3 +1,9 @@
+import {
+    MemoryProviderOperationStore,
+    ProviderOperationExecutor,
+    createProviderOperationAdapter,
+    createRepositoryOperationQueries,
+} from "@bernouy/ulvia-provider";
 import { randomUUID } from "node:crypto";
 import { compileProviderRoutes, createProviderContractRelay } from "@bernouy/cms-gateway/provider/server";
 import { DefaultProviderCapabilityDispatcher, ProviderCapabilityDispatchError } from "@bernouy/ulvia-provider";
@@ -10,6 +16,7 @@ const PREFIX = "/.cms/call/ulvia/repository";
 export async function repositoryFixtureHttp(
     service: RepositoryCapabilityService,
     authenticate: (token: string) => Promise<string | null>,
+    operations = new ProviderOperationExecutor(new MemoryProviderOperationStore()),
 ) {
     const build = await loadOfficialFeatures();
     const contracts = build.implementedContracts.filter(({ release }) => release.contractId === "ulvia/repository");
@@ -21,6 +28,7 @@ export async function repositoryFixtureHttp(
         dispatcher,
         {
             repository: service,
+            repositoryOperations: createRepositoryOperationQueries(operations),
             resolveRepositoryAccount: async (context) => {
                 if (!context.subjectId) {
                     throw new ProviderCapabilityDispatchError("ACTOR_UNAVAILABLE", 403);
@@ -29,7 +37,11 @@ export async function repositoryFixtureHttp(
             },
         },
         build.implementations.filter(({ contractId }) => contractId === "ulvia/repository"),
-        { providerId, scope: { siteId: "fixture", instanceId: "fixture-instance" } },
+        {
+            providerId,
+            scope: { siteId: "fixture", instanceId: "fixture-instance" },
+            operations: createProviderOperationAdapter(operations),
+        },
     );
     dispatcher.seal(contracts);
     const relay = createProviderContractRelay(routes, dispatcher, { siteId: "fixture", providerId }, NOOP_LOGGER);

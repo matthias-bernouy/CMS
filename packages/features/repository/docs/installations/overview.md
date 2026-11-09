@@ -61,3 +61,16 @@ Branch on the declared error code. `error.output.message` explains a refusal in 
 ## Verify the result
 
 Read back the affected resource using its owning contract, verify the requested state and inspect asynchronous operation details when a handle was returned. Report any checks that could not be performed. Diagnostic journal records help explain failures but are not durable business audit or proof of visual quality.
+
+
+## Large collection resource catalogues
+
+Installations 1.4 adds `install-collections`, `list-installed-collections`,
+`get-collection-details` and `configure-collection`, supporting
+up to 8,192 texts and theme tokens per collection. They share the existing site,
+revision, exact-release and browser-risk approval checks. The retained
+`install-collection` and `update-collection-configuration` APIs refuse results exceeding their original 4,096-resource
+count bounds before changing installation state. Existing reads retain their
+original output schemas; use the newer detail operation for larger catalogues.
+Content 1.1 adds `localization.texts.read` and `theme.read` for catalogues up to
+8,192 entries with the same administrator authorization and filtering semantics.

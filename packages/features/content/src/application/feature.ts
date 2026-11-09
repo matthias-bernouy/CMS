@@ -1,3 +1,5 @@
+import { themeRead } from "./capabilities/theme/read";
+import { localizationTextsRead } from "./capabilities/localization/texts.read";
 import { defineFeature } from "@bernouy/ulvia-sdk";
 import { mapContentError } from "content/application/capabilities/mapError";
 import { deliveryResolveResource } from "content/application/capabilities/delivery/resolve-resource";
@@ -33,12 +35,14 @@ export const contentFeature = defineFeature({
     "contractId": "ulvia/cms.content",
     "name": "CMS Content",
     "description": "Manage site settings, pages, localization and themes for one provider-selected CMS instance.",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "publisherId": "ulvia",
     "catalogue": { "icon": "pages", "categories": ["administration", "content"] },
     documents: new URL("../../docs/", import.meta.url),
     mapError: mapContentError,
     capabilities: [
+        themeRead,
+        localizationTextsRead,
         deliveryResolveResource,
         examplesGet,
         examplesList,

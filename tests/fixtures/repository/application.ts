@@ -1,3 +1,5 @@
+import { ProviderOperationExecutor, MemoryProviderOperationStore } from "@bernouy/ulvia-provider";
+import type { ProviderOperationStore } from "@bernouy/ulvia-provider";
 import type { RepositoryPublicationRegistry } from "@bernouy/repository/repository/publication";
 import { join } from "node:path";
 import { InMemoryPatRepository } from "@bernouy/auth";
@@ -20,7 +22,9 @@ export function repositoryApplication(
     root: string,
     repositoryId = "fixture-repository",
     publicationRegistry?: RepositoryPublicationRegistry,
+    operationStore: ProviderOperationStore = new MemoryProviderOperationStore(),
 ) {
+    const operations = new ProviderOperationExecutor(operationStore);
     const accounts = new Set<string>();
     const pats = new InMemoryPatRepository();
     const namespaces = new RepositoryNamespaces(new FixtureNamespaceStore(join(root, ".ownership-fixture")), {
@@ -42,11 +46,16 @@ export function repositoryApplication(
         release: (coordinate) => reads.release(coordinate),
         asset: (coordinate, id) => reads.asset(coordinate, id),
     });
-    const ready = repositoryFixtureHttp(service, async (token) => {
-        const principal = await pats.verify(token);
-        return principal && accounts.has(principal.sub) ? principal.sub : null;
-    });
+    const ready = repositoryFixtureHttp(
+        service,
+        async (token) => {
+            const principal = await pats.verify(token);
+            return principal && accounts.has(principal.sub) ? principal.sub : null;
+        },
+        operations,
+    );
     return {
+        operations,
         index,
         handle: async (request: Request) => (await ready)(request),
         service,
@@ -62,6 +71,7 @@ export function repositoryApplication(
             return { accountId, token, patId: pat.id };
         },
         close: async () => {
+            await operations.stop();
             try {
                 await search.close();
             } finally {

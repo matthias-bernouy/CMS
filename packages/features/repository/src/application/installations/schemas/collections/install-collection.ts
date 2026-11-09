@@ -43,3 +43,15 @@ export const installCollectionOutputSchema = z.strictObject({
         .max(256)
         .readonly(),
 });
+
+export const installCollectionsOutputSchema = installCollectionOutputSchema.extend({
+    items: installCollectionOutputSchema.shape.items
+        .unwrap()
+        .element.extend({
+            textCount: z.int().min(0).max(8192),
+            themeTokenCount: z.int().min(0).max(8192),
+        })
+        .array()
+        .max(256)
+        .readonly(),
+});

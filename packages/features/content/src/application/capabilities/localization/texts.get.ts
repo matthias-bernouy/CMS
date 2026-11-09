@@ -1,3 +1,6 @@
+import type { z } from "zod";
+import type { ContentServices } from "content/application/interfaces/ContentServices";
+import { ContentCapabilityError } from "content/application/core/capabilities/errors";
 import { defineCapability } from "content/application/capabilities/define";
 import {
     localizationTextsGetInputSchema,
@@ -39,19 +42,35 @@ export const localizationTextsGet = defineCapability({
     output: localizationTextsGetOutputSchema,
     errors,
     execute: async ({ input, services, context }) => {
-        const [snapshot, system] = await Promise.all([
-            services.contributions.snapshot(context.siteId),
-            readSystemSnapshot(services.repo),
-        ]);
-        return snapshot.texts(input.collectionId, {
-            locale: optionalText(input.locale),
-            group: optionalText(input.group),
-            search: optionalText(input.search),
-            siteLocales: [
-                system.system.site.language,
-                ...system.system.site.additionalLanguages,
-                ...system.system.site.activeLanguages,
-            ],
-        });
+        const result = await readTextCatalogue(services, context.siteId, input);
+        if (
+            result.items.length > 4096 ||
+            result.groups.length > 4096 ||
+            result.groups.some(({ count }) => count > 4096)
+        ) {
+            throw new ContentCapabilityError("CORE_UNAVAILABLE");
+        }
+        return result;
     },
 });
+
+export async function readTextCatalogue(
+    services: ContentServices,
+    siteId: string,
+    input: z.input<typeof localizationTextsGetInputSchema>,
+) {
+    const [snapshot, system] = await Promise.all([
+        services.contributions.snapshot(siteId),
+        readSystemSnapshot(services.repo),
+    ]);
+    return snapshot.texts(input.collectionId, {
+        locale: optionalText(input.locale),
+        group: optionalText(input.group),
+        search: optionalText(input.search),
+        siteLocales: [
+            system.system.site.language,
+            ...system.system.site.additionalLanguages,
+            ...system.system.site.activeLanguages,
+        ],
+    });
+}

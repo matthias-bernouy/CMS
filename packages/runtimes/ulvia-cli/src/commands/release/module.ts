@@ -25,5 +25,10 @@ export async function prepareReleaseModule(directory: string): Promise<readonly 
     ) {
         throw new TypeError("Release module must prepare between 1 and 256 admitted resources");
     }
+    for (const resource of resources) {
+        if (resource.kind === "collection" && typeof resource.sourceJson !== "string") {
+            throw new TypeError("Collection release modules must include their editable source snapshot");
+        }
+    }
     return resources as readonly PreparedResource[];
 }

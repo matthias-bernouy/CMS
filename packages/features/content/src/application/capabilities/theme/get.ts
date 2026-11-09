@@ -1,3 +1,6 @@
+import type { ContentServices } from "content/application/interfaces/ContentServices";
+import type { ThemeWorkspaceSelection } from "content/application/core/capabilities/themeProjection";
+import { ContentCapabilityError } from "content/application/core/capabilities/errors";
 import { defineCapability } from "content/application/capabilities/define";
 import { themeGetInputSchema, themeGetOutputSchema } from "content/application/schemas/theme";
 import { serviceErrors as errors } from "content/application/schemas/errors";
@@ -35,7 +38,15 @@ export const themeGet = defineCapability({
     output: themeGetOutputSchema,
     errors,
     execute: async ({ input, services, context }) => {
-        const { revision, theme } = await readTheme(services, context.siteId);
-        return projectThemeWorkspace(theme, revision, input);
+        const result = await readThemeWorkspace(services, context.siteId, input);
+        if (result.tokens.length > 4096) {
+            throw new ContentCapabilityError("CORE_UNAVAILABLE");
+        }
+        return result;
     },
 });
+
+export async function readThemeWorkspace(services: ContentServices, siteId: string, input: ThemeWorkspaceSelection) {
+    const { revision, theme } = await readTheme(services, siteId);
+    return projectThemeWorkspace(theme, revision, input);
+}

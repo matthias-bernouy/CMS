@@ -1,3 +1,4 @@
+import { legacySourceSnapshot } from "repository/repository/sources/bounds";
 import { defineCapability } from "repository/application/authoring/capabilities/define";
 import {
     getProviderManifestSourcesInputSchema,
@@ -37,10 +38,12 @@ export const getProviderManifestSources = defineCapability({
     output: sourceSnapshotSchema,
     errors,
     execute: ({ services, input }) =>
-        services.authoring.artifactSources(
-            "provider-manifest",
-            requiredText(input.namespace),
-            requiredText(input.providerId),
-            requiredText(input.version),
+        legacySourceSnapshot(
+            services.authoring.artifactSources(
+                "provider-manifest",
+                requiredText(input.namespace),
+                requiredText(input.providerId),
+                requiredText(input.version),
+            ),
         ),
 });

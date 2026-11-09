@@ -1,8 +1,9 @@
+import { collectionSourceAssets } from "../../publication/sourceAssets";
+import { buildCollectionBundle, publishBuiltCollection, publishCollectionBundle } from "../builds/collections";
 import { createHash } from "node:crypto";
 import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { checkCollectionHistory } from "../artifacts/collectionHistory";
 import { RepositoryRequestError } from "../../core/errors";
-import { admitCollectionReleaseJson } from "repository/collections/core/admission/admitCollectionRelease";
 import { parseCollectionReleaseJson } from "repository/collections/core/parsing/parseCollectionRelease";
 import { CollectionPublicationError } from "repository/collections/core/errors";
 import type {
@@ -34,11 +35,7 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
             const yanks = new LocalRepositoryYanks(this.root);
             const contracts = new LocalContractReleases(files, yanks);
             if (envelope.kind === "collection") {
-                const artifact = await admitCollectionReleaseJson(envelope.canonicalJson, envelope.assets, {
-                    contracts: await contracts.catalogue(),
-                });
-                const added = await new LocalCollectionRepository(this.root).store(artifact);
-                return result(envelope.kind, artifact.release, artifact.digest, added);
+                return publishCollectionBundle(this.root, envelope, await contracts.catalogue());
             }
             if (envelope.kind === "contract") {
                 const { added, admission } = await contracts.publish(envelope.canonicalJson, envelope.assets);
@@ -54,6 +51,43 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
         });
         this.index?.invalidate();
         return published;
+    }
+
+    async buildCollection(
+        envelope: PublicationEnvelope,
+        finalize: (publish: () => Promise<RepositoryPublicationResult>) => Promise<RepositoryPublicationResult>,
+        signal?: AbortSignal,
+    ) {
+        const contracts = () =>
+            new LocalContractReleases(
+                new LocalArtifactFiles(this.root),
+                new LocalRepositoryYanks(this.root),
+            ).catalogue();
+        const built = await buildCollectionBundle(this.root, envelope, contracts);
+        const published = await finalize(() =>
+            withRepositoryWriteLock(this.root, async () =>
+                publishBuiltCollection(this.root, built, await contracts(), signal),
+            ),
+        );
+        this.index?.invalidate();
+        return published;
+    }
+
+    async retainCollectionSources(coordinate: RemoteCoordinate, sourceJson: string, releaseDigest: string) {
+        const artifact = await new LocalCollectionRepository(this.root).get(
+            coordinate.publisherId,
+            coordinate.id,
+            coordinate.version,
+        );
+        if (coordinate.kind !== "collection" || !artifact || artifact.digest !== releaseDigest) {
+            throw new RepositoryRequestError("REJECTED", "Source repair requires one exact published collection");
+        }
+        await this.publish({
+            kind: "collection",
+            canonicalJson: artifact.canonicalJson,
+            assets: collectionSourceAssets(sourceJson, artifact.assets),
+            sourceJson,
+        });
     }
 
     async checkCollection(canonicalJson: string, namespace: string) {

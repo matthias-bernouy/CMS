@@ -1,3 +1,4 @@
+export { collectionSourceAssets } from "repository/repository/publication/sourceAssets";
 export { RemoteRepositoryClient, type RepositoryAssetDownloadSink } from "repository/repository/publication/client";
 export {
     encodePublicationUpload,

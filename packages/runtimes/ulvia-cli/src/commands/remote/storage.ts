@@ -1,3 +1,5 @@
+import { collectionSourceAssets } from "@bernouy/repository/repository/publication";
+import { FilesystemRepositorySourceStore } from "@bernouy/repository/repository/sources";
 import { contractAssetDefinitions } from "@bernouy/ulvia-contracts/documentation";
 import { admitContractBundleJson, admitContractReleaseJson, parseContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
@@ -31,12 +33,21 @@ export async function loadLocal(root: string, coordinate: RemoteCoordinate, read
         if (!artifact) {
             throw new Error("Local collection release not found");
         }
+        const sources = await new FilesystemRepositorySourceStore(root).get(
+            coordinate.publisherId,
+            coordinate.id,
+            coordinate.version,
+        );
+        if (sources && sources.releaseDigest !== artifact.digest) {
+            throw new Error("Local source snapshot does not match its release");
+        }
         return {
             digest: artifact.digest,
             envelope: {
                 kind: coordinate.kind,
                 canonicalJson: artifact.canonicalJson,
-                assets: await collectionAssets(artifact.assets),
+                ...(sources ? { sourceJson: sources.sourceJson } : {}),
+                assets: sources ? collectionSourceAssets(sources.sourceJson, artifact.assets) : artifact.assets,
             } satisfies PublicationEnvelope,
         };
     }
@@ -98,10 +109,6 @@ export async function storeLocal(
     const admission = await admitProviderManifestJson(remote.canonicalJson, await contracts.catalogue());
     assertDigest(admission.digest, remote.expectedDigest);
     return (await new LocalProviderReleases(files, contracts, yanks).release(remote.canonicalJson)).added;
-}
-
-async function collectionAssets(assets: readonly { id: string; bytes: Blob }[]): Promise<PublicationAsset[]> {
-    return assets.map((asset) => ({ id: asset.id, bytes: asset.bytes }));
 }
 
 async function contractAssets(files: LocalArtifactFiles, canonicalJson: string): Promise<PublicationAsset[]> {

@@ -1,3 +1,4 @@
+import { authoringTransport } from "./transport";
 import { invokeHttp, resolvedContract } from "../../execution/messages/fixtures";
 import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -63,4 +64,35 @@ test("invalid collection sources return bounded actionable diagnostics and never
     } finally {
         await rm(root, { recursive: true, force: true });
     }
+});
+
+test("the expanded source getter preserves administrator and instance fences and legacy output bounds", async () => {
+    const sourceJson = JSON.stringify({
+        files: Array.from({ length: 3 }, (_, index) => ({
+            path: index ? `texts/${index}.json` : "definition.json",
+            content: "x".repeat(512 * 1024),
+        })),
+    });
+    let reads = 0;
+    const snapshot = { sourceJson, releaseDigest: `sha256:${"a".repeat(64)}` };
+    const { call } = await authoringTransport({
+        sources: async () => {
+            reads++;
+            return snapshot;
+        },
+    });
+    const input = { namespace: "publisher", id: "publisher/kit", kind: "collection", version: "1.0.0" };
+    expect((await call("get-source-snapshot", input, { claims: { actorKind: "user" } })).status).toBe(403);
+    expect((await call("get-source-snapshot", input, { claims: { instanceId: "instance-b" } })).status).toBe(401);
+    expect(reads).toBe(0);
+    const response = await call("get-source-snapshot", input);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(snapshot);
+    const old = await call("get-collection-sources", {
+        namespace: "publisher",
+        collectionId: "publisher/kit",
+        version: "1.0.0",
+    });
+    expect(old.status).toBe(422);
+    expect(reads).toBe(2);
 });

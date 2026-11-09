@@ -52,9 +52,9 @@ base64 string is not an immutable asset reference.
 
 ## Bounds and validation
 
-Source JSON is bounded to 1 MiB UTF-8, 2,048 text files, 64 asset references,
-20 path segments and 524,288 UTF-16 code units per text file. Assets are read
-sequentially, limited to 16 MiB each and 64 MiB including the source payload.
+Source JSON is bounded to 8 MiB UTF-8, 16,384 files including asset references,
+1,024 asset references, 20 path segments and 1 MiB UTF-8 per text file. Contract fixtures are read
+sequentially, limited to 16 MiB each and 64 MiB combined, independently of source JSON.
 Each path is relative, unique and nonoverlapping; traversal and hidden segments
 are refused. Contract admission applies its additional schema, fixture,
 documentation and protocol limits.

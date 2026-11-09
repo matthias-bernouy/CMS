@@ -346,8 +346,10 @@ Use readonly Zod wrappers for readonly port results; they preserve emitted schem
 union and the explicit v1 length bound.
 
 Retaining an older admitted contract is explicit: `./provider` exports
-`loadCompatibleImplementation` to compare its complete execution signatures with
+`loadCompatibleImplementation` to compare its execution signatures with
 one code-owned implementation, and `selectImplementationBuilds` to select exact
-pins across verified builds. Hosts must supply their own bounded retention policy;
+pins across verified builds. Executors may widen input string/binary ceilings;
+retained receivers still apply their original bounds. Output schemas and other
+execution fields remain exact. Hosts must supply their own bounded retention policy;
 unknown or conflicting pins refuse before handler registration. See the
 [runtime attachment guide](../../../docs/development/sdk-runtime.md).

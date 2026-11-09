@@ -1,3 +1,4 @@
+import { assertResourceCounts } from "./resourceBounds";
 import type {
     InstallationServices,
     CollectionSourceReader,
@@ -37,15 +38,25 @@ export async function installCollections(
     services: InstallationServices,
     siteId: string,
     input: InstallCollectionInput,
+    maximumResourceCount = 4096,
 ) {
     const before = await services.collections.listInstalled(siteId);
     if (before.revision !== input.expectedRevision) {
         throw new InstallationError("REVISION_CONFLICT");
     }
+    assertResourceCounts(before.items, maximumResourceCount);
     const staged = await collectionTargets(input.targets, services.sources);
     const installed = new Set(before.items.map(({ collectionId }) => collectionId));
     for (const target of staged) {
         const artifact = await services.collections.getRelease(target.digest);
+        const tokens =
+            artifact?.release.theme?.categories.reduce(
+                (total, category) => total + category.entries.filter((entry) => entry.type !== "font-face").length,
+                0,
+            ) ?? 0;
+        if ((artifact?.release.texts?.length ?? 0) > maximumResourceCount || tokens > maximumResourceCount) {
+            throw new InstallationError("INVALID_INPUT");
+        }
         if (artifact && installed.has(artifact.release.collectionId)) {
             throw new InstallationError("INVALID_STATE");
         }

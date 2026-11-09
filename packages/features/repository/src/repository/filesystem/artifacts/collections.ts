@@ -28,12 +28,14 @@ export class LocalCollectionRepository {
         private readonly verifier?: CollectionVerifier,
     ) {}
 
-    async store(artifact: AdmittedCollectionRelease): Promise<boolean> {
+    async store(artifact: AdmittedCollectionRelease, beforeVisibility?: () => Promise<void>): Promise<boolean> {
         const { publisherId, collectionId, version } = artifact.release;
         const path = this.releasePath(publisherId, collectionId, version);
         const existing = await this.getMetadata(publisherId, collectionId, version);
         if (existing) {
-            return assertSameDigest(existing, artifact);
+            const added = assertSameDigest(existing, artifact);
+            await beforeVisibility?.();
+            return added;
         }
         const history = (await this.listMetadata())
             .filter((item) => item.release.collectionId === collectionId)
@@ -56,6 +58,8 @@ export class LocalCollectionRepository {
         const temporary = join(directory, `.${randomUUID()}.tmp`);
         await durableWriteFile(temporary, artifact.canonicalJson, { flag: "wx", mode: 0o600 });
         try {
+            // All dependencies, including editable sources, must be durable before the release marker.
+            await beforeVisibility?.();
             await link(temporary, path);
             await syncDirectory(directory);
             return true;

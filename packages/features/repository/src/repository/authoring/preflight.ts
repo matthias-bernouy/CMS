@@ -1,3 +1,4 @@
+import { DEFAULT_COLLECTION_LIMITS } from "repository/collections/core/limits";
 import { NamespaceAccessError } from "./namespaces";
 import type { RepositoryNamespaceCredential } from "../publication/transport/credentials";
 import type { AdmittedCollectionRelease } from "repository/collections/interfaces/CollectionAdmission";
@@ -22,7 +23,7 @@ export async function collectionPreflight(
         repositoryId: status.repositoryId,
         origin: new URL(publisher.repositoryUrl).origin,
     };
-    if (!status.configured || Buffer.byteLength(artifact.canonicalJson) > 1024 * 1024) {
+    if (!status.configured || Buffer.byteLength(artifact.canonicalJson) > DEFAULT_COLLECTION_LIMITS.maxDocumentBytes) {
         return result;
     }
     let credential: RepositoryNamespaceCredential;

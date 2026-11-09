@@ -2,17 +2,20 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 
 const MAX_TREE_DEPTH = 16;
-const MAX_JSON_FILES = 2_048;
-const MAX_SOURCE_FILES = 2_048;
+const MAX_JSON_FILES = 16_384;
+const MAX_SOURCE_FILES = 16_384;
 
 export type SourceFile = Readonly<{
     absolutePath: string;
     relativePath: string;
 }>;
 
-export async function scanFileSourceTree(root: string): Promise<SourceFile[]> {
+export async function scanFileSourceTree(
+    root: string,
+    excludedRootFiles: ReadonlySet<string> = new Set(),
+): Promise<SourceFile[]> {
     const files: SourceFile[] = [];
-    await visitFileTree(root, root, 0, files).catch((error: NodeJS.ErrnoException) => {
+    await visitFileTree(root, root, 0, files, excludedRootFiles).catch((error: NodeJS.ErrnoException) => {
         if (error.code !== "ENOENT") {
             throw error;
         }
@@ -29,7 +32,13 @@ export async function scanJsonSourceTree(
     return files.sort((left, right) => left.relativePath.localeCompare(right.relativePath));
 }
 
-async function visitFileTree(root: string, directory: string, depth: number, files: SourceFile[]): Promise<void> {
+async function visitFileTree(
+    root: string,
+    directory: string,
+    depth: number,
+    files: SourceFile[],
+    excludedRootFiles: ReadonlySet<string>,
+): Promise<void> {
     if (depth > MAX_TREE_DEPTH) {
         throw new Error(`Source tree must not exceed ${MAX_TREE_DEPTH} directory levels`);
     }
@@ -37,9 +46,9 @@ async function visitFileTree(root: string, directory: string, depth: number, fil
         const absolutePath = join(directory, entry.name);
         const relativePath = absolutePath.slice(root.length + 1).replaceAll("\\", "/");
         if (entry.isDirectory()) {
-            await visitFileTree(root, absolutePath, depth + 1, files);
+            await visitFileTree(root, absolutePath, depth + 1, files, excludedRootFiles);
         } else if (entry.isFile()) {
-            if (entry.name !== ".gitkeep") {
+            if (entry.name !== ".gitkeep" && !(depth === 0 && excludedRootFiles.has(entry.name))) {
                 files.push({ absolutePath, relativePath });
             }
         } else {

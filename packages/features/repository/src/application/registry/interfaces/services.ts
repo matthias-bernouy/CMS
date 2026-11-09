@@ -8,5 +8,23 @@ export interface RepositoryActor {
 }
 export interface RepositoryServices {
     readonly repository: RepositoryService;
+    readonly repositoryOperations?: {
+        get(
+            siteId: string,
+            input: {
+                operationId: string;
+                namespace: string;
+                namespaceRevision: number;
+                uploadId: string;
+            },
+            actor: RepositoryActor,
+        ): Promise<{
+            operationId: string;
+            status: "queued" | "running" | "succeeded" | "failed";
+            result?: unknown;
+            errorCode?: string;
+            errorOutput?: unknown;
+        }>;
+    };
     resolveRepositoryAccount(context: RepositoryActor): Promise<string>;
 }

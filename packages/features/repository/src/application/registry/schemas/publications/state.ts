@@ -1,3 +1,4 @@
+import { DEFAULT_COLLECTION_LIMITS } from "repository/collections/core/limits";
 import { z } from "zod";
 import { contractString } from "@bernouy/ulvia-sdk";
 export const publicationYankInputSchema = z.strictObject({
@@ -26,7 +27,7 @@ export const publicationYankOutputSchema = z
 export const publicationCheckCollectionInputSchema = z.strictObject({
     namespace: contractString({ minLength: 1, maxLength: 96 }),
     namespaceRevision: z.int().min(1),
-    canonicalJson: contractString({ maxLength: 1048576, sensitive: true }),
+    canonicalJson: contractString({ maxLength: DEFAULT_COLLECTION_LIMITS.maxDocumentBytes, sensitive: true }),
 });
 
 export const publicationCheckCollectionOutputSchema = z

@@ -16,7 +16,7 @@ export function repositoryPublications(ports: RepositoryCapabilityPorts) {
     const owned = async <T>(
         input: PublicationStatusInput,
         account: string | undefined,
-        operation: () => Promise<T>,
+        operation: (manifest: Awaited<ReturnType<typeof ports.uploads.describe>>) => Promise<T>,
     ) => {
         const accountId = repositoryAccount(account);
         return ports.namespaces.execute(accountId, input.namespace, input.namespaceRevision, async () => {
@@ -32,10 +32,17 @@ export function repositoryPublications(ports: RepositoryCapabilityPorts) {
                     "Upload belongs to a different account or ownership revision",
                 );
             }
-            return operation();
+            return operation(manifest);
         });
     };
     return Object.freeze({
+        authorize: (input: PublicationStatusInput, accountId?: string, sourceBuild = false) =>
+            owned(input, accountId, async (manifest) => {
+                if (sourceBuild && (manifest.kind !== "collection" || manifest.sourceJson === undefined)) {
+                    throw new RepositoryRequestError("REJECTED", "A collection build requires editable sources");
+                }
+                return null;
+            }),
         async begin(input: PublicationBeginInput, account: string | undefined, binary?: RepositoryBinaryInput) {
             const accountId = repositoryAccount(account);
             return ports.namespaces.execute(accountId, input.namespace, input.namespaceRevision, async () => {
@@ -73,6 +80,22 @@ export function repositoryPublications(ports: RepositoryCapabilityPorts) {
                 );
                 return null;
             }),
+        async build(input: PublicationStatusInput, accountId?: string, signal?: AbortSignal) {
+            signal?.throwIfAborted();
+            await owned(input, accountId, async (manifest) => {
+                if (
+                    manifest.kind !== "collection" ||
+                    manifest.sourceJson === undefined ||
+                    !ports.registry.buildCollection
+                ) {
+                    throw new RepositoryRequestError("REJECTED", "Repository source builds are unavailable");
+                }
+            });
+            const result = await ports.uploads.commit(input.uploadId, (envelope) =>
+                ports.registry.buildCollection!(envelope, (publish) => owned(input, accountId, publish), signal),
+            );
+            return { kind: result.kind, added: result.added, digest: result.digest };
+        },
         commit: (input: PublicationStatusInput, accountId?: string) =>
             owned(input, accountId, async () => {
                 const result = await ports.uploads.commit(input.uploadId, (envelope) =>

@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
 import { rm, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { CollectionAuthoring, CollectionPublicationRecoveryError } from "@bernouy/repository/repository/authoring";
+import { CollectionAuthoring } from "@bernouy/repository/repository/authoring";
 import { authoringFixture, sourceSnapshot } from "./fixture";
 
-test("durable publication receipt resumes private sources after restart without rebuilding or uploading", async () => {
+test("a durable receipt replays after restart without a CMS rebuild or a separate source write", async () => {
     const f = await authoringFixture();
     const original = globalThis.fetch;
     try {
@@ -15,17 +15,18 @@ test("durable publication receipt resumes private sources after restart without 
             }
             return original(input, init);
         }, original);
-        await expect(f.authoring.publish(prepared.preparationId, prepared.digest)).rejects.toMatchObject({
-            publicationState: "sources-pending",
-            preparationId: prepared.preparationId,
+        expect(await f.authoring.publish(prepared.preparationId, prepared.digest)).toMatchObject({
             digest: prepared.digest,
+            added: true,
         });
-        expect(await f.authoring.sources("community", "community/sample", "1.0.0")).toBeNull();
+        expect((await f.authoring.sources("community", "community/sample", "1.0.0"))?.releaseDigest).toBe(
+            prepared.digest,
+        );
         expect(
             JSON.parse(
                 await readFile(join(f.root, "preparations", prepared.preparationId, "publication.json"), "utf8"),
             ),
-        ).toMatchObject({ sourcesStored: false, digest: prepared.digest });
+        ).toMatchObject({ sourcesStored: true, digest: prepared.digest });
         await rm(join(f.root, "preparations", prepared.preparationId, "sample"), { recursive: true });
         const restarted = new CollectionAuthoring(
             {
@@ -65,7 +66,11 @@ test("lost commit responses expose an unknown outcome and exact replay completes
         const prepared = await f.authoring.prepare(sourceSnapshot());
         globalThis.fetch = Object.assign(async (input: RequestInfo | URL, init?: RequestInit) => {
             const response = await original(input, init);
-            if (String(input).endsWith("/v1/uploads/commit") && response.ok) {
+            if (
+                String(input).endsWith("/v1/uploads/build-status") &&
+                response.ok &&
+                (await response.clone().json()).status === "succeeded"
+            ) {
                 await response.body?.cancel();
                 throw new Error("Lost commit response");
             }
@@ -93,24 +98,14 @@ test("resuming a receipt still requires live namespace authority", async () => {
     const original = globalThis.fetch;
     try {
         const prepared = await f.authoring.prepare(sourceSnapshot());
-        globalThis.fetch = Object.assign(
-            async (input: RequestInfo | URL, init?: RequestInit) =>
-                String(input).endsWith("/v1/source-snapshots/put")
-                    ? new Response(null, { status: 503 })
-                    : original(input, init),
-            original,
-        );
-        await expect(f.authoring.publish(prepared.preparationId, prepared.digest)).rejects.toBeInstanceOf(
-            CollectionPublicationRecoveryError,
-        );
-        globalThis.fetch = original;
+        await f.authoring.publish(prepared.preparationId, prepared.digest);
         await f.application.pats.revoke(f.account.accountId, f.account.patId);
         await expect(f.authoring.publish(prepared.preparationId, prepared.digest)).rejects.toThrow();
         expect(
             JSON.parse(
                 await readFile(join(f.root, "preparations", prepared.preparationId, "publication.json"), "utf8"),
             ),
-        ).toMatchObject({ sourcesStored: false });
+        ).toMatchObject({ sourcesStored: true });
     } finally {
         globalThis.fetch = original;
         await f.close();

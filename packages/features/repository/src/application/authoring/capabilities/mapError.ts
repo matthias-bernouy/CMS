@@ -1,3 +1,4 @@
+import { AuthoringAuthorityError } from "../core/authority";
 import type { FeatureErrorMapper } from "@bernouy/ulvia-sdk";
 import { AuthoringInputError } from "repository/application/authoring/core/input";
 import { AuthoringDependencyError } from "repository/repository/authoring/resources/dependencies/transport";
@@ -5,6 +6,9 @@ import { CollectionPublicationRecoveryError } from "repository/repository/author
 import { NamespaceAccessError } from "repository/repository/authoring/namespaces";
 import { RepositoryRequestError } from "repository/repository/core/errors";
 export const mapAuthoringError: FeatureErrorMapper = (cause) => {
+    if (cause instanceof AuthoringAuthorityError) {
+        return { code: "FORBIDDEN", output: { message: "Current administrator authority is required." } };
+    }
     if (cause instanceof AuthoringDependencyError) {
         return { code: "CORE_UNAVAILABLE", output: { message: "The authoring dependency is unavailable." } };
     }

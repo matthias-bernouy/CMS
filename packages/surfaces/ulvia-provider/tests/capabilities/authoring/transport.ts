@@ -1,3 +1,9 @@
+import { createAuthoringOperationQueries } from "../../../src/capabilities/features/services/publicationOperations";
+import {
+    MemoryProviderOperationStore,
+    ProviderOperationExecutor,
+    createProviderOperationAdapter,
+} from "@bernouy/ulvia-provider";
 import { localizeFailureResponse } from "../../../src/dispatch/errors/response";
 import { createProviderHandler, compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
@@ -8,14 +14,26 @@ import type { AuthoringService } from "@bernouy/repository/features/authoring";
 import { authoringServices } from "./services";
 const providerId = "ulvia/primary-provider";
 const token = "authoring-test-provider-token-" + "x".repeat(40);
-export async function authoringTransport(service: Partial<AuthoringService> = {}) {
-    const ports = authoringServices(service);
+export async function authoringTransport(
+    service: Partial<AuthoringService> = {},
+    options: {
+        operations?: ProviderOperationExecutor;
+        administrator?: () => Promise<boolean>;
+    } = {},
+) {
+    const operations = options.operations ?? new ProviderOperationExecutor(new MemoryProviderOperationStore());
+    const ports = {
+        ...authoringServices(service),
+        authoringOperations: createAuthoringOperationQueries(operations),
+        authoringAuthority: { administrator: options.administrator ?? (async () => true) },
+    };
     const build = await loadOfficialFeatures();
     const releases = build.implementations.filter(({ contractId }) => contractId === "ulvia/cms.authoring");
     const contracts = build.implementedContracts.filter(({ release }) => release.contractId === "ulvia/cms.authoring");
     const routes = compileProviderRoutes(contracts);
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     await registerOfficialFeatures(dispatcher, ports, releases, {
+        operations: createProviderOperationAdapter(operations),
         providerId,
         scope: { siteId: "default", instanceId: "instance-a" },
     });
@@ -67,7 +85,7 @@ export async function authoringTransport(service: Partial<AuthoringService> = {}
             requestId: crypto.randomUUID(),
             instanceId: "instance-a",
             contractId: "ulvia/cms.authoring",
-            contractVersion: "1.1.0",
+            contractVersion: contracts[0]!.release.version,
             capabilityId: id,
             actorKind: "administrator",
             subjectId: "admin",

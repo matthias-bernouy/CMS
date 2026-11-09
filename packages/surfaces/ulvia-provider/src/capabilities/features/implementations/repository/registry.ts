@@ -8,6 +8,6 @@ export const repositoryImplementation = implementFeature(repositoryFeature, {
         if (!repository || !resolveRepositoryAccount) {
             throw new TypeError("Repository requires injected domain services and an authenticated account resolver");
         }
-        return { repository, resolveRepositoryAccount };
+        return { repository, resolveRepositoryAccount, repositoryOperations: dependencies.repositoryOperations };
     },
 });

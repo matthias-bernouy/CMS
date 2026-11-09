@@ -1,3 +1,4 @@
+import { compileRetainedFeatures } from "@bernouy/ulvia-provider/build";
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -12,10 +13,15 @@ test("retained deployed v1 contracts keep their executable APIs and exact runtim
     const releases = await Promise.all(
         index.contracts.map(async (path) => parseContractReleaseJson(await readFile(resolve(root, path)))),
     );
+    const retained = (await compileRetainedFeatures()).flatMap((build) => build.contracts);
     const support = new ProviderExecutionSupport();
     for (const reference of previous.releases) {
         expect(() => support.assert(reference, previous.image)).not.toThrow();
-        const current = releases.find(({ contractId }) => contractId === reference.contractId)!;
+        const current =
+            retained.find(({ digest }) => digest === reference.digest)?.release ??
+            releases.find(
+                ({ contractId, version }) => contractId === reference.contractId && version === reference.version,
+            )!;
         for (const [id, signature] of Object.entries(reference.capabilities)) {
             const capability = current.capabilities.find((capability) => capability.id === id);
             expect(capability, `${reference.contractId}/${id}`).toBeDefined();
@@ -63,4 +69,16 @@ test("the runtime support matrix includes exactly the current and explicitly ret
         expect(() => support.assert(pin, "runtime artifact")).not.toThrow();
     }
     expect(support.releases.some((pin) => pin.contractId === "ulvia/provider.cms-instances")).toBe(false);
+});
+
+test("durable publication retains the preceding Authoring and Registry 1.1 execution pins", () => {
+    const support = new ProviderExecutionSupport();
+    for (const [contractId, digest] of [
+        ["ulvia/cms.authoring", "sha256:454926be86079d930dc811bb60d5abde818fa8e03dd9d92374f6b33fc94df891"],
+        ["ulvia/repository", "sha256:6c459684fb72e50e8e8093e74563c3f111d3f007639df12d5ad09379c2f834ef"],
+    ]) {
+        expect(() =>
+            support.assert({ contractId: contractId!, version: "1.1.0", digest: digest! }, "previous release"),
+        ).not.toThrow();
+    }
 });

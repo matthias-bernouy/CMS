@@ -1,5 +1,5 @@
-import type { SourceGetOutput } from "repository/application/registry/interfaces/outputs";
-export type RepositorySourceSnapshot = NonNullable<SourceGetOutput>;
+import type { SourceReadOutput } from "repository/application/registry/interfaces/outputs";
+export type RepositorySourceSnapshot = NonNullable<SourceReadOutput>;
 
 export type ArtifactSourceKind = "contract" | "provider-manifest";
 

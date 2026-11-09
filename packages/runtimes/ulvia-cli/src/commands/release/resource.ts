@@ -1,4 +1,5 @@
 import { resourceName } from "@bernouy/ulvia-contracts/protocol";
+import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
@@ -12,7 +13,8 @@ import {
     LocalRepositoryYanks,
 } from "@bernouy/repository/repository/filesystem";
 import { prepareContractSource } from "@bernouy/repository/repository/authoring/build";
-import { prepareCollectionRelease } from "@bernouy/repository/collections/build";
+import { captureCollectionSources, compileCollectionSources } from "@bernouy/repository/repository/authoring/build";
+import { FilesystemRepositorySourceStore } from "@bernouy/repository/repository/sources";
 import type { ContentDiagnostic } from "@bernouy/content/page-document";
 
 export type PreparedResource =
@@ -20,6 +22,7 @@ export type PreparedResource =
     | Readonly<{ kind: "provider-manifest"; admission: AdmittedProviderManifest }>
     | Readonly<{
           kind: "collection";
+          sourceJson: string;
           admission: AdmittedCollectionRelease & { readonly diagnostics?: readonly ContentDiagnostic[] };
       }>;
 
@@ -44,7 +47,15 @@ export async function prepareResource(directory: string, contracts: ReleaseCatal
         };
     }
     if (definition.kind === "collection") {
-        return { kind: "collection", admission: await prepareCollectionRelease(directory, contracts) };
+        const captured = await captureCollectionSources(directory);
+        const built = await compileCollectionSources(
+            join(tmpdir(), "ulvia-collection-builds"),
+            captured.sourceJson,
+            captured.assets,
+            contracts,
+        );
+        assertFolder(directory, built.admission.release.collectionId);
+        return { kind: "collection", ...built };
     }
     throw new Error("definition.json must declare kind: collection, contract, or provider-manifest");
 }
@@ -69,7 +80,13 @@ export async function storeResource(
         added = (await new LocalProviderReleases(files, contracts, yanks).release(resource.admission.canonicalJson))
             .added;
     } else {
-        added = await new LocalCollectionRepository(root).store(resource.admission);
+        const { publisherId, collectionId, version } = resource.admission.release;
+        added = await new LocalCollectionRepository(root).store(resource.admission, () =>
+            new FilesystemRepositorySourceStore(root).put(publisherId, collectionId, version, {
+                sourceJson: resource.sourceJson,
+                releaseDigest: resource.admission.digest,
+            }),
+        );
     }
     log(`${added ? "+" : "="} ${resourceCoordinate(resource)} (${resource.admission.digest})`);
     if (resource.kind === "collection") {

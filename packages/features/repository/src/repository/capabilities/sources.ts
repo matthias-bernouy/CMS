@@ -42,7 +42,19 @@ export function repositorySources(ports: RepositoryCapabilityPorts) {
     };
     return Object.freeze({
         getCollection: (input: SourceGetInput, accountId?: string) =>
-            owned(input, accountId, () => ports.sources!.get(input.namespace, input.collectionId, input.version)),
+            owned(input, accountId, async () => {
+                const release = await ports.release({
+                    kind: "collection",
+                    publisherId: input.namespace,
+                    id: input.collectionId,
+                    version: input.version,
+                });
+                if (!release) {
+                    return null;
+                }
+                await release.stream.cancel();
+                return ports.sources!.get(input.namespace, input.collectionId, input.version);
+            }),
         getArtifact: (input: ArtifactSourceGetInput, accountId?: string) =>
             owned(input, accountId, () =>
                 ports.sources!.getArtifact(input.kind, input.namespace, input.id, input.version),
@@ -58,10 +70,19 @@ export function repositorySources(ports: RepositoryCapabilityPorts) {
                     },
                     input.releaseDigest,
                 );
-                await ports.sources!.put(input.namespace, input.collectionId, input.version, {
-                    sourceJson: input.sourceJson,
-                    releaseDigest: input.releaseDigest,
-                });
+                if (!ports.registry.retainCollectionSources) {
+                    throw new RepositoryRequestError("REJECTED", "Repository source verification is unavailable");
+                }
+                await ports.registry.retainCollectionSources(
+                    {
+                        kind: "collection",
+                        publisherId: input.namespace,
+                        id: input.collectionId,
+                        version: input.version,
+                    },
+                    input.sourceJson,
+                    input.releaseDigest,
+                );
                 return null;
             }),
         putArtifact: (input: ArtifactSourcePutInput, accountId?: string) =>

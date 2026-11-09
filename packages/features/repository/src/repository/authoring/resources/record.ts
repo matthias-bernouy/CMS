@@ -1,9 +1,10 @@
+import { AUTHORING_SOURCE_LIMITS } from "../preparations/source/limits";
 import { readFile, stat, open } from "node:fs/promises";
 import { constants } from "node:fs";
 import { join } from "node:path";
 import { isResourceId, resourcePublisher, resourceName, parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { RepositoryRequestError } from "../../core/errors";
-import { sourceDigest } from "../preparations/record";
+import { sourceDigest, MAX_PREPARATION_RECORD_BYTES } from "../preparations/record";
 import { parseSourceSnapshot } from "../snapshot";
 import type { AuthoredArtifactKind } from "./compiler";
 
@@ -31,12 +32,12 @@ export async function readArtifactPreparation(root: string, kind: AuthoredArtifa
     }
     const path = join(root, id);
     try {
-        if ((await stat(join(path, "prepared.json"))).size > 32 * 1024 * 1024) {
+        if ((await stat(join(path, "prepared.json"))).size > MAX_PREPARATION_RECORD_BYTES) {
             throw refuse();
         }
         const value = parseStrictJson(
             await readFile(join(path, "prepared.json")),
-            32 * 1024 * 1024,
+            MAX_PREPARATION_RECORD_BYTES,
             16,
         ) as unknown as ArtifactPreparation;
         if (
@@ -89,7 +90,11 @@ export async function verifyArtifactSources(path: string, prepared: ArtifactPrep
         );
         try {
             const info = await handle.stat();
-            if (!info.isFile() || info.size > 1024 * 1024 || (await handle.readFile("utf8")) !== file.content) {
+            if (
+                !info.isFile() ||
+                info.size > AUTHORING_SOURCE_LIMITS.fileBytes ||
+                (await handle.readFile("utf8")) !== file.content
+            ) {
                 throw new RepositoryRequestError("REJECTED", "Prepared sources changed. Prepare again.");
             }
         } finally {

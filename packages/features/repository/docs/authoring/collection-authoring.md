@@ -36,7 +36,7 @@ Preparation checks HTML structure after expanding collection examples. These dia
 
 ## Publish the reviewed preparation
 
-Inspect its digest and executable browser-code risk. Call `publish-collection` with the returned `preparationId` and `expectedDigest: digest`. Publication creates an immutable `(publisherId, collectionId, version)` release; it does not install it. Use a new version for changed published sources.
+Inspect its digest and executable browser-code risk. Call `publish-collection-operation` with the returned `preparationId` and `expectedDigest: digest`. Supply the command's `idempotencyKey` beside `input` in MCP. Follow `get-publication-operation` with the same preparation, digest and returned `operationId` until `succeeded` or `failed`. An accepted operation is not a published release. The synchronous `publish-collection` capability remains available with its original signature; prefer this durable workflow. Publication creates an immutable `(publisherId, collectionId, version)` release; it does not install it. Use a new version for changed published sources.
 
 After an uncertain response, inspect the available release and retained sources before retrying. Repeating publication of the exact preparation cannot overwrite different bytes at an existing coordinate. Do not change source, version or expected digest merely to retry a lost response. A discarded or cleaned-up preparation must be prepared again. The official Provider bounds their number and cleans preparations older than seven days when preparing new work; preparation storage is not a permanent editing workspace.
 
@@ -60,7 +60,7 @@ publish, upload, install or grant execution authority.
 
 `preflight: "incomplete"` includes a warning. This applies when the Repository
 check is unavailable or exceeds its evidence budget: candidate metadata above
-1 MiB, more than 64 historical releases, or more than 32 MiB of historical
+8 MiB, more than 64 historical releases, or more than 32 MiB of historical
 metadata. An incomplete check is not a compatibility guarantee. Publication
 always rechecks current ownership and evolution under the Repository write lock.
 
@@ -69,17 +69,20 @@ safe `publicationCode` and an optional `publicationResource`. Correct the versio
 or resource identity and prepare again. Technical failures remain unavailable;
 they must not be interpreted as version incompatibility.
 
-Publication and private source retention are separate stages. A retryable
-`CORE_UNAVAILABLE` error may return `publicationState: "sources-pending"`, which
-means the immutable release is already published. `publicationState: "unknown"`
-means the publication response was lost or could not be verified. Both return the
-exact `preparationId` and `digest`: retry those same values after restoring access,
-without changing the version or source. A retained local publication receipt lets
-source completion resume without recompiling or uploading the release again.
-Every retry still requires current namespace ownership and Repository identity.
-A source-retention business refusal returns `INVALID_INPUT` with the same
-published-state fields; resolve that refusal before retrying. It does not imply
-that the immutable release was rolled back.
+Preparation is a local preview. Publication sends the exact prepared editable
+sources and binary assets to the Repository; the CMS does not recompile them on
+publish. The Repository rebuilds against its own catalogue and refuses a digest
+that differs from the reviewed preparation. It retains verified sources before
+making the release visible, so new collection publications no longer have a
+separate source-retention stage.
+
+A lost response can still leave `publicationState: "unknown"`. Retry the same
+preparation and digest after restoring access. Do not change source or version
+merely to resolve uncertainty. Every retry requires current namespace ownership
+and the pinned Repository identity. Historical `sources-pending` receipts remain
+readable; an explicit retry verifies their sources through the server build.
+A failed durable operation is terminal: inspect its error code and use a new
+idempotency key for a fresh attempt after correcting the cause.
 
 Preparations expire after seven days, including publication retries. Missing,
 altered, foreign-instance and expired preparations refuse before publication.

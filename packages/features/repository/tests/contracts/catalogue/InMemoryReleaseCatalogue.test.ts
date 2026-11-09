@@ -30,9 +30,9 @@ describe("InMemoryReleaseCatalogue", () => {
     });
 
     test("revalidates publications with the catalogue limits", async () => {
-        const limits = { ...DEFAULT_RELEASE_LIMITS, maxStringLength: 2 * 1024 * 1024 };
+        const limits = { ...DEFAULT_RELEASE_LIMITS, maxStringLength: 16 * 1024 * 1024 };
         const capability = capabilityDocument({
-            input: objectSchema({ value: stringSchema(2 * 1024 * 1024) }, ["value"]),
+            input: objectSchema({ value: stringSchema(16 * 1024 * 1024) }, ["value"]),
         });
         const admission = await admitContractRelease(
             contractDocument({ version: "1.0.0", capabilities: [capability] }),
@@ -40,7 +40,7 @@ describe("InMemoryReleaseCatalogue", () => {
         );
 
         await expect(new InMemoryReleaseCatalogue().publish(admission)).rejects.toThrow(
-            "must be between 0 and 1048576",
+            "must be between 0 and 8388608",
         );
         await expect(new InMemoryReleaseCatalogue(limits).publish(admission)).resolves.toMatchObject({
             admission: { digest: admission.digest },

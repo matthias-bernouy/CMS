@@ -183,8 +183,8 @@ Incompatible resource contracts require new IDs; upgrades never rewrite Pages.
 ## Admission Limits
 
 The principal current limits are 8 MiB for the canonical collection document,
-512 Blocs, 1,024 assets, 4,096 texts, 128 dependencies, 64 theme
-categories and 4,096 theme entries. One asset is limited to 10 MiB and the
+1,024 Blocs, 1,024 assets, 8,192 texts, 128 dependencies, 64 theme
+categories and 8,192 theme entries. One asset is limited to 10 MiB and the
 release asset total to 50 MiB. Slots, settings, requirements and examples have their own bounded counts.
 
 See [Create A Collection Bloc](authoring.md) for the source contract and

@@ -1,5 +1,5 @@
 import { capabilityBindings } from "@bernouy/ulvia-contracts/bindings";
-import { canonicalIJsonBytes, parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
+import { canonicalIJsonBytes, parseStrictJson, MAX_CAPABILITY_JSON_BYTES } from "@bernouy/ulvia-contracts/protocol";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { CapabilityMcpOptions, McpInvocationContext, McpToolResult } from "./interfaces";
 import { capabilityTool, capabilityToolName } from "./tools";
@@ -46,7 +46,10 @@ export class CapabilityMcpBinding {
         }
         let value: Record<string, unknown>;
         try {
-            value = parseStrictJson(canonicalIJsonBytes(args), 8 * 1024 * 1024, 64) as Record<string, unknown>;
+            value = parseStrictJson(canonicalIJsonBytes(args), MAX_CAPABILITY_JSON_BYTES, 64) as Record<
+                string,
+                unknown
+            >;
         } catch {
             throw new McpProtocolError(-32602, "Tool arguments must be bounded interoperable JSON");
         }

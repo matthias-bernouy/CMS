@@ -30,11 +30,53 @@ revision and the canonical collection JSON. The Repository validates the
 candidate identity and checks its publication evolution, including yanked
 historical releases, without opening an upload or writing a release. Evidence is
 limited to one collection, 64 historical metadata documents and 32 MiB; exceeding
-that budget returns `complete: false`. The input string is limited to 1,048,576 UTF-16 code units; CMS authoring also
-caps the candidate UTF-8 payload at 1 MiB.
+that budget returns `complete: false`. The input string is limited to 8,388,608 UTF-16 code units; CMS authoring also
+caps the candidate UTF-8 payload at 8 MiB.
 The returned digest identifies the checked candidate. Publication still repeats
 authoritative checks because the history may change after preparation.
 
 Collection evolution refusals use `REJECTED` with a safe `publicationCode` and
 optional resource identity. These are business refusals, not infrastructure
-unavailability. Exact immutable reads and publication semantics are unchanged.
+unavailability. Exact immutable reads and compiled-only replays of already stored releases remain available.
+
+## Repository-owned collection builds
+
+A new collection publication includes `sourceJson` in the binary upload manifest,
+plus the exact asset bytes referenced by its source paths. Source references are
+labels for uploaded bytes; the Repository never fetches CMS files or arbitrary
+URLs. Snapshots are limited to 8 MiB UTF-8, 16,384 files including assets and 1,024 assets.
+Each text file is limited to 1 MiB UTF-8. Collection assets are limited to 10 MiB each
+and 50 MiB combined, independently of source JSON. The binary upload manifest is limited to 40 MiB to include escaped source and compiled JSON.
+Existing asset upload transport limits also apply. Uploads expire after one hour.
+
+Use `publication-build` (`POST /v1/uploads/build`) with the upload ID, namespace,
+revision and an `Idempotency-Key`. Its `202` response contains an `operationId`.
+Poll `publication-build-status` (`QUERY /v1/uploads/build-status`) with those same
+coordinates and the operation ID. Only the same actor in the same instance with
+current namespace ownership can read it. The durable host queue recovers work
+after restart and repeats ownership checks before execution. A changed command
+requires a new idempotency key. A failed operation retains its terminal failure;
+start a fresh publication attempt after correcting its cause.
+
+The server compiles against its own published contract catalogue using the same
+source compiler as local CLI releases. It refuses a result differing from the
+reviewed canonical release. Under the Repository and namespace write fences it
+checks evolution, persists assets and verified editable sources, then publishes
+the immutable release marker. The marker is the visibility boundary. Interrupted
+writes before it leave no discoverable release; an exact retry completes them.
+Builds are serialized by a separate build fence; status reads and namespace transfers remain available during compilation. Finalization rechecks ownership and catalogue admission under the publication fences. The synchronous commit
+binding remains available with its existing result shape.
+
+New compiled-only collection publications are refused. Compiled-only exact
+replays cannot restore missing sources. `source-put` explicitly repairs sources
+for an existing release only after a server build reproduces its exact bytes;
+no automatic reconstruction or migration runs. Private source reads omit
+snapshots whose release marker has not been published. Contracts and Provider
+manifests retain their existing publication flows.
+
+
+Private `source-read` (`QUERY /v1/source-snapshots/read`) accepts `kind`, `id`,
+`version`, `namespace` and `namespaceRevision`, retaining account ownership checks.
+It returns source snapshots up to 8 MiB. Existing `source-get` and
+`artifact-source-get` retain their 1,048,576 UTF-16-unit output bounds and refuse
+larger snapshots without truncation. Current CLI/CMS clients use `source-read`.

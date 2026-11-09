@@ -35,7 +35,11 @@ export async function loadCompatibleImplementation<Dependencies>(
     const view = await resolveContract(catalogue, admission);
     const plan = view.capabilities.map(({ definition: capability, owner }) => {
         const entry = captured.find((entry) => entry.capability.id === capability.id);
-        if (!entry || capabilityExecutionSignature(entry.capability) !== capabilityExecutionSignature(capability)) {
+        if (
+            !entry ||
+            capabilityExecutionSignature(entry.capability, capability.input) !==
+                capabilityExecutionSignature(capability)
+        ) {
             throw new SdkDefinitionError(`Retained capability differs from its executor: ${capability.id}`);
         }
         const requests = view.lineage
@@ -71,8 +75,14 @@ export async function loadCompatibleImplementation<Dependencies>(
 }
 
 /** Ignore explanatory metadata only; business fields named description remain part of the API. */
-function capabilityExecutionSignature(capability: CapabilityDefinition): string {
+function capabilityExecutionSignature(
+    capability: CapabilityDefinition,
+    retainedInput?: CapabilityDefinition["input"],
+): string {
     const value = structuredClone(capability) as unknown as Record<string, unknown>;
+    if (retainedInput) {
+        value.input = compatibleInputBounds(value.input, retainedInput);
+    }
     delete value.description;
     delete value.docs;
     for (const binding of value.bindings as Record<string, unknown>[]) {
@@ -95,5 +105,26 @@ function schemaDocumentation(value: unknown): unknown {
         Object.entries(record)
             .filter(([key]) => key !== "description" || typeof record.type !== "string")
             .map(([key, child]) => [key, schemaDocumentation(child)]),
+    );
+}
+
+/** Only larger input string/binary ceilings are safe to reuse with an older receiver. */
+function compatibleInputBounds(current: unknown, retained: unknown): unknown {
+    if (Array.isArray(current) && Array.isArray(retained)) {
+        return current.map((value, index) => compatibleInputBounds(value, retained[index]));
+    }
+    if (!current || typeof current !== "object" || !retained || typeof retained !== "object") {
+        return current;
+    }
+    const value = current as Record<string, unknown>;
+    const old = retained as Record<string, unknown>;
+    const ceiling = value.type === "string" ? "maxLength" : value.type === "binary" ? "maxBytes" : null;
+    return Object.fromEntries(
+        Object.entries(value).map(([key, item]) => [
+            key,
+            key === ceiling && typeof item === "number" && typeof old[key] === "number" && old[key] <= item
+                ? old[key]
+                : compatibleInputBounds(item, old[key]),
+        ]),
     );
 }
