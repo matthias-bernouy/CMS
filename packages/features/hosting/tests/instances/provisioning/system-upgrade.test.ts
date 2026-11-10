@@ -1,13 +1,6 @@
 import { expect, test } from "bun:test";
-import { OfficialInstanceProvisioner } from "../../src/exports/index";
-import {
-    SYSTEM_PLAN,
-    MemoryRegistry,
-    MemoryTransitions,
-    administratorCredentials,
-    instance,
-    target,
-} from "./provisioningFixtures";
+import { OfficialInstanceProvisioner } from "@bernouy/hosting/instances";
+import { SYSTEM_PLAN, MemoryRegistry, MemoryTransitions, administratorCredentials, instance, target } from "./fixture";
 
 const next = {
     manifest: { ...SYSTEM_PLAN.manifest, version: "1.1.0", digest: `sha256:${"c".repeat(64)}` },

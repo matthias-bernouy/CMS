@@ -1,19 +1,14 @@
 import { expect, test } from "bun:test";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
-import type {
-    CreateProviderInstanceRecord,
-    OfficialInstanceProvisioner,
-    ProviderInstanceRecord,
-    ProviderInstanceRegistry,
-    UpdateProviderInstanceRecord,
-} from "../../src/exports/index";
-import { ProviderInstanceLifecycle, ProviderOperatorApi } from "../../src/exports/index";
+import type { ProviderInstanceLifecycle } from "@bernouy/hosting/instances";
+import { ProviderOperatorApi } from "../../src/exports/index";
+import { instanceRecord } from "./instanceFixture";
 
 const OPERATOR_TOKEN = "operator-token-that-is-long-enough";
 
 test("the operator API protects and exposes instance lifecycle operations", async () => {
-    const instance = readyInstance();
+    const instance = instanceRecord();
     const creates: unknown[] = [];
     const pages: unknown[] = [];
     const lifecycle = {
@@ -82,126 +77,3 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
         server.stop();
     }
 });
-
-test("an idempotency key can only replay the exact instance request", async () => {
-    const registry = new MemoryRegistry();
-    let stagedAdministrators = 0;
-    let provisions = 0;
-    const lifecycle = new ProviderInstanceLifecycle(
-        registry,
-        {
-            ensure: async () => ({
-                instanceAccessToken: "instance-token",
-                invocationSecret: "invocation-secret",
-                sessionSecret: "session-secret",
-                kekHex: "kek",
-            }),
-            read: async () => null,
-            disable: async () => undefined,
-            stageAdministrator: async () => {
-                stagedAdministrators++;
-            },
-            readAdministrator: async () => null,
-            clearAdministrator: async () => undefined,
-        },
-        {
-            assertCreationAuthority: async () => undefined,
-            provision: async (id: string) => {
-                provisions++;
-                const current = required(await registry.get(id));
-                Object.assign(current, { status: "ready" });
-                return current;
-            },
-        } as unknown as OfficialInstanceProvisioner,
-        {
-            current: async () => ({
-                manifest: {
-                    providerId: "ulvia/primary-provider",
-                    version: "1.0.0",
-                    digest: `sha256:${"a".repeat(64)}`,
-                },
-                contracts: [],
-            }),
-        },
-        "idempotency-secret",
-    );
-    const input = {
-        label: "One",
-        cmsUrl: "http://127.0.0.1:5100",
-        gatewayUrl: "http://edge.internal:3000",
-        administrator: { email: "admin@example.test", password: "long-enough-password" },
-    };
-
-    const created = await lifecycle.create("create-one", input, { kind: "operator" });
-    expect((await lifecycle.create("create-one", input, { kind: "operator" })).instance.id).toBe(created.instance.id);
-    expect(stagedAdministrators).toBe(1);
-    expect(provisions).toBe(1);
-    await expect(
-        lifecycle.create(
-            "create-one",
-            {
-                ...input,
-                administrator: { ...input.administrator, password: "different-password" },
-            },
-            { kind: "operator" },
-        ),
-    ).rejects.toThrow("different request");
-});
-
-function readyInstance(): ProviderInstanceRecord {
-    return {
-        repository: { url: "https://repo.ulvia.fr", configured: false },
-
-        id: "instance:one",
-        idempotencyKey: "create-one",
-        idempotencyFingerprint: "fingerprint",
-        creationAuthority: { kind: "operator" },
-        storageKey: "one",
-        cmsUrl: "http://127.0.0.1:5100",
-        gatewayUrl: "http://edge.internal:3000",
-        label: "One",
-        status: "ready",
-        revision: 6,
-        createdAt: new Date(0).toISOString(),
-        updatedAt: new Date(0).toISOString(),
-    };
-}
-
-function required(instance: ProviderInstanceRecord | null): ProviderInstanceRecord {
-    if (!instance) {
-        throw new Error("Missing test instance");
-    }
-    return instance;
-}
-
-class MemoryRegistry implements ProviderInstanceRegistry {
-    #record: ProviderInstanceRecord | null = null;
-
-    async init(): Promise<void> {}
-    async create(record: CreateProviderInstanceRecord): Promise<ProviderInstanceRecord> {
-        const now = new Date(0).toISOString();
-        const created = { ...record, revision: 1, createdAt: now, updatedAt: now };
-        this.#record = created;
-        return created;
-    }
-    async get(instanceId: string): Promise<ProviderInstanceRecord | null> {
-        return this.#record?.id === instanceId ? this.#record : null;
-    }
-    async getByIdempotencyKey(idempotencyKey: string): Promise<ProviderInstanceRecord | null> {
-        return this.#record?.idempotencyKey === idempotencyKey ? this.#record : null;
-    }
-    async list(): Promise<readonly ProviderInstanceRecord[]> {
-        return this.#record ? [this.#record] : [];
-    }
-    async page(input: { after: string | null; limit: number }) {
-        const records = (await this.list()).filter((record) => input.after === null || record.id > input.after);
-        return { items: records.slice(0, input.limit), nextCursor: null };
-    }
-    async update(
-        _instanceId: string,
-        _expectedRevision: number,
-        _changes: UpdateProviderInstanceRecord,
-    ): Promise<ProviderInstanceRecord> {
-        throw new Error("Unexpected update");
-    }
-}

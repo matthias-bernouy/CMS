@@ -34,7 +34,6 @@ export function localServicesEnvironment(
         ULVIA_BIND_ADDRESS: installation.bindAddress,
         ULVIA_HTTP_PORT: String(installation.ports.http),
         ULVIA_HTTPS_PORT: installation.tls.mode === "acme" ? String(installation.tls.httpsPort) : "443",
-        ULVIA_ACME_EMAIL: installation.tls.mode === "acme" ? installation.tls.email : "disabled@example.invalid",
         ULVIA_PROVIDER_PORT: String(installation.ports.provider),
         ULVIA_UID: String(process.getuid?.() ?? 1000),
         ULVIA_GID: String(process.getgid?.() ?? 1000),

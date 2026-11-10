@@ -9,7 +9,6 @@ export interface ProviderInstanceRegistry {
     create(record: CreateProviderInstanceRecord): Promise<ProviderInstanceRecord>;
     get(instanceId: string): Promise<ProviderInstanceRecord | null>;
     getByIdempotencyKey(idempotencyKey: string): Promise<ProviderInstanceRecord | null>;
-    list(): Promise<readonly ProviderInstanceRecord[]>;
     page(input: { after: string | null; limit: number }): Promise<{
         items: readonly ProviderInstanceRecord[];
         nextCursor: string | null;

@@ -4,14 +4,14 @@ import { serveForTest } from "@bernouy/http-runner/testing";
 import { ProviderOperatorApi } from "../../src/exports/index";
 import type { ProviderInstanceLifecycle, CreateProviderInstance } from "@bernouy/hosting/instances";
 import type { InstanceCreationAuthority } from "@bernouy/hosting/instances";
-import { instance } from "./provisioningFixtures";
+import { instanceRecord } from "./instanceFixture";
 
 test("operator creation supplies internal provenance and reports pending work as accepted", async () => {
     const authorities: InstanceCreationAuthority[] = [];
     const lifecycle = {
         create: async (_key: string, _input: CreateProviderInstance, authority: InstanceCreationAuthority) => {
             authorities.push(authority);
-            return { instance: instance(), credentials: { instanceAccessToken: "operator-only" } };
+            return { instance: instanceRecord("provisioning"), credentials: { instanceAccessToken: "operator-only" } };
         },
     } as unknown as ProviderInstanceLifecycle;
     const token = "operator-token-that-is-long-enough";

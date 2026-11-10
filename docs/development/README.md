@@ -38,7 +38,7 @@ explicit image build/publish and upgrade workflow below.
 
 Control is created automatically and starts empty. Startup prints the path to its
 private initial administrator file; it never prints the password. Open
-`http://control.localhost/.cms/setup`, authenticate, select a Repository and choose
+`http://control.localhost:5100/.cms/setup`, authenticate, select a Repository and choose
 an empty site or an explicitly authored collection. Create other logical sites
 through `ulvia/cms.hosting` HTTP/MCP bindings; the CLI manages infrastructure.
 
@@ -132,22 +132,24 @@ are absent.
 Edge and Provider operator diagnostics use structured stdout/stderr.
 Repository instances use those same runtimes and their own instance journal.
 Instance diagnostics are collected through the selected Observability contract.
-Inspect the last 200 matching instance records with:
+Read an instance journal through the selected `ulvia/cms.observability`
+HTTP/MCP capabilities: `logs.query` lists filtered summaries, `logs.get` loads
+one entry and `logs.aggregate` returns bounded counts. These reads require a
+current administrator in that instance. See [observability](../architecture/observability.md#consultation)
+for filters and pagination.
+
+Inspect the shared runtime container output with:
 
 ```bash
-ulvia instance logs default provider --level warn
-ulvia instance logs default all --request-id <uuid>
-ulvia instance logs default provider --event provider.operation.failed --stack
-ulvia instance logs default all --json
-ulvia instance logs default edge --follow
+ulvia services logs provider
+ulvia services logs edge-1 --follow
+ulvia services logs proxy
 ```
 
-CMS instance journals are collected through the selected `ulvia/cms.observability` contract.
-Use the Observability HTTP/MCP reads or `ulvia instance logs <name>` to search them.
-No observability administration Page is bundled. Filters run
-in the selected Provider rather than on downloaded journal files. Production
-processes also write structured stdout/stderr for startup and operator diagnosis;
-`ulvia services logs provider` reads that container output. Application file
+No observability administration Page is bundled. Journal filters run in the
+selected Provider rather than on downloaded journal files. Shared runtime
+stdout/stderr contains startup and operator diagnostics; it is distinct from
+each instance's journal. Application file
 journals and per-runtime `ULVIA_LOG_*` settings have been removed.
 
 See [CMS observability](../architecture/observability.md) for authority, bounded

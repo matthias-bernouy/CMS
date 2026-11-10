@@ -42,7 +42,9 @@ integration(
             await rm(f.bootstrapFile);
             const reopened = await f.hosting.initialize();
             expect(reopened).toEqual(control);
-            expect((await f.instances.list()).map((instance) => instance.id)).toEqual([control.instance.id]);
+            const page = await f.instances.page({ after: null, limit: 1 });
+            expect(page.items.map((instance) => instance.id)).toEqual([control.instance.id]);
+            expect(page.nextCursor).toBeNull();
             const controlDb = f.client.db(instanceDatabaseName(control.instance.storageKey));
             const [sub] = await new MongoAdministratorGrantStore(controlDb).list();
             const alias = await new ProviderIdentityAliases(new MongoIdentityService(controlDb)).getOrCreate(

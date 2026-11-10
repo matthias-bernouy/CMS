@@ -4,8 +4,8 @@ Ulvia installation and release CLI. The shared-hosting implementation requires
 compatible Provider and Edge images labelled `io.ulvia.hosting-api=1`.
 
 For the operator journey, follow the
-[installation guide](../../../docs/installation/README.md). Current verification
-and outstanding integration work are recorded in
+[installation guide](../../../docs/installation/README.md). Architecture,
+verification and deployment limits are documented in
 [shared hosting](../../../docs/architecture/shared-hosting.md).
 
 The workspace package is private source. Official distribution bundles workspace

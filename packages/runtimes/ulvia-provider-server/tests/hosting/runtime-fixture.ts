@@ -143,7 +143,7 @@ export async function hostingRuntimeFixture(mongoUrl: string) {
             try {
                 await host.close();
             } finally {
-                for (const instance of await instances.list()) {
+                for await (const instance of instances.scan()) {
                     await client.db(instanceDatabaseName(instance.storageKey)).dropDatabase();
                 }
                 await db.dropDatabase();

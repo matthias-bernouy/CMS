@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { chmod, cp, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { CLI_DOCUMENTATION, writeCliDocumentation } from "./documentation";
 
 const PACKAGE_NAME = "@cyaxis/ulvia";
 const NPM_REGISTRY = "https://registry.npmjs.org/";
@@ -61,13 +62,9 @@ async function build(releaseVersion: string, defaultStackVersion: string): Promi
     await cp(join(source, "src/runtime/stack/orchestration/definitions"), join(staging, "dist/definitions"), {
         recursive: true,
     });
-    const readme = (await readFile(join(source, "README.md"), "utf8")).replace(
-        "../../../docs/installation/README.md",
-        "INSTALLATION.md",
-    );
+    const revision = (await command(["git", "rev-parse", "HEAD"], root, false)).trim();
     await Promise.all([
-        writeFile(join(staging, "README.md"), readme),
-        cp(join(root, "docs/installation/README.md"), join(staging, "INSTALLATION.md")),
+        writeCliDocumentation(root, staging, revision),
         cp(join(root, "LICENSE"), join(staging, "LICENSE")),
         writeFile(join(staging, "package.json"), `${JSON.stringify(packageManifest(releaseVersion), null, 4)}\n`),
         chmod(join(staging, "dist/index.js"), 0o755),
@@ -86,7 +83,6 @@ async function build(releaseVersion: string, defaultStackVersion: string): Promi
     await command(["bun", "pm", "pack", "--filename", archiveName], staging);
     await rm(archive, { force: true });
     await rename(join(staging, archiveName), archive);
-    const revision = (await command(["git", "rev-parse", "HEAD"], root, false)).trim();
     await writeFile(
         receipt,
         `${JSON.stringify({ schema: "ulvia.cli-release.v1", package: PACKAGE_NAME, version: releaseVersion, stackVersion: defaultStackVersion, revision, archive: archiveName, sha256: await sha256(archive) }, null, 4)}\n`,
@@ -122,7 +118,7 @@ function packageManifest(releaseVersion: string): Record<string, unknown> {
         license: "MIT",
         type: "module",
         bin: { ulvia: "dist/index.js" },
-        files: ["dist/", "README.md", "INSTALLATION.md", "LICENSE"],
+        files: ["dist/", ...CLI_DOCUMENTATION.map(({ target }) => target), "LICENSE"],
         engines: { bun: ">=1.4.4" },
         dependencies: { "css-tree": "3.2.1", playwright: "1.64.1" },
         publishConfig: { access: "public", registry: NPM_REGISTRY },

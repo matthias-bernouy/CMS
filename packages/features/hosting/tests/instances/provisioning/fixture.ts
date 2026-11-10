@@ -1,5 +1,5 @@
 import { expect } from "bun:test";
-import { OfficialInstanceProvisioner } from "../../src/exports/index";
+import { OfficialInstanceProvisioner } from "@bernouy/hosting/instances";
 import type {
     CreateProviderInstanceRecord,
     InstanceTransitionRecord,
@@ -8,7 +8,7 @@ import type {
     ProviderInstanceRecord,
     ProviderInstanceRegistry,
     UpdateProviderInstanceRecord,
-} from "../../src/exports/index";
+} from "@bernouy/hosting/instances";
 export const SYSTEM_PLAN = Object.freeze({
     manifest: Object.freeze({
         providerId: "ulvia/primary-provider",
@@ -83,11 +83,8 @@ export class MemoryRegistry implements ProviderInstanceRegistry {
     async getByIdempotencyKey() {
         return null;
     }
-    async list() {
-        return [this.record];
-    }
     async page(input: { after: string | null; limit: number }) {
-        const records = (await this.list()).filter((record) => input.after === null || record.id > input.after);
+        const records = [this.record].filter((record) => input.after === null || record.id > input.after);
         return { items: records.slice(0, input.limit), nextCursor: null };
     }
     async update(_id: string, revision: number, changes: UpdateProviderInstanceRecord) {

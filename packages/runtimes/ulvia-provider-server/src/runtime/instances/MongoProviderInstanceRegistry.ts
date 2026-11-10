@@ -52,10 +52,6 @@ export class MongoProviderInstanceRegistry implements ProviderInstanceRegistry {
         return document ? serializeProviderInstance(document) : null;
     }
 
-    async list(): Promise<readonly ProviderInstanceRecord[]> {
-        return (await this.#instances.find().sort({ createdAt: 1 }).toArray()).map(serializeProviderInstance);
-    }
-
     async *scan(): AsyncIterable<ProviderInstanceRecord> {
         const cursor = this.#instances.find({}).sort({ id: 1 }).batchSize(50);
         try {

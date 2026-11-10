@@ -42,9 +42,6 @@ export class InstanceRegistry implements ProviderInstanceRegistry {
     async getByIdempotencyKey(key: string) {
         return [...this.records.values()].find((record) => record.idempotencyKey === key) ?? null;
     }
-    async list(): Promise<readonly ProviderInstanceRecord[]> {
-        throw new Error("unbounded list forbidden");
-    }
     async page(input: { after: string | null; limit: number }) {
         this.pages++;
         const records = [...this.records.values()]

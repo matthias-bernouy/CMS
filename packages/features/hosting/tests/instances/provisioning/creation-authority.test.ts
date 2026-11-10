@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { OfficialInstanceProvisioner, assertInstanceCreationAuthority } from "@bernouy/hosting/instances";
 import type { InstanceCreationAuthority } from "@bernouy/hosting/instances";
 import type { HostingActor } from "@bernouy/hosting";
-import { MemoryRegistry, MemoryTransitions, administratorCredentials, instance, target } from "./provisioningFixtures";
+import { MemoryRegistry, MemoryTransitions, administratorCredentials, instance, target } from "./fixture";
 
 const issuer = { kind: "control", actor: { instanceId: "control:one", subjectId: "provider:admin" } } as const;
 

@@ -83,8 +83,15 @@ pagination remain bounded; `logs.append` has no MCP binding.
 No observability Pages are bundled. A client can build a journal view through
 these declared capabilities without Mongo or implementation-specific access.
 
-`ulvia instance logs <name> [edge | provider] [--level warn] [--event page.render.failed] [--request-id <uuid>] [--json] [--stack]` queries the selected journal. `--stack` loads details only for returned entries. The CLI uses reception-time windows so producer clock skew cannot defer a record behind an already seen page. `--follow` polls the recent result window and walks new pages until a known entry is reached. It stops explicitly if more than 2,000 entries need catching up between polls; it is not a durable subscription.
+Query the selected instance journal through these HTTP/MCP capabilities.
+Use `logs.get` to load a returned entry's sanitized error details. A client
+polling for newly received entries can select `timeField: "receivedAt"` and
+follow the returned cursor. No instance-journal CLI command or subscription is
+provided.
 
-`ulvia services logs [provider | repository | mongo | proxy] [--follow]` displays container stdout/stderr for operator diagnosis. No application journal files or logging bind mounts are created.
+`ulvia services logs [provider | mongo | proxy | edge-N] [--follow]` displays
+shared container stdout/stderr for operator diagnosis. A Registry is a logical
+instance in the Provider, with its own instance journal. No application journal
+files or logging bind mounts are created.
 
 Exports, alerts, arbitrary full-text searches, distributed spans and performance percentiles are not implemented by this version.

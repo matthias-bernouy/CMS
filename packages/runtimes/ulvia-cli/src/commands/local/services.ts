@@ -9,6 +9,7 @@ import {
 } from "../../runtime/stack/orchestration/services";
 import { assertImageVersion } from "../../runtime/stack/orchestration/images";
 import { DEFAULT_STACK_VERSION } from "../../runtime/stack/version";
+import { sharedEdgeNames } from "../../runtime/stack/orchestration/shared/files";
 
 const SERVICES_HELP = `Usage: ulvia services <start | stop | status | logs>
 
@@ -83,7 +84,7 @@ async function printServicesStatus(paths: UlviaPaths, log: (message: string) => 
         "proxy",
         "mongo",
         "provider",
-        ...Array.from({ length: state?.installation.hosting.edgeCount ?? 0 }, (_, index) => `edge-${index + 1}`),
+        ...(state ? sharedEdgeNames(state.installation.hosting.edgeCount) : []),
     ];
     log(`Shared services: ${allHealthy(expected, services) ? "running" : aggregateStatus(services)}`);
     log(`Provider version: ${state?.images.provider.version ?? "not initialized"}`);
