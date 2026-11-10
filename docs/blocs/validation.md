@@ -11,7 +11,8 @@ Run the local CMS with:
 
 ```bash
 bun run images:build --version 0.1.0-shared-hosting all
-bun run ulvia -- start --domain control.localhost --version 0.1.0-shared-hosting
+bun run ulvia -- configure --domain control.localhost
+bun run ulvia -- apply --version 0.1.0-shared-hosting
 ```
 
 Create the preview site through Control's Hosting capabilities and configure it

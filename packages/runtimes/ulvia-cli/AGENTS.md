@@ -13,8 +13,8 @@ Ulvia CMS installation runtime.
 - Expose lifecycle commands for starting, inspecting, and stopping the stack.
 - A Repository is an ordinary logical CMS instance with explicitly installed
   Registry. It uses the shared Edges and proxy, without another server or image.
-  Keep `upgrade` targets limited to Edge and Provider.
-- Source CLI startup requires an explicit initial image version. Bundled system
+  Treat Provider, Edges, Caddy and MongoDB as one exact stack release.
+- Source CLI first apply requires an explicit initial image version. Bundled system
   provisioning must work without remote Repository access, while later discovery
   and publication still use the persisted Repository connection.
 
@@ -130,3 +130,17 @@ Ulvia CMS installation runtime.
 - Official bootstrap generation uses only the SDK feature inventory and Provider
   metadata. Never scan an authored official repository or bundle starter collections.
   Explicit user collection release/build/publication remains supported.
+
+- `configure` records desired settings only; `apply` reconciles them. Root `start`
+  starts existing containers using the last applied private artifact snapshot,
+  without pulling images, regenerating artifacts or consuming pending settings.
+  Missing containers require apply; incomplete operations require their recorded
+  apply/upgrade recovery. Keep desired, applied and in-progress state separate.
+- Stack releases ship in the co-versioned CLI npm archive and include digest-pinned
+  Caddy/MongoDB images and exact Compose files. Verify metadata audience, archive
+  SHA-512, bounded download/decompression and release version/digest before use.
+  Do not extract caller archive paths onto disk. Keep the operation intent durable
+  before Docker writes and update applied state only after successful activation.
+- Technical `logs` reads Docker streams from the exact owned project, with bounded
+  lines/container selection and cancellation. Do not revive CMS journal clients
+  in the CLI or hold the mutation lock while following logs.

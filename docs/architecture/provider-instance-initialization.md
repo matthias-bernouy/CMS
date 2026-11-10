@@ -7,7 +7,7 @@ Edges neither provision databases nor implement a second authentication system.
 
 ## Technical creation
 
-`ulvia start --domain control.localhost --version VERSION` starts shared MongoDB,
+`ulvia configure --domain control.localhost` followed by `ulvia apply --version VERSION` starts shared MongoDB,
 Provider, Caddy and the configured Edge pool. The Provider automatically creates
 empty Control using a protected operator-supplied administrator file and persists
 its installation authority and domain. Ready restarts reopen that state.

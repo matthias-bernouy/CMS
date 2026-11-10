@@ -217,33 +217,40 @@ missing or malformed settings refuse without default substitution or repair.
 
 ## CLI deployment
 
-The CLI launches one Compose project with shared MongoDB, Provider, Caddy and a
+The CLI applies one Compose project with shared MongoDB, Provider, Caddy and a
 configured pool of Edges. Both CMS images require exact image pins and
 `io.ulvia.hosting-api=1` compatibility evidence. With compatible locally built or
 published images available:
 
 ```bash
-ulvia start --domain control.localhost --version VERSION
-ulvia services status
-ulvia configure hosting --edges 2
-ulvia start
+ulvia configure --domain control.localhost
+ulvia apply --version VERSION
+ulvia status
+ulvia configure --edges 2
+ulvia apply
 ```
 
 Compose removes obsolete Edge services when the pool shrinks. Site creation uses
 Control's hosting contracts and never changes Caddy's static shared destinations.
+`configure` saves desired settings; `apply` deploys them. `start` starts only
+existing containers from `services/deployments/<id>/`, including the exact
+Compose definitions, proxy configuration and private environment. A newer CLI
+does not substitute its own definitions. Interrupted apply/upgrade operations
+retain their target separately from the last successful deployment. `status`
+reports pending settings and observed service/image state.
 Infrastructure mutations share a native process lock whose inode survives reset.
 Health checks use `/readyz`; DNS, domain readiness and certificate readiness remain
 separate from healthy backend services.
 
 Mandatory hosting settings live in `services/installation.json`, launch intent
-and image pins in `services/stack.json`, and private keys in
+and applied/unfinished deployment state in `services/stack.json`, and private keys in
 `services/runtime.json`. The initial administrator is written exclusively to
 `services/credentials/control-administrator.json` with mode 0600 in a private
-directory, before runtime keys are committed. Startup prints its path only.
+directory, before runtime keys are committed. Apply prints its path only.
 Missing mandatory settings or keys over existing launch or database state refuse
-without repair. Missing launch pins over populated MongoDB or CMS file storage
-refuse before image lookup or credential generation. An interrupted first launch
-with empty storage can resume. Ready restarts do not recreate a removed initial
+without repair. Missing launch state over populated MongoDB or CMS file storage
+refuses before image lookup or credential generation. An interrupted first apply
+retains its recorded target and can resume after Docker has created storage. Ready restarts do not recreate a removed initial
 administrator file. No collection is shipped or installed for Control.
 
 ## Verification and deployment boundary

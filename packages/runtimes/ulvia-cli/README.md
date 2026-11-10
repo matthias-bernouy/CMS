@@ -13,24 +13,24 @@ dependencies into `@cyaxis/ulvia`; it does not publish this workspace package.
 Build one exact CLI release and its compatible default stack version with:
 
 ```bash
-bun run cli:build --version CLI_VERSION --stack-version STACK_VERSION
+bun run cli:build --version VERSION --stack-version VERSION
 ```
 
-Replace those placeholders with exact release versions. This creates a checked
+Use the same exact distribution version for the CLI, Provider and Edge. This creates a checked
 npm archive and SHA-256 receipt below `artifacts/cli`. Publishing is a separate
-explicit `cli:publish --version CLI_VERSION` operation.
+explicit `cli:publish --version VERSION` operation.
 
 ## Shared infrastructure
 
 From workspace source, supply an exact initial image version:
 
 ```bash
-bun run ulvia -- configure hosting --domain control.localhost --edges 1
-bun run ulvia -- start --version STACK_VERSION
-bun run ulvia -- services status
-bun run ulvia -- services logs provider
-bun run ulvia -- services logs edge-1 --follow
-bun run ulvia -- services stop
+bun run ulvia -- configure --domain control.localhost --edges 1
+bun run ulvia -- apply --version STACK_VERSION
+bun run ulvia -- status
+bun run ulvia -- logs --filter component=provider
+bun run ulvia -- logs --filter service=edge-1 --follow
+bun run ulvia -- stop
 bun run ulvia -- start
 ```
 
@@ -42,7 +42,7 @@ printed. Control uses native setup and can explicitly remain without collections
 or Pages. Create other logical sites through its admitted `ulvia/cms.hosting`
 HTTP/MCP capabilities; no CLI instance lifecycle commands remain.
 
-`configure hosting --edges 2` followed by `start` scales the pool. Site creation
+`configure --edges 2` followed by `apply` scales the pool. Site creation
 does not create containers. Reducing the configured count removes obsolete shared
 Edge containers. Stopping infrastructure makes all its logical sites unavailable
 while retaining their persistent data.
@@ -50,7 +50,8 @@ while retaining their persistent data.
 Persistent data lives below `$XDG_DATA_HOME/ulvia` or
 `~/.local/share/ulvia`. `ULVIA_DATA_DIR` provides explicit installation isolation.
 `services/installation.json` holds mandatory hosting and network configuration;
-`services/stack.json` holds launch intent and both immutable image pins;
+`services/stack.json` separates the last applied deployment from a resumable operation;
+`services/deployments/<id>/` retains its exact private Compose/configuration snapshot;
 `services/runtime.json` holds private infrastructure keys. MongoDB and CMS file
 storage belong to the shared services. There is no per-site Edge runtime state.
 The local release cache remains in `<data>/repository`.
@@ -58,16 +59,16 @@ The local release cache remains in `<data>/repository`.
 The CLI reuses validated cached exact-version images and pulls missing ones.
 It checks component, stack API, hosting API, version and repository digest. A
 mismatched cached image refuses startup. Source builds require `--version` on
-first start; bundled releases carry an exact default. Subsequent starts preserve
-pins. Explicit image updates use:
+first apply; bundled releases carry an exact default. `start` only starts existing
+containers using the applied snapshot. Explicit stack upgrades use:
 
 ```bash
-ulvia upgrade provider --version STACK_VERSION
-ulvia upgrade edge --version STACK_VERSION
+ulvia upgrade --version STACK_VERSION
 ```
 
 Provider replacement checks retained execution support first. Failed activation
-attempts to restore previous images; it does not restore mutated database data.
+retains a resumable target while the applied release stays unchanged. `status`
+shows observed container/image state. Resume with `upgrade`; no data rollback occurs.
 Contract and collection upgrades remain explicit admitted operations.
 
 ## Domains and initial access
@@ -75,15 +76,15 @@ Contract and collection upgrades remain explicit admitted operations.
 Configure public listeners before first launch:
 
 ```bash
-ulvia configure network --bind 0.0.0.0 --http-port 80 --tls acme --https-port 443 --acme-email ops@example.com
-ulvia configure hosting --domain control.example.com --public-addresses 203.0.113.10
-ulvia start
+ulvia configure --bind 0.0.0.0 --http-port 80 --tls acme --https-port 443 --acme-email ops@example.com
+ulvia configure --domain control.example.com --public-addresses 203.0.113.10
+ulvia apply
 ```
 
 Use the installation's real domain and addresses. Network settings and Control's
 origin lock after the first launch. Hosting settings can change the shared Edge
 count, operator-managed suffixes and public-address allowlist; apply them with
-`start`. Customer domain claims use Control's contracts and ownership validation.
+`apply`. Customer domain claims use Control's contracts and ownership validation.
 Caddy uses the admitted TLS permission binding and persistent certificate storage.
 DNS/TLS pending state is distinct from a provisioned instance and healthy backend.
 The Provider operator listener remains on loopback.

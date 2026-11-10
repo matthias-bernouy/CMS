@@ -89,9 +89,17 @@ polling for newly received entries can select `timeField: "receivedAt"` and
 follow the returned cursor. No instance-journal CLI command or subscription is
 provided.
 
-`ulvia services logs [provider | mongo | proxy | edge-N] [--follow]` displays
+`ulvia logs [--filter component=provider|edge|proxy|mongo] [--filter service=edge-N] [--filter level=error] [--follow]` displays
 shared container stdout/stderr for operator diagnosis. A Registry is a logical
 instance in the Provider, with its own instance journal. No application journal
 files or logging bind mounts are created.
 
 Exports, alerts, arbitrary full-text searches, distributed spans and performance percentiles are not implemented by this version.
+
+Runtime log filters combine different fields with AND and repeated values of the
+same field with OR. Levels are exact matches; MongoDB severity letters and Caddy's
+warning level are normalized. Unstructured lines remain visible without a level
+filter. Each selected container contributes its last 200 lines; at most 64
+project-owned containers and 64 KiB per line are accepted. Follow streams do not
+hold the installation mutation lock, and cancellation terminates their Docker
+clients. These technical reads require neither Control readiness nor CMS login.

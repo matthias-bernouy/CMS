@@ -1,7 +1,8 @@
 # Infrastructure Tooling
 
 Run these tools from the workspace root. Infrastructure builds and packages the
-runtime applications; executable composition and environment reads stay in
+runtime applications; the CLI archive embeds and ships its co-versioned stack
+release with exact deployment definitions. Executable composition and environment reads stay in
 `packages/runtimes/`. No GitHub Actions workflows are configured.
 
 | Path | Responsibility |

@@ -20,8 +20,9 @@ Pages. The public catalogue is separate from this technical bootstrap: publishin
 resources into it remains an explicit authenticated action.
 
 ```sh
-ulvia start --domain control.localhost
-ulvia services status
+ulvia configure --domain control.localhost
+ulvia apply
+ulvia status
 ```
 
 Create a logical site through Control's admitted Hosting capabilities; this adds

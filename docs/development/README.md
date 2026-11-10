@@ -17,21 +17,27 @@ SDK authors: see [SDK releases](sdk-releases.md) for feature definitions,
 inferred types and release preparation. [SDK runtime artifacts](sdk-runtime.md)
 explains build output, startup attachment and authorization before durable replay.
 
+See [CLI deployment lifecycle](deployment-lifecycle.md) for command semantics,
+applied snapshots, release integrity and recovery.
+The [2026-11-10 validation report](cli-deployment-validation.md) records the
+implementation checks and remaining extended Docker failures.
+
 ## Local CMS
 
 ```bash
-bun run ulvia -- configure network
+bun run ulvia -- configure --show
 bun run images:build --version 0.1.0-shared-hosting all
-bun run ulvia -- start --domain control.localhost --version 0.1.0-shared-hosting
-bun run ulvia -- services status
-bun run ulvia -- configure hosting --edges 2
-bun run ulvia -- start
-bun run ulvia -- services stop
+bun run ulvia -- configure --domain control.localhost
+bun run ulvia -- apply --version 0.1.0-shared-hosting
+bun run ulvia -- status
+bun run ulvia -- configure --edges 2
+bun run ulvia -- apply
+bun run ulvia -- stop
 ```
 
 The example builds compatible local images without publishing. Released images
 must advertise the shared-hosting API. The source CLI reports `development` and has no
-embedded default stack version, so first startup requires `--version`.
+embedded default stack version, so first apply requires `--version`.
 After initialization, `bun run ulvia -- start` reuses the installed digests.
 Building workspace sources does not update those containers; follow the
 explicit image build/publish and upgrade workflow below.
@@ -66,8 +72,8 @@ pool. Creating or disabling a tenant changes domain state without starting or
 stopping an infrastructure process. The CLI owns no application listener.
 Data lives below `$XDG_DATA_HOME/ulvia` or `~/.local/share/ulvia`;
 `ULVIA_DATA_DIR` isolates tests. `ULVIA_HTTP_PORT` and `ULVIA_PROVIDER_PORT`
-provide initial test ports. `ulvia configure network` persists exposure;
-`ulvia configure hosting` persists Control origin and Edge count. The Provider's
+provide initial test ports. `ulvia configure` persists desired network, Control
+origin and Edge settings without running Docker. `ulvia apply` deploys them. The Provider's
 internal endpoint is `ulvia-provider:5103`. Repeated `start` reopens the same
 installation, Control identity, credentials and exact image pins.
 
@@ -77,21 +83,23 @@ authors build a complete distribution and publish its artifacts explicitly:
 ```bash
 bun run build --version 1.0.7
 bun run images:publish --version 1.0.7 all
-ulvia upgrade edge --version 1.0.7
-ulvia upgrade provider --version 1.0.7
+bun run cli:publish --version 1.0.7
+ulvia upgrade --version 1.0.7
 ```
 
-Publish both images under the same release version. Installation state keeps
-independent exact Edge and Provider image pins. Logical sites have no Edge image
-or process ownership of their own.
+Publish both images and the CLI under the same distribution version. The CLI
+archive contains a digest-checked stack release with exact deployment definitions
+and pinned Caddy/MongoDB images. `upgrade --version` reads that release from the
+official npm archive and verifies registry SHA-512 integrity before preparing the
+new deployment. `apply` retains the applied release when changing configuration.
+`start` uses only recorded artifacts and existing containers; upgrading the CLI
+does not change the installation until an explicit `apply` or `upgrade`.
 
-An upgrade pulls the canonical `docker.io/cyaxis` reference, validates its OCI
-labels, and persists its immutable digest. A regular `start` reuses that digest;
-it never upgrades by following a mutable tag. A failed activation attempts to
-restart the previous image. This is best-effort image recovery, not a rollback
-of persisted data, an automatic backup or a fleet-wide transaction. Edge updates
-replace the shared pool. Collection, contract, and provider
-manifest releases remain Repository artifacts and do not become Docker images.
+Desired settings, the last applied snapshot and an unfinished deployment are
+distinct. The operation is journaled before Docker writes; successful activation
+records the new snapshot. Failures retain their exact target for `apply`/`upgrade`
+recovery and never claim the whole release is active. Updates are not a data
+rollback. No commands upgrade an individual Provider or Edge anymore.
 
 The versioned workspace build gives Edge, Provider and the CLI one shared
 distribution version. Contract and Provider manifest versions evolve independently.
@@ -141,9 +149,9 @@ for filters and pagination.
 Inspect the shared runtime container output with:
 
 ```bash
-ulvia services logs provider
-ulvia services logs edge-1 --follow
-ulvia services logs proxy
+ulvia logs --filter component=provider
+ulvia logs --filter service=edge-1 --follow
+ulvia logs --filter component=proxy
 ```
 
 No observability administration Page is bundled. Journal filters run in the

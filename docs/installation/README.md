@@ -30,16 +30,18 @@ see [development](../development/README.md).
 ## 2. Start a local installation
 
 ```bash
-ulvia configure hosting --domain control.localhost --edges 1
-ulvia start
-ulvia services status
+ulvia configure --domain control.localhost --edges 1
+ulvia apply
+ulvia status
 ```
 
 A packaged CLI contains its exact initial stack version. Workspace source needs
-`ulvia start --version STACK_VERSION`, with an exact version of locally built or
-published compatible images. First startup reuses valid cached images and pulls
+`ulvia apply --version STACK_VERSION`, with an exact version of locally built or
+published compatible images. First apply reuses valid cached images and pulls
 missing images. It checks component, stack API, hosting API, version and immutable
-repository digest. Later starts keep both stored image pins.
+repository digest. The applied snapshot keeps both image pins, the pinned
+Caddy/MongoDB definitions and their configuration. `start` only starts existing
+containers from that snapshot. Missing containers require `apply`.
 
 One Compose project contains Provider, MongoDB, Caddy and the shared Edge pool.
 The Provider creates Control automatically. Its default address is
@@ -96,14 +98,14 @@ A collection selected later grants no hosting authority.
 ## 4. Operate and resize the infrastructure
 
 ```bash
-ulvia services status
-ulvia services logs provider
-ulvia services logs edge-1 --follow
-ulvia services logs proxy
-ulvia services stop
+ulvia status
+ulvia logs --filter component=provider
+ulvia logs --filter service=edge-1 --follow
+ulvia logs --filter component=proxy
+ulvia stop
 ulvia start
-ulvia configure hosting --edges 2
-ulvia start
+ulvia configure --edges 2
+ulvia apply
 ```
 
 Stopping services retains data and makes all sites unavailable. Resizing changes
@@ -121,9 +123,9 @@ keys below that directory. Infrastructure mutations share a native process lock.
 Before first launch:
 
 ```bash
-ulvia configure network --bind 0.0.0.0 --http-port 80 --tls acme --https-port 443 --acme-email ops@example.com
-ulvia configure hosting --domain control.example.com --public-addresses 203.0.113.10
-ulvia start
+ulvia configure --bind 0.0.0.0 --http-port 80 --tls acme --https-port 443 --acme-email ops@example.com
+ulvia configure --domain control.example.com --public-addresses 203.0.113.10
+ulvia apply
 ```
 
 Replace the example domain and address with your deployment values. Point all
@@ -136,24 +138,37 @@ unverified or disabled domains cannot obtain permission. Its certificate store
 persists independently of containers. Instance provisioning, DNS/domain readiness,
 HTTPS readiness and backend health are distinct; startup reports pending access.
 
-Network settings and Control origin lock after the first infrastructure launch.
-The public-address allowlist can be updated with `configure hosting`, then
-`start`. Explicitly configure operator-owned suffixes with `--managed-suffixes`
+`configure` records desired settings without contacting Docker. `apply` deploys
+them; `status` reports pending changes. Interactive `configure` requires a terminal,
+while `configure --show` prints desired settings. Network settings and Control
+origin lock after the first deployment.
+The public-address allowlist can be updated with `configure`, then
+`apply`. Explicitly configure operator-owned suffixes with `--managed-suffixes`
 only for DNS space controlled by this installation. Other customer domains require
 the ownership proof supplied through Control's domain capabilities.
 
 ## 6. Update, back up or remove
 
 ```bash
-ulvia upgrade provider --version STACK_VERSION
-ulvia upgrade edge --version STACK_VERSION
+ulvia upgrade --version STACK_VERSION
 ```
 
-Replace `STACK_VERSION` with an exact available version. Explicit updates pull
-that tag and store its immutable digest. Provider updates check retained execution
-support. Failed activation attempts the previous images; this does not roll back
-mutated database or file contents. Contract and collection upgrades remain
-separate, explicit admitted workflows.
+Replace `STACK_VERSION` with an exact published distribution version. `upgrade`
+without a version uses the release embedded in the CLI. The versioned CLI npm
+archive contains `dist/stack-release.json`: the complete Compose definitions and
+pinned Caddy/MongoDB images. Explicit other versions are fetched from the official
+`@cyaxis/ulvia` npm archive, bounded and verified against its registry SHA-512
+integrity. Provider and Edge image labels, compatibility and immutable repository
+digests are checked before activation. Publish the CLI and both images with the
+same version before offering a release.
+
+Apply pending configuration before upgrading. Upgrades check Provider retained
+execution support, update the Provider, replace Edges in sequence and apply the
+proxy. MongoDB major changes and downgrades require an explicit migration. A
+failed operation retains its target and the previous successful snapshot;
+`status` reports actual service/image state and `upgrade` resumes the exact target.
+`start` refuses an unfinished operation. Recovery does not restore database or
+file contents. Contract and collection upgrades remain separate domain operations.
 
 Stop all shared services before a filesystem backup. Preserve the complete
 matching data directory, including MongoDB, file storage and encryption material.
