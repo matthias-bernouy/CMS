@@ -54,7 +54,7 @@ smoke(
                 const source = await prepareSmokeCollectionRelease(smokeCollection, data, version);
                 await runCli(["release", source], { environment, log: () => undefined });
             }
-            await runCli(["start", "--version", version], options);
+            await runCli(["apply", "--version", version], options);
             browser = await chromium.launch({ headless: true });
             console.info("[edge-smoke] native empty Control and two logical sites through hosting contracts");
             const { control, registry, primary } = await prepareHostedSites(browser, data, PORTS.edge);
@@ -72,14 +72,14 @@ smoke(
             await browser.close();
             browser = undefined;
             const status: string[] = [];
-            await runCli(["services", "status"], { environment, log: (message) => status.push(message) });
-            expect(status).toContain("Shared services: running");
-            expect(status).toContain("edge-1: running / healthy");
+            await runCli(["status"], { environment, log: (message) => status.push(message) });
+            expect(status).toContain("Installation: running");
+            expect(status.some((line) => line.startsWith("edge-1: running / healthy"))).toBe(true);
             expect(status.some((line) => line.startsWith("edge-2:"))).toBe(false);
-            await runCli(["services", "stop"], options);
+            await runCli(["stop"], options);
             const stopped: string[] = [];
-            await runCli(["services", "status"], { environment, log: (message) => stopped.push(message) });
-            expect(stopped).toContain("Shared services: stopped");
+            await runCli(["status"], { environment, log: (message) => stopped.push(message) });
+            expect(stopped).toContain("Installation: stopped");
             console.info("[edge-smoke] persisted-state restart");
             await runCli(["start"], options);
             browser = await chromium.launch({ headless: true });
@@ -91,13 +91,13 @@ smoke(
             await assertEmptySite(control);
             await assertEmptySite(registry);
             console.info("[edge-smoke] two warmed Edge processes and content invalidation");
-            await runCli(["configure", "hosting", "--edges", "2"], options);
-            await runCli(["start"], options);
+            await runCli(["configure", "--edges", "2"], options);
+            await runCli(["apply"], options);
             await verifyPublishedAcrossEdges(environment, primary, control);
             expect(browserErrors).toEqual([]);
         } catch (cause) {
-            for (const service of ["provider", "edge-1", "proxy"]) {
-                await runCli(["services", "logs", service], options).catch(() => undefined);
+            for (const service of ["mongo-provision", "provider", "edge-1", "proxy"]) {
+                await runCli(["logs", "--filter", `service=${service}`], options).catch(() => undefined);
             }
             output += `\nCapability HTTP failures:\n${browserFailures()}\n`;
             await writeFailureArtifacts(output, browser);

@@ -5,6 +5,7 @@ import { resolveServicePorts, type ServicePorts } from "./ports";
 import { parseHosting } from "./hosting";
 import type { InstallationHosting } from "./hosting";
 import { instancePublicUrl } from "./ports";
+import { atomicPrivateWrite } from "./orchestration/deployment/storage";
 import { hostingOrigin } from "@bernouy/hosting";
 const SCHEMA = "ulvia.installation.v1" as const;
 
@@ -110,10 +111,11 @@ export async function saveInstallationConfig(
     const normalized = parseInstallationConfig(config);
     const path = installationPath(paths);
     try {
-        await writeFile(path, `${JSON.stringify(normalized, null, 2)}\n`, {
-            flag: exclusive ? "wx" : "w",
-            mode: 0o600,
-        });
+        if (exclusive) {
+            await writeFile(path, `${JSON.stringify(normalized, null, 2)}\n`, { flag: "wx", mode: 0o600 });
+        } else {
+            await atomicPrivateWrite(path, `${JSON.stringify(normalized, null, 2)}\n`);
+        }
     } catch (error) {
         if (!exclusive || (error as NodeJS.ErrnoException).code !== "EEXIST") {
             throw error;

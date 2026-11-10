@@ -5,6 +5,7 @@ export type ComposeServiceState = Readonly<{
     service: string;
     state: string;
     health: string;
+    image?: string;
 }>;
 
 export type ComposeProject = Readonly<{
@@ -13,10 +14,18 @@ export type ComposeProject = Readonly<{
     projectName: string;
     environment: Record<string, string | undefined>;
     generatedFile?: string;
+    directory?: string;
 }>;
 
-export async function composeUp(project: ComposeProject): Promise<void> {
-    await compose(project, ["up", "--detach", "--wait", "--remove-orphans"], true);
+export async function composeUp(project: ComposeProject, services?: readonly string[]): Promise<void> {
+    await compose(
+        project,
+        ["up", "--detach", "--wait", ...(services ? ["--no-deps", ...services] : ["--remove-orphans"])],
+        true,
+    );
+}
+export async function composeStart(project: ComposeProject): Promise<void> {
+    await compose(project, ["start", "--wait", "--wait-timeout", "120"], true);
 }
 
 export async function checkProviderImageRetention(project: ComposeProject): Promise<void> {
@@ -37,10 +46,6 @@ export async function checkProviderImageRetention(project: ComposeProject): Prom
     );
 }
 
-export async function composeLogs(project: ComposeProject, args: readonly string[]): Promise<void> {
-    await compose(project, ["logs", "--no-color", "--tail", "200", ...args], true);
-}
-
 export async function composeStop(project: ComposeProject): Promise<void> {
     await compose(project, ["stop"], true);
 }
@@ -51,7 +56,12 @@ export async function composeDown(project: ComposeProject): Promise<void> {
 
 export async function inspectComposeServices(project: ComposeProject): Promise<ComposeServiceState[]> {
     const result = await compose(project, ["ps", "--all", "--format", "json"], false, true);
-    if (result.exitCode !== 0 || !result.stdout.trim()) {
+    if (result.exitCode !== 0) {
+        throw new Error(
+            "Cannot inspect the installation: Docker is unavailable or the project configuration was refused",
+        );
+    }
+    if (!result.stdout.trim()) {
         return [];
     }
     return parseComposeServices(result.stdout);
@@ -61,7 +71,7 @@ function compose(project: ComposeProject, args: readonly string[], inherit: bool
     const definitions = [project.definition, ...(project.overlays ?? [])];
     const files = definitions.flatMap((definition) => [
         "--file",
-        join(import.meta.dir, "definitions", `${definition}.yml`),
+        join(project.directory ?? join(import.meta.dir, "definitions"), `${definition}.yml`),
     ]);
     if (project.generatedFile) {
         files.push("--file", project.generatedFile);
@@ -90,6 +100,7 @@ export function parseComposeServices(source: string): ComposeServiceState[] {
             service: record.Service,
             state: record.State,
             health: typeof record.Health === "string" ? record.Health : "",
+            ...(typeof record.Image === "string" ? { image: record.Image } : {}),
         };
     });
 }

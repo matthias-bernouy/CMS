@@ -7,7 +7,8 @@
     "type": "module",
     "exports": {
         ".": "./src/index.ts",
-        "./releases": "./src/exports/releases.ts"
+        "./releases": "./src/exports/releases.ts",
+        "./stack-release-build": "./src/runtime/stack/releases/local.ts"
     },
     "scripts": {
         "generate:bootstrap": "bun run src/bootstrap/generate.ts"
@@ -17,10 +18,7 @@
         "@bernouy/content": "workspace:*",
         "@bernouy/repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
-        "@bernouy/logging": "workspace:*",
         "playwright": "^1.64.1",
-        "@bernouy/observability": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",

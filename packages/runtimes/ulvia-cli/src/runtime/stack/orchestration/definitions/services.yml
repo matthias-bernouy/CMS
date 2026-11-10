@@ -54,7 +54,9 @@ services:
     mongo-provision:
         image: mongo:7.0.37@sha256:d5b3ca8c3f3cdce78d44870dc0871b76d5235e9b2ad4ea6bea5d1fbff8027703
         restart: "no"
+        user: "${ULVIA_UID}:${ULVIA_GID}"
         environment:
+            HOME: /tmp
             MONGO_INITDB_ROOT_USERNAME: ${ULVIA_MONGO_USERNAME}
             MONGO_INITDB_ROOT_PASSWORD: ${ULVIA_MONGO_PASSWORD}
             MONGO_PROVIDER_USERNAME: ${ULVIA_MONGO_PROVIDER_USERNAME}

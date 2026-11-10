@@ -1,59 +1,62 @@
 import { expect, test } from "bun:test";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ensureUlviaPaths, resolveUlviaPaths } from "../../../src/runtime/paths";
 import { defaultInstallationConfig } from "../../../src/runtime/stack/installation";
-import type { OfficialImageComponent } from "../../../src/runtime/stack/orchestration/images";
+import { sourceStackRelease } from "../../../src/runtime/stack/releases/local";
+import { prepareDeployment, deploymentProject } from "../../../src/runtime/stack/orchestration/deployment/artifacts";
 import {
-    loadLocalServicesState,
+    readDeploymentState,
     localServicesIdentity,
-    saveLocalServicesState,
+    saveDeploymentState,
+    loadLocalServicesState,
 } from "../../../src/runtime/stack/orchestration/state";
 
-test("local service identity is stable for one user data directory", async () => {
+test("deployment intent is distinct from applied state and exact snapshots survive newer CLI definitions", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-stack-state-"));
     const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
     await ensureUlviaPaths(paths);
     try {
-        const saved = await saveLocalServicesState(paths, defaultInstallationConfig(), {
-            provider: image("provider"),
-            edge: image("edge"),
-        });
-        expect(saved.images.provider.version).toBe("1.2.3");
-        expect(saved.projectName).toBe(localServicesIdentity(paths).projectName);
-        expect(await loadLocalServicesState(paths)).toEqual(saved);
+        const release = await sourceStackRelease("1.2.3");
+        const images = {
+            provider: { component: "provider" as const, version: "1.2.3", digest: `sha256:${"a".repeat(64)}` },
+            edge: { component: "edge" as const, version: "1.2.3", digest: `sha256:${"b".repeat(64)}` },
+        };
+        const target = await prepareDeployment(paths, defaultInstallationConfig(), release, images);
+        await saveDeploymentState(paths, null, { kind: "apply", phase: "prepared", target });
+        expect(await loadLocalServicesState(paths)).toBeNull();
+        expect((await readDeploymentState(paths))?.operation?.target.id).toBe(target.id);
+        await saveDeploymentState(paths, target, null);
+        expect(await loadLocalServicesState(paths)).toEqual(target);
+        const project = await deploymentProject(paths, target);
+        expect(project.directory).toContain(target.id);
+        expect(await readFile(join(project.directory!, "services.yml"), "utf8")).toBe(release.files["services.yml"]);
         expect(localServicesIdentity(resolveUlviaPaths({ ULVIA_DATA_DIR: `${root}-other` })).projectName).not.toBe(
-            saved.projectName,
+            target.projectName,
         );
+        await writeFile(join(project.directory!, "services.yml"), "changed CLI template");
+        await expect(deploymentProject(paths, target)).rejects.toThrow("missing or changed");
     } finally {
         await rm(root, { recursive: true, force: true });
     }
 });
 
-test("local state rejects the obsolete tag-only schema", async () => {
-    const root = await mkdtemp(join(tmpdir(), "ulvia-obsolete-stack-state-"));
+test("missing required applied/operation state fails without repairing existing launch state", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ulvia-obsolete-state-"));
     const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
     await ensureUlviaPaths(paths);
     try {
-        await writeFile(
-            join(paths.services, "stack.json"),
-            JSON.stringify({
-                schema: "ulvia.local-services-stack.v1",
-                version: "0.0.1-alpha.8",
-                ...localServicesIdentity(paths),
-                images: { provider: "ulvia-provider:old", repository: "ulvia--mossa--repository:old" },
-                installation: defaultInstallationConfig(),
-            }),
-        );
-        await expect(loadLocalServicesState(paths)).rejects.toThrow(/state is invalid/);
+        const original = JSON.stringify({
+            schema: "ulvia.local-services-stack.v1",
+            ...localServicesIdentity(paths),
+            images: {},
+            installation: defaultInstallationConfig(),
+        });
+        await writeFile(join(paths.services, "stack.json"), original, { mode: 0o600 });
+        await expect(readDeploymentState(paths)).rejects.toThrow("state is invalid");
+        expect(await readFile(join(paths.services, "stack.json"), "utf8")).toBe(original);
     } finally {
         await rm(root, { recursive: true, force: true });
     }
 });
-
-function image(component: OfficialImageComponent) {
-    const version = "1.2.3";
-    const digest = `sha256:${component === "provider" ? "a" : "b"}`.padEnd(71, component === "provider" ? "a" : "b");
-    return { component, version, digest } as const;
-}

@@ -1,95 +1,112 @@
 import { expect, test } from "bun:test";
-import { showInstanceLogs, readJournalUpdates } from "../../../src/runtime/stack/logs/index";
-import { parseSelection } from "../../../src/runtime/stack/logs/selection";
+import { parseRuntimeLogSelection, runtimeLogLevel } from "../../../src/runtime/stack/logs/selection";
+import { streamCommand } from "../../../src/runtime/processStream";
+import { profileCliFixture } from "../profiles/fixture";
 
-const item = {
-    id: crypto.randomUUID(),
-    time: new Date().toISOString(),
-    receivedAt: new Date().toISOString(),
-    instanceId: "instance-a",
-    service: "cms-edge",
-    level: "error" as const,
-    event: "page.render.failed",
-};
-
-test("instance logs send service, level and correlation filters to the selected contract", async () => {
-    const requests: unknown[] = [];
-    const output: string[] = [];
-    await showInstanceLogs(
-        ["edge", "--level", "warn", "--event", item.event, "--json"],
-        {
-            query: async (input) => {
-                requests.push(input);
-                return { items: [item] };
-            },
-            get: async () => {
-                throw new Error("Summary queries must not download entry details");
-            },
-        },
-        (line) => output.push(line),
-    );
-    expect(requests).toEqual([
-        { service: "cms-edge", levels: ["warn", "error", "fatal"], event: item.event, limit: 200 },
-    ]);
-    expect(JSON.parse(output[0]!).event).toBe(item.event);
+test("runtime filters combine fields, allow repeated values and reject invalid fields before Docker", () => {
+    expect(parseRuntimeLogSelection(["--filter", "component=edge", "--filter", "level=error", "--follow"])).toEqual({
+        components: ["edge"],
+        services: [],
+        levels: ["error"],
+        follow: true,
+    });
+    for (const args of [
+        ["provider"],
+        ["--filter", "tenant=foreign"],
+        ["--filter", "service=../../other"],
+        ["--filter", "level=unknown"],
+    ]) {
+        expect(() => parseRuntimeLogSelection(args)).toThrow();
+    }
+    expect(runtimeLogLevel('{"s":"E"}')).toBe("error");
+    expect(runtimeLogLevel('{"level":"warning"}')).toBe("warn");
+    expect(runtimeLogLevel("plain startup message")).toBeUndefined();
 });
 
-test("stack details are fetched only for the returned entry and cannot select another instance", async () => {
-    const ids: string[] = [];
-    const output: string[] = [];
-    await showInstanceLogs(
-        ["edge", "--stack"],
-        {
-            query: async () => ({ items: [item] }),
-            get: async (id) => {
-                ids.push(id);
-                return {
-                    ...item,
-                    attributes: {},
-                    error: { name: "Error", message: "failed", stack: "Error: failed\n    at test.ts:1" },
-                };
-            },
+test("technical log filtering works without CMS user authentication", async () => {
+    const fixture = await profileCliFixture();
+    try {
+        expect((await fixture.run(["apply", "--version", "0.1.0"])).exitCode).toBe(0);
+        const result = await fixture.run(["logs", "--filter", "component=edge", "--filter", "level=error"]);
+        expect(result.exitCode).toBe(0);
+        expect(result.stdout).toContain("edge-1 | ");
+        expect(result.stdout).toContain("fixture error");
+        expect(result.stdout).not.toContain('"level":"info"');
+        expect(fixture.state.unauthorized).toBe(0);
+    } finally {
+        await fixture.close();
+    }
+});
+
+test("log subprocesses terminate on cancellation and oversized output cannot keep a follow alive", async () => {
+    const controller = new AbortController();
+    const lines: string[] = [];
+    const flight = streamCommand(
+        [process.execPath, "-e", 'console.log("ready");setInterval(()=>{},1000)'],
+        process.env,
+        (line) => {
+            lines.push(line);
+            controller.abort();
         },
-        (line) => output.push(line),
+        controller.signal,
     );
-    expect(ids).toEqual([item.id]);
-    expect(output[0]).toContain("test.ts:1");
-    expect(() => parseSelection(["--instance-id", "other"])).toThrow("Unknown logs option");
+    await flight;
+    expect(lines).toEqual(["ready"]);
     await expect(
-        showInstanceLogs(
-            ["repository"],
-            {
-                query: async () => ({ items: [] }),
-                get: async () => {
-                    throw new Error();
-                },
-            },
+        streamCommand(
+            [process.execPath, "-e", 'console.log("😀".repeat(20000));setInterval(()=>{},1000)'],
+            process.env,
             () => undefined,
+            new AbortController().signal,
         ),
-    ).rejects.toThrow("Unknown log service: repository");
+    ).rejects.toThrow("64 KiB");
 });
 
-test("follow reads subsequent server pages before returning to polling", async () => {
-    const old = { ...item, id: crypto.randomUUID() };
-    const newest = { ...item, id: crypto.randomUUID() };
-    const previous = { ...item, id: crypto.randomUUID() };
-    const requests: unknown[] = [];
-    const result = await readJournalUpdates(
-        {
-            query: async (input) => {
-                requests.push(input);
-                return input.cursor
-                    ? { items: [previous, old], nextCursor: "unused" }
-                    : { items: [newest], nextCursor: "next" };
+test("a CLI log follower holds no mutation lock and SIGTERM releases all Docker clients", async () => {
+    const fixture = await profileCliFixture();
+    let child: ReturnType<typeof Bun.spawn> | undefined;
+    try {
+        expect((await fixture.run(["apply", "--version", "0.1.0"])).exitCode).toBe(0);
+        child = Bun.spawn(
+            [
+                process.execPath,
+                new URL("../../../src/index.ts", import.meta.url).pathname,
+                "logs",
+                "--filter",
+                "component=edge",
+                "--follow",
+            ],
+            {
+                env: {
+                    ...process.env,
+                    PATH: `${fixture.root}/bin:${process.env.PATH}`,
+                    ULVIA_DATA_DIR: `${fixture.root}/data`,
+                    ULVIA_TEST_DOCKER_ROOT: fixture.root,
+                },
+                stdout: "pipe",
+                stderr: "pipe",
             },
-            get: async () => {
-                throw new Error();
-            },
-        },
-        { limit: 200 },
-        new Set([old.id]),
-        false,
-    );
-    expect(result.map(({ id }) => id)).toEqual([previous.id, newest.id]);
-    expect(requests).toEqual([{ limit: 200 }, { limit: 200, cursor: "next" }]);
-});
+        );
+        const reader = (child.stdout as ReadableStream<Uint8Array>).getReader();
+        const first = await reader.read();
+        expect(new TextDecoder().decode(first.value)).toContain("edge-1 | ");
+        const configured = await Promise.race([
+            fixture.run(["configure", "--edges", "2"]),
+            Bun.sleep(2000).then(() => {
+                throw new Error("Log following blocked configuration");
+            }),
+        ]);
+        expect(configured.exitCode).toBe(0);
+        expect(child.exitCode).toBeNull();
+        child.kill("SIGTERM");
+        expect(await Promise.race([child.exited, Bun.sleep(2000).then(() => -1)])).toBe(0);
+        await reader.cancel();
+        reader.releaseLock();
+    } finally {
+        if (child && child.exitCode === null) {
+            child.kill("SIGKILL");
+            await child.exited;
+        }
+        await fixture.close();
+    }
+}, 15_000);

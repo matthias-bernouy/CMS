@@ -1,5 +1,7 @@
+import { sourceStackRelease } from "@bernouy/ulvia-cli/stack-release-build";
+import { registryFixturePath } from "./registry";
 import { fakeDockerFixturePath } from "./docker";
-import { chmod, cp, mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { chmod, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -8,6 +10,22 @@ export async function profileCliFixture() {
     const root = await mkdtemp(join(tmpdir(), "ulvia-profile-cli-"));
     const bin = join(root, "bin");
     await mkdir(bin);
+    await mkdir(join(root, "registry"));
+    for (const version of ["0.1.0", "0.2.0"]) {
+        const directory = join(root, "registry", version);
+        await mkdir(join(directory, "package/dist"), { recursive: true });
+        await writeFile(
+            join(directory, "package/dist/stack-release.json"),
+            JSON.stringify(await sourceStackRelease(version)),
+        );
+        const packed = Bun.spawn(
+            ["tar", "-czf", join(root, "registry", `${version}.tgz`), "-C", directory, "package"],
+            { stdout: "ignore", stderr: "inherit" },
+        );
+        if ((await packed.exited) !== 0) {
+            throw new Error("Could not prepare fixture release");
+        }
+    }
     await cp(fakeDockerFixturePath, join(bin, "docker"));
     await chmod(join(bin, "docker"), 0o755);
     const state = { rejectUpgrade: false, unauthorized: 0, creates: [] as unknown[], upgrades: [] as unknown[] };
@@ -40,19 +58,28 @@ export async function profileCliFixture() {
         root,
         state,
         async run(args: string[], extra: Record<string, string> = {}) {
-            const child = Bun.spawn([process.execPath, resolve(import.meta.dir, "../../../src/index.ts"), ...args], {
-                env: {
-                    ...process.env,
-                    PATH: `${bin}:${process.env.PATH}`,
-                    ULVIA_DATA_DIR: join(root, "data"),
-                    ULVIA_TEST_DOCKER_ROOT: root,
-                    ULVIA_HTTP_PORT: String(proxy.port),
-                    ULVIA_PROVIDER_PORT: String(provider.port),
-                    ...extra,
+            const child = Bun.spawn(
+                [
+                    process.execPath,
+                    "--preload",
+                    registryFixturePath,
+                    resolve(import.meta.dir, "../../../src/index.ts"),
+                    ...args,
+                ],
+                {
+                    env: {
+                        ...process.env,
+                        PATH: `${bin}:${process.env.PATH}`,
+                        ULVIA_DATA_DIR: join(root, "data"),
+                        ULVIA_TEST_DOCKER_ROOT: root,
+                        ULVIA_HTTP_PORT: String(proxy.port),
+                        ULVIA_PROVIDER_PORT: String(provider.port),
+                        ...extra,
+                    },
+                    stdout: "pipe",
+                    stderr: "pipe",
                 },
-                stdout: "pipe",
-                stderr: "pipe",
-            });
+            );
             const [exitCode, stdout, stderr] = await Promise.all([
                 child.exited,
                 new Response(child.stdout).text(),

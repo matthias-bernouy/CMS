@@ -115,7 +115,7 @@ export function assertImageVersion(version: string): void {
 }
 
 export function isOfficialImage(value: unknown, component: OfficialImageComponent): value is OfficialImage {
-    if (!isRecord(value)) {
+    if (!isRecord(value) || Object.keys(value).sort().join(",") !== "component,digest,version") {
         return false;
     }
     if (typeof value.version !== "string") {

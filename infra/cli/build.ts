@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { chmod, cp, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { sourceStackRelease } from "@bernouy/ulvia-cli/stack-release-build";
 import { CLI_DOCUMENTATION, writeCliDocumentation } from "./documentation";
 
 const PACKAGE_NAME = "@cyaxis/ulvia";
@@ -30,6 +31,9 @@ if (action === "build") {
 }
 
 async function build(releaseVersion: string, defaultStackVersion: string): Promise<void> {
+    if (releaseVersion !== defaultStackVersion) {
+        throw new Error("CLI and stack releases must use the same distribution version");
+    }
     await rm(staging, { recursive: true, force: true });
     await mkdir(join(staging, "dist"), { recursive: true });
     await command(["bun", "run", "build:browser"], root);
@@ -43,6 +47,7 @@ async function build(releaseVersion: string, defaultStackVersion: string): Promi
             "utf8",
         ),
     };
+    const stackRelease = await sourceStackRelease(defaultStackVersion);
     const result = await Bun.build({
         entrypoints: [join(source, "src/index.ts")],
         target: "bun",
@@ -54,6 +59,7 @@ async function build(releaseVersion: string, defaultStackVersion: string): Promi
             __ULVIA_PREVIEW_RUNTIMES__: JSON.stringify(previewRuntimes),
             __ULVIA_CLI_VERSION__: JSON.stringify(releaseVersion),
             __ULVIA_DEFAULT_STACK_VERSION__: JSON.stringify(defaultStackVersion),
+            __ULVIA_STACK_RELEASE__: JSON.stringify(stackRelease),
         },
     });
     if (!result.success) {
@@ -65,6 +71,7 @@ async function build(releaseVersion: string, defaultStackVersion: string): Promi
     const revision = (await command(["git", "rev-parse", "HEAD"], root, false)).trim();
     await Promise.all([
         writeCliDocumentation(root, staging, revision),
+        writeFile(join(staging, "dist/stack-release.json"), JSON.stringify(stackRelease)),
         cp(join(root, "LICENSE"), join(staging, "LICENSE")),
         writeFile(join(staging, "package.json"), `${JSON.stringify(packageManifest(releaseVersion), null, 4)}\n`),
         chmod(join(staging, "dist/index.js"), 0o755),
@@ -75,8 +82,8 @@ async function build(releaseVersion: string, defaultStackVersion: string): Promi
     if (reportedVersion !== releaseVersion) {
         throw new Error(`Built CLI reports ${reportedVersion} instead of ${releaseVersion}`);
     }
-    const startHelp = await command(["bun", "dist/index.js", "services", "start", "--help"], staging, false);
-    if (!startHelp.includes(`Bundled initial stack version: ${defaultStackVersion}`)) {
+    const startHelp = await command(["bun", "dist/index.js", "apply", "--help"], staging, false);
+    if (!startHelp.includes(`Bundled stack release: ${defaultStackVersion}`)) {
         throw new Error(`Built CLI does not report its ${defaultStackVersion} initial stack version`);
     }
     await mkdir(artifacts, { recursive: true });

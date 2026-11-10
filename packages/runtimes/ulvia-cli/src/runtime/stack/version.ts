@@ -11,7 +11,7 @@ export const DEFAULT_STACK_VERSION = injectedStackVersion ?? "unbundled";
 export function defaultStackVersion(): string {
     if (!injectedStackVersion) {
         throw new Error(
-            "This development CLI has no bundled stack version. Pass --version <version> on the first start.",
+            "This development CLI has no bundled stack version. Pass --version <version> on the first apply.",
         );
     }
     return injectedStackVersion;

@@ -1,23 +1,37 @@
 import { createHash } from "node:crypto";
-import { chmod, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { UlviaPaths } from "../../paths";
-import { parseInstallationConfig, type InstallationConfig } from "../installation";
-import { isOfficialImage, type OfficialImage } from "./images";
-
-const SERVICES_SCHEMA = "ulvia.local-services-stack.v1" as const;
+import { parseInstallationConfig } from "../installation";
+import type { InstallationConfig } from "../installation";
+import { isOfficialImage } from "./images";
+import type { OfficialImage } from "./images";
+import { parseStackRelease } from "../releases/model";
+import type { StackRelease } from "../releases/model";
+import { atomicPrivateWrite, readPrivateFile } from "./deployment/storage";
 
 export type LocalServicesState = Readonly<{
-    schema: typeof SERVICES_SCHEMA;
+    id: string;
     projectName: string;
     privateNetwork: string;
     instanceNetwork: string;
     images: Readonly<{ provider: OfficialImage; edge: OfficialImage }>;
     installation: InstallationConfig;
+    release: StackRelease;
+    artifactDigest: string;
+}>;
+export type DeploymentOperation = Readonly<{
+    kind: "apply" | "upgrade";
+    phase: "prepared" | "provider" | "edges" | "proxy" | "failed";
+    target: LocalServicesState;
+}>;
+export type DeploymentState = Readonly<{
+    schema: "ulvia.local-services-stack.v1";
+    applied: LocalServicesState | null;
+    operation: DeploymentOperation | null;
 }>;
 
 export function localServicesIdentity(paths: UlviaPaths) {
-    const suffix = dataSuffix(paths);
+    const suffix = createHash("sha256").update(paths.data).digest("hex").slice(0, 12);
     return {
         projectName: `ulvia-services-${suffix}`,
         privateNetwork: `ulvia-services-private-${suffix}`,
@@ -25,78 +39,100 @@ export function localServicesIdentity(paths: UlviaPaths) {
     } as const;
 }
 
-export async function loadLocalServicesState(paths: UlviaPaths): Promise<LocalServicesState | null> {
-    const value = await readState(join(paths.services, "stack.json"));
-    if (value === null) {
+export async function readDeploymentState(paths: UlviaPaths): Promise<DeploymentState | null> {
+    const text = await readPrivateFile(join(paths.services, "stack.json")).catch(() => {
+        throw new Error("Ulvia local services state is invalid; explicit recovery is required");
+    });
+    if (text === null) {
         return null;
+    }
+    try {
+        const value = JSON.parse(text);
+        if (
+            !value ||
+            Object.keys(value).sort().join(",") !== "applied,operation,schema" ||
+            value.schema !== "ulvia.local-services-stack.v1" ||
+            (value.applied === null && value.operation === null)
+        ) {
+            throw new Error();
+        }
+        const applied = value.applied === null ? null : parseDeployment(paths, value.applied);
+        let operation: DeploymentOperation | null = null;
+        if (value.operation !== null) {
+            const row = value.operation;
+            if (
+                !row ||
+                Object.keys(row).sort().join(",") !== "kind,phase,target" ||
+                !["apply", "upgrade"].includes(row.kind) ||
+                !["prepared", "provider", "edges", "proxy", "failed"].includes(row.phase)
+            ) {
+                throw new Error();
+            }
+            operation = { kind: row.kind, phase: row.phase, target: parseDeployment(paths, row.target) };
+        }
+        return { schema: value.schema, applied, operation };
+    } catch {
+        throw new Error("Ulvia local services state is invalid; explicit recovery is required");
+    }
+}
+
+export async function loadLocalServicesState(paths: UlviaPaths): Promise<LocalServicesState | null> {
+    return (await readDeploymentState(paths))?.applied ?? null;
+}
+export async function saveDeploymentState(
+    paths: UlviaPaths,
+    applied: LocalServicesState | null,
+    operation: DeploymentOperation | null,
+): Promise<void> {
+    if (!applied && !operation) {
+        throw new Error("Empty deployment state cannot be persisted");
+    }
+    const value: DeploymentState = { schema: "ulvia.local-services-stack.v1", applied, operation };
+    await atomicPrivateWrite(join(paths.services, "stack.json"), `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function parseDeployment(paths: UlviaPaths, value: unknown): LocalServicesState {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        throw new Error();
+    }
+    const row = value as Record<string, unknown>;
+    if (
+        Object.keys(row).sort().join(",") !==
+            "artifactDigest,id,images,installation,instanceNetwork,privateNetwork,projectName,release" ||
+        typeof row.id !== "string" ||
+        !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/u.test(row.id) ||
+        typeof row.artifactDigest !== "string" ||
+        !/^sha256:[a-f0-9]{64}$/u.test(row.artifactDigest)
+    ) {
+        throw new Error();
     }
     const identity = localServicesIdentity(paths);
     if (
-        value.schema !== SERVICES_SCHEMA ||
-        value.projectName !== identity.projectName ||
-        value.privateNetwork !== identity.privateNetwork ||
-        value.instanceNetwork !== identity.instanceNetwork ||
-        !validServiceImages(value.images)
+        row.projectName !== identity.projectName ||
+        row.privateNetwork !== identity.privateNetwork ||
+        row.instanceNetwork !== identity.instanceNetwork
     ) {
-        throw new Error("Ulvia local services state is invalid");
+        throw new Error();
     }
-    const installation = parseInstallationConfig(value.installation);
+    const images = row.images as LocalServicesState["images"];
+    if (
+        !images ||
+        Object.keys(images).sort().join(",") !== "edge,provider" ||
+        !isOfficialImage(images.provider, "provider") ||
+        !isOfficialImage(images.edge, "edge")
+    ) {
+        throw new Error();
+    }
+    const release = parseStackRelease(row.release);
+    if (images.provider.version !== release.version || images.edge.version !== release.version) {
+        throw new Error();
+    }
     return {
-        schema: SERVICES_SCHEMA,
-        projectName: value.projectName as string,
-        privateNetwork: value.privateNetwork as string,
-        instanceNetwork: value.instanceNetwork as string,
-        images: value.images as LocalServicesState["images"],
-        installation,
-    };
-}
-
-export async function saveLocalServicesState(
-    paths: UlviaPaths,
-    installation: InstallationConfig,
-    images: LocalServicesState["images"],
-): Promise<LocalServicesState> {
-    const state: LocalServicesState = {
-        schema: SERVICES_SCHEMA,
-        ...localServicesIdentity(paths),
+        id: row.id,
+        artifactDigest: row.artifactDigest,
+        ...identity,
         images,
-        installation,
+        release,
+        installation: parseInstallationConfig(row.installation),
     };
-    await writeState(join(paths.services, "stack.json"), state);
-    return state;
-}
-
-async function readState(path: string): Promise<Record<string, unknown> | null> {
-    const source = await readFile(path, "utf8").catch((error: NodeJS.ErrnoException) => {
-        if (error.code === "ENOENT") {
-            return null;
-        }
-        throw error;
-    });
-    if (source === null) {
-        return null;
-    }
-    await chmod(path, 0o600);
-    return JSON.parse(source) as Record<string, unknown>;
-}
-
-async function writeState(path: string, state: object): Promise<void> {
-    await writeFile(path, `${JSON.stringify(state, null, 2)}\n`, { mode: 0o600 });
-    await chmod(path, 0o600);
-}
-
-function dataSuffix(paths: UlviaPaths): string {
-    return createHash("sha256").update(paths.data).digest("hex").slice(0, 12);
-}
-
-function validServiceImages(value: unknown): value is LocalServicesState["images"] {
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-        return false;
-    }
-    const record = value as Record<string, unknown>;
-    return (
-        Object.keys(record).sort().join(",") === "edge,provider" &&
-        isOfficialImage(record.provider, "provider") &&
-        isOfficialImage(record.edge, "edge")
-    );
 }

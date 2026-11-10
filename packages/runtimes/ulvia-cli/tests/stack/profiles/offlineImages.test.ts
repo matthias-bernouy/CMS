@@ -10,14 +10,21 @@ test("fresh example--cached--image startup needs no registry pull while an expli
     const fixture = await profileCliFixture();
     try {
         await seedImages(fixture.root);
-        const services = await fixture.run(["services", "start", "--version", version]);
+        const services = await fixture.run(["apply", "--version", version]);
         expect(services.stderr).toBe("");
         expect(services.exitCode).toBe(0);
         expect((await fixture.run(["start"])).exitCode).toBe(0);
-        expect((await calls(fixture.root)).filter(({ args }) => args[0] === "pull")).toEqual([]);
-        expect((await fixture.run(["upgrade", "provider", "--version", version])).exitCode).toBe(0);
-        expect((await calls(fixture.root)).filter(({ args }) => args[0] === "pull").map(({ args }) => args)).toEqual([
+        expect(
+            (await calls(fixture.root)).filter(({ args }) => args[0] === "pull" && args[1].includes("cyaxis/")),
+        ).toEqual([]);
+        expect((await fixture.run(["upgrade", "--version", version])).exitCode).toBe(0);
+        expect(
+            (await calls(fixture.root))
+                .filter(({ args }) => args[0] === "pull" && args[1].includes("cyaxis/"))
+                .map(({ args }) => args),
+        ).toEqual([
             ["pull", `docker.io/cyaxis/ulvia-provider:${version}`],
+            ["pull", `docker.io/cyaxis/ulvia-edge:${version}`],
         ]);
     } finally {
         await fixture.close();
@@ -28,7 +35,7 @@ test("a mismatched cached image refuses startup before pulling or persisting a r
     const fixture = await profileCliFixture();
     try {
         await seedImages(fixture.root, true);
-        const result = await fixture.run(["services", "start", "--version", version]);
+        const result = await fixture.run(["apply", "--version", version]);
         expect(result.exitCode).not.toBe(0);
         expect(result.stderr).toContain("not the official Ulvia provider");
         const invoked = await calls(fixture.root);

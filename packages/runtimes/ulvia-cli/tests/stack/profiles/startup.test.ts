@@ -11,7 +11,7 @@ test("help, version and services status do not initialize authoring or publicati
         const options = { environment: { ULVIA_DATA_DIR: Bun.argv.at(-1) }, log() {} };
         await runCli(["--help"], options);
         await runCli(["--version"], options);
-        await runCli(["services", "status"], options);
+        await runCli(["status"], options);
         console.log(JSON.stringify(Object.keys(require.cache).filter(path =>
             /repository\/src\/collections\/|ulvia-cli\/src\/commands\/(release|remote)\//.test(path))));
     `;

@@ -1,103 +1,58 @@
-import { LOG_LEVELS, type LogLevel, type LogRecord } from "@bernouy/logging";
-import { isValidRequestId } from "@bernouy/http-runner/observability";
-
-const DEV_LOG_SERVICES = ["edge", "provider"] as const;
-const STABLE_IDENTIFIER = /^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/u;
-type LocalLogService = (typeof DEV_LOG_SERVICES)[number];
-
-export type LogSelection = Readonly<{
-    services: readonly LocalLogService[];
-    level: LogLevel;
-    requestId?: string;
-    event?: string;
+export type RuntimeLogSelection = Readonly<{
     follow: boolean;
-    format: "pretty" | "json";
-    stack: boolean;
+    components: readonly string[];
+    services: readonly string[];
+    levels: readonly string[];
 }>;
+const COMPONENTS = ["provider", "edge", "proxy", "mongo"];
+const LEVELS = ["trace", "debug", "info", "warn", "error", "fatal"];
 
-export function parseSelection(args: readonly string[], usage = "ulvia logs"): LogSelection {
-    const values = [...args];
-    const first = values[0];
-    const services: readonly LocalLogService[] =
-        !first || first.startsWith("--") || first === "all"
-            ? DEV_LOG_SERVICES
-            : DEV_LOG_SERVICES.includes(first as LocalLogService)
-              ? [values.shift() as LocalLogService]
-              : fail(`Unknown log service: ${first}`, usage);
-    if (first === "all") {
-        values.shift();
-    }
-    let level: LogLevel = "trace";
-    let requestId: string | undefined;
-    let event: string | undefined;
+export function parseRuntimeLogSelection(args: readonly string[]): RuntimeLogSelection {
     let follow = false;
-    let format: LogSelection["format"] = "pretty";
-    let stack = false;
-    while (values.length > 0) {
-        const flag = values.shift();
-        if (flag === "--follow") {
+    const filters: Record<string, string[]> = { component: [], service: [], level: [] };
+    for (let index = 0; index < args.length; index++) {
+        const arg = args[index];
+        if (arg === "--follow" && !follow) {
             follow = true;
             continue;
         }
-        if (flag === "--json") {
-            format = "json";
-            continue;
+        if (arg !== "--filter" || !args[index + 1]) {
+            throw new Error("Usage: ulvia logs [--filter <component|service|level=value>] [--follow]");
         }
-        if (flag === "--stack") {
-            stack = true;
-            continue;
+        const match = /^(component|service|level)=([a-z0-9-]{1,32})$/u.exec(args[++index]!);
+        if (!match) {
+            throw new Error("Invalid runtime log filter");
         }
-        if (flag === "--level") {
-            const value = values.shift() as LogLevel | undefined;
-            if (!value || !LOG_LEVELS.includes(value)) {
-                fail("--level requires trace, debug, info, warn, error, or fatal", usage);
-            }
-            level = value;
-            continue;
+        const key = match[1]!;
+        const value = match[2]!;
+        if (
+            (key === "component" && !COMPONENTS.includes(value)) ||
+            (key === "level" && !LEVELS.includes(value)) ||
+            (key === "service" && !/^(?:provider|proxy|mongo|mongo-provision|edge-[1-9][0-9]?)$/u.test(value))
+        ) {
+            throw new Error("Invalid runtime log filter value");
         }
-        if (flag === "--request-id") {
-            requestId = values.shift()?.trim();
-            if (!requestId || !isValidRequestId(requestId)) {
-                fail("--request-id requires a canonical UUID v4", usage);
-            }
-            continue;
+        if (filters[key]!.length >= 16) {
+            throw new Error("Too many runtime log filters");
         }
-        if (flag === "--event") {
-            event = values.shift()?.trim();
-            if (!event || !STABLE_IDENTIFIER.test(event)) {
-                fail("--event requires a stable lowercase event name", usage);
-            }
-            continue;
+        if (!filters[key]!.includes(value)) {
+            filters[key]!.push(value);
         }
-        fail(`Unknown logs option: ${flag}`, usage);
     }
-    return { services, level, requestId, event, follow, format, stack };
+    return { follow, components: filters.component!, services: filters.service!, levels: filters.level! };
 }
-
-export function formatRecord(record: LogRecord, selection: LogSelection): string {
-    if (selection.format === "json") {
-        return JSON.stringify(record);
+export function logComponent(service: string): string {
+    return service.startsWith("edge-") ? "edge" : service === "mongo-provision" ? "mongo" : service;
+}
+export function runtimeLogLevel(line: string): string | undefined {
+    try {
+        const row = JSON.parse(line);
+        const level =
+            row.level ??
+            ({ D: "debug", I: "info", W: "warn", E: "error", F: "fatal" } as Record<string, string>)[row.s];
+        const normalized = level === "warning" ? "warn" : level;
+        return typeof normalized === "string" && LEVELS.includes(normalized) ? normalized : undefined;
+    } catch {
+        return undefined;
     }
-    const attributes = record.attributes ? ` ${JSON.stringify(record.attributes)}` : "";
-    const error = record.error ? ` ${escapeControls(record.error.name)}: ${escapeControls(record.error.message)}` : "";
-    const stack = selection.stack && record.error?.stack ? `\n${escapeStack(record.error.stack)}` : "";
-    return `${record.time} ${record.level.toUpperCase()} ${record.service} ${record.event}${attributes}${error}${stack}`;
-}
-
-function escapeStack(value: string): string {
-    return value.replace(
-        /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/gu,
-        (character) => `\\u${character.codePointAt(0)?.toString(16).padStart(4, "0")}`,
-    );
-}
-
-function escapeControls(value: string): string {
-    return value.replace(
-        /[\u0000-\u001f\u007f-\u009f]/gu,
-        (character) => `\\u${character.codePointAt(0)?.toString(16).padStart(4, "0")}`,
-    );
-}
-
-function fail(message: string, usage: string): never {
-    throw new Error(`${message}\nUsage: ${usage} [all | edge | provider] [options]`);
 }

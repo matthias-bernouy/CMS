@@ -23,20 +23,18 @@ export async function announceControl(paths: UlviaPaths, state: LocalServicesSta
         await Bun.sleep(250);
     } while (Date.now() < deadline);
     if (local) {
-        throw new Error(
-            `Shared services started but Control is not accessible at ${origin}. Inspect ulvia services logs.`,
-        );
+        throw new Error(`Shared services started but Control is not accessible at ${origin}. Inspect ulvia logs.`);
     }
     log(
-        `Control is provisioned at ${origin}; DNS/TLS or proxy readiness is pending. Inspect ulvia services status and logs.`,
+        `Control is provisioned at ${origin}; DNS/TLS or proxy readiness is pending. Inspect ulvia status and ulvia logs.`,
     );
     if (!state.installation.hosting.publicAddresses.length) {
         log(
-            "Set the installation public addresses with ulvia configure hosting --public-addresses <ip,ip>, then restart services.",
+            "Set the installation public addresses with ulvia configure --public-addresses <ip,ip>, then run ulvia apply.",
         );
     }
 }
-async function controlAccessible(state: LocalServicesState): Promise<boolean> {
+export async function controlAccessible(state: LocalServicesState): Promise<boolean> {
     const origin = new URL(state.installation.hosting.controlOrigin);
     const url =
         state.installation.tls.mode === "disabled"

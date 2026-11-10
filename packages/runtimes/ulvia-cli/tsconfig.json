@@ -13,12 +13,11 @@
         "src/**/*.ts"
     ],
     "references": [
-        { "path": "../../features/hosting" },
         {
-            "path": "../../features/content"
+            "path": "../../features/hosting"
         },
         {
-            "path": "../../features/observability"
+            "path": "../../features/content"
         },
         {
             "path": "../../features/repository"
@@ -34,9 +33,6 @@
         },
         {
             "path": "../../platform/contracts"
-        },
-        {
-            "path": "../../platform/gateway"
         },
         {
             "path": "../../platform/providers"

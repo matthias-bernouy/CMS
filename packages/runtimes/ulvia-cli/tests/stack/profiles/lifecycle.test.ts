@@ -3,18 +3,19 @@ import { readFile, writeFile, stat, lstat, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { profileCliFixture } from "./fixture";
 
-test("CLI starts shared hosting, preserves credentials and data, scales Edges and rolls back failed updates", async () => {
+test("CLI starts shared hosting, preserves credentials and data, scales Edges and resumes interrupted stack updates", async () => {
     const fixture = await profileCliFixture();
     const { root, run, state } = fixture;
     const data = join(root, "data");
     const json = async (path: string) => JSON.parse(await readFile(path, "utf8"));
     try {
-        const started = await run(["start", "--version", "0.1.0", "--domain", "control.localhost"]);
+        const started = await run(["apply", "--version", "0.1.0"]);
         expect(started.stderr).toBe("");
         expect(started.exitCode).toBe(0);
         expect(started.stdout).toContain("Control is accessible");
         const servicesPath = join(data, "services/stack.json");
-        const initialServices = await json(servicesPath);
+        const initialRecord = await json(servicesPath);
+        const initialServices = initialRecord.applied;
         expect(Object.keys(initialServices.images).sort()).toEqual(["edge", "provider"]);
         expect(initialServices.installation.hosting.edgeCount).toBe(1);
         const administratorPath = join(data, "services/credentials/control-administrator.json");
@@ -40,37 +41,40 @@ test("CLI starts shared hosting, preserves credentials and data, scales Edges an
             throw cause;
         });
         expect(obsolete).toBeNull();
-        expect((await run(["services", "stop"])).exitCode).toBe(0);
+        expect((await run(["stop"])).exitCode).toBe(0);
         expect((await run(["start"])).exitCode).toBe(0);
-        expect(await json(servicesPath)).toEqual(initialServices);
+        expect((await json(servicesPath)).applied).toEqual(initialServices);
         expect(await json(administratorPath)).toEqual(administrator);
         expect(await json(runtimePath)).toEqual(runtime);
         expect(await readFile(operatorPath, "utf8")).toBe(operator);
-        const refusedDomain = await run(["configure", "hosting", "--domain", "other.localhost"]);
+        const refusedDomain = await run(["configure", "--domain", "other.localhost"]);
         expect(refusedDomain.stderr).toContain("Control origin cannot change");
-        const refusedNetwork = await run(["configure", "network", "--http-port", "8080"]);
-        expect(refusedNetwork.stderr).toContain("locked after the first infrastructure start");
-        expect((await run(["configure", "hosting", "--edges", "2"])).exitCode).toBe(0);
+        const refusedNetwork = await run(["configure", "--http-port", "8080"]);
+        expect(refusedNetwork.stderr).toContain("locked after the first deployment");
+        expect((await run(["configure", "--edges", "2"])).exitCode).toBe(0);
         expect((await run(["start"])).exitCode).toBe(0);
-        const scaled = await json(servicesPath);
+        expect((await json(servicesPath)).applied.installation.hosting.edgeCount).toBe(1);
+        expect((await run(["apply"])).exitCode).toBe(0);
+        const scaled = (await json(servicesPath)).applied;
         expect(scaled.installation.hosting.edgeCount).toBe(2);
-        const compose = await json(join(data, "services/shared-edges.json"));
+        const compose = await json(join(data, "services/deployments", scaled.id, "shared-edges.json"));
         expect(Object.keys(compose.services).sort()).toEqual(["edge-1", "edge-2", "proxy"]);
-        const status = await run(["services", "status"]);
+        const status = await run(["status"]);
         expect(status.exitCode).toBe(0);
         expect(status.stdout).toContain("edge-2");
         for (const component of ["provider", "edge"]) {
-            const failed = await run(["upgrade", component, "--version", "0.2.0"], {
+            const failed = await run(["upgrade", "--version", "0.2.0"], {
                 ULVIA_TEST_DOCKER_FAIL_VERSION: "0.2.0",
                 ULVIA_TEST_DOCKER_FAIL_COMPONENT: component,
             });
             expect(failed.exitCode).not.toBe(0);
-            expect(await json(servicesPath)).toEqual(scaled);
+            expect((await json(servicesPath)).applied).toEqual(scaled);
+            expect((await json(servicesPath)).operation.phase).toBe("failed");
         }
-        expect((await run(["upgrade", "provider", "--version", "0.2.0"])).exitCode).toBe(0);
-        expect((await run(["upgrade", "edge", "--version", "0.2.0"])).exitCode).toBe(0);
-        expect((await json(servicesPath)).images.provider.version).toBe("0.2.0");
-        expect((await json(servicesPath)).images.edge.version).toBe("0.2.0");
+        expect((await run(["upgrade"])).exitCode).toBe(0);
+        expect((await json(servicesPath)).operation).toBeNull();
+        expect((await json(servicesPath)).applied.images.provider.version).toBe("0.2.0");
+        expect((await json(servicesPath)).applied.images.edge.version).toBe("0.2.0");
         expect(await json(runtimePath)).toEqual(runtime);
         expect(await json(administratorPath)).toEqual(administrator);
         expect(await readFile(marker, "utf8")).toBe('{"title":"Preserved page"}');
@@ -89,7 +93,7 @@ test("CLI starts shared hosting, preserves credentials and data, scales Edges an
         expect(
             calls
                 .filter(({ args }) => args[0] === "pull")
-                .every(({ args }) => /cyaxis\/ulvia-(provider|edge):/u.test(args[1])),
+                .every(({ args }) => /(?:cyaxis\/ulvia-(provider|edge):|^(?:mongo|caddy):)/u.test(args[1])),
         ).toBe(true);
         expect(
             calls
@@ -104,7 +108,7 @@ test("CLI starts shared hosting, preserves credentials and data, scales Edges an
         expect(JSON.stringify(calls)).not.toContain(administrator.password);
         expect(JSON.stringify(calls)).not.toContain(operator);
         await rm(administratorPath);
-        expect((await run(["services", "stop"])).exitCode).toBe(0);
+        expect((await run(["stop"])).exitCode).toBe(0);
         const reopened = await run(["start"]);
         expect(reopened.exitCode).toBe(0);
         expect(reopened.stdout).toContain("existing Control administrator");

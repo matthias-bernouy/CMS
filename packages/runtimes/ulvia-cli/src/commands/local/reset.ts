@@ -3,17 +3,17 @@ import { chmod, lstat, opendir, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { ensureUlviaPaths, type UlviaPaths } from "../../runtime/paths";
 import { loadInstallationConfig } from "../../runtime/stack/installation";
-import { loadLocalServicesState } from "../../runtime/stack/orchestration/state";
+import { readDeploymentState } from "../../runtime/stack/orchestration/state";
 import { destroyLocalServices } from "../../runtime/stack/orchestration/services";
 
 export async function resetLocalInstallation(paths: UlviaPaths, log: (message: string) => void): Promise<void> {
     await assertRecognizedData(paths);
-    if (await loadLocalServicesState(paths)) {
+    if (await readDeploymentState(paths)) {
         await destroyLocalServices(paths);
     }
     await resetLocalData(paths);
     log(`Reset local Ulvia installation: ${paths.data}`);
-    log("Run ulvia start to initialize a fresh empty Control.");
+    log("Run ulvia configure and ulvia apply to initialize a fresh empty Control.");
 }
 
 export async function resetLocalData(paths: UlviaPaths): Promise<void> {

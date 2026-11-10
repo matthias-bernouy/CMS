@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
 import { runCli } from "../../src/cli";
 import { bootstrapOfficialRepository } from "../../src/commands/bootstrap";
-import { aggregateStatus } from "../../src/commands/local/services";
+import { aggregateStatus } from "../../src/commands/local/deployment/status";
 import { resolveUlviaPaths } from "../../src/runtime/paths";
 import { resolveServicePorts } from "../../src/runtime/stack/ports";
 import { loadInstallationConfig } from "../../src/runtime/stack/installation";
@@ -20,11 +20,12 @@ describe("Ulvia CLI", () => {
         expect(output.join("\n")).toContain("ulvia prune");
         expect(output.join("\n")).toContain("ulvia pull");
         expect(output.join("\n")).toContain("ulvia push");
-        expect(output.join("\n")).toContain("ulvia services");
-        expect(output.join("\n")).toContain("ulvia configure network");
-        expect(output.join("\n")).toContain("ulvia configure hosting");
+        expect(output.join("\n")).toContain("ulvia apply");
+        expect(output.join("\n")).not.toContain("ulvia services");
+        expect(output.join("\n")).toContain("ulvia configure");
+        expect(output.join("\n")).toContain("ulvia configure");
         expect(output.join("\n")).not.toContain("ulvia instance create");
-        expect(output.join("\n")).toContain("ulvia upgrade <edge | provider>");
+        expect(output.join("\n")).toContain("ulvia upgrade [--version");
         expect(output.join("\n")).not.toContain("ulvia dev");
         expect(output.join("\n")).toContain("ulvia reset --yes");
         expect(output.join("\n")).not.toContain("ulvia instance delete");
@@ -34,7 +35,7 @@ describe("Ulvia CLI", () => {
         const root = await mkdtemp(join(tmpdir(), "ulvia-upgrade-arguments-"));
         try {
             await expect(
-                runCli(["upgrade", "edge", "--version", "latest"], {
+                runCli(["upgrade", "--version", "latest"], {
                     environment: { ULVIA_DATA_DIR: root },
                     log: () => undefined,
                 }),
@@ -56,7 +57,6 @@ describe("Ulvia CLI", () => {
             await runCli(
                 [
                     "configure",
-                    "network",
                     "--bind",
                     "0.0.0.0",
                     "--http-port",
@@ -79,7 +79,7 @@ describe("Ulvia CLI", () => {
             const marker = join(paths.services, "stack.json");
             await writeFile(marker, '{"invalid":"existing launch state"}');
             await expect(
-                runCli(["configure", "network", "--http-port", "8080"], {
+                runCli(["configure", "--http-port", "8080"], {
                     environment: { ULVIA_DATA_DIR: root },
                     log: () => undefined,
                 }),
