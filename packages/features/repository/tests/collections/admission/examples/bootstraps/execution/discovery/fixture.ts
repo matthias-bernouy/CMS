@@ -1,3 +1,12 @@
+import { discoveryPeer } from "./peer";
+import { compareSemVer, releaseChannel } from "@bernouy/ulvia-contracts/compatibility";
+import { afterEach } from "bun:test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { FilesystemRepositoryCatalogueIndex } from "repository/repository/filesystem/catalogueIndex";
+import { RecipeProjections } from "repository/repository/filesystem/artifacts/discovery/projections";
+import { LocalRepositoryYanks } from "repository/repository/filesystem/yanks";
 import { createHash } from "node:crypto";
 import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import {
@@ -5,18 +14,27 @@ import {
     collectionBrowserRiskDigest,
     collectionBrowserRisk,
 } from "@bernouy/repository/collections";
-import { HttpCollectionRepository } from "@bernouy/repository/collections/http";
 import { SiteInitializationService } from "@bernouy/repository/collections/installations";
 import { inlineCollectionVerifier } from "@bernouy/repository/collections/sources";
-import type { RepositoryFetch } from "@bernouy/repository/collections/http";
 import { bootstrapCollection } from "../../fixture";
 import { initializationFixture } from "../fixture";
 
+const roots = new Set<string>();
+afterEach(async () => {
+    for (const root of roots) {
+        await rm(root, { recursive: true, force: true });
+        roots.delete(root);
+    }
+});
+
 type Collection = { name: string; versions?: string[]; recipes?: boolean };
-type DiscoveryIntercept = (...args: Parameters<RepositoryFetch>) => Promise<Response | undefined>;
 
 export async function discoveryFixture(collections: Collection[] = [{ name: "atlas" }]) {
     const f = await initializationFixture();
+    const root = await mkdtemp(join(tmpdir(), "recipe-discovery-"));
+    roots.add(root);
+    const index = new FilesystemRepositoryCatalogueIndex(root);
+    const projections = new RecipeProjections(root);
     const releases = new Map<string, string>();
     const entries = [];
     for (const collection of collections) {
@@ -31,12 +49,21 @@ export async function discoveryFixture(collections: Collection[] = [{ name: "atl
         }
         const artifact = await admitCollectionRelease(document);
         const risk = collectionBrowserRisk(artifact.release);
-        for (const version of collection.versions ?? ["1.0.0"]) {
+        const versions = collection.versions ?? ["1.0.0"];
+        const latest = versions
+            .filter((version) => releaseChannel(version) === "stable")
+            .sort(compareSemVer)
+            .at(-1);
+        for (const version of versions) {
             const release = { ...artifact.release, version };
             const json = canonicalizeIJson(release);
-            const digest = `sha256:${createHash("sha256").update(json).digest("hex")}`;
+            const digest = `sha256:${createHash("sha256").update(json).digest("hex")}` as const;
             const path = `/v1/releases/collection/${encodeURIComponent(release.publisherId)}/${encodeURIComponent(release.collectionId)}/${version}`;
             releases.set(path, json);
+            await Bun.write(join(root, "releases", release.publisherId, collection.name, `${version}.json`), json);
+            if (version === latest) {
+                await projections.put(await admitCollectionRelease(release));
+            }
             entries.push({
                 kind: "collection",
                 publisherId: release.publisherId,
@@ -58,39 +85,7 @@ export async function discoveryFixture(collections: Collection[] = [{ name: "atl
             });
         }
     }
-    const requests: { path: string; method: string; input: Record<string, unknown> }[] = [];
-    const observed = {
-        catalogueEntries: 0,
-        releaseBytes: 0,
-        verifications: 0,
-        intercept: undefined as DiscoveryIntercept | undefined,
-    };
-    const source = new HttpCollectionRepository("official", "https://repository.example", {
-        request: async (url, init) => {
-            const path = url.pathname.replace("/.cms/call/ulvia/repository", "");
-            const input = init.body ? JSON.parse(String(init.body)) : {};
-            requests.push({ path, method: init.method ?? "GET", input });
-            const intercepted = await observed.intercept?.(url, init);
-            if (intercepted) {
-                return intercepted;
-            }
-            if (path === "/v1/catalogue") {
-                const offset = input.cursor ? Number(String(input.cursor).slice(5)) : 0;
-                const page = entries.slice(offset, offset + Number(input.limit));
-                observed.catalogueEntries += page.length;
-                return Response.json({
-                    releases: page,
-                    ...(offset + page.length < entries.length ? { nextCursor: `page_${offset + page.length}` } : {}),
-                });
-            }
-            const json = releases.get(path);
-            if (!json) {
-                throw new Error(`Unexpected discovery request: ${path}`);
-            }
-            observed.releaseBytes += Buffer.byteLength(json);
-            return new Response(json, { headers: { "content-type": "application/json" } });
-        },
-    });
+    const { source, observed, requests } = discoveryPeer(index, entries, releases);
     const service = new SiteInitializationService({
         ...f.options,
         source,
@@ -108,5 +103,10 @@ export async function discoveryFixture(collections: Collection[] = [{ name: "atl
         collections: await f.options.collections.listInstalled("default"),
         activeUpgrade: await f.options.upgrades.getActive("default"),
     });
-    return { service, source, entries, releases, requests, observed, businessState };
+    const yank = async (collectionId: string, version: string) => {
+        await new LocalRepositoryYanks(root).set("collection", "atlas.official", collectionId, version, "Withdrawn");
+        index.invalidate();
+        await index.prepareRecipes();
+    };
+    return { service, source, entries, releases, requests, observed, businessState, yank };
 }

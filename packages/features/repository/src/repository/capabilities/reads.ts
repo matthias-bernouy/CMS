@@ -4,6 +4,7 @@ import type { RepositoryCapabilityPorts } from "./interfaces";
 import type {
     CatalogueListInput,
     CollectionCatalogueInput,
+    RecipeCatalogueInput,
     CatalogueSearchInput,
     NamespaceGetInput,
     PublicationStateInput,
@@ -30,6 +31,12 @@ export function repositoryReads(ports: RepositoryCapabilityPorts) {
                 { ...input, kind: "collection", channel: input.channel ?? "stable", latestPerResource: true },
                 signal,
             );
+        },
+        async recipes(input: RecipeCatalogueInput, signal?: AbortSignal) {
+            if (!ports.recipes) {
+                throw new RepositoryRequestError("CORE_UNAVAILABLE", "Recipe discovery is unavailable");
+            }
+            return ports.recipes(input, signal);
         },
         async search(input: CatalogueSearchInput) {
             if (!ports.search) {

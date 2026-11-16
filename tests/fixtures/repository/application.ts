@@ -43,6 +43,7 @@ export function repositoryApplication(
         search,
         sources: new FilesystemRepositorySourceStore(root),
         catalogue: (input) => reads.catalogue(input),
+        recipes: (input, signal) => reads.recipes(input, signal),
         release: (coordinate) => reads.release(coordinate),
         asset: (coordinate, id) => reads.asset(coordinate, id),
     });

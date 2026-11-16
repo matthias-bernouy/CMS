@@ -5,6 +5,7 @@ import { assertCollectionResourceIsolation } from "@bernouy/repository/collectio
 import { FilesystemRepositoryCatalogueIndex } from "@bernouy/repository/repository/filesystem";
 import { assertMaximum, benchmark, printResults, type BenchmarkResult } from "../../benchmark";
 import { repositoryFixture } from "./fixture";
+import { measureRecipeDiscovery } from "./recipes";
 
 const fixture = await repositoryFixture();
 const results: BenchmarkResult[] = [];
@@ -56,7 +57,9 @@ try {
     await measure("available collections warm / empty site", () => sources.catalogue("empty"));
     printResults("Repository and installation catalogue phases (real loopback HTTP)", results);
     console.table(work.map(({ name, reads, network }) => ({ phase: name, ...reads, ...network })));
+    const recipeDiscovery = await measureRecipeDiscovery(fixture);
     const report = {
+        recipeDiscovery,
         generatedAt: new Date().toISOString(),
         environment: { bun: Bun.version, platform: process.platform, arch: process.arch },
         collection: {

@@ -20,6 +20,7 @@ import { LocalContractReleases } from "../contracts";
 import { withRepositoryWriteLock } from "../core/lock";
 import { LocalProviderReleases } from "../providers";
 import { LocalRepositoryYanks } from "../yanks";
+import { prepareRecipeYank } from "../artifacts/discovery/prepare";
 import type { FilesystemRepositoryCatalogueIndex } from "../catalogueIndex";
 
 /** Reference filesystem adapter for the storage-independent publication endpoint. */
@@ -126,6 +127,7 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
     ): Promise<RepositoryYankResult> {
         const result = await withRepositoryWriteLock(this.root, async () => {
             await assertPublished(this.root, coordinate);
+            await prepareRecipeYank(this.root, coordinate, reason !== null);
             const yank = await new LocalRepositoryYanks(this.root).set(
                 coordinate.kind,
                 coordinate.publisherId,

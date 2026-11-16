@@ -36,19 +36,34 @@ test("a changed catalogue refuses an old recipe cursor before reading any releas
     const first = await f.service.list();
     const before = await f.businessState();
     const verifications = f.observed.verifications;
-    f.entries.pop();
+    await f.yank("atlas.official/echo", "1.0.0");
     await expect(f.service.list(first.cursor)).rejects.toMatchObject({ status: 409 });
     expect(f.observed.verifications).toBe(verifications);
     expect(await f.businessState()).toEqual(before);
 });
 
-test("discovery refuses release bytes that do not match the exact catalogue digest without changing the site", async () => {
+test("discovery refuses forged summary references without downloading collection releases", async () => {
     const f = await discoveryFixture();
     const before = await f.businessState();
-    const [path, json] = [...f.releases][0];
-    f.releases.set(path, JSON.stringify({ ...JSON.parse(json), version: "1.0.1" }));
-    await expect(f.service.list()).rejects.toThrow("digest mismatch");
+    const result = await f.service.list();
+    f.observed.intercept = async () =>
+        Response.json({
+            ...result,
+            items: result.items.map((item) => ({ ...item, root: { ...item.root, publisherId: "other" } })),
+        });
+    await expect(f.service.list()).rejects.toThrow("Invalid recipe catalogue references");
     expect(await f.businessState()).toEqual(before);
-    f.releases.set(path, json);
+    f.observed.intercept = undefined;
     expect((await f.service.list()).items).toHaveLength(1);
+    expect(f.observed.releaseBytes).toBe(0);
+});
+
+test("collections without recipes do not consume recipe page slots", async () => {
+    const f = await discoveryFixture([
+        ...["alpha", "bravo", "charlie", "delta"].map((name) => ({ name, recipes: false })),
+        { name: "echo" },
+    ]);
+    const result = await f.service.list();
+    expect(result.items.map(({ root }) => root.collectionId)).toEqual(["atlas.official/echo"]);
+    expect(result.cursor).toBe("");
 });

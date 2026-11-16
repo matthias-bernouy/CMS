@@ -42,6 +42,7 @@ export async function createInstanceRepository(
         exists: async (accountId) => Boolean(await stores.users.getBySub(accountId)),
     });
     const index = new FilesystemRepositoryCatalogueIndex(root, verifier);
+    await index.prepareRecipes();
     const reads = new FilesystemRegistryReads(root, index, verifier);
     const uploads = new FilesystemRepositoryPublicationUploadStore(root);
     try {
@@ -59,6 +60,7 @@ export async function createInstanceRepository(
         sources: new FilesystemRepositorySourceStore(root),
         registry: new FilesystemRepositoryPublicationRegistry(root, index),
         catalogue: (input, signal) => reads.catalogue(input, signal),
+        recipes: (input, signal) => reads.recipes(input, signal),
         release: (coordinate) => reads.release(coordinate),
         asset: (coordinate, assetId) => reads.asset(coordinate, assetId),
     });

@@ -2,7 +2,7 @@ import type { CollectionPublicationCode, CollectionPublicationResource } from "r
 /** An expected, safely reportable refusal; storage and other technical failures must propagate. */
 export class RepositoryRequestError extends Error {
     constructor(
-        readonly code: "REJECTED" | "NOT_FOUND",
+        readonly code: "REJECTED" | "NOT_FOUND" | "CORE_UNAVAILABLE",
         message: string = code,
         readonly publicationCode?: CollectionPublicationCode,
         readonly publicationResource?: CollectionPublicationResource,

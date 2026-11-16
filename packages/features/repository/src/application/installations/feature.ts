@@ -62,7 +62,7 @@ export const installationsFeature = defineFeature({
     name: "CMS Installations",
     description:
         "Inspect and administer the collection installations, provider installations and contract selections of one CMS instance.",
-    version: "1.4.0",
+    version: "1.4.1",
     publisherId: "ulvia",
     catalogue: { icon: "installations", categories: ["administration", "content", "infrastructure"] },
     documents: new URL("../../../docs/installations/", import.meta.url),

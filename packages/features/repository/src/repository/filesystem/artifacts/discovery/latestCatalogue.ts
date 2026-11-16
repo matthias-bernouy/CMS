@@ -1,8 +1,8 @@
 import { join } from "node:path";
 import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
-import type { LocalRepositoryYanks } from "../yanks";
+import type { LocalRepositoryYanks } from "../../yanks";
 import type { CollectionReference } from "./collectionReferences";
-import { listDirectories } from "../core/immutableFiles";
+import { listDirectories } from "../../core/immutableFiles";
 import { collectionReferences, validCollectionScope } from "./collectionReferences";
 import type { CollectionReferenceScope } from "./collectionReferences";
 

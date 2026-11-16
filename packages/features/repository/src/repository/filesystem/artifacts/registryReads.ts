@@ -6,6 +6,7 @@ import {
     resolveCollectionTranslation,
 } from "repository/exports/collections/index";
 import type { CollectionVerifier } from "repository/collections/sources/verification";
+import type { RecipeCatalogueInput } from "repository/application/registry/interfaces/inputs";
 import { RepositoryRequestError } from "../../core/errors";
 import type { RepositoryCapabilityPorts } from "../../capabilities/interfaces";
 import type { RemoteCoordinate } from "../../publication/types";
@@ -78,6 +79,10 @@ export class FilesystemRegistryReads {
             }
             throw error;
         }
+    }
+
+    recipes(input: RecipeCatalogueInput, signal?: AbortSignal) {
+        return this.index.recipePage(input, signal);
     }
 
     private async hydrateCollection(

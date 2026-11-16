@@ -8,9 +8,9 @@ The public `initialization.entry` query exposes only a pending flag. Every other
 capability requires an administrator. The system HTML assistant uses the same Gateway capabilities
 as API and MCP clients; it owns no authentication session or persistence of its own.
 
-Use `initialization.list` to browse recipes. Discovery reads metadata for at most four latest
-stable collections per page. A cursor is bound to the current catalogue; restart discovery after
-a revision conflict. No browser code executes while browsing or reviewing a recipe.
+Use `initialization.list` to browse recipes. Discovery requests at most four indexed recipe summaries per page from Repository 1.3.
+It does not enumerate release history, download collection releases or validate executable bundles.
+A cursor is bound to the current recipe index and locale; restart discovery after a revision conflict. No browser code executes while browsing or reviewing a recipe.
 
 Call `initialization.plan` with an exact root reference, or `root: null` for an empty start.
 The review pins the instance, administrator, execution policy, current state, collection bytes,

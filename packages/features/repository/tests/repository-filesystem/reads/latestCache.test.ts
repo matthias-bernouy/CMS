@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { LatestCollectionCatalogue } from "../../../src/repository/filesystem/artifacts/latestCatalogue";
+import { LatestCollectionCatalogue } from "../../../src/repository/filesystem/artifacts/discovery/latestCatalogue";
 
 test("all shared latest readers observe invalidation and failed loads are retryable", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-latest-race-"));

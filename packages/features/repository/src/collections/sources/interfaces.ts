@@ -30,6 +30,7 @@ export interface CollectionRepositoryBundle {
 export interface CollectionRepositorySource {
     readonly id: string;
     list(): Promise<CollectionRepositoryEntry[]>;
+    recipes?(input: RecipeCatalogueInput, signal?: AbortSignal): Promise<RecipeCatalogueOutput>;
     page?(
         input: {
             mode: "latest" | "history";
@@ -50,3 +51,5 @@ export interface CollectionRepositorySource {
     ): Promise<CollectionRepositoryBundle>;
 }
 import type { CollectionBundleAsset } from "../interfaces/CollectionAssets";
+import type { RecipeCatalogueInput } from "./recipeSchema";
+import type { RecipeCatalogueOutput } from "./recipeSchema";

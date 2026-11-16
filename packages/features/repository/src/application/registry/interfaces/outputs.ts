@@ -1,4 +1,5 @@
 import type { publicationYankOutputSchema } from "repository/application/registry/schemas/publications/state";
+import type { recipeCatalogueOutputSchema } from "repository/application/registry/schemas/catalogue/recipes";
 import type { z } from "zod";
 import type { catalogueListOutputSchema } from "repository/application/registry/schemas/catalogue/listing";
 import type { namespaceClaimOutputSchema } from "repository/application/registry/schemas/namespaces";
@@ -16,3 +17,4 @@ export type RepositoryCatalogueMetadata = z.output<typeof catalogueMetadataSchem
 export type PublicationStateOutput = z.output<typeof publicationYankOutputSchema>;
 
 export type CollectionCatalogueOutput = z.output<typeof catalogueListOutputSchema>;
+export type RecipeCatalogueOutput = z.output<typeof recipeCatalogueOutputSchema>;

@@ -17,9 +17,9 @@ const releaseDigests = {
     "ulvia/cms.files": "sha256:f5be7d20f375d96cc97d4454bdb570fc87fabe755dff1850cbaeb26e508809a8",
     "ulvia/cms.observability": "sha256:113758c81e4cdc774bba95c8f136a3a9650be5b6d59412ef51383bd15dd2de45",
     "ulvia/provider.connections": "sha256:0cfc85a809d4078e5e95adc94d023d65fa6d626074093f1a880090ce02b8f9f2",
-    "ulvia/repository": "sha256:fc0cff55733f2bd4f4ce77871ccb95893793f9a8f4965cf47bd31bf4c1cea6a2",
+    "ulvia/repository": "sha256:216131fbd6fa34c015c8dbdb1e1954d6217ba7b85e44d6f51d137d5b21979409",
     "ulvia/cms.hosting": "sha256:89bfdbd3cbc8e66b334f2e93986008185036118d217dd76837433bc3a4b10d66",
-    "ulvia/cms.installations": "sha256:dbfaafe02234c64828b1fc8b0ced559a6ec75ebe185db6ade639def9edcd876f",
+    "ulvia/cms.installations": "sha256:0909a87318692b8753c9931955ea98816cce8256dc0eb185787b525d3c597754",
     "ulvia/provider.tls": "sha256:41dbd3a81aa4d4d6eea2053c5dc7f097ac7003cd683a0c86341fbc4fb5bafa01",
     "ulvia/provider.routing": "sha256:0e312b93bdd939df59e4b837aba02be5f0b750485cf88db41fcec0411cdd9437",
     "ulvia/provider.cms-instances": "sha256:789d38661b21df1db1b36f4c616aa21c5d3456d235c5ee85555c1691b4f80f1b",
@@ -54,4 +54,18 @@ test("Hosting 1.0 remains executable with its eight exact capabilities before ex
     );
     expect(hosting!.contracts[0]!.release.capabilities).toHaveLength(8);
     expect(hosting!.contracts[0]!.release.capabilities.some(({ id }) => id.startsWith("zones."))).toBe(false);
+});
+
+test("Repository 1.2 and Installations 1.4 retain their exact admitted contracts before explicit upgrades", async () => {
+    const builds = await compileRetainedFeatures();
+    for (const [contractId, version, digest] of [
+        ["ulvia/repository", "1.2.0", "sha256:fc0cff55733f2bd4f4ce77871ccb95893793f9a8f4965cf47bd31bf4c1cea6a2"],
+        ["ulvia/cms.installations", "1.4.0", "sha256:dbfaafe02234c64828b1fc8b0ced559a6ec75ebe185db6ade639def9edcd876f"],
+    ] as const) {
+        const retained = builds.find((build) =>
+            build.implementations.some((pin) => pin.contractId === contractId && pin.version === version),
+        );
+        expect(retained).toBeDefined();
+        expect(retained!.contracts[0]!.digest).toBe(digest);
+    }
 });

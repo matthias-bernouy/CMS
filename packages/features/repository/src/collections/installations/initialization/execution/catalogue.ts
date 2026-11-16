@@ -9,7 +9,7 @@ import { DEFAULT_INITIALIZATION_LIMITS as LIMITS } from "../limits";
 import { initializationRoot } from "../planning/root";
 import { initializationError } from "./state";
 
-export async function initializationCatalogue(source: CollectionRepositorySource) {
+async function initializationCatalogue(source: CollectionRepositorySource) {
     const entries = await source.list();
     if (entries.length > 1024) {
         throw initializationError("Initialization catalogue is too large");

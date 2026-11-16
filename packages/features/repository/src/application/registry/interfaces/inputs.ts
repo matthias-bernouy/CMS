@@ -1,4 +1,5 @@
 import type { collectionCatalogueInputSchema } from "repository/application/registry/schemas/catalogue/collection-catalogue";
+import type { recipeCatalogueInputSchema } from "repository/application/registry/schemas/catalogue/recipes";
 import type { z } from "zod";
 import type { catalogueListInputSchema } from "repository/application/registry/schemas/catalogue/listing";
 import type { assetDownloadInputSchema } from "repository/application/registry/schemas/downloads";
@@ -44,3 +45,4 @@ export type ReleaseDownloadInput = z.output<typeof publicationStateInputSchema>;
 export type SourceGetInput = z.output<typeof sourceGetInputSchema>;
 
 export type CollectionCatalogueInput = z.output<typeof collectionCatalogueInputSchema>;
+export type RecipeCatalogueInput = z.output<typeof recipeCatalogueInputSchema>;

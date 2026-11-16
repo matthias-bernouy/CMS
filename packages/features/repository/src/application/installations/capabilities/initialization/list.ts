@@ -11,7 +11,7 @@ import {
 export const initializationList = defineCapability({
     "id": "initialization.list",
     "access": "admin",
-    "description": "List bootstrap recipes from four latest stable collections per page, using metadata only.",
+    "description": "List a bounded page of indexed bootstrap recipe summaries without downloading collection releases.",
     "behavior": { "effect": "query", "execution": "sync", "sensitive": true },
     "bindings": [
         {
@@ -50,6 +50,6 @@ export const initializationList = defineCapability({
     errors: initializationListErrors,
     execute: async ({ services, context, input }) => {
         await initializationAdministrator(services, context);
-        return initializationService(services, context).list(input.cursor, input.locale);
+        return initializationService(services, context).list(input.cursor, input.locale, context.signal);
     },
 });

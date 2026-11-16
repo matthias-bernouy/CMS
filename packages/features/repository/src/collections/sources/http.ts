@@ -1,4 +1,6 @@
+import { readRecipePage } from "./recipes";
 import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
+import type { RecipeCatalogueInput } from "./recipeSchema";
 import { DEFAULT_COLLECTION_LIMITS } from "repository/collections/core/limits";
 import { inlineCollectionVerifier } from "./verification";
 import type { CollectionVerifier } from "./verification";
@@ -46,6 +48,10 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
 
     private readonly request?: RepositoryFetch;
     private readonly verifier: CollectionVerifier;
+
+    recipes(input: RecipeCatalogueInput, signal?: AbortSignal) {
+        return readRecipePage(this.base, input, signal, this.request);
+    }
 
     async page(input: Parameters<NonNullable<CollectionRepositorySource["page"]>>[0], signal?: AbortSignal) {
         if (

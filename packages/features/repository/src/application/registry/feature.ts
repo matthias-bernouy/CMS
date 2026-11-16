@@ -1,4 +1,5 @@
 import { sourceRead } from "./capabilities/sources/source-read";
+import { bootstrapRecipes } from "./capabilities/catalogue/bootstrap-recipes";
 import { publicationBuild } from "./capabilities/builds/publication-build";
 import { publicationBuildStatus } from "./capabilities/builds/publication-build-status";
 import { collectionCatalogue } from "repository/application/registry/capabilities/catalogue/collection-catalogue";
@@ -30,11 +31,12 @@ export const repositoryFeature = defineFeature({
     contractId: "ulvia/repository",
     name: "Ulvia Repository",
     description: "Public discovery and account-owned namespaces for immutable contracts, providers and collections.",
-    version: "1.2.0",
+    version: "1.3.0",
     publisherId: "ulvia",
     documents: new URL("../../../docs/repository/", import.meta.url),
     mapError: mapRepositoryError,
     capabilities: [
+        bootstrapRecipes,
         sourceRead,
         collectionCatalogue,
         namespaceClaim,

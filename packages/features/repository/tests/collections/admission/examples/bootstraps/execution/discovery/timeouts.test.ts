@@ -3,18 +3,25 @@ import { initializationList } from "repository/application/installations/capabil
 import { mapInstallationError } from "repository/application/installations/capabilities/policy/mapError";
 import { discoveryFixture } from "./fixture";
 
-for (const phase of ["catalogue", "release"] as const) {
+for (const phase of ["headers", "body"] as const) {
     test(`a Repository ${phase} timeout is unavailable, read-only and releases discovery for retry`, async () => {
         const f = await discoveryFixture();
         const before = await f.businessState();
         const timeout = new DOMException("Repository request timed out", "TimeoutError");
         f.observed.intercept = async (url, init) => {
             expect(init.signal).toBeInstanceOf(AbortSignal);
-            if (url.pathname.includes(phase === "catalogue" ? "/v1/catalogue" : "/v1/releases/")) {
-                // Inject the transport outcome; this does not establish the cause of the live ten-second failures.
+            expect(url.pathname.endsWith("/v1/recipes")).toBe(true);
+            // Inject transport outcomes without claiming to explain the live ten-second failures.
+            if (phase === "headers") {
                 throw timeout;
             }
-            return undefined;
+            return new Response(
+                new ReadableStream({
+                    start(controller) {
+                        controller.error(timeout);
+                    },
+                }),
+            );
         };
         const failure = await f.service.list().then(
             () => {

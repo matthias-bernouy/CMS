@@ -1,5 +1,5 @@
-import type { CatalogueListInput } from "repository/application/registry/interfaces/inputs";
-import type { CatalogueListOutput } from "repository/application/registry/interfaces/outputs";
+import type { CatalogueListInput, RecipeCatalogueInput } from "repository/application/registry/interfaces/inputs";
+import type { CatalogueListOutput, RecipeCatalogueOutput } from "repository/application/registry/interfaces/outputs";
 import type { RepositorySearch } from "../search/core/service";
 import type { RepositorySourceStore } from "../sources/interfaces";
 import type { RepositoryNamespaces } from "../namespaces/accounts/RepositoryNamespaces";
@@ -20,6 +20,7 @@ export interface RepositoryCapabilityPorts {
         input: CatalogueListInput & { readonly latestPerResource?: boolean },
         signal?: AbortSignal,
     ) => Promise<CatalogueListOutput>;
+    readonly recipes?: (input: RecipeCatalogueInput, signal?: AbortSignal) => Promise<RecipeCatalogueOutput>;
     readonly release: (coordinate: RemoteCoordinate) => Promise<{
         stream: ReadableStream<Uint8Array>;
         contentType: string;

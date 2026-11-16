@@ -79,14 +79,13 @@ export class SiteInitializationService {
             redirectPath: status === "completed" ? redirectPath(review!) : "",
         };
     }
-    async list(cursor?: string, locale?: string) {
+    async list(cursor?: string, locale?: string, signal?: AbortSignal) {
+        signal?.throwIfAborted();
         const state = await readInitialization(this.options);
         if (state.status !== "pending") {
             throw initializationError("Initialization was already started", 409);
         }
-        return this.exclusive(() =>
-            discoverInitializationRecipes(this.options.source, cursor, locale, this.options.verifier),
-        );
+        return this.exclusive(() => discoverInitializationRecipes(this.options.source, cursor, locale, signal));
     }
     plan(actorId: string, root: unknown, locale?: string, signal?: AbortSignal) {
         return this.exclusive(

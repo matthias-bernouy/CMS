@@ -5,7 +5,7 @@ import { compileContract, compileImplementations } from "@bernouy/ulvia-sdk/buil
 test("Installations SDK authoring preserves all 57 canonical capabilities, exact digest and document bytes", async () => {
     const compiled = await compileContract(installationsFeature);
     expect(compiled.release.capabilities).toHaveLength(57);
-    expect(compiled.digest).toBe("sha256:dbfaafe02234c64828b1fc8b0ced559a6ec75ebe185db6ade639def9edcd876f");
+    expect(compiled.digest).toBe("sha256:0909a87318692b8753c9931955ea98816cce8256dc0eb185787b525d3c597754");
     expect(compiled.documentationAssets).toHaveLength(7);
 });
 test("compiling Installations captures all defaults without constructing services or running business code", async () => {

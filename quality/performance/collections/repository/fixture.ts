@@ -114,6 +114,8 @@ export async function repositoryFixture() {
         };
         return {
             root,
+            contracts,
+            index: application.index,
             artifact,
             store,
             reads,

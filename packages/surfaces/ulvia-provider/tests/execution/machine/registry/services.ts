@@ -12,6 +12,7 @@ export function repositoryServices(overrides: Overrides = {}): RepositoryService
             namespace: unexpected,
             catalogue: unexpected,
             collectionCatalogue: unexpected,
+            recipes: unexpected,
             search: unexpected,
             publicationState: unexpected,
             release: unexpected,

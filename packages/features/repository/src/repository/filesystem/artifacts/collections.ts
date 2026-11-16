@@ -19,6 +19,7 @@ import { listDirectories, writeImmutableFile } from "../core/immutableFiles";
 import { pruneRepository } from "../core/recovery";
 import { assetFileName } from "../core/assetFiles";
 import { ImmutableJsonCache } from "../core/immutableJsonCache";
+import { RecipeProjections } from "./discovery/projections";
 
 export class LocalCollectionRepository {
     private readonly metadataCache = new ImmutableJsonCache<VerifiedCollectionReleaseMetadata>();
@@ -35,6 +36,7 @@ export class LocalCollectionRepository {
         if (existing) {
             const added = assertSameDigest(existing, artifact);
             await beforeVisibility?.();
+            await new RecipeProjections(this.root).put(artifact);
             return added;
         }
         const history = (await this.listMetadata())
@@ -60,6 +62,7 @@ export class LocalCollectionRepository {
         try {
             // All dependencies, including editable sources, must be durable before the release marker.
             await beforeVisibility?.();
+            await new RecipeProjections(this.root).put(artifact);
             await link(temporary, path);
             await syncDirectory(directory);
             return true;

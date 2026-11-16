@@ -10,6 +10,7 @@ import type {
 } from "repository/collections/sources/interfaces";
 import { FilesystemRepositoryCatalogueIndex } from "../catalogueIndex";
 import { LocalCollectionRepository } from "./collections";
+import type { RecipeCatalogueInput } from "repository/application/registry/interfaces/inputs";
 
 /** Metadata does not hydrate assets; complete reads use normal immutable asset admission. */
 export class FilesystemCollectionRepository implements CollectionRepositorySource {
@@ -37,6 +38,10 @@ export class FilesystemCollectionRepository implements CollectionRepositorySourc
             );
         }
         return entries;
+    }
+
+    recipes(input: RecipeCatalogueInput, signal?: AbortSignal) {
+        return this.index.recipePage(input, signal);
     }
 
     async getMetadata(reference: CollectionRepositoryReference): Promise<unknown> {

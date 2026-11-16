@@ -1,6 +1,8 @@
-import type { CollectionReferenceScope } from "./artifacts/collectionReferences";
+import type { CollectionReferenceScope } from "./artifacts/discovery/collectionReferences";
 import type { CollectionVerifier } from "repository/collections/sources/verification";
-import { LatestCollectionCatalogue } from "./artifacts/latestCatalogue";
+import { LatestCollectionCatalogue } from "./artifacts/discovery/latestCatalogue";
+import { RecipeCatalogue } from "./artifacts/discovery/recipes";
+import type { RecipeCatalogueInput } from "repository/application/registry/interfaces/inputs";
 import {
     collectionBrowserRisk,
     collectionBrowserRiskDigest,
@@ -47,6 +49,7 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
     private readonly contracts: LocalContractReleases;
     private readonly providers: LocalProviderReleases;
     private readonly latest: LatestCollectionCatalogue;
+    private readonly recipes: RecipeCatalogue;
     private readonly yanks: LocalRepositoryYanks;
     private snapshot?: Snapshot;
     private revision = 0;
@@ -57,6 +60,7 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
         this.yanks = new LocalRepositoryYanks(root);
         this.collections = new LocalCollectionRepository(root, verifier);
         this.latest = new LatestCollectionCatalogue(root, this.yanks);
+        this.recipes = new RecipeCatalogue(root, () => this.latest.read("stable"));
         this.contracts = new LocalContractReleases(files, this.yanks);
         this.providers = new LocalProviderReleases(files, this.contracts, this.yanks);
     }
@@ -64,6 +68,7 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
     invalidate(): void {
         this.revision++;
         this.latest.invalidate();
+        this.recipes.invalidate();
         this.snapshot = undefined;
     }
 
@@ -73,6 +78,17 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
 
     collectionReleaseReferences(input: CollectionReferenceScope) {
         return this.latest.history(input);
+    }
+
+    recipePage(input: RecipeCatalogueInput, signal?: AbortSignal) {
+        return this.recipes.page(input, signal);
+    }
+
+    /** Registry composition explicitly prepares derived data; discovery never repairs missing records. */
+    prepareRecipes() {
+        return this.recipes.prepare((reference) =>
+            this.collections.getMetadata(reference.publisherId, reference.collectionId, reference.version),
+        );
     }
 
     async refresh(): Promise<void> {

@@ -342,7 +342,9 @@ export class ProviderInstanceHost {
             throw new Error(`Provider instance credentials are unavailable: ${instance.id}`);
         }
         const repository = repositoryTransport(instance);
-        const request = createCorrelatedRepositoryFetch(this.transport?.request);
+        const diagnostics = createInstanceDiagnostics(instance.id, this.logger.child({ instanceId: instance.id }));
+        const instanceLogger = diagnostics.logger;
+        const request = createCorrelatedRepositoryFetch(this.transport?.request, instanceLogger);
         const providerSource = new HttpProviderRepository(repository.id, repository.url, {
             request,
             allowInsecureHttp: repository.allowInsecureHttp,
@@ -354,8 +356,6 @@ export class ProviderInstanceHost {
         });
         const filesDirectory = join(this.env.CMS_FILES_DIR, instance.storageKey);
         await mkdir(filesDirectory, { recursive: true, mode: 0o700 });
-        const diagnostics = createInstanceDiagnostics(instance.id, this.logger.child({ instanceId: instance.id }));
-        const instanceLogger = diagnostics.logger;
         const storesStartedAt = performance.now();
         const stores = await createProviderStores(
             {
