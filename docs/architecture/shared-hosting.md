@@ -261,7 +261,7 @@ administrator file. No collection is shipped or installed for Control.
 
 ## Verification and deployment boundary
 
-`bun run verify:full` runs standard verification, the fresh CLI browser journey,
+`bun run verify` runs standard verification, the fresh CLI browser journey,
 delivery measurements and the isolated ACME fixture. Optional integration tests
 have their own explicit image/environment requirements; skipped tests are not
 runtime evidence.

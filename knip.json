@@ -15,7 +15,8 @@
     "project": [
         "*.ts",
         "infra/**/*.js",
-        "quality/**/*.ts"
+        "quality/**/*.ts",
+        "infra/**/*.ts"
     ],
     "ignoreDependencies": [
         "@bernouy/binary-media",
@@ -57,7 +58,20 @@
         },
         ".": {
             "entry": [
-                "infra/**/ulvia.release.ts"
+                "infra/**/ulvia.release.ts",
+                "infra/workspace.ts",
+                "infra/bootstrap.ts",
+                "infra/cli/build.ts",
+                "infra/images/build.ts",
+                "infra/distribution/publish.ts",
+                "infra/models/prepare.ts",
+                "quality/**/check.ts",
+                "quality/ci/check-all/index.ts",
+                "quality/performance/run.ts",
+                "quality/performance/collections/repository/run.ts",
+                "tests/performance/delivery/run.ts",
+                "tests/integration/instance/documentation/evaluation/host.ts",
+                "tests/integration/instance/documentation/evaluation/client.ts"
             ]
         }
     },
@@ -78,6 +92,12 @@
         "quality/**": [
             "exports",
             "types"
+        ]
+    },
+    "bun": {
+        "entry": [
+            "**/*.{test,spec}.{js,jsx,ts,tsx}",
+            "**/*_{test,spec}.{js,jsx,ts,tsx}"
         ]
     }
 }

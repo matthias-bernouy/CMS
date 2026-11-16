@@ -25,7 +25,7 @@ Chromium browser available. Build a matching set of local images, or use an
 already built exact tag:
 
 ```sh
-bun run images:build --version 0.1.0-integration all
+bun run infra/images/build.ts build --version 0.1.0-integration all
 
 ULVIA_MCP_EDGE_DOCKER_IMAGE=docker.io/cyaxis/ulvia-edge:0.1.0-integration \
 ULVIA_MCP_PROVIDER_DOCKER_IMAGE=docker.io/cyaxis/ulvia-provider:0.1.0-integration \
@@ -43,7 +43,7 @@ They can run alongside this suite. `instance.docker.test.ts` and
 `documentation/native.test.ts` still hardcode a 68-tool snapshot. Reconcile those
 assertions against their exact selected catalogue before treating these journeys as a
 current candidate-image acceptance gate; an ordinary skipped run proves none of them. The CLI Edge smoke journey exercised by
-`bun run verify:full` is a separate integration check.
+`bun run verify` is a separate integration check.
 
 See [Instance MCP V1](../../../docs/architecture/instance-mcp.md) and
 [Provider connections](../../../docs/providers/connections.md) for the runtime
@@ -63,8 +63,8 @@ subsequent restart. No test publishes to or reads from the public Repository.
 
 ## Delivery work budgets
 
-`bun run test:performance:delivery` builds matching candidate images and runs
-`performance.docker.test.ts` explicitly. It also runs in `verify:full`.
+`bun run tests/performance/delivery/run.ts` builds matching candidate images and runs
+`performance.docker.test.ts` explicitly. It also runs in `verify`.
 The ordinary suite skips this case unless
 `ULVIA_RUN_DELIVERY_PERFORMANCE=1`; the explicit runner refuses missing partial
 image sets. See [guardrails](../../../docs/development/guardrails.md) for

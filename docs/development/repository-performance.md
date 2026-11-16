@@ -18,7 +18,9 @@ than 1,024 instead of exposing a paginated UI contract.
 Run the measured Repository journey separately:
 
 ```sh
-ULVIA_PERF_SAMPLES=3 bun run test:performance:repository
+bun run build
+bun x tsc --project quality/performance/collections/repository/tsconfig.json
+ULVIA_PERF_SAMPLES=3 bun run quality/performance/collections/repository/run.ts
 ```
 
 It builds the current SDK bootstrap, loads its contracts and Provider manifest,

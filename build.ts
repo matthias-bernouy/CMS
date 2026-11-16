@@ -1,43 +1,22 @@
-// Workspace and versioned distribution builds. Prepare immutable runtime metadata
-// before TypeScript checks its static imports; Content then bundles browser runtimes.
-//
-// Other packages ship sources directly via their `exports` field; no bundle
-// step is needed.
+import { join } from "node:path";
+import { withRepositoryWriteLock } from "@bernouy/repository/repository/filesystem/lock";
+import { command } from "./infra/process";
+import { buildDistribution } from "./infra/distribution/build";
+import { distributionVersion } from "./infra/distribution/options";
 
-const version = releaseVersion(Bun.argv.slice(2));
+const version = distributionVersion(Bun.argv.slice(2), false);
+const root = process.cwd();
 
-async function run(cmd: string[], cwd?: string): Promise<void> {
-    const proc = Bun.spawn(cmd, { stdout: "inherit", stderr: "inherit", cwd });
-    const exit = await proc.exited;
-    if (exit !== 0) {
-        throw new Error(`${cmd.join(" ")} (cwd=${cwd ?? "."}) exited with ${exit}`);
+async function build(): Promise<void> {
+    await command(["bun", "run", "infra/bootstrap.ts"]);
+    await command(["bun", "x", "tsc", "--build"]);
+    await command(["bun", "run", "--cwd", "packages/features/content", "build:browser"]);
+    if (version) {
+        await buildDistribution(root, version);
+        console.log(`Ulvia ${version} build done (contracts, Provider manifest, Edge, Provider, CLI)`);
+    } else {
+        console.log("workspace build done");
     }
 }
 
-await run(["bun", "run", "generate:official-bootstrap"]);
-await run(["bunx", "tsc", "--build"]);
-await run(["bun", "run", "build:browser"], "packages/features/content");
-
-if (version) {
-    await run(["bun", "run", "images:build", "--version", version]);
-    await run(["bun", "run", "cli:build", "--version", version, "--stack-version", version]);
-    console.log(`✅ Ulvia ${version} build done (Edge, Provider, CLI)`);
-} else {
-    console.log("✅ workspace build done");
-}
-
-function releaseVersion(args: readonly string[]): string | undefined {
-    if (args.length === 0) {
-        return undefined;
-    }
-    const version = args[1];
-    if (
-        args.length !== 2 ||
-        args[0] !== "--version" ||
-        !version ||
-        !/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/u.test(version)
-    ) {
-        throw new Error("Usage: bun run build [--version <version>]");
-    }
-    return version;
-}
+await withRepositoryWriteLock(join(root, "artifacts/distributions"), build);

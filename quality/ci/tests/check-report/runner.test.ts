@@ -14,7 +14,7 @@ const checks: CheckDefinition[] = [
     { id: "third", label: "Third check", args: ["run", "third"] },
 ];
 
-test("check:all declares every fast workspace diagnostic in a stable order", () => {
+test("check declares every fast workspace diagnostic in a stable order", () => {
     expect(ALL_CHECKS.map(({ id }) => id)).toEqual([
         "architecture",
         "ui-contracts",
@@ -31,7 +31,7 @@ test("check:all declares every fast workspace diagnostic in a stable order", () 
     expect(ALL_CHECKS.find(({ id }) => id === "architecture")?.args).toEqual(["quality/architecture/check.ts"]);
 });
 
-test("check:all runs every check after failures and preserves report order", async () => {
+test("check runs every check after failures and preserves report order", async () => {
     const called: string[] = [];
     const execute = async (check: CheckDefinition): Promise<CheckExecution> => {
         called.push(check.id);
@@ -49,10 +49,10 @@ test("check:all runs every check after failures and preserves report order", asy
     expect(output.indexOf("first stdout")).toBeLessThan(output.indexOf("second stdout"));
     expect(output.indexOf("second stdout")).toBeLessThan(output.indexOf("third stdout"));
     expect(output).toContain("[stderr]\nsecond stderr");
-    expect(output).toEndWith("[check:all][SUMMARY] 2 passed, 1 failed");
+    expect(output).toEndWith("[check][SUMMARY] 2 passed, 1 failed");
 });
 
-test("check:all records executor errors and continues", async () => {
+test("check records executor errors and continues", async () => {
     const called: string[] = [];
     const results = await runChecks(checks, async (check) => {
         called.push(check.id);
@@ -65,7 +65,7 @@ test("check:all records executor errors and continues", async () => {
     expect(results[1]).toMatchObject({ exitCode: 1, stderr: "spawn failed" });
 });
 
-test("check:all keeps advisory output successful and returns one for real failures", async () => {
+test("check keeps advisory output successful and returns one for real failures", async () => {
     const reports: string[] = [];
     const advisory = async (): Promise<CheckExecution> => ({
         exitCode: 0,

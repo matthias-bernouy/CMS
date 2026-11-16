@@ -1,5 +1,9 @@
 # Shared hosting validation
 
+Historical command names below describe the dated run. For current commands,
+see [development](README.md); `check` replaces `check:all` and `verify` now includes
+the former `verify:full` stages.
+
 Validation scope: the isolated `codex/shared-hosting` task checkout on 2026-11-09.
 This report covers the fresh shared-hosting baseline, not an import of historical
 installation state. See [architecture](../architecture/shared-hosting.md) and

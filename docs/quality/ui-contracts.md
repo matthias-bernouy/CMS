@@ -16,7 +16,7 @@ bun run check:ui-contracts --root /path/to/another/worktree --json
 bun test quality/ui-contracts quality/ci/tests/check-all.test.ts
 ```
 
-`check:all` includes this check. Exit codes are **0** for no errors (warnings and
+`check` includes this check. Exit codes are **0** for no errors (warnings and
 information may remain), **1** for contract errors, and **2** for an invalid
 invocation or failed scan. JSON has `schemaVersion: 1`, scan counts, and findings
 with rule, severity, relative file path, one-based line/column, evidence,
@@ -78,7 +78,7 @@ Warnings are review requests, not confirmed violations. Possible outcomes are:
 - Split a mixed helper before deciding which operations need an exception.
 
 There is no suppressed historical baseline or automatic bulk exemption. Existing
-errors remain visible and make `check:all` fail until resolved or explicitly
+errors remain visible and make `check` fail until resolved or explicitly
 accepted as a documented document boundary.
 
 ## Coverage and limits

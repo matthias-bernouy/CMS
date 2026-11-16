@@ -5,14 +5,14 @@ security or performance properties have been checked.
 
 ## Fast checks and evidence
 
-`bun run check:all` prints check results first, then changed-file guidance.
+`bun run check` prints check results first, then changed-file guidance.
 Errors are always visible. Other advisory findings are counted unless they
 concern changed paths. `--verbose` prints complete tool output. Full text and
 JSON reports are saved to `artifacts/check-all/latest.{txt,json}`; a report
 write failure fails the command.
 
 Local scope includes staged, unstaged and untracked files. Use
-`bun run check:all --base <ref>` for committed work: its scope is the merge base
+`bun run check --base <ref>` for committed work: its scope is the merge base
 through the working tree, including untracked files. An unavailable or unrelated base (including a force-push) widens scope to all
 indexed and untracked paths, including local deletions. It never substitutes
 HEAD^ or an empty scope. Actual Git discovery failures still fail the command. Path matching
@@ -24,7 +24,7 @@ allowed on refusal. Documentation changes need accuracy and link checks.
 
 ## Body-read regression guard
 
-`check:architecture` rejects direct `json`, `text`, `arrayBuffer`, `blob`,
+The architecture check rejects direct `json`, `text`, `arrayBuffer`, `blob`,
 `bytes` and `formData` calls on receivers proven to be the built-in DOM
 `Request`. Use `readBoundedRequestBody` or `readBoundedFormData` from
 `@bernouy/http-runner`. The bounded-reader implementation owns its exception.
@@ -38,14 +38,14 @@ heuristic Mongo-loop rules remain deferred until their cases are precise.
 ## Work and timing budgets
 
 `verify` runs ordinary tests (including `tests/performance/repository` and
-Content rendering budgets), then the checked `test:performance` suite.
+Content rendering budgets), then typechecks and runs the performance suite in `quality/performance/run.ts`.
 That suite uses synthetic collection/compiler fixtures, read-only upgrade analysis and resolved
 Gateway contracts. Upgrade scans are capped at 500 Pages per batch and two
 passes. The validation growth ceiling is 12x for 4x the Blocs and examples;
 measured ratios depend on the current synthetic fixture and host.
 This is a regression ceiling, not a linear-growth guarantee.
 
-`bun run test:performance:delivery` builds two local candidate images,
+`bun run tests/performance/delivery/run.ts` builds two local candidate images,
 checks their component/API/revision labels and runs an isolated Docker/Mongo
 journey. Supplying both image variables documented in
 [instance tests](../../tests/integration/instance/README.md) reuses images;
@@ -88,7 +88,7 @@ loads and 256 waiters per load. Immutable snapshots classify Page access;
 actual invocations retain fresh authorization. Dynamic indexing remains live
 and private/no-store, including after a capability restriction.
 
-`verify:full` runs the CLI browser smoke and this Docker budget journey locally
+`verify` runs the CLI browser smoke and this Docker budget journey locally
 with candidate images. See [Content delivery](../architecture/content-delivery.md#shared-edge-response-cache)
 for the implemented response cache, invalidation and process-local limits.
 

@@ -44,7 +44,7 @@ export function parseOptions(args: readonly string[]): { verbose: boolean; base?
         } else if (arg === "--base" && !base && args[index + 1] && !args[index + 1]!.startsWith("-")) {
             base = args[++index];
         } else {
-            throw new Error("Usage: bun run check:all [--verbose] [--base <ref>]");
+            throw new Error("Usage: bun run check [--verbose] [--base <ref>]");
         }
     }
     return { verbose, ...(base ? { base } : {}) };

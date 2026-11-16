@@ -13,7 +13,7 @@ From the workspace root:
 ```sh
 ULVIA_DOCUMENTATION_CHROMIUM="/absolute/path/to/chromium" \
 ULVIA_DOCUMENTATION_MODEL_CACHE="/absolute/path/to/populated/model-cache" \
-bun run test:documentation:agent /private/tmp/my-documentation-trial
+bun run tests/integration/instance/documentation/evaluation/host.ts /private/tmp/my-documentation-trial
 ```
 
 Wait for the ready JSON containing `session`, `cmsUrl` and `pageId`. Each agent
@@ -23,8 +23,8 @@ sources, prior trials, or another participant. This is an instruction boundary,
 not an OS security sandbox. Returned screenshots are permitted evidence.
 
 ```sh
-bun run test:documentation:client /private/tmp/my-documentation-trial/session.json collection catalogue
-bun run test:documentation:client /private/tmp/my-documentation-trial/session.json collection describe <<'JSON'
+bun run tests/integration/instance/documentation/evaluation/client.ts /private/tmp/my-documentation-trial/session.json collection catalogue
+bun run tests/integration/instance/documentation/evaluation/client.ts /private/tmp/my-documentation-trial/session.json collection describe <<'JSON'
 {"name":"installations_documentation_search"}
 JSON
 ```

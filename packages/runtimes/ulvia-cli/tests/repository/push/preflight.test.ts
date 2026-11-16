@@ -1,5 +1,8 @@
 import { expect, spyOn, test } from "bun:test";
 import { LocalContractReleases } from "@bernouy/repository/repository/filesystem";
+import { cp } from "node:fs/promises";
+import { join } from "node:path";
+import { prepareReleasePublication } from "../../../src/exports/publication";
 import { pushFixture } from "./fixtures";
 
 test("batch preflight restores a bounded number of catalogues instead of one per contract", async () => {
@@ -26,6 +29,28 @@ test("batch preflight restores a bounded number of catalogues instead of one per
         expect(f.output.at(-1)).toBe("Published 4 local releases.");
     } finally {
         reads?.mockRestore();
+        await f.close();
+    }
+});
+
+test("distribution publication uses only its snapshot and rechecks a revoked saved connection", async () => {
+    const f = await pushFixture();
+    try {
+        await f.contract("built.example");
+        await f.run(["release", f.source, "--recursive"]);
+        const snapshot = join(f.root, "build-repository");
+        await cp(join(f.data, "repository"), snapshot, { recursive: true });
+        await f.contract("unrelated.example");
+        await f.run(["release", f.source, "--recursive"]);
+        const publication = await prepareReleasePublication(snapshot, f.options.environment);
+        expect(publication.coordinates.map(({ id }) => id)).toEqual(["ulvia/built.example"]);
+        await publication.publish(() => undefined);
+        expect(await f.remoteFiles.list("contracts")).toHaveLength(1);
+        const revoked = await prepareReleasePublication(snapshot, f.options.environment);
+        await f.run(["repository", "logout"]);
+        await expect(revoked.publish(() => undefined)).rejects.toThrow("Repository connection changed");
+        expect(await f.remoteFiles.list("contracts")).toHaveLength(1);
+    } finally {
         await f.close();
     }
 });

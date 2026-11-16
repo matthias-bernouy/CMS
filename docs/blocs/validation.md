@@ -10,7 +10,7 @@ Content-owned rendering pipeline exposed through native delivery resources.
 Run the local CMS with:
 
 ```bash
-bun run images:build --version 0.1.0-shared-hosting all
+bun run infra/images/build.ts build --version 0.1.0-shared-hosting all
 bun run ulvia -- configure --domain control.localhost
 bun run ulvia -- apply --version 0.1.0-shared-hosting
 ```
@@ -89,7 +89,7 @@ bun run build
 bun run verify
 ```
 
-`check:all` covers architecture, package exports, repository shape, style, UI
+`check` covers architecture, package exports, repository shape, style, UI
 contracts, logging, dead code and the TypeScript project. The build also verifies
 the generated Bloc behavior and binding-core browser runtimes.
 

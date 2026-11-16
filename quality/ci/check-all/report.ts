@@ -4,7 +4,7 @@ export function formatCheckResults(results: readonly CheckResult[]): string {
     const output: string[] = [];
     for (const result of results) {
         const status = result.exitCode === 0 ? "PASS" : "FAIL";
-        output.push(`[check:all][${status}] ${result.id} — ${result.label}`);
+        output.push(`[check][${status}] ${result.id} — ${result.label}${duration(result)}`);
         output.push(`command: bun ${result.args.join(" ")}`);
         if (result.stdout.trim()) {
             output.push(result.stdout.trimEnd());
@@ -14,15 +14,15 @@ export function formatCheckResults(results: readonly CheckResult[]): string {
         }
     }
     const failed = results.filter(({ exitCode }) => exitCode !== 0).length;
-    output.push(`[check:all][SUMMARY] ${results.length - failed} passed, ${failed} failed`);
+    output.push(`[check][SUMMARY] ${results.length - failed} passed, ${failed} failed`);
     return output.join("\n");
 }
 
 export function formatSummaryReport(results: readonly CheckResult[], options: ReportOptions): string {
     const failed = results.filter(({ exitCode }) => exitCode !== 0).length;
-    const lines = [`[check:all][SUMMARY] ${results.length - failed} passed, ${failed} failed`];
+    const lines = [`[check][SUMMARY] ${results.length - failed} passed, ${failed} failed`];
     for (const result of results) {
-        lines.push(`[${result.exitCode === 0 ? "PASS" : "FAIL"}] ${result.id} — ${result.label}`);
+        lines.push(`[${result.exitCode === 0 ? "PASS" : "FAIL"}] ${result.id} — ${result.label}${duration(result)}`);
     }
     for (const result of results) {
         const output = [result.stdout.trimEnd(), result.stderr.trimEnd()].filter(Boolean).join("\n");
@@ -69,4 +69,8 @@ export function formatSummaryReport(results: readonly CheckResult[], options: Re
         "Reports: artifacts/check-all/latest.txt and latest.json",
     );
     return lines.join("\n");
+}
+
+function duration(result: CheckResult): string {
+    return result.durationMs === undefined ? "" : ` (${(result.durationMs / 1000).toFixed(2)}s)`;
 }

@@ -120,22 +120,23 @@ CmsCore/
 ```bash
 bun install --frozen-lockfile # links workspace packages + installs locked externals
 bun run build               # types, browser runtimes and official bootstrap
-bun run typecheck           # tsc --build only (project references)
+bun run check               # all static diagnostics, including types
 bun run clean               # cleans TypeScript state, package dist and tsbuildinfo
 bun run test                # maintained workspace tests
+bun run verify              # checks, tests, performance, browser, Docker and TLS
 ```
 
 The source CLI has no embedded initial image version. On an empty installation,
-use `bun run ulvia -- services start --version <published-stack-version>`, then
-create a named instance. Later starts reuse persisted image digests. Running
+use `bun run ulvia -- apply --version <published-stack-version>`, then
+create logical sites through Control. Later starts reuse persisted image digests. Running
 from source does not build or deploy the current workspace's server code.
 
 See the [development guide](docs/development/README.md) for current checks and
 the [documentation index](docs/README.md) for architecture and product boundaries.
 
-`build.ts` first runs `tsc --build`, then builds the generated Bloc behavior and
-binding-core runtimes owned by `@bernouy/content`, and finally refreshes the
-CLI's admitted system API snapshot from SDK feature definitions. There is no
+`build.ts` first prepares the admitted system API snapshot and runtime metadata
+from SDK feature definitions, then runs `tsc --build` and builds the Bloc behavior
+and binding-core runtimes owned by `@bernouy/content`. There is no
 separate visual-component package or generated component distribution.
 
 Packages ship **source** through their `exports` fields; consumers resolve

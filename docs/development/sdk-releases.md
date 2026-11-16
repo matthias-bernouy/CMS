@@ -18,13 +18,17 @@ Release digests are covered by golden assertions. There is no retained authored
 contract/provider repository or prefabricated collection corpus to scan.
 
 ```sh
-bun run generate:official-bootstrap
-bun run release:official
-# Explicit publication through the configured, authenticated Repository connection:
-bun run ulvia -- push all
+bun run build
+# Build an exact distribution snapshot, then publish through authenticated connections:
+bun run build --version <version>
+bun run publish --version <version>
 ```
 
-Bootstrap and local release preparation share `prepareOfficialResources`.
+Bootstrap and generic local release preparation share `prepareOfficialResources`.
+Versioned builds copy the admitted catalogue into `artifacts/distributions/<version>/`
+and seal its exact resources/assets in a build manifest. Distribution publication
+uses only that catalogue, never all releases in the personal CLI cache. The
+unversioned build generates package outputs without modifying personal data.
 Bootstrap emits admitted documents/assets and the Provider snapshot. It also
 regenerates the runtime's current execution support pins from the manifest and
 runtime package version. Executable support contains only those shipped SDK claims.

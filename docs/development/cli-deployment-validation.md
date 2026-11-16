@@ -1,5 +1,9 @@
 # CLI deployment validation — 2026-11-10
 
+Historical command names below describe the dated run. For current commands,
+see [development](README.md); `check` replaces `check:all` and `verify` now includes
+the former `verify:full` stages.
+
 This report covers the root CLI deployment lifecycle implemented on `v1.0.9`,
 in a working tree based on `a27c47b51`. It records that checkout's evidence,
 not a guarantee about later releases. See the [lifecycle guide](deployment-lifecycle.md).

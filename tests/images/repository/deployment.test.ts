@@ -10,8 +10,8 @@ test("Repository deployment uses the Provider and an independent Edge without a 
         resolve(root, "packages/runtimes/ulvia-cli/src/runtime/stack/orchestration/definitions/services.yml"),
         "utf8",
     );
-    expect(provider).toContain("bun run generate:official-bootstrap");
-    expect(provider.indexOf("RUN bun run generate:official-bootstrap")).toBeLessThan(provider.indexOf("RUN bunx tsc"));
+    expect(provider).toContain("bun run infra/bootstrap.ts");
+    expect(provider.indexOf("RUN bun run infra/bootstrap.ts")).toBeLessThan(provider.indexOf("RUN bunx tsc"));
     expect(provider).toContain("--filter=@bernouy/ulvia-provider-server");
     expect(provider).toContain('VOLUME ["/var/lib/cms/files"]');
     expect(provider).toContain("USER bun");
@@ -26,7 +26,7 @@ test("Repository deployment uses the Provider and an independent Edge without a 
 test("the Edge image prepares its own ignored runtime metadata before typechecking", async () => {
     const edge = await readFile(resolve(root, "infra/images/edge/Dockerfile"), "utf8");
     expect(edge).toContain("COPY infra/bootstrap.ts infra/execution-support.ts ./infra/");
-    const preparation = edge.indexOf("RUN bun run generate:official-bootstrap");
+    const preparation = edge.indexOf("RUN bun run infra/bootstrap.ts");
     expect(preparation).toBeGreaterThan(0);
     expect(preparation).toBeLessThan(edge.indexOf("RUN bunx tsc"));
     expect(edge).toContain("/app/packages/runtimes/ulvia-provider-server/dist/bootstrap");

@@ -153,7 +153,7 @@ anonymous immutable SVG with a strong ETag.
 ## Releases And Installation
 
 ```bash
-bun run images:build --version 0.1.0-shared-hosting all
+bun run infra/images/build.ts build --version 0.1.0-shared-hosting all
 bun run ulvia -- configure --domain control.localhost
 bun run ulvia -- apply --version 0.1.0-shared-hosting
 ```

@@ -8,7 +8,7 @@ release with exact deployment definitions. Executable composition and environmen
 | Path | Responsibility |
 | --- | --- |
 | `cli/build.ts` | Bundle the private CLI sources into the public `@cyaxis/ulvia` npm archive, verify it and write a SHA-256 receipt. Publication is a separate command. |
-| `images/build.ts` | Build, inspect and explicitly publish the separate Edge and Provider images with exact version, component and stack-API labels. |
+| `images/build.ts` | Build and inspect the separate Edge and Provider images with exact version, component and stack-API labels. |
 | `images/edge/` | Stateless Edge Dockerfile and image guide. |
 | `images/provider/` | Stateful Provider Dockerfile, SDK system bootstrap and packaged local embedding model. |
 | `models/` | Pinned model manifest, bounded downloads and verified build cache; see the [model guide](models/README.md). |
@@ -20,20 +20,28 @@ release with exact deployment definitions. Executable composition and environmen
 ## Commands
 
 ```sh
-bun run generate:official-bootstrap
-bun run release:official
+bun run build
 bun run build --version <version>
+bun run publish --version <version>
 ```
 
-Without `--version`, `bun run build` generates the bootstrap and runtime metadata
-before compiling the workspace. With `--version`, it then builds Edge, Provider and the CLI with one
-shared distribution version, including the CLI's initial stack version. The
-component-specific builders remain available for targeted builds.
+Without `--version`, `build` generates the official bootstrap and runtime metadata,
+then compiles the workspace and browser assets. A versioned build also creates
+both images and the CLI under one distribution version and seals their identities,
+contracts and assets under `artifacts/distributions/<version>/`.
 
-These prepare local artifacts. `images:publish`, `cli:publish` and `ulvia push`
-are explicit publication actions with their respective registry credentials.
-Image and CLI versions are independent from contracts, manifests and instance
-system installations. A local build never updates a running installation.
+`distribution/` owns the build manifest, exact file hashes, image checks and
+publication orchestration. `publish` uses only that snapshot and the saved
+Repository publisher connection, then Docker/npm credentials. It publishes
+contracts, the Provider manifest, images and the exact CLI archive. Repeating an
+identical publication resumes safely after partial completion. It never compiles
+sources or discovers unrelated resources in the personal CLI cache.
+
+Contract and Provider manifest versions evolve independently of the distribution.
+Neither build nor publish upgrades running installations. The generic trusted
+`releases/ulvia.release.ts` entry remains available through `ulvia release` for
+explicit manual resource preparation. `workspace.ts` orchestrates `check`, `test`,
+`verify` and the source CLI, preparing each prerequisite once.
 
 See [development](../docs/development/README.md) for release commands and checks,
 [SDK releases](../docs/development/sdk-releases.md) for generated artifacts and

@@ -20,6 +20,17 @@ export async function pushCommand(
     environment: Record<string, string | undefined>,
     log: (message: string) => void,
 ): Promise<void> {
+    const publication = await preparePush(selection, url, root, environment);
+    await publication.publish(log);
+}
+
+/** Preflight is scoped to one invocation; remote writes still recheck current ownership. */
+export async function preparePush(
+    selection: RemoteSelection,
+    url: string,
+    root: string,
+    environment: Record<string, string | undefined>,
+) {
     const contracts = new LocalContractReleases(new LocalArtifactFiles(root), new LocalRepositoryYanks(root));
     let catalogue: Promise<ReleaseCatalogue> | undefined;
     // Immutable preflight evidence is scoped to this command, never cached invocation authority.
@@ -51,7 +62,24 @@ export async function pushCommand(
     for (const namespace of new Set(coordinates.map((coordinate) => coordinate.publisherId))) {
         credentials.set(namespace, await remoteRepositoryCredential(url, namespace, environment));
     }
-    if (selection.mode === "all") {
+    return {
+        url,
+        coordinates,
+        publish: async (log: (message: string) => void) => {
+            await publishPrepared(prepared, url, credentials, log, selection.mode === "all");
+        },
+    };
+}
+
+type PreparedPush = { coordinate: RemoteCoordinate; local: Awaited<ReturnType<typeof loadLocal>> };
+async function publishPrepared(
+    prepared: readonly PreparedPush[],
+    url: string,
+    credentials: ReadonlyMap<string, RepositoryNamespaceCredential>,
+    log: (message: string) => void,
+    batch: boolean,
+): Promise<void> {
+    if (batch) {
         log(`Publishing ${prepared.length} local releases to ${url}.`);
     }
     let completed = 0;
@@ -72,7 +100,7 @@ export async function pushCommand(
             );
         }
     }
-    if (selection.mode === "all") {
+    if (batch) {
         log(`Published ${completed} local releases.`);
     }
 }

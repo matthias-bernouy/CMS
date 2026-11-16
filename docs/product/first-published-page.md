@@ -40,8 +40,8 @@ contains separate API, media, MCP and delivery journeys. These tests require
 matching local images and explicit activation; ordinary unit verification does
 not establish their execution.
 
-Run `bun run test:edge-smoke` for the fresh local browser journey or
-`bun run verify:full` to include static, unit and delivery performance checks.
+Run `ULVIA_RUN_EDGE_SMOKE=1 bun run test -- packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts` for the fresh local browser journey or
+`bun run verify` to include static, unit and delivery performance checks.
 See [development](../development/README.md#checks-and-build) for prerequisites.
 
 ## Visual Authoring Boundary

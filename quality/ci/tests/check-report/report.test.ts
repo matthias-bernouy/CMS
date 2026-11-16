@@ -17,7 +17,7 @@ test("compact output counts unrelated advice and preserves changed-file findings
     const result = formatSummaryReport([check(`${unrelated}\n${changed}`)], {
         changedPaths: ["packages/changed/file.ts"],
     });
-    expect(result).toStartWith("[check:all][SUMMARY] 1 passed, 0 failed");
+    expect(result).toStartWith("[check][SUMMARY] 1 passed, 0 failed");
     expect(result).toContain(changed);
     expect(result).not.toContain(unrelated);
     expect(result).toContain("1 other advisory findings");

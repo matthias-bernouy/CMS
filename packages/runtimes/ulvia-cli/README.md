@@ -16,12 +16,14 @@ must not remove compiler outputs or make incremental and clean builds differ.
 Build one exact CLI release and its compatible default stack version with:
 
 ```bash
-bun run cli:build --version VERSION --stack-version VERSION
+bun run build --version VERSION
 ```
 
 Use the same exact distribution version for the CLI, Provider and Edge. This creates a checked
 npm archive and SHA-256 receipt below `artifacts/cli`. Publishing is a separate
-explicit `cli:publish --version VERSION` operation.
+explicit `bun run publish --version VERSION` operation. The versioned build seals
+the CLI, images and official releases under `artifacts/distributions/VERSION/`;
+publication selects that snapshot and verifies its bytes before any upload.
 
 ## Shared infrastructure
 
@@ -140,14 +142,15 @@ prepared canonical bytes and assets are bounded to 512 MiB. `push` remains an
 explicit separate command.
 
 ```bash
-ulvia release infra/releases
-bun run release:official
-# Equivalent SDK source entry:
+# Official distribution, without changing the personal release cache:
+bun run build --version VERSION
+bun run publish --version VERSION
+# Generic manual preparation still writes to the personal release cache:
 ulvia release infra/releases
 ```
 
-The official build uses a trusted local `ulvia.release.ts` entry so all SDK
-features, manifest claims and the bootstrap share the same inventory and compiler. See the
+The official build and the trusted local `ulvia.release.ts` entry share the same
+SDK inventory and compiler for feature contracts, manifest claims and bootstrap. See the
 [SDK workflow](../../../docs/development/sdk-releases.md) for explicit versions,
 source-module rules and generated runtime attachment.
 
@@ -257,7 +260,7 @@ reopens ready instances from their persisted execution. Generate the API-only
 snapshot from the SDK feature inventory with:
 
 ```bash
-bun run generate:official-bootstrap
+bun run build
 ```
 
 That command neither publishes to a running repository nor upgrades an existing
@@ -268,9 +271,8 @@ exact parent contracts before specializations, then Provider manifests and colle
 Publication, system installation transitions, collection upgrades and container
 image replacement remain separate actions.
 
-Official releases evolve independently. The current branch's Provider manifest
-uses `1.4.0`; Installations uses `1.4.0`, Hosting uses `1.0.0` and local state
-formats remain `v1`. This is source metadata, not evidence that a matching image
+Official releases evolve independently. Each feature owns its contract version;
+the Provider manifest owns its version, and local state formats remain `v1`. This is source metadata, not evidence that a matching image
 has been published. Collections are supplied and versioned by their authors.
 
 ## Collection examples

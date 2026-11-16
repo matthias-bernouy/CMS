@@ -21,6 +21,6 @@ Existing collection tests cover admission, styles, assets, dependency graphs,
 installation evolution and reviewed release upgrades. The CLI's
 `packages/runtimes/ulvia-cli/tests/stack/edgeSmoke/` journey exercises empty native
 setup, explicit collection installation, Page publication, restart and instance
-isolation in a production-shaped Docker stack. `bun run verify:full` runs this
+isolation in a production-shaped Docker stack. `bun run verify` runs this
 local Edge browser journey after normal verify. These are repository tests, not
 a generic collection-authored browser scenario format.

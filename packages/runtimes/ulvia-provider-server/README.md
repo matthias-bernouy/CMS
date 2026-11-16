@@ -18,7 +18,7 @@ and Pages. The image-owned SDK snapshot bootstraps those APIs offline; setup the
 offers a custom Repository address, the official Repository, or a new Registry on
 this instance. There are no named profiles or global Repository environment settings.
 
-Run `bun run generate:official-bootstrap` before native startup. Images bundle the
+Run `bun run build` before native startup. Images bundle the
 admitted system contracts, documentation and manifest in `dist/bootstrap` and omit
 starter collections. `ULVIA_BOOTSTRAP_DIR` may select an absolute prebuilt snapshot.
 Ready sites reopen approved persisted execution without their original image kit.

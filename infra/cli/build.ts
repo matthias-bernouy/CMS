@@ -3,6 +3,7 @@ import { chmod, cp, mkdir, readFile, rename, rm, writeFile } from "node:fs/promi
 import { join, resolve } from "node:path";
 import { sourceStackRelease } from "@bernouy/ulvia-cli/stack-release-build";
 import { CLI_DOCUMENTATION, writeCliDocumentation } from "./documentation";
+import { verifyCli } from "./verification";
 
 const PACKAGE_NAME = "@cyaxis/ulvia";
 const NPM_REGISTRY = "https://registry.npmjs.org/";
@@ -11,7 +12,6 @@ const root = resolve(import.meta.dir, "../..");
 const source = join(root, "packages/runtimes/ulvia-cli");
 const artifacts = join(root, "artifacts/cli");
 const staging = join(artifacts, "package");
-const publishing = join(artifacts, "publishing");
 
 const [action, ...args] = Bun.argv.slice(2);
 const { version, stackVersion } = parseArguments(action, args);
@@ -24,8 +24,6 @@ if (action === "build") {
         throw new Error(usage());
     }
     await build(version, stackVersion);
-} else if (action === "publish") {
-    await publish(version);
 } else {
     throw new Error(usage());
 }
@@ -36,7 +34,6 @@ async function build(releaseVersion: string, defaultStackVersion: string): Promi
     }
     await rm(staging, { recursive: true, force: true });
     await mkdir(join(staging, "dist"), { recursive: true });
-    await command(["bun", "run", "build:browser"], root);
     const previewRuntimes = {
         blocRuntime: await readFile(
             join(root, "packages/features/content/dist/runtime-assets/bloc-runtime.js"),
@@ -77,15 +74,7 @@ async function build(releaseVersion: string, defaultStackVersion: string): Promi
         chmod(join(staging, "dist/index.js"), 0o755),
     ]);
     await command(["bun", "install", "--production", "--ignore-scripts"], staging);
-    await command(["bun", "dist/index.js", "--help"], staging, false);
-    const reportedVersion = (await command(["bun", "dist/index.js", "--version"], staging, false)).trim();
-    if (reportedVersion !== releaseVersion) {
-        throw new Error(`Built CLI reports ${reportedVersion} instead of ${releaseVersion}`);
-    }
-    const startHelp = await command(["bun", "dist/index.js", "apply", "--help"], staging, false);
-    if (!startHelp.includes(`Bundled stack release: ${defaultStackVersion}`)) {
-        throw new Error(`Built CLI does not report its ${defaultStackVersion} initial stack version`);
-    }
+    await verifyCli(staging, releaseVersion, defaultStackVersion);
     await mkdir(artifacts, { recursive: true });
     await command(["bun", "pm", "pack", "--filename", archiveName], staging);
     await rm(archive, { force: true });
@@ -95,26 +84,6 @@ async function build(releaseVersion: string, defaultStackVersion: string): Promi
         `${JSON.stringify({ schema: "ulvia.cli-release.v1", package: PACKAGE_NAME, version: releaseVersion, stackVersion: defaultStackVersion, revision, archive: archiveName, sha256: await sha256(archive) }, null, 4)}\n`,
     );
     console.log(`Built ${PACKAGE_NAME}@${releaseVersion} (initial stack ${defaultStackVersion}): ${archive}`);
-}
-
-async function publish(releaseVersion: string): Promise<void> {
-    const value = JSON.parse(await readFile(receipt, "utf8")) as Record<string, unknown>;
-    if (
-        value.schema !== "ulvia.cli-release.v1" ||
-        value.package !== PACKAGE_NAME ||
-        value.version !== releaseVersion ||
-        typeof value.stackVersion !== "string" ||
-        !VERSION.test(value.stackVersion) ||
-        value.archive !== archiveName ||
-        value.sha256 !== (await sha256(archive))
-    ) {
-        throw new Error(`Refusing invalid CLI release artifact for ${PACKAGE_NAME}@${releaseVersion}`);
-    }
-    await rm(publishing, { recursive: true, force: true });
-    await mkdir(publishing, { recursive: true });
-    await command(["tar", "-xzf", archive, "--strip-components=1", "-C", publishing], root);
-    const tag = releaseVersion.includes("-") ? "next" : "latest";
-    await command(["bun", "publish", "--registry", NPM_REGISTRY, "--access", "public", "--tag", tag], publishing);
 }
 
 function packageManifest(releaseVersion: string): Record<string, unknown> {
@@ -138,13 +107,13 @@ function parseArguments(
 ): { version: string; stackVersion?: string } {
     const version = option(args, "--version");
     const stackVersion = option(args, "--stack-version");
-    const expectedLength = action === "build" ? 4 : 2;
+    const expectedLength = 4;
     if (
         !version ||
         !VERSION.test(version) ||
         args.length !== expectedLength ||
         (action === "build" && (!stackVersion || !VERSION.test(stackVersion))) ||
-        (action === "publish" && stackVersion)
+        action !== "build"
     ) {
         throw new Error(usage());
     }
@@ -185,5 +154,5 @@ async function command(args: readonly string[], cwd: string, inherit = true): Pr
 function usage(): string {
     return `Usage:
   bun run infra/cli/build.ts build --version <cli-version> --stack-version <stack-version>
-  bun run infra/cli/build.ts publish --version <cli-version>`;
+  Publication is owned by bun run publish --version <version>.`;
 }

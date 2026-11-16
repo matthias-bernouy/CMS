@@ -34,9 +34,6 @@ for (const component of components) {
             process.cwd(),
         ]);
         await verifyImage(reference, component, options.version);
-    } else if (action === "publish") {
-        await verifyImage(reference, component, options.version);
-        await command(["docker", "push", reference]);
     } else {
         throw new Error(usage());
     }
@@ -90,5 +87,5 @@ async function command(args: readonly string[], inherit = true): Promise<string>
 }
 
 function usage(): string {
-    return "Usage: bun run infra/images/build.ts <build | publish> --version <version> [edge | provider | all]";
+    return "Usage: bun run infra/images/build.ts build --version <version> [edge | provider | all]";
 }

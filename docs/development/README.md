@@ -26,7 +26,7 @@ implementation checks and remaining extended Docker failures.
 
 ```bash
 bun run ulvia -- configure --show
-bun run images:build --version 0.1.0-shared-hosting all
+bun run build --version 0.1.0-shared-hosting
 bun run ulvia -- configure --domain control.localhost
 bun run ulvia -- apply --version 0.1.0-shared-hosting
 bun run ulvia -- status
@@ -82,8 +82,7 @@ authors build a complete distribution and publish its artifacts explicitly:
 
 ```bash
 bun run build --version 1.0.7
-bun run images:publish --version 1.0.7 all
-bun run cli:publish --version 1.0.7
+bun run publish --version 1.0.7
 ulvia upgrade --version 1.0.7
 ```
 
@@ -103,24 +102,37 @@ rollback. No commands upgrade an individual Provider or Edge anymore.
 
 The versioned workspace build gives Edge, Provider and the CLI one shared
 distribution version. Contract and Provider manifest versions evolve independently.
-Current Installations and Provider manifest use `1.4.0`; Content uses `1.1.0`,
-Authoring and Registry use `1.2.0`. Hosting, Routing and TLS use `1.0.0`.
-Existing npm versions and Docker tags are never reused.
+Versions are explicit in each feature definition and the Provider manifest source.
+Existing npm versions and Docker tags must not be assigned different release bytes.
 
 The host CLI is a separate public npm artifact. Its private workspace sources
 are bundled so the published package has no `workspace:*` dependencies:
 
 ```bash
-bun run cli:publish --version 1.0.7
+bun run publish --version 1.0.7
 bun add --global @cyaxis/ulvia@1.0.7
 ```
 
-The build writes the package archive and a SHA-256 release receipt below
-`artifacts/cli`. Publication targets `https://registry.npmjs.org/` explicitly,
-requires npm credentials outside the repository, and refuses a changed archive.
-The unified build sets the CLI and initial Docker stack versions to the same
-release version and seals both into the receipt. Prereleases use the npm `next`
-tag; stable versions use `latest`.
+The build writes the archive and SHA-256 receipt below `artifacts/cli`, then
+copies them and the exact admitted official catalogue into
+`artifacts/distributions/<version>/`. Its `manifest.json` seals every input file,
+resource coordinate, Git revision and local image ID. This directory is ignored by Git.
+Builds never change the personal CLI release cache or running installations.
+
+`publish --version` consumes only that snapshot. It verifies all files, both image
+identities, the saved Repository connection and npm's existing version before
+publishing contracts in dependency order, the Provider manifest, both images, and
+finally the exact CLI tarball. Repository publication uses the connection established
+by `bun run ulvia -- repository login <url>`; Docker and npm use their normal
+external credentials. It never calls `push all` against the personal release cache.
+
+The three destinations are not one transaction. On failure, repeat the same
+`publish --version`: Repository retries are idempotent, Docker retries push the
+same local images, and an existing npm version succeeds only when its SHA-512
+integrity matches the built archive. Changed artifacts or npm content conflicts fail.
+No build or source regeneration runs during publication. The CLI and initial Docker
+stack share the distribution version; contract and manifest versions remain independent.
+Prereleases use npm's `next` tag; stable versions use `latest`.
 
 ## Instance integration verification
 
@@ -223,48 +235,40 @@ still require deployment-level verification.
 
 | Command | Purpose |
 | --- | --- |
-| `bun run check:all` | Architecture, UI contracts, repository shape, style, workspace types, dead code and tooling types. |
-| `bun run verify` | Prepare official runtime metadata, run static checks, build browser assets, run the Bun test suite and check performance budgets. |
-| `bun run verify:full` | Run `verify`, the shared-hosting browser journey, Docker delivery budgets and isolated ACME issuance/restart. |
-| `bun run check:dead-code` | Report unused declarations, exports, exported types and package dependencies. |
-| `bun run check:logging` | Reject server-side `console` references and unstable logger event names outside approved presentation boundaries. |
-| `bun run check:style` | Read-only Biome check. |
+| `bun run ulvia -- <arguments>` | Prepare metadata/browser assets and run the source CLI. |
 | `bun run format` | Apply Biome formatting and configured safe/unsafe fixes; inspect the diff. |
-| `bun run typecheck` | Generate official runtime metadata, then check/build TypeScript project references. |
-| `bun run build` | Generate the official bootstrap and runtime metadata, then build TypeScript references and Content browser runtimes. |
-| `bun run build --version <version>` | Build the workspace, both Docker images and the CLI with one distribution version. |
-| `bun run cli:build --version <cli-version> --stack-version <stack-version>` | Bundle and verify the installable `@cyaxis/ulvia` npm archive with its independent initial stack version. |
-| `bun run cli:publish --version <version>` | Publish an unchanged, previously built CLI archive to the public npm registry. |
-| `bun run images:build --version <version> all` | Build all official Cyaxis/Ulvia Docker images locally. |
-| `bun run images:publish --version <version> all` | Publish verified official images to Docker Hub. |
-| `bun run test` | Generate official runtime metadata, then run maintained tests under `quality/`, `tests/` and `packages/`. |
-| `bun run test:edge-smoke` | Configure empty Control, create sites over HTTP/MCP, publish explicitly, restart and check two warmed Edges. |
-| `bun run test:hosting:tls` | Run two Caddy entrypoints with Pebble, shared certificates and restart preservation. |
-| `bun run clean` | Clean TypeScript build state, then remove every package `dist` and `tsconfig.tsbuildinfo`. |
+| `bun run check` | Run every static diagnostic, including types, architecture, style and dead code. |
+| `bun run test [paths/options]` | Prepare metadata/browser assets, then run maintained Bun tests, or selected tests. |
+| `bun run verify` | Run static checks, tests, performance budgets, the shared-hosting browser journey, Docker delivery and isolated TLS issuance/restart. |
+| `bun run build [--version <version>]` | Build workspace outputs; with a version, also build images, the CLI and an exact publication snapshot. |
+| `bun run publish --version <version>` | Publish only the previously built snapshot to Repository, Docker and npm. |
+| `bun run clean` | Clean TypeScript build state and package `dist`/`tsconfig.tsbuildinfo` outputs. |
 
-`check:all` remains the fast aggregate static check; it does not execute the
-application test suite or browser scenarios. Use `verify` before handing off a
-code change. Use `verify:full` when the complete Provider, instance and Edge
-journey is in scope. Browser/network integration tests require an environment
-that permits Chromium and local listeners.
+`check` is the fast static pass. It preserves every diagnostic and reports elapsed
+seconds per check; `--verbose` and `--base <ref>` control reporting. There is no
+individual-check selector. `test` is the normal iteration loop and accepts Bun
+paths and options, for example `bun run test ./tests/operations`.
 
-The fresh-install Edge smoke test additionally requires Docker Compose and
-Chromium. It builds the Edge and Provider images from the current checkout using
-the local tag `0.1.0-edge-smoke`, validates their OCI labels and immutable
-repository digests, and prepares the admitted official and fixture catalogue
-in an isolated temporary CLI data directory. Installation state, image pins,
-service credentials, Provider instances and CMS site data are created by the normal
-CLI flow. Nothing is pushed to a registry. Local image manifests must be
-available by digest (for example with Docker's containerd image store).
+`verify` is the complete maintained automated acceptance pipeline. It requires
+Docker Compose, Chromium and local listeners; missing prerequisites fail the
+command. Bootstrap and browser outputs are prepared once per command before the
+stages that consume them. Individual internal entrypoints remain directly callable
+for diagnosis; they are not additional root aliases.
 
-To reuse an already built matching pair, set
-`ULVIA_SMOKE_IMAGE_VERSION=<local-version>` explicitly. This skips image builds
-but still verifies each component, stack API, version and digest. Without that
-override, `bun run verify:full` builds and tests the candidate source directly.
-The smoke is opt-in locally. Run `bun run verify:full` explicitly for the smoke
-and Docker delivery budgets plus the two-entrypoint ACME fixture. The TLS runner
-defaults to the candidate Provider image built by delivery budgets; set
-`ULVIA_TLS_TEST_IMAGE` to reuse another matching candidate. This repository has no GitHub Actions workflows.
+`verify` builds one candidate Edge/Provider pair tagged `0.1.0-verify` from the
+current checkout and reuses it for the browser, delivery and TLS stages. It
+validates OCI component/API/revision labels and exact image identities. Local
+image manifests must be available by digest (for example with Docker's containerd
+image store). Each journey uses disposable services and isolated client data;
+nothing is pushed to a public registry.
+
+The ordinary `test` command leaves these acceptance journeys opt-in. For focused
+diagnosis, call the internal entrypoints directly. The smoke accepts
+`ULVIA_SMOKE_IMAGE_VERSION`, delivery accepts both `ULVIA_MCP_EDGE_DOCKER_IMAGE`
+and `ULVIA_MCP_PROVIDER_DOCKER_IMAGE`, and TLS accepts `ULVIA_TLS_TEST_IMAGE`.
+Those explicit image overrides are for the internal runners; `verify` always
+builds its current candidate once. This repository has no GitHub Actions workflows.
+
 See [security and performance guardrails](guardrails.md) for reports, scope
 selection, measured budgets and remaining limits.
 
@@ -280,14 +284,14 @@ have opt-in real Mongo tests covering concurrent processes, account/instance
 isolation and bounded indexed reads. Wider adapter interruption, transactions
 and full restore still need environment-level coverage.
 Performance work should gate calls, transferred bytes and retained resources;
-`verify` now runs `test:performance` with machine-dependent timing ceilings,
-while `verify:full` also runs the real Docker delivery budget journey.
+`verify` runs the performance suite with machine-dependent timing ceilings and
+the real Docker delivery budget journey.
 
-`check:dead-code` exits with a failure when it finds unused declarations,
+The dead-code diagnostic included in `check` exits with a failure when it finds unused declarations,
 exports, exported types or package dependencies. Public exports can be
 intentional; confirm their package contract before removing them.
 
-For code changes, capture `check:all` before the work and run `verify` after it
+For code changes, capture `check` before the work and run `verify` after it
 in the same workspace. Address introduced errors and inspect new warnings in
 scope.
 Documentation-only changes normally need a diff whitespace check and validation

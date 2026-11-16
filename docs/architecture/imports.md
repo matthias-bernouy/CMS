@@ -30,7 +30,7 @@ import types, including `typeof import("module")`, are rejected by the
 `inline-import-type` architecture rule. It scans source, tests, tooling,
 infrastructure scripts and handwritten declarations and reports the file and
 line. Runtime dynamic imports remain supported. Comments and example strings
-are not treated as type imports. `check:all` and `verify` include this control.
+are not treated as type imports. `check` and `verify` include this control.
 
 ## Local Package Aliases
 

@@ -8,7 +8,7 @@ COPY infra/bootstrap.ts infra/execution-support.ts ./infra/
 COPY packages/ ./packages/
 
 RUN bun install --frozen-lockfile
-RUN bun run generate:official-bootstrap
+RUN bun run infra/bootstrap.ts
 RUN bunx tsc --build packages/runtimes/cms-edge-server
 
 FROM build AS runtime-source

@@ -78,7 +78,7 @@ recovery; those are current domain operations, not historical import paths.
 - Do not import another package through `packages/.../src/...`.
 - Declare type dependencies with top-level `import type` statements. Inline
   import types (`import("module").Type` and `typeof import("module")`) are
-  rejected by `check:architecture`, including tests and handwritten declarations.
+  rejected by the architecture check, including tests and handwritten declarations.
   Runtime dynamic imports remain allowed.
 - Network and persistence adapters are composition-root imports. Keep them out
   of production surface code and browser bundles. Tests may compose adapters;
@@ -137,14 +137,12 @@ Use Bun commands from the workspace root unless a package says otherwise:
 
 ```bash
 bun install
-bun run check:all
+bun run check
 bun run verify
-bun run verify:full
-bun run check:style
 bun run format
 bun run build
-bun run typecheck
-bun test
+bun run test
+bun run publish --version <version>
 bun run clean
 ```
 
@@ -152,16 +150,20 @@ bun run clean
 metadata under package `dist/` directories, then emits TypeScript project
 references and builds the Bloc behavior and binding-core runtimes owned by
 `@bernouy/content`. Generated runtime metadata is not tracked by Git; historical
-admitted compatibility snapshots remain versioned source data.
+admitted compatibility snapshots remain versioned source data. A versioned build also
+seals its contracts, Provider manifest, image identities and CLI archive under
+`artifacts/distributions/<version>/`. `publish` consumes only that build, without
+regeneration or personal release-cache discovery. Contract versions remain independent.
 
 ## Agent Validation Loop
 
 - In a new worktree, make frozen dependencies available with
   `bun install --frozen-lockfile` before running the initial check.
-- For code changes, run `bun run check:all` before making changes and `bun run
+- For code changes, run `bun run check` before making changes and `bun run
   verify` before handoff. Run them in the same task workspace so the final report
-  can be compared with that task's starting state. Use `bun run verify:full` when
-  the complete local Edge journey is in scope.
+  can be compared with that task's starting state. `verify` includes the browser,
+  Docker delivery and TLS journeys; Docker Compose, Chromium and local listeners
+  are required. Missing prerequisites fail verification.
 - When concurrent work may modify the same checkout, create or use an isolated
   Git worktree before the initial check. Read-only reviews can share a checkout.
   Do not fix findings from another worktree or unrelated pre-existing findings
@@ -193,7 +195,7 @@ admitted compatibility snapshots remain versioned source data.
 ## Tests And Safety
 
 - Match the existing test style. Add focused tests when behavior changes.
-- For documentation-only changes, the before/after `check:all` loop is optional:
+- For documentation-only changes, the before/after `check` loop is optional:
   run `git diff --check` and verify local links after moves. Check generated docs
   or executable examples when the change requires it.
 - Do not overwrite unrelated dirty work. Read existing changes before touching a

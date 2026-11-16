@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 // Compile the SDK inventory; no authored collection corpus is bundled.
 if (Bun.argv.length > 2) {
-    throw new Error("Usage: generate:official-bootstrap");
+    throw new Error("Usage: bun run infra/bootstrap.ts");
 }
 const child = Bun.spawn([process.execPath, "run", "--cwd", "packages/runtimes/ulvia-cli", "generate:bootstrap"], {
     stdout: "inherit",

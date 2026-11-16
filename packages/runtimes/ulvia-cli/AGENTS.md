@@ -144,3 +144,8 @@ Ulvia CMS installation runtime.
 - Technical `logs` reads Docker streams from the exact owned project, with bounded
   lines/container selection and cancellation. Do not revive CMS journal clients
   in the CLI or hold the mutation lock while following logs.
+
+- `./publication` exposes isolated catalogue inventory and one-invocation publication
+  preflight to distribution tooling. Keep it independent of the SDK compiler and
+  personal release-cache discovery. Saved Repository credentials retain their
+  origin/identity/generation checks; remote commits recheck namespace ownership.

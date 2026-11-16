@@ -1,5 +1,5 @@
 {
-    "extends": "../../tsconfig.base.json",
+    "extends": "../../tsconfig.tooling.json",
     "compilerOptions": {
         "composite": false,
         "declaration": false,
@@ -9,6 +9,9 @@
     },
     "include": [
         "./**/*.ts",
-        "../ui-contracts/**/*.ts"
+        "../ui-contracts/**/*.ts",
+        "../../infra/**/*.ts",
+        "../../build.ts",
+        "../../tests/operations/**/*.ts"
     ]
 }

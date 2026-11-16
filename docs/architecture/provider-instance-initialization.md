@@ -110,7 +110,7 @@ The browser polls one setup status request per second while applying a recipe.
 
 ## Execution and recovery
 
-Images generate `bun run generate:official-bootstrap` from the SDK inventory.
+Images run `bun run infra/bootstrap.ts` to generate resources from the SDK inventory.
 The resulting admitted contracts, documentation assets and Provider manifest are
 local provisioning resources. Missing exact resources refuse provisioning without
 a remote fallback. Ready/disabled instances reopen their approved persisted

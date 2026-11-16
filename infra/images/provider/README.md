@@ -1,11 +1,11 @@
 # Ulvia Provider image
 
 This image contains only the official multi-instance Provider runtime. Build
-and publish official tags from the workspace root:
+and publish the complete official distribution from the workspace root:
 
 ```bash
-bun run images:build --version 1.0.7 provider
-bun run images:publish --version 1.0.7 provider
+bun run build --version 1.0.7
+bun run publish --version 1.0.7
 ```
 
 The Provider owns database access, instance provisioning and file storage. It

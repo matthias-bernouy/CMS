@@ -85,4 +85,4 @@ The [logging tests](../../packages/runtimes/ulvia-cli/tests/stack/logging/logs.t
 cover filters, unauthenticated technical reads, cancellation and oversized lines.
 The [native browser journey](../../packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts)
 uses actual containers and native CMS setup, restarts the installation and applies
-a second Edge. `bun run verify:full` also runs delivery and ACME acceptance checks.
+a second Edge. `bun run verify` also runs delivery and ACME acceptance checks.

@@ -21,11 +21,12 @@ export function createCheckExecutor(repositoryRoot = REPOSITORY_ROOT): CheckExec
 export async function runChecks(checks: readonly CheckDefinition[], execute: CheckExecutor): Promise<CheckResult[]> {
     const results: CheckResult[] = [];
     for (const check of checks) {
+        const start = performance.now();
         try {
-            results.push({ ...check, ...(await execute(check)) });
+            results.push({ ...check, ...(await execute(check)), durationMs: performance.now() - start });
         } catch (error) {
             const stderr = error instanceof Error ? error.message : String(error);
-            results.push({ ...check, exitCode: 1, stdout: "", stderr });
+            results.push({ ...check, exitCode: 1, stdout: "", stderr, durationMs: performance.now() - start });
         }
     }
     return results;

@@ -19,7 +19,7 @@ export function blocRuntimeCacheKey(pathname: string): string {
 async function loadBrowserRuntimeEntry(filename: string): Promise<CacheEntry> {
     const file = Bun.file(join(ASSET_DIRECTORY, filename));
     if (!(await file.exists())) {
-        throw new Error(`CMS browser runtime ${filename} is missing; run bun run build:browser`);
+        throw new Error(`CMS browser runtime ${filename} is missing; run bun run build`);
     }
     return compress(await file.text(), "text/javascript");
 }

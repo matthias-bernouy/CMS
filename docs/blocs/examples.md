@@ -151,7 +151,7 @@ category memberships for clients; no visual catalogue/editor is bundled.
 ```bash
 bun test packages/features/repository/tests/collections/admission/examples
 ULVIA_RUN_EXAMPLE_BROWSER=1 bun test packages/runtimes/ulvia-cli/tests/preview
-bun run verify:full
+bun run verify
 ```
 
 Admission checks server text placement with the same rules as rendering, without
