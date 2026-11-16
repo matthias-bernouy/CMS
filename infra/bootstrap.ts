@@ -1,4 +1,4 @@
-import { chmod, cp, mkdir, readdir, rm } from "node:fs/promises";
+import { chmod, cp, readdir, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 
 // Compile the SDK inventory; no authored collection corpus is bundled.
@@ -19,9 +19,6 @@ await rm(destination, { recursive: true, force: true });
 await cp(source, destination, { recursive: true });
 await makePublicSnapshotReadable(destination);
 await writeExecutionSupport(bootstrapRoot);
-const featureRuntime = resolve("packages/surfaces/ulvia-provider/src/capabilities/features/generated/runtime.json");
-await mkdir(resolve(featureRuntime, ".."), { recursive: true });
-await cp(resolve(bootstrapRoot, "feature-runtime.json"), featureRuntime);
 
 /** Shipped releases are public data; Compose may run under an arbitrary host UID. */
 async function makePublicSnapshotReadable(root: string): Promise<void> {

@@ -20,8 +20,7 @@ const SCRIPT = /\.[cm]?[jt]sx?$/;
 export function isProductionSource(path: string): boolean {
     return (
         !path.split("/").some((part) => EXCLUDED_DIRECTORIES.has(part)) &&
-        !/\.(?:d|test|spec|cases|fixture)\.[cm]?[jt]sx?$/.test(path) &&
-        !path.endsWith("/src/browser/admin-runtime.js")
+        !/\.(?:d|test|spec|cases|fixture)\.[cm]?[jt]sx?$/.test(path)
     );
 }
 

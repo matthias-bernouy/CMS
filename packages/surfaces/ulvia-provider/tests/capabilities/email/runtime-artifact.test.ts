@@ -34,7 +34,7 @@ console.log(JSON.stringify(runtime.implementations.map(({contractId}) => contrac
         ]) {
             expect(inputs.some((path) => path.endsWith(forbidden))).toBe(false);
         }
-        expect(inputs.some((path) => path.endsWith("features/generated/runtime.json"))).toBe(true);
+        expect(inputs.some((path) => path.endsWith("ulvia-provider/dist/generated/runtime.json"))).toBe(true);
         await expect(stat(join(root, "docs"))).rejects.toMatchObject({ code: "ENOENT" });
         const child = Bun.spawn([process.execPath, "--no-macros", outfile], {
             cwd: destination,

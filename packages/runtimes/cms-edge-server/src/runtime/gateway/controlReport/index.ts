@@ -1,7 +1,7 @@
 import { parseProviderRuntimeReportJson, type ProviderRuntimeReport } from "@bernouy/ulvia-providers/installations";
 import type { InstallationsProviderTransport } from "../InstallationsProviderTransport";
 
-import supported from "./supported.json";
+import supported from "../../../../dist/generated/supported.json";
 export const INSTALLATIONS_CONTRACT = supported[0]!;
 const SUPPORTED_CONTROL_CONTRACTS = supported;
 

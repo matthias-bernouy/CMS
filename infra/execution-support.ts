@@ -1,11 +1,17 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { compileRetainedFeatures } from "@bernouy/ulvia-provider/build";
 
 /** Exact executable claims come only from the SDK-backed manifest shipped with this build. */
-export async function writeExecutionSupport(bootstrapRoot: string): Promise<void> {
-    const root = resolve(import.meta.dir, "../packages/runtimes/ulvia-provider-server");
-    const source = resolve(root, "src/runtime/instances/system/execution");
+export async function writeExecutionSupport(
+    bootstrapRoot: string,
+    repositoryRoot = resolve(import.meta.dir, ".."),
+): Promise<void> {
+    const root = resolve(repositoryRoot, "packages/runtimes/ulvia-provider-server");
+    const source = resolve(root, "dist/generated");
+    const edge = resolve(root, "../cms-edge-server/dist/generated");
+    const provider = resolve(repositoryRoot, "packages/surfaces/ulvia-provider/dist/generated");
+    await Promise.all([source, edge, provider].map((directory) => mkdir(directory, { recursive: true })));
     const manifest = JSON.parse(
         await readFile(resolve(bootstrapRoot, "providers/primary-provider/definition.json"), "utf8"),
     ) as {
@@ -28,10 +34,7 @@ export async function writeExecutionSupport(bootstrapRoot: string): Promise<void
         }
     }
     await writeFile(
-        resolve(
-            import.meta.dir,
-            "../packages/runtimes/cms-edge-server/src/runtime/gateway/controlReport/supported.json",
-        ),
+        resolve(edge, "supported.json"),
         `${JSON.stringify(
             releases.filter(({ contractId }) => contractId === "ulvia/cms.installations"),
             null,
@@ -44,14 +47,12 @@ export async function writeExecutionSupport(bootstrapRoot: string): Promise<void
         throw new Error("The official inventory has no host routing contract");
     }
     await writeFile(
-        resolve(
-            import.meta.dir,
-            "../packages/runtimes/cms-edge-server/src/runtime/hosting/client/routing-contract.json",
-        ),
+        resolve(edge, "routing-contract.json"),
         `${JSON.stringify({ ...routing, canonicalJson: (await readFile(routingPath, "utf8")).trim() }, null, 4)}\n`,
     );
     await writeFile(
         resolve(source, "supported-releases.json"),
         `${JSON.stringify({ providerId: manifest.providerId, buildVersion, releases }, null, 4)}\n`,
     );
+    await cp(resolve(bootstrapRoot, "feature-runtime.json"), resolve(provider, "runtime.json"));
 }

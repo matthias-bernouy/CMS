@@ -148,9 +148,11 @@ bun test
 bun run clean
 ```
 
-`bun run build` emits TypeScript project references, builds the Bloc behavior
-and binding-core runtimes owned by `@bernouy/content`, then refreshes the
-CLI's admitted official bootstrap snapshot.
+`bun run build` first generates the admitted official bootstrap and runtime
+metadata under package `dist/` directories, then emits TypeScript project
+references and builds the Bloc behavior and binding-core runtimes owned by
+`@bernouy/content`. Generated runtime metadata is not tracked by Git; historical
+admitted compatibility snapshots remain versioned source data.
 
 ## Agent Validation Loop
 

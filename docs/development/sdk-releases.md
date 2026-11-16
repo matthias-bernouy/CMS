@@ -110,7 +110,7 @@ Only `.md` files are included; other regular files are ignored. Limits are 64 do
 The SDK root does no filesystem IO; compilation snapshots exact bytes synchronously
 before asynchronous hashing. Bootstrap also emits `ulvia-sdk-runtime/v1` metadata from the same compilation.
 `infra/bootstrap.ts` stages it at the surface's
-`src/capabilities/features/generated/runtime.json`. Runtime mounting verifies that
+`dist/generated/runtime.json` (ignored by Git). Runtime mounting verifies that
 artifact and attaches executors without source asset discovery or Zod conversion.
 See [SDK runtime artifacts](sdk-runtime.md) for the format, trust boundary and guards.
 

@@ -14,10 +14,29 @@ instances and document/fixture bytes are absent.
 The CLI bootstrap generator emits `dist/bootstrap/feature-runtime.json` from the
 same compilation that supplies contract releases and manifest claims.
 `infra/bootstrap.ts` copies it to the surface's
-`src/capabilities/features/generated/runtime.json`. This is generated code-owned
-metadata; regenerate it with `bun run generate:official-bootstrap`, never edit it.
+`dist/generated/runtime.json`. This is generated code-owned metadata ignored by
+Git; regenerate it with `bun run generate:official-bootstrap`, never edit it.
 The source inventory is `src/capabilities/features/inventory.ts`; the build compiler
 entry is `src/capabilities/features/build.ts`.
+
+The same generation prepares these package-owned outputs:
+
+| Package | Generated metadata |
+| --- | --- |
+| `@bernouy/ulvia-provider` | `dist/generated/runtime.json` |
+| `@bernouy/ulvia-provider-server` | `dist/generated/supported-releases.json` |
+| `@bernouy/cms-edge-server` | `dist/generated/supported.json`, `dist/generated/routing-contract.json` |
+
+`build`, `typecheck`, `check:all` and `test` prepare metadata before consuming it.
+Image builds also generate it before TypeScript; the Edge build does not depend
+on committed outputs or an earlier Provider build. `clean` removes all package
+`dist/` directories. After cleaning, use the maintained commands above; direct
+`bun test` or native runtime startup requires generation first. Missing artifacts
+fail through their static imports; startup never regenerates or downloads them.
+
+Historical canonical releases are different: the reviewed source file
+`src/capabilities/features/compatibility/retained.json` stays in Git. It cannot be
+reconstructed from current definitions and is not rewritten by generation.
 
 The Provider image ships that metadata with its source modules. Runtime startup
 neither opens authored Markdown/fixture directories nor converts Zod schemas.

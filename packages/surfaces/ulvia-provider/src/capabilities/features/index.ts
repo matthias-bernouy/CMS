@@ -8,8 +8,8 @@ import type { ImplementationRelease, ProviderRegistrationOptions } from "@bernou
 import type { ProviderCapabilityRegistry } from "../../dispatch/registry";
 import type { UlviaProviderFeatureServices } from "../../ports/index";
 import { officialFeatureImplementations } from "./inventory";
-import artifact from "./generated/runtime.json";
-import retained from "./generated/retained.json";
+import artifact from "../../../dist/generated/runtime.json";
+import retained from "./compatibility/retained.json";
 import { formatOfficialCapabilityFailure } from "./errors";
 
 let loaded: ReturnType<typeof loadImplementations<UlviaProviderFeatureServices>> | undefined;

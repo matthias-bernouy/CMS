@@ -10,6 +10,9 @@ verification and deployment limits are documented in
 
 The workspace package is private source. Official distribution bundles workspace
 dependencies into `@cyaxis/ulvia`; it does not publish this workspace package.
+Workspace TypeScript declarations are emitted to `dist/types/`, separately from
+the generated system snapshot in `dist/bootstrap/`. Regenerating that snapshot
+must not remove compiler outputs or make incremental and clean builds differ.
 Build one exact CLI release and its compatible default stack version with:
 
 ```bash

@@ -127,7 +127,8 @@ Repository does not track sites outside this Provider's administrative scope.
 System installation pins come from the SDK-generated manifest and bundled snapshot,
 loaded lazily for installation operations. Named profiles are removed. Executable
 support is generated in
-`packages/runtimes/ulvia-provider-server/src/runtime/instances/system/execution/supported-releases.json`.
+`packages/runtimes/ulvia-provider-server/dist/generated/supported-releases.json`
+(ignored by Git and generated before typechecking or image assembly).
 An image update never silently changes selected release pins. Adding support
 requires exact executor linkage and contract tests; SemVer alone grants nothing.
 

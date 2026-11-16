@@ -2,7 +2,7 @@
 node_modules
 /artifacts/
 
-# TypeScript build output (per-package `dist/`)
+# Reproducible package build output (declarations, bundles and runtime metadata)
 dist/
 *.tsbuildinfo
 
@@ -28,7 +28,6 @@ build/
 
 # Generated files
 coverage/
-packages/surfaces/cms-edge/src/browser/admin-runtime.js
 
 # .p9r files
 .p9r/

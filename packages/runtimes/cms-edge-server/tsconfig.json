@@ -4,6 +4,7 @@
         "outDir": "dist",
         "rootDir": "./src"
     },
+    "files": ["dist/generated/supported.json", "dist/generated/routing-contract.json"],
     "include": [
         "src/**/*.ts",
         "src/**/*.json"

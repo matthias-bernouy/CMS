@@ -1,8 +1,8 @@
 import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { expect, test } from "bun:test";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { buildOfficialBootstrapArtifacts, writeOfficialBootstrapArtifacts } from "../../src/bootstrap/generate";
 import {
     FilesystemCollectionRepository,
@@ -14,6 +14,23 @@ function officialArtifacts() {
     compiled ??= buildOfficialBootstrapArtifacts();
     return compiled;
 }
+
+test("regenerating bootstrap preserves declarations at the configured TypeScript output location", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ulvia-bootstrap-declarations-"));
+    const configuration = await Bun.file(new URL("../../tsconfig.json", import.meta.url)).json();
+    const declaration = join(root, configuration.compilerOptions.outDir, "bootstrap/generate.d.ts");
+    const bytes = "export declare function generate(): Promise<void>;\n";
+    try {
+        await mkdir(dirname(declaration), { recursive: true });
+        await writeFile(declaration, bytes);
+        for (let attempt = 0; attempt < 2; attempt++) {
+            await writeOfficialBootstrapArtifacts(join(root, "dist/bootstrap"), await officialArtifacts());
+            expect(await readFile(declaration, "utf8")).toBe(bytes);
+        }
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+}, 15_000);
 
 test("SDK bootstrap retains the exact system APIs without a collection index", async () => {
     const artifacts = await buildOfficialBootstrapArtifacts();

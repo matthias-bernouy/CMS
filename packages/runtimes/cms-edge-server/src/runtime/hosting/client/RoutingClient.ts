@@ -4,7 +4,7 @@ import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { signProviderInvocationToken, assertProviderInvocationSecret } from "@bernouy/cms-gateway/protocol";
 import type { EdgeRoute } from "@bernouy/hosting/routing";
 import { currentRequestHeaders } from "@bernouy/http-runner/observability";
-import definition from "./routing-contract.json";
+import definition from "../../../../dist/generated/routing-contract.json";
 
 let admitted: ReturnType<typeof verifyStoredContractReleaseJson> | undefined;
 const contract = () => (admitted ??= verifyStoredContractReleaseJson(definition.canonicalJson, definition.digest));

@@ -25,8 +25,9 @@ test("discovery follows browser helpers but excludes server-only code, tests and
             '<form cms-mutation="ulvia/catalog:save as saved"></form>',
         );
         await file(`${pkg}/tests/example.test.ts`, 'fetch("/api/test");');
-        await file(`${pkg}/src/browser/admin-runtime.js`, 'fetch("/compiled");');
         await file(`${pkg}/dist/index.js`, 'fetch("/generated");');
+        await file("packages/features/content/package.json", JSON.stringify({ name: "@bernouy/content" }));
+        await file("packages/features/content/dist/runtime-assets/bloc-runtime.js", 'fetch("/compiled");');
         const sources = await discoverUiSources(root);
         expect(sources.map((source) => source.path)).toHaveLength(4);
         expect(sources.find((source) => source.path.endsWith("/core/data.ts"))?.browser).toBe(true);

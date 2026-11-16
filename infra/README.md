@@ -25,8 +25,8 @@ bun run release:official
 bun run build --version <version>
 ```
 
-Without `--version`, `bun run build` compiles the workspace and regenerates the
-bootstrap. With `--version`, it then builds Edge, Provider and the CLI with one
+Without `--version`, `bun run build` generates the bootstrap and runtime metadata
+before compiling the workspace. With `--version`, it then builds Edge, Provider and the CLI with one
 shared distribution version, including the CLI's initial stack version. The
 component-specific builders remain available for targeted builds.
 

@@ -4,6 +4,7 @@
         "outDir": "dist",
         "rootDir": "./src"
     },
+    "files": ["dist/generated/supported-releases.json"],
     "include": [
         "src/**/*.ts",
         "src/**/*.json"

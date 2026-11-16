@@ -41,7 +41,9 @@ behavior.
 
 - `src/capabilities/features/inventory.ts` is the single SDK implementation/template inventory.
   `compileOfficialFeatures` is build-only. Bootstrap emits the runtime artifact at
-  `src/capabilities/features/generated/runtime.json`; do not edit it by hand.
+  `dist/generated/runtime.json`; it is ignored by Git and must be generated before
+  typechecking or bundling. Do not edit it by hand. Historical admitted releases
+  remain versioned at `src/capabilities/features/compatibility/retained.json`.
   `loadOfficialFeatures` verifies and attaches that shipped metadata once per process.
   Runtime mounting must not import the build entry or require authored docs/fixtures.
   Add a migrated feature to the inventory, without a family-specific registrar.

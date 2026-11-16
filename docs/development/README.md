@@ -224,20 +224,20 @@ still require deployment-level verification.
 | Command | Purpose |
 | --- | --- |
 | `bun run check:all` | Architecture, UI contracts, repository shape, style, workspace types, dead code and tooling types. |
-| `bun run verify` | Run static checks, build browser assets, regenerate official bootstrap artifacts, run the Bun test suite and check performance budgets. |
+| `bun run verify` | Prepare official runtime metadata, run static checks, build browser assets, run the Bun test suite and check performance budgets. |
 | `bun run verify:full` | Run `verify`, the shared-hosting browser journey, Docker delivery budgets and isolated ACME issuance/restart. |
 | `bun run check:dead-code` | Report unused declarations, exports, exported types and package dependencies. |
 | `bun run check:logging` | Reject server-side `console` references and unstable logger event names outside approved presentation boundaries. |
 | `bun run check:style` | Read-only Biome check. |
 | `bun run format` | Apply Biome formatting and configured safe/unsafe fixes; inspect the diff. |
-| `bun run typecheck` | TypeScript project-reference check/build. |
-| `bun run build` | Build TypeScript references and Content browser runtimes, then regenerate the official CLI bootstrap snapshot. |
+| `bun run typecheck` | Generate official runtime metadata, then check/build TypeScript project references. |
+| `bun run build` | Generate the official bootstrap and runtime metadata, then build TypeScript references and Content browser runtimes. |
 | `bun run build --version <version>` | Build the workspace, both Docker images and the CLI with one distribution version. |
 | `bun run cli:build --version <cli-version> --stack-version <stack-version>` | Bundle and verify the installable `@cyaxis/ulvia` npm archive with its independent initial stack version. |
 | `bun run cli:publish --version <version>` | Publish an unchanged, previously built CLI archive to the public npm registry. |
 | `bun run images:build --version <version> all` | Build all official Cyaxis/Ulvia Docker images locally. |
 | `bun run images:publish --version <version> all` | Publish verified official images to Docker Hub. |
-| `bun run test` | Run maintained tests under `quality/`, `tests/` and `packages/`. |
+| `bun run test` | Generate official runtime metadata, then run maintained tests under `quality/`, `tests/` and `packages/`. |
 | `bun run test:edge-smoke` | Configure empty Control, create sites over HTTP/MCP, publish explicitly, restart and check two warmed Edges. |
 | `bun run test:hosting:tls` | Run two Caddy entrypoints with Pebble, shared certificates and restart preservation. |
 | `bun run clean` | Clean TypeScript build state, then remove every package `dist` and `tsconfig.tsbuildinfo`. |

@@ -15,9 +15,9 @@ COPY infra/bootstrap.ts infra/execution-support.ts ./infra/
 COPY packages/ ./packages/
 
 RUN bun install --frozen-lockfile
+RUN bun run generate:official-bootstrap
 RUN bunx tsc --build packages/runtimes/ulvia-provider-server
 RUN cd packages/features/content && bun run build:browser
-RUN bun run generate:official-bootstrap
 
 FROM build AS runtime-source
 RUN rm -rf /app/node_modules /app/packages/*/node_modules /app/packages/*/*/node_modules \

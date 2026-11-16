@@ -5,9 +5,9 @@ import { join, resolve } from "node:path";
 
 const entry = resolve(import.meta.dir, "../../build.ts");
 const workspace = [
+    ["bun", "run", "generate:official-bootstrap"],
     ["bunx", "tsc", "--build"],
     ["bun", "run", "build:browser"],
-    ["bun", "run", "generate:official-bootstrap"],
 ];
 
 async function run(args: string[], failImages = false) {
@@ -58,7 +58,7 @@ esac
             .split("\n")
             .filter(Boolean)
             .map((line) => line.split("\t"));
-        return { status, stdout, stderr, commands: rows.map((row) => row.slice(1)), browserCwd: rows[1]?.[0], root };
+        return { status, stdout, stderr, commands: rows.map((row) => row.slice(1)), browserCwd: rows[2]?.[0], root };
     } finally {
         await rm(root, { recursive: true, force: true });
     }

@@ -1,5 +1,5 @@
 import { loadCompatibleImplementation } from "@bernouy/ulvia-sdk/provider";
-import retained from "./generated/retained.json";
+import retained from "./compatibility/retained.json";
 import { compileImplementations } from "@bernouy/ulvia-sdk/build";
 import type { UlviaProviderFeatureServices } from "../../ports/index";
 import { officialFeatureImplementations, officialFeatureTemplates } from "./inventory";
