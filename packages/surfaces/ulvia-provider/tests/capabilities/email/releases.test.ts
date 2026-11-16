@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test";
-import { compileOfficialFeatures, compileOfficialManifest } from "@bernouy/ulvia-provider/build";
+import {
+    compileOfficialFeatures,
+    compileOfficialManifest,
+    compileRetainedFeatures,
+} from "@bernouy/ulvia-provider/build";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
 
 // Reviewed current releases; historical execution compatibility is verified separately.
@@ -14,7 +18,7 @@ const releaseDigests = {
     "ulvia/cms.observability": "sha256:113758c81e4cdc774bba95c8f136a3a9650be5b6d59412ef51383bd15dd2de45",
     "ulvia/provider.connections": "sha256:0cfc85a809d4078e5e95adc94d023d65fa6d626074093f1a880090ce02b8f9f2",
     "ulvia/repository": "sha256:fc0cff55733f2bd4f4ce77871ccb95893793f9a8f4965cf47bd31bf4c1cea6a2",
-    "ulvia/cms.hosting": "sha256:afa1b95ffb2cb7c23f3c233bb195cdeb0bb9026abfd0df933a9ff2798c99144c",
+    "ulvia/cms.hosting": "sha256:89bfdbd3cbc8e66b334f2e93986008185036118d217dd76837433bc3a4b10d66",
     "ulvia/cms.installations": "sha256:dbfaafe02234c64828b1fc8b0ced559a6ec75ebe185db6ade639def9edcd876f",
     "ulvia/provider.tls": "sha256:41dbd3a81aa4d4d6eea2053c5dc7f097ac7003cd683a0c86341fbc4fb5bafa01",
     "ulvia/provider.routing": "sha256:0e312b93bdd939df59e4b837aba02be5f0b750485cf88db41fcec0411cdd9437",
@@ -37,4 +41,17 @@ test("generated manifest claims the exact SDK implementation inventory", async (
     for (const implementation of manifest.manifest.implementations) {
         expect(implementation.digest).toBe(releaseDigests[implementation.contractId as keyof typeof releaseDigests]);
     }
+});
+
+test("Hosting 1.0 remains executable with its eight exact capabilities before explicit upgrade", async () => {
+    const builds = await compileRetainedFeatures();
+    const hosting = builds.find((build) =>
+        build.implementations.some((pin) => pin.contractId === "ulvia/cms.hosting" && pin.version === "1.0.0"),
+    );
+    expect(hosting).toBeDefined();
+    expect(hosting!.implementations[0]!.digest).toBe(
+        "sha256:afa1b95ffb2cb7c23f3c233bb195cdeb0bb9026abfd0df933a9ff2798c99144c",
+    );
+    expect(hosting!.contracts[0]!.release.capabilities).toHaveLength(8);
+    expect(hosting!.contracts[0]!.release.capabilities.some(({ id }) => id.startsWith("zones."))).toBe(false);
 });

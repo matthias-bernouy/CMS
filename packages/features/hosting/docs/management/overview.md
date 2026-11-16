@@ -24,6 +24,9 @@ from 1 to 50. Resume with `nextCursor`; null marks the final page.
 Customer domains remain pending until `domains.verify` observes their exact TXT
 proof. Verification and TLS readiness are separate states. Deployment-owned
 suffixes may skip ownership proof; callers cannot declare a domain managed.
+Hosting 1.1 also supports [verified DNS zones](zones.md), administered at runtime
+with `zones.claim`, `zones.verify`, `zones.list` and `zones.disable`. A verified
+zone grants automatic admission of its apex and descendants on this installation.
 Domain changes require `expectedRevision`. Stale operations refuse without
 changing state. The installation's initial Control domain cannot be disabled.
 

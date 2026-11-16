@@ -13,6 +13,9 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "domains.claim": "neutral",
         "domains.verify": "neutral",
         "domains.disable": "neutral",
+        "zones.claim": "neutral",
+        "zones.verify": "neutral",
+        "zones.disable": "neutral",
     },
     "ulvia/provider.connections": {
         "connections.configure": "neutral",

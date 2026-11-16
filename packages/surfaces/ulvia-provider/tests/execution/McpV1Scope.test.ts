@@ -29,7 +29,7 @@ test("official MCP V1 exposes authoring, collection lifecycle, hosting and admin
             expect(bindings.some((binding) => binding.transport === "http")).toBe(true);
             if (release.contractId === "ulvia/cms.hosting") {
                 expect(capability.access).toBe("admin");
-                expect(/^(?:instances|domains)\./u.test(capability.id)).toBe(true);
+                expect(/^(?:instances|domains|zones)\./u.test(capability.id)).toBe(true);
             }
             if (release.contractId === "ulvia/cms.observability") {
                 expect(["logs.query", "logs.get", "logs.aggregate"]).toContain(capability.id);
@@ -64,5 +64,5 @@ test("official MCP V1 exposes authoring, collection lifecycle, hosting and admin
             }
         }
     }
-    expect(tools).toBe(102);
+    expect(tools).toBe(106);
 });

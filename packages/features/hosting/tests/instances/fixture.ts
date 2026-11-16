@@ -2,9 +2,10 @@ import {
     ControlAuthority,
     DomainAdmissionPolicy,
     InstanceManagement,
+    ZoneRegistry,
     reserveHostingInstallation,
 } from "@bernouy/hosting";
-import { InMemoryHostingStore } from "@bernouy/hosting/memory";
+import { InMemoryHostingStore, InMemoryHostingZoneStore } from "@bernouy/hosting/memory";
 import { ProviderInstanceLifecycle } from "@bernouy/hosting/instances";
 import type {
     CreateProviderInstanceRecord,
@@ -70,6 +71,10 @@ export async function instanceFixture() {
     await store.completeInstallation(2);
     let admin = true;
     const authority = new ControlAuthority(store, async () => admin);
+    const zoneStore = new InMemoryHostingZoneStore();
+    let zoneVerified = false;
+    const zones = new ZoneRegistry(zoneStore, authority, "proof-key-material".repeat(3), async () => zoneVerified);
+    const admission = new DomainAdmissionPolicy(["managed.example"], true, zones);
     const registry = new InstanceRegistry();
     const lifecycle = new ProviderInstanceLifecycle(
         registry,
@@ -113,7 +118,7 @@ export async function instanceFixture() {
         store,
         store,
         authority,
-        new DomainAdmissionPolicy(["managed.example"], true),
+        admission,
         "proof-key-material".repeat(3),
     );
     return {
@@ -122,6 +127,12 @@ export async function instanceFixture() {
         registry,
         lifecycle,
         management,
+        zones,
+        zoneStore,
+        admission,
+        setZoneVerified(value: boolean) {
+            zoneVerified = value;
+        },
         actor: { instanceId: "control-id", subjectId: "admin" },
         setAdmin(value: boolean) {
             admin = value;

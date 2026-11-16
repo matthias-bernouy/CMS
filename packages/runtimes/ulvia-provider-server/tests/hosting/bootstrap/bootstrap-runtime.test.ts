@@ -52,6 +52,10 @@ integration(
                 sub!,
             );
             const actor = { instanceId: control.instance.id, subjectId: alias };
+            const zone = await f.hosting.services.zones.claim(actor, "demo.example");
+            expect(zone.zone).toMatchObject({ hostname: "demo.example", state: "pending", revision: 1 });
+            expect(zone.proof.name).toBe("_ulvia-zone.demo.example");
+            expect((await f.hosting.services.zones.list(actor, null, 10)).items).toEqual([zone.zone]);
             const sites = [];
             for (const name of ["one", "two"]) {
                 const created = await f.hosting.services.instances.create(actor, {
@@ -78,6 +82,10 @@ integration(
                 f.hosting.services.instances.list({ ...actor, instanceId: sites[0]!.id }, null, 10),
             ).rejects.toMatchObject({ code: "FORBIDDEN" });
             expect((await f.hosting.services.instances.list(actor, null, 10)).items).toHaveLength(3);
+            await expect(
+                f.hosting.services.zones.claim({ ...actor, instanceId: sites[0]!.id }, "foreign.example"),
+            ).rejects.toMatchObject({ code: "FORBIDDEN" });
+            expect((await f.hosting.services.zones.list(actor, null, 10)).items).toEqual([zone.zone]);
             const grants = new MongoAdministratorGrantStore(controlDb);
             await grants.set("replacement-admin", true);
             await grants.set(sub!, false);

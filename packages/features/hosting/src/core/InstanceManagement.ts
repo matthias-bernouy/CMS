@@ -27,7 +27,7 @@ export class InstanceManagement {
         if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(input.requestId)) {
             throw new HostingError("INVALID_INPUT", "A UUID creation request is required");
         }
-        const { origin, hostname, local, managed } = this.admission.classify(input.origin);
+        const { origin, hostname, local, managed } = await this.admission.admit(input.origin, actor);
         const plainHttp = local && origin.startsWith("http:");
         const key = `hosting:${input.requestId.toLowerCase()}`;
         const create = { label: input.label, cmsUrl: origin, administrator: input.administrator };

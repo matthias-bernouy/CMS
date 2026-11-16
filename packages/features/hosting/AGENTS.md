@@ -26,7 +26,9 @@ administrator credentials only for the administrator step.
 - Domain claims are exclusive and revision checked. Failed ownership verification
   must not mutate the claim. Recheck authority after external verification.
 - Only deployment-owned code may register a managed domain without a DNS proof.
-  That method is not a tenant capability. Customer domains need an exact proof.
+  That method is not a tenant capability. Control may also verify a persisted DNS
+  zone through its dedicated TXT proof; admission may then trust its apex and
+  descendants. Other customer domains need an exact individual proof.
 - Routing only returns active domains. Context identity includes both domain and
   target instance revisions; the Provider must fence current authority at use.
 - Persist mandatory fields without defaults or historical repair. Initializing an
@@ -35,11 +37,17 @@ administrator credentials only for the administrator step.
 - Optional persistence adapters use explicit exports and are runtime imports.
 - No collections or Pages are created by this package.
 
-`./feature` owns `ulvia/cms.hosting` and its eight HTTP/MCP capabilities. The
+`./feature` owns `ulvia/cms.hosting` and its twelve HTTP/MCP capabilities. The
 surface projects structural services from the single official SDK inventory.
 Creation uses natural persisted idempotence, not SDK receipts containing initial
 administrator passwords. Domain reservations fence both hostname and creation
 request before provisioning can write an instance.
+
+Zones belong to the persisted Control identity. Recheck administrator authority
+after DNS verification and fence updates by revision and claim generation. A
+disabled zone may be reclaimed only with a fresh proof. Disabling a zone removes
+its admission grant without modifying existing domains; already admitted work may
+finish. Use bounded exact-ancestor lookups, never scan zones on admission or routing.
 
 Control bootstrap persists reserved/provisioning/ready phases. Only a ready
 installation grants hosting authority. Reopening ready state validates its

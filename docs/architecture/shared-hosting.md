@@ -27,9 +27,15 @@ a customer TXT proof. Localhost origins are allowed only for local installations
 HTTPS localhost still requires TLS. Customer claims require their exact DNS TXT
 proof. No collections or Pages are bootstrapped for Control or other sites.
 
+Hosting 1.1 also admits names under persisted, Control-owned verified DNS zones.
+`zones.claim` returns a dedicated `_ulvia-zone` TXT proof; `zones.verify` checks it
+once to grant apex/descendant admissions. `zones.list` is cursor-paged and
+`zones.disable` removes that grant without modifying existing sites. Reclaiming a
+disabled zone rotates its proof. See the [zone workflow](../../packages/features/hosting/docs/management/zones.md).
+
 ## Contract boundaries
 
-`ulvia/cms.hosting` has eight HTTP/MCP instance and domain operations. Creation
+`ulvia/cms.hosting` has twelve HTTP/MCP instance, domain and zone operations. Creation
 reserves the primary hostname and a unique request identity before provisioning,
 so a conflict does not leave an orphan tenant. Exact retries reuse one persisted
 identity; returned instance status distinguishes pending from ready. Lists use

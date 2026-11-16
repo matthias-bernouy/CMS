@@ -8,8 +8,9 @@ import {
     DomainAdmissionPolicy,
     DomainRegistry,
     InstanceManagement,
+    ZoneRegistry,
 } from "@bernouy/hosting";
-import { MongoHostingStore } from "@bernouy/hosting/mongo";
+import { MongoHostingStore, MongoHostingZoneStore } from "@bernouy/hosting/mongo";
 import { ProviderInstanceLifecycle } from "@bernouy/hosting/instances";
 import type { HostingServices } from "@bernouy/hosting/feature";
 import type { Db } from "mongodb";
@@ -43,6 +44,8 @@ export async function composeHosting(options: {
     const { db, host, instances, credentials, provisioner, system, lifecycle, configuration } = options;
     const store = new MongoHostingStore(db);
     await store.init();
+    const zoneStore = new MongoHostingZoneStore(db);
+    await zoneStore.init();
     if (configuration.proxyUrl) {
         host.transport = new HostedTransport(configuration.proxyUrl, store, { getInstance: (id) => instances.get(id) });
     }
@@ -50,13 +53,15 @@ export async function composeHosting(options: {
     const proofSecret = createHmac("sha256", options.idempotencySecret)
         .update("ulvia-hosting-domain-proof/v1")
         .digest("base64url");
+    const zones = new ZoneRegistry(zoneStore, authority, proofSecret, verifyTxt);
+    const admission = new DomainAdmissionPolicy(configuration.managedSuffixes, configuration.localDevelopment, zones);
     const domains = new DomainRegistry(
         store,
         { getInstance: (id) => instances.get(id) },
         authority,
         proofSecret,
         verifyTxt,
-        new DomainAdmissionPolicy(configuration.managedSuffixes, configuration.localDevelopment),
+        admission,
     );
     const controlLifecycle = new ProviderInstanceLifecycle(
         instances,
@@ -78,14 +83,8 @@ export async function composeHosting(options: {
     const services: HostingServices["hosting"] = {
         authority,
         domains,
-        instances: new InstanceManagement(
-            lifecycle,
-            store,
-            store,
-            authority,
-            new DomainAdmissionPolicy(configuration.managedSuffixes, configuration.localDevelopment),
-            proofSecret,
-        ),
+        zones,
+        instances: new InstanceManagement(lifecycle, store, store, authority, admission, proofSecret),
     };
     const delivery = await composeTlsDelivery(
         store,

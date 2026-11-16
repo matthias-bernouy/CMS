@@ -25,7 +25,7 @@ export class DomainRegistry {
         await this.authority.assertAdministrator(actor);
         await this.requireInstance(instanceId);
         const { origin, hostname } = hostingOrigin(publicOrigin);
-        const classified = this.admission?.classify(publicOrigin);
+        const classified = await this.admission?.admit(publicOrigin, actor);
         const managed = classified?.managed === true;
         const plainHttp = managed && classified.local && origin.startsWith("http:");
         const domain = await this.store.claimDomain({

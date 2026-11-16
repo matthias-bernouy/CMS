@@ -22,7 +22,9 @@ async function featureFixture() {
         "proof-key-material".repeat(3),
         async () => false,
     );
-    const services: HostingServices = { hosting: { authority: f.authority, instances: f.management, domains } };
+    const services: HostingServices = {
+        hosting: { authority: f.authority, instances: f.management, domains, zones: f.zones },
+    };
     const context = {
         requestId: crypto.randomUUID(),
         siteId: "default",
@@ -36,7 +38,7 @@ async function featureFixture() {
 
 test("hosting compiles as one admitted feature with admin HTTP/MCP bindings and a sensitive bootstrap password", async () => {
     const compiled = await compileContract(hostingFeature);
-    expect(compiled.release.capabilities).toHaveLength(8);
+    expect(compiled.release.capabilities).toHaveLength(12);
     for (const capability of compiled.release.capabilities) {
         expect(capability.access).toBe("admin");
         expect(capability.bindings?.map((binding) => binding.transport)).toEqual(["http", "mcp"]);
@@ -121,7 +123,7 @@ test("signed Provider HTTP invocations cannot switch hosting scope through heade
             requestId: crypto.randomUUID(),
             instanceId,
             contractId: "ulvia/cms.hosting",
-            contractVersion: "1.0.0",
+            contractVersion: hostingFeature.version,
             capabilityId: "instances.create",
             subjectId,
             issuedAt: now,

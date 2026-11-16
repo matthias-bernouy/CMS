@@ -1,5 +1,11 @@
-import { ControlAuthority, DomainRegistry, reserveHostingInstallation } from "@bernouy/hosting";
-import { InMemoryHostingStore } from "@bernouy/hosting/memory";
+import {
+    ControlAuthority,
+    DomainRegistry,
+    DomainAdmissionPolicy,
+    ZoneRegistry,
+    reserveHostingInstallation,
+} from "@bernouy/hosting";
+import { InMemoryHostingStore, InMemoryHostingZoneStore } from "@bernouy/hosting/memory";
 import type { HostingInstanceState } from "@bernouy/hosting";
 
 export async function fixture() {
@@ -18,6 +24,12 @@ export async function fixture() {
         ["site-b", { id: "site-b", status: "ready", revision: 1, cmsUrl: "http://control.localhost" }],
     ]);
     const authority = new ControlAuthority(store, async () => admin);
+    const zoneStore = new InMemoryHostingZoneStore();
+    const verify = async () => {
+        await probe?.();
+        return verified;
+    };
+    const zones = new ZoneRegistry(zoneStore, authority, "a".repeat(32), verify);
     const domains = new DomainRegistry(
         {
             getDomain: async (hostname) => {
@@ -37,14 +49,14 @@ export async function fixture() {
         },
         authority,
         "a".repeat(32),
-        async () => {
-            await probe?.();
-            return verified;
-        },
+        verify,
+        new DomainAdmissionPolicy([], true, zones),
     );
     return {
         store,
         domains,
+        zones,
+        zoneStore,
         instances,
         authority,
         actor: { instanceId: "control-id", subjectId: "administrator" },

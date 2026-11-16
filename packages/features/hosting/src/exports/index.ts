@@ -21,3 +21,5 @@ export type {
     HostingInstanceReader,
     HostingInstanceState,
 } from "hosting/interfaces/stores";
+export { ZoneRegistry } from "hosting/core/zones/ZoneRegistry";
+export type { HostingZone, HostingZonePage, HostingZoneStore } from "hosting/interfaces/zones";

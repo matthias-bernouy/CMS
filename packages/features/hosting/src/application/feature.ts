@@ -2,11 +2,12 @@ import { defineFeature } from "@bernouy/ulvia-sdk";
 import { createInstance, listInstances, getInstance, disableInstance } from "./capabilities/instances";
 import { claimDomain, listDomains, verifyDomain, disableDomain } from "./capabilities/domains";
 import { mapHostingError } from "./capabilities/policy";
+import { claimZone, verifyZone, listZones, disableZone } from "./capabilities/zones";
 
 export const hostingFeature = defineFeature({
     contractId: "ulvia/cms.hosting",
     name: "CMS Hosting",
-    version: "1.0.0",
+    version: "1.1.0",
     publisherId: "ulvia",
     description:
         "Provider-owned instance and domain administration authorized by the persisted Control identity and its current administrator grants.",
@@ -22,6 +23,10 @@ export const hostingFeature = defineFeature({
         listDomains,
         verifyDomain,
         disableDomain,
+        claimZone,
+        verifyZone,
+        listZones,
+        disableZone,
     ],
 });
 export type { HostingServices } from "hosting/interfaces/services";
