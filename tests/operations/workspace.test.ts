@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { workspaceSteps } from "../../infra/workspace";
+import { executeWorkspace, workspaceSteps } from "../../infra/workspace";
 
 test("focused test arguments are forwarded and verify rejects partial selection", () => {
     const args = ["./packages/features/auth/tests", "--test-name-pattern", "authorization"];
@@ -15,10 +15,35 @@ test("verify prepares each prerequisite once and includes browser, Docker and TL
         "packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts",
     );
     expect(steps.filter(({ args }) => args.includes("infra/images/build.ts"))).toHaveLength(1);
-    expect(steps.at(-2)?.env?.ULVIA_MCP_EDGE_DOCKER_IMAGE).toBe("docker.io/cyaxis/ulvia-edge:0.1.0-verify");
+    expect(
+        steps.find(({ args }) => args.includes("tests/performance/delivery/run.ts"))?.env?.ULVIA_MCP_EDGE_DOCKER_IMAGE,
+    ).toBe("docker.io/cyaxis/ulvia-edge:0.1.0-verify");
     expect(steps.at(-1)?.env?.ULVIA_TLS_TEST_IMAGE).toBe("docker.io/cyaxis/ulvia-provider:0.1.0-verify");
-    expect(steps.at(-2)?.args).toContain("tests/performance/delivery/run.ts");
+    expect(steps.at(-2)?.args).toContain("tests/performance/assessment/run.ts");
+    expect(steps.some(({ args }) => args.includes("tests/performance/benchmarks/collections/repository/run.ts"))).toBe(
+        true,
+    );
     expect(steps.at(-1)?.args).toContain("packages/runtimes/ulvia-provider-server/tests/hosting/tls/run.ts");
+});
+
+test("performance failures still allow later journeys while failed prerequisites stop dependent stages", async () => {
+    const visited: string[] = [];
+    const execute = async (args: readonly string[]) => {
+        visited.push(args[0]!);
+        if (args[0] === "performance") {
+            throw new Error("Budget failure");
+        }
+        return "";
+    };
+    await expect(
+        executeWorkspace([{ args: ["performance"], continueOnFailure: true }, { args: ["tls"] }], execute),
+    ).rejects.toThrow("diagnostic stages");
+    expect(visited).toEqual(["performance", "tls"]);
+    visited.length = 0;
+    await expect(executeWorkspace([{ args: ["performance"] }, { args: ["dependent"] }], execute)).rejects.toThrow(
+        "Budget failure",
+    );
+    expect(visited).toEqual(["performance"]);
 });
 
 test("test options alone retain maintained discovery while option values are not mistaken for paths", () => {

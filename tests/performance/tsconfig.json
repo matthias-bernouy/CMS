@@ -1,0 +1,17 @@
+{
+    "extends": "../../tsconfig.tooling.json",
+    "compilerOptions": {
+        "composite": false,
+        "declaration": false,
+        "emitDeclarationOnly": false,
+        "noEmit": true,
+        "sourceMap": false
+    },
+    "include": [
+        "./**/*.ts",
+        "../integration/instance/performance/**/*.ts",
+        "../integration/instance/performance.docker.test.ts",
+        "../integration/instance/freshness.docker.test.ts",
+        "../integration/instance/documentation/**/*.ts"
+    ]
+}

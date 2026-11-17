@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { containerCluster } from "./cluster";
+import type { ContainerResourceLimits } from "./cluster";
 import { createContainerHosting } from "./hosting";
 import { docker, waitForHttp } from "../docker";
 
@@ -8,8 +9,9 @@ export async function sharedDeployment(
     images: { edge: string; provider: string },
     fetchPreload?: string,
     initialResponseCache?: boolean,
+    resources?: ContainerResourceLimits,
 ) {
-    const cluster = await containerCluster(images.edge, fetchPreload);
+    const cluster = await containerCluster(images.edge, fetchPreload, resources);
     const { id, names, run } = cluster;
     const operatorToken = randomBytes(32).toString("base64url");
     const administrator = { email: "mcp-admin@ulvia.local", password: `Mcp-${randomBytes(24).toString("base64url")}!` };

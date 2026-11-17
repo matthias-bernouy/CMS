@@ -1,7 +1,7 @@
 import { command } from "./process";
 import { testArguments } from "./test-arguments";
 
-export type WorkspaceStep = { args: string[]; env?: Record<string, string | undefined> };
+export type WorkspaceStep = { args: string[]; env?: Record<string, string | undefined>; continueOnFailure?: boolean };
 const bootstrap = { args: ["bun", "run", "infra/bootstrap.ts"] };
 const browser = { args: ["bun", "run", "--cwd", "packages/features/content", "build:browser"] };
 const tests = ["./quality", "./tests", "./packages"];
@@ -31,15 +31,22 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
         bootstrap,
         { args: ["bun", "run", "quality/ci/check-all/index.ts"] },
         browser,
-        { args: ["bun", "test", ...tests] },
-        { args: ["bun", "x", "tsc", "--project", "quality/performance/tsconfig.json"] },
-        { args: ["bun", "run", "quality/performance/run.ts"] },
+        { args: ["bun", "test", ...tests], continueOnFailure: true },
+        { args: ["bun", "x", "tsc", "--project", "tests/performance/tsconfig.json"] },
+        { args: ["bun", "run", "tests/performance/benchmarks/run.ts"], continueOnFailure: true },
+        { args: ["bun", "run", "tests/performance/benchmarks/collections/repository/run.ts"], continueOnFailure: true },
         { args: ["bun", "run", "infra/images/build.ts", "build", "--version", candidateVersion] },
         {
             args: ["bun", "test", "packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts"],
             env: { ...candidateImages, ULVIA_RUN_EDGE_SMOKE: "1" },
+            continueOnFailure: true,
         },
-        { args: ["bun", "run", "tests/performance/delivery/run.ts"], env: candidateImages },
+        { args: ["bun", "run", "tests/performance/delivery/run.ts"], env: candidateImages, continueOnFailure: true },
+        {
+            args: ["bun", "run", "tests/performance/assessment/run.ts", candidateVersion],
+            env: candidateImages,
+            continueOnFailure: true,
+        },
         {
             args: ["bun", "run", "packages/runtimes/ulvia-provider-server/tests/hosting/tls/run.ts"],
             env: candidateImages,
@@ -47,9 +54,25 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
     ];
 }
 
+/** Diagnostic stage failures remain fatal overall, but must not hide later acceptance evidence. */
+export async function executeWorkspace(steps: readonly WorkspaceStep[], execute = command): Promise<void> {
+    const failures: string[] = [];
+    for (const step of steps) {
+        try {
+            await execute(step.args, { env: step.env });
+        } catch (error) {
+            if (!step.continueOnFailure) {
+                throw error;
+            }
+            failures.push(step.args.join(" "));
+        }
+    }
+    if (failures.length) {
+        throw new Error(`Verification failed in ${failures.length} diagnostic stages:\n${failures.join("\n")}`);
+    }
+}
+
 if (import.meta.main) {
     const [action, ...args] = Bun.argv.slice(2);
-    for (const step of workspaceSteps(action, args)) {
-        await command(step.args, { env: step.env });
-    }
+    await executeWorkspace(workspaceSteps(action, args));
 }

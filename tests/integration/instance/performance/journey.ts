@@ -4,6 +4,7 @@ import { mongoProfile, internalRequests, internalRequestPaths } from "./profiler
 import { requestWork, workCount } from "./request-work";
 import type { mcpContainers } from "../containers";
 import type { connectBrowser } from "../oauth";
+import { statistics } from "../../../performance/harness/measurements/statistics";
 type Stack = Awaited<ReturnType<typeof mcpContainers>>;
 type Connection = Awaited<ReturnType<typeof connectBrowser>>;
 
@@ -43,7 +44,9 @@ export async function measureResource(stack: Stack, path: string, requestCount =
         mongoByCollection: mongo.byCollection,
         internalCallsPerRequest: calls / requestCount,
         bytesPerRequest: bytes / requestCount,
-        p50Ms: latencies.toSorted((a, b) => a - b)[Math.floor(requestCount / 2)]!,
+        samplesMs: latencies,
+        p50Ms: statistics(latencies).p50,
+        p95Ms: statistics(latencies).p95,
     };
 }
 export async function publishPerformancePages(connection: Connection) {
@@ -68,34 +71,6 @@ export async function publishPerformancePages(connection: Connection) {
             visible: true,
         });
     }
-}
-export async function exerciseLoad(stack: Stack, connection: Connection) {
-    let success = 0;
-    let administrators = 0;
-    const started = performance.now();
-    const paths = ["/performance-image", "/performance-image-two", "/performance-image-three"];
-    for (let i = 0; i < 420; i++) {
-        const due = started + i * 300;
-        if (due > performance.now()) {
-            await Bun.sleep(due - performance.now());
-        }
-        if (i % 4 === 3) {
-            const response = await connection.page.request.get(`${stack.cmsUrl}/performance-literal`, {
-                timeout: 10_000,
-            });
-            expect(response.status(), `administrator request ${i}`).toBe(200);
-            expect(response.headers()["cache-control"]).toBe("private, no-store");
-            await response.dispose();
-            administrators++;
-        } else {
-            const response = await fetch(`${stack.cmsUrl}${paths[i % 3]}`, { signal: AbortSignal.timeout(10_000) });
-            await response.arrayBuffer();
-            expect(response.status, `public request ${i}`).toBe(200);
-        }
-        success++;
-    }
-    expect(performance.now() - started).toBeGreaterThan(120_000);
-    return { requests: success, administrators, pages: paths.length, elapsedMs: performance.now() - started };
 }
 export async function measureCached(stack: Stack, path: string) {
     await requestWork(stack.providerName, stack.edgeName, [], true);
@@ -149,6 +124,8 @@ export async function measureCached(stack: Stack, path: string) {
         contentOperations: 0,
         control: controlWork.requests,
         otherRequestsAndBackground: work.other,
-        p50Ms: times.toSorted((a, b) => a - b)[10],
+        samplesMs: times,
+        p50Ms: statistics(times).p50,
+        p95Ms: statistics(times).p95,
     };
 }

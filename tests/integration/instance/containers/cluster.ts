@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { docker, mappedPort } from "../docker";
 
+export type ContainerResourceLimits = Readonly<Record<string, Readonly<{ cpus: number; memoryBytes: number }>>>;
+
 /** Applications have only an internal network. Fixed TCP ingress relays expose loopback test ports. */
-export async function containerCluster(relayImage: string, fetchPreload?: string) {
+export async function containerCluster(relayImage: string, fetchPreload?: string, resources?: ContainerResourceLimits) {
     const id = `ulvia-mcp-${randomUUID().slice(0, 8)}`;
     const ingress = `${id}-ingress`;
     const names: string[] = [];
@@ -20,6 +22,7 @@ export async function containerCluster(relayImage: string, fetchPreload?: string
             names.push(name);
             const application = alias !== "mongo";
             const instrumented = fetchPreload && application;
+            const limit = resources?.[alias === "ulvia-provider" ? "provider" : alias];
             const publications: string[] = [];
             const runtimeOptions = options.filter((option, index) => {
                 if (option === "--publish") {
@@ -38,6 +41,16 @@ export async function containerCluster(relayImage: string, fetchPreload?: string
                 id,
                 "--network-alias",
                 alias,
+                ...(limit
+                    ? [
+                          "--cpus",
+                          String(limit.cpus),
+                          "--memory",
+                          String(limit.memoryBytes),
+                          "--memory-swap",
+                          String(limit.memoryBytes),
+                      ]
+                    : []),
                 ...(application
                     ? [
                           "--read-only",

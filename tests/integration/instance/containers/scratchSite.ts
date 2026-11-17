@@ -13,5 +13,5 @@ export async function scratchSite(stack: Awaited<ReturnType<typeof sharedDeploym
     const name = `${cluster.id}-${alias}`;
     const instance = await provisionInstance(providerUrl, operatorToken, name, origin, administrator, origin);
     await hosting.claimDomain(instance.instance.id, origin);
-    return { url: origin, name, administrator };
+    return { url: origin, name, administrator, instanceId: instance.instance.id };
 }

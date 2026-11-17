@@ -5,9 +5,11 @@ import { initializationApi, configureRepository } from "./repository/initializat
 import { repositoryApi } from "./repository/client";
 import { publishBundledReleases } from "./repository/bootstrap";
 import { provisionInstance } from "./provision";
+import { scratchSite } from "./containers/scratchSite";
 
 import { docker, waitForHttp } from "./docker";
 import { upgradeProvider } from "./provider-upgrade";
+import type { ContainerResourceLimits } from "./containers/cluster";
 export { docker, waitForHttp } from "./docker";
 
 export async function mcpContainers(
@@ -15,8 +17,9 @@ export async function mcpContainers(
     prepareRepository?: (url: string, token: string) => Promise<void>,
     fetchPreload?: string,
     initialResponseCache?: boolean,
+    resources?: ContainerResourceLimits,
 ) {
-    const deployment = await sharedDeployment(images, fetchPreload, initialResponseCache);
+    const deployment = await sharedDeployment(images, fetchPreload, initialResponseCache, resources);
     const {
         cluster,
         hosting,
@@ -72,6 +75,7 @@ export async function mcpContainers(
             administrator,
             providerName,
             instanceId: instance.instance.id,
+            createPendingSite: (alias: string) => scratchSite(deployment, alias),
             upgradeProvider: async (image: string) => {
                 await upgradeProvider(
                     providerName,
@@ -90,8 +94,11 @@ export async function mcpContainers(
                 await waitForHttp(`${cmsUrl}/readyz`);
             },
             close,
-            async restartProvider() {
-                await docker(["restart", providerName]);
+            async restartProvider(stopTimeoutSeconds = 10) {
+                if (!Number.isSafeInteger(stopTimeoutSeconds) || stopTimeoutSeconds < 0 || stopTimeoutSeconds > 10) {
+                    throw new Error("Invalid test restart stop timeout");
+                }
+                await docker(["restart", "--time", String(stopTimeoutSeconds), providerName]);
                 await waitForHttp(`${await cluster.endpoint(providerName, 5103)}/readyz`);
             },
             async diagnostics() {

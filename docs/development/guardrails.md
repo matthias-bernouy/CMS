@@ -38,7 +38,8 @@ heuristic Mongo-loop rules remain deferred until their cases are precise.
 ## Work and timing budgets
 
 `verify` runs ordinary tests (including `tests/performance/repository` and
-Content rendering budgets), then typechecks and runs the performance suite in `quality/performance/run.ts`.
+Content rendering budgets), then typechecks `tests/performance/tsconfig.json`
+and runs the supplementary microbenchmarks in `tests/performance/benchmarks/run.ts`.
 That suite uses synthetic collection/compiler fixtures, read-only upgrade analysis and resolved
 Gateway contracts. Upgrade scans are capped at 500 Pages per batch and two
 passes. The validation growth ceiling is 12x for 4x the Blocs and examples;
@@ -76,7 +77,9 @@ still run, and the other integration fixtures keep normal healthchecks. A test-o
 preload records both fetch controls and the native pinned HTTP business
 transport. Its regression uses the actual transport, including a streamed body;
 records contain paths only, never query parameters, tokens or bodies. Reports live in
-`artifacts/delivery-performance/latest.json`. No public Repository is used.
+immutable `artifacts/performance/supplementary/<run-id>/` directories, with
+sealed JSON and HTML, source provenance and candidate image identities. No public
+Repository is used. Supplementary journeys do not grant capability coverage.
 
 The zero-503 prerequisite caches capability descriptions per instance and
 selection revision. Misses reread that revision after the through-Edge call;

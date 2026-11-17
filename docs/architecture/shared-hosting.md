@@ -292,7 +292,8 @@ cached and uncached Pages/assets, private callbacks through admitted bindings,
 request counts and loaded volume. A cache HIT still performs fresh routing and
 bounded authority metadata reads; the performance guardrails account explicitly
 for that cost. The repeatable measurements are written to
-`artifacts/delivery-performance/latest.json` by the runner. They describe the
+immutable `artifacts/performance/supplementary/<run-id>/` directories by the
+runner, with sealed JSON and HTML. They describe the
 fixture and machine under test, not a general production throughput guarantee.
 
 The automated TLS fixture uses two actual Caddy 2.11.9 processes, a shared

@@ -19,8 +19,8 @@ Run the measured Repository journey separately:
 
 ```sh
 bun run build
-bun x tsc --project quality/performance/collections/repository/tsconfig.json
-ULVIA_PERF_SAMPLES=3 bun run quality/performance/collections/repository/run.ts
+bun x tsc --project tests/performance/tsconfig.json
+ULVIA_PERF_SAMPLES=3 bun run tests/performance/benchmarks/collections/repository/run.ts
 ```
 
 It builds the current SDK bootstrap, loads its contracts and Provider manifest,
@@ -29,8 +29,9 @@ collection or production collection corpus is required.
 An isolated filesystem Repository serves real loopback HTTP. Installed state
 uses `MemoryCollectionStorage`; the reported storage counts are method calls,
 not measured MongoDB operations. No public Repository or production mutation is
-used. The generated JSON report is written to
-`artifacts/performance/repository/optimized.json`.
+used. Current JSON and HTML reports are sealed in unique directories under
+`artifacts/performance/supplementary/`. The runner is also included in `verify`.
+These adapter benchmarks do not grant capability coverage.
 
 The benchmark separates cold filesystem catalogue creation, the three catalogue types, bundle
 and asset downloads, installed-state snapshots, graph/example validation, cold
@@ -174,8 +175,9 @@ that failure.
   `list-operations`, checks its terminal result, then checks navigation. Old or
   ambiguous operations fail the test. No browser timeout was increased.
 
-The benchmark preserves the original `report.json` and writes current results
-separately to `artifacts/performance/repository/optimized.json`. Warm listing
+The earlier optimization preserved `report.json` and wrote results to
+`artifacts/performance/repository/optimized.json`. The current runner preserves
+each execution in immutable supplementary history instead. Warm listing
 budgets now require zero full release metadata/asset reads and one summary batch;
 a cold one-collection listing allows two HTTP responses. The warm local business
 path also has a generous 100 ms p95 ceiling.
