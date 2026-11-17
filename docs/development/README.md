@@ -17,6 +17,22 @@ SDK authors: see [SDK releases](sdk-releases.md) for feature definitions,
 inferred types and release preparation. [SDK runtime artifacts](sdk-runtime.md)
 explains build output, startup attachment and authorization before durable replay.
 
+The [2026-11-17 performance assessment](performance-assessment-2026-11-17.md)
+records the initial capability measurements, reproduced defects and remaining
+coverage work. It is an interim report; its historical counts do not certify
+the current checkout.
+
+The [focused initialization-plan measurements](initialization-plan-performance-2026-11-17.md)
+cover HTTP/MCP, cold starts, concurrency and representative recipe volumes.
+The [initialization-plan optimization assessment](initialization-plan-optimization-2026-11-17.md)
+records bounded verification reuse, before/after timings and remaining cold-start costs.
+The [cold initialization follow-up](initialization-plan-cold-optimization-2026-11-17.md)
+records the DOM, expansion and preview changes with a second comparative Docker campaign.
+The [limited admission parsing experiment](admission-document-reuse-2026-11-17.md)
+records a rejected cache candidate whose local parsing reduction did not produce a validated request-level gain.
+The [30-call cold stability campaign](initialization-plan-stability-2026-11-17.md)
+records successful HTTP/MCP invocations, early latency spikes and container memory observations.
+
 See [CLI deployment lifecycle](deployment-lifecycle.md) for command semantics,
 applied snapshots, release integrity and recovery.
 The [2026-11-10 validation report](cli-deployment-validation.md) records the
