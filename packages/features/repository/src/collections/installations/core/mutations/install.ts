@@ -11,6 +11,7 @@ export async function installCollections(
     siteId: string,
     requests: readonly CollectionInstallRequest[],
     expectedRevision: number,
+    validateResources: typeof assertCollectionResourceIsolation = assertCollectionResourceIsolation,
 ): Promise<void> {
     if (requests.length === 0) {
         throw new TypeError("At least one collection release is required");
@@ -46,7 +47,7 @@ export async function installCollections(
             return installed.release;
         }),
     );
-    assertCollectionResourceIsolation([...installedReleases, ...artifacts.map(({ artifact }) => artifact.release)]);
+    validateResources([...installedReleases, ...artifacts.map(({ artifact }) => artifact.release)]);
     await writeCollectionSiteState(storage, siteId, state.revision, expectedRevision, {
         revision: expectedRevision + 1,
         installations: [

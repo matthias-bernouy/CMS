@@ -4,7 +4,12 @@ import { CollectionPublicationError } from "@bernouy/repository/collections";
 
 /** Bound retained structured-clone payloads independently of queue length. */
 export function taskBytes(task: VerificationTask): number {
-    const values = task.kind === "evolution" ? [task.previous, task.next] : [task.value];
+    const values =
+        task.kind === "evolution"
+            ? [task.previous, task.next]
+            : task.kind === "assets"
+              ? [task.declarations]
+              : [task.value];
     let bytes = 0;
     for (const value of values) {
         const json =
@@ -18,7 +23,7 @@ export function taskBytes(task: VerificationTask): number {
         }
         bytes += Buffer.byteLength(json);
     }
-    if (task.kind === "artifact") {
+    if (task.kind === "artifact" || task.kind === "assets") {
         if (task.assets.length > 1024) {
             throw new CollectionValidationError("body_limit_exceeded", "verification asset count exceeds limit");
         }

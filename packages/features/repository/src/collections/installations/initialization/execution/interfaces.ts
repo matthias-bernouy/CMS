@@ -1,6 +1,7 @@
 import type { CollectionVerifier } from "../../../sources/verification";
 import type { ContentRepository } from "@bernouy/content";
 import type { AdmittedCollectionRelease } from "../../../interfaces/CollectionAdmission";
+import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 import type { CollectionRepositorySource } from "../../../sources/interfaces";
 import type { CollectionStore } from "../../core/CollectionStore";
 import type { SiteUpgradeStorage } from "repository/site-upgrades/interfaces";
@@ -58,5 +59,10 @@ export interface InitializationServiceOptions {
         plan: CollectionInitializationPlan,
         artifacts: readonly AdmittedCollectionRelease[],
         execution: InitializationExecution,
+        context: Readonly<{
+            verifier: CollectionVerifier;
+            signal: AbortSignal;
+            validateResources: (releases: readonly CollectionRelease[]) => void;
+        }>,
     ) => Promise<void>;
 }

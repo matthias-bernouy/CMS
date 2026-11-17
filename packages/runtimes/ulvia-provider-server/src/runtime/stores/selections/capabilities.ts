@@ -11,8 +11,8 @@ import type { ContractSelectionStore } from "@bernouy/repository/providers/selec
 
 export function selectedQueryCapabilityResolver(
     siteId: string,
-    selections: ContractSelectionStore,
-    releases: ReleaseCatalogue,
+    selections: Pick<ContractSelectionStore, "get">,
+    releases: Pick<ReleaseCatalogue, "get">,
 ): BindingQueryCapabilityResolver {
     return async (targets) => {
         if (targets.length === 0) {
@@ -51,8 +51,8 @@ export function selectedQueryCapabilityResolver(
 
 export function selectedCapabilityResolver(
     siteId: string,
-    selections: ContractSelectionStore,
-    releases: ReleaseCatalogue,
+    selections: Pick<ContractSelectionStore, "get">,
+    releases: Pick<ReleaseCatalogue, "get">,
 ): BindingCapabilityResolver {
     return async (targets) => {
         if (targets.length === 0) {
@@ -91,8 +91,8 @@ export function selectedCapabilityResolver(
 
 export function selectedPublicSvgCapabilityValidator(
     siteId: string,
-    selections: ContractSelectionStore,
-    releases: ReleaseCatalogue,
+    selections: Pick<ContractSelectionStore, "get">,
+    releases: Pick<ReleaseCatalogue, "get">,
 ): SvgCapabilityValidator {
     return async (targets) => {
         const stored = await selections.get(siteId);

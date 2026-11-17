@@ -9,7 +9,10 @@ if (!parentPort) {
 parentPort.on("message", async ({ id, task }: VerificationRequest) => {
     const reply: VerificationReply = { id };
     try {
-        if (task.kind === "json") {
+        if (task.kind === "assets") {
+            await inlineCollectionVerifier.assets!(task.declarations, task.assets, undefined, task.limits);
+            reply.value = null;
+        } else if (task.kind === "json") {
             reply.value = await inlineCollectionVerifier.metadataJson(task.value, task.digest, undefined, task.limits);
         } else if (task.kind === "metadata") {
             reply.value = await inlineCollectionVerifier.metadata(task.value, task.digest, undefined, task.limits);

@@ -76,9 +76,11 @@ export function snapshotCollectionAssets(
 export async function verifyCollectionAssets(
     declarations: readonly CollectionAssetDefinition[],
     snapshots: readonly VerifiedCollectionAsset[],
+    signal?: AbortSignal,
 ): Promise<void> {
     const supplied = new Map(snapshots.map((asset) => [asset.id, asset.bytes]));
     for (const declaration of declarations) {
+        signal?.throwIfAborted();
         const path = `$.assets.${declaration.id}`;
         const bytes = supplied.get(declaration.id);
         if (!bytes || bytes.size !== declaration.byteLength) {
@@ -86,6 +88,7 @@ export async function verifyCollectionAssets(
         }
         const content = new Uint8Array(await bytes.arrayBuffer());
         const digest = await sha256Digest(content);
+        signal?.throwIfAborted();
         if (digest !== declaration.digest) {
             mismatch("asset digest mismatch", path);
         }

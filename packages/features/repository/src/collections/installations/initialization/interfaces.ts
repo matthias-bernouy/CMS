@@ -4,6 +4,7 @@ import type {
     CollectionBootstrapPage,
     CollectionBootstrapReference,
     CollectionCapabilityRequirement,
+    CollectionRelease,
 } from "../../interfaces/CollectionRelease";
 import type { CollectionBrowserRiskReport } from "../../core/validation/browserCapabilities";
 
@@ -31,6 +32,7 @@ export interface InitializationOptions {
     /** Current host-selected exact execution views; a recipe cannot select or invent providers. */
     readonly selected: readonly ResolvedContract[];
     readonly verifier?: CollectionVerifier;
+    readonly validateResources?: (releases: readonly CollectionRelease[]) => void;
     readonly denied?: readonly Readonly<{ contractId: string; capabilityId: string }>[];
     readonly locale?: string;
     readonly limits?: Readonly<InitializationLimits>;

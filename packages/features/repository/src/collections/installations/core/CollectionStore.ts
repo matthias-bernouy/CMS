@@ -36,6 +36,7 @@ export class CollectionStore {
     constructor(
         private readonly storage: CollectionStorage,
         private readonly contracts?: ReleaseCatalogue,
+        private readonly validateResources: typeof assertCollectionResourceIsolation = assertCollectionResourceIsolation,
     ) {}
 
     async importRelease(input: unknown, assets: readonly CollectionBundleAsset[] = []) {
@@ -138,7 +139,7 @@ export class CollectionStore {
                 };
             }),
         );
-        assertCollectionResourceIsolation(collections.map(({ release }) => release));
+        this.validateResources(collections.map(({ release }) => release));
         return structuredClone({ revision: state.revision, collections });
     }
 
@@ -148,7 +149,7 @@ export class CollectionStore {
 
     /** Install one exact dependency graph atomically; request order is irrelevant. */
     async installMany(siteId: string, requests: readonly CollectionInstallRequest[], expectedRevision: number) {
-        await installCollections(this.storage, siteId, requests, expectedRevision);
+        await installCollections(this.storage, siteId, requests, expectedRevision, this.validateResources);
         return this.snapshot(siteId);
     }
 

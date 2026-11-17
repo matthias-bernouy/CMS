@@ -2,12 +2,14 @@ import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { initializationDigest } from "../planning/plan";
 import type { InitializationRecord, InitializationReview, InitializationServiceOptions } from "./interfaces";
 import { readInitialization, initializationError, validateInitializationRecord } from "./state";
-import { prepareInitialization } from "./review";
+import { prepareInitialization } from "./preparation/review";
 import { executeInitialization } from "./apply";
 import { discoverInitializationRecipes } from "./discovery";
+import { InitializationPreparationCache } from "./preparation/reuse/preparations";
 
 export class SiteInitializationService {
     private busy = false;
+    private readonly preparations = new InitializationPreparationCache();
     readonly siteId: string;
     constructor(private readonly options: InitializationServiceOptions) {
         this.siteId = options.siteId;
@@ -89,7 +91,8 @@ export class SiteInitializationService {
     }
     plan(actorId: string, root: unknown, locale?: string, signal?: AbortSignal) {
         return this.exclusive(
-            async () => (await prepareInitialization(this.options, actorId, root, locale, signal)).review,
+            async () =>
+                (await prepareInitialization(this.options, actorId, root, locale, signal, this.preparations)).review,
         );
     }
     apply(
@@ -123,7 +126,14 @@ export class SiteInitializationService {
                     throw initializationError("Initialization retry changed its reviewed scope", 409);
                 }
             } else {
-                const prepared = await prepareInitialization(this.options, actorId, root, locale, guard?.signal);
+                const prepared = await prepareInitialization(
+                    this.options,
+                    actorId,
+                    root,
+                    locale,
+                    guard?.signal,
+                    this.preparations,
+                );
                 review = prepared.review;
                 if (review.digest !== planDigest) {
                     throw initializationError("Initialization review is stale", 409);

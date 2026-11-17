@@ -2,12 +2,19 @@ import type {
     CollectionLimits,
     CollectionBundleAsset,
     CollectionRelease,
+    CollectionAssetDefinition,
     CollectionValidationCode,
     CollectionPublicationCode,
     CollectionPublicationResource,
 } from "@bernouy/repository/collections";
 
 export type VerificationTask =
+    | {
+          kind: "assets";
+          declarations: readonly CollectionAssetDefinition[];
+          assets: readonly CollectionBundleAsset[];
+          limits?: Readonly<CollectionLimits>;
+      }
     | { kind: "json"; value: string | Uint8Array; digest: unknown; limits?: Readonly<CollectionLimits> }
     | { kind: "metadata"; value: unknown; digest: unknown; limits?: Readonly<CollectionLimits> }
     | {

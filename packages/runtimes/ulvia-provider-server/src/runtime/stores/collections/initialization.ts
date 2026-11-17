@@ -33,6 +33,6 @@ export function initializationFactory(
             source,
             verifier,
             execution: initializationExecution("default", selections, executionState, releases),
-            validateCandidate: previewInitialization(repository, selections, releases, verifier),
+            validateCandidate: previewInitialization(repository, selections, releases),
         });
 }

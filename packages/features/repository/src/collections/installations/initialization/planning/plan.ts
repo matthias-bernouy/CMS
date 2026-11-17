@@ -61,7 +61,7 @@ export async function planCollectionInitialization(
     if (graph.collections.length !== entries.size) {
         invalid("initialization contains unrelated releases", "$.collections");
     }
-    assertCollectionResourceIsolation(releases);
+    (options.validateResources ?? assertCollectionResourceIsolation)(releases);
     const execution = initializationRequirements(graph.pages, graph.requirements, releases, options.selected);
     if (
         execution.requirements.some((requirement) =>

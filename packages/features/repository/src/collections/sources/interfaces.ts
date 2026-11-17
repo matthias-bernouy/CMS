@@ -26,10 +26,18 @@ export interface CollectionRepositoryBundle {
     readonly assets: readonly CollectionBundleAsset[];
 }
 
+export type CollectionBundleReadOptions = Readonly<{
+    maxAssetBytes?: number;
+    signal?: AbortSignal;
+    /** Prefetched metadata remains untrusted and must pass the configured verifier. */
+    metadata?: unknown;
+    verifier?: CollectionVerifier;
+}>;
+
 /** A source lists release metadata and resolves immutable bytes on the server. */
 export interface CollectionRepositorySource {
     readonly id: string;
-    list(): Promise<CollectionRepositoryEntry[]>;
+    list(signal?: AbortSignal): Promise<CollectionRepositoryEntry[]>;
     recipes?(input: RecipeCatalogueInput, signal?: AbortSignal): Promise<RecipeCatalogueOutput>;
     page?(
         input: {
@@ -47,9 +55,10 @@ export interface CollectionRepositorySource {
     getMetadata(reference: CollectionRepositoryReference, signal?: AbortSignal): Promise<unknown>;
     get(
         reference: CollectionRepositoryReference,
-        options?: { readonly maxAssetBytes?: number; readonly signal?: AbortSignal },
+        options?: CollectionBundleReadOptions,
     ): Promise<CollectionRepositoryBundle>;
 }
 import type { CollectionBundleAsset } from "../interfaces/CollectionAssets";
+import type { CollectionVerifier } from "./verification";
 import type { RecipeCatalogueInput } from "./recipeSchema";
 import type { RecipeCatalogueOutput } from "./recipeSchema";

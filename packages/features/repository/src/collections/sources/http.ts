@@ -16,6 +16,7 @@ import type {
     CollectionRepositoryEntry,
     CollectionRepositoryReference,
     CollectionRepositorySource,
+    CollectionBundleReadOptions,
 } from "./interfaces";
 import {
     parseCollectionCataloguePage,
@@ -95,11 +96,12 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
         return page;
     }
 
-    async list(): Promise<CollectionRepositoryEntry[]> {
+    async list(signal?: AbortSignal): Promise<CollectionRepositoryEntry[]> {
         return readCataloguePages(
             async (cursor) => {
                 const bytes = await getRepositoryBytes(this.base, "v1/catalogue", "Collection", {
                     request: this.request,
+                    signal,
                     query: { kind: "collection", limit: CATALOGUE_PAGE_SIZE, ...(cursor ? { cursor } : {}) },
                 });
                 return parseCollectionCataloguePage(
@@ -129,14 +131,23 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
         return parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64);
     }
 
-    async get(
-        reference: CollectionRepositoryReference,
-        options?: { readonly maxAssetBytes?: number; readonly signal?: AbortSignal },
-    ) {
+    async get(reference: CollectionRepositoryReference, options?: CollectionBundleReadOptions) {
         options?.signal?.throwIfAborted();
-        const metadata = await this.getMetadata(reference, options?.signal);
+        if (!validCollectionReference(reference)) {
+            throw new TypeError("Invalid repository reference");
+        }
+        const metadata = options?.metadata ?? (await this.getMetadata(reference, options?.signal));
         options?.signal?.throwIfAborted();
-        const release = (await this.verifier.metadata(metadata, reference.digest, options?.signal)).release;
+        const release = (
+            await (options?.verifier ?? this.verifier).metadata(metadata, reference.digest, options?.signal)
+        ).release;
+        if (
+            release.publisherId !== reference.publisherId ||
+            release.collectionId !== reference.collectionId ||
+            release.version !== reference.version
+        ) {
+            throw new TypeError("Collection release identity mismatch");
+        }
         const maxAssetBytes = options?.maxAssetBytes ?? DEFAULT_COLLECTION_LIMITS.maxBundleBytes;
         if (
             !Number.isSafeInteger(maxAssetBytes) ||

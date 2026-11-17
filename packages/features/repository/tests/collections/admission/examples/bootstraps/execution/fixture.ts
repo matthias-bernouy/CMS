@@ -128,8 +128,12 @@ export async function initializationFixture(instanceId = "instance-a", pages = 1
                 return { release: artifact.release, assets: [] };
             },
         },
-        async validateCandidate(plan, artifacts) {
-            const store = new CollectionStore(new MemoryCollectionStorage());
+        async validateCandidate(plan, artifacts, _execution, context) {
+            const store = new CollectionStore(
+                new MemoryCollectionStorage(undefined, context.verifier),
+                undefined,
+                context.validateResources,
+            );
             for (const artifact of artifacts) {
                 await store.importAdmittedRelease(artifact);
             }
@@ -151,7 +155,9 @@ export async function initializationFixture(instanceId = "instance-a", pages = 1
                     pageIds: {},
                     completedPages: [],
                     checkpoint: async () => {},
-                    assertLease: async () => {},
+                    assertLease: async () => {
+                        context.signal.throwIfAborted();
+                    },
                 },
             );
         },

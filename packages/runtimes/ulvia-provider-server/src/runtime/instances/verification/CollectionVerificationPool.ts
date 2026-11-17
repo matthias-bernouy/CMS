@@ -44,6 +44,8 @@ export class CollectionVerificationPool implements CollectionVerifier {
         this.submit({ kind: "metadata", value, digest, limits }, signal);
     readonly artifact: CollectionVerifier["artifact"] = (value, assets, digest, signal, limits) =>
         this.submit({ kind: "artifact", value, assets, digest, limits }, signal);
+    readonly assets: NonNullable<CollectionVerifier["assets"]> = (declarations, assets, signal, limits) =>
+        this.submit({ kind: "assets", declarations, assets, limits }, signal);
     readonly evolution: CollectionVerifier["evolution"] = (previous, next, signal) =>
         this.submit({ kind: "evolution", previous, next }, signal);
 
@@ -69,7 +71,7 @@ export class CollectionVerificationPool implements CollectionVerifier {
                 throw Object.assign(new Error("Collection verification capacity unavailable"), { status: 503 });
             }
             const snapshot: VerificationTask =
-                task.kind === "artifact"
+                task.kind === "artifact" || task.kind === "assets"
                     ? {
                           ...structuredClone({ ...task, assets: [] }),
                           assets: task.assets.map(({ id, bytes }) => ({

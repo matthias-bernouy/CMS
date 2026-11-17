@@ -1,4 +1,3 @@
-import type { CollectionVerifier } from "@bernouy/repository/collections/sources";
 import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/content";
 import type { ContentRepository } from "@bernouy/content";
 import { withInstalledCollections } from "@bernouy/repository/collections/content";
@@ -10,18 +9,23 @@ import {
 import type { InitializationServiceOptions } from "@bernouy/repository/collections/installations";
 import type { ContractSelectionStore } from "@bernouy/repository/providers/selections";
 import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
-import { selectedCapabilityResolver, selectedPublicSvgCapabilityValidator } from "../selections/capabilities";
+import { previewCapabilities } from "./preview/capabilities";
+import { previewRepository } from "./preview/repository";
 
 /** Disposable adapters reproduce the actual Content validation before any durable business write. */
 export function previewInitialization(
     repository: ContentRepository,
     selections: ContractSelectionStore,
     releases: ReleaseCatalogue,
-    verifier?: CollectionVerifier,
 ): InitializationServiceOptions["validateCandidate"] {
-    return async (plan, artifacts) => {
-        const collections = new CollectionStore(new MemoryCollectionStorage(undefined, verifier));
+    return async (plan, artifacts, _execution, context) => {
+        const collections = new CollectionStore(
+            new MemoryCollectionStorage(undefined, context.verifier),
+            undefined,
+            context.validateResources,
+        );
         for (const artifact of artifacts) {
+            context.signal.throwIfAborted();
             await collections.importAdmittedRelease(artifact);
         }
         if (artifacts.length) {
@@ -33,12 +37,14 @@ export function previewInitialization(
         }
         const inner = new InMemoryContentRepository();
         await inner.updateSystem(await repository.getSystem(), await inner.getSystemRevision());
-        const preview = new ValidatingContentRepository(withInstalledCollections(inner, collections, "default"), {
-            resolveCapabilities: selectedCapabilityResolver("default", selections, releases),
-            requireQueryCapabilityResolution: true,
-            validateSvgCapabilities: selectedPublicSvgCapabilityValidator("default", selections, releases),
-            requireSvgCapabilityResolution: true,
-        });
+        const preview = new ValidatingContentRepository(
+            previewRepository(withInstalledCollections(inner, collections, "default")),
+            {
+                ...previewCapabilities(selections, releases),
+                requireQueryCapabilityResolution: true,
+                requireSvgCapabilityResolution: true,
+            },
+        );
         await applyInitializationPages(
             preview,
             plan,
@@ -47,7 +53,9 @@ export function previewInitialization(
                 pageIds: {},
                 completedPages: [],
                 checkpoint: async () => {},
-                assertLease: async () => {},
+                assertLease: async () => {
+                    context.signal.throwIfAborted();
+                },
             },
         );
     };

@@ -103,3 +103,27 @@ export async function assertEmptyInitialization(options: InitializationServiceOp
 export function initializationError(message: string, status = 422): Error {
     return Object.assign(new Error(message), { status });
 }
+
+/** Cached validation is reusable only when fresh reads still bracket the same current business and execution state. */
+export async function assertPreparationUnchanged(
+    options: InitializationServiceOptions,
+    revision: number,
+    snapshot: Awaited<ReturnType<typeof assertEmptyInitialization>>,
+    fingerprint: string,
+) {
+    const [state, after, execution] = await Promise.all([
+        readInitialization(options),
+        assertEmptyInitialization(options),
+        options.execution(),
+    ]);
+    if (
+        state.status !== "pending" ||
+        state.revision !== revision ||
+        after.systemRevision !== snapshot.systemRevision ||
+        after.collectionRevision !== snapshot.collectionRevision ||
+        after.siteBlocsRevision !== snapshot.siteBlocsRevision ||
+        execution.fingerprint !== fingerprint
+    ) {
+        throw initializationError("Initialization preparation changed while being reviewed", 409);
+    }
+}

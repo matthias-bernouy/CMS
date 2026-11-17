@@ -1,4 +1,5 @@
 import type { CollectionVerifier } from "../../../sources/verification";
+import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
 import { collectionReleaseSummary } from "../../core/releaseSummary";
 import { verifyStoredCollectionArtifact } from "../../../core/admission/collectionArtifact";
 import { assertBlobRange, type BlobRange } from "@bernouy/blob-store";
@@ -40,7 +41,7 @@ export class MemoryCollectionStorage implements CollectionStorage {
         }
         this.releases.set(verified.digest, {
             digest: verified.digest,
-            release: verified.release,
+            release: deepFreeze(verified.release),
             assets: await Promise.all(
                 verified.assets.map(async (asset) => ({
                     id: asset.id,
@@ -63,7 +64,7 @@ export class MemoryCollectionStorage implements CollectionStorage {
         if (!artifact) {
             return null;
         }
-        return structuredClone({ digest: artifact.digest, release: artifact.release });
+        return Object.freeze({ digest: artifact.digest, release: artifact.release });
     }
     async getAssetManifest(digest: string) {
         const artifact = this.releases.get(digest);

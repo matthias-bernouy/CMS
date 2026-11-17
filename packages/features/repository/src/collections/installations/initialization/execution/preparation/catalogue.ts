@@ -1,16 +1,16 @@
 import { compareSemVer, releaseChannel, satisfiesVersionRange } from "@bernouy/ulvia-contracts/compatibility";
 import { canonicalIJsonBytes } from "@bernouy/ulvia-contracts/protocol";
-import { inlineCollectionVerifier } from "../../../sources/verification";
-import type { CollectionVerifier } from "../../../sources/verification";
-import type { VerifiedCollectionReleaseMetadata } from "../../../interfaces/CollectionAdmission";
-import type { CollectionRepositoryEntry, CollectionRepositorySource } from "../../../sources/interfaces";
-import type { InitializationRoot } from "../interfaces";
-import { DEFAULT_INITIALIZATION_LIMITS as LIMITS } from "../limits";
-import { initializationRoot } from "../planning/root";
-import { initializationError } from "./state";
+import { inlineCollectionVerifier } from "repository/collections/sources/verification";
+import type { CollectionVerifier } from "repository/collections/sources/verification";
+import type { VerifiedCollectionReleaseMetadata } from "repository/collections/interfaces/CollectionAdmission";
+import type { CollectionRepositoryEntry, CollectionRepositorySource } from "repository/collections/sources/interfaces";
+import type { InitializationRoot } from "repository/collections/installations/initialization/interfaces";
+import { DEFAULT_INITIALIZATION_LIMITS as LIMITS } from "repository/collections/installations/initialization/limits";
+import { initializationRoot } from "repository/collections/installations/initialization/planning/root";
+import { initializationError } from "repository/collections/installations/initialization/execution/state";
 
-async function initializationCatalogue(source: CollectionRepositorySource) {
-    const entries = await source.list();
+async function initializationCatalogue(source: CollectionRepositorySource, signal?: AbortSignal) {
+    const entries = await source.list(signal);
     if (entries.length > 1024) {
         throw initializationError("Initialization catalogue is too large");
     }
@@ -26,7 +26,8 @@ export async function resolveInitializationGraph(
 ) {
     signal?.throwIfAborted();
     const root = initializationRoot(requested);
-    const catalogue = await initializationCatalogue(source);
+    let listed: Promise<CollectionRepositoryEntry[]> | undefined;
+    const catalogue = () => (listed ??= initializationCatalogue(source, signal));
     const loaded = new Map<string, VerifiedCollectionReleaseMetadata>();
     let metadataBytes = 0;
     const visit = async (entry: CollectionRepositoryEntry, recipeId?: string): Promise<void> => {
@@ -55,7 +56,7 @@ export async function resolveInitializationGraph(
             loaded.set(entry.collectionId, metadata);
             for (const dependency of metadata.release.dependencies ?? []) {
                 const existing = loaded.get(dependency.collectionId);
-                const candidate = catalogue
+                const candidate = (await catalogue())
                     .filter(
                         (item) =>
                             item.collectionId === dependency.collectionId &&
@@ -85,12 +86,29 @@ export async function resolveInitializationGraph(
                 throw initializationError("The requested bootstrap recipe is unavailable");
             }
             for (const include of recipe.includes) {
-                await visit(exact(include), include.bootstrapId);
+                await visit(await exact(include), include.bootstrapId);
             }
         }
     };
-    const exact = (pin: InitializationRoot) => {
-        const entry = catalogue.find(
+    const exact = async (pin: InitializationRoot) => {
+        signal?.throwIfAborted();
+        const page = source.page
+            ? await source.page(
+                  {
+                      mode: "history",
+                      channel: "all",
+                      publisherId: pin.publisherId,
+                      collectionId: pin.collectionId,
+                      version: pin.version,
+                      limit: 1,
+                  },
+                  signal,
+              )
+            : undefined;
+        if (page?.nextCursor || (page && page.entries.length > 1)) {
+            throw initializationError("Exact bootstrap catalogue response exceeds its scope");
+        }
+        const entry = (page?.entries ?? (await catalogue())).find(
             (item) =>
                 item.publisherId === pin.publisherId &&
                 item.collectionId === pin.collectionId &&
@@ -103,6 +121,6 @@ export async function resolveInitializationGraph(
         return entry;
     };
     const recipes = new Set<string>();
-    await visit(exact(root), root.bootstrapId);
+    await visit(await exact(root), root.bootstrapId);
     return { root, metadata: [...loaded.values()] };
 }
