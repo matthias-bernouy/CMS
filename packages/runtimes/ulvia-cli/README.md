@@ -20,7 +20,7 @@ bun run build --version VERSION
 ```
 
 Use the same exact distribution version for the CLI, Provider and Edge. This creates a checked
-npm archive and SHA-256 receipt below `artifacts/cli`. Publishing is a separate
+npm archive and one SHA-256 receipt below `artifacts/distributions/VERSION/cli/`. Publishing is a separate
 explicit `bun run publish --version VERSION` operation. The versioned build seals
 the CLI, images and official releases under `artifacts/distributions/VERSION/`;
 publication selects that snapshot and verifies its bytes before any upload.

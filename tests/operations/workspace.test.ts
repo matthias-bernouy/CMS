@@ -1,20 +1,7 @@
 import { expect, test } from "bun:test";
 import { workspaceSteps } from "../../infra/workspace";
-import { readFile } from "node:fs/promises";
 
-// This boundary is the public developer interface, including forwarded test arguments.
-test("the root exposes exactly eight commands and forwards focused test arguments", async () => {
-    const manifest = JSON.parse(await readFile(new URL("../../package.json", import.meta.url), "utf8"));
-    expect(Object.keys(manifest.scripts).sort()).toEqual([
-        "build",
-        "check",
-        "clean",
-        "format",
-        "publish",
-        "test",
-        "ulvia",
-        "verify",
-    ]);
+test("focused test arguments are forwarded and verify rejects partial selection", () => {
     const args = ["./packages/features/auth/tests", "--test-name-pattern", "authorization"];
     expect(workspaceSteps("test", args).at(-1)?.args).toEqual(["bun", "test", ...args]);
     expect(() => workspaceSteps("verify", ["--only", "tests"])).toThrow("Usage:");

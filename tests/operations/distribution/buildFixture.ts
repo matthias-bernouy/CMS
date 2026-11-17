@@ -34,8 +34,8 @@ case "\${0##*/}" in
       'run infra/images/build.ts build '*)
         if [ "$ULVIA_TEST_FAIL_IMAGES" = 1 ]; then exit 7; fi ;;
       'run infra/cli/build.ts build '*)
-        mkdir -p artifacts/cli
-        cp fixture-cli/* artifacts/cli/ ;;
+        mkdir -p "artifacts/distributions/$ULVIA_TEST_VERSION/cli"
+        cp fixture-cli/* "artifacts/distributions/$ULVIA_TEST_VERSION/cli/" ;;
     esac
     ;;
 esac
@@ -72,10 +72,10 @@ esac
             .split("\n")
             .filter(Boolean)
             .map((line) => line.split("\t"));
-        const manifest = await readFile(join(f.destination, "manifest.json"), "utf8")
+        const receipt = await readFile(join(f.destination, "cli", `cyaxis-ulvia-${version}.json`), "utf8")
             .then(JSON.parse)
             .catch(() => null);
-        return { status, stdout, stderr, commands, manifest };
+        return { status, stdout, stderr, commands, receipt };
     } finally {
         await f.close();
     }

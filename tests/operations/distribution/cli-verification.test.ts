@@ -21,7 +21,7 @@ console.log(process.argv.includes("--version") ? "1.2.3" : "Bundled stack releas
 `,
         );
         const entry = resolve(import.meta.dir, "../../../infra/cli/verification.ts");
-        const script = `import { verifyCli } from ${JSON.stringify(entry)}; await verifyCli(${JSON.stringify(root)}, "1.2.3", "1.2.3");`;
+        const script = `import { verifyCli } from ${JSON.stringify(entry)}; await verifyCli(${JSON.stringify(root)}, "1.2.3");`;
         const child = Bun.spawn([process.execPath, "-e", script], {
             env: {
                 ...process.env,

@@ -26,7 +26,7 @@ bun run publish --version <version>
 
 Bootstrap and generic local release preparation share `prepareOfficialResources`.
 Versioned builds copy the admitted catalogue into `artifacts/distributions/<version>/`
-and seal its exact resources/assets in a build manifest. Distribution publication
+and record a single catalogue fingerprint in the CLI build receipt. Distribution publication
 uses only that catalogue, never all releases in the personal CLI cache. The
 unversioned build generates package outputs without modifying personal data.
 Bootstrap emits admitted documents/assets and the Provider snapshot. It also

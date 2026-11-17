@@ -8,6 +8,7 @@ release with exact deployment definitions. Executable composition and environmen
 | Path | Responsibility |
 | --- | --- |
 | `cli/build.ts` | Bundle the private CLI sources into the public `@cyaxis/ulvia` npm archive, verify it and write a SHA-256 receipt. Publication is a separate command. |
+| `images/inspection.ts` | Shared official image references and component/API/version/revision/identity validation for builds and publication. |
 | `images/build.ts` | Build and inspect the separate Edge and Provider images with exact version, component and stack-API labels. |
 | `images/edge/` | Stateless Edge Dockerfile and image guide. |
 | `images/provider/` | Stateful Provider Dockerfile, SDK system bootstrap and packaged local embedding model. |
@@ -30,8 +31,10 @@ then compiles the workspace and browser assets. A versioned build also creates
 both images and the CLI under one distribution version and seals their identities,
 contracts and assets under `artifacts/distributions/<version>/`.
 
-`distribution/` owns the build manifest, exact file hashes, image checks and
-publication orchestration. `publish` uses only that snapshot and the saved
+`distribution/` completes the existing CLI receipt with image identities and a
+single catalogue fingerprint, then orchestrates publication. The archive and sole
+receipt are written directly under the versioned distribution; there is no separate
+distribution manifest or duplicated CLI output. `publish` uses only that snapshot and the saved
 Repository publisher connection, then Docker/npm credentials. It publishes
 contracts, the Provider manifest, images and the exact CLI archive. Repeating an
 identical publication resumes safely after partial completion. It never compiles

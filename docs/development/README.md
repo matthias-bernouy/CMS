@@ -113,10 +113,11 @@ bun run publish --version 1.0.7
 bun add --global @cyaxis/ulvia@1.0.7
 ```
 
-The build writes the archive and SHA-256 receipt below `artifacts/cli`, then
-copies them and the exact admitted official catalogue into
-`artifacts/distributions/<version>/`. Its `manifest.json` seals every input file,
-resource coordinate, Git revision and local image ID. This directory is ignored by Git.
+The build writes the archive and its single receipt directly into
+`artifacts/distributions/<version>/cli/`, alongside the isolated official catalogue
+in `repository/`. The receipt records the CLI SHA-256, Git revision, local image
+identities and one SHA-256 over the sorted catalogue paths and file hashes. It has
+no schema/dialect marker or duplicated resource inventory. This directory is ignored by Git.
 Builds never change the personal CLI release cache or running installations.
 
 `publish --version` consumes only that snapshot. It verifies all files, both image
@@ -130,7 +131,8 @@ The three destinations are not one transaction. On failure, repeat the same
 `publish --version`: Repository retries are idempotent, Docker retries push the
 same local images, and an existing npm version succeeds only when its SHA-512
 integrity matches the built archive. Changed artifacts or npm content conflicts fail.
-No build or source regeneration runs during publication. The CLI and initial Docker
+No build or source regeneration runs during publication. Incomplete or older build
+receipts missing image identities or the catalogue fingerprint require a new build. The CLI and initial Docker
 stack share the distribution version; contract and manifest versions remain independent.
 Prereleases use npm's `next` tag; stable versions use `latest`.
 

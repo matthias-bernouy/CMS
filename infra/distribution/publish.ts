@@ -1,9 +1,10 @@
+import { isDeepStrictEqual } from "node:util";
 import { join, resolve } from "node:path";
 import { withRepositoryWriteLock } from "@bernouy/repository/repository/filesystem/lock";
 import { prepareReleasePublication } from "@bernouy/ulvia-cli/publication";
 import { command } from "../process";
-import { inspectImages } from "./images";
-import { readManifest, same } from "./manifest";
+import { inspectImages } from "../images/inspection";
+import { readReceipt } from "./receipt";
 import { prepareNpmPublication } from "./npm";
 import { distributionRoot, distributionVersion } from "./options";
 
@@ -28,21 +29,18 @@ export async function publishDistribution(
     dependencies: PublicationPorts = ports,
 ): Promise<void> {
     const source = distributionRoot(root, version);
-    const manifest = await readManifest(source, version);
-    if (!same(manifest.images, await dependencies.images(version, manifest.revision))) {
+    const receipt = await readReceipt(source, version);
+    if (!isDeepStrictEqual(receipt.images, await dependencies.images(version, receipt.revision))) {
         throw new Error("Local image tags changed since build; refusing publication");
     }
     const repository = await dependencies.repository(join(source, "repository"), environment);
-    if (!same(repository.coordinates, manifest.resources)) {
-        throw new Error("Repository publication differs from the built inventory");
-    }
     const publishNpm = await dependencies.npm(join(source, "cli", `cyaxis-ulvia-${version}.tgz`), version);
     // Re-read all bytes after credential/network preflight; never compile sources here.
-    if (!same(manifest, await readManifest(source, version))) {
-        throw new Error("Distribution changed during publication preflight");
+    if (!isDeepStrictEqual(receipt, await readReceipt(source, version))) {
+        throw new Error("Build receipt changed during publication preflight");
     }
     await repository.publish(console.log);
-    for (const image of manifest.images) {
+    for (const image of receipt.images) {
         await dependencies.run(["docker", "push", image.reference]);
     }
     await publishNpm();

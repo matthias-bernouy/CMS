@@ -151,8 +151,8 @@ metadata under package `dist/` directories, then emits TypeScript project
 references and builds the Bloc behavior and binding-core runtimes owned by
 `@bernouy/content`. Generated runtime metadata is not tracked by Git; historical
 admitted compatibility snapshots remain versioned source data. A versioned build also
-seals its contracts, Provider manifest, image identities and CLI archive under
-`artifacts/distributions/<version>/`. `publish` consumes only that build, without
+records the CLI archive hash, image identities and a catalogue fingerprint in
+one CLI receipt under `artifacts/distributions/<version>/cli/`. `publish` consumes only that build, without
 regeneration or personal release-cache discovery. Contract versions remain independent.
 
 ## Agent Validation Loop

@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/repository/repository/filesystem";
 import { distributionRoot } from "../../../infra/distribution/options";
 import { fileHash } from "../../../infra/distribution/files";
-import { writeManifest } from "../../../infra/distribution/manifest";
-import type { ImageArtifact } from "../../../infra/distribution/images";
+import { completeReceipt } from "../../../infra/distribution/receipt";
+import type { ImageArtifact } from "../../../infra/images/inspection";
 
 export async function distributionFixture(version = "1.2.3") {
     const root = await mkdtemp(join(tmpdir(), "ulvia-distribution-"));
@@ -22,7 +22,6 @@ export async function distributionFixture(version = "1.2.3") {
     await writeFile(
         join(destination, "cli", `cyaxis-ulvia-${version}.json`),
         JSON.stringify({
-            schema: "ulvia.cli-release.v1",
             package: "@cyaxis/ulvia",
             version,
             stackVersion: version,
@@ -63,14 +62,14 @@ export async function distributionFixture(version = "1.2.3") {
             ],
         }),
     );
-    const manifest = await writeManifest(destination, version, revision, images);
+    const receipt = await completeReceipt(destination, version, revision, images);
     return {
         root,
         destination,
         version,
         revision,
         images,
-        manifest,
+        receipt,
         archive: join(destination, "cli", archive),
         close: () => rm(root, { recursive: true, force: true }),
     };

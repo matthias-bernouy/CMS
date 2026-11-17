@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { publishDistribution } from "../../../infra/distribution/publish";
 import type { PublicationPorts } from "../../../infra/distribution/publish";
@@ -19,7 +19,7 @@ async function fixture() {
             calls.push("repository-preflight");
             return {
                 url: "https://repository.example",
-                coordinates: f.manifest.resources,
+                coordinates: [{ kind: "contract", publisherId: "example", id: "example/simple", version: "1.0.0" }],
                 publish: async () => {
                     calls.push("contracts");
                     if (fail === "contracts") {
@@ -85,7 +85,7 @@ test("all artifacts and publishers are checked before ordered publication; ident
     }
 });
 
-test.each(["archive", "extra-file", "image", "npm-preflight", "contracts"])(
+test.each(["archive", "catalogue", "extra-file", "special-file", "image", "npm-preflight", "contracts"])(
     "%s refusal stops all later writes",
     async (failure) => {
         const f = await fixture();
@@ -93,8 +93,14 @@ test.each(["archive", "extra-file", "image", "npm-preflight", "contracts"])(
             if (failure === "archive") {
                 await writeFile(f.archive, "tampered");
             }
-            if (failure === "extra-file") {
-                await writeFile(join(f.destination, "repository/extra"), "unrelated cached release");
+            if (failure === "catalogue") {
+                const path = join(f.destination, "repository/contracts/example/simple/1.0.0.json");
+                const contract = JSON.parse(await readFile(path, "utf8"));
+                await writeFile(path, JSON.stringify({ ...contract, name: "Changed after build" }));
+            }
+            if (failure === "extra-file" || failure === "special-file") {
+                const name = failure === "special-file" ? "__proto__" : "extra";
+                await writeFile(join(f.destination, "repository", name), "unrelated cached release");
             }
             if (failure === "image") {
                 f.dependencies.images = async () => [{ ...f.images[0]!, id: `sha256:${"c".repeat(64)}` }, f.images[1]!];
@@ -121,7 +127,7 @@ test("a changed artifact during remote preflight is refused before any write", a
                 f.calls.push("cli");
             };
         };
-        await expect(f.publish()).rejects.toThrow("modified distribution");
+        await expect(f.publish()).rejects.toThrow("modified build");
         expect(f.calls).not.toContain("contracts");
     } finally {
         await f.close();

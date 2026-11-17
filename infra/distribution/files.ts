@@ -14,9 +14,9 @@ export async function fileHash(path: string, algorithm = "sha256", encoding: "he
     return hash.digest(encoding);
 }
 
-/** Exact bounded file inventory; symlinks and additional files cannot escape the snapshot. */
-export async function artifactHashes(root: string): Promise<Record<string, string>> {
-    const hashes: Record<string, string> = {};
+/** Hash the sorted catalogue paths and bytes; symlinks and extra files cannot escape the snapshot. */
+export async function catalogueHash(root: string): Promise<string> {
+    const hashes: [string, string][] = [];
     let visited = 0;
     async function visit(relative: string, depth: number): Promise<void> {
         if (++visited > 8192 || depth > 24) {
@@ -29,16 +29,15 @@ export async function artifactHashes(root: string): Promise<Record<string, strin
         }
         if (metadata.isDirectory()) {
             for (const name of (await readdir(path)).sort()) {
-                if (relative === "repository" && name === ".write-lock") {
+                if (relative === "." && name === ".write-lock") {
                     continue;
                 }
-                await visit(`${relative}/${name}`, depth + 1);
+                await visit(relative === "." ? name : `${relative}/${name}`, depth + 1);
             }
         } else {
-            hashes[relative] = await fileHash(path);
+            hashes.push([relative, await fileHash(path)]);
         }
     }
-    await visit("cli", 0);
-    await visit("repository", 0);
-    return hashes;
+    await visit(".", 0);
+    return createHash("sha256").update(JSON.stringify(hashes)).digest("hex");
 }
