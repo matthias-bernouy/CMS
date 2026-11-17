@@ -20,8 +20,17 @@ export function managedNativeElementIssue(
 
     const { document } = parseHTML("<!DOCTYPE html><html><body></body></html>");
     document.body.innerHTML = content;
+    return managedNativeDocumentIssue(document.body, contracts, options);
+}
+
+/** Same contract checks for an already parsed, normalized document. Does not mutate the DOM. */
+export function managedNativeDocumentIssue(
+    root: ParentNode,
+    contracts: readonly ManagedNativeElementContract[],
+    options: { requireExactlyOneHost?: boolean } = {},
+): string | null {
     const hostsById = new Map<string, Element[]>();
-    for (const host of document.body.querySelectorAll("[cms-bloc]")) {
+    for (const host of root.querySelectorAll("[cms-bloc]")) {
         const id = host.getAttribute("cms-bloc")!;
         const hosts = hostsById.get(id) ?? [];
         hosts.push(host);

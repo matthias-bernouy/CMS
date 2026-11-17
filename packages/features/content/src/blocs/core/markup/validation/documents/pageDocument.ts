@@ -1,11 +1,11 @@
 import { validateContentTextPlacements } from "content/pages/core/rendering/contentTextTraversal";
 import { ContentValidationError } from "content/application/core/validation/errors";
 import { extractRefs } from "content/blocs/core/markup/contentRefs";
-import { managedNativeElementIssue } from "content/blocs/core/markup/validation/managedNativeElements";
+import { managedNativeDocumentIssue } from "content/blocs/core/markup/validation/managedNativeElements";
 import {
     extractQueries,
     extractMutations,
-    validatePageContentMarkup,
+    validatePageContentDocument,
     type ContentQuery,
 } from "content/blocs/core/markup/validation/nativeContent";
 import { pageBlocHostAttributesIssue } from "content/blocs/core/markup/validation/contracts/hostAttributes";
@@ -53,7 +53,8 @@ export function validatePageDocument(
         );
     }
     validateHosts(preflight, available, new Map((options.unresolvedBlocs ?? []).map((bloc) => [bloc.id, bloc])), true);
-    const normalized = validatePageContentMarkup(html);
+    const document = validatePageContentDocument(html);
+    const normalized = document.body.innerHTML;
     const unresolved = new Map((options.unresolvedBlocs ?? []).map((bloc) => [bloc.id, bloc]));
     const uses = [...extractRefs(normalized).blocs].sort();
     const missing = uses.filter((tag) => !available.has(tag) && !unresolved.has(tag));
@@ -65,8 +66,6 @@ export function validatePageDocument(
         );
     }
 
-    const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
-    document.body.innerHTML = normalized;
     const queries = extractQueries(document);
     const mutations = extractMutations(document);
     if (options.capabilities || options.requireCapabilityResolution) {
@@ -75,7 +74,7 @@ export function validatePageDocument(
     validateRoots(document, available, new Set(visible.keys()), new Set(unresolved.keys()));
     validateHiddenNesting(document, hidden, available);
     validateHosts(document, available, unresolved);
-    validateManagedNative(normalized, [...blocs, ...(options.hiddenBlocs ?? [])]);
+    validateManagedNative(document.body, [...blocs, ...(options.hiddenBlocs ?? [])]);
 
     return { html: document.body.innerHTML, queries, mutations, uses };
 }
@@ -142,9 +141,9 @@ function validateHosts(
     }
 }
 
-function validateManagedNative(html: string, blocs: readonly PageDocumentBlocContract[]): void {
-    const issue = managedNativeElementIssue(
-        html,
+function validateManagedNative(root: ParentNode, blocs: readonly PageDocumentBlocContract[]): void {
+    const issue = managedNativeDocumentIssue(
+        root,
         blocs.map((bloc) => ({ id: bloc.id, root: bloc.root })),
     );
     if (issue) {

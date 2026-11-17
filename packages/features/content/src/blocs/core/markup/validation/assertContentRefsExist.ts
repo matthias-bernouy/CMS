@@ -9,6 +9,8 @@ import {
     type ContentBindingValidationOptions,
 } from "content/application/core/validation/bindingCapabilities";
 import { validateSvgCapabilityReferences } from "content/application/core/validation/svgCapabilities";
+import { validateDocumentBindings } from "content/blocs/core/markup/validation/bindingAnalysis";
+import { parseHTML } from "linkedom";
 
 /** Minimal reader — `ContentRepository` satisfies it structurally. */
 export type ContentRefsReader = {
@@ -61,10 +63,12 @@ export async function assertContentRefsExist(
         bindingOptions.resolveQueryCapabilities ||
         bindingOptions.requireQueryCapabilityResolution
     ) {
-        validatePageDocument(document.html, visibleContracts, {
-            hiddenBlocs: hiddenContracts,
-            ...(await resolveBindingAnalysisOptions(document.queries, document.mutations, bindingOptions)),
-        });
+        const options = await resolveBindingAnalysisOptions(document.queries, document.mutations, bindingOptions);
+        if (options.capabilities || options.requireCapabilityResolution) {
+            const parsed = parseHTML("<!DOCTYPE html><html><body></body></html>").document;
+            parsed.body.innerHTML = document.html;
+            validateDocumentBindings(parsed, options);
+        }
     }
     try {
         const analysis = analyzeExpandedPageDocument(document.html, completeCatalogue, options.complete ?? true);

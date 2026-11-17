@@ -26,9 +26,12 @@ export type ContentQuery = {
 export type ContentMutation = ContentQuery;
 
 export function validatePageContentMarkup(value: string): string {
-    const normalized = validateNativeMarkup(value, "content");
-    const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
-    document.body.innerHTML = normalized;
+    return validatePageContentDocument(value).body.innerHTML;
+}
+
+/** Keep the checked DOM private to one validation instead of serializing and parsing it again. */
+export function validatePageContentDocument(value: string): Document {
+    const document = validateNativeDocument(value, "content");
     for (const node of Array.from(document.body.childNodes)) {
         if (node.nodeType === 3 && node.textContent?.trim()) {
             throw new ContentValidationError("content", "Page root text must be owned by a Bloc slot", {
@@ -43,7 +46,7 @@ export function validatePageContentMarkup(value: string): string {
             );
         }
     }
-    return normalized;
+    return document;
 }
 
 export function validateSiteBlocDefaultContent(value: string, ownerTag?: string): string {
@@ -128,6 +131,16 @@ function validateNativeMarkup(
     options: Parameters<typeof nativeDomTreeIssue>[1] = {},
     enforceBlocBudgets = false,
 ): string {
+    return validateNativeDocument(value, field, rootParentTag, options, enforceBlocBudgets).body.innerHTML;
+}
+
+function validateNativeDocument(
+    value: string,
+    field: string,
+    rootParentTag?: string,
+    options: Parameters<typeof nativeDomTreeIssue>[1] = {},
+    enforceBlocBudgets = false,
+): Document {
     if (enforceBlocBudgets) {
         assertBlocMarkupLength(field, value);
     }
@@ -151,7 +164,7 @@ function validateNativeMarkup(
         throw new ContentValidationError(field, issue, { code: "page.html_invalid", parameters: { field } });
     }
     validateNativeDocumentReferences(document, field);
-    return document.body.innerHTML;
+    return document;
 }
 
 function containsComment(root: Node): boolean {

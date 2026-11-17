@@ -50,29 +50,34 @@ export function expandCompositions(
     const idScope = createTemplateIdScope(root);
     const budget = origins ? { remaining: 50_000, characters: 4 * 1024 * 1024 } : undefined;
     const expansionLimit = markups.size * 100 + 1_000;
-    for (let count = 0; count < expansionLimit; count++) {
-        const host = nextComposition(root, markups, expanded);
-        if (!host) {
-            return;
+    const pending: Element[] = [];
+    pushElements(pending, Array.from(root.childNodes));
+    let count = 0;
+    while (pending.length) {
+        const host = pending.pop()!;
+        const id = host.getAttribute("cms-bloc")?.toLowerCase();
+        if (!id || !markups.has(id) || expanded.has(host) || host.hasAttribute(COMPOSITION_RUNTIME_ATTRIBUTE)) {
+            pushElements(pending, Array.from(host.childNodes));
+            continue;
         }
         expanded.add(host);
-        expandHost(host, markups.get(host.getAttribute("cms-bloc")!)!, mode, idScope, origins, budget);
+        const inserted = expandHost(host, markups.get(host.getAttribute("cms-bloc")!)!, mode, idScope, origins, budget);
+        if (++count === expansionLimit) {
+            throw new Error(
+                "Composition expansion exceeded its safety limit; check for a recursive composition dependency",
+            );
+        }
+        pushElements(pending, inserted);
     }
-    throw new Error("Composition expansion exceeded its safety limit; check for a recursive composition dependency");
 }
 
-function nextComposition(
-    root: ParentNode,
-    markups: ReadonlyMap<string, ExpansionMarkup>,
-    expanded: WeakSet<Element>,
-): Element | null {
-    for (const element of Array.from(root.querySelectorAll("[cms-bloc]"))) {
-        const id = element.getAttribute("cms-bloc")?.toLowerCase();
-        if (id && markups.has(id) && !expanded.has(element) && !element.hasAttribute(COMPOSITION_RUNTIME_ATTRIBUTE)) {
-            return element;
+/** Depth-first order preserves slot/ID behavior while visiting each inserted subtree once. */
+function pushElements(pending: Element[], nodes: readonly Node[]): void {
+    for (let index = nodes.length - 1; index >= 0; index--) {
+        if (nodes[index]!.nodeType === 1) {
+            pending.push(nodes[index] as Element);
         }
     }
-    return null;
 }
 
 function expandHost(
@@ -82,7 +87,7 @@ function expandHost(
     idScope: TemplateIdScope,
     origins?: WeakMap<Element, string>,
     budget?: { remaining: number; characters: number },
-): void {
+): Node[] {
     const document = host.ownerDocument;
     const authored = Array.from(host.childNodes);
     const input = mode === "preview" ? document.createElement("template") : null;
@@ -120,7 +125,7 @@ function expandHost(
         applyRootMarker(host, template.content);
         if (mode === "render") {
             host.replaceChildren(...Array.from(template.content.childNodes));
-            return;
+            return Array.from(host.childNodes);
         }
         host.replaceChildren(
             input!,
@@ -130,13 +135,14 @@ function expandHost(
         );
         host.setAttribute(COMPOSITION_RUNTIME_ATTRIBUTE, "");
         host.setAttribute(COMPONENT_COMPOSITION_ATTRIBUTE, "");
-        return;
+        return Array.from(host.childNodes);
     }
 
     if (mode === "render") {
         propagateHostSlot(host, template.content);
-        host.replaceWith(...Array.from(template.content.childNodes));
-        return;
+        const inserted = Array.from(template.content.childNodes);
+        host.replaceWith(...inserted);
+        return inserted;
     }
 
     const output = document.createElement("cms-composition-output");
@@ -145,6 +151,7 @@ function expandHost(
     output.append(...Array.from(template.content.childNodes));
     host.replaceChildren(input!, output);
     host.setAttribute(COMPOSITION_RUNTIME_ATTRIBUTE, "");
+    return Array.from(host.childNodes);
 }
 
 function applyRootMarker(host: Element, fragment: DocumentFragment): void {

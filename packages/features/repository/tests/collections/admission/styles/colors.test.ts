@@ -1,4 +1,7 @@
-import { expect, test } from "bun:test";
+import { expect, spyOn, test } from "bun:test";
+import { lexer, parse } from "css-tree";
+import type { Declaration } from "css-tree";
+import { colorVariables } from "repository/collections/core/validation/styles/colors";
 import { parseCollectionRelease } from "repository/collections/core/parsing/parseCollectionRelease";
 import { colorCollection } from "./fixture";
 
@@ -92,4 +95,26 @@ test("resolves long local color chains without recursive graph traversal", () =>
     }`),
         ),
     ).not.toThrow();
+});
+
+test("color classification reuses repeated identifiers only within one bounded validation", () => {
+    const source = Array.from({ length: 260 }, (_, i) => `--v${i}: unknown${i};`).join("");
+    const declarations = (
+        parse(`${source}--again: unknown0;--overflow: unknown259;`, {
+            context: "declarationList",
+            parseCustomProperty: true,
+        }).children!.toArray() as Declaration[]
+    ).map((declaration) => ({ declaration, path: "$.style" }));
+    const match = spyOn(lexer, "matchType");
+    try {
+        colorVariables(declarations, new Set());
+        const names = () =>
+            match.mock.calls.map(([, node]) => (typeof node === "object" && node && "name" in node ? node.name : ""));
+        expect(names().filter((name) => name === "unknown0")).toHaveLength(1);
+        expect(names().filter((name) => name === "unknown259")).toHaveLength(2);
+        colorVariables(declarations, new Set());
+        expect(names().filter((name) => name === "unknown0")).toHaveLength(2);
+    } finally {
+        match.mockRestore();
+    }
 });

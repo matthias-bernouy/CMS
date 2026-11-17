@@ -2,7 +2,7 @@ import { ContentValidationError } from "content/application/core/validation/erro
 import { extractRefs } from "content/blocs/core/markup/contentRefs";
 import { pageBlocHostAttributesIssue } from "content/blocs/core/markup/validation/contracts/hostAttributes";
 import { blocHostContractIssue } from "content/blocs/core/markup/validation/contracts/pageSlotContracts";
-import { managedNativeElementIssue } from "content/blocs/core/markup/validation/managedNativeElements";
+import { managedNativeDocumentIssue } from "content/blocs/core/markup/validation/managedNativeElements";
 import {
     validateBlocContentMarkup,
     type BlocContentMarkupResult,
@@ -91,7 +91,7 @@ function validateFragment(
     document.body.innerHTML = html;
     validateReferences(html, document, ownerTag, known, unresolved);
     validateHostAttributes(document, known, unresolved, true, true);
-    validateManagedNative(html, known);
+    validateManagedNative(document.body, known);
     for (const heading of Array.from(document.body.querySelectorAll("h1, h2, h3, h4, h5, h6"))) {
         if (!heading.hasAttribute("cms-bloc")) {
             throw new ContentValidationError(
@@ -130,7 +130,7 @@ function validateDefaultContent(
     document.body.append(root);
     validateReferences(html, document, owner.id, known, unresolved);
     validateHostAttributes(document, known, unresolved, false);
-    validateManagedNative(document.body.innerHTML, known);
+    validateManagedNative(document.body, known);
     const host = document.body.firstElementChild!;
     const issue = blocHostContractIssue(host, owner, known, unresolved);
     if (issue) {
@@ -192,9 +192,9 @@ function validateHostAttributes(
     }
 }
 
-function validateManagedNative(html: string, known: ReadonlyMap<string, PageDocumentBlocContract>): void {
-    const issue = managedNativeElementIssue(
-        html,
+function validateManagedNative(root: ParentNode, known: ReadonlyMap<string, PageDocumentBlocContract>): void {
+    const issue = managedNativeDocumentIssue(
+        root,
         [...known.values()].map((bloc) => ({ id: bloc.id, root: bloc.root })),
     );
     if (issue) {
