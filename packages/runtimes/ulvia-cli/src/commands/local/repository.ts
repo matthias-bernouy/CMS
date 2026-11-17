@@ -1,5 +1,6 @@
 import { clientConfigDirectory, readClientConfig, updateClientConfig } from "../../runtime/repository/config";
 import { readRepositoryToken } from "../../runtime/repository/token";
+import { promptRepositoryToken } from "../../runtime/repository/prompt";
 import { loginRepository } from "../../runtime/repository/connection";
 
 const HELP = `Usage:
@@ -7,7 +8,8 @@ const HELP = `Usage:
   ulvia repository logout
 
 Login verifies and saves a PAT pinned to the Repository origin and identity.
-Provide it through ULVIA_REPOSITORY_TOKEN or bounded stdin; never as an argument.
+Enter it at the hidden terminal prompt, or use ULVIA_REPOSITORY_TOKEN or --token-stdin.
+Tokens are never accepted as arguments.
 Create an instance through Control, then choose A new Repository in its setup.
 It uses the normal Edge, Provider and Mongo deployment.`;
 
@@ -30,7 +32,7 @@ export async function repositoryConnectionCommand(
         const token =
             rest[1] === "--token-stdin"
                 ? await readRepositoryToken(stdin ?? Bun.stdin.stream())
-                : environment.ULVIA_REPOSITORY_TOKEN?.trim();
+                : environment.ULVIA_REPOSITORY_TOKEN?.trim() || (await promptRepositoryToken());
         if (!token) {
             throw new Error("Provide a Repository PAT through ULVIA_REPOSITORY_TOKEN or --token-stdin");
         }

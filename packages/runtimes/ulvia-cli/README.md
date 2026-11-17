@@ -107,15 +107,16 @@ backup of database, files and credentials before destructive recovery.
 
 ## Repository account connections and releases
 
-`repository login URL` saves a CMS PAT supplied by `--token-stdin` or
-`ULVIA_REPOSITORY_TOKEN`, pinned to the origin and Repository identity. Ordinary
-Repository accounts can claim namespaces and publish. Logout removes the local
+`repository login URL` prompts for a CMS PAT with terminal input hidden when
+`ULVIA_REPOSITORY_TOKEN` is absent. Automation can use `--token-stdin` or
+`ULVIA_REPOSITORY_TOKEN`. The saved PAT is pinned to the origin and Repository
+identity. Ordinary Repository accounts can claim namespaces and publish. Logout removes the local
 connection without revoking the remote token. Client configuration uses
 `$XDG_CONFIG_HOME/ulvia`, `~/.config/ulvia` or explicit `ULVIA_CONFIG_DIR`;
 `ULVIA_DATA_DIR` alone isolates it under `<data>/config`. Files are private.
 
 ```bash
-ulvia repository login https://repository.example.com --token-stdin
+ulvia repository login https://repository.example.com
 ulvia namespace claim example
 ulvia release /path/to/resources --recursive
 ulvia push all

@@ -83,8 +83,9 @@ Ulvia CMS installation runtime.
 - Repository writes use ordinary CMS personal access tokens and account-owned
   namespaces, including official publishers. Persist one private, bounded
   `ulvia.client.v1` connection pinned to its origin and Repository identity.
-  Login reads a PAT from the environment or bounded stdin, never a command-line
-  argument. Refuse redirects and cross-origin credential forwarding. Re-read the
+  Login reads a PAT from the environment, bounded stdin or a hidden bounded
+  terminal prompt, never a command-line argument. Refuse redirects and cross-origin
+  credential forwarding. Re-read the
   saved generation before each protected request so logout or replacement
   invalidates active credential resolvers. Never silently generate credentials.
   Push metadata first, stream separately verified assets and finish with an
