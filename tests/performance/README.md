@@ -249,3 +249,19 @@ on DELETE calls. The independent transport test in
 `harness/transport/payload.test.ts` reproduces this without instrumentation:
 POST delivers 45 expected bytes; DELETE delivers zero. This application defect
 is deliberately left unfixed and the test remains enabled and failing.
+
+## Current 1.0.21 integration
+
+The 2026-11-18 integration adds detailed composition reads, identity reads,
+draft updates, permanent deletion and favicon reads/updates. Both HTTP and MCP
+receive the ordinary cold/warm/concurrent matrix; readers also prime and mutate
+before invalidation measurements. Detailed and identity reads add large Unicode
+snapshots and eight draft revisions diverging from an unchanged publication.
+These are declared cases, not evidence that their measured execution passed.
+
+Composition fixtures use unique tags and check foreign sessions, cross-instance
+visibility, malformed requests, optimistic revisions and replacement identities.
+Favicon cases lease independent settings tenants, check unsafe references and
+stale revisions, and restore the original reference before releasing the lease.
+Only the selected invocation is timed; preparation, refusals and postconditions
+remain outside nominal coverage.

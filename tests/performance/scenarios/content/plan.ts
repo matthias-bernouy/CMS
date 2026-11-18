@@ -7,6 +7,8 @@ import { prepareSettings, SETTINGS_CAPABILITIES } from "./settings/recipes";
 import { prepareSettingsRead, SETTINGS_READERS } from "./settings/read/recipe";
 import { blocReadScenarios } from "./bloc-read/plan";
 import { exampleReadScenarios } from "./examples/plan";
+import { compositionScenarios } from "./editing/plan";
+import { prepareFavicon } from "./settings/favicon";
 import type { CapabilityInventory } from "../../capabilities/types";
 
 export function contentScenarios(inventory: CapabilityInventory, fixture: string, lease = settingsTenants(inventory)) {
@@ -64,5 +66,20 @@ export function contentScenarios(inventory: CapabilityInventory, fixture: string
         ...readers,
         ...blocReadScenarios(inventory, fixture),
         ...exampleReadScenarios(inventory, fixture),
+        ...compositionScenarios(inventory, fixture),
+        ...["site.favicon.get", "site.favicon.update"].flatMap((capability) =>
+            lifecycleScenarios(
+                inventory,
+                fixture,
+                "favicon",
+                "ulvia/cms.content",
+                [capability],
+                async (environment, id, obligation) =>
+                    prepareFavicon(await lease(environment), environment, id, obligation.binding, obligation.variant),
+                capability === "site.favicon.get"
+                    ? ["nominal", "cold", "warm", "concurrent", "invalidation"]
+                    : ["nominal", "cold", "warm", "concurrent"],
+            ),
+        ),
     ];
 }
