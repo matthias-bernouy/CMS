@@ -13,6 +13,7 @@ export async function prepareComposition(
     capability: string,
     binding: string,
     variant: string,
+    invalidBody: (capability: string, input: Readonly<Record<string, unknown>>) => Promise<void>,
 ): Promise<PreparedSample> {
     const state = compositionFixture(client);
     try {
@@ -32,7 +33,7 @@ export async function prepareComposition(
                 : capability === "site-blocs.delete"
                   ? { tag: state.tag, revision: before.draftRevision, definitionId: before.definitionId }
                   : { tag: state.tag };
-        await compositionRefusals(state, foreign, secondary, capability, input);
+        await compositionRefusals(state, foreign, secondary, capability, input, invalidBody);
         const expected =
             capability === "site-blocs.update"
                 ? {

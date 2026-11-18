@@ -5,11 +5,12 @@ import type { CompositionFixture } from "./fixture";
 
 /** Negative calls are preparation evidence, never timed nominal coverage. */
 export async function compositionRefusals(
-    state: CompositionFixture,
+    state: Pick<CompositionFixture, "tag" | "read" | "call">,
     foreign: ScenarioClient,
     secondary: ScenarioClient,
     capability: string,
     input: Readonly<Record<string, unknown>>,
+    invalidBody: (capability: string, input: Readonly<Record<string, unknown>>) => Promise<void>,
 ) {
     const before = canonicalizeIJson(await state.read());
     const denied = await foreign("ulvia/cms.content", capability, "http", input);
@@ -22,11 +23,7 @@ export async function compositionRefusals(
         !isolated.observation.validated && isolated.observation.status === 404,
         "composition-cross-instance-visible",
     );
-    const invalid = await state.call(capability, "http", { ...input, unexpectedPerformanceField: true });
-    assertCondition(
-        !invalid.observation.validated && invalid.observation.status === 400,
-        "composition-invalid-body-accepted",
-    );
+    await invalidBody(capability, input);
     if (["site-blocs.update", "site-blocs.delete"].includes(capability)) {
         const stale = await state.call(capability, "http", { ...input, revision: Number(input.revision) + 1 });
         assertCondition(

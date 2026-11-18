@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { ClientFailure } from "../../../harness/clients/failure";
 import { assertCondition, requireRecord } from "../../queries/types";
-import { editedSnapshot } from "./oracle";
+import { editedSnapshot, largeSnapshot } from "./oracle";
 import type { ScenarioClient } from "../../../harness/clients/session";
 
 export function compositionFixture(client: ScenarioClient) {
@@ -34,19 +34,23 @@ export function compositionFixture(client: ScenarioClient) {
         read,
         updateInput,
         async initialize(variant: string) {
-            const text =
-                variant === "large"
-                    ? `<p>${"Controlled Unicode é ".repeat(300)}</p>`.repeat(16)
-                    : "<p>Original composition text</p>";
             await fixture("site-blocs.create", {
                 tag,
                 name: "Original composition",
                 group: "Performance editing",
-                content: `<section>${text}</section>`,
+                content: "<section><p>Original composition text é</p></section>",
             });
             created = true;
             const initial = await read();
             await fixture("site-blocs.publish", { tag, revision: initial.draftRevision });
+            if (variant === "large") {
+                await fixture("site-blocs.update", {
+                    tag,
+                    revision: initial.draftRevision,
+                    definitionId: initial.definitionId,
+                    draftJson: largeSnapshot(initial.draftJson),
+                });
+            }
             if (variant === "history") {
                 for (let index = 0; index < 8; index++) {
                     await fixture("site-blocs.update", updateInput(await read(), `Historical draft ${index}`));

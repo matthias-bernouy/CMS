@@ -1,5 +1,6 @@
 import { lifecycleScenarios } from "../../lifecycle";
 import { scenarioClient } from "../../../harness/clients/session";
+import { expectBodyRefusal } from "../../../harness/clients/refusal";
 import { assertCondition } from "../../queries/types";
 import { prepareComposition } from "./recipe";
 import type { CapabilityInventory, Variant } from "../../../capabilities/types";
@@ -38,6 +39,16 @@ export function compositionScenarios(inventory: CapabilityInventory, fixture: st
                     id,
                     obligation.binding,
                     obligation.variant,
+                    (capability, input) =>
+                        expectBodyRefusal(
+                            inventory,
+                            environment.main,
+                            "ulvia/cms.content",
+                            capability,
+                            input,
+                            { ...input, unexpectedPerformanceField: true },
+                            400,
+                        ),
                 );
             },
             variants,
