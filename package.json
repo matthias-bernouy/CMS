@@ -20,6 +20,7 @@
         "check": "bun run infra/workspace.ts check",
         "test": "bun run infra/workspace.ts test",
         "verify": "bun run infra/workspace.ts verify",
+        "content-storage": "bun --no-macros run packages/runtimes/ulvia-provider-server/src/maintenance/index.ts",
         "build": "bun run build.ts",
         "publish": "bun run infra/distribution/publish.ts",
         "clean": "bun run quality/ci/clean.ts"

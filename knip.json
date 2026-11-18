@@ -48,6 +48,7 @@
             "entry": [
                 "src/index.ts",
                 "src/checkRetention.ts",
+                "src/maintenance/index.ts",
                 "tests/hosting/tls/run.ts"
             ]
         },
@@ -79,7 +80,8 @@
                 "tests/performance/harness/docker/cleanup/namespace-program.ts",
                 "tests/performance/delivery/run.ts",
                 "tests/integration/instance/documentation/evaluation/host.ts",
-                "tests/integration/instance/documentation/evaluation/client.ts"
+                "tests/integration/instance/documentation/evaluation/client.ts",
+                "tests/integration/content/worker.ts"
             ]
         }
     },

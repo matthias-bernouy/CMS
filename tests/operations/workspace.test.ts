@@ -14,6 +14,10 @@ test("verify prepares each prerequisite once and includes browser, Docker and TL
     expect(steps.find(({ env }) => env?.ULVIA_RUN_EDGE_SMOKE === "1")?.args).toContain(
         "packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts",
     );
+    expect(steps.find(({ env }) => env?.ULVIA_RUN_CONTENT_LIFECYCLE === "1")).toMatchObject({
+        args: ["bun", "test", "./tests/integration/content"],
+        continueOnFailure: true,
+    });
     expect(steps.filter(({ args }) => args.includes("infra/images/build.ts"))).toHaveLength(1);
     expect(
         steps.find(({ args }) => args.includes("tests/performance/delivery/run.ts"))?.env?.ULVIA_MCP_EDGE_DOCKER_IMAGE,

@@ -32,6 +32,11 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
         { args: ["bun", "run", "quality/ci/check-all/index.ts"] },
         browser,
         { args: ["bun", "test", ...tests], continueOnFailure: true },
+        {
+            args: ["bun", "test", "./tests/integration/content"],
+            env: { ULVIA_RUN_CONTENT_LIFECYCLE: "1" },
+            continueOnFailure: true,
+        },
         { args: ["bun", "x", "tsc", "--project", "tests/performance/tsconfig.json"] },
         { args: ["bun", "run", "tests/performance/benchmarks/run.ts"], continueOnFailure: true },
         { args: ["bun", "run", "tests/performance/benchmarks/collections/repository/run.ts"], continueOnFailure: true },
