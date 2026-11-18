@@ -1,0 +1,14 @@
+[
+    {
+        "tag": "site-cedar-header",
+        "name": "Cedar navigation",
+        "group": "Site",
+        "content": "<header cms-bloc=\"example--studio--navigation\"><a slot=\"brand\" href=\"/\">Cedar Learning</a><a slot=\"links\" href=\"/#workshops\">Workshops</a><a slot=\"links\" href=\"/about\">About</a></header>"
+    },
+    {
+        "tag": "site-cedar-footer",
+        "name": "Cedar footer",
+        "group": "Site",
+        "content": "<footer cms-bloc=\"example--studio--footer\"><span slot=\"brand\">Cedar Learning</span><a slot=\"links\" href=\"/workshops\">Workshop formats</a><a slot=\"links\" href=\"/about\">About Cedar</a></footer>"
+    }
+]

@@ -40,7 +40,7 @@ try {
     const hostingConfiguration = readHostingConfiguration(process.env);
     await validateCmsStorageRoots(env.CMS_FILES_DIR);
 
-    const mongo = new MongoClient(env.MONGO_URL);
+    const mongo = new MongoClient(env.MONGO_URL, { monitorCommands: true });
     await mongo.connect();
     const controlDb = mongo.db();
     const secretCrypto = await createEnvelopeSecretCrypto(controlDb, env.CMS_KEK);

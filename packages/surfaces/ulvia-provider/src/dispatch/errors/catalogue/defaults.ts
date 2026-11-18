@@ -1,4 +1,16 @@
 export const defaultsMessages = {
+    "STATE_CONFLICT": [
+        "The composition state changed. Read it again before retrying.",
+        "L’état de la composition a changé. Relisez-la avant de réessayer.",
+    ],
+    "site_bloc.archived": [
+        "This composition is archived. Restore it before editing its draft.",
+        "Cette composition est archivée. Restaurez-la avant de modifier son brouillon.",
+    ],
+    "site_bloc.published_slot": [
+        "A published slot was removed or renamed. Preserve its stable identity and slot name.",
+        "Un emplacement publié a été supprimé ou renommé. Conservez son identité stable et son nom.",
+    ],
     "CORE_UNAVAILABLE": [
         "The service is temporarily unavailable. Try again later.",
         "Le service est temporairement indisponible. Réessayez plus tard.",
@@ -58,6 +70,14 @@ export const defaultsMessages = {
     "PAGE_REFERENCED": [
         "This Page is still referenced. Remove its references before deleting it.",
         "Cette page est encore référencée. Retirez les références avant de la supprimer.",
+    ],
+    "REFERENCE_CHECK_INCOMPLETE": [
+        "Reference analysis could not complete. Nothing was deleted. Try again later.",
+        "L’analyse des références n’a pas pu aboutir. Rien n’a été supprimé. Réessayez plus tard.",
+    ],
+    "BLOC_REFERENCED": [
+        "This composition is still referenced. Remove its references before deleting it.",
+        "Cette composition est encore référencée. Retirez les références avant de la supprimer.",
     ],
     "PATH_CONFLICT": [
         "Another Page already uses this address. Choose another address.",

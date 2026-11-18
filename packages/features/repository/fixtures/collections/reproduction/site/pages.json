@@ -1,0 +1,17 @@
+[
+    {
+        "path": "/",
+        "title": "Cedar Learning",
+        "content": "<div cms-bloc=\"site-cedar-header\"></div><main id=\"main\" cms-bloc=\"example--studio--main\"><section slot=\"content\" cms-bloc=\"example--studio--section\" layout=\"split\"><h1 slot=\"heading\" cms-bloc=\"example--studio--heading\">Build stronger teams</h1><p slot=\"intro\">Practical workshops with the Cedar team.</p><figure slot=\"media\" cms-bloc=\"example--studio--media\"><img src=\"/.cms/call/ulvia/cms.files/files/file_fixture_portrait/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\" alt=\"A Cedar workshop facilitator\" width=\"320\" height=\"320\"></figure></section><section id=\"workshops\" slot=\"content\" cms-bloc=\"example--studio--section\"><h2 slot=\"heading\" cms-bloc=\"example--studio--heading\">Choose your format</h2><article slot=\"items\" cms-bloc=\"example--studio--card\"><h3 slot=\"heading\" cms-bloc=\"example--studio--heading\">Team workshop</h3><p slot=\"body\">Practice feedback together.</p></article><article slot=\"items\" cms-bloc=\"example--studio--card\"><h3 slot=\"heading\" cms-bloc=\"example--studio--heading\">Leadership workshop</h3><p slot=\"body\">Build a shared management approach.</p></article></section></main><div cms-bloc=\"site-cedar-footer\"></div>"
+    },
+    {
+        "path": "/workshops",
+        "title": "Workshop formats",
+        "content": "<div cms-bloc=\"site-cedar-header\"></div><main id=\"main\" cms-bloc=\"example--studio--main\"><section slot=\"content\" cms-bloc=\"example--studio--section\"><h1 slot=\"heading\" cms-bloc=\"example--studio--heading\">Workshop formats</h1><p slot=\"intro\">Choose the right format for your group.</p><article slot=\"items\" cms-bloc=\"example--studio--card\"><h2 slot=\"heading\" cms-bloc=\"example--studio--heading\">Team workshop</h2><p slot=\"body\">A practical session for colleagues.</p></article><article slot=\"items\" cms-bloc=\"example--studio--card\"><h2 slot=\"heading\" cms-bloc=\"example--studio--heading\">Leadership workshop</h2><p slot=\"body\">A session for managers.</p></article></section></main><div cms-bloc=\"site-cedar-footer\"></div>"
+    },
+    {
+        "path": "/about",
+        "title": "About Cedar",
+        "content": "<div cms-bloc=\"site-cedar-header\"></div><main id=\"main\" cms-bloc=\"example--studio--main\"><section slot=\"content\" cms-bloc=\"example--studio--section\" layout=\"split\"><h1 slot=\"heading\" cms-bloc=\"example--studio--heading\">Meet the Cedar team</h1><p slot=\"intro\">We design practical learning experiences.</p><figure slot=\"media\" cms-bloc=\"example--studio--media\"><img src=\"/.cms/call/ulvia/cms.files/files/file_fixture_portrait/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\" alt=\"A Cedar workshop facilitator\" width=\"320\" height=\"320\"></figure></section></main><div cms-bloc=\"site-cedar-footer\"></div>"
+    }
+]

@@ -44,6 +44,17 @@ Before recreating a site, inspect installed resources, identify recurring patter
 
 ## Follow the relevant workflow
 
+For "reproduce this website" or "recopier ce site", search `ulvia/cms.authoring`
+for "Reproduce an existing site" before extracting markup. Its ownership matrix,
+good/bad Bloc boundaries, shared header/footer assembly and executable repository
+fixture guide agents without earlier conversation history. The source DOM does
+not determine the number or identity of Blocs.
+
+Site portraits, documents, logos and favicons normally belong in Files; generic
+UI icons and theme fonts may be collection assets. Shared site copy and links
+belong in local compositions. Verify actual Page migration separately from
+installation, and test whether content edits require unnecessary releases.
+
 Use [the installations overview](overview.md) for installation and upgrade capabilities. Search for these guides in their owning contracts:
 
 - `ulvia/cms.authoring`: "Prepare, publish and install a collection" and "Build a minimal collection source snapshot".

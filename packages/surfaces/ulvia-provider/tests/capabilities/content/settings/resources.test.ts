@@ -57,7 +57,7 @@ test("current Content readers expose all 8,192 texts and theme tokens without we
     await mountContentForTest(dispatcher, { collections });
     const context = {
         requestId: crypto.randomUUID(),
-        contractVersion: "1.1.0",
+        contractVersion: "1.2.0",
         siteId: "default",
         providerId: "ulvia/primary-provider",
     };

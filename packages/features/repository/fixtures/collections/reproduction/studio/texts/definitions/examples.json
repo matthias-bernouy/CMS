@@ -1,0 +1,50 @@
+[
+    {
+        "id": "sample-heading",
+        "label": "text.label",
+        "category": "text.category",
+        "group": "text.group"
+    },
+    {
+        "id": "sample-body",
+        "label": "text.label",
+        "category": "text.category",
+        "group": "text.group"
+    },
+    {
+        "id": "sample-card",
+        "label": "text.label",
+        "category": "text.category",
+        "group": "text.group"
+    },
+    {
+        "id": "sample-action",
+        "label": "text.label",
+        "category": "text.category",
+        "group": "text.group"
+    },
+    {
+        "id": "sample-brand",
+        "label": "text.label",
+        "category": "text.category",
+        "group": "text.group"
+    },
+    {
+        "id": "sample-image-alt",
+        "label": "text.label",
+        "category": "text.category",
+        "group": "text.group"
+    },
+    {
+        "id": "primary-navigation",
+        "label": "text.label",
+        "category": "text.category",
+        "group": "text.group"
+    },
+    {
+        "id": "footer-navigation",
+        "label": "text.label",
+        "category": "text.category",
+        "group": "text.group"
+    }
+]

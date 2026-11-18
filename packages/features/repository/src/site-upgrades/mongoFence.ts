@@ -7,7 +7,7 @@ type MaintenanceDocument = {
     maintenance?: { id: string; token: string; expiresAt: Date };
 };
 
-type WritePermitDocument = { _id: string; siteId: string; expiresAt: Date };
+type WritePermitDocument = { _id: string; siteId: string; expiresAt: Date; affectsResources?: boolean };
 const LEASE_MS = 30_000;
 const HEARTBEAT_MS = 10_000;
 type LeaseOwner = { token: string; lost?: Error };
@@ -124,14 +124,24 @@ export class MongoSiteWriteFence implements SiteWriteFence {
         this.stopHeartbeat(siteId, upgradeId);
     }
 
-    async withWrite<T>(siteId: string, operation: () => Promise<T>): Promise<T> {
+    async withWrite<T>(
+        siteId: string,
+        operation: () => Promise<T>,
+        options: { invalidateResources?: boolean } = {},
+    ): Promise<T> {
         await this.clearAbandonedMaintenance(siteId);
         if ((await this.maintenance.findOne({ _id: siteId }))?.maintenance) {
             throw maintenanceError();
         }
         const permitId = randomUUID();
         const owner: PermitOwner = { siteId };
-        await this.permits.insertOne({ _id: permitId, siteId, expiresAt: new Date(Date.now() + this.leaseMs) });
+        const affectsResources = options.invalidateResources !== false;
+        await this.permits.insertOne({
+            _id: permitId,
+            siteId,
+            expiresAt: new Date(Date.now() + this.leaseMs),
+            affectsResources,
+        });
         this.permitOwners.set(permitId, owner);
         const heartbeat = this.permitHeartbeat(permitId);
         try {
@@ -146,7 +156,9 @@ export class MongoSiteWriteFence implements SiteWriteFence {
             clearInterval(heartbeat);
             this.permitOwners.delete(permitId);
             // Keep the durable permit if invalidation fails: an uncertain write cannot become cacheable.
-            await this.invalidateResources?.(siteId);
+            if (affectsResources) {
+                await this.invalidateResources?.(siteId);
+            }
             await this.permits.deleteOne({ _id: permitId });
         }
     }

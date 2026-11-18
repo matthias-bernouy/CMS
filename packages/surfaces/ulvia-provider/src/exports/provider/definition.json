@@ -4,10 +4,10 @@
     "schemaDialect": "ulvia-schema/v1",
     "providerId": "ulvia/primary-provider",
     "name": "Ulvia Provider",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "provenance": {
         "publisherId": "ulvia",
-        "publishedAt": "2026-11-16T00:00:00Z"
+        "publishedAt": "2026-11-18T00:00:00Z"
     },
     "buildVersionRange": ">=1.0.0 <2.0.0",
     "endpoint": {

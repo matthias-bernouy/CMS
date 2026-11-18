@@ -40,6 +40,12 @@ export { pageDocument } from "content/pages/interfaces/pages";
 export { MAX_PAGE_CONTENT_LENGTH } from "content/application/core/validation/fields";
 export { readSystemSnapshot } from "content/settings/core/readSystemSnapshot";
 export {
+    readCmsSiteBloc,
+    readCmsSiteBlocIdentity,
+    updateCmsSiteBloc,
+} from "content/blocs/core/catalogue/editing/documents";
+export { SiteBlocReferencedError } from "content/blocs/core/catalogue/editing/references";
+export {
     listCmsPages,
     type CmsPageListItem,
     type CmsPagesListInput,
@@ -169,6 +175,7 @@ export {
     BlocLifecycleConflictError,
     ContentValidationError,
     ContentConflictError,
+    ContentStorageFormatError,
     DuplicateBlocTagError,
     DuplicatePagePathError,
     PagePathUpdateConflictError,

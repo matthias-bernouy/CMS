@@ -26,3 +26,22 @@ test("fenced adapters preserve private-field receivers for reads, getters and wr
     expect(store.revision).toBe(2);
     await expect(Promise.resolve().then(() => store.write())).rejects.toMatchObject({ status: 423 });
 });
+
+test("only explicitly draft-only methods suppress resource invalidation while retaining the write fence", async () => {
+    const calls: Array<{ siteId: string; options?: { invalidateResources?: boolean } }> = [];
+    const store = withSiteWriteFence(
+        { draft: () => "draft", publish: () => "public" },
+        {
+            async withWrite(siteId, operation, options) {
+                calls.push({ siteId, ...(options ? { options } : {}) });
+                return operation();
+            },
+        },
+        "site",
+        ["draft", "publish"],
+        ["draft"],
+    );
+    expect(await store.draft()).toBe("draft");
+    expect(await store.publish()).toBe("public");
+    expect(calls).toEqual([{ siteId: "site", options: { invalidateResources: false } }, { siteId: "site" }]);
+});

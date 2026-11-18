@@ -44,6 +44,8 @@ const CMS_REPOSITORY_METHOD_POLICY = {
     publishSiteBloc: "guard-bloc",
     archiveSiteBloc: "guard-bloc",
     restoreSiteBloc: "guard-bloc",
+    deleteSiteBloc: "guard-bloc",
+    withContentReferenceWrite: "delegate",
     withSiteBlocPublicationLock: "delegate",
     getBlocsList: "override",
     getBlocViewJS: "override",

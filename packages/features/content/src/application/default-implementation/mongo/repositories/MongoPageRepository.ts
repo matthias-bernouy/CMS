@@ -1,3 +1,5 @@
+import { isDeepStrictEqual } from "node:util";
+import { acknowledgeReconciledReferenceWrite } from "content/application/default-implementation/mongo/repositories/siteBlocPublication/references/outcomes";
 import {
     readSystemDocument,
     systemFromDocument,
@@ -256,24 +258,29 @@ export class MongoPageRepository extends MongoBlocRepository {
             } catch (error) {
                 rethrowPagePathConflict(error, publicPath);
             }
+            const expected = {
+                _id: id,
+                revision: 1,
+                path: publicPath,
+                ...(language ? { paths: { [language]: path } } : {}),
+                title,
+                content,
+                contentReferences: pageContentReferenceKeys(content),
+                description: "",
+                tags: [],
+                visible: false,
+            };
             try {
-                await this.pages.insertOne({
-                    _id: id,
-                    revision: 1,
-                    path: publicPath,
-                    ...(language ? { paths: { [language]: path } } : {}),
-                    title,
-                    content,
-                    contentReferences: pageContentReferenceKeys(content),
-                    description: "",
-                    tags: [],
-                    visible: false,
-                });
+                await this.pages.insertOne(expected);
             } catch (error) {
-                if ((await this.pages.findOne({ _id: id }))?.path !== publicPath) {
-                    await this.pageRoutes.deleteOne({ _id: publicPath, pageId: id, pageInsertToken: id });
+                const persisted = await this.pages.findOne({ _id: id });
+                if (!isDeepStrictEqual(persisted, expected)) {
+                    if (!persisted) {
+                        await this.pageRoutes.deleteOne({ _id: publicPath, pageId: id, pageInsertToken: id });
+                    }
                     rethrowPagePathConflict(error, publicPath);
                 }
+                acknowledgeReconciledReferenceWrite(error);
             }
             await this.pageRoutes.updateOne(
                 { _id: publicPath, pageId: id, pageInsertToken: id },

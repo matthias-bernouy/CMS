@@ -1,0 +1,79 @@
+{
+    "kind": "component",
+    "id": "example--studio--section",
+    "label": "bloc.section.label",
+    "description": "bloc.section.description",
+    "categories": [
+        "category.layout"
+    ],
+    "root": {
+        "accepts": [
+            "section"
+        ]
+    },
+    "slots": {
+        "heading": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "example--studio--heading"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        },
+        "intro": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
+        },
+        "items": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "example--studio--card"
+                }
+            ]
+        },
+        "media": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "example--studio--media"
+                }
+            ],
+            "max": 1
+        }
+    },
+    "uses": [],
+    "requires": [],
+    "settings": [
+        {
+            "id": "layout",
+            "label": "setting.layout",
+            "type": "string",
+            "default": "stacked",
+            "maxLength": 7,
+            "control": {
+                "kind": "select",
+                "options": [
+                    {
+                        "value": "stacked",
+                        "label": "layout.stacked"
+                    },
+                    {
+                        "value": "split",
+                        "label": "layout.split"
+                    }
+                ]
+            }
+        }
+    ],
+    "examples": [
+        "section"
+    ],
+    "defaultExample": "section"
+}

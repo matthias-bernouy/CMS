@@ -1,0 +1,19 @@
+<section cms-bloc="example--studio--section" layout="split">
+    <h2 slot="heading" cms-bloc="example--studio--heading">
+        {{ cms.i18n.example/studio.sample-heading }}
+    </h2>
+    <p slot="intro">
+        {{ cms.i18n.example/studio.sample-body }}
+    </p>
+    <article slot="items" cms-bloc="example--studio--card">
+        <h3 slot="heading" cms-bloc="example--studio--heading">
+            {{ cms.i18n.example/studio.sample-card }}
+        </h3>
+        <p slot="body">
+            {{ cms.i18n.example/studio.sample-body }}
+        </p>
+    </article>
+    <figure slot="media" cms-bloc="example--studio--media">
+        <img src="{{ cms.asset.example/studio.mark.svg }}" alt="{{ cms.i18n.example/studio.sample-image-alt }}" width="320" height="320">
+    </figure>
+</section>

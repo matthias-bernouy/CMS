@@ -1,0 +1,30 @@
+{
+    "kind": "component",
+    "id": "example--studio--main",
+    "label": "bloc.main.label",
+    "description": "bloc.main.description",
+    "categories": [
+        "category.layout"
+    ],
+    "root": {
+        "accepts": [
+            "main"
+        ]
+    },
+    "slots": {
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ],
+            "min": 1
+        }
+    },
+    "uses": [],
+    "requires": [],
+    "examples": [
+        "main"
+    ],
+    "defaultExample": "main"
+}

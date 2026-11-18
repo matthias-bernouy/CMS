@@ -25,7 +25,7 @@ test("missing cache metadata stays uncacheable without implicit repair; quiet re
     expect(calls).toEqual([
         { collection: "site_resource_revisions", filter: { _id: "site" } },
         { collection: "site_upgrade_maintenance", filter: { _id: "site" } },
-        { collection: "site_write_permits", filter: { siteId: "site" } },
+        { collection: "site_write_permits", filter: { siteId: "site", affectsResources: { $ne: false } } },
         { collection: "site_resource_revisions", filter: { _id: "site" } },
     ]);
     await f.storage.withWrite("other-site", async () => undefined);
@@ -61,6 +61,31 @@ test("concurrent writers prevent cache reuse until every permit settles, includi
     ).rejects.toThrow("refused");
     expect(await f.read()).not.toBe(settled);
     expect(await f.db.get("site_write_permits").findOne({ siteId: "site" })).toBeNull();
+});
+
+test("draft-only writes remain fenced by maintenance without invalidating public resource revisions", async () => {
+    const f = fixture();
+    await f.storage.withWrite("site", async () => undefined);
+    const before = await f.read();
+    await f.storage.withWrite(
+        "site",
+        async () => {
+            expect(await f.read()).toBe(before);
+            expect(await f.db.get("site_write_permits").findOne({ siteId: "site" })).toMatchObject({
+                affectsResources: false,
+            });
+        },
+        { invalidateResources: false },
+    );
+    expect(await f.read()).toBe(before);
+    expect(await f.storage.claimMaintenance("site", "upgrade")).toBe(true);
+    try {
+        await expect(
+            f.storage.withWrite("site", async () => undefined, { invalidateResources: false }),
+        ).rejects.toMatchObject({ status: 423 });
+    } finally {
+        await f.storage.releaseMaintenance("site", "upgrade");
+    }
 });
 
 test("a writer completing between revision reads cannot validate the previous cache generation", async () => {

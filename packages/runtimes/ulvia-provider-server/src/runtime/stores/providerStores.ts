@@ -75,7 +75,7 @@ export async function createProviderStores(
     onSelectionsCommitted?: (state: StoredContractSelections) => void,
     collectionVerifier?: CollectionVerifier,
 ) {
-    const mongo = new MongoClient(env.MONGO_URL);
+    const mongo = new MongoClient(env.MONGO_URL, { monitorCommands: true });
     await mongo.connect();
     const db = mongo.db();
     const journal = new MongoJournalStore(db);
@@ -134,7 +134,9 @@ export async function createProviderStores(
         ...createCollectionUpgradeAnalysis(SCOPE_ID, selections, releases, selectionDependencies),
         ...(collectionVerifier ? { verifyEvolution: collectionVerifier.evolution } : {}),
     });
-    const repo = withSiteWriteFence(upgradeRepo, upgradeStorage, SCOPE_ID, CMS_REPOSITORY_FENCED_MUTATIONS);
+    const repo = withSiteWriteFence(upgradeRepo, upgradeStorage, SCOPE_ID, CMS_REPOSITORY_FENCED_MUTATIONS, [
+        "saveSiteBlocDraft",
+    ]);
     const initializationState = new MongoInitializationStateStore(db);
     const createInitialization = initializationFactory(
         env.instanceId,

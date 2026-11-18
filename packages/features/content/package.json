@@ -20,7 +20,8 @@
         "./page-document": "./src/exports/pages/document.ts",
         "./seo": "./src/pages/seo/exports/index.ts",
         "./seo/http": "./src/pages/seo/exports/http.ts",
-        "./mongo": "./src/exports/mongo.ts",
+        "./mongo": "./src/exports/mongo/index.ts",
+        "./mongo/maintenance": "./src/exports/mongo/maintenance.ts",
         "./public-delivery": "./src/exports/runtime/public-delivery.ts",
         "./feature": "./src/application/feature.ts"
     },

@@ -38,7 +38,7 @@ export class MongoSiteUpgradeStorage extends MongoSiteWriteFence implements Site
         // Even expired permits block reuse: a paused writer is not necessarily dead.
         const permit = await this.database
             .collection("site_write_permits")
-            .findOne({ siteId }, { projection: { _id: 1 } });
+            .findOne({ siteId, affectsResources: { $ne: false } }, { projection: { _id: 1 } });
         const after = await revisions.findOne({ _id: siteId });
         for (const value of [before, after]) {
             if (value && (typeof value.revision !== "string" || !/^[0-9a-f-]{36}$/u.test(value.revision))) {

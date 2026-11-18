@@ -24,5 +24,9 @@ test("every official command has a deliberate cache classification; logs and aut
     }
     expect(commandCacheEffect("ulvia/cms.files", "files.make-private")).toBe("purge");
     expect(commandCacheEffect("ulvia/cms.content", "pages.publish")).toBe("purge");
+    expect(commandCacheEffect("ulvia/cms.content", "site-blocs.update")).toBe("neutral");
+    for (const id of ["site-blocs.delete", "site.favicon.update"]) {
+        expect(commandCacheEffect("ulvia/cms.content", id)).toBe("purge");
+    }
     expect(commandCacheEffect("ulvia/cms.content", "future-command")).toBeNull();
 });

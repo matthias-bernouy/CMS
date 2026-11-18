@@ -1,0 +1,11 @@
+{
+    "kind": "collection",
+    "protocol": "ulvia-collection/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "collectionId": "example/studio",
+    "publisherId": "example",
+    "version": "1.0.0",
+    "name": "collection.name",
+    "locale": "en",
+    "exports": "*"
+}

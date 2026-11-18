@@ -1,0 +1,21 @@
+{
+    "id": "section",
+    "label": "bloc.section.label",
+    "description": "bloc.section.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        },
+        {
+            "id": "mobile",
+            "frame": {
+                "width": 390,
+                "height": 844
+            }
+        }
+    ]
+}

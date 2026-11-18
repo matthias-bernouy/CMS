@@ -6,16 +6,57 @@ import {
     DuplicatePagePathError,
     BlocRevisionConflictError,
     ContentConflictError,
+    ContentStorageFormatError,
+    SiteBlocPublishedSlotConflictError,
     SiteBlocNotFoundError,
+    SiteBlocPublicationLockLostError,
+    SiteBlocPublicationRecoveryRequiredError,
 } from "content/application/core/validation/errors";
 import { CmsPageNotFoundError } from "content/pages/core/contracts/renamePage";
 import { PageReferencedError } from "content/pages/core/routing/errors";
+import {
+    SiteBlocReferenceCheckError,
+    SiteBlocReferencedError,
+    SiteBlocIdentityConflictError,
+} from "content/blocs/core/catalogue/editing/references";
 export const mapContentError: FeatureErrorMapper = (cause, capability) => {
     const status = cause && typeof cause === "object" && "status" in cause ? Number(cause.status) : 0;
     let code: string;
+    if (
+        cause instanceof SiteBlocPublicationLockLostError ||
+        cause instanceof SiteBlocPublicationRecoveryRequiredError ||
+        cause instanceof ContentStorageFormatError
+    ) {
+        if (!Object.hasOwn(capability.errors, "CORE_UNAVAILABLE")) {
+            return undefined;
+        }
+        return {
+            code: "CORE_UNAVAILABLE",
+            output: { message: "Content writes are temporarily unavailable. Retry after recovery." },
+        };
+    }
     if (cause instanceof ContentCapabilityError) {
         code = cause.code;
     } else if (capability.id.startsWith("site-blocs.")) {
+        if (cause instanceof SiteBlocIdentityConflictError) {
+            return { code: "REVISION_CONFLICT", output: { message: cause.publicMessage } };
+        }
+        if (cause instanceof SiteBlocReferenceCheckError && capability.id === "site-blocs.delete") {
+            return { code: "REFERENCE_CHECK_INCOMPLETE", output: { message: cause.publicMessage } };
+        }
+        if (cause instanceof SiteBlocReferencedError && capability.id === "site-blocs.delete") {
+            return {
+                code: "BLOC_REFERENCED",
+                output: {
+                    message: cause.publicMessage,
+                    references: cause.references,
+                    truncated: cause.truncated,
+                },
+            };
+        }
+        if (status === 423 && Object.hasOwn(capability.errors, "UPGRADE_IN_PROGRESS")) {
+            return { code: "UPGRADE_IN_PROGRESS", output: { message: "Content mutations are temporarily fenced." } };
+        }
         if (
             !(
                 cause instanceof SiteBlocNotFoundError ||
@@ -33,7 +74,11 @@ export const mapContentError: FeatureErrorMapper = (cause, capability) => {
                 : cause instanceof BlocRevisionConflictError
                   ? "REVISION_CONFLICT"
                   : cause instanceof ContentConflictError
-                    ? "TAG_CONFLICT"
+                    ? ["site-blocs.update", "site-blocs.delete"].includes(capability.id)
+                        ? cause instanceof SiteBlocPublishedSlotConflictError
+                            ? "INVALID_SITE_BLOC"
+                            : "STATE_CONFLICT"
+                        : "TAG_CONFLICT"
                     : cause instanceof ContentValidationError || cause instanceof TypeError
                       ? "INVALID_SITE_BLOC"
                       : "CORE_UNAVAILABLE";
@@ -66,6 +111,11 @@ export const mapContentError: FeatureErrorMapper = (cause, capability) => {
                               ? "INVALID_INPUT"
                               : "INVALID_PAGE"
                         : "CORE_UNAVAILABLE";
+    } else if (capability.id === "site.favicon.update") {
+        if (!(cause instanceof ContentValidationError) && ![409, 423].includes(status)) {
+            return undefined;
+        }
+        code = status === 409 ? "REVISION_CONFLICT" : status === 423 ? "UPGRADE_IN_PROGRESS" : "INVALID_INPUT";
     } else if (
         [
             "site.update",

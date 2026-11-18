@@ -82,9 +82,10 @@ export class InMemoryBlocRepository {
         tag: string,
         draft: SiteBlocSnapshot,
         expectedDraftRevision: number,
+        expectedDefinitionId?: string,
     ): Promise<SiteBlocDefinition> {
         const current = this.requiredRecord(tag);
-        const definition = nextDraftDefinition(current, draft, expectedDraftRevision);
+        const definition = nextDraftDefinition(current, draft, expectedDraftRevision, new Date(), expectedDefinitionId);
         this.blocs.set(tag, { ...current, siteDefinition: definition });
         return structuredClone(definition);
     }
@@ -116,6 +117,10 @@ export class InMemoryBlocRepository {
     }
 
     withSiteBlocPublicationLock<T>(operation: (guard: SiteBlocPublicationGuard) => Promise<T>): Promise<T> {
+        return this.siteBlocPublications.run(operation);
+    }
+
+    withContentReferenceWrite<T>(operation: () => Promise<T>): Promise<T> {
         return this.siteBlocPublications.run(operation);
     }
 

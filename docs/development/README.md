@@ -257,7 +257,7 @@ still require deployment-level verification.
 | `bun run format` | Apply Biome formatting and configured safe/unsafe fixes; inspect the diff. |
 | `bun run check` | Run every static diagnostic, including types, architecture, style and dead code. |
 | `bun run test [paths/options]` | Prepare metadata/browser assets, then run maintained Bun tests, or selected tests. |
-| `bun run verify` | Run static checks, tests, performance-plan guards, retained compatibility, the shared-hosting browser journey and isolated TLS issuance/restart. |
+| `bun run verify` | Run static checks, tests, [real Mongo Content lifecycle regressions](../../tests/integration/content/README.md), performance-plan guards, retained compatibility, the shared-hosting browser journey and isolated TLS issuance/restart. |
 | `bun run perf [--list] [--scenario <id> ...] [--reference <run-id>]` | List or execute the separate measured performance campaign, with explicit targeted scope and optional regression comparison. |
 | `bun run build [--version <version>]` | Build workspace outputs; with a version, also build images, the CLI and an exact publication snapshot. |
 | `bun run publish --version <version>` | Publish only the previously built snapshot to Repository, Docker and npm. |
@@ -323,6 +323,9 @@ Documentation-only changes normally need a diff whitespace check and validation
 of moved links; check executable examples when their behavior changes.
 
 The [root agent instructions](../../AGENTS.md) define editing/validation rules.
+Existing Content databases can require an explicit offline projection upgrade.
+See [Content maintenance](content-storage.md)
+for `bun run content-storage` commands, interruption recovery and prerequisites.
 [UI contracts](../quality/ui-contracts.md) explains scanner scope and limitations.
 [Commit messages](commits.md) records the suggested convention.
 

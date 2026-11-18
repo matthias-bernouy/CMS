@@ -22,7 +22,11 @@ test("all official errors have complete French and English message outputs in th
                     const message = errorMessage(release.contractId, capability.id, error.code, language);
                     expect(message).not.toMatch(/\{[a-z]+\}/u);
                     expect(message.length).toBeGreaterThan(0);
-                    expect(() => validateSchemaValue(error.output!, { message })).not.toThrow();
+                    const output =
+                        error.code === "BLOC_REFERENCED"
+                            ? { message, references: [{ kind: "page", id: "consumer" }], truncated: false }
+                            : { message };
+                    expect(() => validateSchemaValue(error.output!, output)).not.toThrow();
                 }
             }
         }

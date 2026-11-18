@@ -66,51 +66,59 @@ export class ValidatingContentRepository implements ContentRepository {
     async insertPage(path: string, title: string, content?: string): Promise<void | PageWriteFeedback> {
         const validPath = validatePagePath(path);
         const validTitle = validatePageTitle(title);
-        return this.pageMutations.run(async () => {
-            if (content === undefined) {
-                return this.inner.insertPage(validPath, validTitle, undefined);
-            }
-            const validContent = validatePagePatch({ content }).content!;
-            const analysis = await assertContentRefsExist(this.inner, validContent, this.bindingValidation);
-            const diagnostics = await this.pageMutations.content(validContent, [validPath], false, analysis);
-            await this.inner.insertPage(validPath, validTitle, validContent);
-            return { diagnostics };
-        });
+        const validContent = content === undefined ? undefined : validatePagePatch({ content }).content!;
+        const operation = () =>
+            this.pageMutations.run(async () => {
+                if (content === undefined) {
+                    return this.inner.insertPage(validPath, validTitle, undefined);
+                }
+                const analysis = await assertContentRefsExist(this.inner, validContent!, this.bindingValidation);
+                const diagnostics = await this.pageMutations.content(validContent!, [validPath], false, analysis);
+                await this.inner.insertPage(validPath, validTitle, validContent);
+                return { diagnostics };
+            });
+        return validContent === undefined ? operation() : this.inner.withContentReferenceWrite(operation);
     }
 
     async updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<PageWriteResult | null> {
         const valid = validatePagePatch(page);
-        return this.pageMutations.run(async () => {
-            const current = valid.id ? await this.inner.getPageById(valid.id) : null;
-            let diagnostics: readonly ContentDiagnostic[] = [];
-            if (valid.visible === false && current?.visible === true) {
-                diagnostics = await this.pageMutations.unpublication(current.id);
-            }
-            if (valid.content !== undefined || (valid.visible === true && current)) {
-                const html = valid.content ?? current!.content;
-                const analysis = await assertContentRefsExist(this.inner, html, this.bindingValidation);
-                diagnostics = await this.pageMutations.content(
-                    html,
-                    [...(current ? [current.path] : []), ...(valid.path ? [valid.path] : [])],
-                    valid.visible ?? current?.visible ?? false,
-                    analysis,
-                    current?.id,
-                );
-            }
-            const updated = await this.inner.updatePage(valid, expectedRevision);
-            return updated ? { ...updated, diagnostics } : null;
-        });
+        const operation = () =>
+            this.pageMutations.run(async () => {
+                const current = valid.id ? await this.inner.getPageById(valid.id) : null;
+                let diagnostics: readonly ContentDiagnostic[] = [];
+                if (valid.visible === false && current?.visible === true) {
+                    diagnostics = await this.pageMutations.unpublication(current.id);
+                }
+                if (valid.content !== undefined || (valid.visible === true && current)) {
+                    const html = valid.content ?? current!.content;
+                    const analysis = await assertContentRefsExist(this.inner, html, this.bindingValidation);
+                    diagnostics = await this.pageMutations.content(
+                        html,
+                        [...(current ? [current.path] : []), ...(valid.path ? [valid.path] : [])],
+                        valid.visible ?? current?.visible ?? false,
+                        analysis,
+                        current?.id,
+                    );
+                }
+                const updated = await this.inner.updatePage(valid, expectedRevision);
+                return updated ? { ...updated, diagnostics } : null;
+            });
+        return valid.content === undefined ? operation() : this.inner.withContentReferenceWrite(operation);
     }
 
     // ── Pass-through: blocs (compiled + validated upstream) ────────────────
     async createBloc(bloc: TBlocWrite): Promise<TBloc> {
-        return this.inner.createBloc(await validateBlocArtifact(this.inner, bloc, this.bindingValidation));
+        return this.inner.withContentReferenceWrite(async () =>
+            this.inner.createBloc(await validateBlocArtifact(this.inner, bloc, this.bindingValidation)),
+        );
     }
     async replaceBloc(bloc: TBlocWrite): Promise<TBloc> {
-        const artifact = await validateBlocArtifact(this.inner, bloc, this.bindingValidation);
-        return this.pageMutations.run(async () => {
-            await assertBlocPageConsumers(this.inner, artifact);
-            return this.inner.replaceBloc(artifact);
+        return this.inner.withContentReferenceWrite(async () => {
+            const artifact = await validateBlocArtifact(this.inner, bloc, this.bindingValidation);
+            return this.pageMutations.run(async () => {
+                await assertBlocPageConsumers(this.inner, artifact);
+                return this.inner.replaceBloc(artifact);
+            });
         });
     }
     getBlocRecord(tag: string): Promise<BlocRecord | null> {
@@ -121,20 +129,26 @@ export class ValidatingContentRepository implements ContentRepository {
     }
     async createSiteBloc(definition: SiteBlocDefinition): Promise<BlocRecord> {
         const validated = validateSiteBlocDefinition(definition);
-        if (validated.groupId !== undefined) {
-            const groups = await this.getSiteBlocGroups();
-            if (!groups.some(({ id }) => id === validated.groupId)) {
-                throw new ContentValidationError("groupId", "site Bloc group was not found");
+        return this.inner.withContentReferenceWrite(async () => {
+            if (validated.groupId !== undefined) {
+                const groups = await this.getSiteBlocGroups();
+                if (!groups.some(({ id }) => id === validated.groupId)) {
+                    throw new ContentValidationError("groupId", "site Bloc group was not found");
+                }
             }
-        }
-        return this.inner.createSiteBloc(validated);
+            return this.inner.createSiteBloc(validated);
+        });
     }
-    saveSiteBlocDraft(
+    async saveSiteBlocDraft(
         tag: string,
         draft: SiteBlocSnapshot,
         expectedDraftRevision: number,
+        expectedDefinitionId?: string,
     ): Promise<SiteBlocDefinition> {
-        return this.inner.saveSiteBlocDraft(tag, validateSiteBlocSnapshot(draft, tag), expectedDraftRevision);
+        const validated = validateSiteBlocSnapshot(draft, tag);
+        return this.inner.withContentReferenceWrite(() =>
+            this.inner.saveSiteBlocDraft(tag, validated, expectedDraftRevision, expectedDefinitionId),
+        );
     }
     async publishSiteBloc(
         tag: string,
@@ -143,6 +157,11 @@ export class ValidatingContentRepository implements ContentRepository {
         publicationDate?: Date,
         publicationGuard?: SiteBlocPublicationGuard,
     ): Promise<BlocRecord> {
+        if (!publicationGuard) {
+            return this.inner.withSiteBlocPublicationLock((guard) =>
+                this.publishSiteBloc(tag, artifact, expectedDraftRevision, publicationDate, guard),
+            );
+        }
         const validated = await validateBlocArtifact(this.inner, artifact, this.bindingValidation);
         return this.pageMutations.run(async () => {
             await assertBlocPageConsumers(this.inner, validated);
@@ -154,6 +173,12 @@ export class ValidatingContentRepository implements ContentRepository {
     }
     restoreSiteBloc(tag: string, expectedDraftRevision: number): Promise<SiteBlocDefinition> {
         return this.inner.restoreSiteBloc(tag, expectedDraftRevision);
+    }
+    deleteSiteBloc(tag: string, revision: number, identity: string): Promise<void> {
+        return this.inner.deleteSiteBloc(tag, revision, identity);
+    }
+    withContentReferenceWrite<T>(operation: () => Promise<T>): Promise<T> {
+        return this.inner.withContentReferenceWrite(operation);
     }
     withSiteBlocPublicationLock<T>(operation: (guard: SiteBlocPublicationGuard) => Promise<T>): Promise<T> {
         return this.inner.withSiteBlocPublicationLock(operation);

@@ -1,11 +1,13 @@
 import type { BlocRecord } from "content/blocs/interfaces/blocs";
 import type { PageRoute, TPage } from "content/pages/interfaces/pages";
 import type { TSystem } from "content/settings/interfaces/settings";
+import { blocReferenceTags } from "content/blocs/core/catalogue/editing/references";
+import { ContentStorageFormatError } from "content/application/core/validation/errors";
 
 export const SYSTEM_ID = "singleton" as const;
 
 type WithMongoId<T extends { id: string }> = Omit<T, "id"> & { _id: string };
-export type BlocRecordDoc = Omit<BlocRecord, "tag"> & { _id: string };
+export type BlocRecordDoc = Omit<BlocRecord, "tag"> & { _id: string; contentReferences: readonly string[] };
 export type BlocDoc = BlocRecordDoc;
 export type PageDeletionIntent = {
     alternativeId: string | null;
@@ -55,6 +57,7 @@ export function toBlocDoc(record: BlocRecord): BlocRecordDoc {
         _id: record.tag,
         ownership: record.ownership,
         artifact: record.artifact,
+        contentReferences: blocReferenceTags(record).map((tag) => `bloc:${tag}`),
         ...(record.siteDefinition ? { siteDefinition: record.siteDefinition } : {}),
     });
 }
@@ -63,10 +66,16 @@ export function fromBlocDoc(document: BlocDoc | null): BlocRecord | null {
     if (!document) {
         return null;
     }
-    const { _id, ...record } = structuredClone(document);
+    if (
+        !Array.isArray(document.contentReferences) ||
+        document.contentReferences.some((value) => typeof value !== "string")
+    ) {
+        throw new ContentStorageFormatError("Stored Bloc requires contentReferences");
+    }
+    const { _id, contentReferences: _contentReferences, ...record } = document;
     return {
         tag: _id,
-        ...record,
+        ...structuredClone(record),
     };
 }
 

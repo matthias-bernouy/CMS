@@ -33,6 +33,14 @@ export class ContentConflictError extends Error {
     }
 }
 
+export class ContentStorageFormatError extends Error {
+    status = 503;
+    constructor(message: string) {
+        super(message);
+        this.name = "ContentStorageFormatError";
+    }
+}
+
 export class DuplicateBlocTagError extends ContentConflictError {
     constructor(tag: string) {
         super(`Bloc with tag "${tag}" already exists`);
@@ -121,6 +129,7 @@ export class BlocPublicationConflictError extends ContentConflictError {
 }
 
 export class SiteBlocLifecycleConflictError extends ContentConflictError {
+    readonly issue = { code: "site_bloc.archived" };
     constructor(tag: string, operation: string) {
         super(`Cannot ${operation} archived site bloc "${tag}"`);
         this.name = "SiteBlocLifecycleConflictError";
@@ -128,6 +137,7 @@ export class SiteBlocLifecycleConflictError extends ContentConflictError {
 }
 
 export class SiteBlocPublishedSlotConflictError extends ContentConflictError {
+    readonly issue = { code: "site_bloc.published_slot" };
     constructor(tag: string, slotId: string, reason: "removed" | "renamed") {
         super(`Cannot save site bloc "${tag}": published slot "${slotId}" was ${reason}`);
         this.name = "SiteBlocPublishedSlotConflictError";
