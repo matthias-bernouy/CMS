@@ -1,0 +1,36 @@
+{
+    "kind": "component",
+    "id": "example--studio--heading",
+    "label": "bloc.heading.label",
+    "description": "bloc.heading.description",
+    "categories": [
+        "category.content"
+    ],
+    "root": {
+        "accepts": [
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6"
+        ]
+    },
+    "slots": {
+        "": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "phrasing"
+                }
+            ],
+            "min": 1
+        }
+    },
+    "uses": [],
+    "requires": [],
+    "examples": [
+        "heading"
+    ],
+    "defaultExample": "heading"
+}

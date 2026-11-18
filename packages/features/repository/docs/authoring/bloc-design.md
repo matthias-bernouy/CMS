@@ -3,6 +3,8 @@
 Use this procedure when creating or redesigning a Bloc or collection example.
 Read [the source format](collection-source.md) and
 [the preparation workflow](collection-authoring.md) for exact authoring rules.
+For a copied website, also follow [Reproduce an existing site](site-reproduction.md)
+before extracting markup.
 
 ## Define the responsibility
 
@@ -17,6 +19,27 @@ Public release metadata and compiled behavior are not the original source tree.
 Preserve exact dependency and asset references when sources are available.
 
 ## Establish the contract
+
+Model editor operations before source nodes. A Card with `heading`, `body` and
+`actions` can occur several times in a Section's repeated `items` slot; each
+instance is Page content, not another definition. Use variants for coherent
+layout choices and separate components for different responsibilities.
+
+Avoid extraction positions such as `home-section-1` or `article-item-7` as the
+design model. Slots `content-1` through `content-14` hide the author's choices.
+Prefer semantic names and appropriate cardinality. These are review signals,
+not additional naming restrictions. Keep ordered prose together unless a
+specialized structure, such as a chart, needs a contract.
+
+Page-owned headings remain editable. A composition's fixed assembly uses an
+explicit Heading component rather than a native `<h1>` or `<h2>` around a slot.
+Separate visual components from site compositions holding actual brand copy
+and destinations. Every consuming Page references shared navigation/footer
+compositions instead of repeating their content. Respect parent contracts:
+`any-component` does not accept a composition host.
+
+The reproduction guide links an executable fixture testing shared content,
+ownership and ordinary Page edits without a collection digest change.
 
 - Choose the native host through root.accepts. Prefer native semantic elements
   and native interactions appropriate to the task.

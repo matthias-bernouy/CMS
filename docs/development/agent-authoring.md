@@ -1,5 +1,18 @@
 # Agent collection authoring and verification
 
+## Reproducing an existing site
+
+Read the versioned [site reproduction workflow](../../packages/features/repository/docs/authoring/site-reproduction.md)
+before deriving collection boundaries from a reference site. It covers editable
+content, shared site compositions, Files versus collection assets, migration and
+public review. MCP clients discover it from Working with Ulvia, documentation
+search and the collection preparation capability's documentation references.
+
+The [editable reproduction fixture](../../packages/features/repository/fixtures/collections/reproduction/README.md)
+contains real authored sources and three site Pages. Its integration suite
+checks publication, shared edits, Page edits and existing semantic refusals.
+It does not measure an agent's choices or reproduce a browser reference.
+
 ## Existing enforceable tools
 
 The CLI `release <resource-directory>` already compiles recursive authored

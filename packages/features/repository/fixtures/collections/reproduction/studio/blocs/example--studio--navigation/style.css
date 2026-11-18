@@ -1,0 +1,10 @@
+:scope, nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+}
+svg {
+    width: 24px;
+    height: 24px;
+}

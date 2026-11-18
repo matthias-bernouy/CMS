@@ -9,7 +9,7 @@ import { requiredText } from "repository/application/authoring/core/input";
 export const prepareCollection = defineCapability({
     id: "prepare-collection",
     description:
-        "Validate and build a complete collection source snapshot. Read the source and Bloc design guides. Preparation does not publish or establish visual quality.",
+        "Validate and build a complete collection source snapshot. Read the source and Bloc design guides; for a reference website also read site-reproduction.md. Preparation does not publish or establish visual quality.",
     access: "admin",
     behavior: { effect: "command", execution: "sync", idempotency: "none", sensitive: true },
     bindings: [
@@ -31,11 +31,11 @@ export const prepareCollection = defineCapability({
             tool: {
                 name: "authoring_prepare_collection",
                 description:
-                    "Validate and build a complete collection source snapshot. Read the source and Bloc design guides. Preparation does not publish or establish visual quality.",
+                    "Validate and build a complete collection source snapshot. Read the source and Bloc design guides; for a reference website also read site-reproduction.md. Preparation does not publish or establish visual quality.",
             },
         },
     ],
-    docs: ["overview.md", "collection-authoring.md", "collection-source.md", "bloc-design.md"],
+    docs: ["overview.md", "collection-authoring.md", "collection-source.md", "bloc-design.md", "site-reproduction.md"],
     input: prepareCollectionInputSchema,
     output: prepareCollectionOutputSchema,
     errors,

@@ -1,0 +1,10 @@
+:scope {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    padding: 24px;
+}
+nav {
+    display: flex;
+    gap: 16px;
+}

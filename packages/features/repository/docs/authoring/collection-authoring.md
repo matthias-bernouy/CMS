@@ -13,6 +13,7 @@ Read `get-collection-sources` before changing a previously published collection.
 Every Bloc has a native root contract. Listed Blocs use translated descriptions, categories and appropriate examples. Author example `definition.json` and `document.html` with explicit preview frames. Page content and mutable site configuration remain site-owned.
 
 For a new or redesigned Bloc, follow [Design a reusable Bloc](bloc-design.md) before preparing sources. It covers the editor contract, visual system, interaction states and examples.
+For a reference website, start with [Reproduce an existing site](site-reproduction.md): model recurring responsibilities and ownership before extraction. Editorial portraits, documents, logos and favicons normally remain in Files. Deliberately packaged UI/theme assets serve reusable visuals. Installation does not migrate Pages that still reference older Blocs.
 
 ## Make colors reusable
 

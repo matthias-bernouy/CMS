@@ -1,0 +1,20 @@
+:scope {
+    display: grid;
+    gap: 24px;
+    margin-block: 32px;
+}
+:scope[layout="split"] {
+    grid-template-columns: 2fr 1fr;
+}
+.items {
+    display: grid;
+    gap: 16px;
+}
+.items:empty {
+    display: none;
+}
+@media (max-width: 700px) {
+    :scope[layout="split"] {
+        grid-template-columns: 1fr;
+    }
+}

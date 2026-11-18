@@ -1,0 +1,21 @@
+{
+    "id": "main",
+    "label": "bloc.main.label",
+    "description": "bloc.main.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        },
+        {
+            "id": "mobile",
+            "frame": {
+                "width": 390,
+                "height": 844
+            }
+        }
+    ]
+}
