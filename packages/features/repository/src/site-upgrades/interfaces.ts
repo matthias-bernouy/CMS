@@ -15,7 +15,7 @@ export interface SiteWriteFence {
     assertMaintenance(siteId: string, operationId: string): Promise<void>;
     releaseMaintenance(siteId: string, operationId: string): Promise<void>;
     yieldMaintenance(siteId: string, operationId: string): Promise<void>;
-    withWrite<T>(siteId: string, operation: () => Promise<T>): Promise<T>;
+    withWrite<T>(siteId: string, operation: () => Promise<T>, options?: { invalidateResources?: boolean }): Promise<T>;
 }
 export interface SiteUpgradeStorage extends SiteWriteFence {
     begin<T>(intent: SiteUpgradeIntent<T>): Promise<SiteUpgradeIntent<T>>;
