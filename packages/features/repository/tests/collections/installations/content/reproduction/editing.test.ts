@@ -1,8 +1,26 @@
 import { expect, test } from "bun:test";
-import { createCmsSiteBloc, publishCmsSiteBloc } from "@bernouy/content";
+import { createCmsSiteBloc, publishCmsSiteBloc, readCmsSiteBloc, updateCmsSiteBloc } from "@bernouy/content";
 import type { SiteBlocNode } from "@bernouy/content";
 import { parseHTML } from "linkedom";
 import { artifact, pages, reproductionSite } from "./fixture";
+
+test("composition editing cannot turn installed collection components into mutable site resources", async () => {
+    const { repository, storage } = await reproductionSite();
+    const before = await storage.readSite("site");
+    const header = await readCmsSiteBloc(repository, { tag: "site-cedar-header" });
+    await expect(
+        updateCmsSiteBloc(repository, {
+            tag: "example--studio--section",
+            definitionId: header.definitionId,
+            revision: 1,
+            draftJson: header.draftJson,
+        }),
+    ).rejects.toThrow("site-owned");
+    await expect(repository.deleteSiteBloc("example--studio--section", 1, header.definitionId)).rejects.toThrow(
+        "immutable",
+    );
+    expect(await storage.readSite("site")).toEqual(before);
+});
 
 test("authored sources admit reusable structures without site editorial assets or copy", async () => {
     expect(artifact.release.blocs).toHaveLength(7);

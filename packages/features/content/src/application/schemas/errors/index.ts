@@ -1,4 +1,28 @@
 import { messageErrorSchema, pageValidationErrorSchema } from "content/application/schemas/errors/models";
+import { siteBlocReferencedSchema } from "content/application/schemas/site";
+export const siteBlocsReadErrors = {
+    NOT_FOUND: { retryable: false, output: messageErrorSchema },
+    INVALID_SITE_BLOC: { retryable: false, output: messageErrorSchema },
+    CORE_UNAVAILABLE: { retryable: true, output: messageErrorSchema },
+};
+export const siteBlocsUpdateErrors = {
+    NOT_FOUND: { retryable: false, output: messageErrorSchema },
+    REVISION_CONFLICT: { retryable: true, output: messageErrorSchema },
+    STATE_CONFLICT: { retryable: true, output: messageErrorSchema },
+    INVALID_SITE_BLOC: { retryable: false, output: messageErrorSchema },
+    UPGRADE_IN_PROGRESS: { retryable: true, output: messageErrorSchema },
+    CORE_UNAVAILABLE: { retryable: true, output: messageErrorSchema },
+};
+export const siteBlocsDeleteErrors = {
+    REFERENCE_CHECK_INCOMPLETE: { retryable: true, output: messageErrorSchema },
+    NOT_FOUND: { retryable: false, output: messageErrorSchema },
+    REVISION_CONFLICT: { retryable: true, output: messageErrorSchema },
+    STATE_CONFLICT: { retryable: true, output: messageErrorSchema },
+    INVALID_SITE_BLOC: { retryable: false, output: messageErrorSchema },
+    BLOC_REFERENCED: { retryable: false, output: siteBlocReferencedSchema },
+    UPGRADE_IN_PROGRESS: { retryable: true, output: messageErrorSchema },
+    CORE_UNAVAILABLE: { retryable: true, output: messageErrorSchema },
+};
 export const deliveryResolveResourceErrors = {
     INVALID_INPUT: { retryable: false, output: messageErrorSchema },
     FORBIDDEN: { retryable: false, output: messageErrorSchema },

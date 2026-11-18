@@ -1,14 +1,17 @@
+import type { StoredDocument, Filter } from "./fixtures/query";
+import { matches, project } from "./fixtures/query";
 import type { Db } from "mongodb";
 import { MongoContentRepository } from "@bernouy/content/mongo";
-import { FakeMongoClient, type FakeTransactionSupport } from "./fakeMongoSession";
+import { FakeMongoClient, type FakeTransactionSupport } from "./fixtures/fakeMongoSession";
 
-type StoredDocument = { _id: string } & Record<string, unknown>;
-type Filter = Record<string, unknown>;
 type ReplacementDocument = Record<string, unknown> & { _id?: string };
 
 export class FakeContentCollection {
     readonly indexes: Array<{ keys: Filter; options: Filter }> = [];
     readonly findCalls: Filter[] = [];
+    readonly findOptions: Array<{ projection?: Filter; maxTimeMS?: number }> = [];
+    readonly loadedResults: StoredDocument[][] = [];
+    beforeFind?: () => Promise<void>;
     readonly replaceOneCalls: Array<{
         filter: Filter;
         document: ReplacementDocument;
@@ -62,7 +65,10 @@ export class FakeContentCollection {
         return { matchedCount: 0, modifiedCount: 0, upsertedCount: 0 };
     }
 
-    find(filter: Filter = {}): {
+    find(
+        filter: Filter = {},
+        options: { projection?: Filter; maxTimeMS?: number } = {},
+    ): {
         sort: (order: Filter) => {
             limit: (count: number) => { toArray: () => Promise<StoredDocument[]> };
             toArray: () => Promise<StoredDocument[]>;
@@ -71,6 +77,7 @@ export class FakeContentCollection {
         toArray: () => Promise<StoredDocument[]>;
     } {
         this.findCalls.push(structuredClone(filter));
+        this.findOptions.push(structuredClone(options));
         let documents = [...this.documents.values()].filter((document) => matches(document, filter));
         const query = {
             sort: (order: Filter) => {
@@ -86,7 +93,14 @@ export class FakeContentCollection {
                 documents = documents.slice(0, count);
                 return query;
             },
-            toArray: async () => structuredClone(documents),
+            toArray: async () => {
+                await this.beforeFind?.();
+                const result = documents.map((document) =>
+                    options.projection ? project(document, options.projection) : document,
+                );
+                this.loadedResults.push(structuredClone(result));
+                return structuredClone(result);
+            },
         };
         return query;
     }
@@ -220,68 +234,4 @@ export function createMongoContentRepository(prefix = "") {
     const db = new FakeContentDb();
     const repository = new MongoContentRepository(db as unknown as Db, { collectionPrefix: prefix });
     return { db, repository };
-}
-
-function matches(document: StoredDocument, filter: Filter): boolean {
-    return Object.entries(filter).every(([key, expected]) => {
-        const { exists, value } = nestedValue(document, key);
-        if (expected && typeof expected === "object" && !Array.isArray(expected)) {
-            const operator = expected as {
-                $eq?: unknown;
-                $exists?: boolean;
-                $gt?: unknown;
-                $gte?: unknown;
-                $in?: unknown[];
-                $lt?: unknown;
-                $ne?: unknown;
-            };
-            if (operator.$exists !== undefined && exists !== operator.$exists) {
-                return false;
-            }
-            if (Object.prototype.hasOwnProperty.call(operator, "$ne") && value === operator.$ne) {
-                return false;
-            }
-            if (Object.prototype.hasOwnProperty.call(operator, "$eq") && !Bun.deepEquals(value, operator.$eq)) {
-                return false;
-            }
-            if (Object.prototype.hasOwnProperty.call(operator, "$gt") && String(value) <= String(operator.$gt)) {
-                return false;
-            }
-            if (Object.prototype.hasOwnProperty.call(operator, "$gte") && Number(value) < Number(operator.$gte)) {
-                return false;
-            }
-            if (operator.$in && !operator.$in.some((candidate) => Bun.deepEquals(value, candidate))) {
-                return false;
-            }
-            if (Object.prototype.hasOwnProperty.call(operator, "$lt") && Number(value) >= Number(operator.$lt)) {
-                return false;
-            }
-            if (
-                operator.$exists !== undefined ||
-                Object.prototype.hasOwnProperty.call(operator, "$ne") ||
-                Object.prototype.hasOwnProperty.call(operator, "$eq") ||
-                Object.prototype.hasOwnProperty.call(operator, "$gt") ||
-                Object.prototype.hasOwnProperty.call(operator, "$gte") ||
-                Object.prototype.hasOwnProperty.call(operator, "$in") ||
-                Object.prototype.hasOwnProperty.call(operator, "$lt")
-            ) {
-                return true;
-            }
-        }
-        return Array.isArray(value) && !Array.isArray(expected)
-            ? value.some((entry) => Bun.deepEquals(entry, expected))
-            : Bun.deepEquals(value, expected);
-    });
-}
-
-function nestedValue(document: StoredDocument, path: string): { exists: boolean; value: unknown } {
-    const segments = path.split(".");
-    let value: unknown = document;
-    for (const segment of segments) {
-        if (!value || typeof value !== "object" || !Object.prototype.hasOwnProperty.call(value, segment)) {
-            return { exists: false, value: undefined };
-        }
-        value = (value as Record<string, unknown>)[segment];
-    }
-    return { exists: true, value };
 }

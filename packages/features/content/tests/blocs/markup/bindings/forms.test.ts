@@ -14,6 +14,7 @@ const form = (attributes: string, children = "") =>
 function repository() {
     const writes: string[] = [];
     const inner = {
+        withContentReferenceWrite: async <T>(operation: () => Promise<T>) => operation(),
         getBlocsList: async () => [
             { id: "fixture-card", root: { accepts: ["div"] } },
             { id: "fixture-field", root: { accepts: ["div"] } },

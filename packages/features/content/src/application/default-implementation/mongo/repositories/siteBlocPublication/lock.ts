@@ -1,4 +1,6 @@
 import { randomUUIDv7 } from "bun";
+import { AsyncLocalStorage } from "node:async_hooks";
+import { ContentConflictError } from "content/application/core/validation/errors";
 import type { Collection, Db } from "mongodb";
 import {
     SiteBlocPublicationLockLostError,
@@ -13,14 +15,21 @@ import {
     RETRY_MS,
     STALE_COMMIT_MS,
     leaseExpiry,
+    samePublicationScope,
 } from "content/application/default-implementation/mongo/repositories/siteBlocPublication/state";
 import type { SiteBlocPublicationGuard } from "content/application/interfaces/ContentRepository";
+
+const holders = new AsyncLocalStorage<readonly { db: Db; locks: Collection<SiteBlocPublicationLockDoc> }[]>();
 
 export async function withMongoSiteBlocPublicationLock<T>(
     db: Db,
     locks: Collection<SiteBlocPublicationLockDoc>,
     operation: (guard: SiteBlocPublicationGuard) => Promise<T>,
 ): Promise<T> {
+    const parents = holders.getStore() ?? [];
+    if (parents.some((holder) => samePublicationScope(holder, { db, locks }))) {
+        throw new ContentConflictError("Nested content reference/publication operations are not supported");
+    }
     const token = randomUUIDv7();
     await acquire(locks, token);
     const state: MongoPublicationGuardState = { committing: false, db, locks, token };
@@ -30,16 +39,29 @@ export async function withMongoSiteBlocPublicationLock<T>(
         void assertHeld(state).catch(() => {});
     }, LEASE_MS / 3);
     try {
-        return await operation(guard);
+        return await holders.run([...parents, { db, locks }], () => operation(guard));
     } finally {
         clearInterval(heartbeat);
         MONGO_PUBLICATION_GUARDS.delete(guard);
-        await locks.deleteOne({ _id: LOCK_ID, token });
+        if (!state.retainFence) {
+            await locks.deleteOne({ _id: LOCK_ID, token });
+        }
     }
 }
 
 async function assertHeld(state: MongoPublicationGuardState): Promise<void> {
+    if (state.lost) {
+        throw new SiteBlocPublicationLockLostError();
+    }
+    if (state.enteringCommit) {
+        await state.enteringCommit;
+    }
     if (state.committing) {
+        // Transactional publication keeps the persisted lease phase until commit.
+        if (!(await state.locks.findOne({ _id: LOCK_ID, token: state.token }))) {
+            state.lost = true;
+            throw new SiteBlocPublicationLockLostError();
+        }
         return;
     }
     const result = await state.locks.updateOne(
@@ -47,11 +69,14 @@ async function assertHeld(state: MongoPublicationGuardState): Promise<void> {
         { $set: { expiresAt: leaseExpiry(), phase: "leased" } },
     );
     if (result.matchedCount !== 1) {
+        state.lost = true;
         throw new SiteBlocPublicationLockLostError();
     }
 }
 
 async function acquire(locks: Collection<SiteBlocPublicationLockDoc>, token: string): Promise<void> {
+    const deadline = Date.now() + 5000;
+    let delay = RETRY_MS;
     for (;;) {
         const current = await locks.findOne({ _id: LOCK_ID });
         const replacement: SiteBlocPublicationLockDoc = {
@@ -80,7 +105,11 @@ async function acquire(locks: Collection<SiteBlocPublicationLockDoc>, token: str
                 return;
             }
         }
-        await new Promise((resolve) => setTimeout(resolve, RETRY_MS));
+        if (Date.now() >= deadline) {
+            throw new SiteBlocPublicationLockLostError();
+        }
+        await new Promise((resolve) => setTimeout(resolve, Math.min(delay, deadline - Date.now())));
+        delay = Math.min(delay * 2, 250);
     }
 }
 

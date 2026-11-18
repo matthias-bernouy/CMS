@@ -33,13 +33,14 @@ test("Mongo skips page route migration for unrelated settings changes", async ()
     await repository.init();
     await repository.updateSystem({ site: { language: "fr", additionalLanguages: ["en"] } as never });
     await repository.insertPage("/about", "About");
-    const before = db.requestedCollections.filter((name) => name === "pages").length;
+    const pages = db.get("pages");
+    const before = pages.findCalls.length;
 
     await repository.updateSystem({ site: { favicon: "/logo.svg", activeLanguages: ["en"] } as never });
-    expect(db.requestedCollections.filter((name) => name === "pages")).toHaveLength(before);
+    expect(pages.findCalls).toHaveLength(before);
 
     await repository.updateSystem({ site: { additionalLanguages: ["en", "de"] } as never });
-    expect(db.requestedCollections.filter((name) => name === "pages").length).toBeGreaterThan(before);
+    expect(pages.findCalls.length).toBeGreaterThan(before);
 });
 
 test("Mongo resumes an interrupted language migration before exposing its new settings", async () => {

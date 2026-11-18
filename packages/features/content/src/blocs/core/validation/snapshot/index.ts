@@ -1,4 +1,5 @@
 import { ContentValidationError } from "content/application/core/validation/errors";
+import { checkSnapshotBudget, checkSnapshotBytes } from "./budget";
 import { isValidCustomElementTag } from "content/application/core/validation/predicates";
 import { validateSiteBlocDefaultContent } from "content/blocs/core/markup/validation/nativeContent";
 import {
@@ -16,6 +17,7 @@ const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
 const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
 
 export function validateSiteBlocSnapshot(value: SiteBlocSnapshot, ownerTag?: string): SiteBlocSnapshot {
+    checkSnapshotBudget(value);
     if (!isRecord(value)) {
         throw new ContentValidationError("draft", "object expected");
     }
@@ -38,7 +40,7 @@ export function validateSiteBlocSnapshot(value: SiteBlocSnapshot, ownerTag?: str
     if (ownerTag && dependencies.has(ownerTag)) {
         throw new ContentValidationError("draft.structure", "a site bloc cannot reference itself");
     }
-    return {
+    const snapshot = {
         name: value.name.trim(),
         group: value.group.trim(),
         description: value.description.trim(),
@@ -47,6 +49,8 @@ export function validateSiteBlocSnapshot(value: SiteBlocSnapshot, ownerTag?: str
         defaultContent,
         dependencies: [...dependencies].sort(),
     };
+    checkSnapshotBytes(JSON.stringify(snapshot));
+    return snapshot;
 }
 
 function validateSlots(slots: SiteBlocSlot[]): Set<string> {

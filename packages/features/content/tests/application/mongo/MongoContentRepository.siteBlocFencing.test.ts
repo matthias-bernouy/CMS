@@ -6,6 +6,27 @@ import { siteBlocArtifact, siteBlocDefinition } from "../../blocs/siteBlocFixtur
 import { FakeContentDb } from "./contentMongoFixture";
 
 describe("MongoContentRepository site bloc publication fencing", () => {
+    test("ownership checks during transactional publication accept the held lease and reject a stolen token", async () => {
+        const db = new FakeContentDb();
+        const repository = new MongoContentRepository(db as unknown as Db);
+        await repository.createSiteBloc(siteBlocDefinition());
+        await repository.withSiteBlocPublicationLock(async (guard) => {
+            const collection = db.get("blocs");
+            const replace = collection.replaceOne.bind(collection);
+            collection.replaceOne = async (...args) => {
+                await guard.assertHeld();
+                const result = await replace(...args);
+                const locks = db.get("site_bloc_publication_locks");
+                await locks.updateOne({ _id: "published-graph" }, { $set: { token: "successor" } });
+                await expect(guard.assertHeld()).rejects.toBeInstanceOf(SiteBlocPublicationLockLostError);
+                return result;
+            };
+            await repository.publishSiteBloc("site-feature-panel", siteBlocArtifact(), 1, undefined, guard);
+        });
+        expect((await db.get("site_bloc_publication_locks").findOne({ _id: "published-graph" }))?.token).toBe(
+            "successor",
+        );
+    });
     test("self-wraps direct writes and replaces the bloc in the lock transaction", async () => {
         const db = new FakeContentDb();
         const repository = new MongoContentRepository(db as unknown as Db);

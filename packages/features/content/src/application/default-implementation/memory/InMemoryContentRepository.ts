@@ -13,9 +13,13 @@ import { mergeSystemUpdate } from "content/settings/core/system";
 import { languageRoutesChanged } from "content/pages/core/lifecycle/pagePaths";
 import { countValues, normalizeTags } from "content/pages/core/queries/counts";
 import { InMemoryPageRepository } from "content/application/default-implementation/memory/InMemoryPageRepository";
+import { deleteMemorySiteBloc } from "content/application/default-implementation/memory/siteBlocDeletion";
 
 /** In-memory repository for local development and tests. */
 export class InMemoryContentRepository extends InMemoryPageRepository implements ContentRepository {
+    deleteSiteBloc(tag: string, revision: number, identity: string): Promise<void> {
+        return deleteMemorySiteBloc(this, this.blocs, tag, revision, identity);
+    }
     private readonly groups = new Map<string, SiteBlocGroup>();
     private pendingSystem: TSystem | null = null;
     private systemRevision = 0;

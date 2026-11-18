@@ -24,8 +24,12 @@ describe("MongoContentRepository content persistence", () => {
             { keys: { path: 1 }, options: { unique: true } },
             { keys: { "deletionIntent.requestedAt": 1 }, options: { sparse: true } },
             { keys: { "pathUpdateIntent.requestedAt": 1 }, options: { sparse: true } },
-            { keys: { contentReferences: 1 }, options: undefined },
+            { keys: { contentReferences: 1, _id: 1 }, options: undefined },
         ]);
+        expect(db.get("tenant_blocs").indexes).toContainEqual({
+            keys: { contentReferences: 1, _id: 1 },
+            options: undefined,
+        });
         expect(db.requestedCollections.every((name) => name.startsWith("tenant_"))).toBe(true);
     });
 

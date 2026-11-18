@@ -38,6 +38,18 @@ Use the exact contract selected on the site. Discover the available tool schemas
 - `theme.token.save`: Set one token override on one site theme profile and mode.
 - `theme.get`: Read a filtered collection theme workspace with resolved profile values.
 
+## Composition editing and favicon
+
+Content 1.2 adds `site-blocs.read`, `site-blocs.identity`, `site-blocs.update`
+and `site-blocs.delete`.
+Read [composition editing and deletion](site/compositions.md) for complete draft
+snapshots, revision control and bounded consumer refusals. Publication remains
+explicit; existing composition metadata operations retain their response shapes.
+
+`site.favicon.get` and `site.favicon.update` expose the configured favicon without
+changing Files visibility. Follow [favicon configuration](site/favicon.md) and use
+a permanent public reference.
+
 ## Errors and recovery
 
 Branch on the declared error code. `error.output.message` explains a refusal in the language supported by the Provider; never parse translated copy to decide whether a retry is safe. Check the selected schema and retryability. After a revision conflict, reread current state and review changes before retrying. A transport failure may leave a mutation outcome unknown; inspect current state before repeating a non-idempotent command.

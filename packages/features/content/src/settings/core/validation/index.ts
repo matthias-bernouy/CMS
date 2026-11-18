@@ -3,6 +3,7 @@ import { ContentValidationError } from "content/application/core/validation/erro
 import { validateThemeSettings } from "content/theme/core";
 import { validateSiteOrganizationPatch } from "content/settings/core/validation/organization";
 import { validatePageReference } from "content/pages/core/routing/values";
+import { validateFavicon } from "content/settings/core/favicon";
 
 type SiteOrganizationPatch = Omit<Partial<SiteOrganizationSettings>, "address"> & {
     address?: Partial<SiteOrganizationAddress>;
@@ -46,6 +47,9 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
             }
         }
         const site = { ...patch.site };
+        if (site.favicon !== undefined) {
+            site.favicon = validateFavicon(site.favicon);
+        }
         if (site.host !== undefined) {
             if (typeof site.host !== "string") {
                 throw new ContentValidationError("site.host", "string expected");

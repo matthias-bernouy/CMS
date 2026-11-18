@@ -75,7 +75,7 @@ export async function createProviderStores(
     onSelectionsCommitted?: (state: StoredContractSelections) => void,
     collectionVerifier?: CollectionVerifier,
 ) {
-    const mongo = new MongoClient(env.MONGO_URL);
+    const mongo = new MongoClient(env.MONGO_URL, { monitorCommands: true });
     await mongo.connect();
     const db = mongo.db();
     const journal = new MongoJournalStore(db);

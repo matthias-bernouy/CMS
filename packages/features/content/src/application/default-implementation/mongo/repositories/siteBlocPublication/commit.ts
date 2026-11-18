@@ -8,13 +8,41 @@ import {
 } from "content/application/default-implementation/mongo/repositories/siteBlocPublication/state";
 import type { SiteBlocPublicationGuard } from "content/application/interfaces/ContentRepository";
 
+/** Cross-repository validation keeps its lease; only the first storage mutation enters committing. */
+export async function beginMongoReferenceMutation(db: Db, guard: SiteBlocPublicationGuard) {
+    const state = MONGO_PUBLICATION_GUARDS.get(guard);
+    if (!state || state.db !== db || state.lost) {
+        throw new SiteBlocPublicationLockLostError();
+    }
+    if (state.enteringCommit) {
+        await state.enteringCommit;
+    }
+    if (state.committing) {
+        await guard.assertHeld();
+        return state;
+    }
+    state.enteringCommit = commitOnStandalone(state, async () => {
+        state.committing = true;
+    });
+    try {
+        await state.enteringCommit;
+    } catch (error) {
+        state.lost = true;
+        state.committing = false;
+        throw error;
+    } finally {
+        state.enteringCommit = undefined;
+    }
+    return state;
+}
+
 export async function commitMongoSiteBlocPublication<T>(
     db: Db,
     guard: SiteBlocPublicationGuard,
     operation: (session?: ClientSession) => Promise<T>,
 ): Promise<T> {
     const state = MONGO_PUBLICATION_GUARDS.get(guard);
-    if (!state || state.db !== db || state.committing) {
+    if (!state || state.db !== db || state.committing || state.lost) {
         throw new SiteBlocPublicationLockLostError();
     }
     state.committing = true;
@@ -31,6 +59,11 @@ export async function commitMongoSiteBlocPublication<T>(
             }
             return await commitOnStandalone(state, operation);
         }
+    } catch (error) {
+        if (error instanceof SiteBlocPublicationLockLostError) {
+            state.lost = true;
+        }
+        throw error;
     } finally {
         state.committing = false;
     }

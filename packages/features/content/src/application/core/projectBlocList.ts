@@ -1,7 +1,10 @@
 import type { BlocListItemResponse, BlocListOptions } from "content/application/interfaces/ContentRepository";
 import type { BlocRecord } from "content/blocs/interfaces/blocs";
 
-export function projectBlocList(records: BlocRecord[], options: BlocListOptions = {}): BlocListItemResponse[] {
+export function projectBlocList(
+    records: readonly Pick<BlocRecord, "tag" | "artifact" | "ownership">[],
+    options: BlocListOptions = {},
+): BlocListItemResponse[] {
     const editor = options.projection !== "rendering";
     return records.flatMap((record) => {
         const bloc = record.artifact;

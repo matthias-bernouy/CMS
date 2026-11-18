@@ -118,7 +118,12 @@ export interface ContentRepository {
     getBlocRecord(tag: string): Promise<BlocRecord | null>;
     getBlocRecords(): Promise<BlocRecord[]>;
     createSiteBloc(definition: SiteBlocDefinition): Promise<BlocRecord>;
-    saveSiteBlocDraft(tag: string, draft: SiteBlocSnapshot, expectedDraftRevision: number): Promise<SiteBlocDefinition>;
+    saveSiteBlocDraft(
+        tag: string,
+        draft: SiteBlocSnapshot,
+        expectedDraftRevision: number,
+        expectedDefinitionId?: string,
+    ): Promise<SiteBlocDefinition>;
     publishSiteBloc(
         tag: string,
         artifact: TBlocWrite,
@@ -128,6 +133,10 @@ export interface ContentRepository {
     ): Promise<BlocRecord>;
     archiveSiteBloc(tag: string, expectedDraftRevision: number): Promise<SiteBlocDefinition>;
     restoreSiteBloc(tag: string, expectedDraftRevision: number): Promise<SiteBlocDefinition>;
+    /** Delete only local compositions with no Page, draft or published Bloc consumers. */
+    deleteSiteBloc(tag: string, expectedDraftRevision: number, expectedDefinitionId: string): Promise<void>;
+    /** Serialize reference-producing validation and persistence with composition deletion. */
+    withContentReferenceWrite<T>(operation: () => Promise<T>): Promise<T>;
     withSiteBlocPublicationLock<T>(operation: (guard: SiteBlocPublicationGuard) => Promise<T>): Promise<T>;
 
     getBlocsList(options?: BlocListOptions, reads?: RenderingResourceReads): Promise<BlocListItemResponse[]>;

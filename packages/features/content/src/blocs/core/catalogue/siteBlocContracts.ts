@@ -138,7 +138,7 @@ function projectRecord(record: BlocRecord): CmsSiteBloc {
     return projectSiteBloc(record.siteDefinition);
 }
 
-function projectSiteBloc(definition: SiteBlocDefinition): CmsSiteBloc {
+export function projectSiteBloc(definition: SiteBlocDefinition): CmsSiteBloc {
     return {
         tag: definition.tag,
         name: definition.draft.name,

@@ -1,4 +1,4 @@
-import { siteBlocsRevision } from "content/blocs/core/catalogue/siteBlocsRevision";
+import { siteBlocsRevision, siteBlocRevision } from "content/blocs/core/catalogue/siteBlocsRevision";
 import type { RenderingResourceReads } from "content/application/core/RenderingResourceReads";
 import type { BlocListItemResponse, SiteBlocPublicationGuard } from "content/application/interfaces/ContentRepository";
 import type { BlocListOptions } from "content/application/interfaces/ContentRepository";
@@ -34,8 +34,20 @@ import {
     publishMongoSiteBloc,
     withMongoSiteBlocPublicationLock,
 } from "content/application/default-implementation/mongo/repositories/siteBlocPublication";
+import { withMongoContentReferenceWrite } from "content/application/default-implementation/mongo/repositories/siteBlocPublication/references";
+import { deleteMongoSiteBloc } from "content/application/default-implementation/mongo/repositories/siteBlocPublication/deletion";
 
 export class MongoBlocRepository extends MongoRepositoryStorage {
+    withContentReferenceWrite<T>(operation: () => Promise<T>): Promise<T> {
+        return withMongoContentReferenceWrite(this.db, this.siteBlocPublicationLocks, operation);
+    }
+
+    async deleteSiteBloc(tag: string, revision: number, identity: string): Promise<void> {
+        await this.requireReferenceFormat();
+        return this.withContentReferenceWrite(() =>
+            deleteMongoSiteBloc(this.blocs, this.pages, tag, revision, identity),
+        );
+    }
     async createBloc(write: TBlocWrite): Promise<TBloc> {
         const bloc = normalizeBlocWrite(write);
         if (bloc.ownership.kind === "site-builder") {
@@ -93,9 +105,10 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
         tag: string,
         draft: SiteBlocSnapshot,
         expectedDraftRevision: number,
+        expectedDefinitionId?: string,
     ): Promise<SiteBlocDefinition> {
         const current = await requireBlocRecord(this.blocs, tag);
-        const definition = nextDraftDefinition(current, draft, expectedDraftRevision);
+        const definition = nextDraftDefinition(current, draft, expectedDraftRevision, new Date(), expectedDefinitionId);
         await replaceSiteBlocRecord(
             this.blocs,
             tag,
@@ -138,6 +151,29 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
     }
 
     async getBlocsList(options: BlocListOptions = {}, reads?: RenderingResourceReads): Promise<BlocListItemResponse[]> {
+        if (options.projection === "rendering") {
+            const documents = await this.blocs
+                .find(
+                    {},
+                    {
+                        projection: {
+                            contentReferences: 0,
+                            "artifact.source": 0,
+                            "artifact.initialDocument": 0,
+                            "artifact.defaultContent": 0,
+                            "artifact.slots": 0,
+                            "artifact.settings": 0,
+                            "artifact.thumbnail": 0,
+                            "siteDefinition.draft": 0,
+                            "siteDefinition.published": 0,
+                        },
+                    },
+                )
+                .toArray();
+            const records = documents.map(({ _id, ...record }) => ({ tag: _id, ...structuredClone(record) }));
+            reads?.rememberRevision(this, "blocs", siteBlocsRevision(records));
+            return projectBlocList(records, options);
+        }
         const records = await this.getBlocRecords();
         reads?.rememberRevision(this, "blocs", siteBlocsRevision(records));
         return projectBlocList(records, options);
@@ -164,11 +200,11 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
         const records = await this.blocs
             .find(
                 { "ownership.kind": "site-builder" },
-                { projection: { _id: 1, "siteDefinition.publishedRevision": 1 } },
+                { projection: { _id: 1, "siteDefinition.id": 1, "siteDefinition.publishedRevision": 1 } },
             )
             .sort({ _id: 1 })
             .toArray();
-        return JSON.stringify(records.map((record) => [record._id, record.siteDefinition?.publishedRevision ?? null]));
+        return JSON.stringify(records.map((record) => siteBlocRevision(record._id, record.siteDefinition)));
     }
 
     async getBlocSource(htmlTag: string): Promise<Record<string, string> | null> {

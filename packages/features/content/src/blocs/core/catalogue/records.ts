@@ -7,6 +7,7 @@ import {
     SiteBlocPublishedSlotConflictError,
 } from "content/application/core/validation/errors";
 import { nextSiteBlocUpdatedAt } from "content/blocs/core/catalogue/timestamps";
+import { assertSiteBlocIdentity } from "content/blocs/core/catalogue/editing/references";
 import { assertBlocOwner, normalizeBlocWrite } from "content/blocs/core/catalogue/ownership";
 
 export {
@@ -31,8 +32,12 @@ export function nextDraftDefinition(
     draft: SiteBlocSnapshot,
     expectedRevision: number,
     now = new Date(),
+    expectedDefinitionId?: string,
 ): SiteBlocDefinition {
     const definition = activeSiteDefinition(record, "save a draft");
+    if (expectedDefinitionId !== undefined) {
+        assertSiteBlocIdentity(record, expectedDefinitionId);
+    }
     assertDraftRevision(record.tag, definition, expectedRevision);
     assertPublishedSlotContract(record.tag, definition, draft);
     return {

@@ -1,3 +1,9 @@
+import { siteBlocsRead } from "content/application/capabilities/site/blocs/editing/read";
+import { siteBlocsIdentity } from "content/application/capabilities/site/blocs/editing/identity";
+import { siteBlocsUpdate } from "content/application/capabilities/site/blocs/editing/update";
+import { siteBlocsDelete } from "content/application/capabilities/site/blocs/editing/delete";
+import { siteFaviconGet } from "content/application/capabilities/site/favicon/get";
+import { siteFaviconUpdate } from "content/application/capabilities/site/favicon/update";
 import { themeRead } from "./capabilities/theme/read";
 import { localizationTextsRead } from "./capabilities/localization/texts.read";
 import { defineFeature } from "@bernouy/ulvia-sdk";
@@ -35,12 +41,18 @@ export const contentFeature = defineFeature({
     "contractId": "ulvia/cms.content",
     "name": "CMS Content",
     "description": "Manage site settings, pages, localization and themes for one provider-selected CMS instance.",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "publisherId": "ulvia",
     "catalogue": { "icon": "pages", "categories": ["administration", "content"] },
     documents: new URL("../../docs/", import.meta.url),
     mapError: mapContentError,
     capabilities: [
+        siteBlocsIdentity,
+        siteFaviconUpdate,
+        siteFaviconGet,
+        siteBlocsDelete,
+        siteBlocsUpdate,
+        siteBlocsRead,
         themeRead,
         localizationTextsRead,
         deliveryResolveResource,
