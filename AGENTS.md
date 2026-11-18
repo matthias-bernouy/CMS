@@ -176,6 +176,13 @@ regeneration or personal release-cache discovery. Contract versions remain indep
 
 ## Documentation
 
+- Feature-package `docs/` directories are compiled into published contract
+  documentation, including Markdown files without capability links. Write them
+  for agents using the capabilities: task workflows, semantic constraints,
+  refusals and result verification. Put implementation details, adapter/storage
+  protocols and operator commands in repository-root `docs/development/` or
+  `docs/architecture/`; put dated implementation reviews in `docs/quality/`.
+
 - [docs/README.md](docs/README.md) is the documentation index.
 - [Workspace architecture](docs/architecture/README.md) explains package boundaries.
 - [Development](docs/development/README.md) documents current commands and validation.

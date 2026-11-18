@@ -67,6 +67,8 @@ completed browser journey or deployment.
 - [Files and responsive images](images/README.md).
 - [UI contracts](quality/ui-contracts.md): binding ownership, browser request
   diagnostics, source/form checks and current scanner limitations.
+- [Content correction evidence — 2026-11-18](quality/2026-11-18-content-recovery.md):
+  dated review fixes, regression coverage and verification limits.
 
 - [Reviewed Release Upgrades](architecture/release-upgrades.md): resource identity,
   usage inventories, reviewed switches, grants and Provider retention.

@@ -29,7 +29,11 @@ bindings, validation, and read models.
   and persisted sitemap snapshots; `./seo/http` exposes their HTTP handlers.
 - `@bernouy/content/theme` exposes browser-safe theme value resolution.
 - `@bernouy/content/mongo` exposes `MongoContentRepository` for composition
-  roots.
+  roots. Reference writes require a MongoClient constructed with
+  `monitorCommands: true`; command evidence distinguishes pre-send failures from
+  uncertain writes. `./mongo/maintenance` exposes explicit offline projection
+  upgrades and token-bound reference-fence recovery. See
+  [operator maintenance](../../../docs/development/content-storage.md); never run these implicitly.
 - `@bernouy/content/page-document` exposes the provider-neutral Page and
   Bloc document grammar shared by site content and external contributions.
 - File data belongs to providers implementing `ulvia/cms.files`. Content stores
