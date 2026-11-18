@@ -18,6 +18,7 @@ export function scenarioClient(inventory: CapabilityInventory, session: Scenario
             captureHeaders?: ClientCall["captureHeaders"];
             complete?: ClientCall["complete"];
             signal?: AbortSignal;
+            idempotencyKey?: string;
         }> = {},
     ) => {
         const target = inventory.targets.find(
@@ -43,6 +44,7 @@ export function scenarioClient(inventory: CapabilityInventory, session: Scenario
             ...(options.captureHeaders ? { captureHeaders: options.captureHeaders } : {}),
             ...(options.complete ? { complete: options.complete } : {}),
             ...(options.signal ? { signal: options.signal } : {}),
+            ...(options.idempotencyKey !== undefined ? { idempotencyKey: options.idempotencyKey } : {}),
             async assert(value: unknown) {
                 output = value;
                 await assert(value);

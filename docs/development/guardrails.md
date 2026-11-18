@@ -38,8 +38,10 @@ heuristic Mongo-loop rules remain deferred until their cases are precise.
 ## Work and timing budgets
 
 `verify` runs ordinary tests (including `tests/performance/repository` and
-Content rendering budgets), then typechecks `tests/performance/tsconfig.json`
-and runs the supplementary microbenchmarks in `tests/performance/benchmarks/run.ts`.
+Content rendering budgets), typechecks `tests/performance/tsconfig.json` and
+validates the complete capability scenario plan, bindings and budgets without
+executing the measured campaigns. `bun run perf` runs those campaigns separately,
+including the supplementary microbenchmarks in `tests/performance/benchmarks/run.ts`.
 That suite uses synthetic collection/compiler fixtures, read-only upgrade analysis and resolved
 Gateway contracts. Upgrade scans are capped at 500 Pages per batch and two
 passes. The validation growth ceiling is 12x for 4x the Blocs and examples;
@@ -91,8 +93,9 @@ loads and 256 waiters per load. Immutable snapshots classify Page access;
 actual invocations retain fresh authorization. Dynamic indexing remains live
 and private/no-store, including after a capability restriction.
 
-`verify` runs the CLI browser smoke and this Docker budget journey locally
-with candidate images. See [Content delivery](../architecture/content-delivery.md#shared-edge-response-cache)
+`verify` runs the CLI browser smoke and isolated TLS journey locally with
+candidate images. The full `bun run perf` campaign runs this Docker budget
+journey; exact `--scenario` selections skip supplementary benchmarks. See [Content delivery](../architecture/content-delivery.md#shared-edge-response-cache)
 for the implemented response cache, invalidation and process-local limits.
 
 

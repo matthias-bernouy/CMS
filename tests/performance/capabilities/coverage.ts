@@ -18,7 +18,11 @@ export type CoverageRow = Readonly<{
     status: "missing-plan" | "unattempted" | "uncovered" | "covered";
 }>;
 
-export function auditPlan(inventory: CapabilityInventory, scenarios: readonly ScenarioDefinition[]): Finding[] {
+export function auditPlan(
+    inventory: CapabilityInventory,
+    scenarios: readonly ScenarioDefinition[],
+    required: readonly Obligation[] = inventory.targets.flatMap(requiredObligations),
+): Finding[] {
     const targets = new Map(inventory.targets.map((target) => [target.key, target]));
     const declared = new Set<string>();
     const ids = new Set<string>();
@@ -88,7 +92,7 @@ export function auditPlan(inventory: CapabilityInventory, scenarios: readonly Sc
             declared.add(obligationKey(obligation));
         }
     }
-    for (const obligation of inventory.targets.flatMap(requiredObligations)) {
+    for (const obligation of required) {
         if (!declared.has(obligationKey(obligation))) {
             findings.push({
                 code: "missing-scenario",
@@ -104,6 +108,7 @@ export function coverageMatrix(
     inventory: CapabilityInventory,
     scenarios: readonly ScenarioDefinition[],
     results: readonly ScenarioResult[],
+    required: readonly Obligation[] = inventory.targets.flatMap(requiredObligations),
 ): CoverageRow[] {
     const declarations = new Map<string, ScenarioDefinition[]>();
     const attempts = new Map<string, ScenarioResult[]>();
@@ -123,7 +128,7 @@ export function coverageMatrix(
             }
         }
     }
-    return inventory.targets.flatMap(requiredObligations).map((obligation) => {
+    return required.map((obligation) => {
         const key = obligationKey(obligation);
         const declared = declarations.get(key) ?? [];
         const ids = new Set(declared.map(({ id }) => id));
@@ -132,6 +137,7 @@ export function coverageMatrix(
         const complete = declared.every(
             (scenario) =>
                 attempts.get(scenario.id)?.length === 1 &&
+                attempts.get(scenario.id)?.[0]?.status === "passed" &&
                 distinctWitnessedSamples(measurements.filter((measurement) => measurement.scenario === scenario.id)) >=
                     scenario.samples,
         );

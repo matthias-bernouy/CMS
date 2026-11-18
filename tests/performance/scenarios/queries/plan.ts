@@ -12,15 +12,15 @@ export function queryScenarios(inventory: CapabilityInventory, fixture: string):
         (recipe) => {
             const target = findTarget(inventory, recipe);
             return target.definition.bindings.flatMap((binding) =>
-                (["nominal", "warm", "concurrent"] as const).map((variant) => {
+                (["nominal", "cold", "warm", "concurrent"] as const).map((variant) => {
                     const obligation = { target: target.key, binding: binding.id, variant };
                     const definition = {
                         id: `${recipe.family}.${recipe.capability}.${binding.id}.${variant}`,
-                        version: 1,
+                        version: 2,
                         fixture,
                         obligations: [obligation],
                         budget: budgetFor(target, variant),
-                        samples: 10,
+                        samples: variant === "cold" ? 3 : 10,
                         ...loadPolicy(variant),
                     };
                     return { definition, target, obligation, recipe };

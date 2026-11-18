@@ -3,6 +3,7 @@ import { compileHttpBinding, encodeHttpFieldParameter, encodeHttpParameter } fro
 import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import type { UlviaScalarSchema } from "@bernouy/ulvia-contracts/schema";
 import type { CapabilityTarget } from "../../capabilities/types";
+import { requestKey } from "./key";
 
 export function isolatedOrigin(value: string): string {
     const url = new URL(value);
@@ -27,6 +28,7 @@ export function capabilityRequest(
     input: Readonly<Record<string, unknown>>,
     credentials: Readonly<{ cookie?: string; token?: string }> = {},
     traceId: string = randomUUID(),
+    idempotencyKey?: string,
 ) {
     isolatedOrigin(origin);
     validateSchemaValue(target.definition.input, input);
@@ -75,8 +77,9 @@ export function capabilityRequest(
             headers.set(entry.wireName, encoded);
         }
     }
-    if (target.definition.behavior.effect === "command" && target.definition.behavior.idempotency === "keyed") {
-        headers.set("idempotency-key", randomUUID());
+    const key = requestKey(target, idempotencyKey);
+    if (key) {
+        headers.set("idempotency-key", key);
     }
     let body: BodyInit | undefined;
     let requestBytes = 0;

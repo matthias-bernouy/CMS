@@ -22,6 +22,26 @@ test("comparisons refuse missing references, changed fixtures and different envi
     ).toBe(false);
 });
 
+test("the same complete scenarios in a different order cannot silently change cache and dataset conditions", async () => {
+    const fixture = await reportFixture();
+    const ids = ["first", "second"];
+    const report = {
+        ...fixture,
+        scenarios: ids.map((id) => ({ ...fixture.scenarios[0]!, id })),
+        results: ids.map((scenario) => ({
+            ...fixture.results[0]!,
+            scenario,
+            measurements: fixture.results[0]!.measurements.map((row) => ({ ...row, scenario })),
+        })),
+    };
+    expect(compareReports(report, report).comparable).toBe(true);
+    const reversed = { ...report, scenarios: [...report.scenarios].reverse() };
+    const comparison = compareReports(reversed, report);
+    expect(comparison.comparable).toBe(false);
+    expect(comparison.changes).toEqual([]);
+    expect(comparison.findings.some((row) => row.message === "Reference scenario execution order differs")).toBe(true);
+});
+
 test("a real slowdown is reported without moving the reference or turning incomplete samples into zero", async () => {
     const reference = await reportFixture();
     const before = JSON.stringify(reference);
@@ -105,4 +125,26 @@ test("cold comparisons require separate process epochs even when request traces 
     expect(compareReports(cold(true), cold(true)).comparable).toBe(true);
     expect(compareReports(cold(false), cold(true)).findings[0]?.code).toBe("incomplete-comparison");
     expect(compareReports(cold(true), cold(false)).findings[0]?.code).toBe("incomplete-comparison");
+});
+
+test("explicitly contaminated, interrupted-fixture and changing-source runs cannot become regression evidence", async () => {
+    const reference = await reportFixture();
+    for (const code of [
+        "source-changed-during-run",
+        "assessment-fixture-failed",
+        "measurement-contaminated",
+        "assessment-runtime-exited",
+        "assessment-runtime-state-unavailable",
+        "cleanup-failed",
+    ]) {
+        const diagnostic = {
+            ...reference,
+            findings: [...reference.findings, { code, message: "Diagnostic evidence only" }],
+        };
+        for (const comparison of [compareReports(diagnostic, reference), compareReports(reference, diagnostic)]) {
+            expect(comparison.comparable).toBe(false);
+            expect(comparison.changes).toEqual([]);
+            expect(comparison.findings.some((finding) => finding.code === "incompatible-reference")).toBe(true);
+        }
+    }
 });

@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { assertCondition } from "../queries/types";
 import { fixturePage } from "./client";
+import { verifyPageRefusals } from "./scale/verify";
+import { preparePageState } from "./scale/preparation";
+import type { PagePreparation } from "./scale/preparation";
 import type { PageClient } from "./client";
 import type { PreparedSample } from "../../harness/execution/samples";
 
@@ -15,18 +18,30 @@ export const PAGE_CAPABILITIES = [
     "pages.delete",
 ] as const;
 
-export async function preparePage(client: PageClient, capability: string, binding: string): Promise<PreparedSample> {
+export async function preparePage(
+    client: PageClient,
+    capability: string,
+    binding: string,
+    options: PagePreparation = {},
+): Promise<PreparedSample> {
     const suffix = randomUUID();
     const title = `Performance ${suffix}`;
     const path = `/performance-${suffix}`;
-    const page = capability === "pages.create" ? null : await fixturePage(client, "pages.create", { path, title });
+    const { page, content, creation, marker } = await preparePageState(
+        client,
+        capability,
+        binding,
+        path,
+        title,
+        options,
+    );
     const localization = ["pages.update-route", "pages.update-seo"].includes(capability)
         ? await fixturePage(client, "localization.get", {})
         : null;
     let result: Readonly<Record<string, unknown>> | undefined;
     const input =
         capability === "pages.create"
-            ? { path, title }
+            ? creation
             : capability === "pages.get"
               ? { id: page!.id }
               : {
@@ -50,12 +65,33 @@ export async function preparePage(client: PageClient, capability: string, bindin
         async send() {
             const call = await client(capability, binding, input, (output) => {
                 result = output;
+                if (
+                    (options.history || options.contentBytes || options.invalidate) &&
+                    page &&
+                    capability !== "pages.get" &&
+                    capability !== "pages.delete"
+                ) {
+                    assertCondition(output.revision === Number(page.revision) + 1, "page-scale-mutation-revision");
+                }
                 assertCondition(typeof output.id === "string" && (!page || output.id === page.id));
                 if (capability === "pages.create") {
                     assertCondition(output.path === path && output.title === title);
                 }
                 if (capability === "pages.get") {
                     assertCondition(output.path === path && output.title === title);
+                    if (options.history) {
+                        assertCondition(
+                            output.revision === page!.revision &&
+                                output.description === `Previous controlled revision ${(options.history ?? 0) - 1}`,
+                            "page-scale-history-stale",
+                        );
+                    }
+                    if (content) {
+                        assertCondition(output.content === content);
+                    }
+                    if (options.invalidate) {
+                        assertCondition(output.description === marker && output.revision === page!.revision);
+                    }
                 }
                 if (capability === "pages.update") {
                     assertCondition(output.description === "Updated performance description");
@@ -84,6 +120,7 @@ export async function preparePage(client: PageClient, capability: string, bindin
             return call.observation;
         },
         async verify() {
+            let persisted: Readonly<Record<string, unknown>> | undefined;
             if (!result) {
                 throw new Error("No valid Page mutation result");
             }
@@ -92,6 +129,7 @@ export async function preparePage(client: PageClient, capability: string, bindin
                 assertCondition(Array.isArray(listing.items) && !listing.items.some((item) => item.id === page!.id));
             } else {
                 const stored = await fixturePage(client, "pages.get", { id: result.id });
+                persisted = stored;
                 assertCondition(stored.id === result.id && stored.revision === result.revision);
                 for (const field of ["title", "path", "description", "visible", "routes", "seoEntries"]) {
                     if (Object.hasOwn(result, field)) {
@@ -99,6 +137,7 @@ export async function preparePage(client: PageClient, capability: string, bindin
                     }
                 }
             }
+            await verifyPageRefusals(client, capability, input, result, persisted, options);
         },
         async close() {
             const id = result?.id ?? page?.id;

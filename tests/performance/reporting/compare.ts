@@ -1,6 +1,7 @@
 import { regression, statistics } from "../harness/measurements/statistics";
 import { distinctWitnessedSamples, witnessed } from "../capabilities/evidence";
 import { obligationKey } from "../capabilities/types";
+import { selectionFindings } from "./scope";
 import type { Comparison, RunReport } from "./types";
 import type { Finding } from "../capabilities/types";
 
@@ -20,6 +21,28 @@ export function compareReports(
             changes,
         };
     }
+    const ineligible = new Set([
+        "source-changed-during-run",
+        "assessment-fixture-failed",
+        "measurement-contaminated",
+        "assessment-runtime-exited",
+        "assessment-runtime-state-unavailable",
+        "cleanup-failed",
+    ]);
+    for (const [name, report] of [
+        ["Candidate", candidate],
+        ["Reference", reference],
+    ] as const) {
+        if (
+            selectionFindings(report.metadata, report.scenarios).length ||
+            report.findings.some((finding) => ineligible.has(finding.code))
+        ) {
+            findings.push({
+                code: "incompatible-reference",
+                message: `${name} has an explicit measurement eligibility failure`,
+            });
+        }
+    }
     for (const [name, same] of [
         ["environment", candidate.metadata.profile.fingerprint === reference.metadata.profile.fingerprint],
         [
@@ -27,6 +50,15 @@ export function compareReports(
             candidate.metadata.profile.instrumentationDigest === reference.metadata.profile.instrumentationDigest,
         ],
         ["inventory", candidate.inventory.fingerprint === reference.inventory.fingerprint],
+        [
+            "scenario selection",
+            JSON.stringify(candidate.metadata.selection) === JSON.stringify(reference.metadata.selection),
+        ],
+        [
+            "scenario execution order",
+            JSON.stringify(candidate.scenarios.map((scenario) => scenario.id)) ===
+                JSON.stringify(reference.scenarios.map((scenario) => scenario.id)),
+        ],
         [
             "required coverage",
             JSON.stringify(candidate.coverage.map((row) => obligationKey(row.obligation))) ===
@@ -72,7 +104,7 @@ export function compareReports(
         for (const obligation of scenario.obligations) {
             const samples = (report: RunReport) =>
                 report.results
-                    .filter((result) => result.scenario === scenario.id)
+                    .filter((result) => result.scenario === scenario.id && result.status === "passed")
                     .flatMap((result) => result.measurements)
                     .filter(
                         (sample) =>

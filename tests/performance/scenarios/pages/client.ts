@@ -1,3 +1,4 @@
+import { ClientFailure } from "../../harness/clients/failure";
 import { scenarioClient } from "../../harness/clients/session";
 import { requireRecord } from "../queries/types";
 import type { CapabilityInventory } from "../../capabilities/types";
@@ -26,7 +27,9 @@ export type PageClient = ReturnType<typeof pageClient>;
 export async function fixturePage(client: PageClient, capability: string, input: Readonly<Record<string, unknown>>) {
     const result = await client(capability, "http", input);
     if (!result.observation.validated || !result.output) {
-        throw new Error("Page fixture could not produce valid state");
+        throw new ClientFailure(
+            `page-fixture-${capability}-${result.observation.failure ?? `http-status-${result.observation.status}`}`,
+        );
     }
     return result.output;
 }

@@ -1,5 +1,6 @@
 import type { CapabilityInventory, Finding, ScenarioDefinition, ScenarioResult } from "../capabilities/types";
 import type { CoverageRow } from "../capabilities/coverage";
+import type { ContractParentReference } from "@bernouy/ulvia-contracts";
 
 export type EnvironmentProfile = Readonly<{
     id: string;
@@ -13,6 +14,8 @@ export type EnvironmentProfile = Readonly<{
     mongoVersion: string;
     instrumentationDigest: string;
     limits: Readonly<Record<string, Readonly<{ cpus: number; memoryBytes: number }>>>;
+    services?: Readonly<Record<string, Readonly<{ programDigest: string; cpus: number; memoryBytes: number }>>>;
+    bootstrap?: Readonly<{ pin: ContractParentReference; providerDigest: string }>;
 }>;
 
 export type ImageIdentity = Readonly<{
@@ -29,6 +32,8 @@ export type RunMetadata = Readonly<{
     revision: string;
     sourceDigest: string;
     dirty: boolean;
+    sourceArchive?: Readonly<{ archiveSha256: string; manifestSha256: string }>;
+    selection?: Readonly<{ kind: "selected-scenarios"; scenarioIds: readonly string[]; plannedScenarios: number }>;
     profile: EnvironmentProfile;
     images: readonly ImageIdentity[];
 }>;

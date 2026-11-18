@@ -22,7 +22,8 @@
         "verify": "bun run infra/workspace.ts verify",
         "build": "bun run build.ts",
         "publish": "bun run infra/distribution/publish.ts",
-        "clean": "bun run quality/ci/clean.ts"
+        "clean": "bun run quality/ci/clean.ts",
+        "perf": "bun run infra/workspace.ts perf"
     },
     "devDependencies": {
         "@bernouy/binary-media": "workspace:*",
@@ -35,11 +36,14 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/repository": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
+        "@bernouy/email-smtp": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/hosting": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
+        "@bernouy/secrets": "workspace:*",
         "@bernouy/ulvia-cli": "workspace:*",
         "@biomejs/biome": "2.6.4",
         "@types/bun": "1.4.4",

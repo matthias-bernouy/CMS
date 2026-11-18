@@ -4,6 +4,7 @@ import { isolatedOrigin } from "../transport/http";
 import { observe } from "./observe";
 import { ClientFailure } from "./failure";
 import type { ClientCall, McpTool } from "./types";
+import { requestKey } from "../transport/key";
 
 export async function observeMcp(call: ClientCall, tools: readonly McpTool[]) {
     isolatedOrigin(call.origin);
@@ -23,15 +24,14 @@ export async function observeMcp(call: ClientCall, tools: readonly McpTool[]) {
         throw new Error("Exact MCP binding, release or authenticated fixture is missing");
     }
     const traceId = randomUUID();
-    const keyed =
-        call.target.definition.behavior.effect === "command" && call.target.definition.behavior.idempotency === "keyed";
+    const key = requestKey(call.target, call.idempotencyKey);
     const body = JSON.stringify({
         jsonrpc: "2.0",
         id: traceId,
         method: "tools/call",
         params: {
             name: tool.name,
-            arguments: { input: call.input, ...(keyed ? { idempotencyKey: randomUUID() } : {}) },
+            arguments: { input: call.input, ...(key ? { idempotencyKey: key } : {}) },
         },
     });
     return observe(
@@ -57,10 +57,26 @@ export async function observeMcp(call: ClientCall, tools: readonly McpTool[]) {
                 throw new ClientFailure("unexpected-mcp-http-status");
             }
             const message = JSON.parse(new TextDecoder().decode(bytes));
+            if (message.jsonrpc !== "2.0" || message.id !== traceId || message.error || !message.result) {
+                throw new ClientFailure("mcp-envelope-mismatch");
+            }
             if (message.result?.isError) {
                 const code = message.result.structuredContent?.error?.code;
-                const declared = call.target.definition.errors.some((error) => error.code === code);
-                throw new ClientFailure(declared ? `mcp-declared-${code}` : "mcp-error-result");
+                const declared = call.target.definition.errors.find((error) => error.code === code);
+                if (!declared || message.result.isError !== true) {
+                    throw new ClientFailure("mcp-error-result");
+                }
+                try {
+                    const output = message.result.structuredContent.error.output;
+                    if (declared.output) {
+                        validateSchemaValue(declared.output, output);
+                    } else if (output !== undefined) {
+                        throw new Error("Undeclared error output");
+                    }
+                } catch {
+                    throw new ClientFailure("mcp-error-output-invalid");
+                }
+                throw new ClientFailure(`mcp-declared-${code}`);
             }
             if (
                 message.jsonrpc !== "2.0" ||

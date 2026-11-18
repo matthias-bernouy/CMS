@@ -123,7 +123,10 @@ bun run build               # types, browser runtimes and official bootstrap
 bun run check               # all static diagnostics, including types
 bun run clean               # cleans TypeScript state, package dist and tsbuildinfo
 bun run test                # maintained workspace tests
-bun run verify              # checks, tests, performance, browser, Docker and TLS
+bun run verify              # checks, tests, static performance guards, browser and TLS
+bun run perf --list         # list exact performance scenario IDs without Docker
+bun run perf                # measured performance campaign and budgets
+bun run perf --scenario <id> # measure only the selected scenario
 ```
 
 The source CLI has no embedded initial image version. On an empty installation,

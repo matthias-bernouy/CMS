@@ -105,3 +105,29 @@ test("measured regressions and missing metrics fail independently of the scenari
     );
     expect(auditBudgets([f.scenario], [])[0]?.code).toBe("insufficient-samples");
 });
+
+test("failed postconditions or cleanup cannot claim complete coverage even when all raw samples have invocation witnesses", async () => {
+    const fixture = await inventoryFixture();
+    for (const status of ["failed", "blocked"] as const) {
+        const results = [
+            {
+                scenario: fixture.scenario.id,
+                status,
+                failure: "fixture-postcondition-or-cleanup-failed",
+                measurements: [fixture.measurement],
+            },
+        ];
+        const rows = coverageMatrix(fixture.inventory, [fixture.scenario], results);
+        const selected = rows.find(
+            (row) =>
+                row.obligation.target === fixture.target.key &&
+                row.obligation.binding === "http" &&
+                row.obligation.variant === "nominal",
+        )!;
+        expect(selected.successful).toBe(1);
+        expect(selected.status).toBe("uncovered");
+        expect(
+            auditExecution([fixture.scenario], results, rows).some((row) => row.code === "scenario-not-passed"),
+        ).toBe(true);
+    }
+});

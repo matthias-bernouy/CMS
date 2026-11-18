@@ -29,7 +29,11 @@ export async function sourceProvenance(root = resolve(import.meta.dir, "../../..
     return { revision, sourceDigest: hash.digest("hex"), dirty: Boolean(patch || untracked.length) };
 }
 
-export function environmentProfile(instrumentationDigest: string): EnvironmentProfile {
+export function environmentProfile(
+    instrumentationDigest: string,
+    services?: EnvironmentProfile["services"],
+    bootstrap?: EnvironmentProfile["bootstrap"],
+): EnvironmentProfile {
     const machine = cpus();
     const data = {
         id: "docker-cms-v1",
@@ -42,6 +46,8 @@ export function environmentProfile(instrumentationDigest: string): EnvironmentPr
         mongoVersion: "7.0.37",
         instrumentationDigest,
         limits: RESOURCE_LIMITS,
+        ...(services ? { services: structuredClone(services) } : {}),
+        ...(bootstrap ? { bootstrap: structuredClone(bootstrap) } : {}),
     };
     return { ...data, fingerprint: createHash("sha256").update(JSON.stringify(data)).digest("hex") };
 }

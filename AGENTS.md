@@ -139,6 +139,7 @@ Use Bun commands from the workspace root unless a package says otherwise:
 bun install
 bun run check
 bun run verify
+bun run perf
 bun run format
 bun run build
 bun run test
@@ -161,9 +162,11 @@ regeneration or personal release-cache discovery. Contract versions remain indep
   `bun install --frozen-lockfile` before running the initial check.
 - For code changes, run `bun run check` before making changes and `bun run
   verify` before handoff. Run them in the same task workspace so the final report
-  can be compared with that task's starting state. `verify` includes the browser,
-  Docker delivery and TLS journeys; Docker Compose, Chromium and local listeners
-  are required. Missing prerequisites fail verification.
+  can be compared with that task's starting state. `verify` includes the functional browser and TLS journeys plus static
+  performance-plan/harness checks; Docker Compose, Chromium and local listeners
+  are required. Real performance measurements and budgets belong to `bun run perf`,
+  which is separate and supports `--list` and repeated exact `--scenario` IDs.
+  Do not start a long measurement campaign merely to validate unrelated changes. Missing prerequisites fail verification.
 - When concurrent work may modify the same checkout, create or use an isolated
   Git worktree before the initial check. Read-only reviews can share a checkout.
   Do not fix findings from another worktree or unrelated pre-existing findings

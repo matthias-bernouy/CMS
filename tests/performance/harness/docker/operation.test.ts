@@ -31,10 +31,24 @@ test("async work includes poll costs but only the root binding and executed dura
         capabilityId: "status",
         spanId: "poll-handler",
     };
-    const mongo = { kind: "mongo", traceId: "root", spanId: "handler" };
+    const mongo = { kind: "mongo", database: "fixture", traceId: "root", spanId: "handler" };
     const profiles = [
-        { traceId: "root", operations: 1, documentsExamined: 2, keysExamined: 2, documentsReturned: 1 },
-        { traceId: "poll", operations: 1, documentsExamined: 3, keysExamined: 3, documentsReturned: 1 },
+        {
+            database: "fixture",
+            traceId: "root",
+            operations: 1,
+            documentsExamined: 2,
+            keysExamined: 2,
+            documentsReturned: 1,
+        },
+        {
+            database: "fixture",
+            traceId: "poll",
+            operations: 1,
+            documentsExamined: 3,
+            keysExamined: 3,
+            documentsReturned: 1,
+        },
     ];
     const rows = [root, operation, poll, mongo, { ...mongo, traceId: "poll", spanId: "poll-handler" }];
     const result = collectMetrics("root", rows, profiles, true, target, ["poll"], true);

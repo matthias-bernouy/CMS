@@ -7,7 +7,7 @@ test("focused test arguments are forwarded and verify rejects partial selection"
     expect(() => workspaceSteps("verify", ["--only", "tests"])).toThrow("Usage:");
 });
 
-test("verify prepares each prerequisite once and includes browser, Docker and TLS acceptance", () => {
+test("verify retains functional acceptance and static performance guards without measured campaigns", () => {
     const steps = workspaceSteps("verify", []);
     expect(steps.filter(({ args }) => args.includes("infra/bootstrap.ts"))).toHaveLength(1);
     expect(steps.filter(({ args }) => args.includes("build:browser"))).toHaveLength(1);
@@ -15,15 +15,25 @@ test("verify prepares each prerequisite once and includes browser, Docker and TL
         "packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts",
     );
     expect(steps.filter(({ args }) => args.includes("infra/images/build.ts"))).toHaveLength(1);
-    expect(
-        steps.find(({ args }) => args.includes("tests/performance/delivery/run.ts"))?.env?.ULVIA_MCP_EDGE_DOCKER_IMAGE,
-    ).toBe("docker.io/cyaxis/ulvia-edge:0.1.0-verify");
     expect(steps.at(-1)?.env?.ULVIA_TLS_TEST_IMAGE).toBe("docker.io/cyaxis/ulvia-provider:0.1.0-verify");
-    expect(steps.at(-2)?.args).toContain("tests/performance/assessment/run.ts");
-    expect(steps.some(({ args }) => args.includes("tests/performance/benchmarks/collections/repository/run.ts"))).toBe(
-        true,
-    );
-    expect(steps.at(-1)?.args).toContain("packages/runtimes/ulvia-provider-server/tests/hosting/tls/run.ts");
+    expect(steps.some(({ args }) => args.includes("tests/performance/command/check.ts"))).toBe(true);
+    expect(steps.filter(({ args }) => args.includes("tests/performance/compatibility/run.ts"))).toHaveLength(1);
+    for (const removed of [
+        "tests/performance/assessment/run.ts",
+        "tests/performance/delivery/run.ts",
+        "tests/performance/benchmarks/run.ts",
+        "tests/performance/benchmarks/collections/repository/run.ts",
+    ]) {
+        expect(steps.some(({ args }) => args.includes(removed))).toBe(false);
+    }
+});
+
+test("perf forwards exact selections and listing to preflight without unconditional image builds", () => {
+    const args = ["--scenario", "example", "--list"];
+    const steps = workspaceSteps("perf", args);
+    expect(steps).toHaveLength(2);
+    expect(steps[0]?.args).toContain("infra/bootstrap.ts");
+    expect(steps[1]?.args).toEqual(["bun", "run", "tests/performance/command/run.ts", ...args]);
 });
 
 test("performance failures still allow later journeys while failed prerequisites stop dependent stages", async () => {

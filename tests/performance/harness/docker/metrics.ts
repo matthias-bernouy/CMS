@@ -1,4 +1,5 @@
-import type { InvocationWitness, WorkMetrics } from "../../capabilities/types";
+import type { InvocationWitness, WorkMetrics, DependencyMetrics } from "../../capabilities/types";
+import { dependencyEvidence } from "../services/dependencies";
 import type { ProbeRow } from "./probe";
 import type { ProfileMetrics } from "./profiler";
 
@@ -13,7 +14,9 @@ export function collectMetrics(
     businessTarget?: string,
     relatedTraces: readonly string[] = [],
     requireOperation = false,
+    dependencies?: readonly DependencyMetrics[],
 ) {
+    const dependency = dependencyEvidence(businessTarget, dependencies);
     const traces = new Set([traceId, ...relatedTraces]);
     const selected = rows.filter((row) => typeof row.traceId === "string" && traces.has(row.traceId));
     const roots = selected.filter((row) => row.traceId === traceId);
@@ -82,24 +85,37 @@ export function collectMetrics(
                     String(invocation.target).includes(`@${row.contractVersion}#`),
             ),
     );
-    const valid = profile.every((row) =>
-        [row.operations, row.documentsExamined, row.keysExamined, row.documentsReturned].every(nonnegative),
+    const valid = profile.every(
+        (row) =>
+            typeof row.database === "string" &&
+            row.database.length > 0 &&
+            [row.operations, row.documentsExamined, row.keysExamined, row.documentsReturned].every(nonnegative),
     );
     const work: WorkMetrics = {
         mongoOperations: mongo.length,
         documentsExamined: profile.reduce((sum, row) => sum + row.documentsExamined, 0),
         keysExamined: profile.reduce((sum, row) => sum + row.keysExamined, 0),
         documentsReturned: profile.reduce((sum, row) => sum + row.documentsReturned, 0),
-        internalRequests: calls.length,
-        internalResponseBytes: bodies.reduce((sum, row) => sum + (nonnegative(row.bytes) ? row.bytes : 0), 0),
+        internalRequests: calls.length + dependency.requests,
+        internalResponseBytes:
+            bodies.reduce((sum, row) => sum + (nonnegative(row.bytes) ? row.bytes : 0), 0) + dependency.responseBytes,
         instrumentationComplete:
             healthy &&
+            dependency.complete &&
             valid &&
             (!requireOperation || operations.length === 1) &&
             !selected.some((row) => row.kind === "overflow") &&
             bodies.length === calls.length &&
             bodies.every((row) => row.complete === true && nonnegative(row.bytes)) &&
-            mongo.every((command) => profile.some((row) => row.traceId === command.traceId && row.operations > 0)),
+            mongo.every(
+                (command) =>
+                    typeof command.database === "string" &&
+                    command.database.length > 0 &&
+                    profile.some(
+                        (row) =>
+                            row.database === command.database && row.traceId === command.traceId && row.operations > 0,
+                    ),
+            ),
     };
     const spans = new Set(business.map((row) => row.spanId));
     for (let previous = -1; previous !== spans.size; ) {
@@ -146,7 +162,7 @@ export function collectMetrics(
     return {
         work,
         invocations,
-        ...(network.length ? { network } : {}),
+        ...(network.length || dependency.network.length ? { network: [...network, ...dependency.network] } : {}),
         ...(phases.length ? { phases } : {}),
         ...(businessTarget
             ? {
@@ -161,7 +177,7 @@ export function collectMetrics(
                       commonMongoOperations: mongo.length - businessMongo - pollMongo,
                       businessDocumentsExamined: businessDocuments,
                       commonDocumentsExamined: work.documentsExamined - businessDocuments - pollDocuments,
-                      businessInternalRequests: businessRequests,
+                      businessInternalRequests: businessRequests + dependency.requests,
                       commonInternalRequests: calls.length - businessRequests - pollRequests,
                       ...(relatedTraces.length
                           ? {

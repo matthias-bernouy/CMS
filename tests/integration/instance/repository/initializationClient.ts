@@ -48,6 +48,18 @@ export function initializationApi(origin: string, cookie = "") {
     };
 }
 
+export async function initializeEmpty(
+    origin: string,
+    administrator: { email: string; password: string },
+    cookie?: string,
+) {
+    const credential =
+        cookie ?? (await repositoryApi(origin).session(administrator.email, administrator.password)).cookie;
+    const setup = initializationApi(origin, credential);
+    const review = await setup.plan(null);
+    await setup.apply(null, review.digest);
+}
+
 /** Explicit test setup through the same admitted API used by the native screens. */
 export async function installStarter(
     origin: string,

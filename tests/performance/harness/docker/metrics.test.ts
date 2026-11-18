@@ -18,7 +18,7 @@ test("trace metrics account for consumed internal bodies and actual profiler exa
     const rows = [
         { kind: "http", traceId: "a" },
         { kind: "http-body", traceId: "a", bytes: 123, complete: true },
-        { kind: "mongo", traceId: "a", operation: "find" },
+        { kind: "mongo", database: "fixture", traceId: "a", operation: "find" },
         {
             kind: "capability",
             traceId: "a",
@@ -29,7 +29,16 @@ test("trace metrics account for consumed internal bodies and actual profiler exa
         },
         { kind: "mongo", traceId: "another-request" },
     ];
-    const profile = [{ traceId: "a", operations: 1, documentsExamined: 40, keysExamined: 2, documentsReturned: 1 }];
+    const profile = [
+        {
+            database: "fixture",
+            traceId: "a",
+            operations: 1,
+            documentsExamined: 40,
+            keysExamined: 2,
+            documentsReturned: 1,
+        },
+    ];
     const result = collectMetrics("a", rows, profile, true);
     expect(result.work).toEqual({
         mongoOperations: 1,
@@ -125,11 +134,12 @@ test("MCP coverage requires matching successful Gateway representation and actua
         "a",
         [
             execution,
-            { kind: "mongo", traceId: "a", spanId: "business" },
-            { kind: "mongo", traceId: "a", spanId: "authentication" },
+            { kind: "mongo", database: "fixture", traceId: "a", spanId: "business" },
+            { kind: "mongo", database: "fixture", traceId: "a", spanId: "authentication" },
         ],
         [
             {
+                database: "fixture",
                 traceId: "a",
                 spanId: "business",
                 operations: 1,
@@ -138,6 +148,7 @@ test("MCP coverage requires matching successful Gateway representation and actua
                 documentsReturned: 1,
             },
             {
+                database: "fixture",
                 traceId: "a",
                 spanId: "authentication",
                 operations: 1,

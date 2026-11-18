@@ -11,6 +11,7 @@ import type { QueryEnvironment } from "../queries/execute";
 import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { expectedAfterRestarts } from "./state";
 import { restoreAdministration } from "../../fixtures/administration/restore";
+import { mcpTokenRefresh } from "../../harness/clients/refresh";
 
 export async function initializationFixture(environment: QueryEnvironment) {
     const inventory = await officialCapabilityInventory();
@@ -61,10 +62,13 @@ export async function initializationFixture(environment: QueryEnvironment) {
     await configureRepository(site.url, site.administrator, environment.registry.origin);
     const session = await repositoryApi(site.url).session(site.administrator.email, site.administrator.password);
     const connection = await connectBrowser(site.url, site.administrator);
+    const prepareMcp = mcpTokenRefresh({ origin: site.url, clientId: connection.clientId, token: connection.token });
     const main = {
         origin: site.url,
         cookie: session.cookie,
-        token: connection.token.access_token,
+        get token() {
+            return connection.token.access_token;
+        },
         subjectId: session.accountId,
         tools: connection.tools,
     };
@@ -110,6 +114,7 @@ export async function initializationFixture(environment: QueryEnvironment) {
         call,
         snapshot,
         dataset,
+        prepareMcp,
     };
 }
 

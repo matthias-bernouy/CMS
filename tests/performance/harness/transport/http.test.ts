@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test";
 import { inventoryFixture } from "../../fixtures/inventory";
 import { capabilityRequest, isolatedOrigin, responseBytes } from "./http";
+import { requestKey } from "./key";
+import type { CapabilityTarget } from "../../capabilities/types";
 
 test("performance clients accept isolated origins and reject credentials, paths and remote services", () => {
     for (const origin of [
@@ -57,4 +59,22 @@ test("response readers consume complete streams, release locks and cancel oversi
     expect(stream.locked).toBe(false);
     expect(new TextDecoder().decode(await responseBytes(new Response("complete")))).toBe("complete");
     expect((await responseBytes(new Response(null, { status: 204 }))).length).toBe(0);
+});
+
+test("explicit idempotency keys replay exact commands and cannot silently attach to non-keyed requests", async () => {
+    const { target } = await inventoryFixture();
+    const keyed: CapabilityTarget = {
+        ...target,
+        definition: {
+            ...target.definition,
+            behavior: { effect: "command", execution: "sync", sensitive: true, idempotency: "keyed" },
+        },
+    };
+    const key = crypto.randomUUID();
+    expect(requestKey(keyed, key)).toBe(key);
+    expect(requestKey(keyed)).not.toBe(requestKey(keyed));
+    expect(() => requestKey(target, key)).toThrow();
+    expect(() => requestKey(keyed, "invalid key")).toThrow();
+    expect(() => requestKey(keyed, "x".repeat(129))).toThrow();
+    expect(requestKey(target)).toBeUndefined();
 });

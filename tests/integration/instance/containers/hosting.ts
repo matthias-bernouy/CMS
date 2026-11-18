@@ -2,8 +2,8 @@ import { randomBytes } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { configureRepository, initializationApi } from "../repository/initializationClient";
 import { repositoryApi } from "../repository/client";
+import { configureRepository, initializeEmpty } from "../repository/initializationClient";
 
 /** Private operator bootstrap and ordinary empty Control setup for disposable shared deployments. */
 export async function createContainerHosting(port: number) {
@@ -35,6 +35,7 @@ export async function createContainerHosting(port: number) {
         return response.json();
     };
     return {
+        administrator,
         origin,
         registryOrigin,
         edgeSecret,
@@ -59,9 +60,7 @@ export async function createContainerHosting(port: number) {
         async initialize(repositoryOrigin = registryOrigin) {
             await configureRepository(origin, administrator, repositoryOrigin);
             actor = await repositoryApi(origin).session(administrator.email, administrator.password);
-            const setup = initializationApi(origin, actor.cookie);
-            const review = await setup.plan(null);
-            await setup.apply(null, review.digest);
+            await initializeEmpty(origin, administrator, actor.cookie);
         },
         async claimDomain(instanceId: string, targetOrigin: string) {
             const result = await call("domains.claim", { instanceId, origin: targetOrigin });

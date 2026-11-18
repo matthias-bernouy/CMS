@@ -5,7 +5,10 @@ import { instrumentNetwork } from "./network";
 import { instrumentBinding } from "./binding";
 import { instrumentOperations } from "./operation";
 import { instrumentInitialization, measureInitializationMethod } from "./initialization";
+import { beginProbeEpoch } from "./records";
+import { instrumentPublicBinding } from "./public";
 
+beginProbeEpoch();
 const provider = Bun.main.endsWith("/ulvia-provider-server/src/index.ts");
 const runtime = provider ? "ulvia-provider-server" : "cms-edge-server";
 const workspace = createRequire(`/app/packages/runtimes/${runtime}/package.json`);
@@ -14,6 +17,7 @@ const currentTrace = () => currentTraceContext()?.traceId;
 instrumentNetwork(currentTrace);
 instrumentBinding(workspace("@bernouy/cms-gateway").CapabilityGateway.prototype, currentTrace);
 if (provider) {
+    instrumentPublicBinding(workspace("@bernouy/http-runner").BunRunner.prototype);
     const installations = workspace("@bernouy/repository/collections/installations");
     instrumentInitialization(installations.SiteInitializationService.prototype);
     measureInitializationMethod(installations.MemoryCollectionStorage.prototype, "putRelease", "preview.store");

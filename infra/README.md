@@ -44,7 +44,9 @@ Contract and Provider manifest versions evolve independently of the distribution
 Neither build nor publish upgrades running installations. The generic trusted
 `releases/ulvia.release.ts` entry remains available through `ulvia release` for
 explicit manual resource preparation. `workspace.ts` orchestrates `check`, `test`,
-`verify` and the source CLI, preparing each prerequisite once.
+`verify`, the separate measured `perf` command and the source CLI, preparing
+each prerequisite once. `perf --list` validates and lists exact scenario IDs
+without building images; repeated `--scenario <id>` flags select a measured subset.
 
 See [development](../docs/development/README.md) for release commands and checks,
 [SDK releases](../docs/development/sdk-releases.md) for generated artifacts and

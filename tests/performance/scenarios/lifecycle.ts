@@ -11,8 +11,14 @@ export function lifecycleScenarios(
     family: string,
     contractId: string,
     capabilities: readonly string[],
-    prepare: (environment: QueryEnvironment, capability: string, obligation: Obligation) => Promise<PreparedSample>,
+    prepare: (
+        environment: QueryEnvironment,
+        capability: string,
+        obligation: Obligation,
+        sampleIndex: number,
+    ) => Promise<PreparedSample>,
     variants: readonly Variant[] = ["nominal", "cold", "warm", "concurrent"],
+    scenarioVersion = 1,
 ) {
     return capabilities.flatMap((capability) => {
         const target = inventory.targets.find(
@@ -26,7 +32,7 @@ export function lifecycleScenarios(
                 const obligation = { target: target.key, binding: id, variant };
                 const definition = {
                     id: `${family}.lifecycle.${capability}.${id}.${variant}`,
-                    version: 1,
+                    version: scenarioVersion,
                     fixture,
                     obligations: [obligation],
                     budget: budgetFor(target, variant),
@@ -36,17 +42,17 @@ export function lifecycleScenarios(
                 return {
                     definition,
                     execute: (environment: QueryEnvironment) =>
-                        sampleScenario(environment.stack, definition, obligation, async () => {
-                            const sample = await prepare(environment, capability, obligation);
-                            return {
-                                ...sample,
-                                send: async () => {
-                                    if (variant === "cold") {
-                                        await environment.stack.restartProvider();
-                                    }
-                                    return sample.send();
-                                },
-                            };
+                        sampleScenario(environment.stack, definition, obligation, async (sampleIndex) => {
+                            const sample = await prepare(environment, capability, obligation, sampleIndex);
+                            return variant === "cold"
+                                ? {
+                                      ...sample,
+                                      beforeMeasure: async () => {
+                                          await environment.stack.restartProvider();
+                                          await sample.beforeMeasure?.();
+                                      },
+                                  }
+                                : sample;
                         }),
                 };
             }),

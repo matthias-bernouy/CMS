@@ -69,6 +69,11 @@ export async function officialCapabilityInventory(): Promise<CapabilityInventory
     return inventoryFromBuilds(await compileOfficialFeatures(), await compileRetainedFeatures());
 }
 
+/** Only independently declared executor paths require a full performance matrix. */
+export async function performanceCapabilityInventory(): Promise<CapabilityInventory> {
+    return inventoryFromBuilds(await compileOfficialFeatures());
+}
+
 /** A focused report names its exact current target; it cannot claim repository-wide coverage. */
 export function scopedInventory(
     inventory: CapabilityInventory,

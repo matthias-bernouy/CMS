@@ -49,4 +49,15 @@ export const contentQueries: readonly QueryCase[] = [
         assert: (out, context) =>
             assertCondition(out.collectionId === context.collectionId && Array.isArray(out.items)),
     },
+    {
+        family: "content",
+        capability: "examples.get",
+        input: ({ collectionId }) => ({ collectionId, exampleId: "card" }),
+        assert: (out, context) => {
+            assertCondition(out.collectionId === context.collectionId && out.id === "card");
+            const document = out.document;
+            assertCondition(document && typeof document === "object" && "html" in document);
+            assertCondition(String(document.html).includes("ulvia-dtest--smoke-kit--card"));
+        },
+    },
 ];

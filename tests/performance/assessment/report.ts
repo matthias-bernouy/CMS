@@ -1,6 +1,7 @@
 import { auditExecution, auditPlan, coverageMatrix } from "../capabilities/coverage";
 import { auditBudgets } from "../capabilities/budgets";
 import { compareReports } from "../reporting/compare";
+import { selectedObligations, selectionFindings } from "../reporting/scope";
 import { readRun, writeRun } from "../reporting/history";
 import type { CapabilityInventory, Finding, ScenarioDefinition, ScenarioResult } from "../capabilities/types";
 import type { RunMetadata, RunReport } from "../reporting/types";
@@ -14,10 +15,12 @@ export async function assessmentReport(
     findings: readonly Finding[],
     referenceId?: string,
 ) {
-    const coverage = coverageMatrix(inventory, scenarios, results);
+    const required = selectedObligations(metadata, scenarios);
+    const coverage = coverageMatrix(inventory, scenarios, results, required);
     const checks = [
         ...findings,
-        ...auditPlan(inventory, scenarios),
+        ...selectionFindings(metadata, scenarios),
+        ...auditPlan(inventory, scenarios, required),
         ...auditExecution(scenarios, results, coverage),
         ...auditBudgets(scenarios, results),
     ];
@@ -42,7 +45,15 @@ export async function assessmentReport(
             });
         }
     }
-    const comparison = compareReports(draft, reference);
+    const comparison = referenceId
+        ? compareReports(draft, reference)
+        : {
+              reference: null,
+              candidate: metadata.id,
+              comparable: false,
+              findings: [],
+              changes: [],
+          };
     const report: RunReport = {
         ...draft,
         findings: [...checks, ...comparison.findings],

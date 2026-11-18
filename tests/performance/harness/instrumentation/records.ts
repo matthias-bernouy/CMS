@@ -1,13 +1,21 @@
-import { appendFileSync, mkdirSync } from "node:fs";
+import { appendFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
 
 export const PROBE_FILE = "/tmp/ulvia-capability-performance.ndjson";
 export const TRACE_DIRECTORY = "/tmp/ulvia-capability-performance";
-export type Scope = Readonly<{ traceId: string; spanId?: string }>;
+export type Scope = Readonly<{ traceId: string; spanId?: string; publicBinding?: "ulvia/provider.tls" }>;
 export const scope = new AsyncLocalStorage<Scope>();
 const counters = new Map<string, { records: number; bytes: number; overflow: boolean }>();
 mkdirSync(TRACE_DIRECTORY, { recursive: true });
+
+/** A restarted test-owned runtime cannot complete traces from its previous process epoch. */
+export function beginProbeEpoch(file = PROBE_FILE, directory = TRACE_DIRECTORY): void {
+    rmSync(directory, { force: true, recursive: true });
+    mkdirSync(directory, { mode: 0o700 });
+    writeFileSync(file, "", { mode: 0o600 });
+    counters.clear();
+}
 
 export function traceFile(traceId: string): string {
     return `${TRACE_DIRECTORY}/${createHash("sha256").update(traceId).digest("hex")}.ndjson`;

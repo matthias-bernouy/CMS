@@ -70,6 +70,9 @@ export function initializationScenarios(
                             const dataset = await state.dataset(
                                 recipe.name === "invalidation" ? "one-page" : recipe.name,
                             );
+                            if (binding === "mcp") {
+                                await state.prepareMcp(10 * 60_000);
+                            }
                             let previous: InitializationReview | undefined;
                             if (variant === "invalidation") {
                                 previous = assertInitializationReview(

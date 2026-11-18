@@ -257,7 +257,8 @@ still require deployment-level verification.
 | `bun run format` | Apply Biome formatting and configured safe/unsafe fixes; inspect the diff. |
 | `bun run check` | Run every static diagnostic, including types, architecture, style and dead code. |
 | `bun run test [paths/options]` | Prepare metadata/browser assets, then run maintained Bun tests, or selected tests. |
-| `bun run verify` | Run static checks, tests, performance budgets, the shared-hosting browser journey, Docker delivery and isolated TLS issuance/restart. |
+| `bun run verify` | Run static checks, tests, performance-plan guards, retained compatibility, the shared-hosting browser journey and isolated TLS issuance/restart. |
+| `bun run perf [--list] [--scenario <id> ...] [--reference <run-id>]` | List or execute the separate measured performance campaign, with explicit targeted scope and optional regression comparison. |
 | `bun run build [--version <version>]` | Build workspace outputs; with a version, also build images, the CLI and an exact publication snapshot. |
 | `bun run publish --version <version>` | Publish only the previously built snapshot to Repository, Docker and npm. |
 | `bun run clean` | Clean TypeScript build state and package `dist`/`tsconfig.tsbuildinfo` outputs. |
@@ -267,14 +268,15 @@ seconds per check; `--verbose` and `--base <ref>` control reporting. There is no
 individual-check selector. `test` is the normal iteration loop and accepts Bun
 paths and options, for example `bun run test ./tests/operations`.
 
-`verify` is the complete maintained automated acceptance pipeline. It requires
+`verify` is the functional and static automated acceptance pipeline. Measured
+performance campaigns run separately through `perf`. It requires
 Docker Compose, Chromium and local listeners; missing prerequisites fail the
 command. Bootstrap and browser outputs are prepared once per command before the
 stages that consume them. Individual internal entrypoints remain directly callable
 for diagnosis; they are not additional root aliases.
 
 `verify` builds one candidate Edge/Provider pair tagged `0.1.0-verify` from the
-current checkout and reuses it for the browser, delivery and TLS stages. It
+current checkout and reuses it for the functional browser and TLS stages. It
 validates OCI component/API/revision labels and exact image identities. Local
 image manifests must be available by digest (for example with Docker's containerd
 image store). Each journey uses disposable services and isolated client data;
@@ -302,8 +304,13 @@ have opt-in real Mongo tests covering concurrent processes, account/instance
 isolation and bounded indexed reads. Wider adapter interruption, transactions
 and full restore still need environment-level coverage.
 Performance work should gate calls, transferred bytes and retained resources;
-`verify` runs the performance suite with machine-dependent timing ceilings and
-the real Docker delivery budget journey.
+`verify` checks the performance harness and static scenario coverage; `perf`
+enforces measured budgets and runs the real Docker delivery budget journey.
+`perf --list` needs no Docker stack; selected scenarios share one isolated stack
+and report coverage only for their exact selection. Candidates use the separate
+local `0.1.0-perf` tag. Without a reference, absolute budgets still apply; an
+explicit `--reference` or `ULVIA_PERFORMANCE_REFERENCE` requires compatible
+measurement evidence. These commands never publish images or deploy sites.
 
 The dead-code diagnostic included in `check` exits with a failure when it finds unused declarations,
 exports, exported types or package dependencies. Public exports can be

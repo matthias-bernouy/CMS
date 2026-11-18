@@ -1,8 +1,24 @@
 import { randomBytes } from "node:crypto";
 import { containerCluster } from "./cluster";
-import type { ContainerResourceLimits } from "./cluster";
+import type { ContainerResourceLimits, ContainerCluster } from "./cluster";
 import { createContainerHosting } from "./hosting";
 import { docker, waitForHttp } from "../docker";
+
+export type DeploymentSetup = (cluster: ContainerCluster) => Promise<readonly string[]>;
+type DeploymentStage = "mongo" | "provider" | "edge" | "control";
+
+/** Diagnostic text stays private; ordinary error formatting and JSON expose only the fixed stage. */
+export class DeploymentPreparationError extends Error {
+    declare readonly diagnostics: string;
+    constructor(
+        readonly stage: DeploymentStage,
+        diagnostics: string,
+        cause: unknown,
+    ) {
+        super(`Disposable deployment preparation failed during ${stage}`, { cause });
+        Object.defineProperty(this, "diagnostics", { value: diagnostics });
+    }
+}
 
 /** One shared Edge and Provider, independent of a fixture's logical sites. */
 export async function sharedDeployment(
@@ -10,6 +26,7 @@ export async function sharedDeployment(
     fetchPreload?: string,
     initialResponseCache?: boolean,
     resources?: ContainerResourceLimits,
+    prepareServices?: DeploymentSetup,
 ) {
     const cluster = await containerCluster(images.edge, fetchPreload, resources);
     const { id, names, run } = cluster;
@@ -20,7 +37,10 @@ export async function sharedDeployment(
     reservation.stop(true);
     const cmsUrl = `http://site.localhost:${edgePort}`;
     const namedUrl = `http://preview.localhost:${edgePort}`;
-    const hosting = await createContainerHosting(edgePort);
+    const hosting = await createContainerHosting(edgePort).catch(async (error) => {
+        await cluster.close();
+        throw error;
+    });
     const close = async () => {
         try {
             await cluster.close();
@@ -30,7 +50,9 @@ export async function sharedDeployment(
     };
     const providerName = `${id}-provider`;
     const edgeName = `${id}-edge`;
+    let stage: DeploymentStage = "mongo";
     try {
+        const providerOptions = prepareServices ? await prepareServices(cluster) : [];
         const mongo = `${id}-mongo`;
         await run(
             mongo,
@@ -52,6 +74,7 @@ export async function sharedDeployment(
         if (!ready) {
             throw new Error("MongoDB did not become ready");
         }
+        stage = "provider";
         await run(providerName, "ulvia-provider", images.provider, [
             "--publish",
             "127.0.0.1::5103",
@@ -70,11 +93,13 @@ export async function sharedDeployment(
             "--env",
             "ULVIA_PROVIDER_PUBLIC_URL=http://ulvia-provider:5103",
             ...hosting.providerOptions,
+            ...providerOptions,
             "--env",
             `ULVIA_PROVIDER_OPERATOR_TOKEN=${operatorToken}`,
         ]);
         const providerUrl = await cluster.endpoint(providerName, 5103);
         await waitForHttp(`${providerUrl}/readyz`);
+        stage = "edge";
         const startEdge = async (cache = initialResponseCache) =>
             run(edgeName, "edge", images.edge, [
                 "--publish",
@@ -87,6 +112,7 @@ export async function sharedDeployment(
             ]);
         await startEdge();
         await waitForHttp(`${hosting.origin}/readyz`);
+        stage = "control";
         await hosting.initialize();
         return {
             cluster,
@@ -102,7 +128,19 @@ export async function sharedDeployment(
             close,
         };
     } catch (error) {
+        const diagnostics = await Promise.allSettled(
+            [`${id}-mongo`, providerName, edgeName].map(async (name) => {
+                const output = await docker(["logs", "--tail", "20", name], true);
+                return `${name}\n${output.stdout.slice(-6000)}${output.stderr.slice(-6000)}`;
+            }),
+        );
         await close();
-        throw error;
+        throw new DeploymentPreparationError(
+            stage,
+            diagnostics
+                .map((row) => (row.status === "fulfilled" ? row.value : "Startup diagnostics unavailable"))
+                .join("\n"),
+            error,
+        );
     }
 }

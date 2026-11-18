@@ -61,6 +61,7 @@ export async function measurements(
             obligation.target,
             observation.relatedTraces,
             Boolean(observation.operation),
+            observation.dependencies,
         ),
     }));
     // Keep raw trace files bounded across thousands of scenarios; immutable samples now live in the controller.

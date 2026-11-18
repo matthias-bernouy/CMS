@@ -1,7 +1,18 @@
 import { docker } from "../containers";
 
 // This test harness opens only its disposable containers. Credentials never enter diagnostics.
-export async function readProviderCredential(providerName: string, key: string, connectionId?: string) {
+export async function readProviderCredential(
+    providerName: string,
+    key: string,
+    connectionId?: string,
+    expectedInstanceId?: string,
+) {
+    const stack = /^ulvia-mcp-[a-f0-9]{8}-provider$/u.test(providerName)
+        ? providerName.slice(0, -"-provider".length)
+        : undefined;
+    if (!stack || (key !== stack && !key.startsWith(`${stack}-`))) {
+        throw new Error("Provider credentials require an owned disposable stack");
+    }
     const script = `
         import { MongoClient } from "mongodb";
         import { NOOP_LOGGER } from "@bernouy/logging";
@@ -24,10 +35,10 @@ export async function readProviderCredential(providerName: string, key: string, 
             const secrets = new EncryptedMongoSecretStore({ scopeId: "ulvia-provider-control", collection: db.collection("ulvia_provider_secrets"), secretCrypto });
             const credentials = new EncryptedInstanceCredentials(new MongoInstanceCredentialStore(db), secrets);
             const instance = await new MongoProviderInstanceRegistry(db).getByIdempotencyKey(${JSON.stringify(key)});
-            if (!instance) { throw new Error("Test instance unavailable"); }
+            if (!instance || (${JSON.stringify(expectedInstanceId ?? "")} && instance.id !== ${JSON.stringify(expectedInstanceId ?? "")})) { throw new Error("Test instance unavailable"); }
             const runtime = await credentials.read(instance.id);
             if (!runtime) { throw new Error("Test credential unavailable"); }
-            let result = { token: runtime.invocationSecret };
+            let result = { token: runtime.invocationSecret, controlToken: runtime.instanceAccessToken };
             if (${JSON.stringify(connectionId ?? "")}) {
                 stores = await createProviderStores({ instanceId: instance.id, MONGO_URL: instanceMongoUrl(env.MONGO_URL, instance.storageKey), CMS_KEK: { activeKeyId: "instance", keysHex: { instance: runtime.kekHex }, rotateOnStart: false }, CMS_FILES_DIR: env.CMS_FILES_DIR + "/" + instance.storageKey, CMS_SESSION_SECRET: runtime.sessionSecret, CMS_PUBLIC_URL: instance.cmsUrl }, NOOP_LOGGER);
                 result = await new ProviderConnections(stores.providerConnections).get(${JSON.stringify(connectionId ?? "")});
@@ -46,5 +57,10 @@ export async function readProviderCredential(providerName: string, key: string, 
         "-e",
         script,
     ]);
-    return JSON.parse(result.stdout) as { token: string; connectionId?: string; cmsUrl?: string };
+    return JSON.parse(result.stdout) as {
+        token: string;
+        controlToken?: string;
+        connectionId?: string;
+        cmsUrl?: string;
+    };
 }

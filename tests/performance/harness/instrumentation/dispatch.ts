@@ -57,7 +57,14 @@ export function instrumentDispatcher(prototype: Dispatcher): void {
         const identity = `${context.invocation?.instanceId ?? "host"}:${target}`;
         const firstInProcess = !seen.has(identity);
         seen.add(identity);
-        const traceId = context.trace?.traceId ?? context.rootRequestId ?? context.requestId;
+        const publicScope = scope.getStore();
+        const correlated =
+            requested === "ulvia/provider.tls" &&
+            context.invocation?.instanceId === "hosting:tls" &&
+            publicScope?.publicBinding === requested;
+        const traceId = correlated
+            ? publicScope.traceId
+            : (context.trace?.traceId ?? context.rootRequestId ?? context.requestId);
         const spanId = context.requestId;
         return scope.run({ traceId, spanId }, async () => {
             const started = performance.now();

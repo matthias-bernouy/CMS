@@ -57,6 +57,14 @@ export type WorkMetrics = Readonly<{
     instrumentationComplete: boolean;
 }>;
 
+export type DependencyMetrics = Readonly<{
+    service: "dns" | "smtp";
+    requests: number;
+    requestBytes: number;
+    responseBytes: number;
+    complete: boolean;
+}>;
+
 export type Measurement = Readonly<{
     scenario: string;
     phase: "preparation" | "measurement";
@@ -69,6 +77,7 @@ export type Measurement = Readonly<{
     error?: string;
     relatedTraces?: readonly string[];
     operation?: Readonly<{ polls: number }>;
+    dependencies?: readonly DependencyMetrics[];
     validated: boolean;
     completed: boolean;
     streamConsumed: boolean;

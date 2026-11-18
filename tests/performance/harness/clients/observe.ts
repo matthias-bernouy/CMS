@@ -74,8 +74,8 @@ export async function observe(
             durationMs = performance.now() - started;
             try {
                 await call.assert(output);
-            } catch {
-                throw new ClientFailure("business-postcondition-failed");
+            } catch (error) {
+                throw error instanceof ClientFailure ? error : new ClientFailure("business-postcondition-failed");
             }
             validated = true;
             completed = true;

@@ -1,4 +1,5 @@
 import type { CapabilityInventory, CapabilityTarget, Obligation, ScenarioDefinition } from "../../capabilities/types";
+import { ClientFailure } from "../../harness/clients/failure";
 
 export type QueryContext = Readonly<{ subjectId: string; collectionId: string }>;
 export type QueryCase = Readonly<{
@@ -22,8 +23,11 @@ export function requireRecord(value: unknown): Readonly<Record<string, unknown>>
     return value as Readonly<Record<string, unknown>>;
 }
 
-export function assertCondition(value: unknown): asserts value {
+export function assertCondition(value: unknown, diagnostic?: string): asserts value {
     if (!value) {
+        if (diagnostic) {
+            throw new ClientFailure(diagnostic);
+        }
         throw new Error("Business postcondition was not satisfied");
     }
 }

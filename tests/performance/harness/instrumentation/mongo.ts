@@ -1,4 +1,6 @@
 import { record, scope } from "./records";
+import { tenantProfiler } from "./mongo-profile";
+import type { ProfilingClient } from "./mongo-profile";
 
 type Method = (this: object, ...args: unknown[]) => unknown;
 type MongoModule = {
@@ -6,9 +8,12 @@ type MongoModule = {
     Db: { prototype: Record<string, Method> };
     MongoClient: { prototype: { connect: Method } };
 };
-type MonitoredClient = {
+type MonitoredClient = ProfilingClient & {
     monitorCommands: boolean;
-    on(event: string, listener: (event: { commandName: string; command: Record<string, unknown> }) => void): void;
+    on(
+        event: string,
+        listener: (event: { databaseName: string; commandName: string; command: Record<string, unknown> }) => void,
+    ): void;
 };
 
 export function instrumentMongo(mongo: MongoModule, currentTrace: () => string | undefined): void {
@@ -61,6 +66,8 @@ export function instrumentMongo(mongo: MongoModule, currentTrace: () => string |
         decorate(mongo.Db.prototype, name, 1);
     }
     const connected = new WeakSet<object>();
+    const configuring = new WeakSet<object>();
+    const profile = tenantProfiler(configuring);
     const connect = mongo.MongoClient.prototype.connect;
     mongo.MongoClient.prototype.connect = function (...args) {
         const client = this as MonitoredClient;
@@ -68,8 +75,12 @@ export function instrumentMongo(mongo: MongoModule, currentTrace: () => string |
             connected.add(this);
             client.monitorCommands = true;
             client.on("commandStarted", (event) => {
+                if (configuring.has(client)) {
+                    return;
+                }
                 record({
                     kind: "mongo",
+                    database: event.databaseName,
                     traceId: scope.getStore()?.traceId ?? currentTrace(),
                     operation: event.commandName,
                     collection:
@@ -79,7 +90,10 @@ export function instrumentMongo(mongo: MongoModule, currentTrace: () => string |
                 });
             });
         }
-        return connect.apply(this, args);
+        return Promise.resolve(connect.apply(this, args)).then(async (value) => {
+            await profile(client);
+            return value;
+        });
     };
     record({ kind: "instrumentation", component: "mongo" });
 }

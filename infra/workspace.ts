@@ -1,17 +1,13 @@
 import { command } from "./process";
 import { testArguments } from "./test-arguments";
+import { browserBuildStep, candidateEnvironment, candidateImageStep } from "./images/candidate";
 
 export type WorkspaceStep = { args: string[]; env?: Record<string, string | undefined>; continueOnFailure?: boolean };
 const bootstrap = { args: ["bun", "run", "infra/bootstrap.ts"] };
-const browser = { args: ["bun", "run", "--cwd", "packages/features/content", "build:browser"] };
+const browser = browserBuildStep;
 const tests = ["./quality", "./tests", "./packages"];
 const candidateVersion = "0.1.0-verify";
-const candidateImages = {
-    ULVIA_SMOKE_IMAGE_VERSION: candidateVersion,
-    ULVIA_MCP_EDGE_DOCKER_IMAGE: `docker.io/cyaxis/ulvia-edge:${candidateVersion}`,
-    ULVIA_MCP_PROVIDER_DOCKER_IMAGE: `docker.io/cyaxis/ulvia-provider:${candidateVersion}`,
-    ULVIA_TLS_TEST_IMAGE: `docker.io/cyaxis/ulvia-provider:${candidateVersion}`,
-};
+const candidateImages = candidateEnvironment(candidateVersion);
 
 /** Each public command owns preparation once; nested stages consume its outputs. */
 export function workspaceSteps(action: string | undefined, args: string[]): WorkspaceStep[] {
@@ -24,8 +20,11 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
     if (action === "test") {
         return [bootstrap, browser, { args: ["bun", "test", ...testArguments(args)] }];
     }
+    if (action === "perf") {
+        return [bootstrap, { args: ["bun", "run", "tests/performance/command/run.ts", ...args] }];
+    }
     if (action !== "verify" || args.length) {
-        throw new Error("Usage: bun run <check | test | ulvia> [arguments], or bun run verify");
+        throw new Error("Usage: bun run <check | test | perf | ulvia> [arguments], or bun run verify");
     }
     return [
         bootstrap,
@@ -33,18 +32,12 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
         browser,
         { args: ["bun", "test", ...tests], continueOnFailure: true },
         { args: ["bun", "x", "tsc", "--project", "tests/performance/tsconfig.json"] },
-        { args: ["bun", "run", "tests/performance/benchmarks/run.ts"], continueOnFailure: true },
-        { args: ["bun", "run", "tests/performance/benchmarks/collections/repository/run.ts"], continueOnFailure: true },
-        { args: ["bun", "run", "infra/images/build.ts", "build", "--version", candidateVersion] },
+        { args: ["bun", "run", "tests/performance/command/check.ts"] },
+        { args: ["bun", "run", "tests/performance/compatibility/run.ts"], continueOnFailure: true },
+        candidateImageStep(candidateVersion),
         {
             args: ["bun", "test", "packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts"],
             env: { ...candidateImages, ULVIA_RUN_EDGE_SMOKE: "1" },
-            continueOnFailure: true,
-        },
-        { args: ["bun", "run", "tests/performance/delivery/run.ts"], env: candidateImages, continueOnFailure: true },
-        {
-            args: ["bun", "run", "tests/performance/assessment/run.ts", candidateVersion],
-            env: candidateImages,
             continueOnFailure: true,
         },
         {

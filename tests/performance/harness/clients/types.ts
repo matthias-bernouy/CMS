@@ -1,4 +1,4 @@
-import type { CapabilityTarget } from "../../capabilities/types";
+import type { CapabilityTarget, DependencyMetrics } from "../../capabilities/types";
 
 /** Payloads and credentials stay in memory and must never be serialized into reports. */
 export type Observation = Readonly<{
@@ -13,6 +13,7 @@ export type Observation = Readonly<{
     failure?: string;
     relatedTraces?: readonly string[];
     operation?: Readonly<{ polls: number }>;
+    dependencies?: readonly DependencyMetrics[];
 }>;
 
 export type ClientCall = Readonly<{
@@ -30,6 +31,7 @@ export type ClientCall = Readonly<{
     ) => Promise<unknown>;
     signal?: AbortSignal;
     timeoutMs?: number;
+    idempotencyKey?: string;
 }>;
 
 export type McpTool = Readonly<{ name: string; _meta: Readonly<Record<string, unknown>> }>;

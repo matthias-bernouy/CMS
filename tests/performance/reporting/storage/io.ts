@@ -2,6 +2,22 @@ import { constants } from "node:fs";
 import { lstat, open } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
+/** Exclusive, flushed evidence must exist before the next measured environment is acquired. */
+export async function exclusiveJson(path: string, value: unknown) {
+    const bytes = `${JSON.stringify(value)}\n`;
+    if (Buffer.byteLength(bytes) > 32 * 1024 * 1024) {
+        throw new Error("Performance evidence exceeds its byte limit");
+    }
+    const file = await open(path, "wx", 0o600);
+    try {
+        await file.writeFile(bytes);
+        await file.sync();
+    } finally {
+        await file.close();
+    }
+    return bytes;
+}
+
 export async function realDirectory(path: string): Promise<void> {
     const metadata = await lstat(path);
     if (!metadata.isDirectory() || metadata.isSymbolicLink()) {

@@ -70,7 +70,7 @@ export async function connectBrowser(
             }),
         });
         expect(exchange.status).toBe(200);
-        const token = (await exchange.json()) as { access_token: string; refresh_token: string };
+        const token = (await exchange.json()) as { access_token: string; refresh_token: string; expires_in: number };
         let nextId = 0;
         const rpc = async (method: string, params: unknown = {}) => {
             const response = await fetch(resource, {
@@ -130,6 +130,7 @@ export async function connectBrowser(
             return result.structuredContent.output;
         };
         return {
+            clientId: client.client_id,
             page,
             browser,
             token,

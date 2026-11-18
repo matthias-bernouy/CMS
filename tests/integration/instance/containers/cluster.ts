@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { docker, mappedPort } from "../docker";
+import { createTestNetwork } from "./networks";
 
 export type ContainerResourceLimits = Readonly<Record<string, Readonly<{ cpus: number; memoryBytes: number }>>>;
 
@@ -8,9 +9,9 @@ export async function containerCluster(relayImage: string, fetchPreload?: string
     const id = `ulvia-mcp-${randomUUID().slice(0, 8)}`;
     const ingress = `${id}-ingress`;
     const names: string[] = [];
-    await docker(["network", "create", "--internal", id]);
+    await createTestNetwork(id, true);
     try {
-        await docker(["network", "create", ingress]);
+        await createTestNetwork(ingress, false);
     } catch (error) {
         await docker(["network", "rm", id], true);
         throw error;
@@ -18,10 +19,17 @@ export async function containerCluster(relayImage: string, fetchPreload?: string
     return {
         id,
         names,
-        async run(name: string, alias: string, image: string, options: string[] = [], args: string[] = []) {
+        async run(
+            name: string,
+            alias: string,
+            image: string,
+            options: string[] = [],
+            args: string[] = [],
+            instrument = true,
+        ) {
             names.push(name);
             const application = alias !== "mongo";
-            const instrumented = fetchPreload && application;
+            const instrumented = fetchPreload && application && instrument;
             const limit = resources?.[alias === "ulvia-provider" ? "provider" : alias];
             const publications: string[] = [];
             const runtimeOptions = options.filter((option, index) => {

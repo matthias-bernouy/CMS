@@ -1,15 +1,15 @@
 import { sharedDeployment } from "./containers/deployment";
 import { createTraceProbe, installDeliveryFixture } from "./containers/deliveryFixture";
 import { repositoryApplication } from "./containers/repository";
-import { initializationApi, configureRepository } from "./repository/initializationClient";
-import { repositoryApi } from "./repository/client";
 import { publishBundledReleases } from "./repository/bootstrap";
 import { provisionInstance } from "./provision";
 import { scratchSite } from "./containers/scratchSite";
+import { configureRepository, initializeEmpty } from "./repository/initializationClient";
 
 import { docker, waitForHttp } from "./docker";
 import { upgradeProvider } from "./provider-upgrade";
 import type { ContainerResourceLimits } from "./containers/cluster";
+import type { DeploymentSetup } from "./containers/deployment";
 export { docker, waitForHttp } from "./docker";
 
 export async function mcpContainers(
@@ -18,8 +18,9 @@ export async function mcpContainers(
     fetchPreload?: string,
     initialResponseCache?: boolean,
     resources?: ContainerResourceLimits,
+    prepareServices?: DeploymentSetup,
 ) {
-    const deployment = await sharedDeployment(images, fetchPreload, initialResponseCache, resources);
+    const deployment = await sharedDeployment(images, fetchPreload, initialResponseCache, resources, prepareServices);
     const {
         cluster,
         hosting,
@@ -67,6 +68,7 @@ export async function mcpContainers(
             providerUrl: () => cluster.endpoint(providerName, 5103),
             waitForProvider: () => waitForHttp(`${providerUrl}/readyz`),
             instanceToken: instance.credentials.instanceAccessToken,
+            routingSecret: hosting.edgeSecret,
             namedToken: named.credentials.instanceAccessToken,
             cmsUrl,
             namedUrl,
@@ -75,6 +77,7 @@ export async function mcpContainers(
             administrator,
             providerName,
             instanceId: instance.instance.id,
+            control: { origin: hosting.origin, administrator: hosting.administrator },
             createPendingSite: (alias: string) => scratchSite(deployment, alias),
             upgradeProvider: async (image: string) => {
                 await upgradeProvider(
@@ -122,11 +125,4 @@ export async function mcpContainers(
         await close();
         throw new Error(`${String(error)}\n${logs.join("\n")}`);
     }
-}
-
-async function initializeEmpty(origin: string, administrator: { email: string; password: string }) {
-    const session = await repositoryApi(origin).session(administrator.email, administrator.password);
-    const setup = initializationApi(origin, session.cookie);
-    const review = await setup.plan(null);
-    await setup.apply(null, review.digest);
 }
