@@ -44,6 +44,13 @@ test("large collection installation, detail, listing and configuration preserve 
         code: "INVALID_INPUT",
     });
     expect(await store.revision(context.siteId)).toBe(1);
+    const beforeInvalidConfiguration = await store.listInstalled(context.siteId);
+    for (const configurationJson of ['{"unexpected":true}', "null"]) {
+        await expect(run("configure-collection", { ...configuration, configurationJson })).rejects.toMatchObject({
+            code: "INVALID_INPUT",
+        });
+        expect(await store.listInstalled(context.siteId)).toEqual(beforeInvalidConfiguration);
+    }
     await expect(run("configure-collection", { ...configuration, siteId: "site-b" })).rejects.toThrow();
     expect(await store.revision("site-b")).toBe(0);
     expect(await run("configure-collection", configuration)).toMatchObject({

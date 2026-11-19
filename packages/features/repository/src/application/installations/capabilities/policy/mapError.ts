@@ -8,6 +8,7 @@ const collectionCommands = new Set([
     "list-site-usage",
     "install-collection",
     "update-collection-configuration",
+    "configure-collection",
     "plan-collection-upgrade",
     "apply-collection-upgrade",
     "resume-collection-upgrade",
