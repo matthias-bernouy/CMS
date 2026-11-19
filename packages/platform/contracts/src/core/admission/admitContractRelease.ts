@@ -1,3 +1,4 @@
+import { StoredReleaseCache } from "./cache/StoredReleaseCache";
 import type { ReleaseDigest } from "./digest";
 import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../protocol/limits";
 import { ReleaseValidationError } from "../protocol/errors";
@@ -8,6 +9,7 @@ import {
 } from "ulvia-contracts/core/admission/prepareContractRelease";
 
 const encoder = new TextEncoder();
+const storedReleases = new StoredReleaseCache<AdmittedContractRelease>(verifyStoredRelease);
 
 export interface AdmittedContractRelease extends PreparedContractRelease {
     readonly digest: ReleaseDigest;
@@ -44,6 +46,14 @@ export async function verifyStoredContractReleaseJson(
     input: string | Uint8Array,
     expectedDigest: unknown,
     limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
+): Promise<AdmittedContractRelease> {
+    return storedReleases.get(input, expectedDigest, limits);
+}
+
+async function verifyStoredRelease(
+    input: string | Uint8Array,
+    expectedDigest: unknown,
+    limits: Readonly<ReleaseLimits>,
 ): Promise<AdmittedContractRelease> {
     const admitted = await admitPreparedRelease(prepareContractReleaseJson(input, limits));
     if (typeof expectedDigest !== "string" || admitted.digest !== expectedDigest) {
