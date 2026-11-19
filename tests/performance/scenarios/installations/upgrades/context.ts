@@ -102,7 +102,8 @@ export async function upgradeContext(
             capability: string,
             valid: Readonly<Record<string, unknown>>,
             refused: Readonly<Record<string, unknown>>,
-        ) => expectBodyRefusal(inventory, state.session, INSTALLATIONS, capability, valid, refused, 400);
+            expectedStatus = 400,
+        ) => expectBodyRefusal(inventory, state.session, INSTALLATIONS, capability, valid, refused, expectedStatus);
         return {
             state,
             environment,

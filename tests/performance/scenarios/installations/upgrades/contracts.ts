@@ -82,6 +82,8 @@ export async function prepareContractSwitch(
                     capability,
                     planning ? input : context.inputFor(review),
                     planning ? {} : { ...context.inputFor(review), planDigest: "invalid" },
+                    // Empty planning input is schema-valid but semantically refused by declared INVALID_INPUT.
+                    planning ? 422 : 400,
                 );
                 const foreign = await context.state.client(
                     INSTALLATIONS,
