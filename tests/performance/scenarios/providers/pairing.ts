@@ -1,6 +1,5 @@
 import { assertCondition, requireRecord } from "../queries/types";
-import { assertSelectionUnchanged } from "./oracles";
-import { json } from "./context";
+import { assertSelectionUnchanged, assertProviderStateUnchanged } from "./oracles";
 import type { ProviderContext } from "./context";
 import type { PreparedSample } from "../../harness/execution/samples";
 
@@ -79,14 +78,15 @@ export async function preparePairing(
                 await context.foreign(capability, { ...input, expectedRevision: saved.revision });
                 if (rotating) {
                     const replay = await context.call(capability, input);
-                    assertCondition(replay.observation.validated && json(await context.snapshot()) === json(after));
+                    assertCondition(replay.observation.validated, "provider-pairing-replay-refused");
+                    assertProviderStateUnchanged(after, await context.snapshot());
                 }
                 const stale = await context.call(
                     capability,
                     rotating ? { ...input, expectedRevision: Number(saved.revision) - 1 } : input,
                 );
                 assertCondition(!stale.observation.validated && stale.observation.status === 409);
-                assertCondition(json(await context.snapshot()) === json(after));
+                assertProviderStateUnchanged(after, await context.snapshot());
             },
             close,
         };

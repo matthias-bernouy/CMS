@@ -1,5 +1,5 @@
 import { assertCondition, requireRecord } from "../queries/types";
-import { assertPreview, assertSelectionUnchanged } from "./oracles";
+import { assertPreview, assertSelectionUnchanged, assertProviderStateUnchanged } from "./oracles";
 import { json } from "./context";
 import type { ProviderContext } from "./context";
 import type { PreparedSample } from "../../harness/execution/samples";
@@ -49,9 +49,9 @@ export async function prepareConnection(
             },
             async verify() {
                 if (previewing) {
-                    assertCondition(json(await context.snapshot()) === json(before));
+                    assertProviderStateUnchanged(before, await context.snapshot());
                     await context.foreign("approve-provider-connection", { ticket: output!.ticket });
-                    assertCondition(json(await context.snapshot()) === json(before));
+                    assertProviderStateUnchanged(before, await context.snapshot());
                 } else {
                     const saved = await context.find();
                     assertCondition(saved && saved.id === output!.installationId && saved.status === "enabled");
@@ -67,15 +67,10 @@ export async function prepareConnection(
                     const after = await context.snapshot();
                     assertSelectionUnchanged(before, after);
                     const replay = await context.checked(capability, { ticket: review!.ticket });
-                    assertCondition(
-                        json(replay) === json(output) && json(await context.snapshot()) === json(after),
-                        "provider-approval-replay-changed-state",
-                    );
+                    assertCondition(json(replay) === json(output), "provider-approval-replay-changed-result");
+                    assertProviderStateUnchanged(after, await context.snapshot());
                     await context.foreign(capability, { ticket: review!.ticket });
-                    assertCondition(
-                        json(await context.snapshot()) === json(after),
-                        "provider-approval-foreign-changed-state",
-                    );
+                    assertProviderStateUnchanged(after, await context.snapshot());
                 }
             },
             close: context.close,

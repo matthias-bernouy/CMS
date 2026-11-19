@@ -72,3 +72,36 @@ export function assertApprovalStateUnchanged(
     }
     assertCondition(old.size === 0, "provider-approval-identities-changed");
 }
+
+/** Query routing can renew observations; query verification must preserve approval, selections and routes. */
+export function assertProviderStateUnchanged(
+    before: Readonly<Record<string, unknown>>,
+    after: Readonly<Record<string, unknown>>,
+) {
+    assertApprovalStateUnchanged(before, after);
+    assertCondition(json(before.routes) === json(after.routes), "provider-query-routes-changed");
+    const old = new Map(
+        (before.installations as readonly unknown[]).map((value) => {
+            const row = requireRecord(value);
+            return [row.id, row];
+        }),
+    );
+    for (const value of after.installations as readonly unknown[]) {
+        const row = requireRecord(value);
+        const previous = old.get(row.id)!;
+        if (previous.observedAt === undefined && row.observedAt === undefined) {
+            continue;
+        }
+        assertCondition(
+            typeof row.observedAt === "string" && Number.isFinite(Date.parse(row.observedAt)),
+            "provider-query-observation-invalid",
+        );
+        assertCondition(
+            previous.observedAt === undefined ||
+                (typeof previous.observedAt === "string" &&
+                    Date.parse(row.observedAt) >= Date.parse(previous.observedAt)),
+            "provider-query-observation-regressed",
+        );
+        assertCondition(Date.parse(row.observedAt) <= Date.now() + 1000, "provider-query-observation-future");
+    }
+}
