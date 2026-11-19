@@ -10,6 +10,8 @@ import type {
     ContractSelectionDependencySource,
 } from "@bernouy/ulvia-providers/selections";
 
+import { dependencySnapshotReaders } from "./dependencySnapshotReaders";
+
 type CatalogueRecords = Awaited<ReturnType<CatalogueSelectionDependencies["read"]>>;
 
 function compareOrdinal(left: string, right: string): number {
@@ -34,8 +36,9 @@ export class CatalogueSelectionDependencies implements ContractSelectionDependen
             const after = fast ? await this.revision(site) : await fingerprint(site, await this.read(site));
             if (revision === after) {
                 return {
-                    releases: this.releases,
-                    manifests: this.manifests,
+                    ...(fast
+                        ? dependencySnapshotReaders(this.releases, this.manifests, records)
+                        : { releases: this.releases, manifests: this.manifests }),
                     installations: records.installations.map((record) => record.installation),
                     revision,
                 };
