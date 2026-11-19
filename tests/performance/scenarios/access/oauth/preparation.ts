@@ -1,6 +1,33 @@
+import { loadPolicy } from "../../../capabilities/policies";
 import { ClientFailure } from "../../../harness/clients/failure";
 import { assertCondition } from "../../queries/types";
 import { oauthDocument, oauthRefusal } from "./protocol";
+import type { Variant } from "../../../capabilities/types";
+
+type PoolLease = Readonly<{ release: () => void }>;
+
+/** Finish lazy tenant construction before issuing the concurrent exchange cohort's short-lived codes. */
+export async function prepareOAuthCohort(
+    acquire: () => Promise<PoolLease>,
+    capability: string,
+    variant: Variant,
+    sampleIndex: number,
+): Promise<void> {
+    if (capability !== "exchange-mcp-token" || variant !== "concurrent" || sampleIndex !== 0) {
+        return;
+    }
+    const leases: PoolLease[] = [];
+    try {
+        const count = loadPolicy("concurrent").load!.concurrency;
+        for (let index = 0; index < count; index++) {
+            leases.push(await acquire());
+        }
+    } finally {
+        for (const lease of leases.reverse()) {
+            lease.release();
+        }
+    }
+}
 
 type PreparedResponse = Readonly<{ observation: Readonly<{ validated: boolean }>; output: unknown }>;
 

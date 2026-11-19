@@ -5,6 +5,7 @@ import { prepareAccess } from "./recipes";
 import { settingsTenants } from "../content/settings/tenant";
 import { OAUTH_CAPABILITIES } from "./oauth/fixture";
 import { prepareOAuth } from "./oauth/cases";
+import { prepareOAuthCohort } from "./oauth/preparation";
 import { oauthReadScenarios } from "./oauth/read/plan";
 import { RECOVERY_CAPABILITIES } from "./recovery/fixture";
 import { prepareRecovery } from "./recovery/cases";
@@ -29,7 +30,10 @@ export function accessScenarios(inventory: CapabilityInventory, fixture: string,
         "access-oauth",
         "ulvia/cms.access",
         OAUTH_CAPABILITIES,
-        async (environment, capability) => prepareOAuth(await lease(environment), capability, environment),
+        async (environment, capability, obligation, sampleIndex) => {
+            await prepareOAuthCohort(() => lease(environment), capability, obligation.variant, sampleIndex);
+            return prepareOAuth(await lease(environment), capability, environment);
+        },
     );
     const recovery = lifecycleScenarios(
         inventory,
