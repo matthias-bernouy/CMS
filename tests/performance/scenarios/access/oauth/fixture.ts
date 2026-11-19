@@ -1,3 +1,4 @@
+import { oauthPreparation } from "./preparation";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { assertCondition } from "../../queries/types";
 import { oauthDocument, oauthSuccess, oauthRedirect } from "./protocol";
@@ -27,9 +28,13 @@ export async function oauthFixture(lease: OAuthLease, capability: string) {
         client("ulvia/cms.access", id, "http", { requestJson: JSON.stringify(input) }, (output) => {
             assert(output);
         });
+    const preparation = oauthPreparation();
     const checked = async (id: string, input: Readonly<Record<string, unknown>>) => {
-        const result = await call(id, input);
-        assertCondition(result.observation.validated);
+        if (["register-mcp-client", "prepare-mcp-authorization"].includes(id)) {
+            return preparation(id, () => call(id, input, oauthDocument));
+        }
+        const result = await call(id, input, oauthDocument);
+        assertCondition(result.observation.validated, `oauth-lifecycle-${id}-preparation-envelope`);
         return oauthSuccess(result.output);
     };
     const registered = capability === "register-mcp-client" ? null : await checked("register-mcp-client", registration);
