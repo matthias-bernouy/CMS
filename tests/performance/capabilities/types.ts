@@ -57,6 +57,16 @@ export type MongoTransactionWitness = Readonly<{
     outcome: "succeeded" | "failed";
 }>;
 
+export type WorkInstrumentationFailure =
+    | "probe-health"
+    | "dependency-evidence"
+    | "profile-shape"
+    | "operation-witness"
+    | "probe-overflow"
+    | "network-body-count"
+    | "network-body-incomplete"
+    | "mongo-witness";
+
 export type WorkMetrics = Readonly<{
     mongoOperations: number;
     documentsExamined: number;
@@ -65,6 +75,7 @@ export type WorkMetrics = Readonly<{
     internalRequests: number;
     internalResponseBytes: number;
     instrumentationComplete: boolean;
+    instrumentationFailures?: readonly WorkInstrumentationFailure[];
 }>;
 
 export type DependencyMetrics = Readonly<{

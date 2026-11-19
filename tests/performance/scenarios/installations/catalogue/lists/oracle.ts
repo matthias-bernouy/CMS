@@ -1,3 +1,4 @@
+import { assertMetadataProviderObservation } from "./observation";
 import { assertProviderRoutes } from "./routes";
 import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { assertCondition, requireRecord } from "../../../queries/types";
@@ -87,14 +88,7 @@ export function installedProviderOracle(state: MetadataListExpectation) {
                 entry.endpoint === (controlled.has(id) ? "http://ulvia-provider:5103" : expected.endpoint),
                 "metadata-provider-owned-endpoint",
             );
-            assertCondition(
-                Number.isSafeInteger(entry.revision) &&
-                    Number(entry.revision) >= Number(expected.revision) &&
-                    typeof entry.observedAt === "string" &&
-                    Date.parse(entry.observedAt) >= Date.parse(String(expected.observedAt)) &&
-                    Date.parse(entry.observedAt) <= Date.now() + 1000,
-                "metadata-provider-monotonic-observation",
-            );
+            assertMetadataProviderObservation(entry, expected, controlled.has(id));
             if (controlled.has(id)) {
                 assertCondition(
                     entry.revision === expected.revision && entry.observedAt === expected.observedAt,

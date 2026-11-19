@@ -1,4 +1,5 @@
-import { mongoEvidence, mongoTransactionWitnesses } from "./mongo-evidence";
+import { mongoTransactionWitnesses } from "./mongo-evidence";
+import { incompleteWorkReasons } from "./completeness";
 import type { InvocationWitness, WorkMetrics, DependencyMetrics } from "../../capabilities/types";
 import { dependencyEvidence } from "../services/dependencies";
 import type { ProbeRow } from "./probe";
@@ -93,6 +94,17 @@ export function collectMetrics(
             row.database.length > 0 &&
             [row.operations, row.documentsExamined, row.keysExamined, row.documentsReturned].every(nonnegative),
     );
+    const instrumentationFailures = incompleteWorkReasons({
+        healthy,
+        dependenciesComplete: dependency.complete,
+        profileValid: valid,
+        operationComplete: !requireOperation || operations.length === 1,
+        rows: selected,
+        calls,
+        bodies,
+        mongo,
+        profile,
+    });
     const work: WorkMetrics = {
         mongoOperations: mongo.length,
         documentsExamined: profile.reduce((sum, row) => sum + row.documentsExamined, 0),
@@ -101,15 +113,8 @@ export function collectMetrics(
         internalRequests: calls.length + dependency.requests,
         internalResponseBytes:
             bodies.reduce((sum, row) => sum + (nonnegative(row.bytes) ? row.bytes : 0), 0) + dependency.responseBytes,
-        instrumentationComplete:
-            healthy &&
-            dependency.complete &&
-            valid &&
-            (!requireOperation || operations.length === 1) &&
-            !selected.some((row) => row.kind === "overflow") &&
-            bodies.length === calls.length &&
-            bodies.every((row) => row.complete === true && nonnegative(row.bytes)) &&
-            mongo.every((command) => mongoEvidence(command, profile, selected)),
+        instrumentationComplete: instrumentationFailures.length === 0,
+        ...(instrumentationFailures.length ? { instrumentationFailures } : {}),
     };
     const spans = new Set(business.map((row) => row.spanId));
     for (let previous = -1; previous !== spans.size; ) {
