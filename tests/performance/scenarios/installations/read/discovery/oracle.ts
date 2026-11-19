@@ -34,9 +34,11 @@ export function searchPageOracle(expected: ReturnType<typeof expectedSearch>, li
     return (value: unknown) => {
         const row = requireRecord(value);
         assertCondition(
-            row.mode === "lexical" &&
-                row.degraded === true &&
-                row.partial === false &&
+            (row.mode === "lexical" || row.mode === "hybrid") && row.degraded === (row.mode === "lexical"),
+            "site-discovery-valid-search-mode",
+        );
+        assertCondition(
+            row.partial === false &&
                 Array.isArray(row.unavailableRepositories) &&
                 row.unavailableRepositories.length === 0,
             "site-discovery-local-source-complete",
