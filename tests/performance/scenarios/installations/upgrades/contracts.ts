@@ -64,9 +64,12 @@ export async function prepareContractSwitch(
                     assertCondition(grantKey(after.collections) === grantKey(before.collections));
                     const saved = await context.read("get-contract-upgrade", { upgradeId: applied!.upgradeId });
                     assertCondition(grantKey(saved) === grantKey(applied));
-                    const read = await context.state.client(DENIED_READ.contractId, DENIED_READ.capabilityId, "http", {
-                        limit: 1,
-                    });
+                    const read = await context.state.client(
+                        DENIED_READ.contractId,
+                        DENIED_READ.capabilityId,
+                        "http",
+                        {},
+                    );
                     assertCondition(
                         context.denied
                             ? read.observation.validated

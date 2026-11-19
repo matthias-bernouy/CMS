@@ -8,7 +8,8 @@ import type { ClientCall } from "../../../harness/clients/types";
 import type { CapabilityInventory } from "../../../capabilities/types";
 
 export const INSTALLATIONS = "ulvia/cms.installations";
-export const DENIED_READ = { contractId: "ulvia/cms.observability", capabilityId: "logs.query" };
+// Grant-toggle fixtures must preserve mandatory Edge/Provider diagnostic consumers.
+export const DENIED_READ = { contractId: "ulvia/cms.content", capabilityId: "site.get" };
 export const grantKey = (value: unknown) => canonicalizeIJson(value);
 
 export async function upgradeContext(

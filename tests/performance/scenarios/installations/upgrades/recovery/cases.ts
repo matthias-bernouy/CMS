@@ -61,9 +61,7 @@ export async function prepareContractRecovery(context: UpgradeContext, binding: 
                 );
                 const completed = await context.read("get-contract-upgrade", input);
                 completedUpgrade(completed, Number(review.expectedRevision) + 1, upgradeId);
-                const denied = await context.state.client(DENIED_READ.contractId, DENIED_READ.capabilityId, "http", {
-                    limit: 1,
-                });
+                const denied = await context.state.client(DENIED_READ.contractId, DENIED_READ.capabilityId, "http", {});
                 assertCondition(
                     context.denied
                         ? denied.observation.validated
