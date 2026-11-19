@@ -3,7 +3,7 @@ import { hostedInput } from "./context";
 import { hostingDataset, HOSTING_DATASET_SIZE } from "./datasets";
 import { hostingPage, seekBefore, verifyNextPage } from "./pages";
 import { assertCondition, requireRecord } from "../queries/types";
-import { discardDisabledTenantDatabase } from "../../harness/docker/cleanup/tenant";
+import { retainDisabledTenantDatabase } from "../../harness/docker/cleanup/tenant";
 import type { HostingContext } from "./context";
 import type { Variant } from "../../capabilities/types";
 import type { PreparedSample } from "../../harness/execution/samples";
@@ -104,7 +104,7 @@ export async function prepareHostingInstance(
             if (createdId) {
                 await context.checked("instances.disable", { instanceId: createdId });
                 assertCondition(typeof createdId === "string" && typeof input.origin === "string");
-                await discardDisabledTenantDatabase(context.environment.stack, {
+                await retainDisabledTenantDatabase(context.environment.stack, {
                     instanceId: createdId,
                     origin: input.origin,
                 });
@@ -112,7 +112,7 @@ export async function prepareHostingInstance(
             if (fresh) {
                 await context.checked("instances.disable", { instanceId: fresh.instance.id });
                 assertCondition(typeof fresh.instance.id === "string");
-                await discardDisabledTenantDatabase(context.environment.stack, {
+                await retainDisabledTenantDatabase(context.environment.stack, {
                     instanceId: fresh.instance.id,
                     origin: fresh.input.origin,
                 });

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { runInNewContext } from "node:vm";
 import { assertOwnedTenantCleanup, assertDisabledTenantRecord } from "./tenant";
 
-test("tenant disposal refuses production stacks, shared sites, foreign identities and credential-bearing origins", () => {
+test("tenant retention refuses production stacks, shared sites, foreign identities and credential-bearing origins", () => {
     const stack = { id: "ulvia-mcp-aabbccdd", providerName: "ulvia-mcp-aabbccdd-provider" };
     const tenant = {
         instanceId: "instance:00000000-0000-4000-8000-000000000001",
@@ -28,7 +28,7 @@ test("tenant disposal refuses production stacks, shared sites, foreign identitie
     expect(() => assertOwnedTenantCleanup(stack, { ...tenant, instanceId: "foreign" })).toThrow();
 });
 
-test("tenant disposal refuses ready, missing and mismatched records before deleting any storage", () => {
+test("tenant retention refuses ready, missing and mismatched records before reading storage", () => {
     const assertRecord = runInNewContext(
         `(${assertDisabledTenantRecord.toString()})`,
     ) as typeof assertDisabledTenantRecord;

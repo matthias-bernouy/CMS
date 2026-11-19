@@ -33,8 +33,8 @@ export function assertOwnedTenantCleanup(stack: Stack, tenant: Tenant) {
     }
 }
 
-/** Called only after sample collection and admitted disable; keep the disabled catalogue record for history. */
-export async function discardDisabledTenantDatabase(stack: Stack, tenant: Tenant) {
+/** Disabled tenants remain restartable until the entire owned Docker stack is removed. */
+export async function retainDisabledTenantDatabase(stack: Stack, tenant: Tenant) {
     assertOwnedTenantCleanup(stack, tenant);
     const script = `
         import { MongoClient } from "mongodb";
@@ -48,8 +48,9 @@ export async function discardDisabledTenantDatabase(stack: Stack, tenant: Tenant
             assertRecord(${JSON.stringify(tenant)},record);
             const database=instanceDatabaseName(record.storageKey);
             if(database===client.db().databaseName)throw Error("Control database cleanup refused");
-            await client.db(database).dropDatabase();
-            console.log(JSON.stringify({removed:true}));
+            const retained=await client.db(database).collection("cms_provider_installations").countDocuments({siteId:"default"},{limit:1});
+            if(retained!==1)throw Error("Disabled performance tenant persistence is unavailable");
+            console.log(JSON.stringify({retained:true}));
         } finally {await client.close();}
     `;
     const result = await docker([
@@ -62,7 +63,7 @@ export async function discardDisabledTenantDatabase(stack: Stack, tenant: Tenant
         "-e",
         script,
     ]);
-    if (JSON.parse(result.stdout.trim()).removed !== true) {
-        throw new Error("Disabled performance tenant database was not removed");
+    if (JSON.parse(result.stdout.trim()).retained !== true) {
+        throw new Error("Disabled performance tenant persistence was not retained");
     }
 }

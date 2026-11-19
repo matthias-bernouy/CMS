@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { requireRecord } from "../queries/types";
 import { assertCondition } from "../queries/types";
-import { discardDisabledTenantDatabase } from "../../harness/docker/cleanup/tenant";
+import { retainDisabledTenantDatabase } from "../../harness/docker/cleanup/tenant";
 import type { HostingContext } from "./context";
 import type { Variant } from "../../capabilities/types";
 
@@ -27,7 +27,7 @@ export async function hostingDataset(
                     if (variant === "history") {
                         await context.checked("instances.disable", { instanceId: created.instance.id });
                         assertCondition(typeof created.instance.id === "string");
-                        await discardDisabledTenantDatabase(context.environment.stack, {
+                        await retainDisabledTenantDatabase(context.environment.stack, {
                             instanceId: created.instance.id,
                             origin: created.input.origin,
                         });

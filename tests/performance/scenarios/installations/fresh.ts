@@ -8,7 +8,7 @@ import { assertCondition, requireRecord } from "../queries/types";
 import { ClientFailure } from "../../harness/clients/failure";
 import { mcpTokenRefresh } from "../../harness/clients/refresh";
 import { expectBodyRefusal } from "../../harness/clients/refusal";
-import { discardDisabledTenantDatabase } from "../../harness/docker/cleanup/tenant";
+import { retainDisabledTenantDatabase } from "../../harness/docker/cleanup/tenant";
 import type { CapabilityInventory } from "../../capabilities/types";
 import type { QueryEnvironment } from "../queries/execute";
 
@@ -53,7 +53,7 @@ export function freshTenants(inventory: CapabilityInventory) {
                     if (!disabled.observation.validated || requireRecord(disabled.output).status !== "disabled") {
                         throw new ClientFailure("fresh-tenant-disable-failed");
                     }
-                    await discardDisabledTenantDatabase(environment.stack, {
+                    await retainDisabledTenantDatabase(environment.stack, {
                         instanceId: site.instanceId,
                         origin: site.url,
                     });
