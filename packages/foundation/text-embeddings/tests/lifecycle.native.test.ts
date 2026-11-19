@@ -61,3 +61,41 @@ native(
     },
     60_000,
 );
+
+native(
+    "varied native passage shapes preserve finite vectors and repeated input semantics",
+    async () => {
+        const model = new TransformersEmbeddings(options);
+        const signal = AbortSignal.timeout(45_000);
+        const passages = Array.from({ length: 16 }, (_, index) =>
+            `Collection ${index} contains reusable page components, scoped capabilities, editable content and semantic theme tokens. `
+                .repeat(50)
+                .slice(0, 4096),
+        );
+        let reference: readonly (readonly number[])[] | undefined;
+        try {
+            for (const length of [512, 1024, 2048, 4096, 768, 1536, 3072, 4096]) {
+                const vectors = await model.embed(
+                    passages.map((passage) => passage.slice(0, length)),
+                    "passage",
+                    signal,
+                );
+                expect(vectors).toHaveLength(16);
+                for (const vector of vectors) {
+                    expect(vector).toHaveLength(384);
+                    expect(vector.every(Number.isFinite)).toBe(true);
+                    expect(Math.abs(Math.hypot(...vector) - 1)).toBeLessThan(1e-5);
+                }
+                if (length === 4096) {
+                    if (reference) {
+                        expect(vectors).toEqual(reference);
+                    }
+                    reference = vectors;
+                }
+            }
+        } finally {
+            await model.close();
+        }
+    },
+    60_000,
+);

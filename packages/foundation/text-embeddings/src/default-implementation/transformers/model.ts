@@ -102,9 +102,11 @@ export class TransformersModel implements Embeddings {
             cache_dir: this.options.cacheDirectory,
             dtype: "q8" as const,
             device: "cpu" as const,
-            ...(this.options.threads
-                ? { session_options: { intraOpNumThreads: this.options.threads, interOpNumThreads: 1 } }
-                : {}),
+            session_options: {
+                // Passage batches have variable shapes; avoid retaining shape-specific memory patterns.
+                enableMemPattern: false,
+                ...(this.options.threads ? { intraOpNumThreads: this.options.threads, interOpNumThreads: 1 } : {}),
+            },
         };
         const model = this.options.model ?? DEFAULT_EMBEDDING_MODEL;
         const directory = resolve(this.options.cacheDirectory, model, options.revision);
