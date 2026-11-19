@@ -28,7 +28,7 @@ export function readerScenarios(inventory: CapabilityInventory, fixture: string)
                 return prepareDocumentReader(context, obligation.binding);
             }
             if (capability.startsWith("get-provider-")) {
-                return prepareProviderReader(context, capability, obligation.binding);
+                return prepareProviderReader(context, capability, obligation.binding, obligation.variant);
             }
             return prepareCollectionReader(context, capability, obligation.binding);
         },

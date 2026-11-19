@@ -33,9 +33,34 @@ export async function prepareFavicon(
             );
         }
         const command = capability === "site.favicon.update";
-        const input = command ? { expectedRevision: before.revision, favicon: marker } : {};
-        const expected = command ? { revision: Number(before.revision) + 1, favicon: marker } : before;
+        let input: Readonly<Record<string, unknown>> = command
+            ? { expectedRevision: before.revision, favicon: marker }
+            : {};
+        let expected: Readonly<Record<string, unknown>> = command
+            ? { revision: Number(before.revision) + 1, favicon: marker }
+            : before;
         return {
+            ...(variant === "cold"
+                ? {
+                      async beforeMeasure() {
+                          // The lifecycle wrapper restarts first; refresh only the optimistic revision.
+                          const current = await state.fixture("site.get", {});
+                          assertCondition(
+                              typeof current.revision === "number" &&
+                                  Number.isSafeInteger(current.revision) &&
+                                  current.revision >= Number(before.revision),
+                              "favicon-cold-revision-invalid",
+                          );
+                          if (command) {
+                              input = { ...input, expectedRevision: current.revision };
+                          }
+                          expected = {
+                              revision: current.revision + (command ? 1 : 0),
+                              favicon: command ? marker : before.favicon,
+                          };
+                      },
+                  }
+                : {}),
             async send() {
                 return (
                     await state.client("ulvia/cms.content", capability, binding, input, (value) => {

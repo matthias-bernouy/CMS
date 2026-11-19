@@ -4,7 +4,7 @@ import { sampleScenario } from "../../harness/execution/samples";
 import { assertCondition } from "../queries/types";
 import { initializationFixture } from "./fixture";
 import { assertInitializationReview } from "./review";
-import { expectedAfterRestarts } from "./state";
+import { initializationStateGuard } from "./state";
 import { settleInitialization } from "./settlement";
 import type { CapabilityInventory, Variant } from "../../capabilities/types";
 import type { QueryEnvironment } from "../queries/execute";
@@ -88,9 +88,7 @@ export function initializationScenarios(
                                 );
                             }
                             const before = await state.snapshot();
-                            let coldCompleted = 0;
-                            const baseline: Readonly<Record<string, unknown>> =
-                                variant === "cold" ? expectedAfterRestarts(before, definition.samples) : before;
+                            const stateGuard = initializationStateGuard(before, variant === "cold");
                             return sampleScenario(
                                 environment.stack,
                                 definition,
@@ -98,7 +96,7 @@ export function initializationScenarios(
                                 async () => ({
                                     async send() {
                                         if (variant === "cold") {
-                                            await environment.stack.restartProvider();
+                                            await stateGuard.restart(() => environment.stack.restartProvider());
                                         }
                                         const result = await state.client(
                                             "ulvia/cms.installations",
@@ -123,14 +121,7 @@ export function initializationScenarios(
                                             // A refusal or timeout must preserve the same durable state as a successful preview.
                                             const unchanged =
                                                 canonicalizeIJson(await state.snapshot()) ===
-                                                canonicalizeIJson(
-                                                    variant === "cold"
-                                                        ? expectedAfterRestarts(before, coldCompleted + 1)
-                                                        : before,
-                                                );
-                                            if (variant === "cold") {
-                                                coldCompleted++;
-                                            }
+                                                canonicalizeIJson(stateGuard.expected());
                                             if (!settled || !unchanged) {
                                                 return {
                                                     ...result.observation,
@@ -145,11 +136,7 @@ export function initializationScenarios(
                                     },
                                     async verify() {
                                         const current: Readonly<Record<string, unknown>> = await state.snapshot();
-                                        const changed = Object.keys(baseline).filter(
-                                            (field) =>
-                                                canonicalizeIJson(current[field]) !==
-                                                canonicalizeIJson(baseline[field]),
-                                        );
+                                        const changed = stateGuard.changed(current);
                                         if (changed.length) {
                                             console.log(
                                                 `initialization state changed: ${definition.id}: ${changed.join(",")}`,
