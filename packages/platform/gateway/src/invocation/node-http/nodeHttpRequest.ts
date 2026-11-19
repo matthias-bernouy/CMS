@@ -18,6 +18,12 @@ export interface PinnedHttpRequest {
 export async function sendPinnedHttpRequest(value: PinnedHttpRequest): Promise<Response> {
     return new Promise<Response>((resolve, reject) => {
         const secure = value.url.protocol === "https:";
+        const headers: Record<string, string> = { ...value.headers, host: value.url.host };
+        if (typeof value.body === "string") {
+            headers["content-length"] = String(Buffer.byteLength(value.body));
+        } else if (value.body instanceof ReadableStream && headers["content-length"] === undefined) {
+            headers["transfer-encoding"] = "chunked";
+        }
         const options: RequestOptions = {
             protocol: value.url.protocol,
             hostname: value.address.address,
@@ -25,7 +31,7 @@ export async function sendPinnedHttpRequest(value: PinnedHttpRequest): Promise<R
             ...(value.url.port ? { port: value.url.port } : {}),
             path: `${value.url.pathname}${value.url.search}`,
             method: value.method,
-            headers: { ...value.headers, host: value.url.host },
+            headers,
             signal: value.signal,
             agent: secure ? pinnedHttpsAgent : pinnedHttpAgent,
             ...(secure ? { servername: value.url.hostname.replace(/^\[|\]$/g, "") } : {}),
