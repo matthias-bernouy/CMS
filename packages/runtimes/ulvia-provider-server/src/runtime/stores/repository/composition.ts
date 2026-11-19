@@ -65,6 +65,7 @@ export function createRepositoryAuthoring(
             stores.contractSecrets.repository,
             allowInsecureHttp,
             request,
+            stores.db.databaseName,
         ),
     );
 }

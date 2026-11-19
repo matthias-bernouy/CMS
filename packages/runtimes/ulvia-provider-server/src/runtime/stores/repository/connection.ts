@@ -5,6 +5,8 @@ import type { SecretStore } from "@bernouy/secret-store";
 import { RepositoryConnection, RepositoryNamespaceClient } from "@bernouy/repository/repository/namespaces";
 import type { RepositoryConnectionCredential } from "@bernouy/repository/repository/namespaces";
 
+import { mutateConnection } from "./connectionMutations";
+
 const SECRET = "REPOSITORY_CONNECTION";
 interface StoredConnection {
     readonly schema: "ulvia.repository-pat.v1";
@@ -22,6 +24,7 @@ export class PublisherConnection {
         url: string,
         readonly allowInsecureHttp: boolean,
         readonly request?: RepositoryFetch,
+        private readonly mutationScope?: string,
     ) {
         this.origin = new RepositoryConnection(url, undefined, { allowInsecureHttp, request }).base.origin;
     }
@@ -33,6 +36,9 @@ export class PublisherConnection {
         if (!/^pat_[A-Za-z0-9_-]{43}$/u.test(token)) {
             throw new NamespaceAccessError("Invalid Repository personal access token");
         }
+        return mutateConnection(this.secrets, this.mutationScope, () => this.configureVerified(token));
+    }
+    private async configureVerified(token: string) {
         const previous = await this.read();
         const repositoryId = await new RepositoryConnection(this.origin, undefined, this).identity();
         if (previous && previous.repositoryId !== repositoryId) {
@@ -63,9 +69,11 @@ export class PublisherConnection {
         );
         return { configured: true, repositoryUrl: this.origin, repositoryId };
     }
-    async disconnect() {
-        await this.secrets.delete(SECRET);
-        return { configured: false, repositoryUrl: this.origin, repositoryId: null };
+    disconnect() {
+        return mutateConnection(this.secrets, this.mutationScope, async () => {
+            await this.secrets.delete(SECRET);
+            return { configured: false, repositoryUrl: this.origin, repositoryId: null };
+        });
     }
     async credential(): Promise<RepositoryConnectionCredential> {
         const expected = await this.read();

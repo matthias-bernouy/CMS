@@ -24,7 +24,11 @@ test("collection source assets validate their pinned bytes and remain usable aft
                 assetId: "logo.svg",
             },
         ];
-        const stores = { releases: f.contracts, contractSecrets: { repository: f.secrets } };
+        const stores = {
+            db: { databaseName: crypto.randomUUID() },
+            releases: f.contracts,
+            contractSecrets: { repository: f.secrets },
+        };
         for (const tamper of ["asset", "release"]) {
             const source = new HttpCollectionRepository("local", f.base, {
                 request: async (url, init) => {

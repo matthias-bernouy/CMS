@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { RepositoryConnection } from "@bernouy/repository/repository/namespaces";
-import { RepositoryPublisher } from "../../../src/runtime/stores/repository/RepositoryPublisher";
-import { PublisherConnection } from "../../../src/runtime/stores/repository/connection";
-import { repositoryPeer } from "./peer";
+import { RepositoryPublisher } from "../../../../src/runtime/stores/repository/RepositoryPublisher";
+import { PublisherConnection } from "../../../../src/runtime/stores/repository/connection";
+import { repositoryPeer } from "../peer";
 
 test("PAT configuration verifies membership, persists one pinned secret and reveals only status", async () => {
     const peer = repositoryPeer();

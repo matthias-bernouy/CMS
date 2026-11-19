@@ -14,8 +14,9 @@ export class RepositoryPublisher implements CollectionPublisher {
         secrets: SecretStore,
         readonly allowInsecureHttp = false,
         readonly request?: RepositoryFetch,
+        mutationScope?: string,
     ) {
-        this.connection = new PublisherConnection(secrets, repositoryUrl, allowInsecureHttp, request);
+        this.connection = new PublisherConnection(secrets, repositoryUrl, allowInsecureHttp, request, mutationScope);
     }
     connectionStatus() {
         return this.connection.view();
