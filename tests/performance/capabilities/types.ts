@@ -47,6 +47,16 @@ export type InvocationWitness = Readonly<{
     firstInProcess?: boolean;
 }>;
 
+export type MongoTransactionWitness = Readonly<{
+    database: "admin";
+    operation: "commitTransaction" | "abortTransaction";
+    traceId: string;
+    requestId: number;
+    spanId?: string;
+    durationMs: number;
+    outcome: "succeeded" | "failed";
+}>;
+
 export type WorkMetrics = Readonly<{
     mongoOperations: number;
     documentsExamined: number;
@@ -83,6 +93,7 @@ export type Measurement = Readonly<{
     streamConsumed: boolean;
     work: WorkMetrics;
     invocations: readonly InvocationWitness[];
+    mongoTransactions?: readonly MongoTransactionWitness[];
     network?: readonly Readonly<{ path: string; requests: number; responseBytes: number }>[];
     phases?: readonly Readonly<{ name: string; calls: number; failed: number; totalMs: number; maxMs: number }>[];
     breakdown?: Readonly<{

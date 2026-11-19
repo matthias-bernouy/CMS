@@ -1,3 +1,4 @@
+import { transactionProbe } from "./transactions";
 import { record, scope } from "./records";
 import { tenantProfiler } from "./mongo-profile";
 import type { ProfilingClient } from "./mongo-profile";
@@ -11,8 +12,17 @@ type MongoModule = {
 type MonitoredClient = ProfilingClient & {
     monitorCommands: boolean;
     on(
-        event: string,
-        listener: (event: { databaseName: string; commandName: string; command: Record<string, unknown> }) => void,
+        event: "commandStarted",
+        listener: (event: {
+            requestId: number;
+            databaseName: string;
+            commandName: string;
+            command: Record<string, unknown>;
+        }) => void,
+    ): void;
+    on(
+        event: "commandSucceeded" | "commandFailed",
+        listener: (event: { requestId: number; databaseName: string; commandName: string; duration: number }) => void,
     ): void;
 };
 
@@ -74,12 +84,21 @@ export function instrumentMongo(mongo: MongoModule, currentTrace: () => string |
         if (!connected.has(this)) {
             connected.add(this);
             client.monitorCommands = true;
+            const transactions = transactionProbe(record);
+            client.on("commandSucceeded", (event) => transactions.finished(event, "succeeded"));
+            client.on("commandFailed", (event) => transactions.finished(event, "failed"));
             client.on("commandStarted", (event) => {
                 if (configuring.has(client)) {
                     return;
                 }
+                const context = {
+                    traceId: scope.getStore()?.traceId ?? currentTrace(),
+                    spanId: scope.getStore()?.spanId,
+                };
+                transactions.started(event, context);
                 record({
                     kind: "mongo",
+                    requestId: event.requestId,
                     database: event.databaseName,
                     traceId: scope.getStore()?.traceId ?? currentTrace(),
                     operation: event.commandName,

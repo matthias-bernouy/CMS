@@ -1,3 +1,4 @@
+import { mongoEvidence, mongoTransactionWitnesses } from "./mongo-evidence";
 import type { InvocationWitness, WorkMetrics, DependencyMetrics } from "../../capabilities/types";
 import { dependencyEvidence } from "../services/dependencies";
 import type { ProbeRow } from "./probe";
@@ -72,6 +73,7 @@ export function collectMetrics(
         }
     }
     const profile = profiles.filter((row) => traces.has(row.traceId));
+    const transactions = mongoTransactionWitnesses(mongo, selected);
     const business = roots.filter((row) => row.kind === "capability" && row.target === businessTarget);
     const operations = roots.filter(
         (row) =>
@@ -107,15 +109,7 @@ export function collectMetrics(
             !selected.some((row) => row.kind === "overflow") &&
             bodies.length === calls.length &&
             bodies.every((row) => row.complete === true && nonnegative(row.bytes)) &&
-            mongo.every(
-                (command) =>
-                    typeof command.database === "string" &&
-                    command.database.length > 0 &&
-                    profile.some(
-                        (row) =>
-                            row.database === command.database && row.traceId === command.traceId && row.operations > 0,
-                    ),
-            ),
+            mongo.every((command) => mongoEvidence(command, profile, selected)),
     };
     const spans = new Set(business.map((row) => row.spanId));
     for (let previous = -1; previous !== spans.size; ) {
@@ -162,6 +156,7 @@ export function collectMetrics(
     return {
         work,
         invocations,
+        ...(transactions.length ? { mongoTransactions: transactions } : {}),
         ...(network.length || dependency.network.length ? { network: [...network, ...dependency.network] } : {}),
         ...(phases.length ? { phases } : {}),
         ...(businessTarget
