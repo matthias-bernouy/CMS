@@ -97,7 +97,7 @@ export async function prepareInitializationList(
                     }
                 }
                 const invalid = await state.client(contract, capability, "http", { cursor: "invalid-cursor" });
-                assertCondition(!invalid.observation.validated && invalid.observation.status === 422);
+                assertCondition(!invalid.observation.validated && invalid.observation.status === 409);
                 const foreign = await state.client(contract, capability, "http", {}, undefined, {
                     httpCredentials: { cookie: environment.main.cookie },
                 });
