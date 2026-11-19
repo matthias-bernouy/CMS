@@ -9,8 +9,7 @@ import type { InstallationsProviderTransport } from "./InstallationsProviderTran
 import type { Logger } from "@bernouy/logging";
 import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 
-import { INSTALLATIONS_CONTRACT, type InstallationsControlContract } from "./control";
-import { RouteJsonCache } from "./control/RouteJsonCache";
+import { INSTALLATIONS_CONTRACT, type InstallationsControlContract } from "./controlReport";
 const MAX_CONTROL_RESPONSE_BYTES = 2 * 1024 * 1024;
 
 export type IssuedProviderInvocation = Readonly<{
@@ -20,7 +19,6 @@ export type IssuedProviderInvocation = Readonly<{
 
 export class ControlProviderClient {
     readonly delegations: ControlDelegationAuthority;
-    private readonly routeJson = new RouteJsonCache("reply");
     private readonly roots = new TrackedDelegationRoots();
     constructor(
         private readonly transport: InstallationsProviderTransport,
@@ -201,8 +199,7 @@ export class ControlProviderClient {
         }
         const bytes = await readBounded(response);
         this.reportInvocation(capabilityId, performance.now() - startedAt, bytes.byteLength);
-        const source = new TextDecoder().decode(bytes);
-        const value: unknown = capabilityId === "gateway.route.get" ? this.routeJson.parse(source) : JSON.parse(source);
+        const value: unknown = JSON.parse(new TextDecoder().decode(bytes));
         if (!value || typeof value !== "object" || Array.isArray(value)) {
             throw new TypeError("Installations Provider returned an invalid capability response");
         }
