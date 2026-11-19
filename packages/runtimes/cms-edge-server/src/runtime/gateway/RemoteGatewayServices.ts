@@ -4,7 +4,10 @@ import type { ProviderIdentityScope, ProviderIdentityService } from "@bernouy/cm
 import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import type { ControlProviderClient } from "./ControlProviderClient";
 
+import { RouteJsonCache } from "./control/RouteJsonCache";
+
 export class ControlGatewayRouteResolver implements GatewayRouteResolver {
+    readonly #decoded = new RouteJsonCache("snapshot");
     readonly #cache = new Map<string, { route: GatewayRoute; expiresAt: number }>();
     readonly #pending = new Map<string, Promise<GatewayRoute | null>>();
 
@@ -26,7 +29,7 @@ export class ControlGatewayRouteResolver implements GatewayRouteResolver {
         }
         // Share concurrent transport-plan reads; dispatch still has a live authorization fence.
         const load = this.control.getGatewayRoute(contractId).then((snapshot) => {
-            const route = snapshot === null ? null : parseRoute(snapshot, siteId, contractId);
+            const route = snapshot === null ? null : parseRoute(snapshot, siteId, contractId, this.#decoded);
             if (this.#pending.get(cacheKey) === load && route) {
                 // The cache is per control connection (one instance), and holds transport plans only.
                 if (snapshot!.length <= 512 * 1024) {
@@ -59,7 +62,7 @@ export class ControlGatewayRouteResolver implements GatewayRouteResolver {
         if (snapshot === null) {
             return false;
         }
-        const current = parseRoute(snapshot, route.selection.siteId, route.selection.contractId);
+        const current = parseRoute(snapshot, route.selection.siteId, route.selection.contractId, this.#decoded);
         return sameSelection(route, current) && sameInstallation(route, current) && readyForSelection(current);
     }
 }
@@ -116,11 +119,11 @@ export class ControlGatewayAuditStore implements GatewayCommandAuditStore {
     }
 }
 
-function parseRoute(snapshot: string, siteId: string, contractId: string): GatewayRoute {
+function parseRoute(snapshot: string, siteId: string, contractId: string, decoded: RouteJsonCache): GatewayRoute {
     if (snapshot.length > 1024 * 1024) {
         throw new TypeError("Installations Provider Gateway route is too large");
     }
-    const value: unknown = JSON.parse(snapshot);
+    const value: unknown = decoded.parse(snapshot);
     if (!value || typeof value !== "object" || Array.isArray(value)) {
         throw new TypeError("Installations Provider Gateway route is invalid");
     }
