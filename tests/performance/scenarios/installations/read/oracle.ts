@@ -23,7 +23,8 @@ export function installationReadOracle(expected: Readonly<Record<string, unknown
 export function providerReadAfterDisable(before: Readonly<Record<string, unknown>>, capability: string) {
     const revision = Number(before.revision) + 1;
     if (capability === "get-provider-installation") {
-        return { ...before, revision, status: "disabled" };
+        const { observedAt: _observedAt, ...approval } = before;
+        return { ...approval, revision, status: "disabled", contracts: [] };
     }
     assertCondition(
         capability === "get-provider-access" && Array.isArray(before.requests),
