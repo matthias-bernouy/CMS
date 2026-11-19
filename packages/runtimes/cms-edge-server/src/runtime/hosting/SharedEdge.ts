@@ -1,7 +1,8 @@
 import { isIP } from "node:net";
-import { getRequestIP, setRequestIP, retainResponseResource } from "@bernouy/http-runner";
+import { getRequestIP, setRequestIP, retainResponseResource, requestId } from "@bernouy/http-runner";
 import type { EdgeRoute } from "@bernouy/hosting/routing";
 import type { Logger } from "@bernouy/logging";
+import type { ContextPoolOptions } from "./ContextPool";
 import { EdgeContextPool } from "./ContextPool";
 import { routeContextKey } from "./client/RouteLease";
 
@@ -14,7 +15,7 @@ export class SharedEdge {
         private readonly routing: { resolve(hostname: string): Promise<EdgeRoute | null> },
         create: (route: EdgeRoute) => Promise<Context>,
         private readonly logger: Logger,
-        bounds: { maxEntries: number; maxPending: number; maxWaiters: number; idleMs: number },
+        bounds: ContextPoolOptions,
     ) {
         this.contexts = new EdgeContextPool(
             async (key) => {
@@ -66,7 +67,7 @@ export class SharedEdge {
                     headers: { location: canonical.href, "cache-control": "no-store" },
                 });
             }
-            const lease = await this.contexts.acquire(routeContextKey(route));
+            const lease = await this.contexts.acquire(routeContextKey(route), request.signal);
             try {
                 lease.context.update(route);
                 origin.pathname = url.pathname;
@@ -83,7 +84,11 @@ export class SharedEdge {
                 throw error;
             }
         } catch (error) {
-            this.logger.warn("edge.context.unavailable", { hostname }, error);
+            this.logger.warn(
+                "edge.context.unavailable",
+                { hostname, requestId: requestId(request), ...this.contexts.snapshot() },
+                error,
+            );
             return refusal(503);
         }
     }

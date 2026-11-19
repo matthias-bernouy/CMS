@@ -1,3 +1,13 @@
+import { ColdAdmission, abortableContext } from "./ColdAdmission";
+import type { ColdAdmissionOptions } from "./ColdAdmission";
+
+export type ContextPoolOptions = {
+    maxEntries: number;
+    maxPending: number;
+    maxWaiters: number;
+    idleMs: number;
+    admission?: ColdAdmissionOptions;
+};
 export type ContextLease<T> = { readonly context: T; release(): void };
 type Entry<T> = {
     value: Promise<T>;
@@ -24,63 +34,85 @@ export class EdgeContextPool<T> {
     private drainFailed?: (error: unknown) => void;
     private disposalFailure?: unknown;
     private closing?: Promise<void>;
+    private readonly admission?: ColdAdmission;
 
     constructor(
         private readonly create: (key: string) => Promise<T>,
         private readonly dispose: (value: T) => Promise<void>,
-        private readonly options: { maxEntries: number; maxPending: number; maxWaiters: number; idleMs: number },
+        private readonly options: ContextPoolOptions,
     ) {
-        for (const value of Object.values(options)) {
+        for (const value of Object.values({
+            maxEntries: options.maxEntries,
+            maxPending: options.maxPending,
+            maxWaiters: options.maxWaiters,
+            idleMs: options.idleMs,
+        })) {
             if (!Number.isSafeInteger(value) || value < 1) {
                 throw new TypeError("Edge context bounds must be positive safe integers");
             }
         }
+        this.admission = options.admission ? new ColdAdmission(options.admission) : undefined;
     }
 
     snapshot() {
-        return { entries: this.entries.size, live: this.live, pending: this.pending, disposing: this.draining.size };
+        return {
+            entries: this.entries.size,
+            live: this.live,
+            pending: this.pending,
+            disposing: this.draining.size,
+            queued: this.admission?.size ?? 0,
+        };
     }
 
-    async acquire(key: string): Promise<ContextLease<T>> {
-        if (this.closed) {
-            throw new Error("Edge context pool is closed");
-        }
-        let entry = this.entries.get(key);
-        if (!entry && this.live >= this.options.maxEntries) {
-            const idle = [...this.entries.entries()]
-                .filter(([, value]) => value.leases === 0)
-                .sort((a, b) => a[1].lastUsed - b[1].lastUsed)[0];
-            if (idle) {
-                await this.retire(idle[0], idle[1]);
-            }
+    async acquire(key: string, signal?: AbortSignal): Promise<ContextLease<T>> {
+        const deadline = Date.now() + (this.options.admission?.waitMs ?? 0);
+        while (true) {
+            signal?.throwIfAborted();
             if (this.closed) {
                 throw new Error("Edge context pool is closed");
             }
-            entry = this.entries.get(key);
-        }
-        if (!entry) {
-            if (this.live >= this.options.maxEntries || this.pending >= this.options.maxPending) {
+            let entry = this.entries.get(key);
+            if (!entry && this.live >= this.options.maxEntries) {
+                const idle = [...this.entries.entries()]
+                    .filter(([, value]) => value.leases === 0)
+                    .sort((a, b) => a[1].lastUsed - b[1].lastUsed)[0];
+                if (idle) {
+                    await this.retire(idle[0], idle[1]);
+                    signal?.throwIfAborted();
+                }
+                if (this.closed) {
+                    throw new Error("Edge context pool is closed");
+                }
+                entry = this.entries.get(key);
+            }
+            if (!entry) {
+                if (this.admission && this.pending >= this.options.maxPending && this.live < this.options.maxEntries) {
+                    await this.admission.wait(deadline, signal);
+                    continue;
+                }
+                if (this.live >= this.options.maxEntries || this.pending >= this.options.maxPending) {
+                    throw new EdgeContextCapacityError();
+                }
+                entry = this.load(key);
+            }
+            if (entry.leases >= this.options.maxWaiters) {
                 throw new EdgeContextCapacityError();
             }
-            entry = this.load(key);
-        }
-        if (entry.leases >= this.options.maxWaiters) {
-            throw new EdgeContextCapacityError();
-        }
-        clearTimeout(entry.timer);
-        entry.leases++;
-        let released = false;
-        const release = () => {
-            if (!released) {
-                released = true;
-                this.release(key, entry!);
+            clearTimeout(entry.timer);
+            entry.leases++;
+            let released = false;
+            const release = () => {
+                if (!released) {
+                    released = true;
+                    this.release(key, entry!);
+                }
+            };
+            try {
+                return { context: await abortableContext(entry.value, signal), release };
+            } catch (error) {
+                release();
+                throw error;
             }
-        };
-        try {
-            return { context: await entry.value, release };
-        } catch (error) {
-            release();
-            throw error;
         }
     }
 
@@ -89,6 +121,7 @@ export class EdgeContextPool<T> {
             return this.closing;
         }
         this.closed = true;
+        this.admission?.wake(new Error("Edge context pool is closed"));
         this.closing = new Promise((resolve, reject) => {
             this.drained = resolve;
             this.drainFailed = reject;
@@ -117,13 +150,18 @@ export class EdgeContextPool<T> {
             .then(
                 (context) => {
                     this.pending--;
+                    this.admission?.wake();
                     return context;
                 },
                 (error) => {
                     entry.retired = true;
+                    clearTimeout(entry.timer);
                     this.pending--;
                     this.live--;
-                    this.entries.delete(key);
+                    if (this.entries.get(key) === entry) {
+                        this.entries.delete(key);
+                    }
+                    this.admission?.wake();
                     this.finishDrain();
                     throw error;
                 },
@@ -154,14 +192,24 @@ export class EdgeContextPool<T> {
         entry.retired = true;
         clearTimeout(entry.timer);
         this.entries.delete(key);
+        let loaded = false;
         const task = entry.value
-            .then(this.dispose)
+            .then(
+                (context) => {
+                    loaded = true;
+                    return this.dispose(context);
+                },
+                () => undefined,
+            )
             .catch((error) => {
                 this.disposalFailure = error;
                 this.closed = true;
+                this.admission?.wake(new Error("Edge context pool is closed"));
             })
             .finally(() => {
-                this.live--;
+                if (loaded) {
+                    this.live--;
+                }
                 this.draining.delete(task);
                 this.finishDrain();
             });
@@ -170,7 +218,7 @@ export class EdgeContextPool<T> {
     }
 
     private finishDrain() {
-        if (this.closed && this.live === 0) {
+        if (this.closed && this.live === 0 && this.draining.size === 0) {
             if (this.disposalFailure !== undefined) {
                 this.drainFailed?.(this.disposalFailure);
             } else {

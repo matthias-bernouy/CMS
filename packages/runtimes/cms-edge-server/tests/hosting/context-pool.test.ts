@@ -122,3 +122,22 @@ test("failed resource disposal closes admission and is reported by shutdown", as
     await expect(pool.acquire("c")).rejects.toThrow("closed");
     await expect(pool.close()).rejects.toThrow("resource cleanup failed");
 });
+
+test("aborting an ingress releases its lease while retaining the unfinished load bound", async () => {
+    const ready = Promise.withResolvers<string>();
+    const pool = new EdgeContextPool(
+        async () => ready.promise,
+        async () => {},
+        bounds,
+    );
+    const controller = new AbortController();
+    const loading = pool.acquire("a", controller.signal);
+    controller.abort(new Error("caller gone"));
+    await expect(loading).rejects.toThrow("caller gone");
+    expect(pool.snapshot()).toMatchObject({ live: 1, pending: 1 });
+    await expect(pool.acquire("b")).rejects.toBeInstanceOf(EdgeContextCapacityError);
+    const closing = pool.close();
+    ready.resolve("ready");
+    await closing;
+    expect(pool.snapshot()).toMatchObject({ live: 0, pending: 0 });
+});

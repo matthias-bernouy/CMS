@@ -13,6 +13,7 @@ try {
     const edge = new SharedEdge(routing, (route) => createTenantContext(env, route, routing), logger, {
         maxEntries: env.CMS_EDGE_MAX_CONTEXTS,
         maxPending: 4,
+        admission: { maxQueued: 64, waitMs: 30_000 },
         maxWaiters: 64,
         idleMs: 60_000,
     });
