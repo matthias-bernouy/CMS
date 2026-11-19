@@ -37,10 +37,7 @@ export class CapabilityMcpBinding {
     }
 
     async call(name: string, args: unknown, context: McpInvocationContext): Promise<McpToolResult> {
-        const entry = (await this.entries(context)).find(
-            ({ contractId, capability, binding }) =>
-                capabilityToolName(contractId, capability.id, binding.id, binding.tool?.name) === name,
-        );
+        const entry = (await this.entries(context)).find(({ toolName }) => toolName === name);
         if (!entry) {
             throw new McpProtocolError(-32602, "Unknown capability tool");
         }
@@ -170,18 +167,23 @@ export class CapabilityMcpBinding {
                 ),
             ),
         );
-        if (
-            entries.length > 1_024 ||
-            new Set(
-                entries.map(({ contractId, capability, binding }) =>
-                    capabilityToolName(contractId, capability.id, binding.id, binding.tool?.name),
-                ),
-            ).size !== entries.length
-        ) {
+        if (entries.length > 1_024) {
+            throw new Error("MCP catalogue exceeds limits or contains duplicate tool identities");
+        }
+        const named = entries.map((entry) => ({
+            ...entry,
+            toolName: capabilityToolName(
+                entry.contractId,
+                entry.capability.id,
+                entry.binding.id,
+                entry.binding.tool?.name,
+            ),
+        }));
+        if (new Set(named.map(({ toolName }) => toolName)).size !== entries.length) {
             throw new Error("MCP catalogue exceeds limits or contains duplicate tool identities");
         }
         // Session effects require an HTTP browser boundary and cannot be executed safely over MCP.
-        return entries
+        return named
             .filter(
                 ({ capability }) =>
                     !capability.responseEffects?.length &&
@@ -190,9 +192,7 @@ export class CapabilityMcpBinding {
                     (this.options.publishBinary || capability.output.type !== "binary"),
             )
             .sort((a, b) => {
-                const left = capabilityToolName(a.contractId, a.capability.id, a.binding.id, a.binding.tool?.name);
-                const right = capabilityToolName(b.contractId, b.capability.id, b.binding.id, b.binding.tool?.name);
-                return left < right ? -1 : left > right ? 1 : 0;
+                return a.toolName < b.toolName ? -1 : a.toolName > b.toolName ? 1 : 0;
             });
     }
 }
