@@ -1,4 +1,5 @@
-import { acquireFilesystemLease } from "../core/lock";
+import { withRepositoryWriteLock } from "../core/lock";
+import { reserveCollectionBuild } from "./admission";
 import { admitCollectionReleaseJson } from "repository/collections/core/admission/admitCollectionRelease";
 import { join } from "node:path";
 import type { ReleaseCatalogue } from "repository/contracts/interfaces/ReleaseCatalogue";
@@ -37,30 +38,43 @@ export async function buildCollectionBundle(
     root: string,
     envelope: PublicationEnvelope,
     contracts: ReleaseCatalogue | (() => Promise<ReleaseCatalogue>),
+    signal?: AbortSignal,
 ) {
     if (envelope.kind !== "collection" || envelope.sourceJson === undefined) {
         throw new RepositoryRequestError("REJECTED", "A collection build requires editable sources");
     }
     const sourceJson = envelope.sourceJson;
-    // No pending in-process catalogue loads: durable callers can retry a busy worker.
-    const lease = await acquireFilesystemLease(join(root, ".collection-build-execution", ".write-lock"));
+    signal?.throwIfAborted();
+    const release = reserveCollectionBuild(root, envelope);
     try {
-        const built = await compileCollectionSources(
-            join(root, ".collection-builds"),
-            sourceJson,
-            envelope.assets,
-            typeof contracts === "function" ? await contracts() : contracts,
+        const canonicalJson = envelope.canonicalJson;
+        const assets = envelope.assets.map(({ id, bytes }) => ({
+            id,
+            bytes: bytes instanceof Blob ? bytes : new Blob([bytes.slice()]),
+        }));
+        return await withRepositoryWriteLock(
+            join(root, ".collection-build-execution"),
+            async () => {
+                const built = await compileCollectionSources(
+                    join(root, ".collection-builds"),
+                    sourceJson,
+                    assets,
+                    typeof contracts === "function" ? await contracts() : contracts,
+                );
+                const artifact = built.admission;
+                if (artifact.canonicalJson !== canonicalJson) {
+                    throw new RepositoryRequestError(
+                        "REJECTED",
+                        "Repository build differs from the reviewed collection release",
+                    );
+                }
+                signal?.throwIfAborted();
+                return built;
+            },
+            signal,
         );
-        const artifact = built.admission;
-        if (artifact.canonicalJson !== envelope.canonicalJson) {
-            throw new RepositoryRequestError(
-                "REJECTED",
-                "Repository build differs from the reviewed collection release",
-            );
-        }
-        return built;
     } finally {
-        await lease.release();
+        release();
     }
 }
 

@@ -64,7 +64,7 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
                 new LocalArtifactFiles(this.root),
                 new LocalRepositoryYanks(this.root),
             ).catalogue();
-        const built = await buildCollectionBundle(this.root, envelope, contracts);
+        const built = await buildCollectionBundle(this.root, envelope, contracts, signal);
         const published = await finalize(() =>
             withRepositoryWriteLock(this.root, async () =>
                 publishBuiltCollection(this.root, built, await contracts(), signal),

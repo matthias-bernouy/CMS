@@ -7,8 +7,8 @@ import type { PublicationEnvelope, RepositoryPublicationResult } from "repositor
 import { LocalCollectionRepository } from "repository/repository/filesystem/artifacts/collections";
 import { FilesystemRepositorySourceStore } from "repository/repository/sources/filesystem";
 import { encodePublicationUpload } from "repository/repository/publication/protocol";
-import { sourceFixture } from "../../../../../../tests/fixtures/repository/sourceBuild";
-import { ownerFixture } from "../publicationFixtures";
+import { sourceFixture } from "../../../../../../../tests/fixtures/repository/sourceBuild";
+import { ownerFixture } from "../../publicationFixtures";
 
 class PausedRegistry extends FilesystemRepositoryPublicationRegistry {
     ready = Promise.withResolvers<void>();
@@ -98,13 +98,14 @@ test.each(["transfer", "lease"])(
     },
 );
 
-test("only one Repository build loads a catalogue; a busy attempt retains no pending catalogue load", async () => {
+test("contending Repository builds wait without loading their catalogues before admission", async () => {
     const f = await sourceFixture();
     const ready = Promise.withResolvers<void>();
     const resume = Promise.withResolvers<void>();
     const root = join(f.root, "busy");
     let loads = 0;
     let running: ReturnType<typeof buildCollectionBundle> | undefined;
+    let waiting: ReturnType<typeof buildCollectionBundle> | undefined;
     try {
         running = buildCollectionBundle(root, f.envelope, async () => {
             loads++;
@@ -113,18 +114,23 @@ test("only one Repository build loads a catalogue; a busy attempt retains no pen
             return new InMemoryReleaseCatalogue();
         });
         await ready.promise;
-        await expect(
-            buildCollectionBundle(root, f.envelope, async () => {
-                loads++;
-                return new InMemoryReleaseCatalogue();
-            }),
-        ).rejects.toThrow("already held");
+        const queuedEnvelope = { ...f.envelope };
+        waiting = buildCollectionBundle(root, queuedEnvelope, async () => {
+            loads++;
+            return new InMemoryReleaseCatalogue();
+        });
+        queuedEnvelope.canonicalJson = "{}";
+        queuedEnvelope.sourceJson = "{}";
+        queuedEnvelope.assets = [];
+        await Bun.sleep(30);
         expect(loads).toBe(1);
         resume.resolve();
         expect((await running).admission.digest).toBe(f.admission.digest);
+        expect((await waiting).admission.digest).toBe(f.admission.digest);
+        expect(loads).toBe(2);
     } finally {
         resume.resolve();
-        await running?.catch(() => undefined);
+        await Promise.allSettled([running, waiting].filter(Boolean));
         await f.close();
     }
 });

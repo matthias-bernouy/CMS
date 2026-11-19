@@ -20,11 +20,17 @@ export class FilesystemLeaseBusyError extends Error {
 type FilesystemLeaseOptions = Readonly<{ createParent?: boolean }>;
 
 /** Serialize repository metadata and publication mutations across local processes. */
-export async function withRepositoryWriteLock<T>(root: string, operation: () => Promise<T>): Promise<T> {
+export async function withRepositoryWriteLock<T>(
+    root: string,
+    operation: () => Promise<T>,
+    signal?: AbortSignal,
+): Promise<T> {
+    signal?.throwIfAborted();
     await mkdir(root, { recursive: true, mode: 0o700 });
     const deadline = Date.now() + WRITE_LOCK_WAIT_MS;
     let lease: FilesystemLease;
     for (;;) {
+        signal?.throwIfAborted();
         try {
             lease = await acquireFilesystemLease(join(root, ".write-lock"));
             break;
@@ -36,6 +42,7 @@ export async function withRepositoryWriteLock<T>(root: string, operation: () => 
         }
     }
     try {
+        signal?.throwIfAborted();
         return await operation();
     } finally {
         await lease.release();
