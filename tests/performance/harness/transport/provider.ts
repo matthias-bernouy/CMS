@@ -30,7 +30,7 @@ export function providerRequest(
 export function nativeRequest(...args: Parameters<typeof capabilityRequest>) {
     const [, target] = args;
     const request = capabilityRequest(...args);
-    const prefix = `/.cms/call/${target.release.contractId}`;
+    const prefix = `/.cms/call/${target.owner.contractId}`;
     if (!request.url.pathname.startsWith(`${prefix}/`)) {
         throw new Error("Provider performance request does not match the compiled target");
     }

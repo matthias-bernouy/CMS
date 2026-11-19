@@ -55,7 +55,7 @@ export function capabilityRequest(
         }
         path = path.replace(`{${entry.wireName}}`, encoded);
     }
-    const url = new URL(`/.cms/call/${target.release.contractId}${path}`, origin);
+    const url = new URL(`/.cms/call/${target.owner.contractId}${path}`, origin);
     const query: string[] = [];
     for (const entry of compiled.query) {
         const encoded = parameter(entry.property);

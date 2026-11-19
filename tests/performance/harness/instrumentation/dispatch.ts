@@ -11,7 +11,10 @@ type Context = Readonly<{
 type Contract = Readonly<{
     release: { contractId: string; version: string };
     digest: string;
-    capabilities: readonly { definition: { id: string; bindings: readonly { id: string }[] } }[];
+    capabilities: readonly {
+        owner?: { contractId: string; version: string };
+        definition: { id: string; bindings: readonly { id: string }[] };
+    }[];
 }>;
 type Dispatcher = {
     seal(contracts: readonly Contract[]): void;
@@ -24,14 +27,21 @@ type Dispatcher = {
 };
 
 export function instrumentDispatcher(prototype: Dispatcher): void {
-    const mounted = new WeakMap<object, Map<string, string>>();
+    const mounted = new WeakMap<object, Map<string, string | null>>();
     const seen = new Set<string>();
     const epoch = randomUUID();
     const seal = prototype.seal;
     prototype.seal = function (contracts) {
-        const claims = new Map<string, string>();
+        const claims = new Map<string, string | null>();
         for (const contract of contracts) {
-            claims.set(`${contract.release.contractId}@${contract.release.version}`, contract.digest);
+            for (const capability of contract.capabilities) {
+                const target = `${contract.release.contractId}@${contract.release.version}#${contract.digest}:${capability.definition.id}`;
+                for (const reference of [contract.release, capability.owner ?? contract.release]) {
+                    const key = `${contract.release.contractId}\0${reference.contractId}@${reference.version}:${capability.definition.id}`;
+                    const previous = claims.get(key);
+                    claims.set(key, previous === undefined || previous === target ? target : null);
+                }
+            }
         }
         const value = seal.call(this, contracts);
         mounted.set(this, claims);
@@ -52,8 +62,9 @@ export function instrumentDispatcher(prototype: Dispatcher): void {
     const invoke = prototype.invoke;
     prototype.invoke = function (contract, capability, input, context) {
         const requested = context.invocation?.contractId ?? contract;
-        const digest = mounted.get(this)?.get(`${requested}@${context.contractVersion}`);
-        const target = `${requested}@${context.contractVersion}#${digest ?? "unresolved"}:${capability}`;
+        const key = `${contract}\0${requested}@${context.contractVersion}:${capability}`;
+        const target =
+            mounted.get(this)?.get(key) ?? `${requested}@${context.contractVersion}#unresolved:${capability}`;
         const identity = `${context.invocation?.instanceId ?? "host"}:${target}`;
         const firstInProcess = !seen.has(identity);
         seen.add(identity);
