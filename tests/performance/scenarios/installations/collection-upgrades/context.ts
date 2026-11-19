@@ -11,6 +11,8 @@ import type { publicationCollection } from "../../repository/resources/collectio
 import type { QueryEnvironment } from "../../queries/execute";
 
 const CONTRACT = "ulvia/cms.installations";
+
+export const COLLECTION_UPGRADE_SCHEMA_INVALID_ID = "x".repeat(72);
 type Resource = Awaited<ReturnType<typeof publicationCollection>>;
 
 export async function collectionUpgradeContext(
@@ -133,16 +135,7 @@ export async function collectionUpgradeContext(
                 capability: string,
                 valid: Readonly<Record<string, unknown>>,
                 invalid: Readonly<Record<string, unknown>>,
-            ) =>
-                expectBodyRefusal(
-                    inventory,
-                    state.session,
-                    CONTRACT,
-                    capability,
-                    valid,
-                    invalid,
-                    capability === "get-collection-upgrade" ? 422 : 400,
-                ),
+            ) => expectBodyRefusal(inventory, state.session, CONTRACT, capability, valid, invalid, 400),
             async close() {
                 lease.release();
             },

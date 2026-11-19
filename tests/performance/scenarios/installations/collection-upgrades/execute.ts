@@ -2,6 +2,7 @@ import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { responseBytes } from "../../../harness/transport/http";
 import { assertCondition } from "../../queries/types";
 import { collectionReview, completedCollectionUpgrade } from "./oracles";
+import { COLLECTION_UPGRADE_SCHEMA_INVALID_ID } from "./context";
 import type { CollectionUpgradeContext } from "./context";
 import type { PreparedSample } from "../../../harness/execution/samples";
 import type { Variant } from "../../../capabilities/types";
@@ -93,7 +94,11 @@ export async function prepareCollectionUpgrade(
                     });
                     assertCondition(!missing.observation.validated && missing.observation.status === 404);
                 }
-                await context.invalid(capability, input(), reading ? { upgradeId: "" } : { ...input(), targets: [] });
+                await context.invalid(
+                    capability,
+                    input(),
+                    reading ? { upgradeId: COLLECTION_UPGRADE_SCHEMA_INVALID_ID } : { ...input(), targets: [] },
+                );
                 const foreign = await context.state.client(CONTRACT, capability, "http", input(), undefined, {
                     httpCredentials: { cookie: context.environment.main.cookie },
                 });
