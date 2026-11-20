@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { preparedFixture } from "./fixture";
 
-test("1.6 command preparation combines three control steps while retaining ordered audit and exact token dispatch", async () => {
+test("1.5 command preparation combines three control steps while retaining ordered audit and exact token dispatch", async () => {
     const f = await preparedFixture(true, undefined, false, true);
     try {
         expect(await f.invoke()).toMatchObject({ kind: "success", output: { items: ["authorized"] } });

@@ -5,6 +5,7 @@ import { packGatewayRoute } from "@bernouy/cms-gateway/protocol";
 import { ControlProviderClient } from "../../../src/runtime/gateway/ControlProviderClient";
 import { InstallationsProviderTransport } from "../../../src/runtime/gateway/InstallationsProviderTransport";
 import { INSTALLATIONS_CONTRACT } from "../../../src/runtime/gateway/control";
+import supportedControlContracts from "../../../dist/generated/supported.json";
 import { createEdgeGateway } from "../../../src/runtime/gateway/createEdgeGateway";
 
 export async function preparedFixture(command = false, settled?: () => void, machine = false, compact = false) {
@@ -12,7 +13,10 @@ export async function preparedFixture(command = false, settled?: () => void, mac
     const requests: string[] = [];
     let outerStatus = 0;
     let stageFailure: "identity" | "audit" | null = null;
-    const contract = compact ? INSTALLATIONS_CONTRACT : { ...INSTALLATIONS_CONTRACT, version: "1.5.0" };
+    const contract =
+        command && !compact
+            ? supportedControlContracts.find(({ version }) => version === "1.4.2")!
+            : INSTALLATIONS_CONTRACT;
     const preparations: Record<string, any>[] = [];
     const secret = "signed-provider-" + "p".repeat(40);
     let wrongAudience = false;

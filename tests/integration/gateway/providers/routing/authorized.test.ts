@@ -48,7 +48,7 @@ test("compact MCP resolution reauthorizes before every lookup, never lists insta
             context: {
                 requestId: "compact-test",
                 siteId: "site-a",
-                contractVersion: "1.6.0",
+                contractVersion: "1.5.0",
                 providerId: "ulvia/provider",
                 controlAuthority: true,
             },

@@ -72,7 +72,7 @@ function fixture(fail?: "identity" | "audit" | "preparation") {
             context: {
                 requestId: crypto.randomUUID(),
                 siteId: "site-a",
-                contractVersion: "1.6.0",
+                contractVersion: "1.5.0",
                 providerId: "ulvia/provider",
                 controlAuthority,
             },

@@ -22,7 +22,7 @@ export class ControlRouteClient {
         private readonly invoke: Invoke,
         contract: InstallationsControlContract,
     ) {
-        this.compactCatalogue = satisfiesVersionRange(contract.version, ">=1.6.0 <2.0.0");
+        this.compactCatalogue = satisfiesVersionRange(contract.version, ">=1.5.0 <2.0.0");
         this.supported = satisfiesVersionRange(contract.version, ">=1.5.0 <2.0.0");
     }
     async route(contractId: string): Promise<GatewayRouteSource | null> {

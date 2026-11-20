@@ -20,7 +20,7 @@ const releaseDigests = {
     "ulvia/provider.connections": "sha256:0cfc85a809d4078e5e95adc94d023d65fa6d626074093f1a880090ce02b8f9f2",
     "ulvia/repository": "sha256:216131fbd6fa34c015c8dbdb1e1954d6217ba7b85e44d6f51d137d5b21979409",
     "ulvia/cms.hosting": "sha256:3fff2f35423060e511f08519f0c48ee4e6413352fc04f55bbe47f15112f4d766",
-    "ulvia/cms.installations": "sha256:daa723417b1c3758602944b29a9f7e0254910c599ada5a783a369c66513ad753",
+    "ulvia/cms.installations": "sha256:b4e244c4c5187e96b3efe142f8b9e5b8f188bb84921f511895e88f8755c139d8",
     "ulvia/provider.tls": "sha256:41dbd3a81aa4d4d6eea2053c5dc7f097ac7003cd683a0c86341fbc4fb5bafa01",
     "ulvia/provider.routing": "sha256:0e312b93bdd939df59e4b837aba02be5f0b750485cf88db41fcec0411cdd9437",
     "ulvia/provider.cms-instances": "sha256:789d38661b21df1db1b36f4c616aa21c5d3456d235c5ee85555c1691b4f80f1b",
@@ -38,6 +38,7 @@ test("generated manifest claims the exact SDK implementation inventory", async (
     const compiled = await compileOfficialFeatures();
     await publishContractSet(catalogue, compiled.contracts);
     const manifest = await compileOfficialManifest(catalogue, compiled);
+    expect(manifest.manifest.version).toBe("1.8.0");
     expect(manifest.manifest.implementations).toHaveLength(13);
     for (const implementation of manifest.manifest.implementations) {
         expect(implementation.digest).toBe(releaseDigests[implementation.contractId as keyof typeof releaseDigests]);
@@ -94,43 +95,27 @@ test("prior Content, Repository, Authoring and Installations releases retain exa
     }
 });
 
-test("Installations 1.5 retains every 1.4.2 capability byte for byte and adds only two control queries", async () => {
-    const current = (await compileRetainedFeatures())
-        .find((build) =>
-            build.implementations.some(
-                (pin) => pin.contractId === "ulvia/cms.installations" && pin.version === "1.5.0",
-            ),
-        )!
-        .contracts.find(({ release }) => release.contractId === "ulvia/cms.installations")!;
-    expect(current.digest).toBe("sha256:4d37e1ef5dff76b3833d4f555f21cb4d99ede2c5bb8b9822e0ec909e5d12449c");
-    const retained = (await compileRetainedFeatures()).find((build) =>
-        build.implementations.some((pin) => pin.contractId === "ulvia/cms.installations" && pin.version === "1.4.2"),
-    )!;
-    const previous = retained.contracts.find(({ release }) => release.contractId === "ulvia/cms.installations")!;
-    expect(previous.digest).toBe("sha256:59f764502bde4b642609b6bd4d0cf3b7d0ba58444972cb48027a8b1ddb2acdf1");
-    expect(current.release.version).toBe("1.5.0");
-    const oldIds = new Set(previous.release.capabilities.map(({ id }) => id));
-    expect(current.release.capabilities.filter(({ id }) => oldIds.has(id))).toEqual([...previous.release.capabilities]);
-    expect(
-        current.release.capabilities
-            .filter(({ id }) => !oldIds.has(id))
-            .map(({ id }) => id)
-            .sort(),
-    ).toEqual(["gateway.mcp.resolve", "gateway.route.snapshot"]);
-});
-
-test("Installations 1.6 preserves every 1.5 execution definition and adds only the two compatible control capabilities", async () => {
+test("Installations 1.5 preserves every 1.4.2 definition and adds four compatible control capabilities", async () => {
     const current = (await compileOfficialFeatures()).contracts.find(
         ({ release }) => release.contractId === "ulvia/cms.installations",
     )!;
-    const previous = (await compileRetainedFeatures())
-        .find((build) =>
+    const retained = await compileRetainedFeatures();
+    expect(
+        retained.some((build) =>
             build.implementations.some(
                 (pin) => pin.contractId === "ulvia/cms.installations" && pin.version === "1.5.0",
             ),
+        ),
+    ).toBe(false);
+    const previous = retained
+        .find((build) =>
+            build.implementations.some(
+                (pin) => pin.contractId === "ulvia/cms.installations" && pin.version === "1.4.2",
+            ),
         )!
         .contracts.find(({ release }) => release.contractId === "ulvia/cms.installations")!;
-    expect(current.release.version).toBe("1.6.0");
+    expect(previous.digest).toBe("sha256:59f764502bde4b642609b6bd4d0cf3b7d0ba58444972cb48027a8b1ddb2acdf1");
+    expect(current.release.version).toBe("1.5.0");
     expect(compareContractReleases(previous.release, current.release)).toMatchObject({
         validEvolution: true,
         consumerCompatible: true,
@@ -144,5 +129,5 @@ test("Installations 1.6 preserves every 1.5 execution definition and adds only t
             .filter(({ id }) => !oldIds.has(id))
             .map(({ id }) => id)
             .sort(),
-    ).toEqual(["gateway.command.prepare", "gateway.mcp.authorized"]);
+    ).toEqual(["gateway.command.prepare", "gateway.mcp.authorized", "gateway.mcp.resolve", "gateway.route.snapshot"]);
 });

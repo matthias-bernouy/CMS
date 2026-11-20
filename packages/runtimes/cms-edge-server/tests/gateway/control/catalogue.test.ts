@@ -50,7 +50,7 @@ test("every targeted call obtains its selected IDs through the actor's Gateway b
     expect(events.at(-1)).toBe("gateway");
 });
 
-test("1.6 targeted lookup sends only current actor and tool name, never a full installation listing", async () => {
+test("1.5 targeted lookup sends only current actor and tool name, never a full installation listing", async () => {
     const actor = { kind: "administrator", subjectId: "admin", authorizationRevision: 7 } as const;
     const calls: unknown[] = [];
     const catalogue = new ControlMcpCatalogue(

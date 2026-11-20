@@ -1,6 +1,6 @@
 # Gateway control representations and MCP lookup
 
-Installations 1.5.0 adds two HTTP-only, control-authority queries. Existing 1.4.2
+Installations 1.5.0 adds four HTTP-only, control-authority capabilities. Existing 1.4.2
 capabilities and their exact retained execution pin remain available. Edge
 negotiates an explicit supported pin from the authenticated runtime report;
 older pins keep the original complete-route and MCP discovery paths.
@@ -21,10 +21,18 @@ enter this immutable cache. The original full-route 1 MiB admission ceiling and
 The existing live dispatch checks still fence execution.
 
 `gateway.mcp.resolve` validates the full selected catalogue's tool identity space
-before returning one exact admitted contract. Each Edge call first obtains the
-selected IDs through the ordinary actor-authorized Gateway invocation. Execution
-then uses the same Gateway and exact MCP binding as discovery-based lookup.
-Unknown tools and invalid global catalogues cannot bypass validation.
+before returning one exact admitted contract. `gateway.mcp.authorized` also checks
+the current actor's authority and reads selected IDs inside that control call,
+avoiding a separate installation-list invocation for targeted tool execution.
+Discovery still obtains selected IDs through the ordinary actor-authorized
+Gateway invocation. Execution uses the same Gateway and exact MCP binding as
+discovery-based lookup. Unknown tools and invalid global catalogues cannot
+bypass validation.
+
+`gateway.command.prepare` combines current identity resolution, durable audit
+start and command preparation in one admitted call. Business execution still
+passes through the Gateway, and the terminal audit remains separate. The
+retained 1.4.2 pin keeps the original separate control exchanges.
 
 The Provider retains only a tool-name-to-exact-pin index, at most 1 MiB per
 instance Gateway. A fresh fingerprint includes selections, installations and
