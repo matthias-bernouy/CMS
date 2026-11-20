@@ -14,7 +14,6 @@ test("a Page render snapshot has a fixed repository-read budget", async () => {
         getPageRoute: 2,
         getSiteBlocsRevision: 1,
         getSystem: 2,
-        getSystemRevision: 1,
     });
 });
 
@@ -28,8 +27,7 @@ test("a Page revision check avoids loading render payloads", async () => {
         getPageRequirements: 1,
         getPageRoute: 2,
         getSiteBlocsRevision: 1,
-        getSystem: 2,
-        getSystemRevision: 1,
+        getSystem: 3,
     });
 });
 
@@ -83,6 +81,22 @@ test("render inputs use the final checked settings and still reject a concurrent
     expect((await createContentReader(fixture.repository).getPageRenderInputs!("/")).route).toEqual({
         kind: "updating",
     });
+});
+
+test("unchanged rendering values retain asset identities across storage-only revision changes", async () => {
+    const fixture = renderingFixture();
+    const reader = createContentReader(fixture.repository);
+    const before = await reader.getPageRenderInputs!("/");
+    fixture.repository.getSystemRevision = async () => 999;
+    const reopened = createContentReader(fixture.repository);
+    expect(await reopened.getRenderingRevision!()).toBe(before.renderingRevision);
+    const original = fixture.repository.getSystem.bind(fixture.repository);
+    fixture.repository.getSystem = async () => {
+        const settings = await original();
+        settings.site.name = "Changed visible setting";
+        return settings;
+    };
+    expect(await reopened.getRenderingRevision!()).not.toBe(before.renderingRevision);
 });
 
 function renderingFixture(unrelatedPageCount = 0): {

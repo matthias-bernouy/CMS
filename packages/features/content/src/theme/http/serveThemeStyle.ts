@@ -1,7 +1,6 @@
 import { publicAssetCacheControl, sendCompressed, type Cache } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS } from "content/application/core/cacheKeys";
 import type { ContentReader } from "content/application/interfaces/ContentReader";
-import { digestContentRevision } from "content/blocs/core/assets/resolvePageAssets";
 import { generateStyleEntry } from "content/theme/core/generateStyleEntry";
 
 const REVISION = /^sha256:[0-9a-f]{64}$/u;
@@ -29,12 +28,8 @@ export async function serveThemeStyle(
             ? sendCompressed(request, entry, publicAssetCacheControl(request))
             : new Response(null, { status: 404 });
     }
-    const currentRevision = await digestContentRevision(
-        (await options.content.getRenderingRevision?.()) ?? (await options.content.getContentRevision?.()) ?? 0,
-    );
-    if (revision !== currentRevision) {
-        return new Response(null, { status: 404 });
-    }
+    // A storage recovery may advance a broader revision without changing CSS.
+    // Regenerate only the exact requested content version, as for Bloc assets.
     entry = await generateStyleEntry(options.content, [], options.resolveContributedAssets);
     if (entry.hash !== version) {
         return new Response(null, { status: 404 });

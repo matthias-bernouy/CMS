@@ -1,3 +1,4 @@
+import { revisionValidatedPageRevision } from "content/pages/delivery/access/revisionPolicy";
 import { parseResolvePathRequest } from "content/pages/delivery/resolvePathInput";
 import type { ContentServices } from "content/application/interfaces/ContentServices";
 import type { ContentCapabilityContext } from "content/application/interfaces/ContentCapabilityContext";
@@ -33,7 +34,9 @@ export async function resolveDelivery(
     return response;
 }
 export function deliveryCacheTags(response: Response): readonly string[] {
+    const revision = revisionValidatedPageRevision(response);
     return [
+        ...(revision ? [`content:revision-validated:${revision}`] : []),
         (response.headers.get("content-type") ?? "").startsWith("text/html")
             ? "content:pages"
             : (response.headers.get("cache-control") ?? "").includes("immutable")

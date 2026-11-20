@@ -53,6 +53,7 @@ export function createPublicDelivery(
             cache,
             logger: stores.logger,
             publicUrl,
+            readResourceRevision: () => stores.upgradeStorage.readResourceRevision(gateway.siteId),
             readCaptureResource: (path, signal) => readCaptureFile(gateway.invoker, gateway.siteId, path, signal),
             sitemapStore: stores.sitemapStore,
             editorialPages: editorialPages(stores.repo),

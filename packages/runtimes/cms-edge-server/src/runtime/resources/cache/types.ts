@@ -6,6 +6,8 @@ export type CachedResource = {
     raw: Uint8Array<ArrayBuffer>;
     gzip?: Uint8Array<ArrayBuffer>;
     storedAt: number;
+    lastUsedAt: number;
+    validatedRevision?: string;
     policy: SharedPolicy;
     bytes: number;
 };
@@ -13,6 +15,8 @@ type ResourceLoad = { response: Response; cacheControl: string | null; tags?: re
 export type CacheLoad = (request: Request, cacheFill?: boolean) => Promise<ResourceLoad>;
 export type CacheOptions = {
     enabled?: boolean;
+    /** Fresh hosting revision checked before every ingress; absent outside the shared Edge. */
+    validatedRevision?: () => string;
     pages?: boolean;
     maxEntries?: number;
     maxBytes?: number;

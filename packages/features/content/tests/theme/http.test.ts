@@ -5,7 +5,7 @@ import { serveThemeStyle } from "@bernouy/content/http";
 import { InMemoryCache } from "@bernouy/http-runner";
 
 describe("serveThemeStyle", () => {
-    test("serves only the current rendering revision and exact generated representation", async () => {
+    test("serves only the exact generated stylesheet version", async () => {
         const content = {
             getContentRevision: async () => 7,
             getRenderingRevision: async () => "7:3",
@@ -34,7 +34,7 @@ describe("serveThemeStyle", () => {
         expect(cache.get(key)?.hash).toBe(generated.hash);
     });
 
-    test("rejects stale and malformed revision URLs before generation", async () => {
+    test("rejects malformed URLs and unavailable content versions", async () => {
         const options = {
             content: {
                 getContentRevision: async () => 2,
@@ -68,6 +68,23 @@ describe("serveThemeStyle", () => {
         expect((await serveThemeStyle(request(oldRevision, generated.hash), options)).status).toBe(200);
         renderingRevision = "7:2";
         expect((await serveThemeStyle(request(oldRevision, generated.hash), options)).status).toBe(200);
+    });
+    test("a cold cache regenerates an old revision URL only when its exact CSS bytes still match", async () => {
+        const system = defaultSystem();
+        const content = { getRenderingSettings: async () => system };
+        const generated = await generateStyleEntry(content);
+        const revision = await digestContentRevision("old-storage-revision");
+        const options = {
+            content,
+            cache: new InMemoryCache(),
+            resolveContributedAssets: async (value: string) => value,
+        };
+        const response = await serveThemeStyle(request(revision, generated.hash), options);
+        expect(response.status).toBe(200);
+        expect(await response.text()).toBe(new TextDecoder().decode(generated.raw));
+        options.cache.deleteMatching(() => true);
+        // A mismatching content version must never receive another immutable representation.
+        expect((await serveThemeStyle(request(revision, "0000000000"), options)).status).toBe(404);
     });
 });
 

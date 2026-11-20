@@ -122,3 +122,49 @@ Provider assembly, the Edge context pool, strict CLI installation parsing and
 owned Docker fixture lifecycle. They were reviewed rather than split merely to
 meet a line threshold. Directory fanout has no blocking error. Quotas, billing,
 agent execution and a console collection remain outside this change.
+
+
+## Revision-validated public response retention
+
+Shared Edge resolves the admitted hosting route before every ingress, including
+cache hits. A changed resource revision purges retained responses and pending
+fills; routing or authority failures never authorize cached responses.
+
+Content marks an exact rendered artifact as revision-bound only when it has no
+live binding runtime or capability-backed SVG expansion. Public Page delivery
+also requires a complete render snapshot, no declared capability dependencies,
+and the ordinary public/non-dynamic access decision. Private, draft, dynamic
+indexing, fallback and unsupported responses do not opt in. The marker travels
+through native resource cache tags (`content:revision-validated:<source-revision>`), not an HTTP
+header or a new endpoint. Weak metadata follows the actual compressed artifact,
+including warm render-cache reads; it cannot retain discarded artifacts.
+
+The producing instance reads its own resource clock before returning static
+artifact metadata. An Edge must match that proof against its fresh hosting clock;
+a remote Provider or another logical instance cannot opt into this policy using
+an unrelated revision. This adds four bounded metadata reads on eligible origin
+responses, never on the retained response path.
+
+Only a shared Edge supplied with a freshly checked hosting revision may retain
+these responses for 24 hours after their last use. Byte, entry, pending-load and
+waiter bounds remain active. Recognized request `no-cache`, `max-age=0` and
+`Pragma: no-cache` can reuse such a response after the revision check, reported
+as `X-Cache: REVALIDATED`; ETags and HEAD still apply. `no-store`, unsupported
+directives, credentials and ranges retain their bypass behavior. Other public
+responses keep their origin's existing freshness policy. Browser cache policy
+remains `public, no-cache`; the server does not grant 24-hour browser freshness.
+
+Tenant contexts likewise expire after 24 hours of inactivity by default. The
+context-count bound and least-recently-used eviction still apply before that
+deadline; active response leases cannot be evicted. This is bounded retention,
+not a promise that every tenant remains resident for a day.
+
+Rendering identities hash the projected rendering settings rather than a
+storage-only settings counter. Ordinary storage recovery therefore cannot change
+asset URLs for unchanged rendering inputs. Theme CSS can regenerate an earlier
+revision URL only if the exact content version still matches, like Bloc assets.
+Historical styles whose actual bytes changed are not durably archived by this
+mechanism and may remain unavailable after process-cache loss.
+
+For independent latency scenarios and their measurement limits, see the
+[public cache journey](../../tests/performance/public-cache/README.md).

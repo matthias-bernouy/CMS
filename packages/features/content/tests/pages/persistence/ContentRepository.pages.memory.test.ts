@@ -1,6 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import {
     countValues,
+    defaultSystem,
     createContentReader,
     DuplicatePagePathError,
     InMemoryContentRepository,
@@ -83,19 +84,24 @@ describe("InMemoryContentRepository.getPagesMetadata — filter + sort", () => {
         expect((await reader.getRenderingSettings()).site.host).not.toBe("https://mutated.test");
     });
 
-    test("rendering revision includes both contributed content and system settings", async () => {
+    test("rendering revision follows actual settings and contributions without storage-only invalidations", async () => {
         let contentRevision = 3;
         let systemRevision = 5;
+        const system = defaultSystem();
         const reader = createContentReader({
             getTextContributions: async () => ({ revision: contentRevision, texts: [] }),
             getSystemRevision: async () => systemRevision,
+            getSystem: async () => system,
         } as never);
 
         const initial = await reader.getRenderingRevision!();
         systemRevision += 1;
-        expect(await reader.getRenderingRevision!()).not.toBe(initial);
+        expect(await reader.getRenderingRevision!()).toBe(initial);
+        system.site.name = "Changed rendering setting";
+        const changedSettings = await reader.getRenderingRevision!();
+        expect(changedSettings).not.toBe(initial);
         contentRevision += 1;
-        expect(await reader.getRenderingRevision!()).not.toBe(initial);
+        expect(await reader.getRenderingRevision!()).not.toBe(changedSettings);
     });
 
     test("Page render revisions change with the resolved Page revision", async () => {

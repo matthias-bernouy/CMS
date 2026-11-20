@@ -1,3 +1,4 @@
+import { projectRenderingSettings } from "content/settings/core/renderingSettings";
 import { RenderingResourceReads } from "./RenderingResourceReads";
 import type { ContentRepository } from "content/application/interfaces/ContentRepository";
 import type { ContentReader, PageRenderInputs, RenderableBloc } from "content/application/interfaces/ContentReader";
@@ -39,13 +40,10 @@ export function installPageRenderInputReaders(
                 contributions,
                 loaders.getRenderableBlocs(reads),
             ]);
-            const [systemRevision, siteBlocsRevision] = await Promise.all([
-                repository.getSystemRevision?.(reads) ?? 0,
-                repository.getSiteBlocsRevision?.(reads) ?? "[]",
-            ]);
+            const siteBlocsRevision = await (repository.getSiteBlocsRevision?.(reads) ?? "[]");
             const renderingRevision = await revisionDigest([
                 loadedContributions?.revision ?? 0,
-                systemRevision,
+                resolved.settings,
                 siteBlocsRevision,
             ]);
             return {
@@ -63,12 +61,12 @@ export function installPageRenderInputReaders(
 }
 
 async function readRenderingRevision(repository: ContentRepository): Promise<string> {
-    const [contentRevision, systemRevision, siteBlocsRevision] = await Promise.all([
+    const [contentRevision, settings, siteBlocsRevision] = await Promise.all([
         repository.getTextContributions?.().then((contributions) => contributions.revision) ?? 0,
-        repository.getSystemRevision?.() ?? 0,
+        repository.getSystem().then(projectRenderingSettings),
         repository.getSiteBlocsRevision?.() ?? "[]",
     ]);
-    return revisionDigest([contentRevision, systemRevision, siteBlocsRevision]);
+    return revisionDigest([contentRevision, settings, siteBlocsRevision]);
 }
 
 function pageRenderRevision(

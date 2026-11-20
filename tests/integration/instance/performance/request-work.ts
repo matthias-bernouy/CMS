@@ -6,10 +6,17 @@ const empty = (): Work => ({ http: {}, mongo: {}, log: {} });
 export const workCount = (counts: Record<string, number>) => Object.values(counts).reduce((sum, n) => sum + n, 0);
 
 /** Observe causal request work separately from unrelated requests and periodic recovery/telemetry. */
-export async function requestWork(provider: string, edge: string, requestIds: readonly string[], reset = false) {
+export async function requestWork(
+    provider: string,
+    edge: string,
+    requestIds: readonly string[],
+    reset = false,
+    includePerRequest = false,
+) {
     const selected = new Set(requestIds);
     const requests = empty();
     const other = empty();
+    const byRequest: Record<string, Work> = {};
     for (const name of [provider, edge]) {
         const result = await docker([
             "exec",
@@ -26,7 +33,11 @@ export async function requestWork(provider: string, edge: string, requestIds: re
         for (const row of JSON.parse(result.stdout.trim()) as Row[]) {
             const counts = (row.traceId && selected.has(row.traceId) ? requests : other)[row.kind];
             counts[row.name] = (counts[row.name] ?? 0) + 1;
+            if (includePerRequest && row.traceId && selected.has(row.traceId)) {
+                const own = (byRequest[row.traceId] ??= empty())[row.kind];
+                own[row.name] = (own[row.name] ?? 0) + 1;
+            }
         }
     }
-    return { requests, other };
+    return { requests, other, ...(includePerRequest ? { byRequest } : {}) };
 }

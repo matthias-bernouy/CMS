@@ -1,3 +1,9 @@
+import { pageRequiresCapabilityAnalysis } from "content/pages/delivery/access/PageCapabilityAnalyzer";
+import {
+    markRevisionValidatedPage,
+    inheritRevisionPolicy,
+    isRevisionValidatedEntry,
+} from "content/pages/delivery/access/revisionPolicy";
 import { observeDelivery } from "content/pages/delivery/observe";
 import type { PageRenderInputs, RenderablePage, RenderingSettings, TPage } from "@bernouy/content/rendering";
 import { CMS_CACHE_KEYS } from "@bernouy/content/rendering";
@@ -37,7 +43,8 @@ export async function serveRenderablePage(
         decision.settings,
         renderInputs,
     );
-    return embeddablePage(response, language, decision.access);
+    const result = embeddablePage(response, language, decision.access);
+    return !pageRequiresCapabilityAnalysis(renderable) ? inheritRevisionPolicy(response, result) : result;
 }
 
 async function renderIndexedPage(
@@ -134,14 +141,18 @@ async function renderWithFallbacks(
             pageRenderInputs: renderInputs,
         });
         const cacheKey = `${CMS_CACHE_KEYS.page(cachePath)}:page:${page.id}:${page.revision}:language:${metadata.language ?? ""}:metadata:${JSON.stringify(metadata)}`;
-        return cachedResponseAsync(
+        const artifactKey = artifactRevision ? `${cacheKey}:artifact:${artifactRevision}` : cacheKey;
+        const response = await cachedResponseAsync(
             request,
-            artifactRevision ? `${cacheKey}:artifact:${artifactRevision}` : cacheKey,
+            artifactKey,
             delivery.cache,
             () => observeDelivery(delivery, "page.render", () => renderPage(page, renderContext, metadata)),
             cacheable ? "public, no-cache, s-maxage=15" : "private, no-store",
             { skipCspHeader: true },
         );
+        return cacheable && renderInputs && isRevisionValidatedEntry(delivery.cache.get(artifactKey))
+            ? markRevisionValidatedPage(response)
+            : response;
     } catch (error) {
         reportPageFailure(delivery, "render", cachePath, error);
         return renderRef(request, delivery, "serverError", 500, "Internal server error");

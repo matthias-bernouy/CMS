@@ -5,7 +5,7 @@ export type ContextPoolOptions = {
     maxEntries: number;
     maxPending: number;
     maxWaiters: number;
-    idleMs: number;
+    idleMs?: number;
     admission?: ColdAdmissionOptions;
 };
 export type ContextLease<T> = { readonly context: T; release(): void };
@@ -25,6 +25,7 @@ export class EdgeContextCapacityError extends Error {
 
 /** Hard admission bounds include pending loads and contexts still being disposed. */
 export class EdgeContextPool<T> {
+    private readonly idleMs: number;
     private readonly entries = new Map<string, Entry<T>>();
     private live = 0;
     private pending = 0;
@@ -41,11 +42,12 @@ export class EdgeContextPool<T> {
         private readonly dispose: (value: T) => Promise<void>,
         private readonly options: ContextPoolOptions,
     ) {
+        this.idleMs = options.idleMs ?? 24 * 60 * 60_000;
         for (const value of Object.values({
             maxEntries: options.maxEntries,
             maxPending: options.maxPending,
             maxWaiters: options.maxWaiters,
-            idleMs: options.idleMs,
+            idleMs: this.idleMs,
         })) {
             if (!Number.isSafeInteger(value) || value < 1) {
                 throw new TypeError("Edge context bounds must be positive safe integers");
@@ -180,7 +182,7 @@ export class EdgeContextPool<T> {
         } else {
             entry.timer = setTimeout(() => {
                 void this.retire(key, entry);
-            }, this.options.idleMs);
+            }, this.idleMs);
             entry.timer.unref();
         }
     }

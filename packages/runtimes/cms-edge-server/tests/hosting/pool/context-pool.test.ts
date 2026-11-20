@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { EdgeContextPool, EdgeContextCapacityError } from "../../src/runtime/hosting/ContextPool";
+import { EdgeContextPool, EdgeContextCapacityError } from "../../../src/runtime/hosting/ContextPool";
 
 const bounds = { maxEntries: 2, maxPending: 1, maxWaiters: 2, idleMs: 60_000 };
 

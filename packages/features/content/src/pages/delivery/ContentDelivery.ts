@@ -1,3 +1,4 @@
+import { inheritRevisionPolicy, isRevisionValidatedPage, bindRevisionValidatedPage } from "./access/revisionPolicy";
 import { captureDeliveryDocument } from "content/application/captures/renderDelivery";
 import type { TPage } from "content/pages/interfaces/pages";
 import { observeDelivery } from "./observe";
@@ -22,6 +23,8 @@ import type { BlobStore } from "@bernouy/blob-store";
 export interface ContentDeliveryOptions
     extends Omit<ContentDeliveryHost, "resolveActor" | "executeQuery" | "basePath" | "cmsPathPrefix"> {
     readonly publicUrl: string;
+    /** Opaque resource clock owned by the instance producing this representation. */
+    readonly readResourceRevision?: () => Promise<string>;
     readonly readCaptureResource?: (path: string, signal?: AbortSignal) => Promise<Response>;
     readonly sitemapStore?: BlobStore;
     readonly serveCollectionAsset: (request: Request) => Promise<Response>;
@@ -64,7 +67,22 @@ export class ContentDelivery {
         if (input.method === "HEAD") {
             await response.body?.cancel();
         }
-        return new Response(input.method === "HEAD" ? null : response.body, { status: response.status, headers });
+        const result = new Response(input.method === "HEAD" ? null : response.body, {
+            status: response.status,
+            headers,
+        });
+        if (actor.kind === "anonymous") {
+            inheritRevisionPolicy(response, result);
+            if (isRevisionValidatedPage(result) && this.options.readResourceRevision) {
+                try {
+                    bindRevisionValidatedPage(result, await this.options.readResourceRevision());
+                } catch (error) {
+                    await result.body?.cancel();
+                    throw error;
+                }
+            }
+        }
+        return result;
     }
     captureDocument(page: TPage, locale: string, themeMode: "light" | "dark", signal?: AbortSignal) {
         return captureDeliveryDocument(this.options, this.resolvePath.bind(this), page, locale, themeMode, signal);

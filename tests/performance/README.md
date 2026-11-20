@@ -6,6 +6,11 @@ initial assessment. Test fixtures mutate disposable local instances only.
 
 ## Execution
 
+For public Page HIT/MISS/BYPASS, expiry, idle-context, process-restart and
+stylesheet/invalidation measurements, see the [public cache journey](public-cache/README.md).
+It is a separately selectable supplementary command, outside `verify` and the
+capability campaign.
+
 For a focused `initialization.plan` campaign, see
 [initialization scenario details](scenarios/initialization/README.md) and the
 [2026-11-17 measurements](../../docs/development/initialization-plan-performance-2026-11-17.md).

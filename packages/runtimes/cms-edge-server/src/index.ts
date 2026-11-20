@@ -15,7 +15,6 @@ try {
         maxPending: 4,
         admission: { maxQueued: 64, waitMs: 30_000 },
         maxWaiters: 64,
-        idleMs: 60_000,
     });
     const runner = new BunRunner({ logger, idleTimeoutSeconds: 60 });
     runner.get("/healthz", () => new Response(null, { status: 204 }));

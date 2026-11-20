@@ -1,3 +1,5 @@
+import { markRevisionValidatedEntry } from "content/pages/delivery/access/revisionPolicy";
+import { parseSvgCapabilityReference } from "content/blocs/core/markup/security/svgReference";
 import { pageDocument, renderPageDocument } from "@bernouy/content/rendering";
 import { parseHTML } from "linkedom";
 import type { TPage } from "@bernouy/content/rendering";
@@ -32,6 +34,7 @@ export async function renderPage(
     ctx: RenderContext,
     runtimeMetadata: PageRenderMetadata = {},
 ): Promise<CacheEntry> {
+    let usesLiveSvg = false;
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     const head = document.head;
 
@@ -46,7 +49,12 @@ export async function renderPage(
             repository: ctx.content,
             language: settings.site.language || "en",
             resolveContributedAssets: ctx.resolveContributedAssets,
-            resolveSvgSources: ctx.resolveSvgSources,
+            resolveSvgSources: ctx.resolveSvgSources
+                ? (sources) => {
+                      usesLiveSvg ||= sources.some((source) => parseSvgCapabilityReference(source) !== null);
+                      return ctx.resolveSvgSources!(sources);
+                  }
+                : undefined,
             // A browser may fetch an interpolated img src before the deferred
             // binding runtime executes. Keep those network attributes inert.
             prepareBody: async (body) => {
@@ -79,5 +87,6 @@ export async function renderPage(
     buildStylesheetLink(document, head, assets);
     buildScriptTags(document, head, assets, { includeBindingCore: requiresBindingRuntime });
 
-    return compress(document.toString(), "text/html");
+    const entry = compress(document.toString(), "text/html");
+    return !rendered.requiresBindingRuntime && !usesLiveSvg ? markRevisionValidatedEntry(entry) : entry;
 }

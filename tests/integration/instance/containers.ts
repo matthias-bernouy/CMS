@@ -97,6 +97,22 @@ export async function mcpContainers(
                 await waitForHttp(`${cmsUrl}/readyz`);
             },
             close,
+            async createEdgeReplica() {
+                const name = `${edgeName}-replica`;
+                await cluster.run(name, "edge-replica", images.edge, [
+                    "--publish",
+                    "127.0.0.1::3000",
+                    "--env",
+                    "CMS_HOSTING_PROVIDER_URL=http://ulvia-provider:5103",
+                    "--env",
+                    `CMS_HOSTING_EDGE_SECRET=${hosting.edgeSecret}`,
+                    "--env",
+                    "CMS_EDGE_RESPONSE_CACHE=true",
+                ]);
+                const endpoint = await cluster.endpoint(name, 3000);
+                await waitForHttp(`${endpoint}/readyz`);
+                return { name, endpoint };
+            },
             async restartProvider(stopTimeoutSeconds = 10) {
                 if (!Number.isSafeInteger(stopTimeoutSeconds) || stopTimeoutSeconds < 0 || stopTimeoutSeconds > 10) {
                     throw new Error("Invalid test restart stop timeout");

@@ -50,15 +50,24 @@ export function sharedPolicy(value: string | null, pages: boolean): SharedPolicy
         staleIfError: seconds("stale-if-error"),
     };
 }
-export function cacheKey(request: Request): string | null {
+/** Revalidation directives are accepted only behind a live, independent hosting revision check. */
+function canValidateRequest(request: Request): boolean {
+    const control = request.headers.get("cache-control");
+    const pragma = request.headers.get("pragma");
+    return (
+        (control === null || /^(?:no-cache|max-age=0)(?:\s*,\s*(?:no-cache|max-age=0))*$/iu.test(control.trim())) &&
+        (pragma === null || pragma.trim().toLowerCase() === "no-cache")
+    );
+}
+export function cacheKey(request: Request, revisionChecked = false): string | null {
     if (
         !["GET", "HEAD"].includes(request.method) ||
         request.headers.has("authorization") ||
         request.headers.has("range") ||
         request.headers.has("if-range") ||
         ["if-match", "if-unmodified-since"].some((name) => request.headers.has(name)) ||
-        request.headers.has("cache-control") ||
-        request.headers.has("pragma")
+        ((request.headers.has("cache-control") || request.headers.has("pragma")) &&
+            (!revisionChecked || !canValidateRequest(request)))
     ) {
         return null;
     }

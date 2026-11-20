@@ -10,6 +10,7 @@ export async function loadCacheResource(
     now: () => number,
 ): Promise<CachedResource | Response> {
     const startedAt = now();
+    const validatedRevision = options.validatedRevision?.();
     const { response, cacheControl, tags = [] } = await load(request, true);
     if (response.status >= 500) {
         return response;
@@ -44,7 +45,7 @@ export async function loadCacheResource(
     const bytes =
         body.byteLength +
         (gzip?.byteLength ?? 0) +
-        new TextEncoder().encode(JSON.stringify([key, headers, tags])).byteLength;
+        new TextEncoder().encode(JSON.stringify([key, headers, tags, validatedRevision])).byteLength;
     const entry: CachedResource = {
         key,
         tags,
@@ -52,6 +53,10 @@ export async function loadCacheResource(
         raw: body,
         ...(gzip ? { gzip } : {}),
         storedAt: startedAt,
+        lastUsedAt: startedAt,
+        ...(validatedRevision !== undefined && tags.includes(`content:revision-validated:${validatedRevision}`)
+            ? { validatedRevision }
+            : {}),
         policy,
         bytes,
     };

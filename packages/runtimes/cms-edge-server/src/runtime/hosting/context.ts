@@ -21,6 +21,7 @@ export async function createTenantContext(env: RuntimeEnv, route: EdgeRoute, cli
     const { logger } = diagnostics;
     const cache = new ResponseCache({
         enabled: env.CMS_EDGE_RESPONSE_CACHE,
+        validatedRevision: () => resourceRevision,
         maxBytes: 2 * 1024 * 1024,
         maxEntryBytes: 512 * 1024,
         maxEntries: 128,

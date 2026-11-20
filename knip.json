@@ -80,6 +80,7 @@
                 "tests/performance/harness/instrumentation/preload.ts",
                 "tests/performance/harness/docker/cleanup/namespace-program.ts",
                 "tests/performance/delivery/run.ts",
+                "tests/performance/public-cache/run.ts",
                 "tests/integration/instance/documentation/evaluation/host.ts",
                 "tests/integration/instance/documentation/evaluation/client.ts",
                 "tests/performance/command/run.ts",

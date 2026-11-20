@@ -3,6 +3,7 @@ import { cacheKey, unconditional } from "./policy";
 import { loadCacheResource } from "./load";
 import { cachedResponse, streamingResponse } from "./representation";
 import type { CachedResource, CacheLoad, CacheOptions } from "./types";
+const RETENTION_IDLE_MS = 24 * 60 * 60_000;
 type Fill = { startedAt: number; generation: number; waiters: number; result: Promise<CachedResource | Response> };
 
 /** Ephemeral per-Edge-instance cache. Provider authority still owns every miss and private request. */
@@ -43,21 +44,39 @@ export class ResponseCache {
         };
     }
     async handle(request: Request, load: CacheLoad, eligible = true): Promise<Response> {
-        const key = this.options.enabled === false || !eligible ? null : cacheKey(request);
+        const key =
+            this.options.enabled === false || !eligible
+                ? null
+                : cacheKey(request, Boolean(this.options.validatedRevision));
         if (key === null) {
             return this.bypass(request, load);
         }
         if (this.hints.has(key)) {
             return this.bypass(request, load);
         }
-        const entry = this.entries.get(key);
+        let entry = this.entries.get(key);
+        const revalidation = request.headers.has("cache-control") || request.headers.has("pragma");
+        const revisionChecked =
+            entry?.validatedRevision !== undefined && entry.validatedRevision === this.options.validatedRevision?.();
+        if (
+            entry?.validatedRevision !== undefined &&
+            (!revisionChecked || this.now() - entry.lastUsedAt >= RETENTION_IDLE_MS)
+        ) {
+            this.remove(key);
+            entry = undefined;
+        }
+        if (revalidation && !entry?.validatedRevision) {
+            return this.bypass(request, load);
+        }
         if (entry) {
             const age = (this.now() - entry.storedAt) / 1000;
-            if (age < entry.policy.fresh) {
+            if (revisionChecked || age < entry.policy.fresh) {
                 this.entries.delete(key);
                 this.entries.set(key, entry);
-                this.event("HIT");
-                return cachedResponse(entry, request, this.now(), "HIT");
+                entry.lastUsedAt = this.now();
+                const outcome = revalidation ? "REVALIDATED" : "HIT";
+                this.event(outcome);
+                return cachedResponse(entry, request, this.now(), outcome);
             }
             if (age < entry.policy.fresh + entry.policy.staleWhileRevalidate) {
                 if (!this.pending.has(key) && this.active < (this.options.maxPending ?? 16)) {
