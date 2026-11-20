@@ -1,8 +1,8 @@
-import { capabilityBindings } from "@bernouy/ulvia-contracts/bindings";
+import { mcpCatalogueEntries } from "./catalogue";
 import { canonicalIJsonBytes, parseStrictJson, MAX_CAPABILITY_JSON_BYTES } from "@bernouy/ulvia-contracts/protocol";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { CapabilityMcpOptions, McpInvocationContext, McpToolResult } from "./interfaces";
-import { capabilityTool, capabilityToolName } from "./tools";
+import { capabilityTool } from "./tools";
 
 export class McpProtocolError extends Error {
     constructor(
@@ -37,7 +37,7 @@ export class CapabilityMcpBinding {
     }
 
     async call(name: string, args: unknown, context: McpInvocationContext): Promise<McpToolResult> {
-        const entry = (await this.entries(context)).find(({ toolName }) => toolName === name);
+        const entry = (await this.entries(context, name)).find(({ toolName }) => toolName === name);
         if (!entry) {
             throw new McpProtocolError(-32602, "Unknown capability tool");
         }
@@ -148,51 +148,10 @@ export class CapabilityMcpBinding {
         }
     }
 
-    private async entries(context: McpInvocationContext) {
-        const contracts = await this.options.contracts(context);
-        const entries = contracts.flatMap((contract) =>
-            contract.release.capabilities.flatMap((capability) =>
-                capabilityBindings(capability).flatMap((binding) =>
-                    binding.transport === "mcp"
-                        ? [
-                              {
-                                  contractId: contract.release.contractId,
-                                  capability,
-                                  binding,
-                                  digest: contract.digest,
-                                  documentation: contract.release.documentation ?? [],
-                              },
-                          ]
-                        : [],
-                ),
-            ),
-        );
-        if (entries.length > 1_024) {
-            throw new Error("MCP catalogue exceeds limits or contains duplicate tool identities");
-        }
-        const named = entries.map((entry) => ({
-            ...entry,
-            toolName: capabilityToolName(
-                entry.contractId,
-                entry.capability.id,
-                entry.binding.id,
-                entry.binding.tool?.name,
-            ),
-        }));
-        if (new Set(named.map(({ toolName }) => toolName)).size !== entries.length) {
-            throw new Error("MCP catalogue exceeds limits or contains duplicate tool identities");
-        }
-        // Session effects require an HTTP browser boundary and cannot be executed safely over MCP.
-        return named
-            .filter(
-                ({ capability }) =>
-                    !capability.responseEffects?.length &&
-                    (this.options.resolveBinary ||
-                        !Object.values(capability.input.properties).some((schema) => schema.type === "binary")) &&
-                    (this.options.publishBinary || capability.output.type !== "binary"),
-            )
-            .sort((a, b) => {
-                return a.toolName < b.toolName ? -1 : a.toolName > b.toolName ? 1 : 0;
-            });
+    private async entries(context: McpInvocationContext, toolName?: string) {
+        const targeted = toolName !== undefined && this.options.resolveToolContract;
+        const selected = targeted ? await this.options.resolveToolContract!(toolName, context) : undefined;
+        const contracts = targeted ? (selected ? [selected] : []) : await this.options.contracts(context);
+        return mcpCatalogueEntries(contracts, Boolean(this.options.resolveBinary), Boolean(this.options.publishBinary));
     }
 }

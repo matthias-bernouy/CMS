@@ -9,7 +9,7 @@ const execute = (
     actor = {},
 ) => executeCapability(installationsFeature, id, { input, services: ports, context: { ...context, ...actor } });
 const denied = { code: "FORBIDDEN", output: { message: "The installation request was refused." } };
-test("all eleven gateway control executors refuse untrusted actors before inspecting service ports", async () => {
+test("all thirteen gateway control executors refuse untrusted actors before inspecting service ports", async () => {
     const examples = {
         "gateway.audit.append": { event: "{}" },
         "gateway.delegation.close": { context: { siteId: "site-a", ticket: "t", requestId: "req" } },
@@ -76,8 +76,10 @@ test("all eleven gateway control executors refuse untrusted actors before inspec
             },
         },
         "gateway.route.get": { contractId: "ulvia/cms.files" },
+        "gateway.route.snapshot": { contractId: "ulvia/cms.files", known: [] },
+        "gateway.mcp.resolve": { contractIds: ["ulvia/cms.files"], toolName: "files_get", known: [] },
     } as const;
-    expect(Object.keys(examples)).toHaveLength(11);
+    expect(Object.keys(examples)).toHaveLength(13);
     for (const [id, input] of Object.entries(examples)) {
         const capability = installationsFeature.capabilities.find((capability) => capability.id === id)!;
         const parsed = capability.input.safeParse(input);

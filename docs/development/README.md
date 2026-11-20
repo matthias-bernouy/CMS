@@ -345,3 +345,6 @@ smoke completes empty setup, explicitly publishes and installs a test collection
 then creates, publishes, reloads and deletes a Page through public APIs and Chromium. See
 [Provider instance initialization](../architecture/provider-instance-initialization.md)
 for review, authority, limits and recovery guarantees.
+
+[Gateway control performance](gateway-control-performance.md) describes the admitted
+compact-route protocol, bounded definition cache and revision-fenced MCP index.

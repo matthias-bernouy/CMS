@@ -1,3 +1,4 @@
+import { ControlMcpCatalogue } from "./control/catalogue";
 import { machineInvocation } from "./dispatch/machineInvocation";
 import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
 import { preparedEdgeDispatch } from "./dispatch/preparedDispatch";
@@ -85,36 +86,15 @@ export function createEdgeGateway(
               }
             : null;
     };
+    const mcpCatalogue = new ControlMcpCatalogue(gateway, control);
     return {
-        contracts: async (context: McpInvocationContext) => {
-            const result = await gateway.invoke({
-                ...context,
-                contractId: "ulvia/cms.installations",
-                capabilityId: "list-provider-installations",
-                input: {},
-            });
-            if (result.kind !== "success") {
-                throw new Error("Selected contract catalogue is unavailable");
-            }
-            const selections = (result.output as { selections: { contractId: string }[] }).selections;
-            const ids = [...new Set(selections.map(({ contractId }) => contractId))];
-            const contracts = new Map<string, Awaited<ReturnType<typeof gateway.resolveContract>>>();
-            while (ids.length) {
-                if (contracts.size >= 256) {
-                    throw new Error("Selected contract catalogue is too large");
-                }
-                const contractId = ids.shift()!;
-                if (contracts.has(contractId)) {
-                    continue;
-                }
-                const contract = await gateway.resolveContract({ siteId: context.siteId, contractId });
-                contracts.set(contractId, contract);
-                if (contract.release.extends) {
-                    ids.push(contract.release.extends.contractId);
-                }
-            }
-            return [...contracts.values()];
-        },
+        contracts: (context: McpInvocationContext) => mcpCatalogue.list(context),
+        ...(control.supportsCompactGateway
+            ? {
+                  resolveToolContract: (name: string, context: McpInvocationContext) =>
+                      mcpCatalogue.resolve(name, context),
+              }
+            : {}),
         invoker: gateway,
         invokeProvider: machineInvocation(control, routes, gatewayOptions, makeTransport),
         authenticateProvider: (token: string) => control.authenticateProvider(token),

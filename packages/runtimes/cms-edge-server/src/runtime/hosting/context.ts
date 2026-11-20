@@ -5,7 +5,7 @@ import { RouteLease } from "./client/RouteLease";
 import { ResponseCache } from "../resources/cache/ResponseCache";
 import { commandCacheEffect, commandCacheTags } from "../resources/cache/commandPolicy";
 import { InstallationsProviderTransport } from "../gateway/InstallationsProviderTransport";
-import { fetchInstallationsProviderReport, installationsControlContract } from "../gateway/controlReport";
+import { fetchInstallationsProviderReport, installationsControlContract } from "../gateway/control";
 import { ControlProviderClient } from "../gateway/ControlProviderClient";
 import { createEdgeGateway } from "../gateway/createEdgeGateway";
 import { createTenantEdge } from "../mountEdge";

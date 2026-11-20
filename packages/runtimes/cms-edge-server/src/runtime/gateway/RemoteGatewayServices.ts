@@ -1,3 +1,4 @@
+import type { GatewayRouteSource } from "@bernouy/cms-gateway/protocol";
 import type { GatewayRoute, GatewayRouteResolver } from "@bernouy/cms-gateway";
 import type { GatewayCommandAuditEvent, GatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 import type { ProviderIdentityScope, ProviderIdentityService } from "@bernouy/cms-gateway/identity";
@@ -9,7 +10,8 @@ export class ControlGatewayRouteResolver implements GatewayRouteResolver {
     readonly #pending = new Map<string, Promise<GatewayRoute | null>>();
 
     constructor(
-        private readonly control: ControlProviderClient,
+        private readonly control: Pick<ControlProviderClient, "getGatewayRoute"> &
+            Partial<Pick<ControlProviderClient, "readGatewayRoute">>,
         private readonly now: () => number = Date.now,
         private readonly cacheDurationMs = 5_000,
     ) {}
@@ -25,11 +27,11 @@ export class ControlGatewayRouteResolver implements GatewayRouteResolver {
             return pending;
         }
         // Share concurrent transport-plan reads; dispatch still has a live authorization fence.
-        const load = this.control.getGatewayRoute(contractId).then((snapshot) => {
+        const load = this.read(contractId).then((snapshot) => {
             const route = snapshot === null ? null : parseRoute(snapshot, siteId, contractId);
             if (this.#pending.get(cacheKey) === load && route) {
                 // The cache is per control connection (one instance), and holds transport plans only.
-                if (snapshot!.length <= 512 * 1024) {
+                if ((typeof snapshot === "string" ? snapshot.length : snapshot!.characters) <= 512 * 1024) {
                     if (this.#cache.size >= 32) {
                         this.#cache.delete(this.#cache.keys().next().value!);
                     }
@@ -48,6 +50,12 @@ export class ControlGatewayRouteResolver implements GatewayRouteResolver {
         }
     }
 
+    private read(contractId: string) {
+        return this.control.readGatewayRoute
+            ? this.control.readGatewayRoute(contractId)
+            : this.control.getGatewayRoute(contractId);
+    }
+
     invalidate(siteId: string, contractId: string): void {
         const key = routeCacheKey(siteId, contractId);
         this.#cache.delete(key);
@@ -55,7 +63,7 @@ export class ControlGatewayRouteResolver implements GatewayRouteResolver {
     }
 
     async isCurrent(route: GatewayRoute): Promise<boolean> {
-        const snapshot = await this.control.getGatewayRoute(route.selection.contractId);
+        const snapshot = await this.read(route.selection.contractId);
         if (snapshot === null) {
             return false;
         }
@@ -116,11 +124,11 @@ export class ControlGatewayAuditStore implements GatewayCommandAuditStore {
     }
 }
 
-function parseRoute(snapshot: string, siteId: string, contractId: string): GatewayRoute {
-    if (snapshot.length > 1024 * 1024) {
+function parseRoute(snapshot: string | GatewayRouteSource, siteId: string, contractId: string): GatewayRoute {
+    if (typeof snapshot === "string" && snapshot.length > 1024 * 1024) {
         throw new TypeError("Installations Provider Gateway route is too large");
     }
-    const value: unknown = JSON.parse(snapshot);
+    const value: unknown = typeof snapshot === "string" ? JSON.parse(snapshot) : snapshot.route;
     if (!value || typeof value !== "object" || Array.isArray(value)) {
         throw new TypeError("Installations Provider Gateway route is invalid");
     }

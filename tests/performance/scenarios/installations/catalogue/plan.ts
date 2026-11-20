@@ -1,3 +1,4 @@
+import { prepareCompactMetadata } from "./metadata/compact";
 import { budgetFor } from "../../../capabilities/policies";
 import { sampleScenario } from "../../../harness/execution/samples";
 import { ClientFailure } from "../../../harness/clients/failure";
@@ -18,6 +19,8 @@ export function metadataCatalogueScenarios(inventory: CapabilityInventory, fixtu
         "list-provider-installations",
         "capabilities.describe",
         "gateway.route.get",
+        "gateway.route.snapshot",
+        "gateway.mcp.resolve",
     ].flatMap((capability) => {
         const target = inventory.targets.find(
             (row) =>
@@ -30,6 +33,7 @@ export function metadataCatalogueScenarios(inventory: CapabilityInventory, fixtu
             "documentation.search",
             "list-available-providers",
             "list-provider-installations",
+            "gateway.route.snapshot",
         ].includes(capability)
             ? ["large", "history", "invalidation"]
             : ["invalidation"];
@@ -53,18 +57,20 @@ export function metadataCatalogueScenarios(inventory: CapabilityInventory, fixtu
                                 definition,
                                 definition.obligations[0]!,
                                 (index) =>
-                                    capability.startsWith("documentation.")
-                                        ? prepareMetadataDocumentation(
-                                              inventory,
-                                              context,
-                                              capability,
-                                              binding,
-                                              variant,
-                                              index,
-                                          )
-                                        : capability.startsWith("list-")
-                                          ? prepareMetadataList(context, capability, variant)
-                                          : prepareMetadataInvalidation(inventory, context, capability),
+                                    capability === "gateway.route.snapshot" || capability === "gateway.mcp.resolve"
+                                        ? prepareCompactMetadata(inventory, context, capability, variant)
+                                        : capability.startsWith("documentation.")
+                                          ? prepareMetadataDocumentation(
+                                                inventory,
+                                                context,
+                                                capability,
+                                                binding,
+                                                variant,
+                                                index,
+                                            )
+                                          : capability.startsWith("list-")
+                                            ? prepareMetadataList(context, capability, variant)
+                                            : prepareMetadataInvalidation(inventory, context, capability),
                             );
                         } catch (error) {
                             return {

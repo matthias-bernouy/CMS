@@ -14,7 +14,8 @@ describe("Installations Provider control capabilities", () => {
         ];
         const control = client(requests, () => Response.json(responses.shift()));
 
-        expect(await control.getGatewayRoute("ulvia/catalog.items")).toContain("selection");
+        expect(control.supportsCompactGateway).toBe(false);
+        expect(await control.readGatewayRoute("ulvia/catalog.items")).toContain("selection");
         expect(await control.resolveGatewayIdentity("ulvia/catalog", "cms-user-a")).toBe("provider-user-a");
         await control.appendGatewayAudit({
             id: "audit-a",
@@ -80,7 +81,11 @@ function client(requests: Array<{ url: string; init?: RequestInit }>, respond: (
             return respond();
         }) as typeof fetch,
     );
-    return new ControlProviderClient(transport);
+    return new ControlProviderClient(transport, undefined, {
+        contractId: "ulvia/cms.installations",
+        version: "1.4.2",
+        digest: "sha256:59f764502bde4b642609b6bd4d0cf3b7d0ba58444972cb48027a8b1ddb2acdf1",
+    });
 }
 
 test("delegation preserves refusal, throttling and infrastructure failure semantics", async () => {

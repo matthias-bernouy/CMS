@@ -10,7 +10,9 @@ export function createProviderContractRelay(...args: Parameters<typeof createGen
         logger,
         authorize,
         transform = (request, response, claims, control) =>
-            control && claims.contractId === "ulvia/cms.installations" && claims.capabilityId === "gateway.route.get"
+            control &&
+            claims.contractId === "ulvia/cms.installations" &&
+            ["gateway.route.get", "gateway.route.snapshot", "gateway.mcp.resolve"].includes(claims.capabilityId)
                 ? routeResponse(request, response)
                 : Promise.resolve(response),
     ] = args;
