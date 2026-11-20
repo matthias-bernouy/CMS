@@ -7,3 +7,6 @@ export type {
     McpResourceLink,
     McpToolResult,
 } from "cms-gateway/invocation/mcp/interfaces";
+
+export { mcpCatalogueEntries } from "cms-gateway/invocation/mcp/catalogue";
+export { collectMcpContracts } from "cms-gateway/invocation/mcp/contracts";

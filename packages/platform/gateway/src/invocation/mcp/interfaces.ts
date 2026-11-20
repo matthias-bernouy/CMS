@@ -25,6 +25,11 @@ export interface CapabilityMcpOptions {
     readonly onMutationSuccess?: (value: { contractId: string; capabilityId: string }) => void | Promise<void>;
     /** Return exact admitted releases available for this trusted host scope. Maximum 1024 capabilities. */
     readonly contracts: (context: McpInvocationContext) => Promise<readonly AdmittedContractRelease[]>;
+    /** Trusted host lookup retains full-catalogue identity/limit validation and fresh selection checks. */
+    readonly resolveToolContract?: (
+        name: string,
+        context: McpInvocationContext,
+    ) => Promise<AdmittedContractRelease | null>;
     /** Resolve host-owned resource handles. Never fetch an arbitrary client-supplied URL. */
     readonly resolveBinary?: (
         uri: string,
