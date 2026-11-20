@@ -272,8 +272,10 @@ paths and options, for example `bun run test ./tests/operations`.
 
 `verify` is the functional and static automated acceptance pipeline. Measured
 performance campaigns run separately through `perf`. It requires
-Docker Compose, Chromium and local listeners; missing prerequisites fail the
-command. Bootstrap and browser outputs are prepared once per command before the
+Docker Compose, npm, Chromium and local listeners; missing prerequisites fail the
+command. The installed-CLI regression serves the locked dependency bytes through
+a temporary local npm registry; it needs neither the public registry nor a warm
+npm cache. Bootstrap and browser outputs are prepared once per command before the
 stages that consume them. Individual internal entrypoints remain directly callable
 for diagnosis; they are not additional root aliases.
 

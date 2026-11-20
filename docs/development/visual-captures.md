@@ -136,6 +136,11 @@ evidence; no measured campaign is claimed by the implementation tests.
 
 ## Verification and client evidence
 
+The packaged CLI resolves its read-only dependency mount from the installed
+Playwright module rather than assuming package-local `node_modules`. The npm
+regression installs a packed CLI with both hoisted and nested dependencies and
+checks identical desktop/mobile PNGs. No workspace dependency symlink is supplied.
+
 Tests cover Unix permissions, input refusal, concurrent capacity, cancellation,
 shutdown, actual native-process startup, isolated Chromium and a complete MCP-only
 journey through signed Provider HTTP calls. Tests on the implementing workstation

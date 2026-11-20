@@ -1,74 +1,85 @@
-import { createRequire } from "node:module";
 import { expect, test } from "bun:test";
-import { mkdtemp, rm, symlink } from "node:fs/promises";
-import { join, resolve, dirname } from "node:path";
+import { mkdtemp, mkdir, rm } from "node:fs/promises";
+import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { createHash } from "node:crypto";
+import { imageSize } from "image-size";
 import { writeExampleSource } from "./fixture";
+import { packedCli } from "./installed/archive";
+import { dependencyRegistry, npmCommand } from "./installed/registry";
 
 test.skipIf(process.env.ULVIA_RUN_EXAMPLE_BROWSER !== "1")(
-    "bundled CLI previews ship their own worker without accessing workspace source files",
+    "packed CLI previews capture identical frames after real npm hoisted and nested installations",
     async () => {
-        const root = await mkdtemp(join(tmpdir(), "ulvia bundled capture "));
+        const root = await mkdtemp(join(tmpdir(), "ulvia installed capture "));
+        let registry;
         try {
+            registry = await dependencyRegistry(root);
+            const archive = await packedCli(root, registry.dependencies);
             const source = await writeExampleSource(root);
-            const runtimeRoot = resolve("packages/features/content/dist/runtime-assets");
-            const bundle = await Bun.build({
-                entrypoints: [resolve(import.meta.dir, "../../src/index.ts")],
-                target: "bun",
-                packages: "bundle",
-                external: ["css-tree", "playwright"],
-                outdir: join(root, "dist"),
-                naming: "index.js",
-                define: {
-                    __ULVIA_CAPTURE_WORKER_BUNDLED__: "true",
-                    __ULVIA_PREVIEW_RUNTIMES__: JSON.stringify({
-                        blocRuntime: await Bun.file(join(runtimeRoot, "bloc-runtime.js")).text(),
-                        bindingCore: await Bun.file(join(runtimeRoot, "binding-core.js")).text(),
-                    }),
-                },
-            });
-            expect(bundle.success).toBeTrue();
-            const worker = await Bun.build({
-                entrypoints: [resolve("packages/foundation/browser-capture/src/playwright/worker.ts")],
-                target: "bun",
-                outdir: join(root, "dist/capture-worker"),
-                naming: "worker.js",
-            });
-            expect(worker.success).toBeTrue();
-            await symlink(resolve("node_modules"), join(root, "node_modules"));
-            const child = Bun.spawn(
-                [process.execPath, join(root, "dist/index.js"), "preview", source, "--output", join(root, "output")],
-                {
-                    env: {
-                        ...process.env,
-                        ULVIA_DATA_DIR: join(root, "data"),
-                        NODE_PATH: dirname(
-                            dirname(
-                                createRequire(resolve("packages/features/repository/package.json")).resolve(
-                                    "css-tree/package.json",
-                                ),
-                            ),
-                        ),
+            let reference: string[] | undefined;
+            for (const strategy of ["hoisted", "nested"]) {
+                const installation = join(root, strategy);
+                await mkdir(installation);
+                await Bun.write(join(installation, "package.json"), JSON.stringify({ private: true }));
+                await npmCommand(
+                    [
+                        "install",
+                        archive,
+                        "--omit=optional",
+                        `--install-strategy=${strategy}`,
+                        `--registry=${registry.url}`,
+                    ],
+                    installation,
+                    root,
+                );
+                const packageRoot = join(installation, "node_modules/@cyaxis/ulvia");
+                expect(await Bun.file(join(packageRoot, "node_modules/playwright/package.json")).exists()).toBe(
+                    strategy === "nested",
+                );
+                expect(await Bun.file(join(installation, "node_modules/playwright/package.json")).exists()).toBe(
+                    strategy === "hoisted",
+                );
+                const output = join(installation, "output");
+                const child = Bun.spawn(
+                    [process.execPath, join(packageRoot, "dist/index.js"), "preview", source, "--output", output],
+                    {
+                        cwd: installation,
+                        env: {
+                            PATH: process.env.PATH,
+                            HOME: process.env.HOME,
+                            ULVIA_DATA_DIR: join(installation, "data"),
+                        },
+                        stdout: "pipe",
+                        stderr: "pipe",
                     },
-                    stdout: "pipe",
-                    stderr: "pipe",
-                },
-            );
-            const [code, stderr] = await Promise.all([
-                child.exited,
-                new Response(child.stderr).text(),
-                new Response(child.stdout).text(),
-            ]);
-            expect(stderr).toBe("");
-            expect(code).toBe(0);
-            const manifest = await Bun.file(join(root, "output/manifest.json")).json();
-            expect(manifest.captures).toHaveLength(2);
-            expect(
-                (await Bun.file(join(root, "output/contact--desktop.png")).arrayBuffer()).byteLength,
-            ).toBeGreaterThan(0);
+                );
+                const [code, stderr] = await Promise.all([
+                    child.exited,
+                    new Response(child.stderr).text(),
+                    new Response(child.stdout).text(),
+                ]);
+                expect(stderr).toBe("");
+                expect(code).toBe(0);
+                expect((await Bun.file(join(output, "manifest.json")).json()).captures).toHaveLength(2);
+                const hashes = [];
+                for (const [frame, width, height] of [
+                    ["desktop", 640, 240],
+                    ["mobile", 320, 160],
+                ] as const) {
+                    const bytes = new Uint8Array(await Bun.file(join(output, `contact--${frame}.png`)).arrayBuffer());
+                    expect(imageSize(bytes)).toMatchObject({ width, height });
+                    hashes.push(createHash("sha256").update(bytes).digest("hex"));
+                }
+                if (reference) {
+                    expect(hashes).toEqual(reference);
+                }
+                reference = hashes;
+            }
         } finally {
+            registry?.stop();
             await rm(root, { recursive: true, force: true });
         }
     },
-    30_000,
+    120_000,
 );
