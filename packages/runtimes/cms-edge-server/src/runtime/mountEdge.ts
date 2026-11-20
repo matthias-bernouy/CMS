@@ -28,6 +28,7 @@ export function createTenantEdge(
             invoker: gateway.invoker,
             resolveActor: gateway.resolveActor,
             contracts: gateway.contracts,
+            resolveToolContract: gateway.resolveToolContract,
         }),
         resolveActor: gateway.resolveActor,
         resourceHandler: createPublicResourceHandler(

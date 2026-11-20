@@ -1,9 +1,10 @@
 import { expect } from "bun:test";
 import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { gatewayRoute } from "../../../../../../tests/integration/gateway/fixtures";
+import { packGatewayRoute } from "@bernouy/cms-gateway/protocol";
 import { ControlProviderClient } from "../../../src/runtime/gateway/ControlProviderClient";
 import { InstallationsProviderTransport } from "../../../src/runtime/gateway/InstallationsProviderTransport";
-import { INSTALLATIONS_CONTRACT } from "../../../src/runtime/gateway/controlReport";
+import { INSTALLATIONS_CONTRACT } from "../../../src/runtime/gateway/control";
 import { createEdgeGateway } from "../../../src/runtime/gateway/createEdgeGateway";
 
 export async function preparedFixture(command = false, settled?: () => void, machine = false) {
@@ -52,6 +53,9 @@ export async function preparedFixture(command = false, settled?: () => void, mac
             (async (url, init) => {
                 const path = new URL(url.toString()).pathname;
                 const input = JSON.parse(String(init?.body));
+                if (path === "/gateway/route-snapshot") {
+                    return Response.json(await packGatewayRoute(route, input.known));
+                }
                 if (path === "/gateway/route") {
                     return Response.json({ route: JSON.stringify(route) });
                 }

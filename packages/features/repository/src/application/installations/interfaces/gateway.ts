@@ -18,6 +18,8 @@ export interface InstallationGateway {
     readonly administrators?: { get(sub: string): Promise<{ readonly enabled: boolean }> };
     readonly describeContract?: (contractId: string) => Promise<CatalogueContractRelease | null>;
     readonly siteId: string;
+    /** Fresh complete catalogue/selection/installation revision fingerprint, or null to disable index reuse. */
+    readonly catalogueRevision?: () => Promise<string | null>;
     readonly contractUpgrades?: ContractUpgradeService;
     readonly installations: ProviderInstallationStore;
     readonly selections: ContractSelectionStore;

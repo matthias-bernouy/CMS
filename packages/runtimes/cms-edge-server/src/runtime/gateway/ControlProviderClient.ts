@@ -1,3 +1,5 @@
+import { ControlRouteClient } from "./control/routes";
+import type { GatewayRouteSource } from "@bernouy/cms-gateway/protocol";
 import { TrackedDelegationRoots } from "./dispatch/TrackedDelegationRoots";
 import type { ProviderMachinePreparation, PreparedProviderMachine } from "@bernouy/cms-gateway/protocol";
 import type { ProviderDispatchPreparation, PreparedProviderDispatch } from "@bernouy/cms-gateway/protocol";
@@ -9,7 +11,7 @@ import type { InstallationsProviderTransport } from "./InstallationsProviderTran
 import type { Logger } from "@bernouy/logging";
 import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 
-import { INSTALLATIONS_CONTRACT, type InstallationsControlContract } from "./controlReport";
+import { INSTALLATIONS_CONTRACT, type InstallationsControlContract } from "./control";
 const MAX_CONTROL_RESPONSE_BYTES = 2 * 1024 * 1024;
 
 export type IssuedProviderInvocation = Readonly<{
@@ -19,12 +21,14 @@ export type IssuedProviderInvocation = Readonly<{
 
 export class ControlProviderClient {
     readonly delegations: ControlDelegationAuthority;
+    private readonly routeClient: ControlRouteClient;
     private readonly roots = new TrackedDelegationRoots();
     constructor(
         private readonly transport: InstallationsProviderTransport,
         private readonly logger?: Logger,
         private readonly contract: InstallationsControlContract = INSTALLATIONS_CONTRACT,
     ) {
+        this.routeClient = new ControlRouteClient((...args) => this.invoke(...args), contract);
         this.delegations = new ControlDelegationAuthority((...args) => this.invoke(...args), this.roots);
     }
 
@@ -107,6 +111,19 @@ export class ControlProviderClient {
         }
     }
 
+    get supportsCompactGateway(): boolean {
+        return this.routeClient.supported;
+    }
+    async readGatewayRoute(contractId: string): Promise<string | GatewayRouteSource | null> {
+        return this.routeClient.supported ? this.routeClient.route(contractId) : this.getGatewayRoute(contractId);
+    }
+    resolveToolContract(contractIds: readonly string[], name: string) {
+        if (!this.routeClient.supported) {
+            throw new TypeError("The negotiated control contract does not expose targeted MCP lookup");
+        }
+        return this.routeClient.tool(contractIds, name);
+    }
+
     async getGatewayRoute(contractId: string): Promise<string | null> {
         const response = await this.invoke("gateway.route.get", "QUERY", "/gateway/route", { contractId }, true);
         if (response === null) {
@@ -180,7 +197,9 @@ export class ControlProviderClient {
                 method,
                 headers: {
                     accept: "application/json",
-                    ...(capabilityId === "gateway.route.get" ? { "accept-encoding": "gzip" } : {}),
+                    ...(["gateway.route.get", "gateway.route.snapshot", "gateway.mcp.resolve"].includes(capabilityId)
+                        ? { "accept-encoding": "gzip" }
+                        : {}),
                     "content-type": "application/json",
                     "x-ulvia-request-id": crypto.randomUUID(),
                     "x-ulvia-contract-id": this.contract.contractId,
@@ -224,7 +243,7 @@ export class ControlProviderClient {
 }
 
 function controlTimingName(capabilityId: string): string {
-    if (capabilityId === "gateway.route.get") {
+    if (capabilityId === "gateway.route.get" || capabilityId === "gateway.route.snapshot") {
         return "gateway_route";
     }
     if (capabilityId === "gateway.identity.resolve") {

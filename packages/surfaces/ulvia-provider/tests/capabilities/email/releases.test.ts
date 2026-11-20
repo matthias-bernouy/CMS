@@ -19,7 +19,7 @@ const releaseDigests = {
     "ulvia/provider.connections": "sha256:0cfc85a809d4078e5e95adc94d023d65fa6d626074093f1a880090ce02b8f9f2",
     "ulvia/repository": "sha256:216131fbd6fa34c015c8dbdb1e1954d6217ba7b85e44d6f51d137d5b21979409",
     "ulvia/cms.hosting": "sha256:89bfdbd3cbc8e66b334f2e93986008185036118d217dd76837433bc3a4b10d66",
-    "ulvia/cms.installations": "sha256:59f764502bde4b642609b6bd4d0cf3b7d0ba58444972cb48027a8b1ddb2acdf1",
+    "ulvia/cms.installations": "sha256:4d37e1ef5dff76b3833d4f555f21cb4d99ede2c5bb8b9822e0ec909e5d12449c",
     "ulvia/provider.tls": "sha256:41dbd3a81aa4d4d6eea2053c5dc7f097ac7003cd683a0c86341fbc4fb5bafa01",
     "ulvia/provider.routing": "sha256:0e312b93bdd939df59e4b837aba02be5f0b750485cf88db41fcec0411cdd9437",
     "ulvia/provider.cms-instances": "sha256:789d38661b21df1db1b36f4c616aa21c5d3456d235c5ee85555c1691b4f80f1b",
@@ -62,6 +62,7 @@ test("prior Content, Repository, Authoring and Installations releases retain exa
         ["ulvia/cms.content", "1.1.0", "sha256:4191a38c7c20104b78cf0340354b194f00e183dbd71e75a3a5eb4e4e13d13353"],
         ["ulvia/repository", "1.2.0", "sha256:fc0cff55733f2bd4f4ce77871ccb95893793f9a8f4965cf47bd31bf4c1cea6a2"],
         ["ulvia/cms.installations", "1.4.0", "sha256:dbfaafe02234c64828b1fc8b0ced559a6ec75ebe185db6ade639def9edcd876f"],
+        ["ulvia/cms.installations", "1.4.2", "sha256:59f764502bde4b642609b6bd4d0cf3b7d0ba58444972cb48027a8b1ddb2acdf1"],
         ["ulvia/cms.installations", "1.4.1", "sha256:0909a87318692b8753c9931955ea98816cce8256dc0eb185787b525d3c597754"],
         ["ulvia/cms.authoring", "1.2.0", "sha256:040e4e0346f615f592d46d1cbe685958074afa2f65f9d833a972f45bbda981e4"],
     ] as const) {
@@ -71,4 +72,24 @@ test("prior Content, Repository, Authoring and Installations releases retain exa
         expect(retained).toBeDefined();
         expect(retained!.contracts[0]!.digest).toBe(digest);
     }
+});
+
+test("Installations 1.5 retains every 1.4.2 capability byte for byte and adds only two control queries", async () => {
+    const current = (await compileOfficialFeatures()).contracts.find(
+        ({ release }) => release.contractId === "ulvia/cms.installations",
+    )!;
+    const retained = (await compileRetainedFeatures()).find((build) =>
+        build.implementations.some((pin) => pin.contractId === "ulvia/cms.installations" && pin.version === "1.4.2"),
+    )!;
+    const previous = retained.contracts.find(({ release }) => release.contractId === "ulvia/cms.installations")!;
+    expect(previous.digest).toBe("sha256:59f764502bde4b642609b6bd4d0cf3b7d0ba58444972cb48027a8b1ddb2acdf1");
+    expect(current.release.version).toBe("1.5.0");
+    const oldIds = new Set(previous.release.capabilities.map(({ id }) => id));
+    expect(current.release.capabilities.filter(({ id }) => oldIds.has(id))).toEqual([...previous.release.capabilities]);
+    expect(
+        current.release.capabilities
+            .filter(({ id }) => !oldIds.has(id))
+            .map(({ id }) => id)
+            .sort(),
+    ).toEqual(["gateway.mcp.resolve", "gateway.route.snapshot"]);
 });

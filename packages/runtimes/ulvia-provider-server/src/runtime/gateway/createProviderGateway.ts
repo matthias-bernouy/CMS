@@ -199,6 +199,18 @@ export async function createProviderGateway(
     return {
         siteId,
         describeContract: (contractId: string) => catalogue.describe(siteId, contractId),
+        catalogueRevision: async () => {
+            if (!releases.revision || !manifests.revision || !installations.revision) {
+                return null;
+            }
+            const [selected, installed, contracts, providers] = await Promise.all([
+                selections.get(siteId),
+                installations.revision(siteId),
+                releases.revision(),
+                manifests.revision(),
+            ]);
+            return JSON.stringify([siteId, selected?.revision ?? null, installed, contracts, providers]);
+        },
         contractUpgrades,
         releases,
         manifests,

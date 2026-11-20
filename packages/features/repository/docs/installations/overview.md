@@ -15,6 +15,8 @@ Use the exact contract selected on the site. Discover the available tool schemas
 
 - `documentation.search`: Search selected contracts and their exact ancestors using natural language or capability names; inspect the returned retrieval mode.
 - `documentation.get`: Read an exact document reference from search results or tool metadata, following continuation offsets when present.
+- `gateway.route.snapshot`: Edge control connection only. Read the current selected route with exact immutable definition references; mutable installation state is always returned.
+- `gateway.mcp.resolve`: Edge control connection only. Resolve one MCP tool in a supplied selected-contract catalogue after checking all tool identities and exact parent contracts. This lookup grants no execution authority; invoke through the Gateway.
 - `gateway.audit.append`: Edge control connection only. Persist one immutable Gateway command audit event.
 - `apply-collection-upgrade`: Apply one current reviewed release-switch plan. Page documents are never transformed.
 - `apply-contract-upgrade`: Atomically apply a current reviewed selection and grant plan without editing site content.

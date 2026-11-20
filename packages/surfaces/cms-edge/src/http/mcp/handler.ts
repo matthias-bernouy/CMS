@@ -1,16 +1,17 @@
 import { mcpUpload } from "./uploads";
 import { CapabilityMcpBinding, createCapabilityMcpHttpHandler } from "@bernouy/cms-gateway/mcp";
 import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
-import type { McpInvocationContext } from "@bernouy/cms-gateway/mcp";
+import type { CapabilityMcpOptions, McpInvocationContext } from "@bernouy/cms-gateway/mcp";
 import { authorizationPage, connectionsPage } from "./pages";
 import { accessCall, mcpActor, boundedText, form, json, McpHttpError, type CmsMcpHost } from "./protocol";
 import { createAuthoringResources } from "./resources";
 import { cmsMcpInstructions } from "./instructions";
 
 export function createCmsMcpHandler(
-    host: CmsMcpHost & {
-        readonly contracts: (context: McpInvocationContext) => Promise<readonly AdmittedContractRelease[]>;
-    },
+    host: CmsMcpHost &
+        Pick<CapabilityMcpOptions, "resolveToolContract"> & {
+            readonly contracts: (context: McpInvocationContext) => Promise<readonly AdmittedContractRelease[]>;
+        },
 ) {
     const origin = new URL(host.publicUrl).origin;
     const resource = `${origin}/.cms/mcp`;
@@ -18,6 +19,7 @@ export function createCmsMcpHandler(
     const binding = new CapabilityMcpBinding({
         invoker: host.invoker,
         contracts: host.contracts,
+        resolveToolContract: host.resolveToolContract,
         onMutationSuccess: host.onMutationSuccess,
     });
     const mcp = createCapabilityMcpHttpHandler({
