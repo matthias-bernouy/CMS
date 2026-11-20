@@ -1,3 +1,4 @@
+import { PageRenderInputsChanged } from "content/application/core/pageRenderInputs";
 import { pageRequiresCapabilityAnalysis } from "content/pages/delivery/access/PageCapabilityAnalyzer";
 import {
     markRevisionValidatedPage,
@@ -5,7 +6,13 @@ import {
     isRevisionValidatedEntry,
 } from "content/pages/delivery/access/revisionPolicy";
 import { observeDelivery } from "content/pages/delivery/observe";
-import type { PageRenderInputs, RenderablePage, RenderingSettings, TPage } from "@bernouy/content/rendering";
+import type {
+    PageRenderInputs,
+    PageRenderPreparation,
+    RenderablePage,
+    RenderingSettings,
+    TPage,
+} from "@bernouy/content/rendering";
 import { CMS_CACHE_KEYS } from "@bernouy/content/rendering";
 import type { PageRenderMetadata } from "@bernouy/content/seo";
 import { cachedResponseAsync, sendCompressed } from "@bernouy/http-runner";
@@ -24,7 +31,7 @@ export async function serveRenderablePage(
     language: string,
     delivery: ContentDeliveryHost,
     minimumAccess: PageAccess = "public",
-    renderInputs?: PageRenderInputs,
+    renderInputs?: PageRenderInputs | PageRenderPreparation,
 ): Promise<Response> {
     const decision = await measureCurrentRequestTiming("page_access", () =>
         preflightPageGatewayAccess(request, renderable, delivery, minimumAccess, renderInputs?.settings),
@@ -56,7 +63,7 @@ async function renderIndexedPage(
     language: string,
     cacheable: boolean,
     settings?: RenderingSettings,
-    renderInputs?: PageRenderInputs,
+    renderInputs?: PageRenderInputs | PageRenderPreparation,
 ): Promise<Response> {
     if (access !== "public") {
         return renderWithFallbacks(
@@ -108,19 +115,20 @@ async function renderWithFallbacks(
     cacheable: boolean,
     metadata: PageRenderMetadata,
     settings?: RenderingSettings,
-    renderInputs?: PageRenderInputs,
+    renderInputs?: PageRenderInputs | PageRenderPreparation,
     artifactCacheable = true,
 ): Promise<Response> {
     try {
         if (!artifactCacheable) {
             return sendCompressed(
                 request,
-                await observeDelivery(delivery, "page.render", () =>
+                await observeDelivery(delivery, "page.render", async () =>
                     renderPage(
                         page,
                         makeRuntimeRenderContext(delivery, {
                             renderingSettings: settings,
-                            pageRenderInputs: renderInputs,
+                            pageRenderInputs:
+                                renderInputs && "load" in renderInputs ? await renderInputs.load() : renderInputs,
                         }),
                         metadata,
                     ),
@@ -135,18 +143,25 @@ async function renderWithFallbacks(
             (await delivery.content.getContentRevision?.()) ??
             0;
         const renderingRevision = renderInputs?.renderingRevision ?? artifactRevision;
-        const renderContext = makeRuntimeRenderContext(delivery, {
-            renderingSettings: settings,
-            contentRevision: renderingRevision,
-            pageRenderInputs: renderInputs,
-        });
         const cacheKey = `${CMS_CACHE_KEYS.page(cachePath)}:page:${page.id}:${page.revision}:language:${metadata.language ?? ""}:metadata:${JSON.stringify(metadata)}`;
         const artifactKey = artifactRevision ? `${cacheKey}:artifact:${artifactRevision}` : cacheKey;
         const response = await cachedResponseAsync(
             request,
             artifactKey,
             delivery.cache,
-            () => observeDelivery(delivery, "page.render", () => renderPage(page, renderContext, metadata)),
+            async () =>
+                observeDelivery(delivery, "page.render", async () =>
+                    renderPage(
+                        page,
+                        makeRuntimeRenderContext(delivery, {
+                            renderingSettings: settings,
+                            contentRevision: renderingRevision,
+                            pageRenderInputs:
+                                renderInputs && "load" in renderInputs ? await renderInputs.load() : renderInputs,
+                        }),
+                        metadata,
+                    ),
+                ),
             cacheable ? "public, no-cache, s-maxage=15" : "private, no-store",
             { skipCspHeader: true },
         );
@@ -154,6 +169,9 @@ async function renderWithFallbacks(
             ? markRevisionValidatedPage(response)
             : response;
     } catch (error) {
+        if (error instanceof PageRenderInputsChanged) {
+            throw error;
+        }
         reportPageFailure(delivery, "render", cachePath, error);
         return renderRef(request, delivery, "serverError", 500, "Internal server error");
     }

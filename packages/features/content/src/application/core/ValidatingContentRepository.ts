@@ -47,8 +47,12 @@ export class ValidatingContentRepository implements ContentRepository {
     ) {
         this.pageMutations = new PageMutationValidation(inner);
     }
+    async getTextContributionsRevision(reads?: RenderingResourceReads) {
+        return this.inner.getTextContributionsRevision?.(reads) ?? (await this.getTextContributions(reads)).revision;
+    }
     async getTextContributions(reads?: RenderingResourceReads) {
-        return (await this.inner.getTextContributions?.(reads)) ?? { revision: 0, texts: [] };
+        const load = async () => (await this.inner.getTextContributions?.(reads)) ?? { revision: 0, texts: [] };
+        return reads ? reads.resource(this, "text-contributions", load) : load();
     }
     async getPageRequirements(page: TPage, reads?: RenderingResourceReads) {
         return (await this.inner.getPageRequirements?.(page, reads)) ?? [];

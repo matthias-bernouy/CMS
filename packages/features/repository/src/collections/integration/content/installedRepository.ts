@@ -31,6 +31,7 @@ type ContentRepositoryMethodPolicy = "delegate" | "guard-bloc" | "override";
 
 const CMS_REPOSITORY_METHOD_POLICY = {
     getTextContributions: "override",
+    getTextContributionsRevision: "override",
     getPageRequirements: "override",
     getSiteBlocGroups: "delegate",
     updateSiteBlocGroup: "delegate",
@@ -219,6 +220,8 @@ export function withInstalledCollections(
                 patch.theme ? { ...patch, theme: composeCollectionThemes(patch.theme, await releases()) } : patch,
                 expectedRevision,
             ),
+        getTextContributionsRevision: async (reads) =>
+            reads ? (await installedState(reads)).revision : store.revision(siteId),
         getTextContributions: async (reads) => {
             const snapshot = reads ? await installedState(reads) : await installedSnapshot();
             return {

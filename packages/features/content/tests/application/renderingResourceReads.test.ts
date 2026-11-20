@@ -1,4 +1,7 @@
 import { expect, test } from "bun:test";
+import { installPageRenderInputReaders } from "content/application/core/pageRenderInputs";
+import type { ContentReader, ContentRepository } from "@bernouy/content";
+import { defaultSystem } from "@bernouy/content";
 import { RenderingResourceReads } from "@bernouy/content/rendering";
 
 test("rendering resources share only the exact owner and key within one open operation", async () => {
@@ -95,4 +98,30 @@ test("revision metadata belongs to the loaded settings and Bloc records, never a
     await expect(repository.getSystemRevision(reads)).rejects.toThrow("closed");
     await expect(repository.getSiteBlocsRevision(reads)).rejects.toThrow("closed");
     expect(await repository.getSiteBlocsRevision(new RenderingResourceReads())).toBe("[]");
+});
+
+test("deferred metadata captures the Bloc revision after route requirements have completed", async () => {
+    const order: string[] = [];
+    const reader = {} as ContentReader;
+    const repository = {
+        getTextContributionsRevision: async () => 0,
+        getSiteBlocsRevision: async () => {
+            order.push("revision");
+            return "current";
+        },
+    } as unknown as ContentRepository;
+    installPageRenderInputReaders(reader, repository, {
+        routeWithSettings: async () => {
+            await Promise.resolve();
+            order.push("route");
+            return { route: null, settings: defaultSystem() };
+        },
+        getRenderableBlocs: async () => {
+            throw new Error("A cache lookup must not load Bloc payloads");
+        },
+        getContentTexts: async () => [],
+    });
+    const preparation = await reader.preparePageRenderInputs!("/");
+    expect(order).toEqual(["route", "revision"]);
+    preparation.close();
 });

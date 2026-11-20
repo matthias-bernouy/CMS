@@ -105,6 +105,8 @@ export type PageScan = {
 
 export interface ContentRepository {
     /** Runtime projections supplied by package/extension adapters. */
+    /** Same revision as getTextContributions, sharing operation-scoped resource reads when supplied. */
+    getTextContributionsRevision?(reads?: RenderingResourceReads): Promise<number | string>;
     getTextContributions?(reads?: RenderingResourceReads): Promise<ContentTextSnapshot>;
     getPageRequirements?(page: TPage, reads?: RenderingResourceReads): Promise<readonly PageCapabilityRequirement[]>;
     getSiteBlocGroups(): Promise<SiteBlocGroup[]>;

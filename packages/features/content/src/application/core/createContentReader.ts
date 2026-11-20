@@ -62,7 +62,8 @@ export function createContentReader(repository: ContentRepository): ContentReade
         return { route: await renderableRoute(route, reads), settings: projectRenderingSettings(system) };
     };
     const reader: ContentReader = {
-        getContentRevision: async () => (await repository.getTextContributions?.())?.revision ?? 0,
+        getContentRevision: async () =>
+            repository.getTextContributionsRevision?.() ?? (await repository.getTextContributions?.())?.revision ?? 0,
         getContentTexts,
         getRenderablePage,
         getRenderablePages,

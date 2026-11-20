@@ -54,6 +54,7 @@ export const CMS_REPOSITORY_FENCED_MUTATIONS = [
 
 const CMS_REPOSITORY_NON_MUTATIONS = [
     "getTextContributions",
+    "getTextContributionsRevision",
     "getPageRequirements",
     "getSiteBlocGroups",
     "getBlocRecord",

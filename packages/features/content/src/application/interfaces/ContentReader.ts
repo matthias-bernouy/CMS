@@ -50,6 +50,15 @@ export type PageRenderInputs = {
     readonly renderableBlocs: readonly RenderableBloc[];
 };
 
+/** Request-scoped render metadata; close after delivery, including cache hits and refusals. */
+export type PageRenderPreparation = Pick<
+    PageRenderInputs,
+    "route" | "artifactRevision" | "renderingRevision" | "settings"
+> & {
+    load(): Promise<PageRenderInputs>;
+    close(): void;
+};
+
 export type PublishedRouteResolution =
     | { kind: "current"; page: TPage; language: string }
     | { kind: "redirect"; path: string }
@@ -79,6 +88,7 @@ export interface ContentReader {
     resolvePageReference(reference: PageReference): Promise<string | null>;
     resolvePagePaths(paths: readonly string[]): Promise<Readonly<Record<string, string>>>;
     resolveRenderableRoute(path: string): Promise<RenderableRouteResolution | null>;
+    preparePageRenderInputs?(path: string): Promise<PageRenderPreparation>;
     getPageRenderInputs?(path: string): Promise<PageRenderInputs>;
     getPageRenderRevision?(path: string): Promise<number | string>;
     // PAGE

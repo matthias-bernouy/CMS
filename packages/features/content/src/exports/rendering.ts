@@ -5,6 +5,7 @@ export type { PageMetadataContext, PageMetadataScope } from "content/pages/core/
 export type {
     ContentReader,
     PageRenderInputs,
+    PageRenderPreparation,
     PageCapabilityRequirement,
     PublishedRouteResolution,
     RenderableBloc,

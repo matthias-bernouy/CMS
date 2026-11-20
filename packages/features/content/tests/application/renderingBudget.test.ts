@@ -12,7 +12,7 @@ test("a Page render snapshot has a fixed repository-read budget", async () => {
         getPageById: 1,
         getPageRequirements: 1,
         getPageRoute: 2,
-        getSiteBlocsRevision: 1,
+        getSiteBlocsRevision: 2,
         getSystem: 2,
     });
 });
