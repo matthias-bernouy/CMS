@@ -35,6 +35,24 @@ Select finite CSS states rather than writing native paint, `cssText`, style elem
 
 For a copied site, map the source palette to semantic roles and change the destination site's theme values. Keep the Bloc reusable across sites. Review light/dark, hover, focus and error contrast after installation. A custom color control should edit a theme value or business color data, not inject raw Bloc styling.
 
+## Animate a Bloc
+
+Declare static local `@keyframes` names in the Bloc's `style.css`, then reference
+them with `animation` or `animation-name`. Preparation automatically isolates
+each name by the full Bloc identity, including its publisher and collection.
+Different Blocs and collections can safely use the same local name. Conditional
+keyframes under `@media` and `@supports`, quoted names and vendor-prefixed
+animation declarations follow the same rule. Names are case-sensitive.
+
+Every referenced animation must be declared in that Bloc. Referencing another
+Bloc's animation or a generated runtime name without a local declaration is
+refused. `var()`, `env()` and `attr()` are refused in `animation` and
+`animation-name`; keep dynamic parameters in separate properties, such as
+`animation-duration: var(--publisher--collection--panel-duration, 1s)`.
+The existing theme-token, immutable asset and variable-ownership rules also
+apply inside keyframes. Prefer a `prefers-reduced-motion` alternative where
+motion is decorative.
+
 ## Prepare and correct
 
 Call `prepare-collection` with the complete source snapshot. A successful tool invocation can still return `valid: false`: inspect `diagnostics[].message`, correct the sources and prepare again. Publication needs `valid: true`, a `preparationId`, a `digest` and a reviewed `approvedBrowserRiskDigest`. Retain those exact returned values; do not construct them from source text.

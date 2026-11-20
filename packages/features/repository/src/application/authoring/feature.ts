@@ -23,7 +23,7 @@ export const authoringFeature = defineFeature({
     name: "CMS Authoring",
     description:
         "Prepare immutable collection, contract and Provider manifest sources and publish through a pinned Repository account connection.",
-    version: "1.2.2",
+    version: "1.2.3",
     publisherId: "ulvia",
     catalogue: { icon: "package", categories: ["administration", "authoring"] },
     documents: new URL("../../../docs/authoring/", import.meta.url),

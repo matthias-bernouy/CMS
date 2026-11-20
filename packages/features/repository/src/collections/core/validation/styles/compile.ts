@@ -1,4 +1,6 @@
-import { ident, parse, walk } from "css-tree";
+import { ident, parse, tokenize, tokenTypes, walk } from "css-tree";
+import { compileBlocAnimations } from "./animations";
+import { BLOC_DOCUMENT_LIMITS } from "@bernouy/content/page-document";
 
 const FORBIDDEN = /:host\b|::slotted\b|:global\b/u;
 const NESTED_BLOC_SELECTOR = /\[cms-bloc\b/u;
@@ -7,6 +9,7 @@ const COLLECTION_ASSET_URL =
 
 /** Validate authored CSS and close it around one Light DOM Bloc boundary. */
 export function compileBlocStyle(id: string, source: string): string {
+    const implicitBlockEnd = assertStyleBoundary(id, source);
     let ast: ReturnType<typeof parse>;
     try {
         ast = parse(source, { context: "stylesheet", positions: true });
@@ -19,7 +22,7 @@ export function compileBlocStyle(id: string, source: string): string {
     walk(ast, (node) => {
         if (node.type === "Atrule") {
             const name = ident.decode(node.name).toLowerCase();
-            if (["import", "namespace", "scope", "property", "keyframes", "-webkit-keyframes"].includes(name)) {
+            if (["import", "namespace", "scope", "property"].includes(name)) {
                 throw new Error(`Bloc ${id} CSS cannot declare @${name}`);
             }
         }
@@ -35,11 +38,61 @@ export function compileBlocStyle(id: string, source: string): string {
         if (node.type === "Url" && !COLLECTION_ASSET_URL.test(node.value)) {
             throw new Error(`Bloc ${id} CSS URLs must use immutable collection assets`);
         }
-        if (node.type === "Declaration" && ["animation", "animation-name"].includes(node.property.toLowerCase())) {
-            throw new Error(`Bloc ${id} CSS animations require a future namespaced animation contract`);
+    });
+    const prefix = `@layer ulvia.blocks {\n@scope ([cms-bloc="${id}"]) to (:scope [cms-bloc]) {\n`;
+    const suffix = "\n}\n}";
+    const maximum = BLOC_DOCUMENT_LIMITS.maxStyleCssLength - prefix.length - suffix.length;
+    const { css, hasAnimations } = compileBlocAnimations(id, source, ast, maximum);
+    if (implicitBlockEnd && hasAnimations) {
+        throw new Error(`Bloc ${id} CSS must have balanced delimiters inside its Light DOM boundary`);
+    }
+    const compiled = css.trim();
+    return compiled ? `${prefix}${compiled}${suffix}` : "";
+}
+
+/** Reject scope escapes; retain historical EOF block recovery only for non-animated styles. */
+function assertStyleBoundary(id: string, source: string): boolean {
+    const expected: number[] = [];
+    const {
+        Function,
+        LeftParenthesis,
+        RightParenthesis,
+        LeftSquareBracket,
+        RightSquareBracket,
+        LeftCurlyBracket,
+        RightCurlyBracket,
+        BadString,
+        BadUrl,
+        Comment,
+        String,
+        Url,
+    } = tokenTypes;
+    const invalid = () => {
+        throw new Error(`Bloc ${id} CSS must have balanced delimiters inside its Light DOM boundary`);
+    };
+    tokenize(source, (type, start, end) => {
+        if (type === Function || type === LeftParenthesis) {
+            expected.push(RightParenthesis);
+        } else if (type === LeftSquareBracket) {
+            expected.push(RightSquareBracket);
+        } else if (type === LeftCurlyBracket) {
+            expected.push(RightCurlyBracket);
+        } else if (type === RightParenthesis || type === RightSquareBracket || type === RightCurlyBracket) {
+            if (expected.pop() !== type) {
+                invalid();
+            }
+        } else if (type === BadString || type === BadUrl) {
+            invalid();
+        } else if (type === Comment && source.slice(end - 2, end) !== "*/") {
+            invalid();
+        } else if (type === String && !/^(["'])(?:\\[\s\S]|[^\\])*\1$/u.test(source.slice(start, end))) {
+            invalid();
+        } else if (type === Url && source[end - 1] !== ")") {
+            invalid();
         }
     });
-    return source.trim()
-        ? `@layer ulvia.blocks {\n@scope ([cms-bloc="${id}"]) to (:scope [cms-bloc]) {\n${source.trim()}\n}\n}`
-        : "";
+    if (expected.some((type) => type !== RightCurlyBracket)) {
+        invalid();
+    }
+    return expected.length > 0;
 }

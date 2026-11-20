@@ -16,6 +16,7 @@ export type {
     PageSlotAccept,
 } from "content/pages/interfaces/document";
 export { forbiddenBlocBehaviorIssues } from "content/blocs/core/validation/definition";
+export { BLOC_DOCUMENT_LIMITS } from "content/blocs/core/markup/validation/documents/blocBudgets";
 export {
     validateBlocContentMarkup,
     validatePageContentMarkup,

@@ -192,7 +192,13 @@ models and validation for CMS-owned installations and site selections.
 - Reject inline style attributes in all authored markup. Structural classes are
   valid only in component markup, while binding expressions live in Light DOM.
   CSS is parsed and wrapped in a Bloc-owned `@scope`; Shadow DOM selectors and
-  APIs are forbidden. Compiled behavior declares the exact browser ABI and is
+  APIs are forbidden. Static local keyframes and animation references are
+  automatically isolated by the full Bloc identity. Keep the transformation
+  deterministic across preparation, publication and release reads, and preserve
+  compiled bytes for styles without animations. Refuse unknown animation names
+  and dynamic values in `animation` and `animation-name`; separate parameter
+  properties may use owned variables. Apply paint and ownership rules inside
+  keyframes as well. Compiled behavior declares the exact browser ABI and is
   rechecked for syntax and forbidden APIs during admission. It remains
   executable source trust, not proof that admission has audited every semantic
   effect.
