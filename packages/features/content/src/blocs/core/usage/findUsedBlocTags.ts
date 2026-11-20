@@ -1,14 +1,13 @@
-/**
- * Scan content for exact `cms-bloc` identities.
- */
+/** Compile exact identities once for a rendering catalogue, retaining its declaration order. */
+export function createBlocTagFinder(blocList: { id: string }[]): (content: string) => string[] {
+    const patterns = blocList.map(({ id }) => ({
+        id,
+        pattern: new RegExp(`\\bcms-bloc\\s*=\\s*(["'])${id.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}\\1`, "i"),
+    }));
+    return (content) => patterns.filter(({ pattern }) => pattern.test(content)).map(({ id }) => id);
+}
+
+/** Scan content for exact `cms-bloc` identities. */
 export function findUsedBlocTags(content: string, blocList: { id: string }[]): string[] {
-    const used: string[] = [];
-    for (const bloc of blocList) {
-        const escaped = bloc.id.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-        const re = new RegExp(`\\bcms-bloc\\s*=\\s*(["'])${escaped}\\1`, "i");
-        if (re.test(content)) {
-            used.push(bloc.id);
-        }
-    }
-    return used;
+    return createBlocTagFinder(blocList)(content);
 }

@@ -25,6 +25,9 @@ export function transformContentTexts(
             });
         for (const name of element.getAttributeNames()) {
             const value = element.getAttribute(name)!;
+            if (!value.includes("{{")) {
+                continue;
+            }
             const rendered = replace(
                 value,
                 isUserFacingTextAttribute(element.localName, name, element.getAttribute("type") ?? ""),
@@ -36,8 +39,12 @@ export function transformContentTexts(
         }
         for (const node of Array.from(element.childNodes)) {
             if (node.nodeType === 3) {
-                const rendered = replace(node.textContent ?? "", !blocksChildContent, `${element.localName} text`);
-                if (options.write !== false) {
+                const value = node.textContent ?? "";
+                if (!value.includes("{{")) {
+                    continue;
+                }
+                const rendered = replace(value, !blocksChildContent, `${element.localName} text`);
+                if (options.write !== false && rendered !== value) {
                     node.textContent = rendered;
                 }
             } else if (node.nodeType === 1) {

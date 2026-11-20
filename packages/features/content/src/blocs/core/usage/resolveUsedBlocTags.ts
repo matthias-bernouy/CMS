@@ -1,5 +1,5 @@
 import type { ContentReader } from "content/application/interfaces/ContentReader";
-import { findUsedBlocTags } from "content/blocs/core/usage/findUsedBlocTags";
+import { createBlocTagFinder } from "content/blocs/core/usage/findUsedBlocTags";
 
 type BlocListItem = { id: string; markupHTML: string; uses?: readonly string[] };
 export type BlocViewCache = Map<string, Promise<string | null>>;
@@ -14,6 +14,7 @@ export function createBlocUsageResolver(
     repository: Pick<ContentReader, "getBlocViewJS">,
     viewCache: BlocViewCache = new Map(),
 ): (content: string) => Promise<string[]> {
+    const findTags = createBlocTagFinder(blocList);
     const compositionByTag = new Map(blocList.map((bloc) => [bloc.id, bloc.markupHTML]));
     const dependenciesByTag = new Map(blocList.map((bloc) => [bloc.id, bloc.uses ?? []]));
 
@@ -34,7 +35,7 @@ export function createBlocUsageResolver(
     };
 
     return async (content: string): Promise<string[]> => {
-        const used = new Set(findUsedBlocTags(content, blocList));
+        const used = new Set(findTags(content));
         let frontier = [...used];
 
         while (frontier.length > 0) {
@@ -55,7 +56,7 @@ export function createBlocUsageResolver(
                     if (!source) {
                         continue;
                     }
-                    for (const tag of findUsedBlocTags(source, blocList)) {
+                    for (const tag of findTags(source)) {
                         if (!used.has(tag)) {
                             next.add(tag);
                         }

@@ -30,3 +30,30 @@ describe("renderContentTexts", () => {
         );
     });
 });
+
+test("static values stay byte-identical while translations still replace and escape text", () => {
+    const { document } = parseHTML(
+        '<html><body><p title="Static &amp; quoted">Static &amp; escaped</p><p>{{ cms.i18n.example.official/example.label }}</p><p>{{ state.title }}</p></body></html>',
+    );
+    const staticNode = document.querySelector("p")!.firstChild;
+    const staticHtml = document.querySelector("p")!.outerHTML;
+    renderContentTexts(document.body, "en", [
+        { namespace: source.namespace, resolve: () => ({ label: '<img src=x onerror="bad()">' }) },
+    ]);
+    expect(document.querySelector("p")!.firstChild).toBe(staticNode);
+    expect(document.querySelector("p")!.outerHTML).toBe(staticHtml);
+    expect(document.body.innerHTML).toContain('&lt;img src=x onerror="bad()"&gt;');
+    expect(document.querySelector("img")).toBeNull();
+    expect(document.body.innerHTML).toContain("{{ state.title }}");
+});
+
+test("the static fast path does not conceal invalid reserved expressions or inert translations", () => {
+    for (const html of [
+        "<p>Static {{ cms.invalid }}</p>",
+        "<script>Static {{ cms.i18n.example.official/example.label }}</script>",
+        '<a href="{{ cms.i18n.example.official/example.label }}">Static</a>',
+    ]) {
+        const { document } = parseHTML(`<html><body>${html}</body></html>`);
+        expect(() => renderContentTexts(document.body, "en", [source])).toThrow();
+    }
+});
