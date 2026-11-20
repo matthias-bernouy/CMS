@@ -1,4 +1,4 @@
-import type { CapabilityHttpHandlerConfig } from "@bernouy/cms-gateway/http/handlers";
+import type { CapabilityHttpHandlerConfig, CapabilityQueryHandlerConfig } from "@bernouy/cms-gateway/http/handlers";
 import type { GatewayActor } from "@bernouy/cms-gateway";
 import type { Runner } from "@bernouy/http-runner";
 import type { Logger } from "@bernouy/logging";
@@ -14,6 +14,7 @@ export type EdgeCmsConfig = {
         readonly invoker: CapabilityHttpHandlerConfig["invoker"];
         readonly invokeProvider?: CapabilityHttpHandlerConfig["invokeProvider"];
         readonly authenticateProvider?: (token: string) => Promise<string | null>;
+        readonly createInvocationScope?: CapabilityQueryHandlerConfig["createInvocationScope"];
         readonly resolveCapability?: (
             contractId: string,
             capabilityId: string,

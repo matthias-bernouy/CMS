@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { TrackedDelegationRoots } from "../../../src/runtime/gateway/dispatch/TrackedDelegationRoots";
+import { TrackedDelegationRoots } from "../../../../src/runtime/gateway/dispatch/TrackedDelegationRoots";
 const context = { ticket: "a".repeat(43), expiresAt: 30_000 };
 const closure = { siteId: "default", ticket: context.ticket, requestId: "request" };
 test("only registered live roots can delegate; another instance or request cannot close one", () => {

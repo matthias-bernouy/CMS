@@ -19,7 +19,11 @@ import type {
     GatewayRouteResolver,
     GatewayTransport,
 } from "cms-gateway/invocation/interfaces/Invocation";
-import { GatewayError, GatewayDispatchRejected } from "cms-gateway/invocation/core/GatewayError";
+import {
+    GatewayError,
+    GatewayDispatchRejected,
+    GatewayCommandNotStarted,
+} from "cms-gateway/invocation/core/GatewayError";
 import { resolveRoute } from "cms-gateway/invocation/core/resolveRoute";
 import { snapshotInvocation } from "cms-gateway/invocation/core/snapshotInvocation";
 import { validateResponse } from "cms-gateway/invocation/core/validateResponse";
@@ -37,6 +41,8 @@ export interface CapabilityGatewayOptions {
     /** Host invalidation after a command actually reached transport, including unknown outcomes. */
     readonly commandSettled?: (contractId: string, capabilityId: string) => void;
     readonly dispatch?: GatewayDispatch;
+    /** The trusted dispatcher performs identity and durable start before its live preparation fence. */
+    readonly dispatchCommandStart?: boolean;
     /** Trusted initial preparation shared only within this invocation; requires a live transport fence. */
     readonly prepareRoute?: (value: Pick<GatewayInvocation, "siteId" | "contractId" | "actor">) => Promise<{
         route: GatewayRoute | null;
@@ -81,6 +87,9 @@ export class CapabilityGateway implements GatewayAccessProbe {
     constructor(options: CapabilityGatewayOptions) {
         if ((options.dispatch || options.prepareRoute) && !options.transportFencesRoute) {
             throw new TypeError("Prepared dispatch requires a live transport authority fence");
+        }
+        if (options.dispatchCommandStart && (!options.dispatch || !options.commandAudit)) {
+            throw new TypeError("Combined command start requires a prepared dispatcher and command audit");
         }
         this.#options = options;
     }
@@ -152,9 +161,11 @@ export class CapabilityGateway implements GatewayAccessProbe {
         });
         const isCommand = capability.behavior.effect === "command";
         // Preserve command audit semantics: an identity failure precedes the command's started event.
-        const commandSubjectId = isCommand
-            ? await this.#providerSubjectId(invocation.actor, capability, route)
-            : undefined;
+        const combinedStart = isCommand && this.#options.dispatchCommandStart;
+        const commandSubjectId =
+            isCommand && !combinedStart
+                ? await this.#providerSubjectId(invocation.actor, capability, route)
+                : undefined;
         if (isCommand && !this.#options.transportFencesRoute && !(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "installation changed while resolving actor identity");
         }
@@ -166,12 +177,11 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 implementation.digest === route.selection.digest &&
                 implementation.delegation?.sources.some((source) => source === "*" || source === capability.id),
         );
-        if (isCommand) {
-            await this.#auditCommand(
-                commandAuditEvent(invocation, route, requestId, this.#now(), "started"),
-                requestId,
-                false,
-            );
+        const startEvent = isCommand
+            ? commandAuditEvent(invocation, route, requestId, this.#now(), "started")
+            : undefined;
+        if (isCommand && !combinedStart) {
+            await this.#auditCommand(startEvent!, requestId, false);
         }
         let result: GatewayResult;
         let delegation: Awaited<ReturnType<GatewayDelegationAuthority["issue"]>> = null;
@@ -245,13 +255,29 @@ export class CapabilityGateway implements GatewayAccessProbe {
             const send = this.#options.dispatch
                 ? async (request: Parameters<GatewayTransport["send"]>[0]) => {
                       const dispatched = await this.#options.dispatch!(request, {
+                          route,
+                          ...(combinedStart
+                              ? {
+                                    commandStart: {
+                                        providerId: route.installation.installation.providerId,
+                                        identityRequired:
+                                            capability.access !== "public" ||
+                                            (capability.output.type === "binary" &&
+                                                Boolean(capability.output.resource)),
+                                        event: startEvent!,
+                                    },
+                                }
+                              : {}),
                           actor: invocation.actor,
                           deadline: started + DELEGATION_LIMITS.rootDeadlineMs,
                       });
                       delegation = dispatched.delegation;
                       return dispatched.response;
                   }
-                : (request: Parameters<GatewayTransport["send"]>[0]) => this.#options.transport.send(request);
+                : (request: Parameters<GatewayTransport["send"]>[0]) =>
+                      this.#options.transport.sendForGateway
+                          ? this.#options.transport.sendForGateway(request)
+                          : this.#options.transport.send(request);
             const response = await send({
                 onDispatch: () => {
                     dispatched = true;
@@ -331,6 +357,9 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 streamed = true;
             }
         } catch (error) {
+            if (combinedStart && error instanceof GatewayCommandNotStarted) {
+                throw error.cause;
+            }
             if (error instanceof GatewayDispatchRejected) {
                 if (isCommand) {
                     await this.#auditCommand(

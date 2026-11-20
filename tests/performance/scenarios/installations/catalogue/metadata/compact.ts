@@ -53,7 +53,9 @@ export async function prepareCompactMetadata(
         capability === "gateway.route.snapshot"
             ? { contractId: state.resources.latestContract().id, known: [] as readonly string[] }
             : {
-                  contractIds: selectedIds(),
+                  ...(capability === "gateway.mcp.authorized"
+                      ? { actor: { kind: "administrator", subjectId: state.tenant.session.subjectId } }
+                      : { contractIds: selectedIds() }),
                   toolName: capabilityToolName(
                       gateway.content.release.contractId,
                       gateway.content.definition.id,

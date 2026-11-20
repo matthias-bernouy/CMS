@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { fixture } from "./root-fixture";
-import { TrackedDelegationRoots } from "../../../src/runtime/gateway/dispatch/TrackedDelegationRoots";
-import { ControlDelegationAuthority } from "../../../src/runtime/gateway/ControlDelegationAuthority";
+import { TrackedDelegationRoots } from "../../../../src/runtime/gateway/dispatch/TrackedDelegationRoots";
+import { ControlDelegationAuthority } from "../../../../src/runtime/gateway/ControlDelegationAuthority";
 
 test("parallel preparation reserves tracking before emission and rejects excess work without orphaning Provider roots", async () => {
     const f = fixture();

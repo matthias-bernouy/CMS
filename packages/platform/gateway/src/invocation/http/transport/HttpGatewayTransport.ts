@@ -1,6 +1,6 @@
 import { RESOURCE_HEADER, decodeResourceMetadata } from "../../resource/metadata";
 import { httpTransportRequest } from "../route/bindings";
-import { validateHttpResponse } from "../response/validate";
+import { decodeHttpResponse, validateHttpResponse } from "../response/validate";
 import type {
     GatewayHttpTransportRequest,
     GatewayHttpTransportResponse,
@@ -15,7 +15,7 @@ import type {
     GatewayTransportResponse,
 } from "cms-gateway/invocation/interfaces/Invocation";
 import {
-    buildHttpInvocation,
+    buildPreparedHttpInvocation,
     type PreparedHttpInvocation,
 } from "cms-gateway/invocation/http/transport/buildHttpInvocation";
 import { readBounded } from "cms-gateway/invocation/http/transport/readBounded";
@@ -87,10 +87,22 @@ export class HttpGatewayTransport implements GatewayTransport {
     }
 
     async send(value: GatewayTransportRequest): Promise<GatewayTransportResponse> {
+        return this.sendDecoded(value, validateHttpResponse);
+    }
+
+    /** Wire validation only; the core retains sole responsibility for schema projection. */
+    async sendForGateway(value: GatewayTransportRequest): Promise<GatewayTransportResponse> {
+        return this.sendDecoded(value, decodeHttpResponse);
+    }
+
+    private async sendDecoded(
+        value: GatewayTransportRequest,
+        decode: typeof validateHttpResponse,
+    ): Promise<GatewayTransportResponse> {
         const request = httpTransportRequest(value);
         const response = await this.exchange(request);
         try {
-            return validateHttpResponse(request.capability, request.binding, response, request.requestId);
+            return decode(request.capability, request.binding, response, request.requestId);
         } catch (error) {
             await response.stream?.cancel().catch(() => undefined);
             throw error;
@@ -98,7 +110,7 @@ export class HttpGatewayTransport implements GatewayTransport {
     }
 
     private async exchange(request: GatewayHttpTransportRequest): Promise<GatewayHttpTransportResponse> {
-        const prepared = buildHttpInvocation(request);
+        const prepared = buildPreparedHttpInvocation(request);
         const abort = new AbortController();
         const signal = request.signal ? AbortSignal.any([abort.signal, request.signal]) : abort.signal;
         const firstByteTimeout = setTimeout(

@@ -1,3 +1,4 @@
+import type { GatewayHttpTransportRequest } from "../route/interfaces";
 import { httpTransportRequest } from "../route/bindings";
 import { encodeHttpFieldParameter, encodeHttpParameter } from "@bernouy/ulvia-contracts/bindings";
 import type { CompiledHttpParameter } from "@bernouy/ulvia-contracts/bindings";
@@ -17,6 +18,11 @@ export interface PreparedHttpInvocation {
 
 /** Compiles an admitted binding and validated input into one HTTP request. */
 export function buildHttpInvocation(request: GatewayTransportRequest): PreparedHttpInvocation {
+    return buildPreparedHttpInvocation(httpTransportRequest(request));
+}
+
+/** Internal transport path: the admitted binding has already been compiled. */
+export function buildPreparedHttpInvocation(request: GatewayHttpTransportRequest): PreparedHttpInvocation {
     const target = new URL(request.endpoint);
     if (
         target.username ||
@@ -29,7 +35,7 @@ export function buildHttpInvocation(request: GatewayTransportRequest): PreparedH
     ) {
         throw new TypeError("provider endpoint must be a canonical HTTP origin");
     }
-    const { binding, capability, input } = httpTransportRequest(request);
+    const { binding, capability, input } = request;
     let path = binding.path;
     for (const parameter of binding.pathParameters) {
         const encoded = encode(parameter);

@@ -16,7 +16,9 @@ export async function prepareCompactGateway(context: GatewayContext, capability:
     const input =
         capability === "gateway.route.snapshot"
             ? { contractId, known: [] }
-            : { contractIds: [...new Set(selections.map((row) => row.contractId))], toolName, known: [] };
+            : capability === "gateway.mcp.authorized"
+              ? { actor: { kind: "administrator", subjectId: context.environment.main.subjectId }, toolName, known: [] }
+              : { contractIds: [...new Set(selections.map((row) => row.contractId))], toolName, known: [] };
     let captured: unknown;
     const assert = (output: unknown) => {
         const packet = requireRecord(output);
@@ -67,7 +69,19 @@ export async function prepareCompactGateway(context: GatewayContext, capability:
                     await context.checked(capability, { ...input, toolName: "performance_missing_tool" }),
                 );
                 assertCondition(missing.found === false && missing.key === "");
-                await context.refused(capability, { ...input, contractIds: ["performance/missing-contract"] }, [503]);
+                if (capability === "gateway.mcp.authorized") {
+                    await context.refused(
+                        capability,
+                        { ...input, actor: { kind: "administrator", subjectId: crypto.randomUUID() } },
+                        [403],
+                    );
+                } else {
+                    await context.refused(
+                        capability,
+                        { ...input, contractIds: ["performance/missing-contract"] },
+                        [503],
+                    );
+                }
             }
             await decode(await context.checked(capability, input));
         },

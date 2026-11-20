@@ -68,6 +68,9 @@ export function createDispatchPreparer(options: {
         ) {
             throw Object.assign(new Error("Dispatch route changed"), { status: 409 });
         }
+        if ("commandStart" in input && capability.behavior.effect !== "command") {
+            throw Object.assign(new Error("Command preparation requires a command capability"), { status: 403 });
+        }
         const actor = input.actor;
         const needsIdentity =
             (actor.kind === "user" || actor.kind === "administrator") &&

@@ -116,6 +116,7 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "resume-contract-upgrade": "purge",
         "update-collection-configuration": "purge",
         "gateway.dispatch.prepare": "purge",
+        "gateway.command.prepare": "purge",
         "gateway.delegation.close": "purge",
         "gateway.identity.resolve": "purge",
         "gateway.audit.append": "purge",

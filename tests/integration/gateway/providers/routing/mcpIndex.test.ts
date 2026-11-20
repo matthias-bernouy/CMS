@@ -99,3 +99,29 @@ test("global collisions and stale exact pins cannot bypass lookup validation", a
         code: "CORE_UNAVAILABLE",
     });
 });
+
+test("metadata changes preserve the immutable index while exact selected definition changes rebuild it", async () => {
+    const mcp = await import("@bernouy/cms-gateway/mcp");
+    const { spyOn } = await import("bun:test");
+    const entries = spyOn(mcp, "mcpCatalogueEntries");
+    try {
+        const f = await fixture();
+        await f.call();
+        expect(entries).toHaveBeenCalledTimes(1);
+        f.state.reads = [];
+        f.state.revision = "metadata-changed";
+        await f.call();
+        // Mutable availability is still reread, without rebuilding identical tool names.
+        expect(f.state.reads).toEqual(["ulvia/first", "ulvia/second"]);
+        expect(entries).toHaveBeenCalledTimes(1);
+        f.routes.set(
+            "ulvia/first",
+            await gatewayRoute({ contractId: "ulvia/first", capabilityId: "item.other", mcp: true }),
+        );
+        f.state.revision = "definition-changed";
+        expect((await f.call()).found).toBe(false);
+        expect(entries).toHaveBeenCalledTimes(2);
+    } finally {
+        entries.mockRestore();
+    }
+});

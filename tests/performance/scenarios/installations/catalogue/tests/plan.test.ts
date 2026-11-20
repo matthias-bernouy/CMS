@@ -4,14 +4,14 @@ import { auditPlan, coverageMatrix } from "../../../../capabilities/coverage";
 import { obligationKey } from "../../../../capabilities/types";
 import { metadataCatalogueScenarios } from "../plan";
 
-test("twenty metadata variants cover exact current bindings and missing variants remain blocking without fixture credit", async () => {
+test("metadata variants cover exact current bindings and missing variants remain blocking without fixture credit", async () => {
     const inventory = await performanceCapabilityInventory();
     const definitions = metadataCatalogueScenarios(inventory, "unit-plan").map((row) => row.definition);
-    expect(definitions).toHaveLength(20);
+    expect(definitions).toHaveLength(21);
     const targets = new Set(definitions.flatMap((row) => row.obligations.map((obligation) => obligation.target)));
     const selected = { ...inventory, targets: inventory.targets.filter((row) => targets.has(row.key)) };
     const keys = new Set(definitions.flatMap((row) => row.obligations.map(obligationKey)));
-    expect(keys.size).toBe(20);
+    expect(keys.size).toBe(21);
     expect(
         auditPlan(selected, definitions).filter((row) => row.obligation && keys.has(obligationKey(row.obligation))),
     ).toEqual([]);

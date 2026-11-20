@@ -14,6 +14,17 @@ export function validateHttpResponse(
     response: GatewayHttpTransportResponse,
     requestId: string,
 ): GatewayResult {
+    return decodeHttpResponse(capability, binding, response, requestId, projectSchemaValue);
+}
+
+/** The Gateway core must validate the decoded domain output before returning it. */
+export function decodeHttpResponse(
+    capability: CapabilityDefinition,
+    binding: CompiledHttpBinding,
+    response: GatewayHttpTransportResponse,
+    requestId: string,
+    project: typeof projectSchemaValue = (_schema, value) => value,
+): GatewayResult {
     if (!Number.isInteger(response.status)) {
         throw new GatewayError("invalid_provider_response", "provider response status is invalid");
     }
@@ -91,7 +102,7 @@ export function validateHttpResponse(
             throw new GatewayError("invalid_provider_response", "provider JSON output contains binary bytes");
         }
         try {
-            const output = projectSchemaValue(capability.output, response.output ?? null);
+            const output = project(capability.output, response.output ?? null);
             return Object.freeze({
                 kind: "success",
                 requestId,
@@ -129,7 +140,7 @@ export function validateHttpResponse(
         }
         const output =
             definition.output && binding.response.errorEnvelope.kind !== "headers"
-                ? projectSchemaValue(definition.output, response.output)
+                ? project(definition.output, response.output)
                 : undefined;
         return Object.freeze({
             kind: "declared-error",

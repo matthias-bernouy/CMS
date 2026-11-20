@@ -1,3 +1,5 @@
+import type { ProviderCommandStart } from "cms-gateway/protocol/ProviderDispatchPreparation";
+import type { GatewayRoute } from "cms-gateway/invocation/interfaces/Invocation";
 import type { DelegationContext } from "cms-gateway/access/delegation/interfaces";
 import type {
     GatewayActor,
@@ -11,6 +13,9 @@ import type {
 export type GatewayDispatch = (
     request: GatewayTransportRequest,
     context: {
+        /** Host-owned initial route, never serialized or treated as fresh authorization. */
+        route?: GatewayRoute;
+        commandStart?: ProviderCommandStart;
         actor: GatewayActor;
         deadline: number;
     },

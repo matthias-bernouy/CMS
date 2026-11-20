@@ -1,3 +1,7 @@
+import { decodeCommandPreparation, rejectUnstartedCommand } from "./control/commandPreparation";
+import { ControlProviderError } from "./control/errors";
+import type { ProviderCommandStart } from "@bernouy/cms-gateway/protocol";
+import type { GatewayActor } from "@bernouy/cms-gateway";
 import { ControlRouteClient } from "./control/routes";
 import type { GatewayRouteSource } from "@bernouy/cms-gateway/protocol";
 import { TrackedDelegationRoots } from "./dispatch/TrackedDelegationRoots";
@@ -50,15 +54,26 @@ export class ControlProviderClient {
     }
 
     async prepareGatewayDispatch(
-        input: ProviderDispatchPreparation,
+        input: ProviderDispatchPreparation & { commandStart?: ProviderCommandStart },
         reserveRoot = true,
     ): Promise<PreparedProviderDispatch> {
         return this.withClosures(
             input,
             async (value) => {
-                const response = requiredResponse(
-                    await this.invoke("gateway.dispatch.prepare", "POST", "/gateway/dispatch/prepare", value),
-                );
+                let response: Record<string, unknown>;
+                if (value.commandStart) {
+                    const packet = requiredResponse(
+                        await this.invoke("gateway.command.prepare", "POST", "/gateway/commands/prepare", {
+                            ...value,
+                            commandStart: { ...value.commandStart, event: JSON.stringify(value.commandStart.event) },
+                        }).catch(rejectUnstartedCommand),
+                    );
+                    response = decodeCommandPreparation(packet, value.invocation.requestId);
+                } else {
+                    response = requiredResponse(
+                        await this.invoke("gateway.dispatch.prepare", "POST", "/gateway/dispatch/prepare", value),
+                    );
+                }
                 const delegation = response.delegation as PreparedProviderDispatch["delegation"];
                 if (
                     delegation !== null &&
@@ -111,13 +126,17 @@ export class ControlProviderClient {
         }
     }
 
+    get supportsCompactCatalogue(): boolean {
+        return this.routeClient.compactCatalogue;
+    }
+
     get supportsCompactGateway(): boolean {
         return this.routeClient.supported;
     }
     async readGatewayRoute(contractId: string): Promise<string | GatewayRouteSource | null> {
         return this.routeClient.supported ? this.routeClient.route(contractId) : this.getGatewayRoute(contractId);
     }
-    resolveToolContract(contractIds: readonly string[], name: string) {
+    resolveToolContract(contractIds: readonly string[] | GatewayActor, name: string) {
         if (!this.routeClient.supported) {
             throw new TypeError("The negotiated control contract does not expose targeted MCP lookup");
         }
@@ -197,7 +216,12 @@ export class ControlProviderClient {
                 method,
                 headers: {
                     accept: "application/json",
-                    ...(["gateway.route.get", "gateway.route.snapshot", "gateway.mcp.resolve"].includes(capabilityId)
+                    ...([
+                        "gateway.route.get",
+                        "gateway.route.snapshot",
+                        "gateway.mcp.resolve",
+                        "gateway.mcp.authorized",
+                    ].includes(capabilityId)
                         ? { "accept-encoding": "gzip" }
                         : {}),
                     "content-type": "application/json",
@@ -253,16 +277,6 @@ function controlTimingName(capabilityId: string): string {
         return "gateway_delegation";
     }
     return "gateway_authorize";
-}
-
-class ControlProviderError extends Error {
-    constructor(
-        capabilityId: string,
-        readonly status: number,
-    ) {
-        super(`Installations Provider rejected ${capabilityId} (${status})`);
-        this.name = "ControlProviderError";
-    }
 }
 
 function requiredText(value: Record<string, unknown>, field: string): string {

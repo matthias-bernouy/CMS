@@ -1,4 +1,4 @@
-import { GatewayDispatchRejected, type GatewayDispatch } from "@bernouy/cms-gateway";
+import { GatewayCommandNotStarted, GatewayDispatchRejected, type GatewayDispatch } from "@bernouy/cms-gateway";
 import { HttpGatewayTransport, invocationAuthority } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import type { DelegationContext } from "@bernouy/cms-gateway/access/delegation";
@@ -12,7 +12,7 @@ export function preparedEdgeDispatch(
     routes: ControlGatewayRouteResolver,
 ): GatewayDispatch {
     return async (request, context) => {
-        const route = await routes.resolve("default", request.release.contractId);
+        const route = context.route ?? (await routes.resolve("default", request.release.contractId));
         const implementation = route?.manifest.admission.manifest.implementations.find(
             (item) =>
                 item.contractId === route.selection.contractId &&
@@ -47,7 +47,9 @@ export function preparedEdgeDispatch(
                         const issued = await control.prepareGatewayDispatch(
                             {
                                 invocation,
-                                ...context,
+                                actor: context.actor,
+                                deadline: context.deadline,
+                                ...(context.commandStart ? { commandStart: context.commandStart } : {}),
                                 ...(subjectId ? { expectedSubjectId: subjectId } : {}),
                             },
                             reserveRoot,
@@ -61,6 +63,9 @@ export function preparedEdgeDispatch(
                         }
                         return { token: issued.token };
                     } catch (error) {
+                        if (error instanceof GatewayCommandNotStarted) {
+                            throw error;
+                        }
                         routes.invalidate("default", invocation.contractId);
                         const status =
                             error && typeof error === "object" && "status" in error ? Number(error.status) : 0;
@@ -73,7 +78,7 @@ export function preparedEdgeDispatch(
             }),
         });
         try {
-            const response = await transport.send(request);
+            const response = await transport.sendForGateway(request);
             return { response, delegation };
         } catch (error) {
             await close();

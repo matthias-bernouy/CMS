@@ -14,6 +14,8 @@ export type CapabilityHttpHandlerConfig = {
 };
 
 export type CapabilityQueryHandlerConfig = Omit<CapabilityHttpHandlerConfig, "authenticateProvider"> & {
+    /** One logical request owns this bounded metadata view; authority is still fenced at dispatch. */
+    createInvocationScope?(contractId: string): Pick<CapabilityQueryHandlerConfig, "invoker" | "resolveCapability">;
     resolveCapability(
         contractId: string,
         capabilityId: string,

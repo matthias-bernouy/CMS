@@ -4,7 +4,7 @@ import type { InstallationGateway } from "repository/application/installations/i
 import type { GatewayIdentityResolveInput } from "repository/application/installations/interfaces/inputs";
 import { parseConfiguration } from "repository/application/installations/core/collections/configuration";
 import { InstallationError } from "repository/application/installations/core/errors";
-const auditSchema = z.strictObject({
+export const auditSchema = z.strictObject({
     id: z.string(),
     requestId: z.string(),
     occurredAt: z.string(),

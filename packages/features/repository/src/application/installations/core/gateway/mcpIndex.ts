@@ -5,7 +5,7 @@ import { InstallationError } from "../errors";
 
 type Identity = Readonly<{ contractId: string; version: string; digest: string }>;
 type Index = ReadonlyMap<string, Identity>;
-const indices = new WeakMap<InstallationGateway, { key: string; index: Index }>();
+const indices = new WeakMap<InstallationGateway, { key: string; definitions: string; index: Index }>();
 
 /** Only immutable tool identities are retained. Current dependency revisions fence every lookup. */
 export async function resolveMcpContract(
@@ -40,29 +40,38 @@ export async function resolveMcpContract(
         }
         return route.requestedRelease.admission;
     });
-    const entries = mcpCatalogueEntries(contracts, true, true);
-    const index: Index = new Map(
-        entries.map((entry) => {
-            const contract = contracts.find((candidate) => candidate.release.contractId === entry.contractId)!;
-            return [
-                entry.toolName,
-                { contractId: entry.contractId, version: contract.release.version, digest: contract.digest },
-            ];
-        }),
+    const definitions = JSON.stringify(
+        contracts.map(({ release, digest }) => [release.contractId, release.version, digest]),
     );
+    // Mutable revisions still fence availability; tool identities depend only on exact immutable definitions.
+    const entries = cached?.definitions === definitions ? null : mcpCatalogueEntries(contracts, true, true);
+    const index: Index =
+        entries === null
+            ? cached!.index
+            : new Map(
+                  entries.map((entry) => {
+                      const contract = contracts.find(
+                          (candidate) => candidate.release.contractId === entry.contractId,
+                      )!;
+                      return [
+                          entry.toolName,
+                          { contractId: entry.contractId, version: contract.release.version, digest: contract.digest },
+                      ];
+                  }),
+              );
     const after = (await gateway.catalogueRevision?.()) ?? null;
     const bytes =
         key === null
             ? Infinity
             : 128 +
-              key.length * 2 +
+              (key.length + definitions.length) * 2 +
               [...index].reduce(
                   (size, [tool, pin]) =>
                       size + 512 + (tool.length + pin.contractId.length + pin.version.length + pin.digest.length) * 2,
                   0,
               );
     if (key !== null && before === after && bytes <= 1024 ** 2) {
-        indices.set(gateway, { key, index });
+        indices.set(gateway, { key, definitions, index });
     }
     // A changed revision only prevents retention. Do not retry or alter the reference read result.
     const identity = index.get(name);

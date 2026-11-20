@@ -1,3 +1,4 @@
+import type { GatewayCommandAuditEvent } from "cms-gateway/audit/interfaces/GatewayAudit";
 import type { GatewayActor } from "cms-gateway/invocation/interfaces/Invocation";
 import type { DelegationContext } from "cms-gateway/access/delegation/interfaces";
 import type { ProviderInvocationIssue } from "./ProviderInvocationToken";
@@ -34,3 +35,21 @@ export type ProviderMachinePreparation = Readonly<{
     deadline: number;
 }>;
 export type PreparedProviderMachine = PreparedProviderDispatch & Readonly<{ sourceInstallationId: string }>;
+
+/** Host snapshot for the pre-existing identity -> durable audit -> preparation ordering. */
+export type ProviderCommandStart = Readonly<{
+    providerId: string;
+    identityRequired: boolean;
+    event: GatewayCommandAuditEvent;
+}>;
+export type ProviderCommandPreparation = ProviderDispatchPreparation & Readonly<{ commandStart: ProviderCommandStart }>;
+
+/** Closed stage evidence, returned only across the authenticated control capability. */
+export class ProviderCommandPreparationFailure extends Error {
+    constructor(
+        readonly stage: "identity" | "audit" | "preparation",
+        cause: unknown,
+    ) {
+        super("Command preparation failed", { cause });
+    }
+}

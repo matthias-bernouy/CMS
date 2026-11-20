@@ -1,3 +1,6 @@
+import { authorizeCatalogue } from "./providers/authority/authorizeCatalogue";
+import { createCommandPreparer } from "./providers/authority/prepareCommand";
+import type { GatewayActor } from "@bernouy/cms-gateway";
 import type { NodeGatewayHttpNetworkFactory } from "@bernouy/cms-gateway/http/node";
 import { createMachinePreparer } from "./providers/authority/prepareMachine";
 import { createDispatchPreparer } from "./providers/authority/prepareDispatch";
@@ -198,6 +201,7 @@ export async function createProviderGateway(
 
     return {
         siteId,
+        authorizeMcpCatalogue: (actor: GatewayActor) => authorizeCatalogue(invoker, siteId, actor),
         describeContract: (contractId: string) => catalogue.describe(siteId, contractId),
         catalogueRevision: async () => {
             if (!releases.revision || !manifests.revision || !installations.revision) {
@@ -222,6 +226,7 @@ export async function createProviderGateway(
         invocations: {
             issue: issueInvocation,
             prepare: prepareInvocation,
+            prepareCommand: createCommandPreparer(identities, commandAudit, prepareInvocation),
             prepareProvider: createMachinePreparer(access.providers, prepareInvocation),
         },
         delegations,

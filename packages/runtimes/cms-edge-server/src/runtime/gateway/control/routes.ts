@@ -1,3 +1,4 @@
+import type { GatewayActor } from "@bernouy/cms-gateway";
 import { GatewayRouteCodec } from "@bernouy/cms-gateway/protocol";
 import type { GatewayRouteSource, GatewayRoutePacket, GatewayContractPacket } from "@bernouy/cms-gateway/protocol";
 import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
@@ -16,10 +17,12 @@ type Invoke = (
 export class ControlRouteClient {
     private readonly codec = new GatewayRouteCodec();
     readonly supported: boolean;
+    readonly compactCatalogue: boolean;
     constructor(
         private readonly invoke: Invoke,
         contract: InstallationsControlContract,
     ) {
+        this.compactCatalogue = satisfiesVersionRange(contract.version, ">=1.6.0 <2.0.0");
         this.supported = satisfiesVersionRange(contract.version, ">=1.5.0 <2.0.0");
     }
     async route(contractId: string): Promise<GatewayRouteSource | null> {
@@ -37,16 +40,22 @@ export class ControlRouteClient {
             lease.release();
         }
     }
-    async tool(contractIds: readonly string[], name: string): Promise<AdmittedContractRelease | null> {
+    async tool(contractIds: readonly string[] | GatewayActor, name: string): Promise<AdmittedContractRelease | null> {
         const lease = this.codec.definitions.lease();
         try {
             // Existing tool identities are at most sixty UTF-16 code units. Keep global validation for unknown names.
             const toolName = name.length > 60 ? "" : name;
-            const packet = await this.invoke("gateway.mcp.resolve", "QUERY", "/gateway/mcp/resolve", {
-                contractIds,
-                toolName,
-                known: lease.known,
-            });
+            const authorized = !Array.isArray(contractIds);
+            const packet = await this.invoke(
+                authorized ? "gateway.mcp.authorized" : "gateway.mcp.resolve",
+                "QUERY",
+                authorized ? "/gateway/mcp/authorized" : "/gateway/mcp/resolve",
+                {
+                    ...(Array.isArray(contractIds) ? { contractIds } : { actor: contractIds }),
+                    toolName,
+                    known: lease.known,
+                },
+            );
             if (!packet) {
                 throw new TypeError("Installations Provider returned an empty tool lookup");
             }

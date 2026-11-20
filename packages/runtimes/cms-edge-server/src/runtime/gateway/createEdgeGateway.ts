@@ -1,3 +1,4 @@
+import { logicalInvocationScope } from "./dispatch/logicalScope";
 import { ControlMcpCatalogue } from "./control/catalogue";
 import { machineInvocation } from "./dispatch/machineInvocation";
 import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
@@ -40,6 +41,7 @@ export function createEdgeGateway(
         // fence; the cached route is only a transport plan.
         transportFencesRoute: true,
         dispatch: preparedEdgeDispatch(control, routes),
+        dispatchCommandStart: control.supportsCompactCatalogue,
         authorize: async (actor, capability, route) =>
             actor.kind === "provider"
                 ? control.authorizeProvider({
@@ -99,6 +101,8 @@ export function createEdgeGateway(
         invokeProvider: machineInvocation(control, routes, gatewayOptions, makeTransport),
         authenticateProvider: (token: string) => control.authenticateProvider(token),
         resolveCapability,
+        createInvocationScope: (contractId: string) =>
+            logicalInvocationScope(gatewayOptions, contractId, () => logicalRoutes.resolve("default", contractId)),
         resolveActor: (request: Request) => resolveActor(gateway, request),
     };
 }

@@ -4,8 +4,8 @@ import { implementFeature } from "@bernouy/ulvia-sdk";
 import { compileContract, compileImplementations } from "@bernouy/ulvia-sdk/build";
 test("Installations SDK authoring adds two compatible control capabilities, exact digest and document bytes", async () => {
     const compiled = await compileContract(installationsFeature);
-    expect(compiled.release.capabilities).toHaveLength(59);
-    expect(compiled.digest).toBe("sha256:4d37e1ef5dff76b3833d4f555f21cb4d99ede2c5bb8b9822e0ec909e5d12449c");
+    expect(compiled.release.capabilities).toHaveLength(61);
+    expect(compiled.digest).toBe("sha256:daa723417b1c3758602944b29a9f7e0254910c599ada5a783a369c66513ad753");
     expect(compiled.documentationAssets).toHaveLength(7);
 });
 test("compiling Installations captures all defaults without constructing services or running business code", async () => {
@@ -17,7 +17,7 @@ test("compiling Installations captures all defaults without constructing service
         },
     });
     const compiled = await compileImplementations([implementation]);
-    expect(compiled.contracts[0]!.release.capabilities).toHaveLength(59);
+    expect(compiled.contracts[0]!.release.capabilities).toHaveLength(61);
     expect(
         compiled.contracts[0]!.release.capabilities.filter(
             (capability) => capability.behavior.execution === "operation",

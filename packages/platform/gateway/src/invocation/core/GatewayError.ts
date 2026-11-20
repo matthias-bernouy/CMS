@@ -33,3 +33,10 @@ export class GatewayDispatchRejected extends GatewayError {
         this.name = "GatewayDispatchRejected";
     }
 }
+
+/** Trusted preparation failed before its durable command start; no terminal event is due. */
+export class GatewayCommandNotStarted extends Error {
+    constructor(cause: unknown) {
+        super("Command was not started", { cause });
+    }
+}

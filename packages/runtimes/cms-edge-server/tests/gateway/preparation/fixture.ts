@@ -7,8 +7,12 @@ import { InstallationsProviderTransport } from "../../../src/runtime/gateway/Ins
 import { INSTALLATIONS_CONTRACT } from "../../../src/runtime/gateway/control";
 import { createEdgeGateway } from "../../../src/runtime/gateway/createEdgeGateway";
 
-export async function preparedFixture(command = false, settled?: () => void, machine = false) {
+export async function preparedFixture(command = false, settled?: () => void, machine = false, compact = false) {
     const events: string[] = [];
+    const requests: string[] = [];
+    let outerStatus = 0;
+    let stageFailure: "identity" | "audit" | null = null;
+    const contract = compact ? INSTALLATIONS_CONTRACT : { ...INSTALLATIONS_CONTRACT, version: "1.5.0" };
     const preparations: Record<string, any>[] = [];
     const secret = "signed-provider-" + "p".repeat(40);
     let wrongAudience = false;
@@ -52,6 +56,7 @@ export async function preparedFixture(command = false, settled?: () => void, mac
             "control-token-" + "c".repeat(40),
             (async (url, init) => {
                 const path = new URL(url.toString()).pathname;
+                requests.push(path);
                 const input = JSON.parse(String(init?.body));
                 if (path === "/gateway/route-snapshot") {
                     return Response.json(await packGatewayRoute(route, input.known));
@@ -71,18 +76,40 @@ export async function preparedFixture(command = false, settled?: () => void, mac
                     events.push("close");
                     return Response.json({ accepted: true });
                 }
-                if (path !== (machine ? "/gateway/providers/prepare" : "/gateway/dispatch/prepare")) {
+                if (
+                    path !==
+                    (machine
+                        ? "/gateway/providers/prepare"
+                        : compact && command
+                          ? "/gateway/commands/prepare"
+                          : "/gateway/dispatch/prepare")
+                ) {
                     throw new Error("Unexpected control request: " + path);
                 }
-                expect(new Headers(init?.headers).get("x-ulvia-contract-version")).toBe(INSTALLATIONS_CONTRACT.version);
+                expect(new Headers(init?.headers).get("x-ulvia-contract-version")).toBe(contract.version);
+                if (compact && command && outerStatus) {
+                    return new Response(null, { status: outerStatus });
+                }
+                if (compact && command) {
+                    events.push("identity");
+                    if (stageFailure === "identity") {
+                        return Response.json({ prepared: null, failure: { stage: "identity", status: 503 } });
+                    }
+                    events.push("started");
+                    if (stageFailure === "audit") {
+                        return Response.json({ prepared: null, failure: { stage: "audit", status: 503 } });
+                    }
+                }
                 events.push(machine ? "machine-prepare" : "prepare");
                 preparations.push(input);
                 if (status !== 200) {
-                    return new Response(null, { status });
+                    return compact && command
+                        ? Response.json({ prepared: null, failure: { stage: "preparation", status } })
+                        : new Response(null, { status });
                 }
                 const instanceId = wrongAudience ? "instance:another" : "instance:account-a";
                 const now = Math.floor(Date.now() / 1000);
-                return Response.json({
+                const prepared = {
                     instanceId,
                     ...(machine ? { sourceInstallationId: "verified-source" } : {}),
                     token: signProviderInvocationToken(secret, {
@@ -98,11 +125,12 @@ export async function preparedFixture(command = false, settled?: () => void, mac
                         expiresAt: now + 30,
                     }),
                     delegation: machine ? null : { ticket: "t".repeat(43), expiresAt: Date.now() + 10_000 },
-                });
+                };
+                return Response.json(compact && command ? { prepared, failure: null } : prepared);
             }) as typeof fetch,
         );
         const gateway = createEdgeGateway(
-            new ControlProviderClient(transport, undefined, INSTALLATIONS_CONTRACT),
+            new ControlProviderClient(transport, undefined, contract),
             undefined,
             settled,
         );
@@ -117,6 +145,13 @@ export async function preparedFixture(command = false, settled?: () => void, mac
         return {
             gateway,
             events,
+            requests,
+            rejectBeforeStart: (status: number) => {
+                outerStatus = status;
+            },
+            failStage: (stage: "identity" | "audit") => {
+                stageFailure = stage;
+            },
             preparations,
             invoke,
             failBusiness: () => {

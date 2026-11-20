@@ -21,6 +21,7 @@ export function metadataCatalogueScenarios(inventory: CapabilityInventory, fixtu
         "gateway.route.get",
         "gateway.route.snapshot",
         "gateway.mcp.resolve",
+        "gateway.mcp.authorized",
     ].flatMap((capability) => {
         const target = inventory.targets.find(
             (row) =>
@@ -57,7 +58,9 @@ export function metadataCatalogueScenarios(inventory: CapabilityInventory, fixtu
                                 definition,
                                 definition.obligations[0]!,
                                 (index) =>
-                                    capability === "gateway.route.snapshot" || capability === "gateway.mcp.resolve"
+                                    capability === "gateway.route.snapshot" ||
+                                    capability === "gateway.mcp.resolve" ||
+                                    capability === "gateway.mcp.authorized"
                                         ? prepareCompactMetadata(inventory, context, capability, variant)
                                         : capability.startsWith("documentation.")
                                           ? prepareMetadataDocumentation(

@@ -8,6 +8,7 @@ export const NOW = "2026-09-29T08:00:00.000Z";
 
 export async function gatewayRoute(
     overrides: {
+        output?: Record<string, unknown>;
         errorOutput?: Record<string, unknown>;
         endpoint?: string;
         contractId?: string;
@@ -68,17 +69,19 @@ export async function gatewayRoute(
                             required: ["uploadId", "bytes"],
                         }
                       : { type: "object", properties: { term: { type: "string", maxLength: 50 } }, required: [] },
-                output: overrides.binary
-                    ? { type: "binary", maxBytes: 8, ...(overrides.resource ? { resource: true } : {}) }
-                    : overrides.binaryInput
-                      ? { type: "null" }
-                      : {
-                            type: "object",
-                            properties: {
-                                items: { type: "array", items: { type: "string", maxLength: 50 }, maxItems: 10 },
-                            },
-                            required: ["items"],
-                        },
+                output:
+                    overrides.output ??
+                    (overrides.binary
+                        ? { type: "binary", maxBytes: 8, ...(overrides.resource ? { resource: true } : {}) }
+                        : overrides.binaryInput
+                          ? { type: "null" }
+                          : {
+                                type: "object",
+                                properties: {
+                                    items: { type: "array", items: { type: "string", maxLength: 50 }, maxItems: 10 },
+                                },
+                                required: ["items"],
+                            }),
                 errors: [
                     {
                         code: "NOT_FOUND",

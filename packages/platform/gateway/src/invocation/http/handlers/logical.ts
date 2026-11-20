@@ -28,7 +28,8 @@ export function createCapabilityQueryHandler(config: CapabilityQueryHandlerConfi
                 config.basePath,
                 CMS_CAPABILITY_QUERY_ROUTE,
             );
-            const capability = await config.resolveCapability(contractId, capabilityId);
+            const scope = config.createInvocationScope?.(contractId) ?? config;
+            const capability = await scope.resolveCapability(contractId, capabilityId);
             assertLogicalCapability(capability, "query");
             if (request.method === "GET" && request.body) {
                 throw new GatewayError("invalid_input", "GET queries cannot carry a request body");
@@ -37,13 +38,13 @@ export function createCapabilityQueryHandler(config: CapabilityQueryHandlerConfi
             if (capability.access !== "public") {
                 actor = await config.resolveActor(request);
             }
-            const result = await config.invoker.invoke({
+            const result = await scope.invoker.invoke({
                 siteId: config.siteId,
                 requestContext: readGatewayRequestContext(request, false, config.requestHeaders),
                 signal: request.signal,
                 contractId,
                 capabilityId,
-                ...(await logicalHttpBinding(config.invoker, { siteId: config.siteId, contractId, capabilityId })),
+                ...(await logicalHttpBinding(scope.invoker, { siteId: config.siteId, contractId, capabilityId })),
                 input,
                 actor,
                 ...(contractId === "ulvia/cms.access" && capabilityId === "resolve-actor"
@@ -77,20 +78,21 @@ export function createCapabilityMutationHandler(config: CapabilityMutationHandle
                 config.basePath,
                 CMS_CAPABILITY_MUTATION_ROUTE,
             );
-            const capability = await config.resolveCapability(contractId, capabilityId);
+            const scope = config.createInvocationScope?.(contractId) ?? config;
+            const capability = await scope.resolveCapability(contractId, capabilityId);
             assertLogicalCapability(capability, "command");
             const input = await readStructuredInput(request, "mutation");
             if (capability.access !== "public") {
                 actor = await config.resolveActor(request);
             }
             const idempotencyKey = mutationIdempotencyKey(request, capability.idempotency);
-            const result = await config.invoker.invoke({
+            const result = await scope.invoker.invoke({
                 siteId: config.siteId,
                 requestContext: readGatewayRequestContext(request, false, config.requestHeaders),
                 signal: request.signal,
                 contractId,
                 capabilityId,
-                ...(await logicalHttpBinding(config.invoker, { siteId: config.siteId, contractId, capabilityId })),
+                ...(await logicalHttpBinding(scope.invoker, { siteId: config.siteId, contractId, capabilityId })),
                 input,
                 actor,
                 ...(idempotencyKey ? { idempotencyKey } : {}),

@@ -46,6 +46,7 @@ export function createTenantEdge(
             authenticateProvider: gateway.authenticateProvider,
             invokeProvider: gateway.invokeProvider,
             resolveCapability: gateway.resolveCapability,
+            createInvocationScope: gateway.createInvocationScope,
         },
     });
     return { handle: (request) => runner.handle(request) };

@@ -9,7 +9,7 @@ const execute = (
     actor = {},
 ) => executeCapability(installationsFeature, id, { input, services: ports, context: { ...context, ...actor } });
 const denied = { code: "FORBIDDEN", output: { message: "The installation request was refused." } };
-test("all thirteen gateway control executors refuse untrusted actors before inspecting service ports", async () => {
+test("all gateway control executors refuse untrusted actors before inspecting service ports", async () => {
     const examples = {
         "gateway.audit.append": { event: "{}" },
         "gateway.delegation.close": { context: { siteId: "site-a", ticket: "t", requestId: "req" } },
@@ -77,9 +77,31 @@ test("all thirteen gateway control executors refuse untrusted actors before insp
         },
         "gateway.route.get": { contractId: "ulvia/cms.files" },
         "gateway.route.snapshot": { contractId: "ulvia/cms.files", known: [] },
+        "gateway.command.prepare": {
+            invocation: {
+                requestId: "00000000-0000-4000-8000-000000000001",
+                installationId: "installation",
+                contractId: "ulvia/cms.files",
+                contractVersion: "1.0.0",
+                capabilityId: "files.get",
+            },
+            actor: { kind: "anonymous" },
+            deadline: 1,
+            commandStart: { providerId: "ulvia/provider", identityRequired: false, event: "{}" },
+        },
+        "gateway.mcp.authorized": {
+            actor: { kind: "administrator", subjectId: "subject" },
+            toolName: "files_get",
+            known: [],
+        },
         "gateway.mcp.resolve": { contractIds: ["ulvia/cms.files"], toolName: "files_get", known: [] },
     } as const;
-    expect(Object.keys(examples)).toHaveLength(13);
+    expect(Object.keys(examples).sort()).toEqual(
+        installationsFeature.capabilities
+            .filter(({ id }) => id.startsWith("gateway."))
+            .map(({ id }) => id)
+            .sort(),
+    );
     for (const [id, input] of Object.entries(examples)) {
         const capability = installationsFeature.capabilities.find((capability) => capability.id === id)!;
         const parsed = capability.input.safeParse(input);

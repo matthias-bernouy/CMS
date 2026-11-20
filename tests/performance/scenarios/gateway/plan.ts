@@ -1,3 +1,4 @@
+import { prepareGatewayCommand } from "./command";
 import { lifecycleScenarios } from "../lifecycle";
 import { gatewayContext } from "./context";
 import { prepareCompactGateway } from "./compact";
@@ -11,6 +12,8 @@ const GATEWAY_CAPABILITIES = [
     "gateway.route.get",
     "gateway.route.snapshot",
     "gateway.mcp.resolve",
+    "gateway.mcp.authorized",
+    "gateway.command.prepare",
     "gateway.identity.resolve",
     "gateway.audit.append",
     "gateway.invocation.issue",
@@ -26,7 +29,14 @@ export function gatewayScenarios(inventory: CapabilityInventory, fixture: string
         GATEWAY_CAPABILITIES,
         async (environment, capability) => {
             const context = await gatewayContext(inventory, environment);
-            if (capability === "gateway.route.snapshot" || capability === "gateway.mcp.resolve") {
+            if (capability === "gateway.command.prepare") {
+                return prepareGatewayCommand(context);
+            }
+            if (
+                capability === "gateway.route.snapshot" ||
+                capability === "gateway.mcp.resolve" ||
+                capability === "gateway.mcp.authorized"
+            ) {
                 return prepareCompactGateway(context, capability);
             }
             return capability === "gateway.invocation.issue" || capability === "gateway.dispatch.prepare"

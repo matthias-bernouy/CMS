@@ -30,6 +30,8 @@ export {
 } from "cms-gateway/invocation/resource/metadata";
 
 export type {
+    ProviderCommandStart,
+    ProviderCommandPreparation,
     ProviderDispatchPreparation,
     PreparedProviderDispatch,
     ProviderMachinePreparation,
@@ -64,3 +66,5 @@ export type {
     GatewayDefinitionLease,
     GatewayContractPacket,
 } from "cms-gateway/protocol/routes/types";
+
+export { ProviderCommandPreparationFailure } from "cms-gateway/protocol/ProviderDispatchPreparation";

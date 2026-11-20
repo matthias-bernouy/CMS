@@ -1,5 +1,6 @@
 import type { CatalogueContractRelease } from "@bernouy/ulvia-contracts/catalogue";
 import type {
+    ProviderCommandPreparation,
     ProviderMachinePreparation,
     PreparedProviderMachine,
     ProviderDispatchPreparation,
@@ -9,6 +10,7 @@ import type {
 import type { GatewayDelegationAuthority } from "@bernouy/cms-gateway/access/delegation";
 import type { ProviderAccess } from "@bernouy/cms-gateway/access/providers";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
+import type { GatewayActor } from "@bernouy/cms-gateway";
 import type { GatewayRouteResolver } from "@bernouy/cms-gateway";
 import type { GatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 import type { ProviderInstallationStore } from "repository/providers/installations/interfaces/ProviderInstallationStore";
@@ -20,6 +22,8 @@ export interface InstallationGateway {
     readonly siteId: string;
     /** Fresh complete catalogue/selection/installation revision fingerprint, or null to disable index reuse. */
     readonly catalogueRevision?: () => Promise<string | null>;
+    /** Fresh ordinary selected-catalogue authorization, including current user state. */
+    readonly authorizeMcpCatalogue?: (actor: GatewayActor) => Promise<void>;
     readonly contractUpgrades?: ContractUpgradeService;
     readonly installations: ProviderInstallationStore;
     readonly selections: ContractSelectionStore;
@@ -30,6 +34,7 @@ export interface InstallationGateway {
     readonly delegations?: GatewayDelegationAuthority;
     readonly invocations: {
         prepareProvider?(input: ProviderMachinePreparation): Promise<PreparedProviderMachine>;
+        prepareCommand?(input: ProviderCommandPreparation): Promise<PreparedProviderDispatch>;
         prepare?(input: ProviderDispatchPreparation): Promise<PreparedProviderDispatch>;
         issue(input: ProviderInvocationIssue): Promise<{ token: string; instanceId: string }>;
     };

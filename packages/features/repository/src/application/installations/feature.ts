@@ -1,3 +1,5 @@
+import { gatewayMcpAuthorized } from "repository/application/installations/capabilities/gateway/routing/gateway.mcp.authorized";
+import { gatewayCommandPrepare } from "repository/application/installations/capabilities/gateway/invocation/gateway.command.prepare";
 import { gatewayRouteSnapshot } from "repository/application/installations/capabilities/gateway/routing/gateway.route.snapshot";
 import { gatewayMcpResolve } from "repository/application/installations/capabilities/gateway/routing/gateway.mcp.resolve";
 import { listInstalledCollections } from "./capabilities/collections/resources/list-installed-collections";
@@ -64,7 +66,7 @@ export const installationsFeature = defineFeature({
     name: "CMS Installations",
     description:
         "Inspect and administer the collection installations, provider installations and contract selections of one CMS instance.",
-    version: "1.5.0",
+    version: "1.6.0",
     publisherId: "ulvia",
     catalogue: { icon: "installations", categories: ["administration", "content", "infrastructure"] },
     documents: new URL("../../../docs/installations/", import.meta.url),
@@ -96,6 +98,7 @@ export const installationsFeature = defineFeature({
         gatewayDelegationIssue,
         gatewayInvocationIssue,
         pairProviderConnection,
+        gatewayCommandPrepare,
         gatewayDispatchPrepare,
         gatewayProviderPrepare,
         previewProviderConnection,
@@ -115,6 +118,7 @@ export const installationsFeature = defineFeature({
         getContractUpgrade,
         gatewayRouteGet,
         gatewayRouteSnapshot,
+        gatewayMcpAuthorized,
         gatewayMcpResolve,
         getOperation,
         getProviderAccess,

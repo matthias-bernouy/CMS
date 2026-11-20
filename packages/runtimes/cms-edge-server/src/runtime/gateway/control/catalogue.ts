@@ -1,3 +1,4 @@
+import { GatewayError } from "@bernouy/cms-gateway";
 import type { CapabilityGateway } from "@bernouy/cms-gateway";
 import { collectMcpContracts } from "@bernouy/cms-gateway/mcp";
 import type { McpInvocationContext } from "@bernouy/cms-gateway/mcp";
@@ -29,6 +30,13 @@ export class ControlMcpCatalogue {
         );
     }
     async resolve(name: string, context: McpInvocationContext) {
+        if (this.control.supportsCompactCatalogue) {
+            const actor = context.actor;
+            if (context.siteId !== "default" || (actor.kind !== "user" && actor.kind !== "administrator")) {
+                throw new GatewayError("not_authorized", "Selected contract catalogue requires a user");
+            }
+            return this.control.resolveToolContract(actor, name);
+        }
         return this.control.resolveToolContract(await this.ids(context), name);
     }
 }

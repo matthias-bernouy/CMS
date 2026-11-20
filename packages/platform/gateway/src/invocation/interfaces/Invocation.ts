@@ -125,6 +125,8 @@ export interface GatewayTransportResponse {
 }
 
 export interface GatewayTransport {
+    /** Optional wire-only path. Its output is always validated by the Gateway core. */
+    sendForGateway?(request: GatewayTransportRequest): Promise<GatewayTransportResponse>;
     send(request: GatewayTransportRequest): Promise<GatewayTransportResponse>;
 }
 

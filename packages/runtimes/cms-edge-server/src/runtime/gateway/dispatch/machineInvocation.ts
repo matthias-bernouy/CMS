@@ -81,6 +81,7 @@ export function machineInvocation(
         let sent = false;
         const gateway = new CapabilityGateway({
             ...options,
+            dispatchCommandStart: false,
             requestId: () => requestId,
             authorize: async (candidate, requested, current) =>
                 candidate.kind === "provider" &&
@@ -112,7 +113,7 @@ export function machineInvocation(
                     }
                     return { token: issued.token };
                 });
-                return { response: await pinned.send(request), delegation: null };
+                return { response: await (pinned.sendForGateway?.(request) ?? pinned.send(request)), delegation: null };
             },
         });
         return gateway.invoke({ ...value, actor });
