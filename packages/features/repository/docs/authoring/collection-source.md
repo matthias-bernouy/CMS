@@ -41,6 +41,64 @@ The Bloc's `root.accepts` describes the native Page element carrying `cms-bloc`;
 
 Translation keys used by labels, descriptions and categories must exist in the locale catalogue. This deliberately small learning example has literal Page copy. Production reusable copy can use collection texts or business-data bindings; follow the collection's conventions. Site-specific copy may be edited after copying an example into a Page.
 
+## Optional JavaScript behavior
+
+Official and third-party collections use the same behavior source format. For a
+Bloc with `"kind": "component"`, add `blocs/<bloc-id>/bloc.ts` beside
+`definition.json`, `markup.html` and optional `style.css`. The exact entry filename
+is lowercase `bloc.ts`. Additional TypeScript modules belong in
+`blocs/<bloc-id>/runtime/**/*.ts` and can be imported with relative paths such as
+`import { helper } from "./runtime/helper"`. They need the `bloc.ts` entry to run.
+Compositions cannot own behavior, styles or settings.
+
+For an interactive version of the panel above, replace its `markup.html` with:
+
+```html
+<section>
+    <button type="button" data-panel-toggle aria-expanded="true">{{ cms.i18n.your-namespace/guide-kit.toggle-content }}</button>
+    <div data-panel-content><slot name="body"></slot></div>
+</section>
+```
+
+Add these entries to the snapshot's `files` array for the button's reusable text:
+
+```json
+[
+  {"path":"translations/en/behavior.json","content":"{\"text.toggle.label\":\"Toggle content\"}"},
+  {"path":"texts/definitions/behavior.json","content":"[{\"id\":\"toggle-content\",\"category\":\"bloc.label\",\"group\":\"bloc.label\",\"label\":\"text.toggle.label\"}]"},
+  {"path":"texts/locales/en/behavior.json","content":"{\"toggle-content\":\"Toggle content\"}"}
+]
+```
+
+Add this TypeScript as the string `content` of the snapshot file
+`blocs/your-hnamespace--guide-kit--panel/bloc.ts`:
+
+```ts
+export function mount(root: HTMLElement): () => void {
+    const button = root.querySelector<HTMLButtonElement>("[data-panel-toggle]");
+    const content = root.querySelector<HTMLElement>("[data-panel-content]");
+    const onClick = () => {
+        if (button && content) {
+            content.hidden = !content.hidden;
+            button.setAttribute("aria-expanded", String(!content.hidden));
+        }
+    };
+    button?.addEventListener("click", onClick);
+    return () => button?.removeEventListener("click", onClick);
+}
+```
+
+Export the named `mount(root)` function directly from `bloc.ts`. It receives the
+native element carrying `cms-bloc`; return cleanup for listeners or observers.
+Preparation compiles the entry and its imported modules into `runtime.viewJS`
+with the required browser ABI and automatic Bloc registration. Keep `runtime`,
+`markup` and `style` out of the source `definition.json`.
+
+Filenames such as `view.ts`, `view.js`, `behavior.js`, `behavior.ts`, `script.ts`
+and `index.js`, and directories such as `view/` and `behavior/`, are unsupported
+at the Bloc root. Use `bloc.ts` and `runtime/` instead. Behavior still follows
+the [authoring restrictions and browser-code review](collection-authoring.md).
+
 ## Binary assets from site files or a release
 
 Keep file bytes out of textual tool arguments. After a successful workspace upload, add an exact immutable file generation to the snapshot's optional `assets` array:

@@ -12,7 +12,7 @@ const releaseDigests = {
     "ulvia/cms.emailer.smtp": "sha256:ae8b92cd8a685c163229e1c2326c6a687546dd2488dc88a4295eff30e6b256c1",
     "ulvia/cms.access": "sha256:da46389a522b67efc617c090109ff2b3c6050a3f9d79ef05a556477d37a28053",
     "ulvia/cms.content": "sha256:3aac9d6c0b8e19ea6d055d8453f6d0f4cf2330335a522efa7a328c8f532e80a8",
-    "ulvia/cms.authoring": "sha256:33a8ba7cd237c000bb3aea507298268525a976253f06517cea0817e178b09b0d",
+    "ulvia/cms.authoring": "sha256:a29e5ae5aaf28677e1c9158fabefd6b1f26285bd4ea39e48612d3daa48a9be8c",
     "ulvia/cms.secrets": "sha256:358b2e7e889f656320dd824a698c425a500211ea80695d120e5f4effe1255c08",
     "ulvia/cms.files": "sha256:f5be7d20f375d96cc97d4454bdb570fc87fabe755dff1850cbaeb26e508809a8",
     "ulvia/cms.observability": "sha256:113758c81e4cdc774bba95c8f136a3a9650be5b6d59412ef51383bd15dd2de45",
@@ -64,6 +64,7 @@ test("prior Content, Repository, Authoring and Installations releases retain exa
         ["ulvia/cms.installations", "1.4.0", "sha256:dbfaafe02234c64828b1fc8b0ced559a6ec75ebe185db6ade639def9edcd876f"],
         ["ulvia/cms.installations", "1.4.1", "sha256:0909a87318692b8753c9931955ea98816cce8256dc0eb185787b525d3c597754"],
         ["ulvia/cms.authoring", "1.2.0", "sha256:040e4e0346f615f592d46d1cbe685958074afa2f65f9d833a972f45bbda981e4"],
+        ["ulvia/cms.authoring", "1.2.1", "sha256:33a8ba7cd237c000bb3aea507298268525a976253f06517cea0817e178b09b0d"],
     ] as const) {
         const retained = builds.find((build) =>
             build.implementations.some((pin) => pin.contractId === contractId && pin.version === version),

@@ -10,6 +10,16 @@ Before publishing, read `get-connection`. If necessary, use `configure-connectio
 
 Read `get-collection-sources` before changing a previously published collection. Preserve exact dependency and binary asset references from that snapshot. Collections contain reusable resources and examples; create site Pages separately through Content.
 
+Source snapshots are private: `get-collection-sources` requires the configured
+Repository account to own the collection's namespace. Installing a collection
+exposes its compiled resources, including any `runtime.viewJS`, without granting
+access to the original `bloc.ts` files. For example, reading Mossa's sources
+requires ownership of the `ulvia` namespace. Unavailable sources do not imply
+that third-party collections cannot use JavaScript; follow the
+[behavior source format](collection-source.md#optional-javascript-behavior).
+A null snapshot means no retained sources were returned; report that condition
+instead of treating compiled release data as the original source tree.
+
 Every Bloc has a native root contract. Listed Blocs use translated descriptions, categories and appropriate examples. Author example `definition.json` and `document.html` with explicit preview frames. Page content and mutable site configuration remain site-owned.
 
 For a new or redesigned Bloc, follow [Design a reusable Bloc](bloc-design.md) before preparing sources. It covers the editor contract, visual system, interaction states and examples.

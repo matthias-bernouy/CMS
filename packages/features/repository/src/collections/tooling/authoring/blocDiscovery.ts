@@ -62,7 +62,13 @@ async function visitBlocSources(base: string, directory: string, depth: number, 
 function validateBlocEntries(entries: Awaited<ReturnType<typeof readSourceEntries>>, relativePath: string): void {
     for (const entry of entries) {
         if (!BLOC_ENTRIES.has(entry.name)) {
-            throw new Error(`Unsupported entry in Bloc ${relativePath}: ${entry.name}`);
+            throw new Error(
+                `Unsupported entry in Bloc ${relativePath}: ${entry.name}. ` +
+                    "Allowed files: definition.json, markup.html, style.css, bloc.ts. " +
+                    "Allowed directories: settings/, runtime/. " +
+                    "For component behavior, use bloc.ts exporting mount(root). " +
+                    "Compositions cannot own behavior, styles or settings.",
+            );
         }
         if (["settings", "runtime"].includes(entry.name) ? !entry.isDirectory() : !entry.isFile()) {
             throw new Error(`Invalid entry type in Bloc ${relativePath}: ${entry.name}`);
