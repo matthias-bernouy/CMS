@@ -16,7 +16,8 @@ export interface AccessServices {
     readonly mcpAuthorization: Pick<
         McpAuthorization,
         "deny" | "register" | "prepare" | "exchange" | "resolve" | "authorize" | "list" | "revoke"
-    >;
+    > &
+        Partial<Pick<McpAuthorization, "resolveWithAuthority">>;
     readonly governance: AccessGovernance;
     readonly withUserDeletion?: UserDeletionStores["withUserDeletion"];
 }

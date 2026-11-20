@@ -32,12 +32,21 @@ export async function executeMcp(
                 result = await services.mcpAuthorization.exchange(request);
                 break;
             case "resolve": {
-                const principal = await services.mcpAuthorization.resolve(String(request.token));
-                const administrator = await services.governance.administrators.get(principal.subjectId);
-                if (!administrator.enabled) {
-                    throw new OAuthError("access_denied", 403);
+                const resolved = services.mcpAuthorization.resolveWithAuthority
+                    ? await services.mcpAuthorization.resolveWithAuthority(String(request.token))
+                    : {
+                          principal: await services.mcpAuthorization.resolve(String(request.token)),
+                          authority: undefined,
+                      };
+                let authorizationRevision = resolved.authority?.revision;
+                if (authorizationRevision === undefined) {
+                    const administrator = await services.governance.administrators.get(resolved.principal.subjectId);
+                    if (!administrator.enabled) {
+                        throw new OAuthError("access_denied", 403);
+                    }
+                    authorizationRevision = administrator.revision;
                 }
-                result = { ...principal, authorizationRevision: administrator.revision };
+                result = { ...resolved.principal, authorizationRevision };
                 break;
             }
             case "authorize":

@@ -1,14 +1,14 @@
 import { createHash } from "node:crypto";
-import { InMemoryOAuthStore, McpAuthorization } from "@bernouy/auth/oauth";
+import { InMemoryOAuthStore, McpAuthorization, type OAuthPolicy } from "@bernouy/auth/oauth";
 
-export async function oauthFixture() {
+export async function oauthFixture(policy?: OAuthPolicy) {
     const store = new InMemoryOAuthStore();
     let now = Date.now();
     let administrator = true;
     const resource = "https://cms.example/.cms/mcp";
     const authorization = new McpAuthorization(
         store,
-        { canConnect: async (sub) => sub === "admin" && administrator },
+        policy ?? { canConnect: async (sub) => sub === "admin" && administrator },
         resource,
         new TextEncoder().encode("x".repeat(32)),
         () => now,

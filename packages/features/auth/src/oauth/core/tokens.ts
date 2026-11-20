@@ -1,5 +1,5 @@
 import type { OAuthGrant, OAuthPolicy, OAuthRecord, OAuthStore } from "../interfaces/OAuthStore";
-import { accessToken, hash, OAuthError, opaque, readAccessToken, text } from "./primitives";
+import { accessToken, hash, OAuthError, opaque, text } from "./primitives";
 import { currentRecord } from "./clients";
 
 export function tokens(record: OAuthRecord, refresh: string, resource: string, key: Uint8Array, now: number) {
@@ -21,46 +21,6 @@ export function tokens(record: OAuthRecord, refresh: string, resource: string, k
         refresh_token: refresh,
         scope: "cms:full",
     };
-}
-
-export async function resolveAccess(
-    store: OAuthStore,
-    policy: OAuthPolicy,
-    resource: string,
-    key: Uint8Array,
-    token: string,
-    now: number,
-) {
-    let claims: Record<string, unknown>;
-    try {
-        claims = readAccessToken(token, key);
-    } catch {
-        throw new OAuthError("invalid_token", 401);
-    }
-    if (
-        claims.aud !== resource ||
-        claims.iss !== new URL(resource).origin ||
-        typeof claims.exp !== "number" ||
-        !Number.isSafeInteger(claims.exp) ||
-        claims.exp <= now / 1000 ||
-        typeof claims.grant !== "string"
-    ) {
-        throw new OAuthError("invalid_token", 401);
-    }
-    const record = await currentRecord(store, claims.grant, now).catch(() => {
-        throw new OAuthError("invalid_token", 401);
-    });
-    const grant = record.value as OAuthGrant;
-    if (
-        grant.revoked ||
-        grant.resource !== resource ||
-        claims.sub !== grant.subjectId ||
-        claims.revision !== record.revision ||
-        !(await policy.canConnect(grant.subjectId))
-    ) {
-        throw new OAuthError("invalid_token", 401);
-    }
-    return { subjectId: grant.subjectId, connectionId: record.id.slice(6), mode: "full_access" as const };
 }
 
 export async function rotateRefresh(

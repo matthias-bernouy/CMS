@@ -44,4 +44,6 @@ export interface OAuthGrant extends OAuthRequest {
 
 export interface OAuthPolicy {
     canConnect(subjectId: string): Promise<boolean>;
+    /** Equivalent live policy decision with its authorization revision; never cached across resolutions. */
+    inspectAuthority?(subjectId: string): Promise<{ revision: number } | null>;
 }

@@ -551,6 +551,13 @@ export class ProviderInstanceHost {
                             canConnect: async (sub) =>
                                 Boolean(await stores.users.getBySub(sub)) &&
                                 (await gateway.administrators.get(sub)).enabled,
+                            inspectAuthority: async (sub) => {
+                                if (!(await stores.users.getBySub(sub))) {
+                                    return null;
+                                }
+                                const administrator = await gateway.administrators.get(sub);
+                                return administrator.enabled ? { revision: administrator.revision } : null;
+                            },
                         },
                         new URL("/.cms/mcp", instance.cmsUrl).href,
                         new TextEncoder().encode(stores.runtimeSessionSecret),

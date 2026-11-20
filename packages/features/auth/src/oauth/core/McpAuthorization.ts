@@ -2,7 +2,8 @@ import { InMemoryRateLimiter, type RateLimiter } from "@bernouy/rate-limiter";
 import type { OAuthClient, OAuthGrant, OAuthPolicy, OAuthRequest, OAuthStore } from "../interfaces/OAuthStore";
 import { currentRecord, prepareAuthorization, registerClient, retainClient } from "./clients";
 import { hash, OAuthError, opaque, text, isLocalHostname } from "./primitives";
-import { resolveAccess, rotateRefresh, tokens } from "./tokens";
+import { rotateRefresh, tokens } from "./tokens";
+import { resolveAccessWithAuthority } from "./resolveAccess";
 
 /** Provider-owned authorization. Policy is injected independently of authentication subjects. */
 export class McpAuthorization {
@@ -106,8 +107,11 @@ export class McpAuthorization {
         await this.store.create(record);
         return tokens(record, refresh, this.resource, this.key, this.now());
     }
-    resolve(token: string) {
-        return resolveAccess(this.store, this.policy, this.resource, this.key, token, this.now());
+    async resolve(token: string) {
+        return (await this.resolveWithAuthority(token)).principal;
+    }
+    resolveWithAuthority(token: string) {
+        return resolveAccessWithAuthority(this.store, this.policy, this.resource, this.key, token, this.now());
     }
     async list(subjectId: string, input: { cursor?: unknown; limit?: unknown } = {}) {
         await this.assertAdministrator(subjectId);
