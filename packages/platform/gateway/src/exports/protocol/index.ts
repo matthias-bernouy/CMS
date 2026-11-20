@@ -54,3 +54,13 @@ export {
     selectResponseHeaders,
     snapshotHeaders,
 } from "cms-gateway/protocol/http/headers";
+
+export { packGatewayRoute, packGatewayContract } from "cms-gateway/protocol/routes/encode";
+export { GatewayRouteCodec } from "cms-gateway/protocol/routes/decode";
+export type {
+    GatewayDefinition,
+    GatewayRoutePacket,
+    GatewayRouteSource,
+    GatewayDefinitionLease,
+    GatewayContractPacket,
+} from "cms-gateway/protocol/routes/types";
