@@ -37,11 +37,19 @@ administrator credentials only for the administrator step.
 - Optional persistence adapters use explicit exports and are runtime imports.
 - No collections or Pages are created by this package.
 
-`./feature` owns `ulvia/cms.hosting` and its twelve HTTP/MCP capabilities. The
+`./feature` owns `ulvia/cms.hosting` and its thirteen HTTP/MCP capabilities. The
 surface projects structural services from the single official SDK inventory.
 Creation uses natural persisted idempotence, not SDK receipts containing initial
 administrator passwords. Domain reservations fence both hostname and creation
 request before provisioning can write an instance.
+
+The instance `cmsUrl` is the elected public origin. `gatewayUrl`, creation
+fingerprints and Repository addresses retain their logical identities. Primary
+election reserves the active target against domain mutations, CAS-updates the
+ready instance and advances the target domain revision on completion. A retry
+must fence an interrupted writer before clearing its reservation; never expire
+the reservation and allow a delayed pointer write. Do not disable the current
+primary. Control's initial bootstrap identity remains fixed independently.
 
 Zones belong to the persisted Control identity. Recheck administrator authority
 after DNS verification and fence updates by revision and claim generation. A

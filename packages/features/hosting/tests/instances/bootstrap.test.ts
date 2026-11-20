@@ -144,6 +144,26 @@ test("initial access requires valid operator credentials and never permits a fir
     expect(f.instances.creates).toBe(0);
 });
 
+test("Control reopens a verified elected domain during TLS recovery and refuses it after disable", async () => {
+    const f = fixture();
+    const initial = await f.bootstrap.initialize(origin, administrator);
+    const primary = await f.store.claimDomain({
+        ...initial.domain,
+        hostname: "new.example",
+        origin: "https://new.example",
+        claimId: crypto.randomUUID(),
+        creationFingerprint: null,
+        state: "verified",
+        tls: "failed",
+        revision: 1,
+    });
+    await f.instances.setPublicOrigin(initial.instance.id, initial.instance.revision, primary.origin);
+    expect((await f.bootstrap.initialize(origin)).instance.cmsUrl).toBe(primary.origin);
+    expect(await f.store.getDomain(primary.hostname)).toEqual(primary);
+    await f.store.replaceDomain(1, { ...primary, state: "disabled", revision: 2 });
+    await expect(f.bootstrap.initialize(origin)).rejects.toMatchObject({ code: "UNAVAILABLE" });
+});
+
 test("missing ready state or a changed startup origin refuses without recreating or moving Control", async () => {
     const f = fixture();
     const ready = await f.bootstrap.initialize(origin, administrator);

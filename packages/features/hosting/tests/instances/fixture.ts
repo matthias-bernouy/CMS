@@ -4,6 +4,8 @@ import {
     InstanceManagement,
     ZoneRegistry,
     reserveHostingInstallation,
+    PrimaryDomainManagement,
+    HostingError,
 } from "@bernouy/hosting";
 import { InMemoryHostingStore, InMemoryHostingZoneStore } from "@bernouy/hosting/memory";
 import { ProviderInstanceLifecycle } from "@bernouy/hosting/instances";
@@ -39,6 +41,15 @@ export class InstanceRegistry implements ProviderInstanceRegistry {
     }
     async get(id: string) {
         return this.records.get(id) ?? null;
+    }
+    async setPublicOrigin(id: string, revision: number, origin: string) {
+        const current = this.records.get(id);
+        if (!current || current.revision !== revision || current.status !== "ready") {
+            throw new HostingError("CONFLICT", "Instance changed during primary election");
+        }
+        const next = { ...current, cmsUrl: origin, revision: revision + 1 };
+        this.records.set(id, next);
+        return next;
     }
     async getByIdempotencyKey(key: string) {
         return [...this.records.values()].find((record) => record.idempotencyKey === key) ?? null;
@@ -121,12 +132,21 @@ export async function instanceFixture() {
         admission,
         "proof-key-material".repeat(3),
     );
+    const primaryDomains = new PrimaryDomainManagement(
+        store,
+        {
+            getInstance: (id) => registry.get(id),
+            setPublicOrigin: (id, revision, origin) => registry.setPublicOrigin(id, revision, origin),
+        },
+        authority,
+    );
     return {
         authority,
         store,
         registry,
         lifecycle,
         management,
+        primaryDomains,
         zones,
         zoneStore,
         admission,

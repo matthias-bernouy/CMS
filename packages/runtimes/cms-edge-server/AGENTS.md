@@ -29,8 +29,11 @@ Production composition root for a shared, stateless CMS Edge listener.
 - Keep Gateways, credentials, route caches, public resource caches, OAuth/MCP,
   cookie policy, CSP and journal sinks inside the tenant context. Host diagnostics
   stay operator-owned. Signed subject resolution remains behind contracts.
-- Preserve one canonical CMS origin. Registered aliases redirect there before
-  constructing a context. Ignore caller-supplied forwarding headers for routing;
+- Preserve one canonical public CMS origin. Registered aliases redirect Pages,
+  OAuth and MCP there before constructing a context. Admitted `/.cms/call/`
+  endpoints retain their registered logical origin for existing authenticated
+  callbacks and Repository credentials, with normal tenant authorization.
+  Ignore caller-supplied forwarding headers for routing;
   preserve the captured TCP peer when rebuilding a scoped Request.
 
 ## Resources and coherence

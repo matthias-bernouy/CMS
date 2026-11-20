@@ -3,10 +3,13 @@ import { HostingError } from "hosting/core/errors";
 import type { HostingDomain, HostingInstallation } from "hosting/interfaces/state";
 import type { HostingDomainStore, HostingInstallationStore } from "hosting/interfaces/stores";
 import { readDomain, readInstallation } from "../state";
+import { getPrimaryElection, reservePrimaryElection, finishPrimaryElection } from "./primary";
+import type { CoordinatedDomain } from "./primary";
+import type { PrimaryDomainElection } from "hosting/interfaces/primary";
 
 export class MongoHostingStore implements HostingDomainStore, HostingInstallationStore {
     private readonly installations: Collection<HostingInstallation>;
-    private readonly domains: Collection<HostingDomain>;
+    private readonly domains: Collection<CoordinatedDomain>;
 
     constructor(db: Db) {
         this.installations = db.collection("ulvia_hosting_installation");
@@ -96,7 +99,7 @@ export class MongoHostingStore implements HostingDomainStore, HostingInstallatio
     }
 
     async getDomain(hostname: string) {
-        const record = await this.domains.findOne({ hostname }, { projection: { _id: 0 } });
+        const record = await this.domains.findOne({ hostname }, { projection: { _id: 0, _primaryElection: 0 } });
         return record === null ? null : readDomain(record);
     }
 
@@ -135,6 +138,7 @@ export class MongoHostingStore implements HostingDomainStore, HostingInstallatio
                 claimId: record.claimId,
                 creationFingerprint: record.creationFingerprint,
                 revision: expectedRevision,
+                _primaryElection: { $exists: false },
             },
             { $set: record },
             { returnDocument: "after", projection: { _id: 0 } },
@@ -152,7 +156,7 @@ export class MongoHostingStore implements HostingDomainStore, HostingInstallatio
         const records = await this.domains
             .find(
                 { instanceId: input.instanceId, ...(input.after === null ? {} : { hostname: { $gt: input.after } }) },
-                { projection: { _id: 0 } },
+                { projection: { _id: 0, _primaryElection: 0 } },
             )
             .sort({ hostname: 1 })
             .limit(input.limit + 1)
@@ -166,12 +170,26 @@ export class MongoHostingStore implements HostingDomainStore, HostingInstallatio
             throw new HostingError("INVALID_INPUT", "Invalid domain page limit");
         }
         const records = await this.domains
-            .find(input.after === null ? {} : { hostname: { $gt: input.after } }, { projection: { _id: 0 } })
+            .find(input.after === null ? {} : { hostname: { $gt: input.after } }, {
+                projection: { _id: 0, _primaryElection: 0 },
+            })
             .sort({ hostname: 1 })
             .limit(input.limit + 1)
             .toArray();
         const items = records.slice(0, input.limit).map(readDomain);
         return { items, nextCursor: records.length > input.limit ? items.at(-1)!.hostname : null };
+    }
+
+    getPrimaryElection(hostname: string) {
+        return getPrimaryElection(this.domains, hostname);
+    }
+
+    reservePrimaryElection(candidate: PrimaryDomainElection) {
+        return reservePrimaryElection(this.domains, candidate);
+    }
+
+    finishPrimaryElection(election: PrimaryDomainElection, committed: boolean) {
+        return finishPrimaryElection(this.domains, election, committed);
     }
 }
 

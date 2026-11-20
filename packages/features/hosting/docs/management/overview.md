@@ -30,6 +30,36 @@ zone grants automatic admission of its apex and descendants on this installation
 Domain changes require `expectedRevision`. Stale operations refuse without
 changing state. The installation's initial Control domain cannot be disabled.
 
+## Elect the primary public domain
+
+Read `instances.get` and `domains.list`. Choose a domain of that exact instance
+whose `state` is `active` and whose TLS is `ready` (or `not-required` for admitted
+local HTTP). Call `instances.set-primary-domain` with `instanceId`, `hostname`,
+`expectedInstanceRevision` and `expectedDomainRevision`. The result returns the
+effective `origin`, the instance `revision` and the current domain revision.
+The domain is already claimed and verified; this operation does not perform DNS
+admission, obtain a certificate or create another instance.
+
+The elected origin becomes the Page, authentication-link, file-URL and MCP
+origin. Other active domains redirect public Pages and OAuth/MCP discovery to
+it, preserving paths and query strings. Existing admitted contract URLs remain
+usable on active aliases to preserve Provider callbacks and origin-bound
+Repository credentials; they retain ordinary Gateway authorization. This does
+not authorize unknown domains or move credentials to another origin.
+
+The primary domain cannot be disabled: elect another first. A domain still used
+as the instance's callback or configured Repository origin also refuses disable;
+changing the public primary does not migrate those independent identities. Control's original
+bootstrap domain remains protected even when another domain is primary.
+Browser sessions are host-bound; reconnect on the new domain when required.
+No Page, account, file, Provider credential or Repository identity is recreated.
+
+Re-electing the current primary is harmless after current authorization checks.
+An interrupted election retains a domain reservation. Retry its exact input to
+fence the previous writer and recover; after a conflict read both revisions
+again. A target domain reserved by an unfinished election refuses disable and
+TLS mutations until the election is recovered. Never guess newer revisions.
+
 Every capability has an HTTP binding and an MCP tool binding. Select the admitted
 contract and use the existing authenticated Gateway transport; no special console
 collection is required. This contract contains no quotas, billing or Edge machine

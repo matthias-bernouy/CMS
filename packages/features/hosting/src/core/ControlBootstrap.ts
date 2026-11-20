@@ -58,7 +58,6 @@ export class ControlBootstrap {
             if (
                 !instance ||
                 instance.idempotencyKey !== installation.controlKey ||
-                instance.cmsUrl !== origin ||
                 instance.status === "disabled" ||
                 !(await this.credentials.read(instance.id))
             ) {
@@ -79,6 +78,17 @@ export class ControlBootstrap {
                     "UNAVAILABLE",
                     "Persisted Control domain is unavailable; operator recovery is required",
                 );
+            }
+            if (instance.cmsUrl !== origin) {
+                const primary = await this.domains.getDomain(hostingOrigin(instance.cmsUrl).hostname);
+                if (
+                    !primary ||
+                    primary.instanceId !== instance.id ||
+                    primary.origin !== instance.cmsUrl ||
+                    (primary.state !== "active" && primary.state !== "verified")
+                ) {
+                    throw new HostingError("UNAVAILABLE", "The elected Control domain is unavailable");
+                }
             }
             return { installation, instance, domain };
         }

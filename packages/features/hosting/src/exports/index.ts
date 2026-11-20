@@ -4,6 +4,13 @@ export { InstanceManagement } from "hosting/core/InstanceManagement";
 export { DomainAdmissionPolicy } from "hosting/core/domains/AdmissionPolicy";
 export type { CreateHostedInstance, HostedInstance } from "hosting/interfaces/management";
 export { DomainRegistry } from "hosting/core/domains/DomainRegistry";
+export { PrimaryDomainManagement } from "hosting/core/domains/PrimaryDomainElection";
+export type {
+    ElectPrimaryDomain,
+    PrimaryDomainElection,
+    PrimaryDomainStore,
+    PrimaryInstanceStore,
+} from "hosting/interfaces/primary";
 export { HostingError } from "hosting/core/errors";
 export { reserveHostingInstallation } from "hosting/core/installation";
 export { domainHostname, hostingOrigin } from "hosting/core/origin";

@@ -23,7 +23,13 @@ async function featureFixture() {
         async () => false,
     );
     const services: HostingServices = {
-        hosting: { authority: f.authority, instances: f.management, domains, zones: f.zones },
+        hosting: {
+            authority: f.authority,
+            instances: f.management,
+            domains,
+            zones: f.zones,
+            primaryDomains: f.primaryDomains,
+        },
     };
     const context = {
         requestId: crypto.randomUUID(),
@@ -38,7 +44,7 @@ async function featureFixture() {
 
 test("hosting compiles as one admitted feature with admin HTTP/MCP bindings and a sensitive bootstrap password", async () => {
     const compiled = await compileContract(hostingFeature);
-    expect(compiled.release.capabilities).toHaveLength(12);
+    expect(compiled.release.capabilities).toHaveLength(13);
     for (const capability of compiled.release.capabilities) {
         expect(capability.access).toBe("admin");
         expect(capability.bindings?.map((binding) => binding.transport)).toEqual(["http", "mcp"]);

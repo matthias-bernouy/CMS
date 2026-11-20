@@ -17,7 +17,15 @@ async function setup() {
     );
     return {
         ...f,
-        services: { hosting: { authority: f.authority, instances: f.management, domains, zones: f.zones } },
+        services: {
+            hosting: {
+                authority: f.authority,
+                instances: f.management,
+                domains,
+                zones: f.zones,
+                primaryDomains: f.primaryDomains,
+            },
+        },
         context: {
             requestId: crypto.randomUUID(),
             siteId: "default",
@@ -28,9 +36,9 @@ async function setup() {
     };
 }
 
-test("Hosting 1.1 publishes four zone HTTP/MCP operations and projects only public DTOs", async () => {
+test("Hosting retains four zone HTTP/MCP operations and projects only public DTOs", async () => {
     const compiled = await compileContract(hostingFeature);
-    expect(compiled.release.version).toBe("1.1.0");
+    expect(compiled.release.version).toBe("1.2.0");
     for (const id of ["zones.claim", "zones.verify", "zones.list", "zones.disable"]) {
         const capability = compiled.release.capabilities.find((entry) => entry.id === id)!;
         expect(capability.access).toBe("admin");

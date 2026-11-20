@@ -37,7 +37,7 @@ export class RouteLease {
         return this.route.controlLease;
     }
 
-    /** A completed command can advance instance revision before its final audit. */
+    /** Drain an in-flight command after its revision/primary election; new ingresses use a new context key. */
     async refresh(): Promise<string> {
         if (!this.renewal) {
             this.renewal = this.client
@@ -47,9 +47,11 @@ export class RouteLease {
                         !current ||
                         current.hostname !== this.route.hostname ||
                         current.origin !== this.route.origin ||
-                        current.canonicalOrigin !== this.route.canonicalOrigin ||
                         current.instanceId !== this.route.instanceId ||
-                        current.domainRevision !== this.route.domainRevision ||
+                        current.domainRevision < this.route.domainRevision ||
+                        ((current.domainRevision !== this.route.domainRevision ||
+                            current.canonicalOrigin !== this.route.canonicalOrigin) &&
+                            current.instanceRevision <= this.route.instanceRevision) ||
                         current.instanceRevision < this.route.instanceRevision
                     ) {
                         throw new Error("The hosting route is no longer active or changed authority");

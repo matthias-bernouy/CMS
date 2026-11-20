@@ -67,7 +67,8 @@ Production runtime for the official Ulvia Provider.
 
 - Startup composes `@bernouy/hosting`, reserves/provisions Control and mounts its
   management services before accepting requests. `ULVIA_CONTROL_ORIGIN` is an
-  explicit canonical origin. `ULVIA_CONTROL_BOOTSTRAP_FILE` names a bounded JSON
+  explicit initial bootstrap origin; keep it stable after a public primary-domain
+  election. `ULVIA_CONTROL_BOOTSTRAP_FILE` names a bounded JSON
   file containing exactly `email` and `password`, supplied by the operator for
   initial provisioning; ready restarts do not read it or reset the administrator.
   `ULVIA_HOSTING_MANAGED_SUFFIXES` is an optional bounded JSON array of operator-

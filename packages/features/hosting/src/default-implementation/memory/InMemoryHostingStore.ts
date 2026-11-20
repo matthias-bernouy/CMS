@@ -2,10 +2,12 @@ import { HostingError } from "hosting/core/errors";
 import { readDomain, readInstallation } from "../state";
 import type { HostingInstallation, HostingDomain } from "hosting/interfaces/state";
 import type { HostingDomainStore, HostingInstallationStore } from "hosting/interfaces/stores";
+import type { PrimaryDomainElection } from "hosting/interfaces/primary";
 
 export class InMemoryHostingStore implements HostingDomainStore, HostingInstallationStore {
     private installation: HostingInstallation | null = null;
     private readonly domains = new Map<string, HostingDomain>();
+    private readonly primaryElections = new Map<string, PrimaryDomainElection>();
 
     async readInstallation() {
         return structuredClone(this.installation);
@@ -77,6 +79,7 @@ export class InMemoryHostingStore implements HostingDomainStore, HostingInstalla
         const current = this.domains.get(record.hostname);
         if (
             !current ||
+            this.primaryElections.has(record.hostname) ||
             current.revision !== expectedRevision ||
             record.revision !== expectedRevision + 1 ||
             current.instanceId !== record.instanceId ||
@@ -112,5 +115,39 @@ export class InMemoryHostingStore implements HostingDomainStore, HostingInstalla
             .slice(0, input.limit + 1);
         const items = records.slice(0, input.limit);
         return structuredClone({ items, nextCursor: records.length > input.limit ? items.at(-1)!.hostname : null });
+    }
+
+    async getPrimaryElection(hostname: string) {
+        return structuredClone(this.primaryElections.get(hostname) ?? null);
+    }
+
+    async reservePrimaryElection(candidate: PrimaryDomainElection) {
+        const pending = this.primaryElections.get(candidate.hostname);
+        if (pending) {
+            return structuredClone(pending);
+        }
+        const domain = this.domains.get(candidate.hostname);
+        if (
+            !domain ||
+            domain.instanceId !== candidate.instanceId ||
+            domain.state !== "active" ||
+            domain.revision !== candidate.expectedDomainRevision
+        ) {
+            throw new HostingError("CONFLICT", "Domain changed before its election reservation");
+        }
+        this.primaryElections.set(candidate.hostname, structuredClone(candidate));
+        return structuredClone(candidate);
+    }
+
+    async finishPrimaryElection(election: PrimaryDomainElection, committed: boolean) {
+        const pending = this.primaryElections.get(election.hostname);
+        const domain = this.domains.get(election.hostname);
+        if (!domain || pending?.token !== election.token) {
+            throw new HostingError("CONFLICT", "Primary election reservation changed");
+        }
+        const result = readDomain({ ...domain, revision: domain.revision + (committed ? 1 : 0) });
+        this.domains.set(domain.hostname, result);
+        this.primaryElections.delete(domain.hostname);
+        return structuredClone(result);
     }
 }

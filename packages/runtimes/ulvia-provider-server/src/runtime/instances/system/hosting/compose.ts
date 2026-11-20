@@ -8,6 +8,7 @@ import {
     DomainAdmissionPolicy,
     DomainRegistry,
     InstanceManagement,
+    PrimaryDomainManagement,
     ZoneRegistry,
 } from "@bernouy/hosting";
 import { MongoHostingStore, MongoHostingZoneStore } from "@bernouy/hosting/mongo";
@@ -84,6 +85,14 @@ export async function composeHosting(options: {
         authority,
         domains,
         zones,
+        primaryDomains: new PrimaryDomainManagement(
+            store,
+            {
+                getInstance: (id) => instances.get(id),
+                setPublicOrigin: (id, revision, origin) => instances.setPublicOrigin(id, revision, origin),
+            },
+            authority,
+        ),
         instances: new InstanceManagement(lifecycle, store, store, authority, admission, proofSecret),
     };
     const delivery = await composeTlsDelivery(

@@ -18,7 +18,7 @@ const releaseDigests = {
     "ulvia/cms.observability": "sha256:113758c81e4cdc774bba95c8f136a3a9650be5b6d59412ef51383bd15dd2de45",
     "ulvia/provider.connections": "sha256:0cfc85a809d4078e5e95adc94d023d65fa6d626074093f1a880090ce02b8f9f2",
     "ulvia/repository": "sha256:216131fbd6fa34c015c8dbdb1e1954d6217ba7b85e44d6f51d137d5b21979409",
-    "ulvia/cms.hosting": "sha256:89bfdbd3cbc8e66b334f2e93986008185036118d217dd76837433bc3a4b10d66",
+    "ulvia/cms.hosting": "sha256:3fff2f35423060e511f08519f0c48ee4e6413352fc04f55bbe47f15112f4d766",
     "ulvia/cms.installations": "sha256:4d37e1ef5dff76b3833d4f555f21cb4d99ede2c5bb8b9822e0ec909e5d12449c",
     "ulvia/provider.tls": "sha256:41dbd3a81aa4d4d6eea2053c5dc7f097ac7003cd683a0c86341fbc4fb5bafa01",
     "ulvia/provider.routing": "sha256:0e312b93bdd939df59e4b837aba02be5f0b750485cf88db41fcec0411cdd9437",
@@ -54,6 +54,21 @@ test("Hosting 1.0 remains executable with its eight exact capabilities before ex
     );
     expect(hosting!.contracts[0]!.release.capabilities).toHaveLength(8);
     expect(hosting!.contracts[0]!.release.capabilities.some(({ id }) => id.startsWith("zones."))).toBe(false);
+});
+
+test("Hosting 1.1 retains its twelve exact capabilities and exposes primary election only after explicit upgrade", async () => {
+    const retained = (await compileRetainedFeatures()).find((build) =>
+        build.implementations.some((pin) => pin.contractId === "ulvia/cms.hosting" && pin.version === "1.1.0"),
+    )!.contracts[0]!;
+    expect(retained.digest).toBe("sha256:89bfdbd3cbc8e66b334f2e93986008185036118d217dd76837433bc3a4b10d66");
+    expect(retained.release.capabilities).toHaveLength(12);
+    const current = (await compileOfficialFeatures()).contracts.find(
+        ({ release }) => release.contractId === "ulvia/cms.hosting",
+    )!;
+    expect(current.release.capabilities.filter(({ id }) => id !== "instances.set-primary-domain")).toEqual([
+        ...retained.release.capabilities,
+    ]);
+    expect(retained.release.capabilities.some(({ id }) => id === "instances.set-primary-domain")).toBe(false);
 });
 
 test("prior Content, Repository, Authoring and Installations releases retain exact execution pins before explicit upgrades", async () => {

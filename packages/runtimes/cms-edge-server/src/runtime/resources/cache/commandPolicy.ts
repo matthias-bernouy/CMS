@@ -10,6 +10,7 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
     "ulvia/cms.hosting": {
         "instances.create": "neutral",
         "instances.disable": "neutral",
+        "instances.set-primary-domain": "neutral",
         "domains.claim": "neutral",
         "domains.verify": "neutral",
         "domains.disable": "neutral",

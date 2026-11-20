@@ -7,6 +7,7 @@ import {
 } from "@bernouy/ulvia-provider";
 import type { Collection, Db } from "mongodb";
 import { assertInstanceCreationAuthority, assertInstanceRepository } from "@bernouy/hosting/instances";
+import { hostingOrigin, HostingError } from "@bernouy/hosting";
 
 export type ProviderInstanceDocument = Omit<ProviderInstanceRecord, "createdAt" | "updatedAt"> & {
     createdAt: Date;
@@ -45,6 +46,35 @@ export class MongoProviderInstanceRegistry implements ProviderInstanceRegistry {
     async get(instanceId: string): Promise<ProviderInstanceRecord | null> {
         const document = await this.#instances.findOne({ id: instanceId });
         return document ? serializeProviderInstance(document) : null;
+    }
+
+    async setPublicOrigin(
+        instanceId: string,
+        expectedRevision: number,
+        origin: string,
+    ): Promise<ProviderInstanceRecord> {
+        const canonical = hostingOrigin(origin).origin;
+        if (canonical !== origin) {
+            throw new HostingError("INVALID_INPUT", "The elected origin must be canonical");
+        }
+        const current = await this.get(instanceId);
+        if (!current || current.status !== "ready" || current.revision !== expectedRevision) {
+            throw new HostingError("CONFLICT", "Instance changed during primary election");
+        }
+        const record = await this.#instances.findOneAndUpdate(
+            {
+                id: instanceId,
+                revision: expectedRevision,
+                status: "ready",
+                creationAuthority: current.creationAuthority,
+            },
+            { $set: { cmsUrl: origin, updatedAt: new Date() }, $inc: { revision: 1 } },
+            { returnDocument: "after" },
+        );
+        if (!record) {
+            throw new HostingError("CONFLICT", "Instance changed during primary election");
+        }
+        return serializeProviderInstance(record);
     }
 
     async getByIdempotencyKey(idempotencyKey: string): Promise<ProviderInstanceRecord | null> {

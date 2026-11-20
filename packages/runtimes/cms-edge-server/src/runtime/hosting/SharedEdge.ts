@@ -58,7 +58,11 @@ export class SharedEdge {
             if (origin.hostname !== hostname || origin.host !== normalized.host) {
                 return refusal(404);
             }
-            if (route.canonicalOrigin !== route.origin || url.host !== origin.host) {
+            // Admitted contract endpoints retain their original logical origin for
+            // Provider callbacks and origin-bound Repository credentials. Public
+            // pages and OAuth/MCP discovery still use the elected canonical host.
+            const contractCall = url.pathname.startsWith("/.cms/call/");
+            if ((!contractCall && route.canonicalOrigin !== route.origin) || url.host !== origin.host) {
                 const canonical = new URL(route.canonicalOrigin);
                 canonical.pathname = url.pathname;
                 canonical.search = url.search;

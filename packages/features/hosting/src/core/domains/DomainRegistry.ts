@@ -64,6 +64,16 @@ export class DomainRegistry {
         await this.authority.assertAdministrator(actor);
         const current = await this.requireDomain(hostname, expectedRevision);
         await this.authority.assertDomainCanBeDisabled(actor, current);
+        const instance = await this.requireInstance(current.instanceId);
+        if (instance.cmsUrl === current.origin) {
+            throw new HostingError("CONFLICT", "Elect another primary domain before disabling this domain");
+        }
+        if (
+            instance.gatewayUrl === current.origin ||
+            (instance.repository?.configured && instance.repository.url === current.origin)
+        ) {
+            throw new HostingError("CONFLICT", "The domain still owns a callback or Repository origin");
+        }
         return this.store.replaceDomain(expectedRevision, {
             ...current,
             state: "disabled",

@@ -18,6 +18,9 @@ export interface HostingDomainStore {
 
 export interface HostingInstanceState {
     readonly cmsUrl: string;
+    /** Runtime-owned logical origins, when supplied by the instance registry. */
+    readonly gatewayUrl?: string;
+    readonly repository?: { readonly url: string; readonly configured: boolean };
     readonly id: string;
     readonly revision: number;
     readonly status: "provisioning" | "upgrading" | "ready" | "failed" | "disabled";

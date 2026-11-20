@@ -35,12 +35,42 @@ disabled zone rotates its proof. See the [zone workflow](../../packages/features
 
 ## Contract boundaries
 
-`ulvia/cms.hosting` has twelve HTTP/MCP instance, domain and zone operations. Creation
+`ulvia/cms.hosting` has thirteen HTTP/MCP instance, domain and zone operations. Creation
 reserves the primary hostname and a unique request identity before provisioning,
 so a conflict does not leave an orphan tenant. Exact retries reuse one persisted
 identity; returned instance status distinguishes pending from ready. Lists use
 bounded cursor pages. Management protects Control, its initial domain and an
 already enabled exact Hosting selection.
+
+Hosting 1.2 adds `instances.set-primary-domain`. It selects an already active
+domain of the same ready instance using both expected revisions. The single
+instance `cmsUrl` pointer is authoritative; no per-domain primary flags or domain
+list scans participate in routing. Election reserves the target against disable
+and TLS mutations, compare-and-sets the instance origin/revision, then advances
+the target domain revision and releases its reservation. Interrupted retries
+fence the previous instance writer before releasing coordination state. This
+works on standalone Mongo without requiring a cross-collection transaction.
+
+Public Pages and OAuth/MCP discovery on active aliases redirect to the elected
+origin. Admitted `/.cms/call/` endpoints remain scoped to their registered alias
+and normal Gateway authorization, preserving existing logical Provider callback
+and Repository origins without forwarding credentials across origins. Instance
+revision changes rebuild Provider/Edge contexts; old control leases refuse, with
+fresh same-instance renewal available to drain in-flight command completion.
+Control's original bootstrap origin remains persisted and protected independently
+of its current public primary. Sessions remain host-bound.
+Keep `ULVIA_CONTROL_ORIGIN` at that original bootstrap origin when restarting;
+select the public primary through Hosting rather than changing this setting.
+On restart, the elected Control claim must still belong to Control and be active
+or verified. Temporary TLS failure keeps the Provider available for certificate
+reconciliation and administrator recovery; it does not activate that domain's route.
+
+Election changes runtime-generated public origins, not editorial data. Content's
+explicit `site.host` still owns SEO canonicals and sitemap snapshots; update it
+through the existing Content workflow when migrating those URLs. Absolute links
+already authored in Pages, old signed URLs and external OAuth clients are not
+rewritten. Keep active callback/Repository domains available and reconnect
+browser/MCP sessions at the new public origin when necessary.
 
 Instance records persist immutable creation provenance: an operator entry point
 or the original Control administrator actor. The creation fingerprint binds this
@@ -85,8 +115,9 @@ Each ingress resolves the hostname before using a context or resource cache.
 A context key includes hostname, canonical/public origins, instance identity and
 domain/instance revisions. Loads coalesce and failed loads release capacity.
 Contexts hold separate Gateways, route caches, public caches, OAuth/MCP origins,
-cookie policies and bounded diagnostic sinks. Registered aliases redirect to the
-canonical CMS origin. Forwarding headers do not select a tenant.
+cookie policies and bounded diagnostic sinks. Public Pages and OAuth/MCP on aliases
+redirect to the canonical CMS origin; admitted contract calls retain their
+registered logical origin. Forwarding headers do not select a tenant.
 
 Provider and Edge runtime leases stay held through response body completion,
 cancellation or abort. Shutdown stops the listener before draining contexts.

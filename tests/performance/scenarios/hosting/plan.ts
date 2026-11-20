@@ -3,6 +3,7 @@ import { requiredVariants } from "../../capabilities/policies";
 import { hostingContexts } from "./context";
 import { prepareHostingInstance } from "./instances";
 import { prepareHostingDomain } from "./domains";
+import { preparePrimaryElection } from "./primary";
 import type { CapabilityInventory } from "../../capabilities/types";
 
 const HOSTING_CAPABILITIES = [
@@ -10,6 +11,7 @@ const HOSTING_CAPABILITIES = [
     "instances.list",
     "instances.get",
     "instances.disable",
+    "instances.set-primary-domain",
     "domains.claim",
     "domains.list",
     "domains.verify",
@@ -43,9 +45,11 @@ export function hostingScenarios(
             [capability],
             async (environment, id, obligation) => {
                 const context = await contextFor(environment);
-                return id.startsWith("instances.")
-                    ? prepareHostingInstance(context, id, obligation.binding, obligation.variant)
-                    : prepareHostingDomain(context, id, obligation.binding, obligation.variant);
+                return id === "instances.set-primary-domain"
+                    ? preparePrimaryElection(context, obligation.binding)
+                    : id.startsWith("instances.")
+                      ? prepareHostingInstance(context, id, obligation.binding, obligation.variant)
+                      : prepareHostingDomain(context, id, obligation.binding, obligation.variant);
             },
             requiredVariants(target),
         );

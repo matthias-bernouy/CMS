@@ -80,6 +80,12 @@ export class MemoryRegistry implements ProviderInstanceRegistry {
     async get(id: string) {
         return id === this.record.id ? this.record : null;
     }
+    async setPublicOrigin(id: string, revision: number, origin: string) {
+        expect(id).toBe(this.record.id);
+        expect(revision).toBe(this.record.revision);
+        this.record = { ...this.record, cmsUrl: origin, revision: revision + 1 };
+        return this.record;
+    }
     async getByIdempotencyKey() {
         return null;
     }
