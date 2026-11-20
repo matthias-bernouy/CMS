@@ -58,6 +58,7 @@
         "typescript": "^7.0.2",
         "@bernouy/resource-identity": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
-        "@bernouy/ulvia-providers": "workspace:*"
+        "@bernouy/ulvia-providers": "workspace:*",
+        "linkedom": "^0.18.15"
     }
 }
