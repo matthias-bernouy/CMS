@@ -32,13 +32,16 @@ export class MongoSiteUpgradeStorage extends MongoSiteWriteFence implements Site
     async readResourceRevision(siteId: string): Promise<string> {
         const revisions = this.database.collection<ResourceRevisionDocument>("site_resource_revisions");
         const before = await revisions.findOne({ _id: siteId });
-        const maintenance = await this.database
-            .collection<{ _id: string; maintenance?: unknown }>("site_upgrade_maintenance")
-            .findOne({ _id: siteId }, { projection: { maintenance: 1 } });
+        // Both checks stay between the ordered revision reads. They are independent.
         // Even expired permits block reuse: a paused writer is not necessarily dead.
-        const permit = await this.database
-            .collection("site_write_permits")
-            .findOne({ siteId, affectsResources: { $ne: false } }, { projection: { _id: 1 } });
+        const [maintenance, permit] = await Promise.all([
+            this.database
+                .collection<{ _id: string; maintenance?: unknown }>("site_upgrade_maintenance")
+                .findOne({ _id: siteId }, { projection: { maintenance: 1 } }),
+            this.database
+                .collection("site_write_permits")
+                .findOne({ siteId, affectsResources: { $ne: false } }, { projection: { _id: 1 } }),
+        ]);
         const after = await revisions.findOne({ _id: siteId });
         for (const value of [before, after]) {
             if (value && (typeof value.revision !== "string" || !/^[0-9a-f-]{36}$/u.test(value.revision))) {
