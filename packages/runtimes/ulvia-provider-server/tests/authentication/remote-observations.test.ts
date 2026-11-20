@@ -5,7 +5,7 @@ import { RefreshingProviderRoutes } from "../../src/runtime/gateway/providers/Re
 async function fixture() {
     let now = Date.now();
     const route = structuredClone(await gatewayRoute());
-    route.installation.observation!.observedAt = new Date(now - 31_000).toISOString();
+    route.installation.observation!.observedAt = new Date(now - 61_000).toISOString();
     let lookups = 0;
     let probes = 0,
         failures = 0;
@@ -55,7 +55,7 @@ async function fixture() {
             read = value;
         },
         tick: () => {
-            now += 31_000;
+            now += 61_000;
         },
         lookups: () => lookups,
         probes: () => probes,
@@ -143,4 +143,66 @@ test("cold invocation bursts share route resolution and reread state after compl
     const burst = await Promise.all(Array.from({ length: 96 }, () => f.routes.resolve("site-a", "ulvia/catalog")));
     expect(burst.every((route) => route!.installation.installation.status === "disabled")).toBeTrue();
     expect(f.lookups()).toBe(3);
+});
+
+test("valid observations refresh in the background; hard expiry still waits", async () => {
+    const f = await fixture();
+    f.route.installation.observation!.observedAt = new Date(Date.now() - 31_000).toISOString();
+    let release!: () => void;
+    f.setRead(async () => {
+        await new Promise<void>((resolve) => {
+            release = resolve;
+        });
+        return f.route.installation.observation!.report;
+    });
+    const calls = await Promise.all(Array.from({ length: 96 }, () => f.routes.resolve("site-a", "ulvia/catalog")));
+    expect(calls.every((route) => route!.installation.revision === 2)).toBeTrue();
+    expect(f.probes()).toBe(1);
+    f.tick();
+    let settled = false;
+    const expired = f.routes.resolve("site-a", "ulvia/catalog").then((route) => {
+        settled = true;
+        return route;
+    });
+    await Bun.sleep(0);
+    expect(settled).toBeFalse();
+    release();
+    expect((await expired)!.installation.revision).toBe(3);
+});
+
+test("a failed background renewal retains backoff without extending hard validity", async () => {
+    const f = await fixture();
+    f.route.installation.observation!.observedAt = new Date(Date.now() - 31_000).toISOString();
+    f.fail();
+    await f.routes.resolve("site-a", "ulvia/catalog");
+    await Bun.sleep(0);
+    await f.routes.resolve("site-a", "ulvia/catalog");
+    expect(f.probes()).toBe(1);
+    expect(f.failures()).toBe(1);
+    f.tick();
+    const expired = await f.routes.resolve("site-a", "ulvia/catalog");
+    expect(expired!.installation.observation!.observedAt).toBe(f.route.installation.observation!.observedAt);
+    expect(f.probes()).toBe(2);
+});
+
+test("background probes have a global pending bound and remain isolated by instance", async () => {
+    const f = await fixture();
+    f.route.installation.observation!.observedAt = new Date(Date.now() - 31_000).toISOString();
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => {
+        release = resolve;
+    });
+    f.setRead(async () => {
+        await pending;
+        return f.route.installation.observation!.report;
+    });
+    await Promise.all(Array.from({ length: 80 }, (_, index) => f.routes.resolve(`site-${index}`, "ulvia/catalog")));
+    expect(f.probes()).toBe(64);
+    // The same installation ID in another instance must have its own flight.
+    expect(f.probes()).toBeGreaterThan(1);
+    release();
+    await Bun.sleep(0);
+    await f.routes.resolve("site-extra", "ulvia/catalog");
+    // Successful refreshes can make the fixture current; failed CAS probes have already released their slots.
+    expect(f.failures()).toBe(63);
 });

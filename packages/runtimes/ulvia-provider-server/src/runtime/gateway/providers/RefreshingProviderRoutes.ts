@@ -42,8 +42,8 @@ export class RefreshingProviderRoutes implements GatewayRouteResolver {
                 const observedAt = Date.parse(route?.installation.observation?.observedAt ?? "");
                 const now = (this.options.now ?? Date.now)();
                 state.nextAt =
-                    Number.isFinite(observedAt) && observedAt <= now && now - observedAt < 30_000
-                        ? observedAt + 30_000
+                    Number.isFinite(observedAt) && observedAt <= now && now - observedAt < 25_000
+                        ? observedAt + 25_000
                         : now + 5_000;
             })
             .finally(() => {
@@ -75,18 +75,26 @@ export class RefreshingProviderRoutes implements GatewayRouteResolver {
         }
         const now = (this.options.now ?? Date.now)();
         const age = now - Date.parse(route.installation.observation?.observedAt ?? "");
-        if (Number.isFinite(age) && age >= 0 && age < 30_000) {
+        if (Number.isFinite(age) && age >= 0 && age < 25_000) {
             return route;
         }
         const key = `${siteId}/${route.installation.installation.id}`;
-        const pending = this.flights.get(key);
-        if (pending) {
-            await pending;
+        const flight = this.flights.get(key) ?? this.startRefresh(route, key, now);
+        // Renew before the Gateway's 60-second hard validity limit without blocking live traffic.
+        if (Number.isFinite(age) && age >= 0 && age < 60_000) {
+            return route;
+        }
+        if (flight) {
+            await flight;
             reads?.clear();
             return this.base.resolve(siteId, contractId, reads);
         }
-        if (now < (this.next.get(key) ?? 0)) {
-            return route;
+        // Exhaustion/backoff never extends validity: the Gateway still checks the observation age.
+        return route;
+    }
+    private startRefresh(route: GatewayRoute, key: string, now: number): Promise<void> | undefined {
+        if (now < (this.next.get(key) ?? 0) || this.flights.size >= 64) {
+            return undefined;
         }
         if (!this.next.has(key) && this.next.size >= 512) {
             this.next.delete(this.next.keys().next().value!);
@@ -95,9 +103,9 @@ export class RefreshingProviderRoutes implements GatewayRouteResolver {
             this.flights.delete(key);
         });
         this.flights.set(key, flight);
-        await flight;
-        reads?.clear();
-        return this.base.resolve(siteId, contractId, reads);
+        // Advisory refresh failures must not become unhandled rejections on the background path.
+        void flight.catch(() => undefined);
+        return flight;
     }
     isCurrent(route: GatewayRoute) {
         return this.base.isCurrent(route);
