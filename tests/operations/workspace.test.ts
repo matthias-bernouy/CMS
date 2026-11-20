@@ -14,6 +14,11 @@ test("verify retains functional acceptance and static performance guards without
     expect(steps.find(({ env }) => env?.ULVIA_RUN_EDGE_SMOKE === "1")?.args).toContain(
         "packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts",
     );
+    expect(steps.find(({ env }) => env?.ULVIA_RUN_COLLECTION_STYLE_BROWSER === "1")).toMatchObject({
+        args: ["bun", "test", "./tests/integration/collections/animations.browser.test.ts"],
+        continueOnFailure: true,
+    });
+    expect(workspaceSteps("test", []).some(({ env }) => env?.ULVIA_RUN_COLLECTION_STYLE_BROWSER === "1")).toBe(false);
     expect(steps.find(({ env }) => env?.ULVIA_RUN_CONTENT_LIFECYCLE === "1")).toMatchObject({
         args: ["bun", "test", "./tests/integration/content"],
         continueOnFailure: true,

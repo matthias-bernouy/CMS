@@ -32,6 +32,11 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
         browser,
         { args: ["bun", "test", ...tests], continueOnFailure: true },
         {
+            args: ["bun", "test", "./tests/integration/collections/animations.browser.test.ts"],
+            env: { ULVIA_RUN_COLLECTION_STYLE_BROWSER: "1" },
+            continueOnFailure: true,
+        },
+        {
             args: ["bun", "test", "./tests/integration/content"],
             env: { ULVIA_RUN_CONTENT_LIFECYCLE: "1" },
             continueOnFailure: true,
