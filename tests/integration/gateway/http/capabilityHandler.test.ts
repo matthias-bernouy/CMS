@@ -89,7 +89,9 @@ test("serves a public binary capability without a Page referer", async () => {
         },
     });
 
-    const response = await handler(new Request("http://site/.cms/call/ulvia/catalog/files/photo-1"));
+    const response = await handler(
+        new Request("http://site/.cms/call/ulvia/catalog/files/photo-1", { headers: { cookie: "session=present" } }),
+    );
 
     expect(response.status).toBe(200);
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));

@@ -3,7 +3,14 @@ import { CmsFilesError, createFileAccess, validFileAccess } from "files/core/cre
 import { NamespaceAuthority } from "files/core/NamespaceAuthority";
 import { parseRange } from "files/core/streams";
 import { boundedText } from "files/core/validation";
-import type { CmsFileRead, CmsFilesStore, FileRecord, FileReference, FileVariant } from "files/interfaces";
+import type {
+    CmsFileRead,
+    CmsFilesStore,
+    FileRecord,
+    FileReference,
+    FileVariant,
+    FileReadConditions,
+} from "files/interfaces";
 
 export class FileAccess {
     readonly #signingKey: Uint8Array;
@@ -109,21 +116,40 @@ export class FileAccess {
         rangeHeader?: string,
         ifRange?: string,
         variant?: FileVariant,
+        conditions: FileReadConditions = {},
     ): Promise<CmsFileRead> {
         if (file.visibility === "private" && !(await validFileAccess(file, access, this.#signingKey, this.now()))) {
             throw new CmsFilesError("NOT_AUTHORIZED", 403);
         }
         const size = variant?.size ?? file.size;
         const etag = '"' + file.generation + (variant ? `-${variant.profile}-w${variant.width}` : "") + '"';
-        const range = rangeHeader && (!ifRange || ifRange === etag) ? parseRange(rangeHeader, size) : undefined;
-        const stream = await this.blobs.get(variant?.blobKey ?? file.blobKey, range ? { range } : undefined);
+        const notModified = conditions.ifNoneMatch?.split(",").some((value) => {
+            const tag = value.trim();
+            return tag === "*" || tag.replace(/^W\//u, "") === etag;
+        });
+        const range =
+            !notModified && rangeHeader && (!ifRange || ifRange === etag) ? parseRange(rangeHeader, size) : undefined;
+        const key = variant?.blobKey ?? file.blobKey;
+        let stream: ReadableStream<Uint8Array> | null;
+        if (conditions.metadataOnly || notModified) {
+            // Metadata alone cannot prove the blob still exists; keep missing-byte failures unchanged.
+            stream = (await this.blobs.head(key))
+                ? new ReadableStream({
+                      start(controller) {
+                          controller.close();
+                      },
+                  })
+                : null;
+        } else {
+            stream = await this.blobs.get(key, range ? { range } : undefined);
+        }
         if (!stream) {
             throw new CmsFilesError("NOT_FOUND", 404);
         }
         return {
             file,
             stream,
-            status: range ? 206 : 200,
+            status: notModified ? 304 : range ? 206 : 200,
             contentLength: range ? range.end - range.start + 1 : size,
             ...(range ? { contentRange: "bytes " + range.start + "-" + range.end + "/" + size } : {}),
             etag,

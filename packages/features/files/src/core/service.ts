@@ -118,16 +118,16 @@ export class CmsFilesService {
         return this.#files.listRepresentations(input);
     }
 
-    readRepresentation(input: Parameters<FileCatalog["readRepresentation"]>[0]) {
-        return this.#files.readRepresentation(input);
+    readRepresentation(...args: Parameters<FileCatalog["readRepresentation"]>) {
+        return this.#files.readRepresentation(...args);
     }
 
     signRepresentations(input: Parameters<FileCatalog["signRepresentations"]>[0]) {
         return this.#files.signRepresentations(input);
     }
 
-    readFile(input: Parameters<FileCatalog["read"]>[0]) {
-        return this.#files.read(input);
+    readFile(...args: Parameters<FileCatalog["read"]>) {
+        return this.#files.read(...args);
     }
 
     deleteFile(namespaceId: string, namespaceKey: string, fileId: string) {

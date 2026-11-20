@@ -88,10 +88,16 @@ export interface FileDerivativeScheduler {
     enqueue(file: FileRecord): void;
 }
 
+/** Trusted HTTP delivery conditions, independent of business capability input. */
+export interface FileReadConditions {
+    readonly metadataOnly?: boolean;
+    readonly ifNoneMatch?: string;
+}
+
 export interface CmsFileRead {
     readonly file: FileRecord;
     readonly stream: ReadableStream<Uint8Array>;
-    readonly status: 200 | 206;
+    readonly status: 200 | 206 | 304;
     readonly contentLength: number;
     readonly contentRange?: string;
     readonly etag: string;

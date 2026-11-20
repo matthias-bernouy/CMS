@@ -2,7 +2,7 @@ import { CmsFilesError } from "files/core/credentials";
 import { FileAccess } from "files/core/FileAccess";
 import { NamespaceAuthority } from "files/core/NamespaceAuthority";
 import { boundedText } from "files/core/validation";
-import type { CmsFileRead, CmsFilesStore } from "files/interfaces";
+import type { CmsFileRead, CmsFilesStore, FileReadConditions } from "files/interfaces";
 
 export class FileCatalog {
     constructor(
@@ -92,15 +92,18 @@ export class FileCatalog {
         };
     }
 
-    async readRepresentation(input: {
-        fileId: string;
-        generation: string;
-        profile: "thumbnail" | "responsive";
-        width: number;
-        access?: string;
-        range?: string;
-        ifRange?: string;
-    }): Promise<CmsFileRead> {
+    async readRepresentation(
+        input: {
+            fileId: string;
+            generation: string;
+            profile: "thumbnail" | "responsive";
+            width: number;
+            access?: string;
+            range?: string;
+            ifRange?: string;
+        },
+        conditions?: FileReadConditions,
+    ): Promise<CmsFileRead> {
         const file = await this.access.requiredFile(input.fileId, input.generation);
         const variant = file.variants?.find(
             (candidate) => candidate.profile === input.profile && candidate.width === input.width,
@@ -108,7 +111,7 @@ export class FileCatalog {
         if (!variant) {
             throw new CmsFilesError("NOT_FOUND", 404);
         }
-        return this.access.read(file, input.access, input.range, input.ifRange, variant);
+        return this.access.read(file, input.access, input.range, input.ifRange, variant, conditions);
     }
 
     async signRepresentations(input: Parameters<FileAccess["sign"]>[0]) {
@@ -127,15 +130,18 @@ export class FileCatalog {
         };
     }
 
-    async read(input: {
-        fileId: string;
-        generation: string;
-        access?: string;
-        range?: string;
-        ifRange?: string;
-    }): Promise<CmsFileRead> {
+    async read(
+        input: {
+            fileId: string;
+            generation: string;
+            access?: string;
+            range?: string;
+            ifRange?: string;
+        },
+        conditions?: FileReadConditions,
+    ): Promise<CmsFileRead> {
         const file = await this.access.requiredFile(input.fileId, input.generation);
-        return this.access.read(file, input.access, input.range, input.ifRange);
+        return this.access.read(file, input.access, input.range, input.ifRange, undefined, conditions);
     }
 
     async delete(namespaceId: string, namespaceKey: string, fileId: string): Promise<void> {

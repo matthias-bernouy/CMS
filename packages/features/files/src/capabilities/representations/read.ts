@@ -39,13 +39,19 @@ export const readRepresentation = defineCapability({
     input: readRepresentationInputSchema,
     output: readFileOutputSchema,
     errors,
-    execute: async ({ input, services }) =>
+    execute: async ({ input, services, context }) =>
         binaryResponse(
-            await services.files.readRepresentation({
-                ...input,
-                access: input.access ?? undefined,
-                range: input.range ?? undefined,
-                ifRange: input.ifRange ?? undefined,
-            }),
+            await services.files.readRepresentation(
+                {
+                    ...input,
+                    access: input.access ?? undefined,
+                    range: input.range ?? undefined,
+                    ifRange: input.ifRange ?? undefined,
+                },
+                {
+                    metadataOnly: context.http?.transportRequest?.method === "HEAD",
+                    ifNoneMatch: context.http?.headers.get("if-none-match") ?? undefined,
+                },
+            ),
         ),
 });

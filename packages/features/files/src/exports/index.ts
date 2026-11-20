@@ -6,6 +6,7 @@ export {
 export { CmsFilesError } from "files/core/credentials";
 export type {
     CmsFileRead,
+    FileReadConditions,
     CmsFilesStore,
     FileRecord,
     FileReference,

@@ -38,13 +38,19 @@ export const readFile = defineCapability({
     input: readFileInputSchema,
     output: readFileOutputSchema,
     errors,
-    execute: async ({ input, services }) =>
+    execute: async ({ input, services, context }) =>
         binaryResponse(
-            await services.files.readFile({
-                ...input,
-                access: input.access ?? undefined,
-                range: input.range ?? undefined,
-                ifRange: input.ifRange ?? undefined,
-            }),
+            await services.files.readFile(
+                {
+                    ...input,
+                    access: input.access ?? undefined,
+                    range: input.range ?? undefined,
+                    ifRange: input.ifRange ?? undefined,
+                },
+                {
+                    metadataOnly: context.http?.transportRequest?.method === "HEAD",
+                    ifNoneMatch: context.http?.headers.get("if-none-match") ?? undefined,
+                },
+            ),
         ),
 });

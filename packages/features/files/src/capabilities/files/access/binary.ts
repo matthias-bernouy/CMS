@@ -4,11 +4,11 @@ import type { CmsFileRead } from "files/interfaces";
 export async function binaryResponse(read: CmsFileRead): Promise<Response> {
     try {
         const safe = read.file.name.replace(/[\r\n"\\]/gu, "_");
-        return new Response(read.stream, {
+        return new Response(read.status === 304 ? null : read.stream, {
             status: read.status,
             headers: {
                 "content-type": read.contentType,
-                "content-length": String(read.contentLength),
+                ...(read.status === 304 ? {} : { "content-length": String(read.contentLength) }),
                 etag: read.etag,
                 "cache-control": read.cacheControl,
                 "accept-ranges": "bytes",
