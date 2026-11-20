@@ -6,7 +6,7 @@ import type {
     GatewayResult,
 } from "cms-gateway/invocation/interfaces/Invocation";
 
-export type McpInvocationContext = Readonly<{ siteId: string; actor: GatewayActor }>;
+export type McpInvocationContext = Readonly<{ siteId: string; actor: GatewayActor; signal?: AbortSignal }>;
 export type McpResourceLink = Readonly<{
     type: "resource_link";
     uri: string;
@@ -15,12 +15,18 @@ export type McpResourceLink = Readonly<{
     size?: number;
 }>;
 export type McpToolResult = Readonly<{
-    content: readonly (McpResourceLink | { type: "text"; text: string })[];
+    content: readonly (
+        | McpResourceLink
+        | { type: "text"; text: string }
+        | { type: "image"; mimeType: string; data: string }
+    )[];
     structuredContent?: Record<string, unknown>;
     isError?: boolean;
 }>;
 
 export interface CapabilityMcpOptions {
+    /** Opt-in bounded inline images; other binary results retain resource-link transport. */
+    readonly inlineImageBytes?: number;
     readonly invoker: Pick<GatewayInvoker, "invoke">;
     readonly onMutationSuccess?: (value: { contractId: string; capabilityId: string }) => void | Promise<void>;
     /** Return exact admitted releases available for this trusted host scope. Maximum 1024 capabilities. */

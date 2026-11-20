@@ -17,6 +17,7 @@ Usage:
   ulvia reset --yes
   ulvia release <resource-directory> [--recursive]
   ulvia preview <collection-directory> --output <new-directory> [--dependency <directory>] [--no-screenshots] [--serve]
+  ulvia capture-worker --socket <absolute-path> [--browser-path <absolute-path>]
   ulvia push <publisher/id@version | all> [--repository <url>]
   ulvia pull <kind> <publisher/id@version> --repository <url>
   ulvia yank <kind> <publisher/id@version> --repository <url> --reason <text>
@@ -35,6 +36,7 @@ Commands:
   upgrade      Deploy one coherent stack release (Provider, Edges, Caddy and MongoDB)
   reset        Delete all instances, services data, and repository releases after --yes
   preview      Generate example frames, captures, and a local explorer
+  capture-worker Run the native private Playwright worker independently of CMS services
   release      Validate and store one resource or a recursive resource batch
   push         Publish one local release or all non-yanked local releases
   pull         Validate and store one exact remote release locally
@@ -68,6 +70,11 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     }
     if (command === "--version" || command === "-v") {
         log(CLI_VERSION);
+        return;
+    }
+    if (command === "capture-worker") {
+        const { captureWorkerCommand } = await import("./capture-worker/command");
+        await captureWorkerCommand(args.slice(1), log);
         return;
     }
     if (

@@ -5,6 +5,7 @@ export const CLI_DOCUMENTATION = [
     { source: "packages/runtimes/ulvia-cli/README.md", target: "README.md" },
     { source: "docs/installation/README.md", target: "INSTALLATION.md" },
     { source: "docs/architecture/shared-hosting.md", target: "SHARED-HOSTING.md" },
+    { source: "docs/development/visual-captures.md", target: "VISUAL-CAPTURES.md" },
 ] as const;
 
 /** Keep shipped guides local; pin other source documentation links to the build revision. */

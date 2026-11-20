@@ -32,3 +32,8 @@ export {
     type CollectionExampleRenderOptions,
     type CollectionExampleFrame,
 } from "repository/collections/tooling/examples/render";
+
+export {
+    exampleCaptureDocument,
+    installedExampleCaptureDocument,
+} from "repository/collections/tooling/examples/capture";

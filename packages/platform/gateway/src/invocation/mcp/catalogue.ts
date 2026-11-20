@@ -1,3 +1,4 @@
+import { supportsInlineImage } from "./images";
 import { capabilityBindings } from "@bernouy/ulvia-contracts/bindings";
 import type { AdmittedContractRelease } from "@bernouy/ulvia-contracts";
 import { capabilityToolName } from "./tools";
@@ -7,6 +8,7 @@ export function mcpCatalogueEntries(
     contracts: readonly AdmittedContractRelease[],
     binaryInputs: boolean,
     binaryOutputs: boolean,
+    inlineImageBytes?: number,
 ) {
     const entries = contracts.flatMap((contract) =>
         contract.release.capabilities.flatMap((capability) =>
@@ -41,7 +43,9 @@ export function mcpCatalogueEntries(
                 !capability.responseEffects?.length &&
                 (binaryInputs ||
                     !Object.values(capability.input.properties).some((schema) => schema.type === "binary")) &&
-                (binaryOutputs || capability.output.type !== "binary"),
+                (binaryOutputs ||
+                    supportsInlineImage(capability, inlineImageBytes) ||
+                    capability.output.type !== "binary"),
         )
         .sort((a, b) => (a.toolName < b.toolName ? -1 : a.toolName > b.toolName ? 1 : 0));
 }

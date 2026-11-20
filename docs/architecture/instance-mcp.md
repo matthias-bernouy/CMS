@@ -133,7 +133,9 @@ The two Markdown guides now come from the selected contract releases, through
 metadata. See [contract documentation](contract-documentation.md) for hybrid
 search, authoring and model operation.
 
-Prompts, packaged skills, persistent source workspaces, previews and a generic
+Visual captures expose Pages, installed examples and private preparations through selected Content and Authoring capabilities. Bounded PNG outputs are returned inline to MCP clients; actual model image access must be verified per client. See [visual captures](../development/visual-captures.md).
+
+Prompts, packaged skills, persistent source workspaces and a generic
 asset/context manifest are deferred. Contract and Provider source preparation
 and publication are available through both CLI and instance Authoring capabilities.
 

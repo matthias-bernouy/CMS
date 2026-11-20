@@ -16,9 +16,14 @@ import { initializeSmokeRegistry, prepareHostedSites, siteCredentials } from "./
 import { assertEmptySite } from "./edgeSmoke/setup";
 import { verifyPublishedAcrossEdges } from "./edgeSmoke/lifecycle";
 import { assertPortAvailable, writeFailureArtifacts } from "./edgeSmoke/diagnostics";
+import { startNativeSmokeWorker, verifyNativeMcpCaptures } from "./edgeSmoke/captures";
 
 const smoke = process.env.ULVIA_RUN_EDGE_SMOKE === "1" ? test : test.skip;
-const PORTS = { edge: 15_100, registryBridge: 15_102, provider: 15_103 } as const;
+const portBase = Number(process.env.ULVIA_EDGE_SMOKE_PORT_BASE ?? "15100");
+if (!Number.isInteger(portBase) || portBase < 1024 || portBase > 65532) {
+    throw new Error("ULVIA_EDGE_SMOKE_PORT_BASE must be an integer between 1024 and 65532");
+}
+const PORTS = { edge: portBase, registryBridge: portBase + 2, provider: portBase + 3 } as const;
 
 smoke(
     "fresh shared hosting configures empty Control, publishes an isolated site and preserves it across restart and two Edges",
@@ -39,6 +44,7 @@ smoke(
         let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
         let browserErrors: string[] = [];
         let browserFailures = () => "(none)";
+        let captureWorker: Awaited<ReturnType<typeof startNativeSmokeWorker>> | undefined;
         const options = {
             environment,
             log: (message: string) => {
@@ -48,6 +54,17 @@ smoke(
         try {
             console.info("[edge-smoke] prepare immutable resources and fresh shared services");
             const version = await prepareSmokeRuntimeImages(environment);
+            captureWorker = await startNativeSmokeWorker();
+            await runCli(
+                [
+                    "configure",
+                    "--capture-socket-directory",
+                    captureWorker.directory,
+                    "--capture-group",
+                    captureWorker.group,
+                ],
+                options,
+            );
             await bootstrapOfficialRepository(join(data, "repository"));
             await runCli(["release", smokeCollection], { environment, log: () => undefined });
             for (const version of ["1.1.0", "2.0.0", "2.1.0-beta.1"]) {
@@ -66,6 +83,10 @@ smoke(
             page.on("pageerror", (error) => browserErrors.push(error.stack ?? error.message));
             console.info("[edge-smoke] explicit collection publication and Page isolation");
             await runEdgeSmoke(page, siteCredentials(primary), primary.origin, registry.origin);
+            console.info(
+                "[edge-smoke] Docker Provider uses native worker through OAuth MCP with private image isolation",
+            );
+            await verifyNativeMcpCaptures(primary, registry);
             await verifySecondInstanceIsolation(primary, registry);
             await assertEmptySite(control);
             expect(browserErrors).toEqual([]);
@@ -108,6 +129,7 @@ smoke(
         } finally {
             await browser?.close();
             await cleanupSmokeRuntime(environment);
+            await captureWorker?.close();
             await rm(data, { recursive: true, force: true });
         }
     },

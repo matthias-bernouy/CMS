@@ -1,9 +1,11 @@
+import type { ContentCaptures } from "content/application/captures/interfaces";
 import type { ContentRepository } from "content/application/interfaces/ContentRepository";
 import type { ContentDelivery } from "content/pages/delivery/ContentDelivery";
 import type { ContentDeliveryHost } from "content/exports/runtime/public-delivery";
 import type { ContentCapabilityContext } from "content/application/interfaces/ContentCapabilityContext";
 import type { ContentContributions } from "content/application/interfaces/ContentContributions";
 export interface ContentServices {
+    readonly captures?: ContentCaptures;
     readonly repo: ContentRepository;
     readonly contributions: ContentContributions;
     readonly publicDelivery: (context: ContentCapabilityContext) => Pick<ContentDelivery, "resolvePath">;

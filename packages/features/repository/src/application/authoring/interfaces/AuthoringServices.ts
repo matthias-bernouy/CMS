@@ -1,3 +1,6 @@
+import type { CaptureServices } from "@bernouy/content/captures";
+import type { AdmittedCollectionRelease } from "repository/collections/interfaces/CollectionAdmission";
+import type { CaptureDependencyReference } from "repository/application/authoring/schemas/preparations/captures";
 import type { RepositoryAuthoring } from "repository/repository/authoring/resources/RepositoryAuthoring";
 /** Public structural service port; feature implementations need no private host/publisher state. */
 export type AuthoringService = Pick<
@@ -16,7 +19,13 @@ export type AuthoringService = Pick<
     | "artifactSources"
 >;
 export interface AuthoringServices {
-    readonly authoring: AuthoringService;
+    readonly authoring: AuthoringService & Partial<Pick<RepositoryAuthoring, "preview">>;
+    readonly authoringCaptures?: CaptureServices & {
+        dependencies(
+            references: readonly CaptureDependencyReference[],
+            maxAssetBytes: number,
+        ): Promise<readonly AdmittedCollectionRelease[]>;
+    };
     readonly authoringAuthority?: {
         administrator(actor: { providerId: string; subjectId: string }): Promise<boolean>;
     };

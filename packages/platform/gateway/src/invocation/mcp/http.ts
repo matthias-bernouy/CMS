@@ -124,7 +124,10 @@ export function createCapabilityMcpHttpHandler(options: {
                     if (typeof params.name !== "string") {
                         throw new McpProtocolError(-32602, "Missing tool name");
                     }
-                    result = await options.binding.call(params.name, params.arguments ?? {}, context);
+                    result = await options.binding.call(params.name, params.arguments ?? {}, {
+                        ...context,
+                        signal: request.signal,
+                    });
                     break;
                 default:
                     throw new McpProtocolError(-32601, "Method not found");

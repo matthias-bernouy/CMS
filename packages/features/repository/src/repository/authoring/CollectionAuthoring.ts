@@ -1,3 +1,4 @@
+import { previewPreparation } from "./preparations/preview";
 import type { RepositoryConnectionStatus } from "repository/application/authoring/interfaces/AuthoringDtos";
 export type { RepositoryConnectionStatus } from "repository/application/authoring/interfaces/AuthoringDtos";
 import type { RepositoryNamespaceView } from "repository/repository/namespaces/accounts/interfaces";
@@ -81,6 +82,9 @@ export class CollectionAuthoring {
                 error instanceof CollectionAuthoringValidationError ? error.diagnostics : undefined,
             );
         }
+    }
+    preview(id: string, expectedDigest: string) {
+        return previewPreparation(this.host, this.publisher, id, expectedDigest);
     }
     async publish(id: string, expectedDigest: string) {
         return publishPreparedCollection(this.host, this.publisher, id, expectedDigest);

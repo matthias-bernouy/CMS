@@ -1,3 +1,4 @@
+import { captureScenarios } from "../captures/plan";
 import { lifecycleScenarios } from "../lifecycle";
 import { scenarioClient } from "../../harness/clients/session";
 import { AUTHORING_ARTIFACTS } from "./fixture";
@@ -46,6 +47,7 @@ export function authoringScenarios(inventory: CapabilityInventory, fixture: stri
         ["invalidation"],
     );
     return [
+        ...captureScenarios(inventory, fixture, "ulvia/cms.authoring"),
         ...artifacts.map((scenario) =>
             scenario.definition.id.includes(".claim-namespace.")
                 ? {

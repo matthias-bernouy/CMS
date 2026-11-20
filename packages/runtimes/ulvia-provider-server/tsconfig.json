@@ -4,7 +4,9 @@
         "outDir": "dist",
         "rootDir": "./src"
     },
-    "files": ["dist/generated/supported-releases.json"],
+    "files": [
+        "dist/generated/supported-releases.json"
+    ],
     "include": [
         "src/**/*.ts",
         "src/**/*.json"
@@ -81,6 +83,9 @@
         },
         {
             "path": "../../features/hosting"
+        },
+        {
+            "path": "../../foundation/browser-capture"
         }
     ]
 }

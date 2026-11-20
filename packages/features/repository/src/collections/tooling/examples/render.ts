@@ -22,7 +22,12 @@ export type CollectionExampleFrame = {
     themeMode: "light" | "dark";
 };
 
-export type CollectionExampleRenderOptions = { locale?: string; themeMode?: "light" | "dark" };
+export type CollectionExampleRenderOptions = {
+    locale?: string;
+    themeMode?: "light" | "dark";
+    exampleId?: string;
+    previewId?: string;
+};
 
 export type CollectionExampleRuntimes = { blocRuntime: string; bindingCore: string };
 
@@ -57,7 +62,13 @@ export async function renderCollectionExamples(
     files.set("binding-core.js", new Blob([runtimeAssets.bindingCore], { type: "text/javascript" }));
     const frames: CollectionExampleFrame[] = [];
     for (const example of artifact.release.examples ?? []) {
+        if (options.exampleId !== undefined && example.id !== options.exampleId) {
+            continue;
+        }
         for (const preview of example.previews) {
+            if (options.previewId !== undefined && preview.id !== options.previewId) {
+                continue;
+            }
             const { document } = parseHTML("<!doctype html><html><head></head><body></body></html>");
             const rendered = await renderPageDocument(
                 document.body,

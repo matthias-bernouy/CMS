@@ -1,0 +1,30 @@
+[Unit]
+Description=Ulvia native Playwright capture worker
+After=local-fs.target
+
+[Service]
+Type=simple
+User=ulvia-capture
+Group=ulvia-capture
+Environment=HOME=/var/lib/ulvia-capture
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+RuntimeDirectory=ulvia-capture
+RuntimeDirectoryMode=0770
+RuntimeDirectoryPreserve=yes
+StateDirectory=ulvia-capture
+StateDirectoryMode=0700
+UMask=0007
+ExecStart=/usr/local/bin/ulvia capture-worker --socket /run/ulvia-capture/worker.sock
+NoNewPrivileges=yes
+PrivateTmp=yes
+MemoryMax=1536M
+CPUQuota=200%
+TasksMax=512
+LimitNOFILE=1024
+KillMode=control-group
+TimeoutStopSec=30
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

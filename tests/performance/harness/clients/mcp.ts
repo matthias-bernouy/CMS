@@ -88,6 +88,17 @@ export async function observeMcp(call: ClientCall, tools: readonly McpTool[]) {
             ) {
                 throw new Error("MCP response was not a successful matching result");
             }
+            if (call.target.definition.output.type === "binary") {
+                const images = message.result.content?.filter((part: { type: string }) => part.type === "image");
+                if (images?.length !== 1 || images[0].mimeType !== "image/png" || typeof images[0].data !== "string") {
+                    throw new ClientFailure("mcp-image-missing");
+                }
+                const bytes = Buffer.from(images[0].data, "base64");
+                if (bytes.toString("base64") !== images[0].data) {
+                    throw new ClientFailure("mcp-image-invalid");
+                }
+                return new Uint8Array(bytes);
+            }
             return message.result.structuredContent.output;
         },
     );

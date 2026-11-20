@@ -3,11 +3,11 @@ import { contentFeature } from "@bernouy/content/feature";
 import type { UlviaProviderFeatureServices } from "../../../ports/index";
 export const contentImplementation = implementFeature(contentFeature, {
     services: (dependencies: UlviaProviderFeatureServices) => {
-        const { repo, contributions, publicDelivery, contentQuery } = dependencies;
+        const { repo, contributions, publicDelivery, contentQuery, captures } = dependencies;
         if (!repo || !contributions || !publicDelivery) {
             throw new TypeError("Content requires repository, contribution and public delivery services");
         }
-        return { repo, contributions, publicDelivery, contentQuery };
+        return { repo, contributions, publicDelivery, contentQuery, captures };
     },
     requires: [
         {

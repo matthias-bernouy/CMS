@@ -1,3 +1,4 @@
+import { captureFailure } from "content/application/captures/create";
 import type { FeatureErrorMapper } from "@bernouy/ulvia-sdk";
 import { ContentCapabilityError } from "content/application/core/capabilities/errors";
 import {
@@ -20,6 +21,10 @@ import {
     SiteBlocIdentityConflictError,
 } from "content/blocs/core/catalogue/editing/references";
 export const mapContentError: FeatureErrorMapper = (cause, capability) => {
+    const captureError = captureFailure(cause);
+    if (captureError && Object.hasOwn(capability.errors, captureError.code)) {
+        return captureError;
+    }
     const status = cause && typeof cause === "object" && "status" in cause ? Number(cause.status) : 0;
     let code: string;
     if (

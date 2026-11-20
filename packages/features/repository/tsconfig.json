@@ -48,6 +48,9 @@
         },
         {
             "path": "../documentation"
+        },
+        {
+            "path": "../../foundation/browser-capture"
         }
     ]
 }

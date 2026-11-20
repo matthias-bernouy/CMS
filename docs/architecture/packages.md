@@ -25,6 +25,7 @@ already been published to a registry.
 | --- | --- |
 | `@bernouy/binary-media` | Immutable binary snapshots, SHA-256 identities, representation fingerprints and bounded media signature inspection. |
 | `@bernouy/blob-store` | Stream-first opaque blob contracts with memory, local-filesystem and S3-compatible adapters. |
+| `@bernouy/browser-capture` | Bounded document capture ports, ephemeral artifacts, isolated Playwright execution and private Unix worker transport. |
 | `@bernouy/http-runner` | Runner abstractions, Bun HTTP serving, cache, compression, CSP and test helpers. |
 | `@bernouy/envelope-crypto` | Envelope encryption, KEK/DEK contracts and Mongo DEK storage. |
 | `@bernouy/resource-identity` | Bounded qualified resource identities and collision-free CSS-safe ownership prefixes. |

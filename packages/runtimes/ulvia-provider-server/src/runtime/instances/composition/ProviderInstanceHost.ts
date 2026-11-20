@@ -1,3 +1,4 @@
+import { createCaptureServices } from "../../content/captures/services";
 import type { HostedTransport } from "../system/hosting/transport/HostedTransport";
 import type { HostingServices } from "@bernouy/hosting/feature";
 import { registryInstallationPlan } from "../system/execution/registry";
@@ -483,6 +484,8 @@ export class ProviderInstanceHost {
                 },
                 lifetime.retain,
             );
+            const delivery = createPublicDelivery(stores, gateway, instance.cmsUrl, this.transport?.network);
+            const captures = createCaptureServices(stores, delivery, collectionSource, this.env.ULVIA_CAPTURE_SOCKET);
             await registerOfficialProviderCapabilities(
                 dispatcher,
                 {
@@ -495,7 +498,8 @@ export class ProviderInstanceHost {
                             allowInsecureHttp: repository.allowInsecureHttp,
                         }),
                     ]),
-                    ...createPublicDelivery(stores, gateway, instance.cmsUrl, this.transport?.network),
+                    ...delivery,
+                    ...captures,
                     authoring,
                     repository: registry?.service,
                     providerConnections,

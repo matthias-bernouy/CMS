@@ -17,6 +17,7 @@ export function createCmsMcpHandler(
     const resource = `${origin}/.cms/mcp`;
     const resourceMetadata = `${origin}/.well-known/oauth-protected-resource`;
     const binding = new CapabilityMcpBinding({
+        inlineImageBytes: 4 * 1024 * 1024,
         invoker: host.invoker,
         contracts: host.contracts,
         resolveToolContract: host.resolveToolContract,

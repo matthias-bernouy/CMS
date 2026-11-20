@@ -8,7 +8,7 @@ import type {
 import type { RepositoryServices } from "@bernouy/repository/features/repository";
 import type { ProviderConnectionServices } from "../capabilities/features/provider/connections/interfaces";
 import type { ContentServices } from "@bernouy/content/feature";
-import type { AuthoringServices, AuthoringService } from "@bernouy/repository/features/authoring";
+import type { AuthoringServices } from "@bernouy/repository/features/authoring";
 import type { AccessServices } from "@bernouy/auth/feature";
 import type { CollectionStore } from "@bernouy/repository/collections/installations";
 import type { ContractSelection } from "@bernouy/ulvia-providers/selections";
@@ -22,7 +22,7 @@ import type { ObservabilityServices } from "@bernouy/observability/feature";
 
 export interface CmsContentDependencies
     extends Pick<ContentServices, "repo" | "contentQuery">,
-        Partial<Pick<ContentServices, "publicDelivery">> {
+        Partial<Pick<ContentServices, "publicDelivery" | "captures">> {
     readonly collections: CollectionStore;
     readonly sitemapStore?: BlobStore;
     readonly logger?: Logger;
@@ -33,7 +33,7 @@ export interface CmsCollectionDependencies {
     readonly repositorySettings?: InstallationServices["repositorySettings"];
     readonly documentation?: InstallationServices["documentation"];
     readonly repositoryDiscovery?: InstallationServices["discovery"];
-    readonly authoring?: AuthoringService;
+    readonly authoring?: AuthoringServices["authoring"];
     readonly collections: CollectionStore;
     readonly collectionUpgrades: InstallationServices["collectionUpgrades"];
 }

@@ -141,7 +141,7 @@ frames. Stop it with Ctrl+C. Frames cannot access the explorer's DOM.
 Capture contexts allow only local export requests; there are no live API
 fixtures for data-dependent examples.
 
-Generated captures are not uploaded or mounted in the CMS catalogue yet.
+Installed examples and private collection preparations can also be captured through MCP; see [visual captures](../development/visual-captures.md). Generated CLI captures are not uploaded or mounted in the CMS catalogue.
 Public preview distribution and the integrated catalogue UI remain separate
 work. Content's authoring catalogue exposes default insertion metadata and
 category memberships for clients; no visual catalogue/editor is bundled.

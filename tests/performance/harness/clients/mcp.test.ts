@@ -98,3 +98,62 @@ test("MCP refusal evidence requires the matching envelope, exact declared code a
         await server.stop(true);
     }
 });
+test("MCP image observations validate inline bytes and refuse metadata-only results", async () => {
+    const fixture = await inventoryFixture();
+    const target: CapabilityTarget = {
+        ...fixture.target,
+        definition: { ...fixture.target.definition, output: { type: "binary", maxBytes: 128 } },
+    };
+    let includeImage = true;
+    const bytes = new Uint8Array([137, 80, 78, 71]);
+    const server = Bun.serve({
+        hostname: "127.0.0.1",
+        port: 0,
+        async fetch(request) {
+            const message = await request.json();
+            return Response.json({
+                jsonrpc: "2.0",
+                id: message.id,
+                result: {
+                    structuredContent: { output: { mimeType: "image/png" } },
+                    content: includeImage
+                        ? [{ type: "image", mimeType: "image/png", data: Buffer.from(bytes).toString("base64") }]
+                        : [],
+                },
+            });
+        },
+    });
+    const tools = [
+        {
+            name: "image",
+            _meta: {
+                "io.ulvia/contract": target.release.contractId,
+                "io.ulvia/capability": target.definition.id,
+                "io.ulvia/binding": "mcp",
+                "io.ulvia/digest": target.release.digest,
+            },
+        },
+    ];
+    let assertions = 0;
+    const call = {
+        origin: server.url.origin,
+        target,
+        binding: "mcp",
+        input: {},
+        credentials: { token: "test" },
+        assert: (value: unknown) => {
+            assertions++;
+            expect(value).toEqual(bytes);
+        },
+    };
+    try {
+        expect((await observeMcp(call, tools)).validated).toBeTrue();
+        includeImage = false;
+        const missing = await observeMcp(call, tools);
+        expect(missing.validated).toBeFalse();
+        expect(missing.failure).toBe("mcp-image-missing");
+        expect(assertions).toBe(1);
+    } finally {
+        await server.stop(true);
+    }
+});

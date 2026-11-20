@@ -47,6 +47,7 @@ async function build(releaseVersion: string): Promise<void> {
         outdir: join(staging, "dist"),
         naming: "index.js",
         define: {
+            __ULVIA_CAPTURE_WORKER_BUNDLED__: "true",
             __ULVIA_PREVIEW_RUNTIMES__: JSON.stringify(previewRuntimes),
             __ULVIA_CLI_VERSION__: JSON.stringify(releaseVersion),
             __ULVIA_DEFAULT_STACK_VERSION__: JSON.stringify(releaseVersion),
@@ -56,6 +57,19 @@ async function build(releaseVersion: string): Promise<void> {
     if (!result.success) {
         throw new AggregateError(result.logs, "CLI bundle failed");
     }
+    const worker = await Bun.build({
+        entrypoints: [join(root, "packages/foundation/browser-capture/src/playwright/worker.ts")],
+        target: "bun",
+        outdir: join(staging, "dist/capture-worker"),
+        naming: "worker.js",
+    });
+    if (!worker.success) {
+        throw new AggregateError(worker.logs, "Capture worker bundle failed");
+    }
+    await cp(
+        join(source, "src/capture-worker/ulvia-capture.service"),
+        join(staging, "dist/capture-worker/ulvia-capture.service"),
+    );
     await cp(join(source, "src/runtime/stack/orchestration/definitions"), join(staging, "dist/definitions"), {
         recursive: true,
     });

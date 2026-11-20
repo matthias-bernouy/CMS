@@ -8,6 +8,7 @@ export const authoringImplementation = implementFeature(authoringFeature, {
         }
         return {
             authoring: dependencies.authoring,
+            authoringCaptures: dependencies.authoringCaptures,
             authoringOperations: dependencies.authoringOperations,
             authoringAuthority: dependencies.authoringAuthority,
         };

@@ -1,3 +1,4 @@
+import { captureScenarios } from "../captures/plan";
 import { lifecycleScenarios } from "../lifecycle";
 import { scenarioClient } from "../../harness/clients/session";
 import { prepareSiteBloc, SITE_BLOC_CAPABILITIES } from "./site-blocs";
@@ -60,6 +61,7 @@ export function contentScenarios(inventory: CapabilityInventory, fixture: string
         ["invalidation"],
     );
     return [
+        ...captureScenarios(inventory, fixture, "ulvia/cms.content"),
         ...blocs,
         ...delivery,
         ...settings,

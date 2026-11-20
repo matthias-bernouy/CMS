@@ -1,4 +1,5 @@
 import { mcpCatalogueEntries } from "./catalogue";
+import { inlineImage, supportsInlineImage } from "./images";
 import { canonicalIJsonBytes, parseStrictJson, MAX_CAPABILITY_JSON_BYTES } from "@bernouy/ulvia-contracts/protocol";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { CapabilityMcpOptions, McpInvocationContext, McpToolResult } from "./interfaces";
@@ -30,7 +31,14 @@ export class CapabilityMcpBinding {
             tools: entries
                 .slice(offset, offset + 64)
                 .map(({ contractId, capability, digest, binding, documentation }) =>
-                    capabilityTool(contractId, capability, digest, binding, documentation),
+                    capabilityTool(
+                        contractId,
+                        capability,
+                        digest,
+                        binding,
+                        documentation,
+                        supportsInlineImage(capability, this.options.inlineImageBytes),
+                    ),
                 ),
             ...(offset + 64 < entries.length ? { nextCursor: String(offset + 64) } : {}),
         };
@@ -93,6 +101,9 @@ export class CapabilityMcpBinding {
                 throw new GatewayError("unsupported_behavior", "MCP cannot apply browser session effects");
             }
             if (result.kind === "binary") {
+                if (supportsInlineImage(entry.capability, this.options.inlineImageBytes)) {
+                    return await inlineImage(result, this.options.inlineImageBytes!);
+                }
                 if (!this.options.publishBinary) {
                     await result.stream.cancel();
                     throw new GatewayError("unsupported_behavior", "Binary output requires a resource publisher");
@@ -152,6 +163,11 @@ export class CapabilityMcpBinding {
         const targeted = toolName !== undefined && this.options.resolveToolContract;
         const selected = targeted ? await this.options.resolveToolContract!(toolName, context) : undefined;
         const contracts = targeted ? (selected ? [selected] : []) : await this.options.contracts(context);
-        return mcpCatalogueEntries(contracts, Boolean(this.options.resolveBinary), Boolean(this.options.publishBinary));
+        return mcpCatalogueEntries(
+            contracts,
+            Boolean(this.options.resolveBinary),
+            Boolean(this.options.publishBinary),
+            this.options.inlineImageBytes,
+        );
     }
 }

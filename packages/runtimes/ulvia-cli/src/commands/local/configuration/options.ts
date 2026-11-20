@@ -2,9 +2,10 @@ import { domainHostname } from "@bernouy/hosting";
 import { instancePublicUrl } from "../../../runtime/stack/ports";
 import { parseInstallationConfig } from "../../../runtime/stack/installation";
 import type { InstallationConfig } from "../../../runtime/stack/installation";
+import { configuredCaptureConnection } from "../../../runtime/stack/captures/configuration";
 
 export const CONFIGURE_USAGE =
-    "Usage: ulvia configure [--show | --domain <hostname> --edges <1..16> --bind <address> --http-port <port> --tls <disabled|acme> --https-port <port> --acme-email <email> --managed-suffixes <dns,dns> --public-addresses <ip,ip>]";
+    "Usage: ulvia configure [--show | --domain <hostname> --edges <1..16> --bind <address> --http-port <port> --tls <disabled|acme> --https-port <port> --acme-email <email> --managed-suffixes <dns,dns> --public-addresses <ip,ip> --capture-socket-directory <path|disabled> --capture-group <gid>]";
 export function configureOptions(args: readonly string[]): Map<string, string> {
     const allowed = [
         "--domain",
@@ -16,6 +17,8 @@ export function configureOptions(args: readonly string[]): Map<string, string> {
         "--acme-email",
         "--managed-suffixes",
         "--public-addresses",
+        "--capture-socket-directory",
+        "--capture-group",
     ];
     const result = new Map<string, string>();
     if (args.length % 2) {
@@ -95,8 +98,11 @@ export function configuredInstallation(
                       .map((part) => part.trim())
                 : []
             : fallback;
+    const { capture: priorCapture, ...base } = current;
+    const capture = configuredCaptureConnection(priorCapture, values);
     return parseInstallationConfig({
-        ...current,
+        ...base,
+        ...(capture ? { capture } : {}),
         bindAddress,
         ports,
         tls,

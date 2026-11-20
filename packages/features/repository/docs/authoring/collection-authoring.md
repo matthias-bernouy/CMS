@@ -117,3 +117,24 @@ Preparations expire after seven days, including publication retries. Missing,
 altered, foreign-instance and expired preparations refuse before publication.
 After expiration, prepare the original exact sources again; an identical
 published release remains immutable and its exact replay is idempotent.
+
+## Inspect a preparation visually
+
+After a valid preparation, use `capture-prepared-example` with its exact
+`preparationId`, `expectedDigest`, an `exampleId`, a declared `previewId`,
+`locale`, `themeMode` and `dependencies`. The dependency array contains explicit
+immutable `{ publisherId, collectionId, version, digest }` references for the
+complete transitive dependency graph; use an empty array when there are none.
+At most 32 dependencies and 64 MiB of combined assets are supported.
+
+The tool rechecks current Repository namespace ownership, preparation expiry,
+source integrity, asset digests and dependency compatibility. Dependencies are
+read from the configured Repository, without installation or publication.
+The renderer uses collection defaults, with no site-specific overrides or live
+API data. Scripts run in an isolated worker and remote requests are blocked.
+
+Read the returned `captureId` using Content's `captures.image` in the same
+instance and administrator. Inspect the actual PNG and its diagnostics before
+claiming visual quality. Images last at most five minutes and can be evicted
+earlier. A new preparation needs a new capture; an old image does not validate
+new sources. This workflow does not publish or install the candidate.

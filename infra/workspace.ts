@@ -37,6 +37,20 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
             continueOnFailure: true,
         },
         {
+            args: [
+                "bun",
+                "test",
+                "packages/foundation/browser-capture/tests/capture.browser.test.ts",
+                "packages/foundation/browser-capture/tests/sandbox.browser.test.ts",
+                "packages/surfaces/ulvia-provider/tests/capabilities/content/captures/journey.browser.test.ts",
+                "packages/runtimes/ulvia-cli/tests/preview/capture.browser.test.ts",
+                "packages/runtimes/ulvia-cli/tests/preview/bundled.browser.test.ts",
+                "packages/runtimes/ulvia-cli/tests/preview/native-worker.browser.test.ts",
+            ],
+            env: { ULVIA_RUN_CAPTURE_BROWSER: "1", ULVIA_RUN_EXAMPLE_BROWSER: "1" },
+            continueOnFailure: true,
+        },
+        {
             args: ["bun", "test", "./tests/integration/content"],
             env: { ULVIA_RUN_CONTENT_LIFECYCLE: "1" },
             continueOnFailure: true,

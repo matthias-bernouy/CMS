@@ -22,6 +22,7 @@ export function capabilityTool(
     digest: string,
     binding: Extract<CapabilityBinding, { transport: "mcp" }>,
     documentation: readonly ContractDocumentationDefinition[] = [],
+    inlineImage = false,
 ) {
     const docs = (capability.docs ?? []).map((path) => ({
         reference: { contractId, releaseDigest: digest, path },
@@ -41,7 +42,9 @@ export function capabilityTool(
         capability.behavior.execution === "operation"
             ? closedObject({ operationId: { type: "string", format: "uuid" } })
             : capability.output.type === "binary"
-              ? closedObject({ uri: { type: "string", format: "uri" }, mimeType: { type: "string" } })
+              ? inlineImage
+                  ? closedObject({ mimeType: { type: "string" } })
+                  : closedObject({ uri: { type: "string", format: "uri" }, mimeType: { type: "string" } })
               : mcpSchema(capability.output);
     const errors = capability.errors.map((error) =>
         closedObject({

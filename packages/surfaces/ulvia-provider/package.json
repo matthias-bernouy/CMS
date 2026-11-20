@@ -33,5 +33,9 @@
     },
     "peerDependencies": {
         "typescript": "^7.0.2"
+    },
+    "devDependencies": {
+        "@bernouy/browser-capture": "workspace:*",
+        "playwright": "^1.64.1"
     }
 }

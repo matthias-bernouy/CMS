@@ -117,3 +117,52 @@ test("host invalidation runs after dispatched commands, including unknown outcom
         f.close();
     }
 });
+
+const cases = [
+    ["ulvia/cms.content", "pages.capture"],
+    ["ulvia/cms.content", "examples.capture"],
+    ["ulvia/cms.authoring", "capture-prepared-example"],
+] as const;
+test.each(cases)(
+    "only a direct administrator capture gets the worker-compatible response budget: %s/%s",
+    async (contractId, id) => {
+        const route = await gatewayRoute();
+        const request = {
+            release: { ...route.requestedRelease.admission.release, contractId },
+            capability: { ...route.requestedRelease.admission.release.capabilities[0]!, id },
+        };
+        const administrator = { kind: "administrator", subjectId: "admin" } as const;
+        expect(responseTimeout(request, administrator)).toBe(30_000);
+        const actors: GatewayActor[] = [
+            { kind: "anonymous" },
+            { kind: "user", subjectId: "user" },
+            { kind: "system", serviceId: "internal" },
+            { kind: "provider", installationId: "other", credentialFingerprint: "fingerprint" },
+        ];
+        for (const actor of actors) {
+            expect(responseTimeout(request, actor)).toBe(15_000);
+        }
+        expect(responseTimeout({ ...request, delegated: true }, administrator)).toBe(15_000);
+        expect(
+            responseTimeout(
+                { ...request, release: { ...request.release, contractId: "other/captures" } },
+                administrator,
+            ),
+        ).toBe(15_000);
+        expect(
+            responseTimeout({ ...request, capability: { ...request.capability, id: "captures.image" } }, administrator),
+        ).toBe(15_000);
+        expect(
+            responseTimeout(
+                {
+                    ...request,
+                    capability: {
+                        ...request.capability,
+                        behavior: { effect: "command", execution: "sync", sensitive: true, idempotency: "natural" },
+                    },
+                },
+                administrator,
+            ),
+        ).toBe(15_000);
+    },
+);

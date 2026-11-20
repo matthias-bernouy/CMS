@@ -1,3 +1,4 @@
+import { readCaptureFile } from "./captures/files";
 import type { NodeGatewayHttpNetworkFactory } from "@bernouy/cms-gateway/http/node";
 import { createDescriptionCache } from "./descriptionCache";
 import { contentGatewayClient } from "./gatewayClient";
@@ -20,7 +21,9 @@ export function createPublicDelivery(
     gateway: Awaited<ReturnType<typeof createProviderGateway>>,
     publicUrl: string,
     createNetwork?: NodeGatewayHttpNetworkFactory,
-): Pick<CmsContentDependencies, "publicDelivery" | "contentQuery"> {
+): Pick<CmsContentDependencies, "publicDelivery" | "contentQuery"> & {
+    captureDelivery: (context: ProviderCapabilityInvocationContext) => ContentDelivery;
+} {
     const cache = new InMemoryCache();
     const readSelectionRevision = async () =>
         (await stores.executionState.read(gateway.siteId, [])).selections?.revision ?? 0;
@@ -43,51 +46,54 @@ export function createPublicDelivery(
         }
         return route.requestedRelease.admission.release;
     };
-    return {
-        publicDelivery: (context) =>
-            new ContentDelivery({
-                content,
-                observe: contentPhaseObserver(stores.logger),
-                cache,
-                logger: stores.logger,
-                publicUrl,
-                sitemapStore: stores.sitemapStore,
-                editorialPages: editorialPages(stores.repo),
-                resolveContributedAssets: (input) => resolveInstalledCollectionAssets(input, assets, ""),
-                serveCollectionAsset: (request) => serveInstalledCollectionAsset(request, assets, ""),
-                guard: (request) =>
-                    collectionMaintenanceResponse(request, {
-                        siteId: gateway.siteId,
-                        upgrades: stores.upgradeStorage,
-                        basePath: "",
-                    }),
-                resolveSvgSources: (sources) =>
-                    resolveSvgSources({ cache, assets, client: client(context), release }, sources),
-                pageCapabilities: {
-                    requiredAccess: async (page) => {
-                        const revision = await readSelectionRevision();
-                        return analyzer.requiredAccess(page, (contractId) =>
-                            description(contractId, revision, async () => {
-                                const response = await client(context).invoke(
-                                    await release("ulvia/cms.installations"),
-                                    "capabilities.describe",
-                                    { contractId },
-                                    { authority: "provider" },
-                                );
-                                const value = response.output as {
-                                    found: boolean;
-                                    version: string;
-                                    capabilities: { id: string; access: "public" | "authenticated" | "admin" }[];
-                                };
-                                if (value?.found !== true && value?.found !== false) {
-                                    throw new Error("Capability description response is unavailable");
-                                }
-                                return value.found ? value : null;
-                            }),
-                        );
-                    },
+    const captureDelivery = (context: ProviderCapabilityInvocationContext) =>
+        new ContentDelivery({
+            content,
+            observe: contentPhaseObserver(stores.logger),
+            cache,
+            logger: stores.logger,
+            publicUrl,
+            readCaptureResource: (path, signal) => readCaptureFile(gateway.invoker, gateway.siteId, path, signal),
+            sitemapStore: stores.sitemapStore,
+            editorialPages: editorialPages(stores.repo),
+            resolveContributedAssets: (input) => resolveInstalledCollectionAssets(input, assets, ""),
+            serveCollectionAsset: (request) => serveInstalledCollectionAsset(request, assets, ""),
+            guard: (request) =>
+                collectionMaintenanceResponse(request, {
+                    siteId: gateway.siteId,
+                    upgrades: stores.upgradeStorage,
+                    basePath: "",
+                }),
+            resolveSvgSources: (sources) =>
+                resolveSvgSources({ cache, assets, client: client(context), release }, sources),
+            pageCapabilities: {
+                requiredAccess: async (page) => {
+                    const revision = await readSelectionRevision();
+                    return analyzer.requiredAccess(page, (contractId) =>
+                        description(contractId, revision, async () => {
+                            const response = await client(context).invoke(
+                                await release("ulvia/cms.installations"),
+                                "capabilities.describe",
+                                { contractId },
+                                { authority: "provider" },
+                            );
+                            const value = response.output as {
+                                found: boolean;
+                                version: string;
+                                capabilities: { id: string; access: "public" | "authenticated" | "admin" }[];
+                            };
+                            if (value?.found !== true && value?.found !== false) {
+                                throw new Error("Capability description response is unavailable");
+                            }
+                            return value.found ? value : null;
+                        }),
+                    );
                 },
-            }),
+            },
+        });
+    return {
+        publicDelivery: captureDelivery,
+        captureDelivery,
         contentQuery: async (context, contractId, capabilityId, input) => {
             if (!context.delegation) {
                 return new Response(null, { status: 503 });

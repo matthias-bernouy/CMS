@@ -1,3 +1,5 @@
+import { captureDeliveryDocument } from "content/application/captures/renderDelivery";
+import type { TPage } from "content/pages/interfaces/pages";
 import { observeDelivery } from "./observe";
 import {
     serveBlocSet,
@@ -20,6 +22,7 @@ import type { BlobStore } from "@bernouy/blob-store";
 export interface ContentDeliveryOptions
     extends Omit<ContentDeliveryHost, "resolveActor" | "executeQuery" | "basePath" | "cmsPathPrefix"> {
     readonly publicUrl: string;
+    readonly readCaptureResource?: (path: string, signal?: AbortSignal) => Promise<Response>;
     readonly sitemapStore?: BlobStore;
     readonly serveCollectionAsset: (request: Request) => Promise<Response>;
     readonly guard?: (request: Request) => Promise<Response | null>;
@@ -62,6 +65,9 @@ export class ContentDelivery {
             await response.body?.cancel();
         }
         return new Response(input.method === "HEAD" ? null : response.body, { status: response.status, headers });
+    }
+    captureDocument(page: TPage, locale: string, themeMode: "light" | "dark", signal?: AbortSignal) {
+        return captureDeliveryDocument(this.options, this.resolvePath.bind(this), page, locale, themeMode, signal);
     }
     private async resolve(request: Request, path: string, host: ContentDeliveryHost): Promise<Response> {
         const { content, cache, logger, resolveContributedAssets } = host;

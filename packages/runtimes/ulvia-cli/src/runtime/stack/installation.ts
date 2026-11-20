@@ -7,6 +7,8 @@ import type { InstallationHosting } from "./hosting";
 import { instancePublicUrl } from "./ports";
 import { atomicPrivateWrite } from "./orchestration/deployment/storage";
 import { hostingOrigin } from "@bernouy/hosting";
+import { parseCaptureConnection } from "./captures/configuration";
+import type { CaptureConnection } from "./captures/configuration";
 const SCHEMA = "ulvia.installation.v1" as const;
 
 type InstallationTls = Readonly<{ mode: "disabled" }> | Readonly<{ mode: "acme"; email: string; httpsPort: number }>;
@@ -17,6 +19,7 @@ export type InstallationConfig = Readonly<{
     ports: ServicePorts;
     tls: InstallationTls;
     hosting: InstallationHosting;
+    capture?: CaptureConnection;
 }>;
 
 export function defaultInstallationConfig(environment: Record<string, string | undefined> = {}): InstallationConfig {
@@ -135,7 +138,12 @@ export function parseInstallationConfig(value: unknown): InstallationConfig {
         throw new Error("Ulvia installation configuration is invalid");
     }
     const record = value as Record<string, unknown>;
-    if (Object.keys(record).sort().join(",") !== "bindAddress,hosting,ports,schema,tls") {
+    if (
+        Object.keys(record)
+            .filter((key) => key !== "capture")
+            .sort()
+            .join(",") !== "bindAddress,hosting,ports,schema,tls"
+    ) {
         throw new Error("Ulvia installation configuration is invalid");
     }
     const ports = parsePorts(record.ports);
@@ -148,7 +156,14 @@ export function parseInstallationConfig(value: unknown): InstallationConfig {
     if (record.schema !== SCHEMA || !validBindAddress(record.bindAddress)) {
         throw new Error("Ulvia installation configuration is invalid");
     }
-    return Object.freeze({ schema: SCHEMA, bindAddress: record.bindAddress, ports, tls, hosting });
+    return Object.freeze({
+        schema: SCHEMA,
+        bindAddress: record.bindAddress,
+        ports,
+        tls,
+        hosting,
+        ...("capture" in record ? { capture: parseCaptureConnection(record.capture) } : {}),
+    });
 }
 
 function parsePorts(value: unknown): ServicePorts {

@@ -1,3 +1,4 @@
+import { captureFailure } from "@bernouy/content/captures";
 import { AuthoringAuthorityError } from "../core/authority";
 import type { FeatureErrorMapper } from "@bernouy/ulvia-sdk";
 import { AuthoringInputError } from "repository/application/authoring/core/input";
@@ -6,6 +7,10 @@ import { CollectionPublicationRecoveryError } from "repository/repository/author
 import { NamespaceAccessError } from "repository/repository/authoring/namespaces";
 import { RepositoryRequestError } from "repository/repository/core/errors";
 export const mapAuthoringError: FeatureErrorMapper = (cause) => {
+    const captureError = captureFailure(cause);
+    if (captureError) {
+        return captureError;
+    }
     if (cause instanceof AuthoringAuthorityError) {
         return { code: "FORBIDDEN", output: { message: "Current administrator authority is required." } };
     }

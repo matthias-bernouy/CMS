@@ -1,3 +1,6 @@
+import { pageCapture } from "content/application/capabilities/delivery/captures/page";
+import { exampleCapture } from "content/application/capabilities/delivery/captures/example";
+import { imageCapture } from "content/application/capabilities/delivery/captures/image";
 import { siteBlocsRead } from "content/application/capabilities/site/blocs/editing/read";
 import { siteBlocsIdentity } from "content/application/capabilities/site/blocs/editing/identity";
 import { siteBlocsUpdate } from "content/application/capabilities/site/blocs/editing/update";
@@ -41,12 +44,15 @@ export const contentFeature = defineFeature({
     "contractId": "ulvia/cms.content",
     "name": "CMS Content",
     "description": "Manage site settings, pages, localization and themes for one provider-selected CMS instance.",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "publisherId": "ulvia",
     "catalogue": { "icon": "pages", "categories": ["administration", "content"] },
     documents: new URL("../../docs/", import.meta.url),
     mapError: mapContentError,
     capabilities: [
+        pageCapture,
+        exampleCapture,
+        imageCapture,
         siteBlocsIdentity,
         siteFaviconUpdate,
         siteFaviconGet,

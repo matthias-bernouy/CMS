@@ -4,6 +4,7 @@ import { createCaddyHostingConfiguration } from "@bernouy/hosting/caddy";
 import { TLS_PERMISSION_PATH } from "@bernouy/hosting/tls";
 import type { InstallationConfig } from "../../installation";
 import type { UlviaPaths } from "../../../paths";
+import { captureProviderMount } from "../../captures/mount";
 
 export function sharedEdgeNames(count: number): string[] {
     if (!Number.isSafeInteger(count) || count < 1 || count > 16) {
@@ -82,6 +83,7 @@ export async function writeSharedComposeFiles(paths: UlviaPaths, installation: I
             {
                 services: {
                     ...services,
+                    ...(await captureProviderMount(installation.capture)),
                     proxy: {
                         depends_on: Object.fromEntries(names.map((name) => [name, { condition: "service_healthy" }])),
                     },
