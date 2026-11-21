@@ -37,7 +37,6 @@ test("the upgrade contracts step initializes account publications after selectio
         env: {} as ProviderRuntimeEnv,
         credentials: {} as never,
         providerSource: {} as never,
-        collectionSource: {} as never,
         composition: {
             runtime: { report: { instanceId: f.instance.id } },
             gateway: {

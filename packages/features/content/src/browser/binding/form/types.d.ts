@@ -27,13 +27,3 @@ export type FormSubmitResult = {
 };
 
 export type AdditionalFormFields = Record<string, SerializedFormValue>;
-
-export type SubmitFormOptions = {
-    url: string;
-    method: FormSubmitMethod;
-    signal?: AbortSignal;
-    bodyFields?: AdditionalFormFields;
-    formData?: FormData;
-    serialized?: SerializedForm;
-    headers?: HeadersInit;
-};

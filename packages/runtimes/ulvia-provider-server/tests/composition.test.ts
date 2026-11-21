@@ -96,7 +96,6 @@ test("official administrator provisioning writes the shared authority model", as
         env: {} as ProviderRuntimeEnv,
         credentials: { read: async () => null },
         providerSource: {} as never,
-        collectionSource: {} as never,
     });
 
     await target.initializeAdministrator(
@@ -132,7 +131,6 @@ function connectionTarget(management: Record<string, unknown>) {
             }),
         },
         providerSource: {} as never,
-        collectionSource: {} as never,
     });
 }
 
@@ -180,7 +178,6 @@ test("fresh provisioning pairs the official return connection after selecting co
         env: {} as ProviderRuntimeEnv,
         credentials: {} as never,
         providerSource: {} as never,
-        collectionSource: {} as never,
     });
     await target.selectContracts(SYSTEM_PLAN, execution());
     expect(steps).toEqual(["selections", "paired"]);

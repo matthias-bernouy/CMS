@@ -1,4 +1,3 @@
-import type { CollectionRepositorySource } from "@bernouy/repository/collections/sources";
 import { importProviderManifest } from "@bernouy/repository/providers/sources";
 import type { ProviderRepositorySource } from "@bernouy/repository/providers/sources";
 import type {
@@ -22,7 +21,6 @@ type TargetOptions = Readonly<{
     env: ProviderRuntimeEnv;
     credentials: Pick<ProviderInstanceCredentials, "read">;
     providerSource: ProviderRepositorySource;
-    collectionSource: CollectionRepositorySource;
 }>;
 
 export function createInstanceProvisioningTarget(options: TargetOptions): OfficialInstanceProvisioningTarget {

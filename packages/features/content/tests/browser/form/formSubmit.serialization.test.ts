@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { serializeForm, submitForm } from "../../../src/browser/binding/form/formSubmit";
+import { serializeForm } from "../../../src/browser/binding/form/formSubmit";
 import { resetDom } from "../support/testUtils";
 import { form } from "./formTestUtils";
 
@@ -145,27 +145,5 @@ describe("formSubmit serialization", () => {
         });
         expect(serialized.kind).toBe("formData");
         expect(serialized.formData.get("folder")).toBe("avatars");
-    });
-
-    test("submitForm returns a normalized result and never throws for network failures", async () => {
-        const target = form(`<form><input name="email" value="ada@example.com"></form>`);
-        let requestBody = "";
-        globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
-            requestBody = String(init?.body);
-            return new Response(JSON.stringify({ ok: true }), {
-                status: 201,
-                statusText: "Created",
-                headers: { "content-type": "application/json" },
-            });
-        }) as typeof fetch;
-        const result = await submitForm(target, { url: "/api/users", method: "POST" });
-        expect(requestBody).toBe(JSON.stringify({ email: "ada@example.com" }));
-        expect(result).toMatchObject({ ok: true, status: 201, statusText: "Created", body: { ok: true }, message: "" });
-
-        globalThis.fetch = (async () => {
-            throw new Error("offline");
-        }) as unknown as typeof fetch;
-        const failed = await submitForm(target, { url: "/api/users", method: "POST" });
-        expect(failed).toMatchObject({ ok: false, status: 0, statusText: "Network Error", message: "offline" });
     });
 });

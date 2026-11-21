@@ -210,7 +210,6 @@ export class ProviderInstanceHost {
                 env: this.env,
                 credentials: this.credentials,
                 providerSource: this.bootstrap.providers,
-                collectionSource: this.bootstrap.collections,
             }),
             release: lease.release,
         };

@@ -5,7 +5,6 @@ import { ContentValidationError } from "@bernouy/content";
 import {
     selectedCapabilityResolver,
     selectedPublicSvgCapabilityValidator,
-    selectedQueryCapabilityResolver,
 } from "../../src/runtime/stores/selections/capabilities";
 
 const capability = {
@@ -17,13 +16,13 @@ const capability = {
 
 describe("selected query capability resolution", () => {
     test("uses the exact pinned digest and keeps historical yanked selections readable", async () => {
-        const resolve = selectedQueryCapabilityResolver(
+        const resolve = selectedCapabilityResolver(
             "default",
             selections("sha256:" + "a".repeat(64)),
             releases("sha256:" + "a".repeat(64), true),
         );
 
-        expect(await resolve([{ contractId: "ulvia/catalog", capabilityId: "list" }])).toEqual([
+        expect(await resolve([{ contractId: "ulvia/catalog", capabilityId: "list", effect: "query" }])).toEqual([
             {
                 contractId: "ulvia/catalog",
                 capabilityId: "list",
@@ -34,13 +33,13 @@ describe("selected query capability resolution", () => {
     });
 
     test("rejects a catalogue artifact that disagrees with the selected digest", async () => {
-        const resolve = selectedQueryCapabilityResolver(
+        const resolve = selectedCapabilityResolver(
             "default",
             selections("sha256:" + "a".repeat(64)),
             releases("sha256:" + "b".repeat(64), false),
         );
 
-        await expect(resolve([{ contractId: "ulvia/catalog", capabilityId: "list" }])).rejects.toThrow(
+        await expect(resolve([{ contractId: "ulvia/catalog", capabilityId: "list", effect: "query" }])).rejects.toThrow(
             "unavailable or invalid",
         );
     });

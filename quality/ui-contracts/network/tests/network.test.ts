@@ -104,7 +104,7 @@ describe("browser network contracts", () => {
             inspect("fetch(url)", {
                 path: "packages/features/content/src/browser/binding/form/submitRequest.ts",
             })[0]?.severity,
-        ).toBe("INFO");
+        ).toBe("WARNING");
         expect(inspect("fetch(url)", { path: path.replace("queryFetch.ts", "helper.ts") })[0]?.severity).toBe(
             "WARNING",
         );

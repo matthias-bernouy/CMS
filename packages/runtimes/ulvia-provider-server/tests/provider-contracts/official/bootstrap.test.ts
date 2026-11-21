@@ -24,7 +24,7 @@ test("loads the complete official profile and documentation from immutable files
                 loaded.plan.contracts.some((pin) => pin.contractId === release.contractId),
             ),
         ).toBe(true);
-        expect(await sources.collections.list()).toEqual([]);
+        expect(Object.keys(sources)).toEqual(["providers"]);
         expect((await loadSystemArtifacts(sources.providers)).plan).toEqual(loaded.plan);
         await expect(
             sources.providers.get({

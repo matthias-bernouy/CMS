@@ -1,53 +1,8 @@
-import type {
-    BindingCapability,
-    BindingCapabilityResolver,
-    BindingQueryCapability,
-    BindingQueryCapabilityResolver,
-} from "@bernouy/content/page-document";
+import type { BindingCapability, BindingCapabilityResolver } from "@bernouy/content/page-document";
 import { ContentValidationError, type SvgCapabilityValidator } from "@bernouy/content";
 import { compileContractBindings, matchPathTemplate } from "@bernouy/ulvia-contracts/bindings";
 import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import type { ContractSelectionStore } from "@bernouy/repository/providers/selections";
-
-export function selectedQueryCapabilityResolver(
-    siteId: string,
-    selections: Pick<ContractSelectionStore, "get">,
-    releases: Pick<ReleaseCatalogue, "get">,
-): BindingQueryCapabilityResolver {
-    return async (targets) => {
-        if (targets.length === 0) {
-            return [];
-        }
-        const stored = await selections.get(siteId);
-        if (!stored) {
-            throw new Error(`Contract selections are unavailable for site ${JSON.stringify(siteId)}`);
-        }
-        const result: BindingQueryCapability[] = [];
-        for (const target of targets) {
-            const selection = stored.plan.selections.find(({ contractId }) => contractId === target.contractId);
-            if (!selection) {
-                throw unavailableBinding(target.contractId, target.capabilityId);
-            }
-            const record = await releases.get(selection.contractId, selection.version);
-            if (!record || record.admission.digest !== selection.digest) {
-                throw new Error(
-                    `Selected contract ${selection.contractId}@${selection.version} is unavailable or invalid`,
-                );
-            }
-            const capability = record.admission.release.capabilities.find(({ id }) => id === target.capabilityId);
-            if (!capability || capability.behavior.effect !== "query" || capability.output.type === "binary") {
-                throw unavailableBinding(target.contractId, target.capabilityId, "structured query");
-            }
-            result.push({
-                contractId: target.contractId,
-                capabilityId: target.capabilityId,
-                output: capability.output,
-                errors: capability.errors,
-            });
-        }
-        return result;
-    };
-}
 
 export function selectedCapabilityResolver(
     siteId: string,

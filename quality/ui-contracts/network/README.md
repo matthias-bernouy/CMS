@@ -29,8 +29,7 @@ HTTP usage produces `ui.network.http` warnings recommending declarative
 binding where it fits UI loading or submission. The exact transport files below produce
 informational findings instead, with their purpose recorded in `policy.ts`:
 
-- `packages/features/content/src/browser/binding/runtime/query/queryFetch.ts`: query transport.
-- `packages/features/content/src/browser/binding/form/submitRequest.ts`: mutation form submission.
+- `packages/features/content/src/browser/binding/runtime/query/queryFetch.ts`: shared query and mutation transport.
 
 WebSocket and EventSource constructors produce separate informational rules
 for protocol purpose and connection lifecycle review. They are not presented
