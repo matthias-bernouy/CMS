@@ -6,8 +6,19 @@ import {
 import { parseBindingExpression } from "content/blocs/core/markup/expression/parser";
 import type { ExpressionNode } from "content/blocs/core/markup/expression/types";
 import { interpolationExpressions, parseInterpolation } from "content/blocs/core/markup/bindings/operation";
+import { isSupportedAriaAttribute } from "content/blocs/core/markup/validation/contracts/accessibilityAttributes";
 
 export type BoundAttributeValueKind = "boolean" | "string" | "declared-string" | "number" | "integer";
+
+export function implementationAttributeBindingKind(name: string): "boolean" | "string" | null {
+    if (name === "hidden") {
+        return "boolean";
+    }
+    if (name === "id" || name === "tabindex" || /^data-(?!cms-)[a-z][a-z0-9-]*$/u.test(name)) {
+        return "string";
+    }
+    return isSupportedAriaAttribute(name) ? "string" : null;
+}
 
 /** Returns undefined for a static value, otherwise the dynamic binding issue. */
 export function boundAttributeValueIssue(value: string, kind: BoundAttributeValueKind): string | null | undefined {

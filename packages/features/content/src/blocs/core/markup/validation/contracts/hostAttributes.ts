@@ -1,16 +1,16 @@
 import type { BlocSettingItem, BlocSettings, ManagedNativeElement } from "content/pages/interfaces/document";
 import { isPlatformNativeAttributeAllowed } from "content/blocs/core/validation/nativeHtml";
 import { COMPOSITION_CONTROLLER_ATTRIBUTE } from "content/blocs/core/composition/expandCompositions";
-import {
-    implementationAccessibilityAttributeIssue,
-    isSupportedAriaAttribute,
-} from "content/blocs/core/markup/validation/contracts/accessibilityAttributes";
+import { implementationAccessibilityAttributeIssue } from "content/blocs/core/markup/validation/contracts/accessibilityAttributes";
 import {
     isCmsBindingAttribute,
     nativeBindingAttributeIssue,
     nativeBindingElementIssue,
 } from "content/blocs/core/validation/nativeBindings";
-import { boundAttributeValueIssue } from "content/blocs/core/markup/validation/contracts/attributeBindings";
+import {
+    boundAttributeValueIssue,
+    implementationAttributeBindingKind,
+} from "content/blocs/core/markup/validation/contracts/attributeBindings";
 
 const JSON_NUMBER = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/u;
 const SLOT_NAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
@@ -85,7 +85,7 @@ export function pageBlocHostAttributesIssue(
             }
         }
         if (allowImplementationAttributes) {
-            const implementationKind = dynamicImplementationAttributeKind(name);
+            const implementationKind = implementationAttributeBindingKind(name);
             if (implementationKind) {
                 const bindingIssue = boundAttributeValueIssue(value, implementationKind);
                 if (bindingIssue !== undefined) {
@@ -130,16 +130,6 @@ export function pageBlocHostAttributesIssue(
     } catch (error) {
         return `Bloc <${contract.id}> settings are invalid: ${error instanceof Error ? error.message : "constraint mismatch"}`;
     }
-}
-
-function dynamicImplementationAttributeKind(name: string): "boolean" | "string" | null {
-    if (name === "hidden") {
-        return "boolean";
-    }
-    if (name === "id" || name === "tabindex" || /^data-(?!cms-)[a-z][a-z0-9-]*$/u.test(name)) {
-        return "string";
-    }
-    return isSupportedAriaAttribute(name) ? "string" : null;
 }
 
 function isImplementationAttribute(name: string, value: string): boolean {

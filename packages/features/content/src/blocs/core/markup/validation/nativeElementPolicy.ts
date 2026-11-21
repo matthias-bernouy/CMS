@@ -10,11 +10,11 @@ import {
 } from "content/blocs/core/validation/nativeAttributeValues";
 import { isPlatformNativeAttributeAllowed } from "content/blocs/core/validation/nativeHtml";
 import { accessibleSvgIssue, componentImageIssue } from "content/blocs/core/markup/validation/nativeMediaPolicy";
+import { implementationAccessibilityAttributeIssue } from "content/blocs/core/markup/validation/contracts/accessibilityAttributes";
 import {
-    implementationAccessibilityAttributeIssue,
-    isSupportedAriaAttribute,
-} from "content/blocs/core/markup/validation/contracts/accessibilityAttributes";
-import { boundAttributeValueIssue } from "content/blocs/core/markup/validation/contracts/attributeBindings";
+    boundAttributeValueIssue,
+    implementationAttributeBindingKind,
+} from "content/blocs/core/markup/validation/contracts/attributeBindings";
 import { CMS_SVG_ATTRIBUTE, svgReferenceIssue } from "content/blocs/core/markup/security/svgReference";
 
 export type NativePolicyElement = {
@@ -243,16 +243,6 @@ function nativeAttributesIssue(
         return null;
     }
     return nativeAttributeSetIssue(tag, controlled);
-}
-
-function implementationAttributeBindingKind(name: string): "boolean" | "string" | null {
-    if (name === "hidden") {
-        return "boolean";
-    }
-    if (name === "id" || name === "tabindex" || /^data-(?!cms-)[a-z][a-z0-9-]*$/u.test(name)) {
-        return "string";
-    }
-    return isSupportedAriaAttribute(name) ? "string" : null;
 }
 
 function isImplementationAttribute(name: string, value: string): boolean {

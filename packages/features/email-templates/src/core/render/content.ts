@@ -1,3 +1,4 @@
+import { TEMPLATE_LIMITS } from "email-templates/core/limits";
 import { contentSchema, renderedSchema } from "email-templates/schemas/content";
 import type { TemplateContent, TemplateValues } from "email-templates/schemas/content";
 import { invalid } from "email-templates/core/errors";
@@ -7,7 +8,10 @@ import { validateHtml } from "./html";
 
 export function validateContent(input: TemplateContent): TemplateContent {
     const content = contentSchema.parse(input);
-    if (Buffer.byteLength(JSON.stringify(content)) > 65536 || /[\r\n\u0000]/u.test(content.subject)) {
+    if (
+        Buffer.byteLength(JSON.stringify(content)) > TEMPLATE_LIMITS.sourceJsonMaxBytes ||
+        /[\r\n\u0000]/u.test(content.subject)
+    ) {
         invalid();
     }
     const names = new Set<string>();
@@ -24,7 +28,10 @@ export function validateContent(input: TemplateContent): TemplateContent {
     }
     const html = validateHtml(content);
     const normalized = contentSchema.safeParse(content.html === undefined ? content : { ...content, html });
-    if (!normalized.success || Buffer.byteLength(JSON.stringify(normalized.data)) > 65536) {
+    if (
+        !normalized.success ||
+        Buffer.byteLength(JSON.stringify(normalized.data)) > TEMPLATE_LIMITS.sourceJsonMaxBytes
+    ) {
         invalid();
     }
     return normalized.data;
@@ -34,7 +41,12 @@ export function renderContent(input: TemplateContent, values: TemplateValues) {
     const supplied = new Map<string, string>();
     for (const { name, value } of values) {
         const variable = content.variables.find((entry) => entry.name === name);
-        if (!variable || supplied.has(name) || value.length > 8192 || value.includes("\0")) {
+        if (
+            !variable ||
+            supplied.has(name) ||
+            value.length > TEMPLATE_LIMITS.variableValueMaxCodeUnits ||
+            value.includes("\0")
+        ) {
             invalid();
         }
         if (variable.kind === "url" && !validUrl(value)) {
@@ -73,7 +85,7 @@ export function renderContent(input: TemplateContent, values: TemplateValues) {
     };
     if (
         /[\r\n\u0000]/u.test(rendered.subject) ||
-        Buffer.byteLength(JSON.stringify(rendered)) > 262144 ||
+        Buffer.byteLength(JSON.stringify(rendered)) > TEMPLATE_LIMITS.renderedJsonMaxBytes ||
         !renderedSchema.safeParse(rendered).success
     ) {
         invalid();

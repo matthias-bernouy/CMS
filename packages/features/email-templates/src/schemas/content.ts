@@ -1,3 +1,4 @@
+import { TEMPLATE_LIMITS } from "email-templates/core/limits";
 import { contractString, z } from "@bernouy/ulvia-sdk";
 
 export const idSchema = contractString({ format: "uuid", maxLength: 36 });
@@ -8,19 +9,27 @@ const variableSchema = z.strictObject({
     required: z.boolean(),
 });
 export const contentSchema = z.strictObject({
-    subject: contractString({ minLength: 1, maxLength: 500, sensitive: true }),
-    text: contractString({ minLength: 1, maxLength: 32768, sensitive: true }),
-    html: contractString({ minLength: 1, maxLength: 32768, sensitive: true }).optional(),
-    variables: z.array(variableSchema).max(32),
+    subject: contractString({ minLength: 1, maxLength: TEMPLATE_LIMITS.sourceSubjectMaxCodeUnits, sensitive: true }),
+    text: contractString({ minLength: 1, maxLength: TEMPLATE_LIMITS.sourceBodyMaxCodeUnits, sensitive: true }),
+    html: contractString({
+        minLength: 1,
+        maxLength: TEMPLATE_LIMITS.sourceBodyMaxCodeUnits,
+        sensitive: true,
+    }).optional(),
+    variables: z.array(variableSchema).max(TEMPLATE_LIMITS.variableCount),
 });
 export const valueSchema = z.strictObject({
     name: contractString({ minLength: 1, maxLength: 64 }),
-    value: contractString({ maxLength: 8192, sensitive: true }),
+    value: contractString({ maxLength: TEMPLATE_LIMITS.variableValueMaxCodeUnits, sensitive: true }),
 });
 export const renderedSchema = z.strictObject({
-    subject: contractString({ minLength: 1, maxLength: 998, sensitive: true }),
-    text: contractString({ minLength: 1, maxLength: 131072, sensitive: true }),
-    html: contractString({ minLength: 1, maxLength: 131072, sensitive: true }).optional(),
+    subject: contractString({ minLength: 1, maxLength: TEMPLATE_LIMITS.renderedSubjectMaxCodeUnits, sensitive: true }),
+    text: contractString({ minLength: 1, maxLength: TEMPLATE_LIMITS.renderedBodyMaxCodeUnits, sensitive: true }),
+    html: contractString({
+        minLength: 1,
+        maxLength: TEMPLATE_LIMITS.renderedBodyMaxCodeUnits,
+        sensitive: true,
+    }).optional(),
 });
 export type TemplateContent = z.infer<typeof contentSchema>;
 export type TemplateValues = z.infer<typeof valueSchema>[];

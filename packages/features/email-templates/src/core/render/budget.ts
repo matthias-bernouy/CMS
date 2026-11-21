@@ -1,3 +1,4 @@
+import { TEMPLATE_LIMITS } from "email-templates/core/limits";
 import type { TemplateContent } from "email-templates/schemas/content";
 import { invalid } from "email-templates/core/errors";
 import { tokenPattern } from "./tokens";
@@ -55,9 +56,9 @@ export function assertRenderBudget(content: TemplateContent, values: ReadonlyMap
     const html = new Map([...values].map(([name, value]) => [name, size(value, true)]));
     let bytes = Buffer.byteLength(JSON.stringify({ subject: "", text: "", ...(content.html ? { html: "" } : {}) }));
     for (const [field, maximum] of [
-        ["subject", 998],
-        ["text", 131072],
-        ["html", 131072],
+        ["subject", TEMPLATE_LIMITS.renderedSubjectMaxCodeUnits],
+        ["text", TEMPLATE_LIMITS.renderedBodyMaxCodeUnits],
+        ["html", TEMPLATE_LIMITS.renderedBodyMaxCodeUnits],
     ] as const) {
         const source = content[field];
         if (source === undefined) {
@@ -83,7 +84,7 @@ export function assertRenderBudget(content: TemplateContent, values: ReadonlyMap
             offset = match.index + match[0].length;
         }
         add(size(source.slice(offset), false));
-        if (bytes > 262144) {
+        if (bytes > TEMPLATE_LIMITS.renderedJsonMaxBytes) {
             invalid();
         }
     }
