@@ -1,4 +1,8 @@
-import { verifyAccountTemplates, verifyAccountTemplatesAfterRestart } from "./edgeSmoke/templates";
+import {
+    verifyAccountTemplates,
+    verifyAccountTemplatesAfterRestart,
+    verifyAccountEmailDelivery,
+} from "./edgeSmoke/templates";
 import { publishSmokeRepository } from "./fixtures/repositoryBootstrap";
 import { captureCapabilityFailures } from "./fixtures/browserDiagnostics";
 import { expect, test } from "bun:test";
@@ -84,7 +88,15 @@ smoke(
             page.on("pageerror", (error) => browserErrors.push(error.stack ?? error.message));
             console.info("[edge-smoke] explicit collection publication and Page isolation");
             await runEdgeSmoke(page, siteCredentials(primary), primary.origin, registry.origin);
-            const accountTemplateId = await verifyAccountTemplates(page, primary, registry);
+            const { id: accountTemplateId, actor: templateAdministrator } = await verifyAccountTemplates(
+                page,
+                primary,
+                registry,
+            );
+            console.info(
+                "[edge-smoke] published account templates deliver verification and reset through selected Emailer",
+            );
+            await verifyAccountEmailDelivery(primary, environment, templateAdministrator);
             console.info(
                 "[edge-smoke] Docker Provider uses native worker through OAuth MCP with private image isolation",
             );

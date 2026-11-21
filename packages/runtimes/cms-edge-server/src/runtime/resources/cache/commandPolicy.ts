@@ -48,6 +48,7 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "publish-collection-operation": "neutral",
     },
     "ulvia/cms.access": {
+        "update-email-configuration": "neutral",
         "create-personal-access-token": "neutral",
         "revoke-personal-access-token": "neutral",
         "deny-mcp-authorization": "neutral",
@@ -65,6 +66,12 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "confirm-password-reset": "neutral",
         "authorize-mcp-connection": "neutral",
         "confirm-email-verification": "neutral",
+    },
+    "ulvia/cms.email-templates": {
+        "templates.create": "neutral",
+        "templates.update-draft": "neutral",
+        "templates.publish": "neutral",
+        "templates.archive": "neutral",
     },
     "ulvia/cms.emailer": {
         "emailer.send": "neutral",

@@ -41,9 +41,9 @@ test("push all publishes SDK artifacts without builtin collections, then inferre
         expect(await f.remoteFiles.list("contracts")).toHaveLength(17);
         expect(await f.remoteFiles.list("providers")).toHaveLength(1);
         expect(await new LocalCollectionRepository(f.remote).list()).toEqual([]);
-        expect(f.output.slice(1, 17).every((line) => line.startsWith("+ contract"))).toBe(true);
-        expect(f.output[17]).toStartWith("+ provider-manifest");
-        expect(f.output.at(-1)).toBe("Published 17 local releases.");
+        expect(f.output.slice(1, 18).every((line) => line.startsWith("+ contract"))).toBe(true);
+        expect(f.output[18]).toStartWith("+ provider-manifest");
+        expect(f.output.at(-1)).toBe("Published 18 local releases.");
         const provider = JSON.parse(await readFile(join(source, "providers/primary-provider/definition.json"), "utf8"));
         await f.run(["push", `${provider.providerId}@${provider.version}`]);
         expect(f.output.at(-1)).toStartWith("= provider-manifest");

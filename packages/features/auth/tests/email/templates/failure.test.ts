@@ -35,6 +35,7 @@ test("composition failure consumes only its own token and leaves a concurrent ne
             { sub: "user-a", email: "visitor@example.com" },
         ),
     ).rejects.toThrow("Templates unavailable");
+    expect(emailer.sent).toEqual([]);
     expect(await tokens.consume("password_reset", own)).toBeNull();
     expect(await tokens.consume("password_reset", newer)).not.toBeNull();
 });

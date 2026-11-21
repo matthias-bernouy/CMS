@@ -83,7 +83,11 @@ export function accountTemplateClient(gateway: Gateway, connections: ProviderCon
 }
 function target(route: GatewayRoute) {
     const installed = route.installation.installation;
-    return { installationId: installed.id, endpoint: installed.endpoint, accountId: installed.accountId };
+    const instanceId = route.installation.observation?.report.instanceId;
+    if (!instanceId) {
+        throw new Error("Selected Templates instance identity is unavailable");
+    }
+    return { installationId: installed.id, endpoint: installed.endpoint, accountId: installed.accountId, instanceId };
 }
 function sourceIdentity(route: GatewayRoute) {
     return createHash("sha256")

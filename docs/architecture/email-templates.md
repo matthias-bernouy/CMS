@@ -13,7 +13,7 @@ The generated primary Provider manifest is version `1.10.0`.
 Runtime composition fixes the instance-private database and uses exact selected
 contracts and current machine authority through the normal Gateway. Associations
 contain an exact template UUID/publication version and a source fingerprint of the
-selected installation ID, endpoint and account ID. A source change requires explicit
+selected installation ID, endpoint, account ID and observed instance ID. A source change requires explicit
 reassociation. Gateway's trusted `expectedTarget` fences that target before dispatch;
 it grants no authority and is never forwarded as capability input.
 
@@ -27,7 +27,8 @@ The provisioning checkpoint remains authoritative during crash recovery.
 
 Publications are immutable; activation of another version is an explicit consumer
 configuration write. Archive blocks edits/new associations, while existing exact
-references continue rendering. No permanent deletion or implicit language fallback
+references continue rendering. Association writes already validated before a concurrent
+archive may finish; there is no distributed transaction between consumers and Templates. No permanent deletion or implicit language fallback
 is provided. Initial Access templates are English; other locales can be authored
 and associated explicitly. No collection, Page or visual editor is installed.
 

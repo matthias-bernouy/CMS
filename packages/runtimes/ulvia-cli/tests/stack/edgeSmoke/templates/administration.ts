@@ -1,7 +1,7 @@
 import { expect } from "bun:test";
 import type { Page } from "playwright";
-import { repositoryApi } from "../../../../../../tests/integration/instance/repository/client";
-import type { HostedSite } from "./setup";
+import { repositoryApi } from "../../../../../../../tests/integration/instance/repository/client";
+import type { HostedSite } from "../setup";
 
 export async function verifyAccountTemplates(page: Page, primary: HostedSite, foreign: HostedSite) {
     const api = repositoryApi(primary.origin);
@@ -88,7 +88,7 @@ export async function verifyAccountTemplates(page: Page, primary: HostedSite, fo
     );
     expect(cross.status).toBe(404);
     await cross.body?.cancel();
-    return id;
+    return { id, actor };
 }
 export async function verifyAccountTemplatesAfterRestart(primary: HostedSite, id: string) {
     const api = repositoryApi(primary.origin);

@@ -75,10 +75,13 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
         expectedTarget !== undefined &&
         (!expectedTarget ||
             typeof expectedTarget !== "object" ||
-            Object.keys(expectedTarget).length !== 3 ||
-            [expectedTarget.installationId, expectedTarget.endpoint, expectedTarget.accountId].some(
-                (part) => typeof part !== "string" || !part.length || part.length > 2048,
-            ))
+            Object.keys(expectedTarget).length !== 4 ||
+            [
+                expectedTarget.installationId,
+                expectedTarget.endpoint,
+                expectedTarget.accountId,
+                expectedTarget.instanceId,
+            ].some((part) => typeof part !== "string" || !part.length || part.length > 2048))
     ) {
         throw new GatewayError("invalid_input", "Invalid expected Provider target");
     }

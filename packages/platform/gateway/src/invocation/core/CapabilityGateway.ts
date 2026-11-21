@@ -159,7 +159,8 @@ export class CapabilityGateway implements GatewayAccessProbe {
             expected &&
             (expected.installationId !== installed.id ||
                 expected.endpoint !== installed.endpoint ||
-                expected.accountId !== installed.accountId)
+                expected.accountId !== installed.accountId ||
+                expected.instanceId !== route.installation.observation?.report.instanceId)
         ) {
             throw new GatewayError("stale_route", "Selected Provider no longer matches the resource association");
         }
