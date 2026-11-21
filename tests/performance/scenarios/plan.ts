@@ -16,6 +16,7 @@ import { hostingTechnicalScenarios } from "./hosting/technical/plan";
 import { readerScenarios } from "./readers/plan";
 import { gatewayScenarios } from "./gateway/plan";
 import { observabilityReadScenarios } from "./observability/plan";
+import { clusterLogScenarios } from "./observability/cluster/plan";
 import { installationScenarios } from "./installations/plan";
 import { providerScenarios } from "./providers/plan";
 import { executeQuery } from "./queries/execute";
@@ -50,6 +51,7 @@ export function assessmentScenarios(inventory: CapabilityInventory, fixture: str
         ...readerScenarios(inventory, fixture),
         ...gatewayScenarios(inventory, fixture),
         ...observabilityReadScenarios(inventory, fixture),
+        ...clusterLogScenarios(inventory, fixture),
         ...installationScenarios(inventory, fixture, tenants),
         ...providerScenarios(inventory, fixture, tenants),
     ];

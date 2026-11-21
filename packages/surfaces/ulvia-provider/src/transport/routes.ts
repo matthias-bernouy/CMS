@@ -10,6 +10,7 @@ export function compileProviderRoutes(releases: readonly ResolvedContract[]) {
                 release.contractId !== "ulvia/provider.connections" &&
                 release.contractId !== "ulvia/provider.routing" &&
                 release.contractId !== "ulvia/provider.tls" &&
+                release.contractId !== "ulvia/cluster.logs" &&
                 release.contractId !== "ulvia/repository",
         )
     ) {

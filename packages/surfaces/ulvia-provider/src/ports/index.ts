@@ -19,6 +19,7 @@ import type { SmtpEmailerServices } from "@bernouy/email-smtp/feature";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { Logger } from "@bernouy/logging";
 import type { ObservabilityServices } from "@bernouy/observability/feature";
+import type { ClusterLogsServices } from "@bernouy/observability/cluster/feature";
 
 export interface CmsContentDependencies
     extends Pick<ContentServices, "repo" | "contentQuery">,
@@ -41,6 +42,7 @@ export interface CmsCollectionDependencies {
 /** Ports supplied by the runtime for SDK feature implementations. */
 export type UlviaProviderFeatureServices = Partial<
     RoutingServices &
+        ClusterLogsServices &
         HostingTlsServices &
         HostingServices &
         SmtpEmailerServices &

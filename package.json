@@ -27,6 +27,7 @@
         "perf": "bun run infra/workspace.ts perf"
     },
     "devDependencies": {
+        "@bernouy/observability": "workspace:*",
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/auth": "workspace:*",
         "@bernouy/content": "workspace:*",

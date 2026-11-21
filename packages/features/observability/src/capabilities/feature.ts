@@ -12,7 +12,7 @@ export const observabilityFeature = defineFeature({
     publisherId: "ulvia",
     catalogue: { icon: "activity", categories: ["administration", "observability"] },
     mapError: mapObservabilityError,
-    documents: new URL("../docs/", import.meta.url),
+    documents: new URL("../../docs/", import.meta.url),
     capabilities: [appendLogs, queryLogs, getLogs, aggregateLogs],
 });
 export type { ObservabilityService, ObservabilityServices } from "observability/interfaces/ObservabilityServices";

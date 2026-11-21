@@ -9,6 +9,7 @@ import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repositor
 
 // Reviewed current releases; historical execution compatibility is verified separately.
 const releaseDigests = {
+    "ulvia/cluster.logs": "sha256:72097b513bf036bc8ad7192f4be59651420dd99c659be631e46b5b33eaf62132",
     "ulvia/cms.emailer": "sha256:a235f01b1fec08716ea722caccc6bc56974b15e449b2f41b0559e4ea686b70ed",
     "ulvia/cms.emailer.smtp": "sha256:ae8b92cd8a685c163229e1c2326c6a687546dd2488dc88a4295eff30e6b256c1",
     "ulvia/cms.access": "sha256:da46389a522b67efc617c090109ff2b3c6050a3f9d79ef05a556477d37a28053",
@@ -38,8 +39,8 @@ test("generated manifest claims the exact SDK implementation inventory", async (
     const compiled = await compileOfficialFeatures();
     await publishContractSet(catalogue, compiled.contracts);
     const manifest = await compileOfficialManifest(catalogue, compiled);
-    expect(manifest.manifest.version).toBe("1.8.0");
-    expect(manifest.manifest.implementations).toHaveLength(13);
+    expect(manifest.manifest.version).toBe("1.9.0");
+    expect(manifest.manifest.implementations).toHaveLength(14);
     for (const implementation of manifest.manifest.implementations) {
         expect(implementation.digest).toBe(releaseDigests[implementation.contractId as keyof typeof releaseDigests]);
     }

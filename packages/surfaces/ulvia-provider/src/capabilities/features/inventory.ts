@@ -1,4 +1,5 @@
 import { routingImplementation } from "./implementations/provider/routing";
+import { clusterLogsImplementation } from "./implementations/provider/clusterLogs";
 import { hostingTlsImplementation } from "./implementations/provider/tls";
 import { hostingImplementation } from "./implementations/provider/hosting";
 import { installationsImplementation } from "./implementations/repository/installations";
@@ -34,6 +35,7 @@ const officialFeatureInventory: readonly OfficialFeatureSource[] = Object.freeze
     { implementation: installationsImplementation },
     { implementation: hostingImplementation },
     { implementation: routingImplementation },
+    { implementation: clusterLogsImplementation },
     { implementation: hostingTlsImplementation },
     { definition: providerCmsInstancesFeature },
 ]);

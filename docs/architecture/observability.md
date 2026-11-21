@@ -29,6 +29,61 @@ Append authority does not imply journal read or administration authority.
 
 Host-wide Provider and global Repository diagnostics remain operator-owned stdout/stderr records. They are not copied into hosted site journals.
 
+## Operator federation
+
+`ulvia/cluster.logs@1.0.0` is a separate host-only read contract. It is excluded
+from ordinary and Control CMS plans, their execution reports and selection
+mutations. Exact registration is accepted only in the isolated `cluster-logs`
+runtime. Tenant administrator, control and delegation credentials cannot invoke
+its routes. The existing `ULVIA_PROVIDER_OPERATOR_TOKEN` authenticates these
+static `QUERY` bindings on the Provider listener:
+
+- `/ulvia/operator/logs/query` (`logs.query`)
+- `/ulvia/operator/logs/get` (`logs.get`)
+- `/ulvia/operator/logs/aggregate` (`logs.aggregate`)
+- `/ulvia/operator/logs/latency` (`latency.query`)
+
+`GET /ulvia/report` with that operator credential returns only the isolated
+`instance:cluster-logs` account and its exact Cluster Logs implementation.
+Tenant credentials retain their own instance report without this contract;
+the operator credential grants neither a tenant control lease nor CMS execution.
+
+This version has HTTP bindings only; it is not exposed through tenant `/.cms/mcp`.
+Discover IDs using the existing bounded operator instance catalogue. Each request
+selects 1–16 distinct instances; larger deployments require explicit batches.
+Every source is resolved freshly through the host registry. Instances with the
+exact supported Observability release can be read even when disabled or failed,
+so operators can diagnose their retained history. The runtime opens their
+existing Mongo collections without hydrating CMS runtimes, creating indexes,
+altering records or copying journals. Missing instances and unsupported releases
+are reported as unavailable/unsupported sources.
+
+The service admits at most four concurrent operator HTTP requests, each with at
+most four concurrent source reads. Each database operation has a two-second
+execution deadline. A query reads at most `limit + 1` projected summaries per
+source (limit at most 200), then merges by descending reception time, entry ID
+and instance ID. Signed host/filter/selection-bound cursors expire after 15
+minutes. A failed source stays excluded through that cursor traversal; restart
+the query to retry it. Results are not transactional snapshots. Partial source
+coverage is explicit on every response, including empty and get responses.
+
+Group counts are calculated in Mongo, with at most 500 source groups. The global
+top 50 is selected after merging complete successful source groups. A source
+exceeding its group/point budget is explicitly excluded, not silently truncated.
+
+Latency queries require one exact event and service so unlike measurement
+boundaries cannot be mixed accidentally. Mongo constructs bounded logarithmic
+histograms from retained numeric `durationMs`, grouped by UTC interval and
+capability identity, instance or service. Histograms merge before percentile
+calculation. Results name `histogram-upper-bound-v1`, with 10% relative bucket
+width above 1 ms and a first bucket covering submillisecond durations. Estimates
+are upper bucket bounds clamped to observed extrema; counts, means and extrema
+use original durations. Responses contain at most 500 points. Empty windows have
+no points. No ingestion, metrics collection, persisted rollup or new telemetry
+format is introduced. Coverage and deployment attribution remain limited by
+the original journals.
+
+
 Declared Provider refusals record their stable error code and, when known, a
 bounded diagnostic `reason`, such as `page.multiple_h1`. The official surface
 recognizes its own reason catalogue and preserves this identifier through
@@ -94,7 +149,10 @@ shared container stdout/stderr for operator diagnosis. A Registry is a logical
 instance in the Provider, with its own instance journal. No application journal
 files or logging bind mounts are created.
 
-Exports, alerts, arbitrary full-text searches, distributed spans and performance percentiles are not implemented by this version.
+The instance-scoped `ulvia/cms.observability@1.0.0` contract does not implement
+exports, alerts, arbitrary full-text searches, distributed spans or performance
+percentiles. The separate operator contract computes latency estimates from
+existing recorded durations as described above.
 
 Runtime log filters combine different fields with AND and repeated values of the
 same field with OR. Levels are exact matches; MongoDB severity letters and Caddy's

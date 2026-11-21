@@ -20,7 +20,8 @@ test("verify retains functional acceptance and static performance guards without
     });
     expect(workspaceSteps("test", []).some(({ env }) => env?.ULVIA_RUN_COLLECTION_STYLE_BROWSER === "1")).toBe(false);
     expect(steps.find(({ env }) => env?.ULVIA_RUN_CONTENT_LIFECYCLE === "1")).toMatchObject({
-        args: ["bun", "test", "./tests/integration/content"],
+        args: ["bun", "test", "./tests/integration/content", "./tests/integration/observability"],
+        env: { ULVIA_RUN_CLUSTER_LOGS_MONGO: "1" },
         continueOnFailure: true,
     });
     expect(steps.filter(({ args }) => args.includes("infra/images/build.ts"))).toHaveLength(1);

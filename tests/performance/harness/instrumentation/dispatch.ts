@@ -70,9 +70,9 @@ export function instrumentDispatcher(prototype: Dispatcher): void {
         seen.add(identity);
         const publicScope = scope.getStore();
         const correlated =
-            requested === "ulvia/provider.tls" &&
-            context.invocation?.instanceId === "hosting:tls" &&
-            publicScope?.publicBinding === requested;
+            publicScope?.publicBinding === requested &&
+            ((requested === "ulvia/provider.tls" && context.invocation?.instanceId === "hosting:tls") ||
+                (requested === "ulvia/cluster.logs" && context.invocation?.instanceId === "instance:cluster-logs"));
         const traceId = correlated
             ? publicScope.traceId
             : (context.trace?.traceId ?? context.rootRequestId ?? context.requestId);

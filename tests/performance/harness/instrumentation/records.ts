@@ -4,7 +4,11 @@ import { createHash } from "node:crypto";
 
 export const PROBE_FILE = "/tmp/ulvia-capability-performance.ndjson";
 export const TRACE_DIRECTORY = "/tmp/ulvia-capability-performance";
-export type Scope = Readonly<{ traceId: string; spanId?: string; publicBinding?: "ulvia/provider.tls" }>;
+export type Scope = Readonly<{
+    traceId: string;
+    spanId?: string;
+    publicBinding?: "ulvia/provider.tls" | "ulvia/cluster.logs";
+}>;
 export const scope = new AsyncLocalStorage<Scope>();
 const counters = new Map<string, { records: number; bytes: number; overflow: boolean }>();
 mkdirSync(TRACE_DIRECTORY, { recursive: true });

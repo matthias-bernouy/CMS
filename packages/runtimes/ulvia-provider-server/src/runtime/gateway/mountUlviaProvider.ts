@@ -6,6 +6,7 @@ import {
     ProviderOperatorApi,
     UlviaProvider,
     mountPublicCapabilities,
+    mountOperatorCapabilities,
     type ProviderInstanceLifecycle,
 } from "@bernouy/ulvia-provider";
 import type { UlviaProviderInstanceRuntime } from "@bernouy/ulvia-provider";
@@ -26,6 +27,7 @@ export function mountUlviaProvider(options: {
     lifecycle: ProviderInstanceLifecycle;
     logger: Logger;
     tls?: UlviaProviderInstanceRuntime;
+    clusterLogs?: UlviaProviderInstanceRuntime;
     readiness?: () => Promise<boolean>;
     routing: {
         authority: RoutingAuthority;
@@ -55,12 +57,19 @@ export function mountUlviaProvider(options: {
         }
     });
     new ProviderOperatorApi(runner, env.ULVIA_PROVIDER_OPERATOR_TOKEN, lifecycle);
+    const operatorReport = options.clusterLogs
+        ? mountOperatorCapabilities(runner, options.clusterLogs, env.ULVIA_PROVIDER_OPERATOR_TOKEN)
+        : undefined;
     if (options.tls) {
         mountPublicCapabilities(runner, options.tls, logger);
     }
     new UlviaProvider(runner, {
         logger,
         authenticateReportToken: async (token) => {
+            const operator = operatorReport?.(token);
+            if (operator) {
+                return operator;
+            }
             const instance = token.startsWith(EDGE_LEASE_PREFIX)
                 ? await controlInstance(token)
                 : await authenticator.authenticateReportToken(token);

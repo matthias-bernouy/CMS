@@ -19,6 +19,7 @@ export function lifecycleScenarios(
     ) => Promise<PreparedSample>,
     variants: readonly Variant[] = ["nominal", "cold", "warm", "concurrent"],
     scenarioVersion = 1,
+    concurrency?: number,
 ) {
     return capabilities.flatMap((capability) => {
         const target = inventory.targets.find(
@@ -30,6 +31,7 @@ export function lifecycleScenarios(
         return target.definition.bindings.flatMap(({ id }) =>
             variants.map((variant) => {
                 const obligation = { target: target.key, binding: id, variant };
+                const load = loadPolicy(variant);
                 const definition = {
                     id: `${family}.lifecycle.${capability}.${id}.${variant}`,
                     version: scenarioVersion,
@@ -37,7 +39,8 @@ export function lifecycleScenarios(
                     obligations: [obligation],
                     budget: budgetFor(target, variant),
                     samples: variant === "cold" ? 3 : 10,
-                    ...loadPolicy(variant),
+                    ...load,
+                    ...(load.load && concurrency !== undefined ? { load: { ...load.load, concurrency } } : {}),
                 };
                 return {
                     definition,

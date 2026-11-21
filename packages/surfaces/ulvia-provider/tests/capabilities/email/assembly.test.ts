@@ -28,6 +28,7 @@ test("the surface shares one compiled feature inventory for releases, manifest c
         "ulvia/cms.installations",
         "ulvia/cms.hosting",
         "ulvia/provider.routing",
+        "ulvia/cluster.logs",
         "ulvia/provider.tls",
         "ulvia/provider.cms-instances",
     ]);
@@ -44,6 +45,7 @@ test("the surface shares one compiled feature inventory for releases, manifest c
         "ulvia/cms.installations",
         "ulvia/cms.hosting",
         "ulvia/provider.routing",
+        "ulvia/cluster.logs",
         "ulvia/provider.tls",
     ]);
     expect(build.implementedContracts[0]!.capabilities.map(({ definition }) => definition.id).sort()).toEqual([

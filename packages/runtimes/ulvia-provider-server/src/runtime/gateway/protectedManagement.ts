@@ -21,6 +21,9 @@ export function createProtectedProviderManagement(
     };
     return {
         replaceSelections: async (input) => {
+            if (input.selections.some(({ contractId }) => contractId === "ulvia/cluster.logs")) {
+                throw policyError("cluster_logs_operator_only");
+            }
             const control = await controlInstallation();
             const contract = plan.contracts.find((candidate) => candidate.contractId === CONTROL_CONTRACT_ID);
             if (!contract) {

@@ -17,6 +17,9 @@ export async function readStoredPlan(
     }
     return Promise.all(
         plan.contracts.map(async (pin) => {
+            if (pin.contractId === "ulvia/cluster.logs") {
+                throw new Error("A CMS instance cannot install cluster operator logs");
+            }
             support.assert(pin, "system installation");
             if (
                 !manifest.admission.manifest.implementations.some(

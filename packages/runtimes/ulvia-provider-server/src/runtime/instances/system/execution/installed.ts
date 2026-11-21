@@ -51,6 +51,9 @@ export async function readInstalledExecution(
     }
     const contracts: ResolvedContract[] = [];
     for (const pin of previous.implementations) {
+        if (pin.contractId === "ulvia/cluster.logs") {
+            throw new Error("A CMS instance cannot offer cluster operator logs");
+        }
         support.assert(pin, `instance:${instance.id}/implementation`);
         const stored = await stores.releases.get(pin.contractId, pin.version);
         if (!stored || stored.admission.digest !== pin.digest) {

@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { operatorAuthorized } from "./operator/authentication";
 import type { Runner } from "@bernouy/http-runner";
 import { readBoundedRequestBody, RequestBodyTooLargeError } from "@bernouy/http-runner";
 import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
@@ -121,16 +121,6 @@ async function parseCreateInput(request: Request): Promise<CreateProviderInstanc
 function instanceIdFrom(request: Request, suffix: string): string {
     const path = new URL(request.url).pathname;
     return decodeURIComponent(path.slice("/ulvia/operator/instances/".length, suffix ? -suffix.length : undefined));
-}
-
-function operatorAuthorized(request: Request, expected: string): boolean {
-    const header = request.headers.get("authorization");
-    if (!header?.startsWith("Bearer ")) {
-        return false;
-    }
-    const received = Buffer.from(header.slice(7));
-    const secret = Buffer.from(expected);
-    return received.length === secret.length && timingSafeEqual(received, secret);
 }
 
 function operatorError(error: unknown): Response {

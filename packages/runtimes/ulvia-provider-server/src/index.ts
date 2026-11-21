@@ -1,4 +1,7 @@
 import { createRoutingRuntime } from "./runtime/instances/system/hosting/routingRuntime";
+import { ClusterLogs } from "@bernouy/observability/cluster";
+import { createClusterLogsRuntime } from "./runtime/gateway/operator/runtime";
+import { clusterJournalDirectory } from "./runtime/gateway/operator/journals";
 import { MongoSiteUpgradeStorage } from "@bernouy/repository/upgrades/mongo";
 import { MongoProviderOperationStore } from "./runtime/provider-operations/MongoProviderOperationStore";
 import { createTlsRuntime } from "./runtime/instances/system/hosting/tlsRuntime";
@@ -154,6 +157,14 @@ try {
         );
         const routing = await createRoutingRuntime(system, hosting.routing, hostingConfiguration.edgeSecret);
         const tls = await createTlsRuntime(system, hosting.delivery.authority);
+        const clusterLogs = await createClusterLogsRuntime(
+            system,
+            new ClusterLogs({
+                directory: clusterJournalDirectory(mongo, instances),
+                cursorKey: env.CMS_SESSION_SECRET,
+                scopeId: env.ULVIA_PROVIDER_PUBLIC_URL,
+            }),
+        );
         provider = mountUlviaProvider({
             env,
             authenticator,
@@ -161,6 +172,7 @@ try {
             lifecycle,
             logger,
             tls,
+            clusterLogs,
             readiness: async () => (await hosting.store.readInstallation())?.phase === "ready",
             routing: { authority: hosting.routing, instances, authenticate: routing.authenticate },
         });

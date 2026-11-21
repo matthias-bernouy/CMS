@@ -19,7 +19,8 @@ export class SystemBootstrap implements SystemInstallationSource {
                     contractId !== "ulvia/repository" &&
                     contractId !== "ulvia/cms.hosting" &&
                     contractId !== "ulvia/provider.routing" &&
-                    contractId !== "ulvia/provider.tls",
+                    contractId !== "ulvia/provider.tls" &&
+                    contractId !== "ulvia/cluster.logs",
             ),
         });
     }
@@ -31,7 +32,8 @@ export class SystemBootstrap implements SystemInstallationSource {
                 ({ contractId }) =>
                     contractId !== "ulvia/repository" &&
                     contractId !== "ulvia/provider.routing" &&
-                    contractId !== "ulvia/provider.tls",
+                    contractId !== "ulvia/provider.tls" &&
+                    contractId !== "ulvia/cluster.logs",
             ),
         });
     }
@@ -47,6 +49,13 @@ export class SystemBootstrap implements SystemInstallationSource {
         return deepFreeze({
             ...plan,
             contracts: plan.contracts.filter(({ contractId }) => contractId === "ulvia/provider.tls"),
+        });
+    }
+    async clusterLogs(): Promise<SystemInstallationPlan> {
+        const { plan } = await this.artifacts();
+        return deepFreeze({
+            ...plan,
+            contracts: plan.contracts.filter(({ contractId }) => contractId === "ulvia/cluster.logs"),
         });
     }
     async contracts(plan: SystemInstallationPlan) {

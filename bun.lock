@@ -17,6 +17,7 @@
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
         "@bernouy/logging": "workspace:*",
+        "@bernouy/observability": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/repository": "workspace:*",
         "@bernouy/resource-identity": "workspace:*",

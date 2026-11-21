@@ -113,6 +113,11 @@ behavior.
 - Retain the borrowed instance runtime through streamed response completion or
   cancellation using Foundation's generic response-resource lease helper.
 
+- `ulvia/cluster.logs` is operator-only. Never register or advertise it in a CMS
+  instance runtime, including Control. Its isolated runtime requires the fixed
+  cluster scope; only the operator transport may construct that authority after
+  credential verification. Do not expose it through tenant MCP or delegation.
+
 - `mountPublicCapabilities` mounts only exact admitted static public GET queries
   in an injected technical runtime. Strip caller transport/identity headers and
   construct anonymous scope on the server. Do not make signed CMS or routing

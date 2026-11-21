@@ -82,5 +82,6 @@ export {
     type ProviderInstanceRuntimeCredentials,
 } from "@bernouy/hosting/instances";
 export { ProviderOperatorApi } from "../transport/ProviderOperatorApi";
+export { mountOperatorCapabilities } from "../transport/operator/mountCapabilities";
 export { mountPublicCapabilities } from "../transport/public/mountPublicCapabilities";
 export { assertSystemUpgrade } from "@bernouy/hosting/instances";

@@ -68,6 +68,7 @@ export async function mcpContainers(
             providerUrl: () => cluster.endpoint(providerName, 5103),
             waitForProvider: () => waitForHttp(`${providerUrl}/readyz`),
             instanceToken: instance.credentials.instanceAccessToken,
+            operatorToken,
             routingSecret: hosting.edgeSecret,
             namedToken: named.credentials.instanceAccessToken,
             cmsUrl,

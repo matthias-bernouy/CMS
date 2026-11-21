@@ -11,6 +11,11 @@ import { officialFeatureImplementations } from "./inventory";
 import artifact from "../../../dist/generated/runtime.json";
 import retained from "./compatibility/retained.json";
 import { formatOfficialCapabilityFailure } from "./errors";
+import {
+    CLUSTER_LOGS_CONTRACT_ID,
+    CLUSTER_LOGS_SITE_ID,
+    CLUSTER_LOGS_INSTANCE_ID,
+} from "@bernouy/observability/cluster/feature";
 
 let loaded: ReturnType<typeof loadImplementations<UlviaProviderFeatureServices>> | undefined;
 
@@ -35,6 +40,14 @@ export async function registerOfficialFeatures(
     }
     if (!options) {
         throw new TypeError("Feature registration requires exact scope and durable execution options");
+    }
+    if (
+        implementations.some(({ contractId }) => contractId === CLUSTER_LOGS_CONTRACT_ID) &&
+        (implementations.length !== 1 ||
+            options.scope.siteId !== CLUSTER_LOGS_SITE_ID ||
+            options.scope.instanceId !== CLUSTER_LOGS_INSTANCE_ID)
+    ) {
+        throw new TypeError("Cluster logs cannot be offered by a CMS instance");
     }
     const registration = {
         ...options,

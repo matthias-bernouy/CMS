@@ -25,9 +25,9 @@ export async function historicalRegistryFixture() {
         {
             ...current,
             version: "1.2.0",
-            implementations: current.implementations.map((pin: { contractId: string }) =>
-                pin.contractId === oldRegistry.contractId ? oldRegistry : pin,
-            ),
+            implementations: current.implementations
+                .filter((pin: { contractId: string }) => pin.contractId !== "ulvia/cluster.logs")
+                .map((pin: { contractId: string }) => (pin.contractId === oldRegistry.contractId ? oldRegistry : pin)),
         },
         catalogue,
     );

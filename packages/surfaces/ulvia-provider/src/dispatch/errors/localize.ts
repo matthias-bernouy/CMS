@@ -25,6 +25,7 @@ export function isOfficialContract(id: string): boolean {
         "ulvia/cms.hosting",
         "ulvia/provider.routing",
         "ulvia/provider.tls",
+        "ulvia/cluster.logs",
     ].includes(id);
 }
 

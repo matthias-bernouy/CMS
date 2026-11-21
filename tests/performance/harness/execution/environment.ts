@@ -37,6 +37,7 @@ export function assessmentEnvironment(
             instanceId: stack.instanceId,
             control: stack.control,
             providerControl: { origin: stack.providerUrl, token: stack.instanceToken },
+            operatorControl: { origin: stack.providerUrl, token: stack.operatorToken },
             routingControl: { origin: stack.providerUrl, secret: stack.routingSecret },
             ...(dns ? { dns } : {}),
             ...(smtp ? { smtp } : {}),

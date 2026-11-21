@@ -2,6 +2,15 @@
 
 Instance-scoped diagnostic journals. This package is not a durable business audit or a metrics backend.
 
+- `./cluster` owns read-only federation of existing journals; `./cluster/feature`
+  generates the isolated operator contract `ulvia/cluster.logs`. Keep its sources
+  injected and its DTOs shared with the instance journal. It may compute bounded
+  statistics at read time, but must not collect telemetry or persist rollups.
+- Cluster reads require the fixed host-owned operator scope, never a CMS instance
+  administrator. Preserve explicit partial coverage and merge histograms before
+  calculating percentiles. Memory fixtures belong in tests; production Mongo
+  reads must project summaries or aggregate in storage without tenant hydration.
+
 - Bind the service to an authenticated instance in the runtime. Inputs never select a tenant or service identity.
 - Query, aggregate, deduplicate and expire in the store; never download a journal for filtering.
 - Keep records, queries, output sizes, aggregation buckets and collector queues bounded.

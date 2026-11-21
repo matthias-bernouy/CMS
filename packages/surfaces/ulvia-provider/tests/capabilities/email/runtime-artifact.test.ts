@@ -49,6 +49,7 @@ console.log(JSON.stringify(runtime.implementations.map(({contractId}) => contrac
         expect(stderr).toBe("");
         expect(code).toBe(0);
         expect(JSON.parse(stdout)).toEqual([
+            "ulvia/cluster.logs",
             "ulvia/cms.access",
             "ulvia/cms.authoring",
             "ulvia/cms.content",

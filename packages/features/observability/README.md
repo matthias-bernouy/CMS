@@ -9,6 +9,9 @@ journal, not a durable business audit.
 - The package root exports `CmsObservability`, `ObservabilityError`, the
   structural `ObservabilityService` port and schema-derived journal DTOs.
 - `./feature` exports the complete `observabilityFeature` and its service ports.
+- `./cluster` exports bounded read-only federation; `./cluster/feature` defines
+  the host-only `ulvia/cluster.logs` contract. It reuses existing journals and
+  computes latency estimates at read time without adding telemetry storage.
 - `./logging` exports the bounded collector and injected logging transport.
 - `./memory` is the test adapter; `./mongo` is a runtime composition import.
 

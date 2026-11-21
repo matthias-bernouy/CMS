@@ -21,6 +21,7 @@ export type QueryEnvironment = Readonly<{
             smtp?: SmtpService;
             tls?: TlsControl;
             providerControl?: Readonly<{ origin: () => Promise<string>; token: string }>;
+            operatorControl?: Readonly<{ origin: () => Promise<string>; token: string }>;
             routingControl?: Readonly<{ origin: () => Promise<string>; secret: string }>;
             createPendingSite?: (
                 alias: string,

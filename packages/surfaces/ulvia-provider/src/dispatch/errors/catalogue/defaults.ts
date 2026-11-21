@@ -19,6 +19,10 @@ export const defaultsMessages = {
         "Some of the supplied information is invalid.",
         "Certaines informations fournies sont invalides.",
     ],
+    "QUERY_TOO_LARGE": [
+        "This query exceeds the result budget. Narrow the time window, grouping or filters.",
+        "Cette requête dépasse la limite de résultats. Réduisez la période, le regroupement ou les filtres.",
+    ],
     "INVALID_PAGE": ["The page contains invalid information.", "La page contient des informations invalides."],
     "INVALID_TITLE": ["The Page title is invalid.", "Le titre de la page est invalide."],
     "INVALID_SITE_BLOC": ["The site Bloc definition is invalid.", "La définition du bloc de site est invalide."],
