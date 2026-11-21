@@ -23,6 +23,7 @@ export async function initializeAccountTemplates(
             }
         }
         if (!existing) {
+            checkpoint();
             existing = await templates.create(
                 {
                     id: seed.id,

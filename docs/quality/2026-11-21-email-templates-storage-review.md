@@ -1,5 +1,9 @@
 # Email Templates storage follow-up review
 
+Historical storage validation; its suite did not cover the pre-Templates upgrade or
+preallocation rendering refusal. See the
+[upgrade and rendering follow-up](2026-11-21-email-templates-upgrade-review.md).
+
 Date: 2026-11-21. Branch: `codex/email-templates`, following `4288834be`.
 The [initial review](2026-11-21-email-templates-review.md) records the prior
 embedded-history implementation and its validation. This follow-up replaces that

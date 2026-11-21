@@ -69,6 +69,8 @@ completed browser journey or deployment.
 - [Files and responsive images](images/README.md).
 - [UI contracts](quality/ui-contracts.md): binding ownership, browser request
   diagnostics, source/form checks and current scanner limitations.
+- [Email Templates upgrade and rendering review — 2026-11-21](quality/2026-11-21-email-templates-upgrade-review.md):
+  previous-release upgrades, durable initialization, disabled email and render allocation bounds.
 - [Email Templates storage review — 2026-11-21](quality/2026-11-21-email-templates-storage-review.md):
   removal of total count quotas, separate publications and interrupted-write recovery.
 - [Email Templates implementation review — 2026-11-21](quality/2026-11-21-email-templates-review.md):

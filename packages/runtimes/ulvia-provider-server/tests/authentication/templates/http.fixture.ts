@@ -1,3 +1,5 @@
+import type { UlviaProviderFeatureServices } from "@bernouy/ulvia-provider";
+import { remoteRoute } from "./http.route";
 import { expect } from "bun:test";
 import { CapabilityGateway } from "@bernouy/cms-gateway";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
@@ -14,16 +16,26 @@ import { gatewayRoute, NOW } from "../../../../../../tests/integration/gateway/f
 import { accountTemplateClient } from "../../../src/runtime/authentication/templates/client";
 
 const secret = "test-provider-signature-secret-" + "s".repeat(32);
-export async function httpFixture() {
+export async function httpFixture(emailer?: UlviaProviderFeatureServices["emailer"]) {
     const build = await loadOfficialFeatures();
-    const view = build.implementedContracts.find(({ release }) => release.contractId === "ulvia/cms.email-templates")!;
+    const view = build.implementedContracts.find(
+        ({ release }) => release.contractId === (emailer ? "ulvia/cms.emailer.smtp" : "ulvia/cms.email-templates"),
+    )!;
+    const requested = build.contracts.find(
+        ({ release }) => release.contractId === (emailer ? "ulvia/cms.emailer" : view.release.contractId),
+    )!;
     const templates = new EmailTemplates(new MemoryTemplateStore());
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     await registerOfficialFeatures(
         dispatcher,
-        { emailTemplates: templates },
+        { emailTemplates: templates, ...(emailer ? { emailer } : {}) },
         [{ contractId: view.release.contractId, version: view.release.version, digest: view.digest }],
-        { providerId: "ulvia/primary-provider", scope: { siteId: "site-a", instanceId: "instance:account-a" } },
+        {
+            providerId: "ulvia/primary-provider",
+            scope: { siteId: "site-a", instanceId: "instance:account-a" },
+            // This refusal fixture executes once per fresh key; durable receipt behavior is covered separately.
+            executeKeyed: async (_invocation, execute) => execute(),
+        },
     );
     const relay = createProviderContractRelay(
         compileProviderRoutes([view]),
@@ -49,33 +61,7 @@ export async function httpFixture() {
     });
     const base = await gatewayRoute({ endpoint: server.url.origin, installationId: "remote-templates" });
     const admitted = build.contracts.find(({ release }) => release.contractId === view.release.contractId)!;
-    const pin = { contractId: admitted.release.contractId, version: admitted.release.version, digest: admitted.digest };
-    const route = {
-        ...base,
-        manifest: {
-            ...base.manifest,
-            admission: {
-                ...base.manifest.admission,
-                manifest: { ...base.manifest.admission.manifest, implementations: [{ ...pin, requires: [] }] },
-            },
-        },
-        installation: {
-            ...base.installation,
-            observation: {
-                ...base.installation.observation!,
-                report: {
-                    ...base.installation.observation!.report,
-                    implementations: [{ ...pin, status: "ready" as const }],
-                },
-            },
-        },
-        release: { ...base.release, admission: admitted },
-        requestedRelease: { ...base.requestedRelease, admission: admitted },
-        selection: { ...base.selection, ...pin },
-        lineage: [
-            { ...pin, name: admitted.release.name, capabilityIds: admitted.release.capabilities.map(({ id }) => id) },
-        ],
-    };
+    const route = remoteRoute(base, view, admitted, requested);
     const access = await gatewayRoute({ contractId: "ulvia/cms.access", installationId: "source-a" });
     const connections = new ProviderConnections({
         get: async () =>
@@ -91,6 +77,7 @@ export async function httpFixture() {
     const requirements = build.implementations.find(({ contractId }) => contractId === "ulvia/cms.access")!.requires;
     const gateway = new CapabilityGateway({
         now: () => NOW,
+        commandAudit: { append: async () => {} },
         routes: { resolve: async () => route, isCurrent: async () => true },
         authorize: async (actor, capability) =>
             authorized &&
@@ -98,7 +85,7 @@ export async function httpFixture() {
             actor.installationId === "source-a" &&
             requirements.some(
                 (requirement) =>
-                    requirement.contractId === admitted.release.contractId &&
+                    requirement.contractId === requested.release.contractId &&
                     requirement.capabilityId === capability.id,
             ),
         transport: new HttpGatewayTransport({
@@ -117,6 +104,7 @@ export async function httpFixture() {
     return {
         templates,
         client: client.templates,
+        call: client.call,
         calls: () => calls,
         revoke: () => {
             authorized = false;

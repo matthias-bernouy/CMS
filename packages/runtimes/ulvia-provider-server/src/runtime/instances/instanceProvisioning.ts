@@ -17,6 +17,7 @@ const BOOTSTRAP_ACTOR = "system:provider-provisioner";
 
 type TargetOptions = Readonly<{
     instance: ProviderInstanceRecord;
+    installAccountTemplates: boolean;
     composition: InstanceComposition;
     env: ProviderRuntimeEnv;
     credentials: Pick<ProviderInstanceCredentials, "read">;
@@ -44,9 +45,15 @@ export function createInstanceProvisioningTarget(options: TargetOptions): Offici
             execution.throwIfLeaseLost();
             await options.composition.pairOfficialProvider();
             execution.throwIfLeaseLost();
+            if (
+                options.installAccountTemplates &&
+                plan.contracts.some(({ contractId }) => contractId === "ulvia/cms.email-templates")
+            ) {
+                await options.composition.initializeAccountTemplates(() => execution.throwIfLeaseLost());
+                execution.throwIfLeaseLost();
+            }
         },
         initializeSetup: async (_plan, execution) => {
-            await options.composition.initializeAccountTemplates(() => execution.throwIfLeaseLost());
             if (
                 options.composition.runtime.contracts.some(
                     (contract) =>

@@ -33,6 +33,13 @@ test("system upgrade changes exact pins without reinitializing accounts, setup o
 });
 
 test("system upgrade fences partial work and resumes only unfinished steps with current administrator authority", async () => {
+    const requiredTarget = {
+        ...next,
+        contracts: [
+            ...next.contracts,
+            { contractId: "ulvia/cms.email-templates", version: "1.0.0", digest: `sha256:${"e".repeat(64)}` },
+        ],
+    };
     const registry = new MemoryRegistry(instance("ready"));
     const transitions = new MemoryTransitions();
     const calls: string[] = [];
@@ -52,9 +59,9 @@ test("system upgrade fences partial work and resumes only unfinished steps with 
         }),
         { ...administratorCredentials(), authorizeExtension: async () => allowed },
     );
-    await expect(provisioner.upgradeSystem("instance:one", SYSTEM_PLAN, next, 1, "local:admin")).rejects.toThrow(
-        "Interrupted",
-    );
+    await expect(
+        provisioner.upgradeSystem("instance:one", SYSTEM_PLAN, requiredTarget, 1, "local:admin"),
+    ).rejects.toThrow("Interrupted");
     expect((await registry.get("instance:one"))?.status).toBe("upgrading");
     expect(transitions.record?.completedSteps).toEqual(["manifest", "provider"]);
     allowed = false;
@@ -65,6 +72,7 @@ test("system upgrade fences partial work and resumes only unfinished steps with 
     expect((await provisioner.resumeSystemUpgrade("instance:one", "local:admin")).status).toBe("ready");
     expect(calls).toEqual(["manifest", "provider", "contracts", "contracts"]);
     expect(transitions.record?.status).toBe("succeeded");
+    expect((await registry.get("instance:one"))?.systemPlan).toEqual(requiredTarget);
 });
 
 test("system upgrade refuses stale revisions, foreign administrators and dropped families before journaling", async () => {

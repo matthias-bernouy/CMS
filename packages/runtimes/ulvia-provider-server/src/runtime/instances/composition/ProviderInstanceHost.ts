@@ -201,6 +201,11 @@ export class ProviderInstanceHost {
         return {
             ...createInstanceProvisioningTarget({
                 instance,
+                installAccountTemplates:
+                    transition?.kind !== "registry" &&
+                    !transition?.sourcePlan?.contracts.some(
+                        ({ contractId }) => contractId === "ulvia/cms.email-templates",
+                    ),
                 composition: lease.resource,
                 env: this.env,
                 credentials: this.credentials,

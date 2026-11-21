@@ -10,7 +10,7 @@ export function assertSystemUpgrade(source: SystemInstallationPlan, target: Syst
     if (
         source.manifest.providerId !== target.manifest.providerId ||
         compareSemVer(target.manifest.version, source.manifest.version) < 0 ||
-        source.contracts.length !== target.contracts.length ||
+        source.contracts.length > target.contracts.length ||
         new Set(target.contracts.map(({ contractId }) => contractId)).size !== target.contracts.length ||
         source.contracts.some((before) => {
             const after = target.contracts.find(({ contractId }) => contractId === before.contractId);

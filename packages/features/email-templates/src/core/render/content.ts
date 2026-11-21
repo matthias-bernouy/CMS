@@ -2,6 +2,7 @@ import { contentSchema, renderedSchema } from "email-templates/schemas/content";
 import type { TemplateContent, TemplateValues } from "email-templates/schemas/content";
 import { invalid } from "email-templates/core/errors";
 import { tokenPattern, tokens, validUrl, escapeHtml } from "./tokens";
+import { assertRenderBudget } from "./budget";
 import { validateHtml } from "./html";
 
 export function validateContent(input: TemplateContent): TemplateContent {
@@ -52,10 +53,18 @@ export function renderContent(input: TemplateContent, values: TemplateValues) {
     if (content.variables.some((variable) => variable.required && !supplied.has(variable.name))) {
         invalid();
     }
+    assertRenderBudget(content, supplied);
+    const escaped = new Map<string, string>();
     const substitute = (source: string, html = false) =>
         source.replace(tokenPattern, (_match, name: string) => {
             const value = supplied.get(name) ?? "";
-            return html ? escapeHtml(value) : value;
+            if (!html) {
+                return value;
+            }
+            if (!escaped.has(name)) {
+                escaped.set(name, escapeHtml(value));
+            }
+            return escaped.get(name)!;
         });
     const rendered = {
         subject: substitute(content.subject),

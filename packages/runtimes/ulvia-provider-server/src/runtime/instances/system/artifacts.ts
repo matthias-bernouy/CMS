@@ -5,10 +5,15 @@ import { resolveContract } from "@bernouy/ulvia-contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
 import { admitProviderManifestJson, verifyStoredProviderManifestJson } from "@bernouy/ulvia-providers";
 import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/repository/providers/sources";
+import type { ProviderManifest } from "@bernouy/ulvia-providers";
 import type { SystemInstallationPlan } from "@bernouy/ulvia-provider";
 import { systemManifest } from "@bernouy/ulvia-provider";
 
-export type LoadedSystemArtifacts = Readonly<{ plan: SystemInstallationPlan; contracts: readonly ResolvedContract[] }>;
+export type LoadedSystemArtifacts = Readonly<{
+    plan: SystemInstallationPlan;
+    contracts: readonly ResolvedContract[];
+    manifest: ProviderManifest;
+}>;
 export async function loadSystemArtifacts(providers: ProviderRepositorySource): Promise<LoadedSystemArtifacts> {
     const manifestEntry = exactEntry(
         await providers.list("provider-manifest"),
@@ -30,6 +35,7 @@ export async function loadSystemArtifacts(providers: ProviderRepositorySource): 
         throw new Error("System manifest digest mismatch");
     }
     return Object.freeze({
+        manifest: manifest.manifest,
         plan: Object.freeze({
             manifest: Object.freeze({
                 providerId: manifest.manifest.providerId,

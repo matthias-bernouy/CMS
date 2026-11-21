@@ -80,6 +80,7 @@ describe("official Provider connection provisioning", () => {
 test("official administrator provisioning writes the shared authority model", async () => {
     let granted: { sub: string; enabled: boolean } | undefined;
     const target = createInstanceProvisioningTarget({
+        installAccountTemplates: true,
         instance: { id: "instance:official", storageKey: "instance-official" } as ProviderInstanceRecord,
         composition: {
             stores: {
@@ -112,6 +113,7 @@ function connectionTarget(management: Record<string, unknown>) {
         storageKey: "instance-official",
     } as ProviderInstanceRecord;
     return createInstanceProvisioningTarget({
+        installAccountTemplates: true,
         instance,
         composition: {
             management,
@@ -160,6 +162,7 @@ test("fresh provisioning pairs the official return connection after selecting co
         installationId: "installation:official",
     }));
     const target = createInstanceProvisioningTarget({
+        installAccountTemplates: true,
         instance: { id: "instance:official" } as ProviderInstanceRecord,
         composition: {
             management: {

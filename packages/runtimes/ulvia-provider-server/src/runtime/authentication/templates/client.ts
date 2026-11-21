@@ -1,3 +1,4 @@
+import { EmailDeliveryDisabledError } from "@bernouy/email";
 import { createHash } from "node:crypto";
 import { providerCredentialFingerprint } from "@bernouy/cms-gateway/access/providers";
 import type { GatewayRoute } from "@bernouy/cms-gateway";
@@ -49,6 +50,14 @@ export function accountTemplateClient(gateway: Gateway, connections: ProviderCon
             },
             ...(capabilityId === "emailer.send" ? { idempotencyKey: crypto.randomUUID() } : {}),
         });
+        if (
+            contract === "ulvia/cms.emailer" &&
+            capabilityId === "emailer.send" &&
+            result.kind === "declared-error" &&
+            result.errorCode === "EMAIL_DISABLED"
+        ) {
+            throw new EmailDeliveryDisabledError();
+        }
         if (result.kind !== "success") {
             throw new Error("Selected email service refused the request");
         }

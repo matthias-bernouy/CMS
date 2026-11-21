@@ -25,19 +25,17 @@ export async function reviewSystemUpgrade(
         throw new TypeError("Requested manifest is not the exact release shipped by this image");
     }
     const { plan: source } = await readInstalledExecution(instance, stores, support, endpoint);
-    const enabled = new Set(source.contracts.map(({ contractId }) => contractId));
-    const target = { ...available, contracts: available.contracts.filter(({ contractId }) => enabled.has(contractId)) };
+    const target = await system.upgrade(source);
     assertSystemUpgrade(source, target);
     const contracts = await system.contracts(target);
+    for (const contract of target.contracts) {
+        support.assert(contract, "system upgrade");
+    }
     for (const before of source.contracts) {
         const next = contracts.find(({ release }) => release.contractId === before.contractId);
         if (!next) {
             throw new Error("System release omits an enabled contract");
         }
-        support.assert(
-            { contractId: next.release.contractId, version: next.release.version, digest: next.digest },
-            "system upgrade",
-        );
         if (next.digest === before.digest) {
             continue;
         }

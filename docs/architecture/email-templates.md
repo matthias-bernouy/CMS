@@ -22,7 +22,16 @@ installation UUIDs derived from consumer contract, purpose and locale, with read
 origin metadata. Names never confer authority. Explicit provisioning installs and
 publishes ordinary templates, then initializes associations without overwriting
 existing configuration. Startup composition and reads never recreate missing data.
-Existing ready instances need an explicit admitted system-plan upgrade.
+Existing ready instances need an explicit admitted system-plan upgrade. Its reviewed
+target retains enabled families and closes mandatory dependencies from the exact
+shipped manifest, including inherited capabilities and newly required Templates.
+Optional Hosting/Registry are not enabled implicitly; operator transports stay excluded.
+After selecting the target and pairing the official Provider, the durable `contracts`
+step initializes missing account publications/associations before readiness when
+the transition introduces Templates. Registry activation and later upgrades do not
+recreate missing mandatory account state. An
+interruption leaves that step unfinished and retries initialization idempotently.
+It never reinitializes an existing setup, administrator or Repository configuration.
 The provisioning checkpoint remains authoritative during crash recovery.
 
 Publications are immutable; activation of another version is an explicit consumer
@@ -79,7 +88,11 @@ is single-pass; subjects reject CR/LF. Sources use only exact `{{name}}` tokens.
 HTML is parsed inertly with an explicit element/attribute allowlist, at most 2048
 nodes and depth 24. Dynamic hrefs consist of a whole URL token. No CSS, images,
 forms, scripts, raw HTML values or network reads are supported. Rendered JSON is
-bounded to 256 KiB. Published feature docs enumerate the allowed HTML elements.
+bounded to 256 KiB. Before substitution, a preflight counts expanded UTF-16 characters
+and serialized UTF-8 JSON bytes, including HTML entities, JSON escapes and surrogate
+pairs across substitutions. Oversized expansion refuses before allocating complete
+output strings. Accepted HTML values are escaped once per distinct referenced name.
+Published feature docs enumerate the allowed HTML elements.
 Preview clients must isolate HTML rather than insert it into an administrator DOM.
 
 Values and rendered messages are never stored by Templates, and content/value DTO
@@ -89,8 +102,10 @@ only its own newly minted token, preserving a concurrent newer token.
 
 There is no built-in/custom mode or legacy composer fallback. The selected Emailer
 receives the rendered outbound message through the ordinary admitted invocation.
-A template failure does not invoke Emailer. Existing SMTP-disabled verification
-policy is unchanged.
+A template failure does not invoke Emailer. A Gateway-validated `EMAIL_DISABLED`
+refusal from `emailer.send` becomes `EmailDeliveryDisabledError`, preserving the
+account policy for disabled remote Emailers and disablement after an enabled check.
+Other refusals remain failures without exposing Provider diagnostic output.
 
 ## Cost and validation
 

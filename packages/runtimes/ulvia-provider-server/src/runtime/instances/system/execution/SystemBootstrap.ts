@@ -1,3 +1,4 @@
+import { systemUpgradePlan } from "./upgradePlan";
 import type { SystemInstallationPlan, SystemInstallationSource } from "@bernouy/ulvia-provider";
 import { deepFreeze } from "@bernouy/ulvia-contracts/protocol";
 import { loadSystemArtifacts, type LoadedSystemArtifacts } from "../artifacts";
@@ -57,6 +58,9 @@ export class SystemBootstrap implements SystemInstallationSource {
             ...plan,
             contracts: plan.contracts.filter(({ contractId }) => contractId === "ulvia/cluster.logs"),
         });
+    }
+    async upgrade(source: SystemInstallationPlan): Promise<SystemInstallationPlan> {
+        return systemUpgradePlan(source, await this.artifacts());
     }
     async contracts(plan: SystemInstallationPlan) {
         const artifacts = await this.artifacts();
