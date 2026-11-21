@@ -45,6 +45,7 @@ test("all administration capability areas dispatch outputs matching their offici
         pats: {},
         authentication: {},
         accountLifecycle: {},
+        accountEmailTemplates: { get: unused, update: unused },
         mcpAuthorization: {},
         users: {
             list: async () => ({

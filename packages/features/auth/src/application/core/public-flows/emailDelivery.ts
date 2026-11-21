@@ -1,12 +1,10 @@
 import type { AuthEmailComposer } from "auth/email/interfaces/AuthEmailComposer";
 import { isEmailDeliveryDisabledError } from "@bernouy/email";
-import { DefaultAuthEmailComposer } from "auth/email/default-implementation/DefaultAuthEmailComposer";
 import type { PublicAuthFlowConfig, VerificationTarget } from "auth/application/core/public-flows/types";
 
 const DEFAULT_EMAIL_VERIFICATION_TTL_SECONDS = 24 * 60 * 60;
 const DEFAULT_PASSWORD_RESET_TTL_SECONDS = 60 * 60;
 const DEFAULT_AUTH_EMAIL_COOLDOWN_SECONDS = 5 * 60;
-const DEFAULT_EMAIL_COMPOSER = new DefaultAuthEmailComposer();
 
 export async function isEmailDeliveryEnabled(cfg: PublicAuthFlowConfig): Promise<boolean> {
     return cfg.emailer.isEnabled ? cfg.emailer.isEnabled() : true;
@@ -26,7 +24,7 @@ export async function sendVerificationForCredential(
     const actionUrl = cfg.buildEmailVerificationUrl?.(token) ?? buildTokenUrl(cfg.emailVerificationUrl, token);
     const sent = await sendAuthEmail(
         cfg,
-        await emailComposer(cfg).compose({
+        await composeOrReleaseToken(cfg, "email_verification", {
             kind: "email_verification",
             to: { email: credential.email },
             actionUrl,
@@ -56,7 +54,7 @@ export async function sendPasswordResetForCredential(
     const actionUrl = cfg.buildPasswordResetUrl?.(token) ?? buildTokenUrl(cfg.passwordResetUrl, token);
     const sent = await sendAuthEmail(
         cfg,
-        await emailComposer(cfg).compose({
+        await composeOrReleaseToken(cfg, "password_reset", {
             kind: "password_reset",
             to: { email: credential.email },
             actionUrl,
@@ -100,7 +98,10 @@ async function inEmailCooldown(
 }
 
 function emailComposer(cfg: PublicAuthFlowConfig): AuthEmailComposer {
-    return cfg.emailComposer ?? DEFAULT_EMAIL_COMPOSER;
+    if (!cfg.emailComposer) {
+        throw new Error("Account email composition requires an injected Templates composer");
+    }
+    return cfg.emailComposer;
 }
 
 function buildTokenUrl(pageUrl: string, token: string): string {
@@ -113,4 +114,17 @@ function buildTokenUrl(pageUrl: string, token: string): string {
 
 function expiresIn(seconds: number): Date {
     return new Date(Date.now() + seconds * 1000);
+}
+
+async function composeOrReleaseToken(
+    cfg: PublicAuthFlowConfig,
+    purpose: "email_verification" | "password_reset",
+    input: Parameters<AuthEmailComposer["compose"]>[0],
+) {
+    try {
+        return await emailComposer(cfg).compose(input);
+    } catch (error) {
+        await cfg.tokens.consume(purpose, input.token);
+        throw error;
+    }
 }

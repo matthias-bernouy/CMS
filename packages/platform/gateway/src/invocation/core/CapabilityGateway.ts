@@ -153,6 +153,16 @@ export class CapabilityGateway implements GatewayAccessProbe {
             false,
             tracker,
         );
+        const expected = invocation.expectedTarget;
+        const installed = route.installation.installation;
+        if (
+            expected &&
+            (expected.installationId !== installed.id ||
+                expected.endpoint !== installed.endpoint ||
+                expected.accountId !== installed.accountId)
+        ) {
+            throw new GatewayError("stale_route", "Selected Provider no longer matches the resource association");
+        }
         assertActorCredentialTarget(invocation, capability);
         const input = snapshotInput(invocation.input, capability);
         tracker.update({

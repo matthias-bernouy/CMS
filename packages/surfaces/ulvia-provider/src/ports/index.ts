@@ -1,3 +1,4 @@
+import type { EmailTemplateServices } from "@bernouy/email-templates/feature";
 import type { RoutingServices } from "@bernouy/hosting/routing";
 import type { HostingServices } from "@bernouy/hosting/feature";
 import type {
@@ -41,7 +42,8 @@ export interface CmsCollectionDependencies {
 
 /** Ports supplied by the runtime for SDK feature implementations. */
 export type UlviaProviderFeatureServices = Partial<
-    RoutingServices &
+    EmailTemplateServices &
+        RoutingServices &
         ClusterLogsServices &
         HostingTlsServices &
         HostingServices &

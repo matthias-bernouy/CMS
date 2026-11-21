@@ -1,3 +1,4 @@
+import { testAccountComposer } from "../email/fixture";
 import { expect, test } from "bun:test";
 import {
     InMemorySessionRepository,
@@ -75,6 +76,7 @@ test("invalid recovery proofs leave sessions intact; successful recovery revokes
         ...stores,
         tokens,
         emailer: new InMemoryEmailer(),
+        emailComposer: testAccountComposer,
         emailVerificationUrl: "https://example.test/verify",
         passwordResetUrl: "https://example.test/reset",
     };

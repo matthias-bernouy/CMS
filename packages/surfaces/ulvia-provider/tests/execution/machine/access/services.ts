@@ -7,6 +7,7 @@ const unused = async (): Promise<never> => {
 /** Complete test ports; every unused authentication action fails loudly. */
 export function accessServices(overrides: Partial<AccessServices> = {}): AccessServices {
     return {
+        accountEmailTemplates: { get: unused, update: unused },
         users: new InMemoryUsersRepository(),
         credentials: new InMemoryLocalCredentialStore(),
         pats: new InMemoryPatRepository(),

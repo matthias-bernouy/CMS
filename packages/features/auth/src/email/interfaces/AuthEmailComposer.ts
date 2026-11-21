@@ -12,8 +12,8 @@ export type AuthEmailComposeInput = {
 };
 
 /**
- * Auth email content builder. The default implementation ships simple
- * email-safe text/html; Settings can later provide a stored-template composer.
+ * Injected account email content builder. The official runtime composes exact
+ * publications through the selected Email Templates capability.
  */
 export interface AuthEmailComposer {
     compose(input: AuthEmailComposeInput): Promise<OutboundEmail>;

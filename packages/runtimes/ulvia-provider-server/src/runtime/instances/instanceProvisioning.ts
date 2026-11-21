@@ -46,6 +46,7 @@ export function createInstanceProvisioningTarget(options: TargetOptions): Offici
             execution.throwIfLeaseLost();
         },
         initializeSetup: async (_plan, execution) => {
+            await options.composition.initializeAccountTemplates(() => execution.throwIfLeaseLost());
             if (
                 options.composition.runtime.contracts.some(
                     (contract) =>

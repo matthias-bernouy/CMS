@@ -34,7 +34,9 @@
         "@bernouy/ulvia-providers": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
         "@bernouy/hosting": "workspace:*",
-        "@bernouy/browser-capture": "workspace:*"
+        "@bernouy/browser-capture": "workspace:*",
+        "@bernouy/email-templates": "workspace:*",
+        "@bernouy/email": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

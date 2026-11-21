@@ -9,10 +9,11 @@ import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repositor
 
 // Reviewed current releases; historical execution compatibility is verified separately.
 const releaseDigests = {
+    "ulvia/cms.email-templates": "sha256:32a2ddcc4a66b1f2f7332df566a54363e8c2a7f596e6859dfdc6d2de8ce1ad70",
     "ulvia/cluster.logs": "sha256:72097b513bf036bc8ad7192f4be59651420dd99c659be631e46b5b33eaf62132",
     "ulvia/cms.emailer": "sha256:a235f01b1fec08716ea722caccc6bc56974b15e449b2f41b0559e4ea686b70ed",
     "ulvia/cms.emailer.smtp": "sha256:ae8b92cd8a685c163229e1c2326c6a687546dd2488dc88a4295eff30e6b256c1",
-    "ulvia/cms.access": "sha256:da46389a522b67efc617c090109ff2b3c6050a3f9d79ef05a556477d37a28053",
+    "ulvia/cms.access": "sha256:4c7e61bb4e2e67dd11609947b046cd6c7fd4a752292c64a33020dcff05f0be15",
     "ulvia/cms.content": "sha256:67bbdbb098558cb027bd6b7a737ad5907928d85fd03fe3112918ac2699c44b08",
     "ulvia/cms.authoring": "sha256:695b32aadb19f580cd6b90387cbf7ca4142f13c75b019892f3f3b33095319c9a",
     "ulvia/cms.secrets": "sha256:358b2e7e889f656320dd824a698c425a500211ea80695d120e5f4effe1255c08",
@@ -39,8 +40,8 @@ test("generated manifest claims the exact SDK implementation inventory", async (
     const compiled = await compileOfficialFeatures();
     await publishContractSet(catalogue, compiled.contracts);
     const manifest = await compileOfficialManifest(catalogue, compiled);
-    expect(manifest.manifest.version).toBe("1.9.0");
-    expect(manifest.manifest.implementations).toHaveLength(14);
+    expect(manifest.manifest.version).toBe("1.10.0");
+    expect(manifest.manifest.implementations).toHaveLength(15);
     for (const implementation of manifest.manifest.implementations) {
         expect(implementation.digest).toBe(releaseDigests[implementation.contractId as keyof typeof releaseDigests]);
     }
@@ -131,4 +132,22 @@ test("Installations 1.5 preserves every 1.4.2 definition and adds four compatibl
             .map(({ id }) => id)
             .sort(),
     ).toEqual(["gateway.command.prepare", "gateway.mcp.authorized", "gateway.mcp.resolve", "gateway.route.snapshot"]);
+});
+
+test("Access 1.1 preserves the exact 1.0 capability definitions and adds only email associations", async () => {
+    const previous = (await compileRetainedFeatures()).find(
+        (build) => build.contracts[0]?.release.contractId === "ulvia/cms.access",
+    )!.contracts[0]!;
+    const current = (await compileOfficialFeatures()).contracts.find(
+        ({ release }) => release.contractId === "ulvia/cms.access",
+    )!;
+    expect(previous.digest).toBe("sha256:da46389a522b67efc617c090109ff2b3c6050a3f9d79ef05a556477d37a28053");
+    expect(compareContractReleases(previous.release, current.release)).toMatchObject({
+        validEvolution: true,
+        consumerCompatible: true,
+        requiredBump: "minor",
+        declaredBump: "minor",
+    });
+    const ids = new Set(previous.release.capabilities.map(({ id }) => id));
+    expect(current.release.capabilities.filter(({ id }) => ids.has(id))).toEqual([...previous.release.capabilities]);
 });

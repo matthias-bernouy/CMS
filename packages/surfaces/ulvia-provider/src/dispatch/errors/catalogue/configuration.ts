@@ -1,4 +1,9 @@
 export const configurationMessages = {
+    ARCHIVED: ["This email template is archived.", "Ce modèle d’email est archivé."],
+    CAPACITY_EXCEEDED: [
+        "The email template storage limit has been reached.",
+        "La limite de stockage des modèles d’email est atteinte.",
+    ],
     "auth.email": ["The supplied email address is invalid.", "L’adresse e-mail fournie est invalide."],
     "auth.password": [
         "The password must contain at least {min} characters.",

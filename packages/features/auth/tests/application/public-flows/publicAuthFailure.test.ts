@@ -1,3 +1,4 @@
+import { testAccountComposer } from "../../email/fixture";
 import { describe, expect, test } from "bun:test";
 import {
     confirmEmailVerification,
@@ -135,6 +136,7 @@ async function flowConfig(
         tokens,
         users,
         emailer: new InMemoryEmailer(),
+        emailComposer: testAccountComposer,
         emailVerificationUrl: "https://example.test/verify-email",
         passwordResetUrl: "https://example.test/reset-password",
     };

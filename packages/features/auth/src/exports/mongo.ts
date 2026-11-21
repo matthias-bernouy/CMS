@@ -24,3 +24,5 @@ export {
 export { MongoOAuthStore } from "auth/oauth/default-implementation/mongo/MongoOAuthStore";
 
 export { MongoSessionRepository } from "auth/sessions/default-implementation/mongo/MongoSessionRepository";
+
+export { MongoAccountEmailConfigurationStore } from "auth/email/templates/mongo";

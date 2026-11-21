@@ -1,7 +1,7 @@
 import { lifecycleScenarios } from "../lifecycle";
-import { prepareSmtpConfiguration } from "./configuration";
-import { prepareEmailDelivery } from "./delivery";
-import { prepareSmtpInvalidation } from "./invalidation";
+import { prepareSmtpConfiguration } from "./smtp/configuration";
+import { prepareEmailDelivery } from "./smtp/delivery";
+import { prepareSmtpInvalidation } from "./smtp/invalidation";
 import type { settingsTenants } from "../content/settings/tenant";
 import type { CapabilityInventory } from "../../capabilities/types";
 

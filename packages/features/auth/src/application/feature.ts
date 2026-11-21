@@ -1,3 +1,5 @@
+import { getEmailConfiguration } from "./capabilities/accounts/get-email-configuration";
+import { updateEmailConfiguration } from "./capabilities/accounts/update-email-configuration";
 import { defineFeature } from "@bernouy/ulvia-sdk";
 import { mapAccessError } from "auth/application/capabilities/mapError";
 import { authorizeMcpConnection } from "auth/application/capabilities/mcp/authorize-mcp-connection";
@@ -28,12 +30,14 @@ export const accessFeature = defineFeature({
     contractId: "ulvia/cms.access",
     name: "CMS Access",
     description: "Authenticate actors and manage CMS membership and administrator grants.",
-    version: "1.0.0",
+    version: "1.1.0",
     publisherId: "ulvia",
     catalogue: { icon: "users", categories: ["administration", "access"] },
     mapError: mapAccessError,
     documents: new URL("../../docs/", import.meta.url),
     capabilities: [
+        getEmailConfiguration,
+        updateEmailConfiguration,
         authorizeMcpConnection,
         confirmEmailVerification,
         confirmPasswordReset,

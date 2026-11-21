@@ -1,3 +1,4 @@
+import { emailTemplatesImplementation } from "./implementations/communication/templates";
 import { routingImplementation } from "./implementations/provider/routing";
 import { clusterLogsImplementation } from "./implementations/provider/clusterLogs";
 import { hostingTlsImplementation } from "./implementations/provider/tls";
@@ -10,7 +11,7 @@ import { accessImplementation } from "./implementations/access";
 import { observabilityImplementation } from "./implementations/observability";
 import { filesImplementation } from "./implementations/files";
 import { secretsImplementation } from "./implementations/secrets";
-import { smtpEmailerImplementation } from "./implementations/emailer";
+import { smtpEmailerImplementation } from "./implementations/communication/emailer";
 
 import { providerConnectionsImplementation } from "./implementations/provider/connections";
 import { providerCmsInstancesFeature } from "./provider/instances/feature";
@@ -24,6 +25,7 @@ type OfficialFeatureSource =
 /** One inventory distinguishes executable implementations from published protocol templates. */
 const officialFeatureInventory: readonly OfficialFeatureSource[] = Object.freeze([
     { implementation: smtpEmailerImplementation },
+    { implementation: emailTemplatesImplementation },
     { implementation: accessImplementation },
     { implementation: contentImplementation },
     { implementation: authoringImplementation },

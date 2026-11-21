@@ -59,6 +59,8 @@ completed browser journey or deployment.
   redirects, deletion and recovery.
 - [Dynamic page indexing](surfaces/page-indexing.md): metadata projection and
   sitemap discovery through selected gateway capabilities.
+- [Email templates](architecture/email-templates.md): immutable publications, account
+  associations, selected Providers and explicit default installation.
 - [Access and authentication](surfaces/access-authentication.md): provider-owned
   identity, account flows, administrator grants and Edge-applied session effects.
 

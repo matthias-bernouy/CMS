@@ -51,8 +51,18 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
             continueOnFailure: true,
         },
         {
-            args: ["bun", "test", "./tests/integration/content", "./tests/integration/observability"],
-            env: { ULVIA_RUN_CONTENT_LIFECYCLE: "1", ULVIA_RUN_CLUSTER_LOGS_MONGO: "1" },
+            args: [
+                "bun",
+                "test",
+                "./tests/integration/content",
+                "./tests/integration/observability",
+                "./tests/integration/email-templates",
+            ],
+            env: {
+                ULVIA_RUN_CONTENT_LIFECYCLE: "1",
+                ULVIA_RUN_CLUSTER_LOGS_MONGO: "1",
+                ULVIA_RUN_EMAIL_TEMPLATES_MONGO: "1",
+            },
             continueOnFailure: true,
         },
         { args: ["bun", "x", "tsc", "--project", "tests/performance/tsconfig.json"] },

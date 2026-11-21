@@ -104,3 +104,7 @@ instances, exposed through their independent Edge.
 
 See [workspace architecture](README.md) for dependency direction and
 [repository and gateway flows](../providers/README.md) for runtime wiring.
+
+`@bernouy/email-templates` owns reusable email drafts, immutable publications and
+bounded pure rendering. Access owns account-purpose associations and installation
+sources; Emailer owns delivery. See [email templates](email-templates.md).

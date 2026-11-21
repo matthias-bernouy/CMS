@@ -38,7 +38,7 @@ test("push all publishes SDK artifacts without builtin collections, then inferre
         await f.run(["release", resolve(import.meta.dir, "../../../../../../infra/releases")]);
         f.output.length = 0;
         await f.run(["push", "all"]);
-        expect(await f.remoteFiles.list("contracts")).toHaveLength(16);
+        expect(await f.remoteFiles.list("contracts")).toHaveLength(17);
         expect(await f.remoteFiles.list("providers")).toHaveLength(1);
         expect(await new LocalCollectionRepository(f.remote).list()).toEqual([]);
         expect(f.output.slice(1, 17).every((line) => line.startsWith("+ contract"))).toBe(true);

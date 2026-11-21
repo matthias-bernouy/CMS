@@ -17,6 +17,8 @@ export type GatewayActor =
     | { readonly kind: "system"; readonly serviceId: string };
 
 export interface GatewayInvocation {
+    /** Host-owned resource association fence; never forwarded as business input or authority. */
+    readonly expectedTarget?: Readonly<{ installationId: string; endpoint: string; accountId: string }>;
     readonly requestContext?: GatewayRequestContext;
     readonly signal?: AbortSignal;
     readonly trace?: TraceContext;

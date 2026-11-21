@@ -1,17 +1,16 @@
-import { DefaultAuthEmailComposer } from "auth/email/default-implementation/DefaultAuthEmailComposer";
 import type { AuthEmailComposer } from "auth/email/interfaces/AuthEmailComposer";
 import type { Emailer } from "@bernouy/email";
 
 export type AuthEmailTestSenderConfig = {
     emailer: Emailer;
-    emailComposer?: AuthEmailComposer;
+    emailComposer: AuthEmailComposer;
     emailVerificationUrl: string;
     passwordResetUrl: string;
     siteName?: string;
 };
 
 export function createAuthEmailTestSender(config: AuthEmailTestSenderConfig) {
-    const composer = config.emailComposer ?? new DefaultAuthEmailComposer();
+    const composer = config.emailComposer;
     return {
         async send(input: { kind: "email_verification" | "password_reset"; to: string }): Promise<void> {
             const base = input.kind === "email_verification" ? config.emailVerificationUrl : config.passwordResetUrl;

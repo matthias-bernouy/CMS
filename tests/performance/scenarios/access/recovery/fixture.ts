@@ -1,6 +1,6 @@
 import { repositoryApi } from "../../../../integration/instance/repository/client";
-import { smtpLease } from "../../email/lease";
-import { recoveryToken } from "../../email/message";
+import { smtpLease } from "../../email/smtp/lease";
+import { recoveryToken } from "../../email/smtp/message";
 import { removeSignupChallenge } from "./store";
 import { assertCondition, requireRecord } from "../../queries/types";
 import { ClientFailure } from "../../../harness/clients/failure";

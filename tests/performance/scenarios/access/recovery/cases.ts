@@ -2,7 +2,7 @@ import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { repositoryApi } from "../../../../integration/instance/repository/client";
 import { scenarioClient } from "../../../harness/clients/session";
 import { observedSmtp } from "../../../harness/services/smtp/evidence";
-import { recoveryToken } from "../../email/message";
+import { recoveryToken } from "../../email/smtp/message";
 import { assertCondition, requireRecord } from "../../queries/types";
 import { recoveryFixture } from "./fixture";
 import type { CapabilityInventory } from "../../../capabilities/types";

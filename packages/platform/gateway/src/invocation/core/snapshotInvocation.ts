@@ -14,6 +14,7 @@ import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 export const MAX_GATEWAY_JSON_BYTES = MAX_CAPABILITY_JSON_BYTES;
 const INVOCATION_FIELDS = new Set([
     "siteId",
+    "expectedTarget",
     "requestContext",
     "signal",
     "trace",
@@ -69,6 +70,19 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
     if (value.signal !== undefined && !(value.signal instanceof AbortSignal)) {
         throw new GatewayError("invalid_input", "Invalid cancellation signal");
     }
+    const expectedTarget = value.expectedTarget;
+    if (
+        expectedTarget !== undefined &&
+        (!expectedTarget ||
+            typeof expectedTarget !== "object" ||
+            Object.keys(expectedTarget).length !== 3 ||
+            [expectedTarget.installationId, expectedTarget.endpoint, expectedTarget.accountId].some(
+                (part) => typeof part !== "string" || !part.length || part.length > 2048,
+            ))
+    ) {
+        throw new GatewayError("invalid_input", "Invalid expected Provider target");
+    }
+    const target = expectedTarget ? { ...expectedTarget } : undefined;
     const actor = snapshotActor(value.actor);
     if (
         value.delegationTicket !== undefined &&
@@ -89,6 +103,7 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
         }
         return {
             siteId: value.siteId,
+            ...(target ? { expectedTarget: target } : {}),
             ...(value.requestContext ? { requestContext: snapshotRequestContext(value.requestContext) } : {}),
             ...(value.signal ? { signal: value.signal } : {}),
             ...(value.trace ? { trace: { ...value.trace } } : {}),

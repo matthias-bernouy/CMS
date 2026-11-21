@@ -1,3 +1,4 @@
+import { testAccountComposer } from "../../email/fixture";
 import { expect, test } from "bun:test";
 import {
     createPublicAuthActions,
@@ -14,6 +15,7 @@ test("public auth exposes only account lifecycle operations used by Access", () 
         revokeSessionsForSub: async () => {},
         tokens: new InMemoryAuthTokenStore(),
         emailer: new InMemoryEmailer(),
+        emailComposer: testAccountComposer,
         emailVerificationUrl: "https://example.test/verify",
         passwordResetUrl: "https://example.test/reset",
     };

@@ -1,3 +1,4 @@
+import { testAccountComposer } from "../../email/fixture";
 import { describe, expect, test } from "bun:test";
 import {
     InMemoryAuthTokenStore,
@@ -131,6 +132,7 @@ function flowConfig(): PublicAuthFlowConfig {
         revokeSessionsForSub: async () => {},
         tokens: new InMemoryAuthTokenStore(),
         emailer: new InMemoryEmailer(),
+        emailComposer: testAccountComposer,
         emailVerificationUrl: "https://example.test/verify",
         passwordResetUrl: "https://example.test/reset",
     };

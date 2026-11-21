@@ -16,7 +16,7 @@ export type PublicAuthFlowConfig = {
     tokens: AuthTokenStore;
     revokeSessionsForSub(sub: string): Promise<void>;
     emailer: Emailer;
-    emailComposer?: AuthEmailComposer;
+    emailComposer: AuthEmailComposer;
     /** Frontend page where users land after clicking a verification email. */
     emailVerificationUrl: string;
     /** Frontend page where users land after clicking a password-reset email. */

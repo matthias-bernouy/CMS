@@ -10,7 +10,8 @@
         "./management": "./src/exports/management.ts",
         "./mongo": "./src/exports/mongo.ts",
         "./oauth": "./src/exports/oauth.ts",
-        "./feature": "./src/application/feature.ts"
+        "./feature": "./src/application/feature.ts",
+        "./email-templates": "./src/exports/email-templates.ts"
     },
     "dependencies": {
         "@bernouy/email": "workspace:*",
@@ -18,7 +19,8 @@
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
-        "zod": "4.6.7"
+        "zod": "4.6.7",
+        "@bernouy/email-templates": "workspace:*"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

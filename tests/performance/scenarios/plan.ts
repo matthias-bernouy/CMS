@@ -9,6 +9,7 @@ import { initializationScenarios } from "./initialization/plan";
 import { namespaceReadScenarios } from "./repository/namespace-read/plan";
 import { repositoryScenarios } from "./repository/plan";
 import { settingsTenants } from "./content/settings/tenant";
+import { emailTemplateScenarios } from "./email/templates/plan";
 import { emailScenarios } from "./email/plan";
 import { hostingScenarios } from "./hosting/plan";
 import { hostingContexts } from "./hosting/context";
@@ -46,6 +47,7 @@ export function assessmentScenarios(inventory: CapabilityInventory, fixture: str
         ...repositoryScenarios(inventory, fixture),
         ...namespaceReadScenarios(inventory, fixture),
         ...emailScenarios(inventory, fixture, tenants),
+        ...emailTemplateScenarios(inventory, fixture),
         ...hostingScenarios(inventory, fixture, hosting),
         ...hostingTechnicalScenarios(inventory, fixture, hosting),
         ...readerScenarios(inventory, fixture),

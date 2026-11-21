@@ -82,6 +82,9 @@
             ],
             "ulvia-sdk/*": [
                 "./packages/platform/sdk/src/*"
+            ],
+            "email-templates/*": [
+                "./packages/features/email-templates/src/*"
             ]
         }
     }

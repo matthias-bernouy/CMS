@@ -1,3 +1,4 @@
+import type { AccountEmailTemplates } from "auth/email/templates/AccountEmailTemplates";
 import type { UsersRepository } from "auth/accounts/interfaces/UsersRepository";
 import type { LocalCredentialStore } from "auth/providers/interfaces/LocalCredentialStore";
 import type { PatRepository } from "auth/tokens/personal-access/interfaces/PatRepository";
@@ -8,6 +9,7 @@ import type { McpAuthorization } from "auth/oauth/core/McpAuthorization";
 import type { AccessGovernance } from "auth/application/interfaces/AccessGovernance";
 
 export interface AccessServices {
+    readonly accountEmailTemplates: Pick<AccountEmailTemplates, "get" | "update">;
     readonly users: UsersRepository;
     readonly credentials: LocalCredentialStore;
     readonly pats: PatRepository;

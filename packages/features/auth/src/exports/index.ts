@@ -76,13 +76,6 @@ export { InMemoryUsersRepository } from "auth/accounts/default-implementation/me
 export { InMemoryLocalCredentialStore } from "auth/providers/default-implementation/memory/InMemoryLocalCredentialStore";
 export { InMemoryPatRepository } from "auth/tokens/personal-access/default-implementation/memory/InMemoryPatRepository";
 export { InMemoryAuthTokenStore } from "auth/tokens/one-time/default-implementation/memory/InMemoryAuthTokenStore";
-export {
-    TemplatedAuthEmailComposer,
-    type RuntimeAuthEmailTemplate,
-    type RuntimeAuthEmailTemplates,
-    type TemplatedAuthEmailComposerConfig,
-} from "auth/email/default-implementation/TemplatedAuthEmailComposer";
-export { DefaultAuthEmailComposer } from "auth/email/default-implementation/DefaultAuthEmailComposer";
 
 export { SessionTokenService, type SessionTokenServiceConfig } from "auth/sessions/core/SessionTokenService";
 export type { SessionRepository, SessionRecord } from "auth/sessions/interfaces/SessionRepository";

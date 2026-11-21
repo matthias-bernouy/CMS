@@ -57,3 +57,7 @@ the exact same operation.
 - `./oauth` owns client-neutral delegated MCP grants, PKCE, rotation and live
   authorization policy injection. These are separate from browser sessions and
   PATs. HTTP protocol handling belongs to the Edge; OAuth is not OIDC login.
+
+- Account email associations belong to Access. The shared Templates feature owns
+  publications/rendering; only composition roots select its adapters. The account
+  composer requires an injected Templates client and has no production fallback.

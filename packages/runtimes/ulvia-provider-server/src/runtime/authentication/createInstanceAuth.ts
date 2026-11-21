@@ -1,7 +1,14 @@
+import type { AuthEmailComposer } from "@bernouy/auth";
+import type { Emailer } from "@bernouy/email";
 import { createPublicAuthActions, LocalAuthentication, SessionTokenService, SubjectResolver } from "@bernouy/auth";
 import type { ProviderStores } from "../stores/providerStores";
 
-export async function createInstanceAuth(stores: ProviderStores, cmsUrl: string) {
+export async function createInstanceAuth(
+    stores: ProviderStores,
+    cmsUrl: string,
+    emailComposer: AuthEmailComposer,
+    emailer: Emailer,
+) {
     const sessions = new SessionTokenService({ repository: stores.sessions });
     const auth = new LocalAuthentication({
         providerId: "local",
@@ -16,7 +23,8 @@ export async function createInstanceAuth(stores: ProviderStores, cmsUrl: string)
         credentials: stores.credentials,
         users: stores.users,
         tokens: stores.authTokens,
-        emailer: stores.emailer,
+        emailer,
+        emailComposer,
         siteName: "Ulvia CMS",
         authEmailCooldownSeconds: 300,
     };

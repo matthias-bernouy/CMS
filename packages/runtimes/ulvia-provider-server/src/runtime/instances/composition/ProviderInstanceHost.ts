@@ -1,3 +1,4 @@
+import { composeAccountTemplates } from "../../authentication/templates/compose";
 import { createCaptureServices } from "../../content/captures/services";
 import type { HostedTransport } from "../system/hosting/transport/HostedTransport";
 import type { HostingServices } from "@bernouy/hosting/feature";
@@ -84,6 +85,7 @@ export type InstanceComposition = Readonly<{
     administrators: Awaited<ReturnType<typeof createProviderGateway>>["administrators"];
     operations: ProviderOperationExecutor;
     documentation: CmsDocumentation;
+    initializeAccountTemplates(checkpoint: () => void): Promise<void>;
     ensureProviderReady(): Promise<void>;
     pairOfficialProvider(): Promise<void>;
     close(): Promise<void>;
@@ -456,7 +458,13 @@ export class ProviderInstanceHost {
                 },
                 this.transport?.network,
             );
-            const authentication = await createInstanceAuth(stores, instance.cmsUrl);
+            const accountTemplates = composeAccountTemplates(stores, gateway, providerConnections, instance.id);
+            const authentication = await createInstanceAuth(
+                stores,
+                instance.cmsUrl,
+                accountTemplates.accountEmailTemplates,
+                accountTemplates.emailer,
+            );
             const fileWorkspace = new CmsFileWorkspace(
                 stores.providerFiles,
                 stores.contractSecrets.files,
@@ -564,6 +572,7 @@ export class ProviderInstanceHost {
                         Date.now,
                         stores.oauthPublicLimiter,
                     ),
+                    accountEmailTemplates: accountTemplates.accountEmailTemplates,
                     authentication: authentication.auth,
                     accountLifecycle: authentication.accountLifecycle,
                 },
@@ -609,6 +618,7 @@ export class ProviderInstanceHost {
                 managementForPlan,
                 administrators: gateway.administrators,
                 operations: instanceOperations,
+                initializeAccountTemplates: accountTemplates.initialize,
                 pairOfficialProvider: async () => {
                     const state = await management.list();
                     const official = state.installations.find(

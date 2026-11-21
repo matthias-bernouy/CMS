@@ -1,3 +1,6 @@
+import { EmailTemplates } from "@bernouy/email-templates";
+import { MongoTemplateStore } from "@bernouy/email-templates/mongo";
+import { MongoAccountEmailConfigurationStore } from "@bernouy/auth/mongo";
 import { MongoInitializationStateStore } from "@bernouy/repository/collections/mongo";
 import { initializationFactory } from "./collections/initialization";
 import type { CollectionVerifier } from "@bernouy/repository/collections/sources";
@@ -78,6 +81,10 @@ export async function createProviderStores(
     const mongo = new MongoClient(env.MONGO_URL, { monitorCommands: true });
     await mongo.connect();
     const db = mongo.db();
+    const templateStore = new MongoTemplateStore(db);
+    await templateStore.init();
+    const emailTemplates = new EmailTemplates(templateStore);
+    const accountEmailConfiguration = new MongoAccountEmailConfigurationStore(db);
     const journal = new MongoJournalStore(db);
     await journal.init();
     const observability = new CmsObservability({
@@ -222,6 +229,8 @@ export async function createProviderStores(
     return {
         logger,
         observability,
+        emailTemplates,
+        accountEmailConfiguration,
         connectionDrafts,
         providerConnections: new EncryptedProviderConnections(
             db,

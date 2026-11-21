@@ -5,6 +5,8 @@ import { admitContractReleaseJson } from "@bernouy/ulvia-contracts";
 import { capabilityBindings } from "@bernouy/ulvia-contracts/bindings";
 
 const allowed = new Set([
+    "ulvia/cms.email-templates",
+    "ulvia/cms.access",
     "ulvia/cms.authoring",
     "ulvia/cms.content",
     "ulvia/cms.files",
@@ -64,5 +66,5 @@ test("official MCP V1 exposes authoring, collection lifecycle, hosting and admin
             }
         }
     }
-    expect(tools).toBe(117);
+    expect(tools).toBe(128);
 });
