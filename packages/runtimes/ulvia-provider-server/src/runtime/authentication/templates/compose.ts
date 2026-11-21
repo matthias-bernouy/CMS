@@ -1,3 +1,4 @@
+import { selectedAccountEmailer } from "./delivery";
 import { AccountEmailTemplates } from "@bernouy/auth/email-templates";
 import type { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
 import type { createProviderGateway } from "../../gateway/createProviderGateway";
@@ -15,21 +16,16 @@ export function composeAccountTemplates(
     const accountEmailTemplates = new AccountEmailTemplates(stores.accountEmailConfiguration, client.templates);
     return {
         accountEmailTemplates,
-        emailer: {
-            isEnabled: async () => {
-                const route = await gateway.routes.resolve(gateway.siteId, "ulvia/cms.emailer");
-                if (!route) {
-                    throw new Error("Selected Emailer is unavailable");
-                }
-                const access = await gateway.routes.resolve(gateway.siteId, "ulvia/cms.access");
-                return route.selection.installationId === access?.selection.installationId
-                    ? stores.emailer.isEnabled()
-                    : true;
-            },
-            send: async (message: Parameters<ProviderStores["emailer"]["send"]>[0]) => {
-                await client.call("ulvia/cms.emailer", "emailer.send", message);
-            },
-        },
+        emailer: selectedAccountEmailer(client.call, async () => {
+            const route = await gateway.routes.resolve(gateway.siteId, "ulvia/cms.emailer");
+            if (!route) {
+                throw new Error("Selected Emailer is unavailable");
+            }
+            const access = await gateway.routes.resolve(gateway.siteId, "ulvia/cms.access");
+            return route.selection.installationId === access?.selection.installationId
+                ? stores.emailer.isEnabled()
+                : true;
+        }),
         initialize: async (checkpoint: () => void) => {
             if (await stores.accountEmailConfiguration.read()) {
                 return;

@@ -22,7 +22,11 @@ export function validateContent(input: TemplateContent): TemplateContent {
         }
     }
     const html = validateHtml(content);
-    return { ...content, ...(html ? { html } : {}) };
+    const normalized = contentSchema.safeParse(content.html === undefined ? content : { ...content, html });
+    if (!normalized.success || Buffer.byteLength(JSON.stringify(normalized.data)) > 65536) {
+        invalid();
+    }
+    return normalized.data;
 }
 export function renderContent(input: TemplateContent, values: TemplateValues) {
     const content = validateContent(input);

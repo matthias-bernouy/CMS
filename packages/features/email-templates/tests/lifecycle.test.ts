@@ -62,3 +62,22 @@ test("instance stores isolate identities and pagination contains summaries only"
     expect(first.items[0]).not.toHaveProperty("draft");
     await expect(b.get({ id: first.items[0]!.id })).rejects.toThrow("NOT_FOUND");
 });
+
+test("HTML normalization cannot persist content larger than the admitted source bounds", async () => {
+    const service = fixture();
+    await expect(service.create({ ...input(), draft: { ...draft, html: "&".repeat(10000) } })).rejects.toThrow(
+        "INVALID_INPUT",
+    );
+    expect((await service.list({ limit: 100, includeArchived: true })).items).toHaveLength(0);
+    const created = await service.create(input());
+    await expect(
+        service.updateDraft({
+            id: created.id,
+            name: created.name,
+            description: created.description,
+            expectedRevision: created.revision,
+            draft: { ...draft, html: "&".repeat(10000) },
+        }),
+    ).rejects.toThrow("INVALID_INPUT");
+    expect(await service.get({ id: created.id })).toEqual(created);
+});
