@@ -34,22 +34,40 @@ and associated explicitly. No collection, Page or visual editor is installed.
 
 ## Storage and bounds
 
-The Mongo adapter stores one template and its bounded publication history per
-document in `email_templates_v1`. Publication is a single-document revision CAS.
-`_id` is a unique integer slot in [0,99], enforcing 100 retained templates across
-processes. Creation projects at most 101 slot identifiers, selects a free slot and
-relies on unique insertion; at most 16 races are retried. It never uses an unfenced
-count as an admission guarantee. Archived templates continue consuming capacity.
+The Mongo adapter stores metadata and the current bounded draft in
+`email_templates_v1`, keyed by the template UUID. Immutable publications have
+separate documents in `email_template_publications_v1`, keyed by
+`<template UUID>@<version>`. There is no total template or publication quota, slot
+allocator or creation-time catalogue scan. Model documents do not grow with history.
+Version and revision counters use safe integers up to `Number.MAX_SAFE_INTEGER`
+(9,007,199,254,740,991). Exhaustion refuses before a mutation with `COUNTER_EXHAUSTED`.
 
-Each template has at most 32 publications, 32 variables and 64 KiB of serialized
-source per content snapshot; drafts share that source bound. Template metadata and
-all retained source bytes are therefore bounded. Lists project at most `limit + 1`
-summaries (limit <=100); publication reads use `$slice` to load one content snapshot.
-Draft reads exclude historical bodies. Queries have a 2-second Mongo maxTimeMS.
-Keyset `after` UUIDs are exclusive boundaries, not stable snapshot cursors.
+Publication uses three durable steps without a multi-document transaction:
+
+1. Reserve the current draft with a model revision CAS and a small pending marker.
+2. Insert its immutable publication document. Exact duplicate operations converge;
+   a disagreeing immutable row fails without overwrite.
+3. Advance the model's visible version/revision and clear the pending marker by CAS.
+
+A staged row is invisible until the final CAS. An interrupted operation resumes by
+retrying `templates.publish` with the same ID and expected revision, including after
+restarting the process. Other draft/archive mutations refuse while publication is
+pending; readers never finalize writes. Already committed versions remain readable.
+There is no lease, expiry, automatic cleanup or background recovery. This replaces
+the unpublished embedded-history prototype; no old-format reader or backfill is provided.
+
+Each content snapshot retains at most 32 variables and 64 KiB of serialized source;
+drafts share that source bound. Lists project at most `limit + 1` summaries
+(limit <=100), never draft/publication bodies. One version read loads a model
+visibility marker followed by one exact publication document, independently of the
+number of retained versions. Draft reads load no publication documents. Queries
+have a 2-second Mongo maxTimeMS. Keyset `after` UUIDs are exclusive boundaries,
+not stable snapshot cursors.
 
 `account_email_configuration_v1` stores the exact two associations and CAS revision.
-Missing/malformed persisted fields fail. Updates validate compatible variables,
+Its revision and association versions also use safe integers; revision overflow
+refuses before a write. Missing/malformed persisted fields fail. Updates validate
+compatible variables,
 required text action token and HTML action href before writing. Replays of the
 last exact CAS target do not create another revision.
 
@@ -79,13 +97,15 @@ policy is unchanged.
 Before this feature, official account composition/delivery called local services.
 An enabled account send now reads one association document and performs two admitted
 Templates queries (publication and render) plus one Emailer command. Source/route
-and machine grants are rechecked rather than cached. Publication rendering reads one
-bounded snapshot; it does not hydrate the version history. No rendered-content or
+and machine grants are rechecked rather than cached. Each publication query/render
+loads two bounded documents (visibility marker and exact snapshot), so the two
+Templates queries require four Mongo point reads instead of two in the embedded
+prototype. It does not hydrate the version history. No rendered-content or
 publication cache is introduced.
 
 Focused tests cover isolation, provenance, CAS/replay, immutable publication,
 archiving, source switching, compatibility, token failure and signed HTTP rendering.
-`verify` includes real Mongo capacity races/projection checks and the shared-hosting
-browser journey for preview, association, authorization/isolation and restart.
+`verify` includes real Mongo concurrent publication, growth, projection and
+interrupted-write recovery checks and the shared-hosting browser journey for preview, association, authorization/isolation and restart.
 The performance harness includes every new capability/binding/required variant;
 scenario declarations are not latency or throughput measurements.

@@ -2,7 +2,7 @@ import { contractString, z } from "@bernouy/ulvia-sdk";
 
 const bindingSchema = z.strictObject({
     id: contractString({ format: "uuid", maxLength: 36 }),
-    version: z.number().int().min(1).max(32),
+    version: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
     source: contractString({ minLength: 1, maxLength: 256 }),
 });
 export const accountEmailConfigurationSchema = z.strictObject({

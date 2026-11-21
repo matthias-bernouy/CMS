@@ -9,11 +9,11 @@ import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repositor
 
 // Reviewed current releases; historical execution compatibility is verified separately.
 const releaseDigests = {
-    "ulvia/cms.email-templates": "sha256:32a2ddcc4a66b1f2f7332df566a54363e8c2a7f596e6859dfdc6d2de8ce1ad70",
+    "ulvia/cms.email-templates": "sha256:bc8ced246180f12a2b5942560167611c5391a74be273ee5e23f209aa931f7c8c",
     "ulvia/cluster.logs": "sha256:72097b513bf036bc8ad7192f4be59651420dd99c659be631e46b5b33eaf62132",
     "ulvia/cms.emailer": "sha256:a235f01b1fec08716ea722caccc6bc56974b15e449b2f41b0559e4ea686b70ed",
     "ulvia/cms.emailer.smtp": "sha256:ae8b92cd8a685c163229e1c2326c6a687546dd2488dc88a4295eff30e6b256c1",
-    "ulvia/cms.access": "sha256:4c7e61bb4e2e67dd11609947b046cd6c7fd4a752292c64a33020dcff05f0be15",
+    "ulvia/cms.access": "sha256:873f01fadd4ade91abfc05fd2347c532b3d70bd5c5a6aeb987059f567bc3d9ef",
     "ulvia/cms.content": "sha256:67bbdbb098558cb027bd6b7a737ad5907928d85fd03fe3112918ac2699c44b08",
     "ulvia/cms.authoring": "sha256:695b32aadb19f580cd6b90387cbf7ca4142f13c75b019892f3f3b33095319c9a",
     "ulvia/cms.secrets": "sha256:358b2e7e889f656320dd824a698c425a500211ea80695d120e5f4effe1255c08",

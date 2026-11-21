@@ -50,7 +50,6 @@ export class EmailTemplates {
             revision: 1,
             archived: false,
             latestVersion: 0,
-            publications: [],
             lastMutation: mutation,
         };
         if (!(await this.store.create(record))) {
@@ -81,16 +80,17 @@ export class EmailTemplates {
             input,
             (record) => {
                 validateContent(record.draft);
-                if (record.publications.length >= 32) {
-                    throw new TemplateError("CAPACITY_EXCEEDED");
+                if (record.latestVersion === Number.MAX_SAFE_INTEGER) {
+                    throw new TemplateError("COUNTER_EXHAUSTED");
                 }
                 return {
                     ...record,
-                    publications: [...record.publications, structuredClone(record.draft)],
                     latestVersion: record.latestVersion + 1,
                 };
             },
             "publish",
+            false,
+            true,
         );
         return this.getVersion({ id: result.id, version: result.latestVersion });
     }
@@ -135,6 +135,7 @@ export class EmailTemplates {
         change: (record: TemplateRecord) => TemplateRecord,
         operation = "update",
         allowArchived = false,
+        publication = false,
     ) {
         const record = await this.record(input.id);
         const mutation = digest({ operation, input });
@@ -147,15 +148,24 @@ export class EmailTemplates {
         if (record.archived && !allowArchived) {
             throw new TemplateError("ARCHIVED");
         }
+        if (record.revision === Number.MAX_SAFE_INTEGER) {
+            throw new TemplateError("COUNTER_EXHAUSTED");
+        }
+        if (record.pendingPublication && !publication) {
+            throw new TemplateError("CORE_UNAVAILABLE");
+        }
         const next = { ...change(record), revision: record.revision + 1, lastMutation: mutation };
-        if (!(await this.store.replace(next, record.revision))) {
+        const saved = publication
+            ? await this.store.publish(next, record.revision)
+            : await this.store.replace(next, record.revision);
+        if (!saved) {
             throw new TemplateError("REVISION_CONFLICT");
         }
         return view(next);
     }
 }
 function view(record: TemplateRecord) {
-    const { format: _format, publications: _publications, lastMutation: _lastMutation, ...result } = record;
+    const { format: _format, pendingPublication: _pending, lastMutation: _lastMutation, ...result } = record;
     return structuredClone(result);
 }
 function digest(value: unknown) {

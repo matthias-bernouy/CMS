@@ -15,10 +15,12 @@ const summarySchema = z.strictObject({
     locale: contractString({ minLength: 2, maxLength: 35 }),
     revision: revisionSchema,
     archived: z.boolean(),
-    latestVersion: z.number().int().min(0).max(32),
+    latestVersion: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
 });
 export const templateSchema = summarySchema.extend({ draft: contentSchema });
-export const versionInputSchema = identitySchema.extend({ version: z.number().int().min(1).max(32) });
+export const versionInputSchema = identitySchema.extend({
+    version: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
+});
 export const publicationSchema = versionInputSchema.extend({
     archived: z.boolean(),
     locale: contractString({ minLength: 2, maxLength: 35 }),

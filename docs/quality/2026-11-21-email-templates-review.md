@@ -1,5 +1,10 @@
 # Email Templates implementation review
 
+Historical evidence for the initial embedded-history implementation. Its count limits
+and storage protocol are superseded by the
+[storage follow-up review](2026-11-21-email-templates-storage-review.md). Results
+below apply only to the implementation commits identified here.
+
 Date: 2026-11-21. Task branch: `codex/email-templates`, based on `v1.0.22`
 at `7496cce8e`. Application implementation: `063599155`, completed by
 `33ca3ce13` and `5282754b3`. Work remained in its separate worktree; no publication or merge

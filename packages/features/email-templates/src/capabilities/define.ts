@@ -13,7 +13,7 @@ export const errors = {
     INVALID_INPUT: { retryable: false, output: payload },
     NOT_FOUND: { retryable: false, output: payload },
     REVISION_CONFLICT: { retryable: false, output: payload },
-    CAPACITY_EXCEEDED: { retryable: false, output: payload },
+    COUNTER_EXHAUSTED: { retryable: false, output: payload },
     ARCHIVED: { retryable: false, output: payload },
     CORE_UNAVAILABLE: { retryable: true, output: payload },
 };
@@ -24,7 +24,7 @@ export const response = {
         INVALID_INPUT: 422,
         NOT_FOUND: 404,
         REVISION_CONFLICT: 409,
-        CAPACITY_EXCEEDED: 409,
+        COUNTER_EXHAUSTED: 409,
         ARCHIVED: 409,
         CORE_UNAVAILABLE: 503,
     },

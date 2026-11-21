@@ -8,9 +8,16 @@ missing required values refuse rendering. Values are never recursively expanded.
 
 Use the current revision to update, preview or publish. Publications are immutable;
 store an exact template ID and version in the consuming feature's configuration.
-Publishing a new version never switches consumers. There are at most 100 templates
-and 32 publications per template per instance. Lists load summaries only and use
-an exclusive UUID `after` boundary; they are not stable snapshots across arrivals.
+Publishing a new version never switches consumers. There is no total template or
+publication quota. Revision and version counters stop at `Number.MAX_SAFE_INTEGER`
+(9,007,199,254,740,991); counter exhaustion refuses before writing. Lists load at
+most 100 summaries per page and use an exclusive UUID `after` boundary; they are
+not stable snapshots across arrivals.
+
+If publication is interrupted, retry `templates.publish` with the same ID and
+expected revision to complete it. Staged content is never readable as a publication.
+Until completion, draft updates and archive refuse with `CORE_UNAVAILABLE`.
+Reads do not resume writes. Existing committed publications remain available.
 
 Archive blocks edits and new consumer associations. Existing exact publications
 remain readable/renderable. Consumers own associations and compatibility checks.

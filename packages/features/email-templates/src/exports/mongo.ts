@@ -1,1 +1,1 @@
-export { MongoTemplateStore } from "email-templates/adapters/mongo";
+export { MongoTemplateStore } from "email-templates/adapters/mongo/MongoTemplateStore";

@@ -9,7 +9,11 @@ export const updateEmailConfiguration = defineCapability({
     behavior: { effect: "command", execution: "sync", sensitive: true, idempotency: "natural" },
     input: updateAccountEmailsSchema,
     output: accountEmailConfigurationViewSchema,
-    errors: { ...inputErrors, REVISION_CONFLICT: setAdministratorErrors.REVISION_CONFLICT },
+    errors: {
+        ...inputErrors,
+        REVISION_CONFLICT: setAdministratorErrors.REVISION_CONFLICT,
+        COUNTER_EXHAUSTED: inputErrors.INVALID_INPUT,
+    },
     docs: ["email-templates.md"],
     bindings: [
         {
@@ -21,7 +25,12 @@ export const updateEmailConfiguration = defineCapability({
             response: {
                 successStatuses: [200],
                 contentTypes: ["application/json"],
-                errorStatuses: { INVALID_INPUT: 422, CORE_UNAVAILABLE: 503, REVISION_CONFLICT: 409 },
+                errorStatuses: {
+                    INVALID_INPUT: 422,
+                    CORE_UNAVAILABLE: 503,
+                    REVISION_CONFLICT: 409,
+                    COUNTER_EXHAUSTED: 409,
+                },
             },
         },
         {

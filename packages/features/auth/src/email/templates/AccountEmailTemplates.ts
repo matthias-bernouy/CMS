@@ -45,6 +45,9 @@ export class AccountEmailTemplates implements AuthEmailComposer {
             }
             throw new AccessError("REVISION_CONFLICT");
         }
+        if (current.revision === Number.MAX_SAFE_INTEGER) {
+            throw new AccessError("COUNTER_EXHAUSTED");
+        }
         await this.validate(input.emailVerification, !sameBinding(input.emailVerification, current.emailVerification));
         await this.validate(input.passwordReset, !sameBinding(input.passwordReset, current.passwordReset));
         const next = {

@@ -4,7 +4,7 @@ export class TemplateError extends Error {
             | "INVALID_INPUT"
             | "NOT_FOUND"
             | "REVISION_CONFLICT"
-            | "CAPACITY_EXCEEDED"
+            | "COUNTER_EXHAUSTED"
             | "ARCHIVED"
             | "CORE_UNAVAILABLE",
     ) {

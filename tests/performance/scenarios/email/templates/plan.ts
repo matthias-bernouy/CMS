@@ -14,7 +14,7 @@ export function emailTemplateScenarios(inventory: CapabilityInventory, fixture: 
                         target.definition.id.endsWith("email-configuration"))),
         )
         .flatMap((target) => {
-            // A bounded independent tenant pool per capability prevents immutable-history/capacity exhaustion between scenarios.
+            // An independent tenant pool per capability keeps expected revisions isolated between scenarios.
             const lease = settingsTenants(inventory);
             return lifecycleScenarios(
                 inventory,

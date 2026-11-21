@@ -6,7 +6,7 @@ import { contentMongo } from "../content/mongo";
 
 const enabled = process.env.ULVIA_RUN_EMAIL_TEMPLATES_MONGO === "1";
 test.skipIf(!enabled)(
-    "Mongo templates persist exact publications, enforce shared capacity and project bounded reads",
+    "Mongo templates exceed former counts, persist separate immutable publications and project bounded reads",
     async () => {
         const fixture = await contentMongo();
         try {
@@ -30,7 +30,8 @@ test.skipIf(!enabled)(
                 service.publish({ id: input.id, expectedRevision: 1 }),
                 service.publish({ id: input.id, expectedRevision: 1 }),
             ]);
-            expect(publications.some((result) => result.status === "fulfilled")).toBe(true);
+            expect(publications.map((result) => result.status)).toEqual(["fulfilled", "fulfilled"]);
+            expect(publications[0]).toEqual(publications[1]);
             expect((await service.get({ id: input.id })).latestVersion).toBe(1);
             const commands: { name: string; command: Record<string, unknown> }[] = [];
             const watch = (event: { commandName: string; command: Record<string, unknown> }) => {
@@ -45,24 +46,42 @@ test.skipIf(!enabled)(
             fixture.client.off("commandStarted", watch);
             expect(page.items).toHaveLength(1);
             expect(page.items[0]).not.toHaveProperty("draft");
-            expect(commands.map((entry) => entry.name)).toEqual(["find", "find"]);
-            expect(commands[0]!.command.projection).toHaveProperty("publications.$slice");
-            expect(commands[1]!.command.limit).toBe(3);
+            expect(commands.map((entry) => entry.name)).toEqual(["find", "find", "find"]);
+            expect(commands[0]!.command.projection).not.toHaveProperty("draft");
+            expect(commands[1]!.command.filter).toEqual({ _id: `${input.id}@1` });
+            expect(commands[2]!.command.limit).toBe(3);
             expect(JSON.stringify(commands)).not.toContain("private");
-            // Fill all but two slots, then race independent writers against the hard bound.
-            const persisted = await db.collection("email_templates_v1").findOne({ id: input.id });
-            const occupied = await db.collection("email_templates_v1").distinct("_id");
-            const free = Array.from({ length: 100 }, (_, index) => index).filter((slot) => !occupied.includes(slot));
-            await db
-                .collection("email_templates_v1")
-                .insertMany(free.slice(0, 97).map((slot) => ({ ...persisted, _id: slot, id: crypto.randomUUID() })));
-            const competing = await Promise.allSettled(
-                Array.from({ length: 4 }, () =>
-                    new EmailTemplates(new MongoTemplateStore(db)).create({ ...input, id: crypto.randomUUID() }),
-                ),
+            // Counts are not quotas: every independent writer succeeds beyond the previous 100-model ceiling.
+            for (let batch = 0; batch < 16; batch++) {
+                await Promise.all(
+                    Array.from({ length: 8 }, () =>
+                        new EmailTemplates(new MongoTemplateStore(db)).create({ ...input, id: crypto.randomUUID() }),
+                    ),
+                );
+            }
+            expect(await db.collection("email_templates_v1").countDocuments()).toBe(129);
+            const seen = new Set<string>();
+            let after: string | undefined;
+            do {
+                const page = await restarted.list({ limit: 17, includeArchived: true, after });
+                for (const summary of page.items) {
+                    expect(seen.has(summary.id)).toBe(false);
+                    expect(summary).not.toHaveProperty("draft");
+                    seen.add(summary.id);
+                }
+                after = page.next;
+            } while (after);
+            expect(seen.size).toBe(129);
+            for (let version = 2; version <= 65; version++) {
+                await restarted.publish({ id: input.id, expectedRevision: version });
+            }
+            expect(await db.collection("email_template_publications_v1").countDocuments({ templateId: input.id })).toBe(
+                65,
             );
-            expect(competing.filter((result) => result.status === "fulfilled")).toHaveLength(2);
-            expect(await db.collection("email_templates_v1").countDocuments()).toBe(100);
+            const record = await db.collection("email_templates_v1").findOne({ _id: input.id });
+            expect(record).not.toHaveProperty("publications");
+            expect(Buffer.byteLength(JSON.stringify(record))).toBeLessThan(4096);
+            expect((await restarted.getVersion({ id: input.id, version: 65 })).version).toBe(65);
             const other = new MongoTemplateStore(fixture.client.db("templates_b"));
             await other.init();
             await expect(new EmailTemplates(other).get({ id: input.id })).rejects.toThrow("NOT_FOUND");
