@@ -1,5 +1,5 @@
 import type { ContractFixtureAssetDefinition } from "../../interfaces/ContractRelease";
-import { isReleaseDigest } from "../admission/digest";
+import { isSha256Digest } from "@bernouy/binary-media";
 import { ReleaseValidationError } from "../protocol/errors";
 import type { ReleaseLimits } from "../protocol/limits";
 import {
@@ -41,7 +41,7 @@ export function parseFixtureAssets(
             throw new ReleaseValidationError("invalid_contract", "invalid lowercase media type", `${path}.mediaType`);
         }
         const digest = expectString(record.digest, `${path}.digest`, "invalid_contract", 71);
-        if (!isReleaseDigest(digest)) {
+        if (!isSha256Digest(digest)) {
             throw new ReleaseValidationError("invalid_contract", "invalid SHA-256 digest", `${path}.digest`);
         }
         return { id: parseIdentifier(record.id, `${path}.id`), mediaType, byteLength, digest };

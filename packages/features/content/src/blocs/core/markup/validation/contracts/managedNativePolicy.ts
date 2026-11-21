@@ -1,5 +1,5 @@
 import type { ManagedNativeElement, ManagedNativeElementTag } from "content/pages/interfaces/document";
-import { isCmsBindingAttribute } from "content/blocs/core/validation/nativeBindings";
+import { isCmsBindingAttribute } from "content/blocs/core/validation/nativeBindings/attributes";
 import { isDeclaredPlatformNativeAttributeAllowed } from "content/blocs/core/markup/validation/contracts/nativeAttributes";
 import { implementationAccessibilityAttributeIssue } from "content/blocs/core/markup/validation/contracts/accessibilityAttributes";
 import { nativeAttributeValueIssue } from "content/blocs/core/validation/nativeAttributeValues";

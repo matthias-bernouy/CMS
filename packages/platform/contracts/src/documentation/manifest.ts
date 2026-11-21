@@ -1,5 +1,5 @@
 import type { ContractRelease } from "../interfaces/ContractRelease";
-import { isReleaseDigest } from "../core/admission/digest";
+import { isSha256Digest } from "@bernouy/binary-media";
 import { ReleaseValidationError } from "../core/protocol/errors";
 import {
     expectArray,
@@ -50,7 +50,7 @@ export function parseDocumentation(value: unknown): ContractRelease["documentati
             byteLength > DOCUMENTATION_LIMITS.documentBytes ||
             (total += byteLength) > DOCUMENTATION_LIMITS.totalBytes ||
             typeof row.digest !== "string" ||
-            !isReleaseDigest(row.digest)
+            !isSha256Digest(row.digest)
         ) {
             throw new ReleaseValidationError("invalid_contract", "invalid documentation metadata");
         }

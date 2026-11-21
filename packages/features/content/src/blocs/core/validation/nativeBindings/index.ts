@@ -22,11 +22,7 @@ import {
 
 const CONTROL_CHARACTER = /[\u0000-\u001F\u007F]/;
 
-const BINDING_ATTRIBUTE_SET = new Set<string>(Object.values(CMS_BINDING_ATTRIBUTES));
-
-export function isCmsBindingAttribute(attribute: string): boolean {
-    return BINDING_ATTRIBUTE_SET.has(attribute.toLowerCase());
-}
+export { isCmsBindingAttribute } from "./attributes";
 
 export function nativeBindingAttributeIssue(attribute: string, value: string): string | null {
     const name = attribute.toLowerCase();
