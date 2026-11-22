@@ -27,6 +27,7 @@ export interface ProviderAdministration {
 }
 
 export interface InstallationManagement {
+    selectContract?: ProviderManagement["selectContract"];
     readonly administration?: ProviderAdministration;
     setStatus: ProviderManagement["setStatus"];
 }

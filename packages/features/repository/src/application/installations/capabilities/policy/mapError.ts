@@ -54,6 +54,17 @@ export const mapInstallationError: FeatureErrorMapper = (cause, capability) => {
                       : cause instanceof TypeError || cause instanceof RangeError || status === 400 || status === 422
                         ? "INVALID_INPUT"
                         : "CORE_UNAVAILABLE";
+    } else if (capability.id === "select-contract") {
+        code =
+            status === 403 || reason.endsWith("_protected") || reason === "cluster_logs_operator_only"
+                ? "FORBIDDEN"
+                : status === 409 || reason === "revision_conflict"
+                  ? "REVISION_CONFLICT"
+                  : cause instanceof TypeError
+                    ? "INVALID_INPUT"
+                    : reason
+                      ? "INVALID_SELECTION"
+                      : "CORE_UNAVAILABLE";
     } else if (providerCommands.has(capability.id)) {
         if (status === 403 || reason === "not_authorized") {
             code = "FORBIDDEN";

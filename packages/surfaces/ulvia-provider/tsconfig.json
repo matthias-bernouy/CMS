@@ -5,7 +5,9 @@
         "outDir": "dist",
         "rootDir": "."
     },
-    "files": ["dist/generated/runtime.json"],
+    "files": [
+        "dist/generated/runtime.json"
+    ],
     "include": [
         "src/**/*.ts",
         "tests/**/*.ts",
@@ -62,6 +64,9 @@
         },
         {
             "path": "../../features/hosting"
+        },
+        {
+            "path": "../../features/forms"
         }
     ]
 }

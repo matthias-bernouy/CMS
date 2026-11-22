@@ -82,6 +82,9 @@
             ],
             "ulvia-sdk/*": [
                 "./packages/platform/sdk/src/*"
+            ],
+            "forms/*": [
+                "./packages/features/forms/src/*"
             ]
         }
     }

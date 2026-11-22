@@ -8,6 +8,7 @@ const allowed = new Set([
     "ulvia/cms.authoring",
     "ulvia/cms.content",
     "ulvia/cms.files",
+    "ulvia/cms.forms",
     "ulvia/cms.installations",
     "ulvia/cms.hosting",
     "ulvia/cms.observability",
@@ -48,6 +49,7 @@ test("official MCP V1 exposes authoring, collection lifecycle, hosting and admin
                         capability.id.startsWith("initialization.") ||
                         [
                             "get-operation",
+                            "select-contract",
                             "list-operations",
                             "list-site-usage",
                             "get-site-upgrade-status",
@@ -64,5 +66,5 @@ test("official MCP V1 exposes authoring, collection lifecycle, hosting and admin
             }
         }
     }
-    expect(tools).toBe(117);
+    expect(tools).toBe(130);
 });

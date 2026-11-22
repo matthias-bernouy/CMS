@@ -1,5 +1,7 @@
 # Development And Validation
 
+See [optional Forms](forms.md) for explicit selection, persistence, notification recovery and validation.
+
 See [visual captures](visual-captures.md) for MCP images and isolated browser prerequisites.
 
 Run workspace commands from the repository root. `package.json` pins Bun 1.4.4.

@@ -127,8 +127,15 @@ async function selectContracts(
     if (!installation) {
         throw new Error("Official Provider installation is unavailable during provisioning");
     }
+    const selectable = plan.contracts.filter(
+        (pin) =>
+            pin.contractId !== "ulvia/cms.forms" ||
+            state.selected.some(
+                (current) => current.contractId === pin.contractId && current.installationId === installation.id,
+            ),
+    );
     if (
-        plan.contracts.every((contract) =>
+        selectable.every((contract) =>
             state.selected.some(
                 (current) =>
                     current.contractId === contract.contractId &&
@@ -140,12 +147,12 @@ async function selectContracts(
     ) {
         return;
     }
-    const managedContractIds = new Set(plan.contracts.map(({ contractId }) => contractId));
+    const managedContractIds = new Set(selectable.map(({ contractId }) => contractId));
     await composition.management.replaceSelections({
         expectedRevision: selected?.revision ?? 0,
         selections: [
             ...(selected?.plan.selections ?? []).filter(({ contractId }) => !managedContractIds.has(contractId)),
-            ...plan.contracts.map((contract) => ({ ...contract, installationId: installation.id })),
+            ...selectable.map((contract) => ({ ...contract, installationId: installation.id })),
         ],
     });
     execution.throwIfLeaseLost();

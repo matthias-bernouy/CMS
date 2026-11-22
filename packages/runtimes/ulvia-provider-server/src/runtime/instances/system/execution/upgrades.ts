@@ -26,7 +26,12 @@ export async function reviewSystemUpgrade(
     }
     const { plan: source } = await readInstalledExecution(instance, stores, support, endpoint);
     const enabled = new Set(source.contracts.map(({ contractId }) => contractId));
-    const target = { ...available, contracts: available.contracts.filter(({ contractId }) => enabled.has(contractId)) };
+    const target = {
+        ...available,
+        contracts: available.contracts.filter(
+            ({ contractId }) => enabled.has(contractId) || contractId === "ulvia/cms.forms",
+        ),
+    };
     assertSystemUpgrade(source, target);
     const contracts = await system.contracts(target);
     for (const before of source.contracts) {

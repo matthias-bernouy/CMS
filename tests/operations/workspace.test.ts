@@ -24,6 +24,12 @@ test("verify retains functional acceptance and static performance guards without
         env: { ULVIA_RUN_CLUSTER_LOGS_MONGO: "1" },
         continueOnFailure: true,
     });
+    expect(steps.find(({ env }) => env?.ULVIA_RUN_FORMS_MONGO === "1")?.args).toContain(
+        "packages/features/forms/tests/mongo.test.ts",
+    );
+    expect(steps.find(({ env }) => env?.ULVIA_RUN_FORMS_JOURNEY === "1")?.args).toContain(
+        "tests/integration/instance/forms/journey.test.ts",
+    );
     expect(steps.filter(({ args }) => args.includes("infra/images/build.ts"))).toHaveLength(1);
     expect(steps.at(-1)?.env?.ULVIA_TLS_TEST_IMAGE).toBe("docker.io/cyaxis/ulvia-provider:0.1.0-verify");
     expect(steps.some(({ args }) => args.includes("tests/performance/command/check.ts"))).toBe(true);

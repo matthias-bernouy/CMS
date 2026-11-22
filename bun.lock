@@ -137,6 +137,17 @@
         "typescript": "^7.0.2",
       },
     },
+    "packages/features/forms": {
+      "name": "@bernouy/forms",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/ulvia-sdk": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.8.0",
+        "typescript": "^7.0.2",
+      },
+    },
     "packages/features/hosting": {
       "name": "@bernouy/hosting",
       "version": "1.0.0",
@@ -421,6 +432,7 @@
         "@bernouy/email-smtp": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/files": "workspace:*",
+        "@bernouy/forms": "workspace:*",
         "@bernouy/hosting": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
@@ -470,6 +482,7 @@
         "@bernouy/documentation": "workspace:*",
         "@bernouy/email-smtp": "workspace:*",
         "@bernouy/files": "workspace:*",
+        "@bernouy/forms": "workspace:*",
         "@bernouy/hosting": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
@@ -515,6 +528,8 @@
     "@bernouy/envelope-crypto": ["@bernouy/envelope-crypto@workspace:packages/foundation/envelope-crypto"],
 
     "@bernouy/files": ["@bernouy/files@workspace:packages/features/files"],
+
+    "@bernouy/forms": ["@bernouy/forms@workspace:packages/features/forms"],
 
     "@bernouy/hosting": ["@bernouy/hosting@workspace:packages/features/hosting"],
 

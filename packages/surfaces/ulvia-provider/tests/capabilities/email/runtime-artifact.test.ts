@@ -55,6 +55,7 @@ console.log(JSON.stringify(runtime.implementations.map(({contractId}) => contrac
             "ulvia/cms.content",
             "ulvia/cms.emailer.smtp",
             "ulvia/cms.files",
+            "ulvia/cms.forms",
             "ulvia/cms.hosting",
             "ulvia/cms.installations",
             "ulvia/cms.observability",

@@ -5,12 +5,12 @@ export const PROVISION_STEPS = ["manifest", "provider", "contracts", "initializa
 export const REGISTRY_STEPS = ["provider", "contracts"] as const;
 export const SYSTEM_UPGRADE_STEPS = ["manifest", "provider", "contracts"] as const;
 
-/** A system release switch preserves every enabled family, including Registry. */
+/** A reviewed system release retains every offered family and may add new capabilities. Selection remains a separate step. */
 export function assertSystemUpgrade(source: SystemInstallationPlan, target: SystemInstallationPlan): void {
     if (
         source.manifest.providerId !== target.manifest.providerId ||
         compareSemVer(target.manifest.version, source.manifest.version) < 0 ||
-        source.contracts.length !== target.contracts.length ||
+        source.contracts.length > target.contracts.length ||
         new Set(target.contracts.map(({ contractId }) => contractId)).size !== target.contracts.length ||
         source.contracts.some((before) => {
             const after = target.contracts.find(({ contractId }) => contractId === before.contractId);

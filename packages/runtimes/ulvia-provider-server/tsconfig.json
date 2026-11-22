@@ -86,6 +86,9 @@
         },
         {
             "path": "../../foundation/browser-capture"
+        },
+        {
+            "path": "../../features/forms"
         }
     ]
 }

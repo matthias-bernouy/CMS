@@ -96,6 +96,9 @@
         },
         {
             "path": "packages/features/hosting"
+        },
+        {
+            "path": "packages/features/forms"
         }
     ]
 }

@@ -19,41 +19,46 @@ export function createProtectedProviderManagement(
         }
         return installation;
     };
+    const assertSelections = async (input: Parameters<UlviaProviderManagement["replaceSelections"]>[0]) => {
+        if (input.selections.some(({ contractId }) => contractId === "ulvia/cluster.logs")) {
+            throw policyError("cluster_logs_operator_only");
+        }
+        const control = await controlInstallation();
+        const contract = plan.contracts.find((candidate) => candidate.contractId === CONTROL_CONTRACT_ID);
+        if (!contract) {
+            throw policyError("control_contract_missing");
+        }
+        const selection = input.selections.find((candidate) => candidate.contractId === CONTROL_CONTRACT_ID);
+        if (
+            !selection ||
+            selection.installationId !== control.id ||
+            selection.version !== contract.version ||
+            selection.digest !== contract.digest
+        ) {
+            throw policyError("control_selection_protected");
+        }
+        const hosting = plan.contracts.find(({ contractId }) => contractId === "ulvia/cms.hosting");
+        if (
+            hosting &&
+            !input.selections.some(
+                (selection) =>
+                    selection.contractId === hosting.contractId &&
+                    selection.installationId === control.id &&
+                    selection.version === hosting.version &&
+                    selection.digest === hosting.digest,
+            )
+        ) {
+            throw policyError("hosting_selection_protected");
+        }
+        if (!input.selections.some(({ contractId }) => contractId === "ulvia/cms.observability")) {
+            throw policyError("observability_selection_protected");
+        }
+    };
     return {
+        selectContract: (input) =>
+            management.selectContract(input, (selections) => assertSelections({ expectedRevision: 0, selections })),
         replaceSelections: async (input) => {
-            if (input.selections.some(({ contractId }) => contractId === "ulvia/cluster.logs")) {
-                throw policyError("cluster_logs_operator_only");
-            }
-            const control = await controlInstallation();
-            const contract = plan.contracts.find((candidate) => candidate.contractId === CONTROL_CONTRACT_ID);
-            if (!contract) {
-                throw policyError("control_contract_missing");
-            }
-            const selection = input.selections.find((candidate) => candidate.contractId === CONTROL_CONTRACT_ID);
-            if (
-                !selection ||
-                selection.installationId !== control.id ||
-                selection.version !== contract.version ||
-                selection.digest !== contract.digest
-            ) {
-                throw policyError("control_selection_protected");
-            }
-            const hosting = plan.contracts.find(({ contractId }) => contractId === "ulvia/cms.hosting");
-            if (
-                hosting &&
-                !input.selections.some(
-                    (selection) =>
-                        selection.contractId === hosting.contractId &&
-                        selection.installationId === control.id &&
-                        selection.version === hosting.version &&
-                        selection.digest === hosting.digest,
-                )
-            ) {
-                throw policyError("hosting_selection_protected");
-            }
-            if (!input.selections.some(({ contractId }) => contractId === "ulvia/cms.observability")) {
-                throw policyError("observability_selection_protected");
-            }
+            await assertSelections(input);
             return management.replaceSelections(input);
         },
         setStatus: async (input) => {

@@ -10,7 +10,7 @@ import { accessImplementation } from "./implementations/access";
 import { observabilityImplementation } from "./implementations/observability";
 import { filesImplementation } from "./implementations/files";
 import { secretsImplementation } from "./implementations/secrets";
-import { smtpEmailerImplementation } from "./implementations/emailer";
+import { smtpEmailerImplementation, formsImplementation } from "./implementations/emailer";
 
 import { providerConnectionsImplementation } from "./implementations/provider/connections";
 import { providerCmsInstancesFeature } from "./provider/instances/feature";
@@ -24,6 +24,7 @@ type OfficialFeatureSource =
 /** One inventory distinguishes executable implementations from published protocol templates. */
 const officialFeatureInventory: readonly OfficialFeatureSource[] = Object.freeze([
     { implementation: smtpEmailerImplementation },
+    { implementation: formsImplementation },
     { implementation: accessImplementation },
     { implementation: contentImplementation },
     { implementation: authoringImplementation },
