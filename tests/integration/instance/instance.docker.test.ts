@@ -37,7 +37,7 @@ integration(
                 "packages/runtimes/ulvia-provider-server/src/checkRetention.ts",
             ]);
             connection = await connectBrowser(f.cmsUrl, f.administrator);
-            expect(connection.tools).toHaveLength(68);
+            expect(connection.tools).toHaveLength(69);
             await exerciseDocumentation(connection, f.cmsUrl);
             await exercisePageDelivery(connection, f.cmsUrl);
             await exerciseBasicPage(connection, f.cmsUrl);
