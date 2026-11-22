@@ -44,7 +44,7 @@ integration(
                 { ...candidate, digest: `sha256:${"0".repeat(64)}` },
                 actor,
             );
-            expect(invalid.status).toBe(409);
+            expect(invalid.status).toBe(422);
             expect((await inventory()).selections).toEqual(before.selections);
             const selected = await selectForms(f.cmsUrl, actor.cookie);
             expect(selected.selected.some((pin: { contractId: string }) => pin.contractId === "ulvia/cms.forms")).toBe(

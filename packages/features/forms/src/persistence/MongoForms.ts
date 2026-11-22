@@ -31,7 +31,16 @@ export class MongoForms {
     async create(formId: string, draft: FormDraft, principal: string) {
         const createDigest = await fingerprint([formId, draft, principal]);
         const record: FormRecord = { id: formId, revision: 1, availability: "closed", draft };
-        this.size({ _id: formId, record, createDigest, changeDigest: null, nonce: crypto.randomUUID() }, 65536);
+        this.size(
+            {
+                _id: formId,
+                record: { ...record, revision: Number.MAX_SAFE_INTEGER, currentVersion: Number.MAX_SAFE_INTEGER },
+                createDigest,
+                changeDigest: null,
+                nonce: crypto.randomUUID(),
+            },
+            65536,
+        );
         try {
             await this.forms.insertOne({
                 _id: formId,
@@ -102,6 +111,13 @@ export class MongoForms {
         this.checkForm(current);
         const changeDigest = await fingerprint([revision, change]);
         if (current.record.revision === revision + 1 && current.changeDigest === changeDigest) {
+            const confirmed = await this.forms.updateOne(
+                { _id: formId, "record.revision": revision + 1, changeDigest },
+                { $set: { nonce: crypto.randomUUID() } },
+            );
+            if (!confirmed.matchedCount) {
+                throw new FormsError("REVISION_CONFLICT");
+            }
             return formSchema.parse(current.record);
         }
         if (
@@ -112,7 +128,14 @@ export class MongoForms {
             throw new FormsError("REVISION_CONFLICT");
         }
         const record = formSchema.parse({ ...current.record, ...change, revision: revision + 1 });
-        this.size({ ...current, record, changeDigest }, 65536);
+        this.size(
+            {
+                ...current,
+                record: { ...record, revision: Number.MAX_SAFE_INTEGER, currentVersion: Number.MAX_SAFE_INTEGER },
+                changeDigest,
+            },
+            65536,
+        );
         const result = await this.forms.updateOne(
             { _id: formId, "record.revision": revision },
             { $set: { record, changeDigest } },
@@ -205,6 +228,8 @@ export class MongoForms {
         }
     }
     private async seal(formId: string, version: number) {
+        // Force a changed journaled write even when a repeated seal is already true.
+        await this.forms.updateOne({ _id: formId }, { $set: { nonce: crypto.randomUUID() } });
         const result = await this.versions.updateOne({ _id: `${formId}:${version}` }, { $set: { committed: true } });
         if (!result.matchedCount) {
             throw new FormsError("CORE_UNAVAILABLE");

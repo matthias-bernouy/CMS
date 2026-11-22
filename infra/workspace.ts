@@ -60,7 +60,12 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
             continueOnFailure: true,
         },
         {
-            args: ["bun", "test", "packages/features/forms/tests/mongo.test.ts"],
+            args: [
+                "bun",
+                "test",
+                "packages/features/forms/tests/mongo.test.ts",
+                "packages/features/forms/tests/mongo-lists.test.ts",
+            ],
             env: { ULVIA_RUN_FORMS_MONGO: "1" },
             continueOnFailure: true,
         },

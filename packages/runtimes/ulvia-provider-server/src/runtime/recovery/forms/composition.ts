@@ -38,6 +38,8 @@ export async function composeForms(options: {
                 siteId: "default",
                 contractId: "ulvia/cms.emailer",
                 capabilityId: "emailer.send",
+                // The generic probe validates keyed-command metadata without dispatching it.
+                idempotencyKey: "forms-availability-probe",
                 actor: {
                     kind: "provider",
                     installationId: route.selection.installationId,

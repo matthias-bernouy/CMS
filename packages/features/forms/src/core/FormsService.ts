@@ -91,6 +91,10 @@ export class FormsService {
         if (!validRequest(parsed)) {
             throw new FormsError("INVALID_INPUT");
         }
+        const expiry = this.now() + parsed.retentionDays * 86400000;
+        if (!Number.isSafeInteger(expiry) || expiry > Date.parse("9999-12-31T23:59:59.999Z")) {
+            throw new FormsError("INVALID_INPUT");
+        }
         validateFields(parsed.fields);
         validateTemplates(parsed);
         if (

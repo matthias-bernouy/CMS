@@ -66,6 +66,18 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "authorize-mcp-connection": "neutral",
         "confirm-email-verification": "neutral",
     },
+    "ulvia/cms.forms": {
+        "forms.create": "neutral",
+        "forms.update-draft": "neutral",
+        "forms.publish": "neutral",
+        "forms.set-availability": "neutral",
+        "forms.archive": "neutral",
+        "forms.submit": "neutral",
+        "forms.submit-authenticated": "neutral",
+        "submissions.set-status": "neutral",
+        "submissions.retry-notification": "neutral",
+        "submissions.delete": "neutral",
+    },
     "ulvia/cms.emailer": {
         "emailer.send": "neutral",
     },
@@ -95,6 +107,7 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "site-blocs.archive": "purge",
     },
     "ulvia/cms.installations": {
+        "select-contract": "purge",
         "initialization.apply": "purge",
         "initialization.repository.configure": "purge",
         "initialization.repository.create": "purge",
