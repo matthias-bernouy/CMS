@@ -24,7 +24,11 @@ function input(index: number) {
 }
 export function markup() {
     const form = { formId: { from: "state", key: "@param:ulvia-dtest--forms-kit--form-id" } };
-    const submission = { ...form, attemptId: { from: "state", key: "@param:ulvia-dtest--forms-kit--attempt-id" } };
+    const submission = {
+        ...form,
+        formVersion: { from: "state", key: "@page:ulvia-dtest--forms-kit--definition", path: ["data", "formVersion"] },
+        attemptId: { from: "state", key: "@param:ulvia-dtest--forms-kit--attempt-id" },
+    };
     const codes = [
         "INVALID_INPUT",
         "FORM_NOT_FOUND",

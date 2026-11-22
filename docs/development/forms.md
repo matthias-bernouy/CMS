@@ -43,9 +43,11 @@ until it settles, while logical worker shutdown can finish after its deadline.
 
 Recovery scans at most fifty instance metadata records per ten-second tick and
 opens an instance only when its indexed Forms work probe is due. Unused instances
-do not receive Forms collections. Submission expiry removes local payload and
-intents; opaque retry metadata remains for seven days. Mongo TTL removal is
-asynchronous, and private reads refuse expired payload immediately. This does not
+do not receive Forms collections. The worker erases expired payload and
+intents on its next due tick; opaque retry metadata has a seven-day replay window.
+While the Provider is down, erasure waits for recovery or Mongo TTL, whose document
+deadline is the later of payload expiry and replay expiry. TTL removal itself is
+asynchronous. Private reads refuse expired payload immediately. This does not
 promise erasure from external mailboxes or backups.
 
 ## Technical bounds and validation

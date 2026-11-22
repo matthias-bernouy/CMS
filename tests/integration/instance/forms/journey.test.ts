@@ -77,6 +77,7 @@ integration(
                 replyTo: "reply@performance.test",
                 smtp: smtp.connection,
             };
+            const member = await api.signup("member@performance.test", "Member-strong-password-123!");
             await call("/configuration", configuration, "POST", "ulvia/cms.emailer.smtp");
             const formId = crypto.randomUUID();
             const authoring = {
@@ -107,7 +108,7 @@ integration(
                 formId,
             });
             expect(JSON.stringify(await publicDefinition.json())).not.toContain("forms@performance.test");
-            for (const credentials of [{}, await api.signup("member@example.test", "Member-strong-password-123!")]) {
+            for (const credentials of [{}, member]) {
                 const refused = await api.request(
                     "ulvia/cms.forms",
                     "/submissions/get",
@@ -118,6 +119,7 @@ integration(
                 expect([401, 403]).toContain(refused.status);
             }
             const foreign = await repositoryApi(f.namedUrl).session(f.administrator.email, f.administrator.password);
+            await selectForms(f.namedUrl, foreign.cookie);
             const refused = await api.request("ulvia/cms.forms", "/submissions/get", "QUERY", { receiptId }, foreign);
             expect([401, 403]).toContain(refused.status);
             const foreignId = await repositoryApi(f.namedUrl).request(
