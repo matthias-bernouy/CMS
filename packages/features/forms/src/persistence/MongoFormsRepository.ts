@@ -145,9 +145,14 @@ export class MongoFormsRepository extends MongoForms implements FormsRepository 
         if (input.from && input.to && input.from >= input.to) {
             throw new FormsError("INVALID_INPUT");
         }
-        const after = input.after
-            ? z.tuple([z.string().length(24), z.string().uuid()]).parse(JSON.parse(input.after))
-            : null;
+        let after: [string, string] | null = null;
+        if (input.after) {
+            try {
+                after = z.tuple([z.string().length(24), z.string().uuid()]).parse(JSON.parse(input.after));
+            } catch {
+                throw new FormsError("INVALID_INPUT");
+            }
+        }
         const range = { ...(input.from ? { $gte: input.from } : {}), ...(input.to ? { $lt: input.to } : {}) };
         const rows = await this.records
             .find(

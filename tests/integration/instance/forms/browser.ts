@@ -31,6 +31,7 @@ export async function submitInBrowser(
             await tab.goto(
                 `${f.cmsUrl}/forms-journey?ulvia-dtest--forms-kit--form-id=${formId}&ulvia-dtest--forms-kit--attempt-id=${attemptId}`,
             );
+            await tab.getByRole("status").filter({ hasText: "Contact" }).waitFor();
             await tab.getByRole("button", { name: "Send", exact: true }).waitFor();
             for (const [index, answer] of answers.entries()) {
                 const control = tab.locator(

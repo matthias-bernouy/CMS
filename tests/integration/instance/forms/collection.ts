@@ -34,11 +34,31 @@ export async function buildCollection() {
                 name: "collection.name",
                 locale: "en",
                 exports: "*",
-                states: ["form-id", "attempt-id"].map((id) => ({
-                    id,
-                    scope: "param",
-                    schema: { type: "string", maxLength: 36 },
-                })),
+                states: [
+                    ...["form-id", "attempt-id"].map((id) => ({
+                        id,
+                        scope: "param",
+                        schema: { type: "string", maxLength: 36 },
+                    })),
+                    {
+                        id: "definition",
+                        scope: "page",
+                        schema: {
+                            type: "object",
+                            properties: {
+                                data: {
+                                    type: "object",
+                                    nullable: true,
+                                    properties: {
+                                        formVersion: { type: "integer", minimum: 1, maximum: Number.MAX_SAFE_INTEGER },
+                                    },
+                                    required: ["formVersion"],
+                                },
+                            },
+                            required: ["data"],
+                        },
+                    },
+                ],
             }),
             json(join(bloc, "definition.json"), {
                 kind: "component",

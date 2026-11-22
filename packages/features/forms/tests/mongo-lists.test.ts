@@ -82,6 +82,9 @@ integration(
                 after = page.next;
             } while (after);
             expect(receipts).toEqual(rows.slice(25).map((row) => String(row._id)));
+            calls.length = 0;
+            await expect(service.list({ formId, limit: 25, after: "malformed" })).rejects.toThrow("INVALID_INPUT");
+            expect(calls).toEqual([]);
             fixture.client.off("commandStarted", monitor);
         } finally {
             await fixture.close();
