@@ -1,3 +1,4 @@
+import { formsFeature } from "@bernouy/forms/feature";
 import { implementFeature } from "@bernouy/ulvia-sdk";
 import { smtpEmailerFeature } from "@bernouy/email-smtp/feature";
 
@@ -18,4 +19,16 @@ export const smtpEmailerImplementation = implementFeature(smtpEmailerFeature, {
             optional: false,
         }),
     ),
+});
+
+export const formsImplementation = implementFeature(formsFeature, {
+    services: (dependencies: UlviaProviderFeatureServices) => {
+        if (!dependencies.formsServices) {
+            throw new TypeError("Forms requires injected services");
+        }
+        return dependencies.formsServices;
+    },
+    requires: [
+        { contractId: "ulvia/cms.emailer", capabilityId: "emailer.send", versionRange: "^1.0.0", optional: false },
+    ],
 });

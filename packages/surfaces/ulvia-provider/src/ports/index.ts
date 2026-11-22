@@ -1,4 +1,5 @@
 import type { EmailTemplateServices } from "@bernouy/email-templates/feature";
+import type { FormsServices } from "@bernouy/forms";
 import type { RoutingServices } from "@bernouy/hosting/routing";
 import type { HostingServices } from "@bernouy/hosting/feature";
 import type {
@@ -57,7 +58,7 @@ export type UlviaProviderFeatureServices = Partial<
         ProviderConnectionServices &
         RepositoryServices &
         InstallationServices
->;
+> & { readonly formsServices?: FormsServices };
 
 export type UlviaProviderDependencies = CmsContentDependencies &
     CmsCollectionDependencies &

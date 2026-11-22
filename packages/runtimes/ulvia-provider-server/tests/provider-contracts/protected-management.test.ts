@@ -134,3 +134,24 @@ test("an enabled hosting selection cannot be removed or redirected to another Pr
     });
     expect(replacements).toBe(1);
 });
+
+test("single-contract selection cannot bypass protected control and observability selections", async () => {
+    let writes = 0;
+    const provider = {
+        list: async () => ({ installations: [systemInstallation] }),
+        selectContract: async (_input: unknown, check: (selections: unknown) => Promise<void>) => {
+            await check([{ ...content, installationId: "provider:foreign" }]);
+            writes++;
+            return { revision: 2, selected: [] };
+        },
+    };
+    const management = createProtectedProviderManagement(
+        provider as never,
+        { id: systemInstallation.accountId } as never,
+        { manifest: { providerId: systemInstallation.providerId }, contracts: [control] } as never,
+    );
+    await expect(management.selectContract!({ installationId: "provider:foreign", ...control })).rejects.toMatchObject({
+        code: "control_selection_protected",
+    });
+    expect(writes).toBe(0);
+});

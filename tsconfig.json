@@ -99,6 +99,9 @@
         },
         {
             "path": "packages/features/email-templates"
+        },
+        {
+            "path": "packages/features/forms"
         }
     ]
 }

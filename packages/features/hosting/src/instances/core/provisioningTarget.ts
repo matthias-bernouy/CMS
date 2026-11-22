@@ -1,3 +1,4 @@
+import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
 import type { SystemInstallationPlan } from "hosting/instances/interfaces/installationPlan";
 import type { ProviderInstanceTransitionExecution } from "hosting/instances/core/transitionLease";
 
@@ -5,7 +6,7 @@ export const PROVISION_STEPS = ["manifest", "provider", "contracts", "initializa
 export const REGISTRY_STEPS = ["provider", "contracts"] as const;
 export const SYSTEM_UPGRADE_STEPS = ["manifest", "provider", "contracts"] as const;
 
-/** A system release switch preserves every enabled family, including Registry. */
+/** A reviewed system release retains every offered family and may add new capabilities. Selection remains a separate step. */
 export function assertSystemUpgrade(source: SystemInstallationPlan, target: SystemInstallationPlan): void {
     if (
         source.manifest.providerId !== target.manifest.providerId ||
@@ -61,4 +62,3 @@ export async function executeProvisioningStep(
     }
     return target.initializeAdministrator(administrator, execution);
 }
-import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";

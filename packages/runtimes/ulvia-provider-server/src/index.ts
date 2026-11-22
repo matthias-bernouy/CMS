@@ -1,3 +1,4 @@
+import { FormsDiscovery } from "./runtime/recovery/forms/discovery";
 import { createRoutingRuntime } from "./runtime/instances/system/hosting/routingRuntime";
 import { ClusterLogs } from "@bernouy/observability/cluster";
 import { createClusterLogsRuntime } from "./runtime/gateway/operator/runtime";
@@ -64,6 +65,7 @@ try {
     let host: ProviderInstanceHost | undefined;
     let transitionRecovery: RecoverySupervisor | undefined;
     let operationRecovery: Promise<void> | undefined;
+    let formsDiscovery: FormsDiscovery | undefined;
     let tlsDelivery: { start(): void; stop(): Promise<void> } | undefined;
     try {
         const bootstrap = bundledBootstrapSources(env.ULVIA_BOOTSTRAP_DIR);
@@ -185,6 +187,10 @@ try {
             (error) => logger.error("provider.transition.recovery.failed", {}, error),
         );
         await transitionRecovery.start(false);
+        formsDiscovery = new FormsDiscovery(instances, mongo, instanceHost, (error) =>
+            logger.error("forms.discovery.failed", {}, error),
+        );
+        formsDiscovery.start();
         operationRecovery = instanceHost
             .recoverOperations(instances.scan(), async (instance) =>
                 new MongoProviderOperationStore(mongo.db(instanceDatabaseName(instance.storageKey))).hasPending(),
@@ -194,6 +200,7 @@ try {
     } catch (error) {
         await settleCleanup("startup", [
             ["tls-delivery", tlsDelivery?.stop()],
+            ["forms-recovery", formsDiscovery?.stop()],
             ["transition-recovery", transitionRecovery?.stop()],
             ["operation-recovery", operationRecovery],
             ["listener", provider?.stop()],
@@ -214,6 +221,7 @@ try {
             ...(await settleCleanup("shutdown-tls", [["tls-delivery", tlsDelivery?.stop()]])),
             ...(await settleCleanup("shutdown-listener", [["listener", provider.stop()]])),
             ...(await settleCleanup("shutdown-background", [
+                ["forms-recovery", formsDiscovery?.stop()],
                 ["transition-recovery", transitionRecovery?.stop()],
                 ["operation-recovery", operationRecovery],
             ])),

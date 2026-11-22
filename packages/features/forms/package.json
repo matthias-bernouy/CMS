@@ -1,0 +1,19 @@
+{
+    "name": "@bernouy/forms",
+    "version": "1.0.0",
+    "description": "Configurable forms, retained submissions and Emailer notifications.",
+    "license": "MIT",
+    "type": "module",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./feature": "./src/feature.ts",
+        "./mongo": "./src/exports/mongo.ts"
+    },
+    "dependencies": {
+        "@bernouy/ulvia-sdk": "workspace:*"
+    },
+    "peerDependencies": {
+        "mongodb": "^7.8.0",
+        "typescript": "^7.0.2"
+    }
+}

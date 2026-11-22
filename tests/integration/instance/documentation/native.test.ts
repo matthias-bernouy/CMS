@@ -15,7 +15,14 @@ integration(
             connection = await connectBrowser(f.cmsUrl, f.administrator, {
                 executablePath: process.env.ULVIA_DOCUMENTATION_CHROMIUM,
             });
-            expect(connection.tools).toHaveLength(68);
+            expect(
+                connection.tools.some(
+                    (tool) =>
+                        tool._meta["io.ulvia/contract"] === "ulvia/cms.installations" &&
+                        tool._meta["io.ulvia/capability"] === "select-contract",
+                ),
+            ).toBe(true);
+            expect(connection.tools.some((tool) => tool._meta["io.ulvia/contract"] === "ulvia/cms.forms")).toBe(false);
             await f.waitForDocumentation();
             const found = await connection.call("ulvia/cms.installations", "repository.search", {
                 query: "ulvia/cms.content",

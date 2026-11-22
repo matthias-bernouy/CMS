@@ -85,6 +85,7 @@ test("the upgrade contracts step initializes account publications after selectio
     await expect(target.selectContracts(review.target, execution)).rejects.toThrow("Lease interrupted");
     expect(await configuration.read()).toBeNull();
     expect(replacements).toBe(1);
+    expect(selected.some(({ contractId }) => contractId === "ulvia/cms.forms")).toBe(false);
     interrupted = false;
     await target.selectContracts(review.target, execution);
     expect(replacements).toBe(1);

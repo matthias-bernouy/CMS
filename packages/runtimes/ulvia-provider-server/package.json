@@ -36,7 +36,8 @@
         "@bernouy/hosting": "workspace:*",
         "@bernouy/browser-capture": "workspace:*",
         "@bernouy/email-templates": "workspace:*",
-        "@bernouy/email": "workspace:*"
+        "@bernouy/email": "workspace:*",
+        "@bernouy/forms": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

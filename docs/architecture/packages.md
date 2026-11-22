@@ -62,6 +62,7 @@ Provider remain surfaces; documentation search remains a feature.
 | `@bernouy/repository` | Persistent release catalogues, publication, installation/selection workflows, authored collection admission, content projections, upgrades and build tooling. |
 | `@bernouy/secrets` | Credential-scoped secret namespaces, metadata and lifecycle over an injected generic encrypted secret store. |
 | `@bernouy/email` (`features/email/base`) | Provider-neutral outbound email delivery interface. |
+| `@bernouy/forms` | Configurable forms, immutable publications, typed retained submissions and injected Emailer notifications; optional Mongo adapter. |
 | `@bernouy/email-smtp` (`features/email/smtp`) | SMTP-specific administration, secret-backed configuration and the official Nodemailer implementation. |
 | `@bernouy/auth` | Provider-owned accounts, local credentials, PATs, persistent opaque sessions, account lifecycle and authentication email composition. It exposes no HTTP routes. |
 

@@ -37,7 +37,14 @@ integration(
                 "packages/runtimes/ulvia-provider-server/src/checkRetention.ts",
             ]);
             connection = await connectBrowser(f.cmsUrl, f.administrator);
-            expect(connection.tools).toHaveLength(68);
+            expect(
+                connection.tools.some(
+                    (tool) =>
+                        tool._meta["io.ulvia/contract"] === "ulvia/cms.installations" &&
+                        tool._meta["io.ulvia/capability"] === "select-contract",
+                ),
+            ).toBe(true);
+            expect(connection.tools.some((tool) => tool._meta["io.ulvia/contract"] === "ulvia/cms.forms")).toBe(false);
             await exerciseDocumentation(connection, f.cmsUrl);
             await exercisePageDelivery(connection, f.cmsUrl);
             await exerciseBasicPage(connection, f.cmsUrl);

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { reviewSystemUpgrade } from "../../../../src/runtime/instances/system/execution/upgrades";
 import { previousInstance } from "./fixture";
 
-test("the exact 1.9 to 1.10 review adds mandatory Templates and retains ordinary/Control families", async () => {
+test("the exact 1.9 to 1.11 review adds mandatory Templates and offers optional Forms and retains ordinary/Control families", async () => {
     for (const control of [false, true]) {
         const f = await previousInstance(control);
         const before = structuredClone(f.installed);
@@ -30,7 +30,7 @@ test("the exact 1.9 to 1.10 review adds mandatory Templates and retains ordinary
         expect(review.source.contracts.some(({ contractId }) => contractId === "ulvia/cms.email-templates")).toBe(
             false,
         );
-        expect(review.target.manifest.version).toBe("1.10.0");
+        expect(review.target.manifest.version).toBe("1.11.0");
         expect(review.target.contracts.find(({ contractId }) => contractId === "ulvia/cms.access")?.version).toBe(
             "1.1.0",
         );
@@ -38,7 +38,7 @@ test("the exact 1.9 to 1.10 review adds mandatory Templates and retains ordinary
             review.target.contracts
                 .filter((pin) => !review.source.contracts.some((old) => old.contractId === pin.contractId))
                 .map(({ contractId }) => contractId),
-        ).toEqual(["ulvia/cms.email-templates"]);
+        ).toEqual(["ulvia/cms.email-templates", "ulvia/cms.forms"]);
         expect(review.target.contracts.some(({ contractId }) => contractId === "ulvia/cms.hosting")).toBe(control);
         expect(review.target.contracts.some(({ contractId }) => contractId === "ulvia/repository")).toBe(false);
         expect(

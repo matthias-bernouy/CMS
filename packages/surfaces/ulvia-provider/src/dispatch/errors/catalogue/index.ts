@@ -5,8 +5,11 @@ import { fieldsMessages } from "./fields";
 import { markupMessages } from "./markup";
 import { configurationMessages } from "./configuration";
 
+import { formsMessages } from "./forms";
+
 export const ERROR_MESSAGES = {
     ...defaultsMessages,
+    ...formsMessages,
     ...servicesMessages,
     ...contextsMessages,
     ...fieldsMessages,

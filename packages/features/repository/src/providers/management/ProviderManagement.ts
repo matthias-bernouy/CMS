@@ -151,8 +151,11 @@ export class ProviderManagement {
         return this.lifecycle.observe(scope, current.revision, report);
     }
 
-    async selectContract(input: { installationId: string; contractId: string; version: string; digest: string }) {
-        return activateProviderContract(this.gateway, input);
+    async selectContract(
+        input: { installationId: string; contractId: string; version: string; digest: string },
+        assertSelections?: Parameters<typeof activateProviderContract>[2],
+    ) {
+        return activateProviderContract(this.gateway, input, assertSelections);
     }
 
     async replaceSelections(input: {

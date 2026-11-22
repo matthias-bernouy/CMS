@@ -7,18 +7,23 @@ import { ProviderExecutionSupport } from "../../../../src/runtime/instances/syst
 import type { reviewSystemUpgrade } from "../../../../src/runtime/instances/system/execution/upgrades";
 import previousManifest from "./primary-provider-1.9.0.json";
 
-/** Exact pre-Templates manifest emitted at 7496cce8e; Access 1.0 is the retained admitted release. */
+/** Exact pre-Templates/Forms manifest emitted at 7496cce8e; resolve its retained contract pins. */
 export async function previousInstance(control = false) {
     const resources = await repositoryFixture();
-    const access = (await compileRetainedFeatures()).find(
-        (build) => build.contracts[0]?.release.contractId === "ulvia/cms.access",
-    )!;
-    const previousAccess = access.contracts[0]!;
+    const retained = (await compileRetainedFeatures()).flatMap((build) => build.contracts);
     const catalogue = {
-        get: async (id: string, version: string) =>
-            id === previousAccess.release.contractId && version === previousAccess.release.version
-                ? { admission: previousAccess, publishedAt: "2026-11-20T00:00:00Z" }
-                : resources.catalogue.get(id, version),
+        get: async (id: string, version: string) => {
+            const pin = previousManifest.implementations.find(
+                (item) => item.contractId === id && item.version === version,
+            );
+            const previous = retained.find(
+                (item) =>
+                    item.release.contractId === id && item.release.version === version && item.digest === pin?.digest,
+            );
+            return previous
+                ? { admission: previous, publishedAt: "2026-11-20T00:00:00Z" }
+                : resources.catalogue.get(id, version);
+        },
         list: (id: string) => resources.catalogue.list(id),
     };
     const admission = await admitProviderManifest(previousManifest, catalogue);

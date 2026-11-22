@@ -47,7 +47,9 @@ export function systemUpgradePlan(
     }
     return {
         ...artifacts.plan,
-        contracts: artifacts.plan.contracts.filter(({ contractId }) => selected.has(contractId)),
+        contracts: artifacts.plan.contracts.filter(
+            ({ contractId }) => selected.has(contractId) || contractId === "ulvia/cms.forms",
+        ),
     };
 }
 function covers(contract: ResolvedContract, requirement: ProviderCapabilityRequirement) {

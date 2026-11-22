@@ -1,4 +1,5 @@
 import { composeAccountTemplates } from "../../authentication/templates/compose";
+import { composeForms } from "../../recovery/forms/composition";
 import { createCaptureServices } from "../../content/captures/services";
 import type { HostedTransport } from "../system/hosting/transport/HostedTransport";
 import type { HostingServices } from "@bernouy/hosting/feature";
@@ -384,6 +385,8 @@ export class ProviderInstanceHost {
         const storesMs = performance.now() - storesStartedAt;
         let operations: ProviderOperationExecutor | undefined;
         let operationRecovery: RecoverySupervisor | undefined;
+        let formsRecovery: RecoverySupervisor | undefined;
+        let formsRuntime: Awaited<ReturnType<typeof composeForms>> | undefined;
         let documentation: CmsDocumentation | undefined;
         let documentationTimer: ReturnType<typeof setInterval> | undefined;
         let registry: Awaited<ReturnType<typeof createInstanceRepository>> | undefined;
@@ -418,6 +421,15 @@ export class ProviderInstanceHost {
                 },
                 this.transport?.network,
             );
+            if (plan.contracts.some((pin) => pin.contractId === "ulvia/cms.forms")) {
+                formsRuntime = await composeForms({
+                    instanceId: instance.id,
+                    providerId: this.support.providerId,
+                    stores,
+                    gateway,
+                    connections: new ProviderConnections(stores.providerConnections, this.transport?.network),
+                });
+            }
             const managementForPlan = (plan: ExecutionPlan, execution?: ProviderInstanceTransitionExecution) => {
                 const retention = createProviderRetention(gateway, stores.upgradeStorage, plan, instance.id);
                 return new ProviderManagement(gateway, stores.contractSecrets.installations, {
@@ -552,6 +564,7 @@ export class ProviderInstanceHost {
                     }),
                     hosting: this.hosting,
                     emailer: stores.emailer,
+                    formsServices: formsRuntime?.services,
                     secrets: stores.cmsSecrets,
                     files: stores.providerFiles,
                     workspace: fileWorkspace,
@@ -613,6 +626,15 @@ export class ProviderInstanceHost {
                     instanceLogger.error("provider.operation.recovery.failed", { instanceId: instance.id }, error),
             );
             await operationRecovery.start(false);
+            if (formsRuntime) {
+                formsRecovery = new RecoverySupervisor(
+                    () => formsRuntime!.tick(),
+                    10000,
+                    25,
+                    (error) => instanceLogger.error("forms.recovery.failed", {}, error),
+                );
+                await formsRecovery.start(false);
+            }
             connectInstanceDiagnostics(diagnostics, stores, gateway, instance.id);
             const composition = {
                 stores,
@@ -647,6 +669,8 @@ export class ProviderInstanceHost {
                     closeInstanceComposition({
                         documentationTimer,
                         recovery: operationRecovery,
+                        formsRecovery,
+                        forms: formsRuntime,
                         operations,
                         registry,
                         documentation: instanceDocumentation,
@@ -683,6 +707,8 @@ export class ProviderInstanceHost {
                 await closeInstanceComposition({
                     documentationTimer,
                     recovery: operationRecovery,
+                    formsRecovery,
+                    forms: formsRuntime,
                     operations,
                     registry,
                     documentation,

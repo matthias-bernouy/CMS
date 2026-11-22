@@ -85,6 +85,9 @@
             ],
             "email-templates/*": [
                 "./packages/features/email-templates/src/*"
+            ],
+            "forms/*": [
+                "./packages/features/forms/src/*"
             ]
         }
     }

@@ -8,6 +8,22 @@ For an introduction to Ulvia concepts, documentation discovery and verification,
 
 Use the exact contract selected on the site. Discover the available tool schemas before calling capabilities; a documentation link does not grant execution rights. Capabilities without an MCP binding are not MCP tools. Inherited capabilities retain their declaring contract and exact parent release.
 
+## Select an optional contract
+
+Use `list-provider-installations` to inspect ready candidates and their exact
+selection references. Call `select-contract` with `installationId`, `contractId`,
+`version` and `digest`. The Provider account must be approved and enabled, the
+release must be imported and reported ready, and the complete dependency graph
+must validate. The operation retains unrelated selections and replaces overlapping
+contract lineage. It does not connect a Provider, import a release or configure
+its service. Protected system selections remain protected.
+
+For example, explicitly select an offered Forms implementation to enable its APIs;
+its required Emailer capability must already be selected. An offered contract is
+not automatically selected. Refresh MCP discovery after selection. On a concurrent
+revision refusal, reread current candidates before retrying. Refused changes leave
+selections unchanged.
+
 ## Capabilities
 
 - `repository.search`: Discover reusable resources in configured repositories before installation.

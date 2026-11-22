@@ -67,6 +67,9 @@
         },
         {
             "path": "../../features/email-templates"
+        },
+        {
+            "path": "../../features/forms"
         }
     ]
 }

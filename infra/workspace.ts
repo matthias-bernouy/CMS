@@ -30,7 +30,11 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
         bootstrap,
         { args: ["bun", "run", "quality/ci/check-all/index.ts"] },
         browser,
-        { args: ["bun", "test", ...tests], continueOnFailure: true },
+        {
+            args: ["bun", "test", ...tests],
+            env: { ULVIA_RUN_FORMS_MONGO: "0", ULVIA_RUN_FORMS_JOURNEY: "0" },
+            continueOnFailure: true,
+        },
         {
             args: ["bun", "test", "./tests/integration/collections/animations.browser.test.ts"],
             env: { ULVIA_RUN_COLLECTION_STYLE_BROWSER: "1" },
@@ -65,10 +69,25 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
             },
             continueOnFailure: true,
         },
+        {
+            args: [
+                "bun",
+                "test",
+                "packages/features/forms/tests/mongo.test.ts",
+                "packages/features/forms/tests/mongo-lists.test.ts",
+            ],
+            env: { ULVIA_RUN_FORMS_MONGO: "1" },
+            continueOnFailure: true,
+        },
         { args: ["bun", "x", "tsc", "--project", "tests/performance/tsconfig.json"] },
         { args: ["bun", "run", "tests/performance/command/check.ts"] },
         { args: ["bun", "run", "tests/performance/compatibility/run.ts"], continueOnFailure: true },
         candidateImageStep(candidateVersion),
+        {
+            args: ["bun", "test", "tests/integration/instance/forms/journey.test.ts"],
+            env: { ...candidateImages, ULVIA_RUN_FORMS_JOURNEY: "1" },
+            continueOnFailure: true,
+        },
         {
             args: ["bun", "test", "packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts"],
             env: { ...candidateImages, ULVIA_RUN_EDGE_SMOKE: "1" },
