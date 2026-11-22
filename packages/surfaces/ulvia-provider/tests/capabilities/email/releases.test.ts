@@ -42,7 +42,14 @@ test("generated manifest claims the exact SDK implementation inventory", async (
     const manifest = await compileOfficialManifest(catalogue, compiled);
     expect(manifest.manifest.version).toBe("1.10.0");
     expect(manifest.manifest.implementations).toHaveLength(15);
-    expect(manifest.manifest.implementations.find((pin) => pin.contractId === "ulvia/cms.forms")!.requires).toEqual([
+    expect(
+        manifest.manifest.implementations
+            .find((pin) => pin.contractId === "ulvia/cms.forms")!
+            .requires.map(({ versionRange, ...requirement }) => ({
+                ...requirement,
+                versionRange: String(versionRange),
+            })),
+    ).toEqual([
         { contractId: "ulvia/cms.emailer", capabilityId: "emailer.send", versionRange: "^1.0.0", optional: false },
     ]);
     for (const implementation of manifest.manifest.implementations) {
