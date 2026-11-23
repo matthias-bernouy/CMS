@@ -1,4 +1,6 @@
-import type { BlocRecord, SiteBlocNode } from "@bernouy/content";
+import type { BlocRecord, SiteBlocSnapshot } from "@bernouy/content";
+import { serializeSiteBlocMarkup } from "@bernouy/content";
+import { parseHTML } from "linkedom";
 
 export function localBlocDocuments(record: BlocRecord): Readonly<Record<string, string>> {
     const documents: Record<string, string> = {};
@@ -19,7 +21,7 @@ export function localBlocDocuments(record: BlocRecord): Readonly<Record<string, 
             continue;
         }
         documents[`${name}/content`] = snapshot.defaultContent;
-        documents[`${name}/structure`] = serializeNodes(snapshot.structure);
+        documents[`${name}/structure`] = serializeStructure(snapshot);
         documents[`${name}/slots`] = snapshot.slots
             .flatMap((slot) =>
                 slot.accepts.flatMap((accept) =>
@@ -31,21 +33,18 @@ export function localBlocDocuments(record: BlocRecord): Readonly<Record<string, 
     return documents;
 }
 
-function serializeNodes(nodes: readonly SiteBlocNode[]): string {
-    return nodes
-        .map((node) => {
-            if (node.kind === "text") {
-                return escape(node.value);
-            }
-            if (node.kind === "slot") {
-                return "";
-            }
-            const attributes = Object.entries(node.attributes)
-                .map(([name, value]) => ` ${name}="${escape(value)}"`)
-                .join("");
-            return `<${node.tag}${attributes}>${serializeNodes(node.children)}</${node.tag}>`;
-        })
-        .join("");
+function serializeStructure(snapshot: SiteBlocSnapshot): string {
+    const html = serializeSiteBlocMarkup(snapshot, { controller: false });
+    if (snapshot.slots.length === 0) {
+        return html;
+    }
+    // Template placeholders are not Page content; their accepts are inventoried separately.
+    const { document } = parseHTML("<html><body></body></html>");
+    document.body.innerHTML = html;
+    for (const slot of document.body.querySelectorAll("slot")) {
+        slot.remove();
+    }
+    return document.body.innerHTML;
 }
 function escape(value: string): string {
     return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
