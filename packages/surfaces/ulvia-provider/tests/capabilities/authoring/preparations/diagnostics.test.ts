@@ -1,5 +1,5 @@
-import { authoringTransport } from "./transport";
-import { invokeHttp, resolvedContract } from "../../execution/messages/fixtures";
+import { authoringTransport } from "../transport";
+import { invokeHttp, resolvedContract } from "../../../execution/messages/fixtures";
 import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { RepositoryAuthoring } from "@bernouy/repository/repository/authoring";
 import { InMemoryReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { mountAuthoringForTest } from "./mount";
+import { mountAuthoringForTest } from "../mount";
 
 test("invalid collection sources return bounded actionable diagnostics and never request publication authority", async () => {
     const root = await mkdtemp(join(tmpdir(), "authoring-diagnostics-"));

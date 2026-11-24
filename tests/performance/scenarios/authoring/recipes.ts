@@ -63,6 +63,14 @@ export async function prepareAuthoring(
                                 output.repositoryUrl === repositoryOrigin &&
                                 typeof output.repositoryId === "string",
                         );
+                    } else if (capability === "list-preparations") {
+                        const quota = requireRecord(output.quota);
+                        assertCondition(
+                            Array.isArray(output.items) &&
+                                output.items.length <= 8 &&
+                                typeof quota.count === "number" &&
+                                quota.count >= 1,
+                        );
                     } else if (capability === "discard-preparation") {
                         assertCondition(output.discarded === true);
                     } else if (capability === "get-publication-operation") {

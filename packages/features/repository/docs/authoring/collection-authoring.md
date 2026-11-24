@@ -57,6 +57,12 @@ motion is decorative.
 
 Call `prepare-collection` with the complete source snapshot. A successful tool invocation can still return `valid: false`: inspect `diagnostics[].message`, correct the sources and prepare again. Publication needs `valid: true`, a `preparationId`, a `digest` and a reviewed `approvedBrowserRiskDigest`. Retain those exact returned values; do not construct them from source text.
 
+If the diagnostic code is `preparation.quota_exceeded`, inspect the returned
+quota, call `list-preparations`, explicitly discard an unneeded preparation by
+its returned `preparationId`, then retry. Prefer completed `published` entries
+after verifying their remote release and retained sources; preserve work needed
+for publication recovery. See [preparation management](overview.md#errors-and-verification).
+
 Compilation does not prove visual quality. Inspect the installed result with a browser when available and report any missing visual or interaction checks.
 
 Inspect `diagnostics` even when `valid` is true. Errors block preparation; warnings report incomplete validation. Entries carry a stable code, severity, message and optional location, related resource IDs and suggestion. `analysis.truncated` means additional validation issues were omitted. Correct the reported issues and prepare again.

@@ -68,7 +68,10 @@ fixture references retain the exact published contract, release digest and asset
 ID instead of depending on another site's private file generation.
 
 All preparations share the existing limit of 64 unexpired workspaces and expire
-after seven days. discard-preparation removes one unpublished preparation. This
+after seven days. Use `list-preparations` to find preparation IDs and their
+resource, expiry and publication state. `discard-preparation` explicitly removes
+one selected preparation; remote published releases and sources remain intact.
+Keep preparations needed to complete a `sources-pending` publication. This
 ephemeral storage is not a permanent editing repository; retained published
 sources are the durable editing source.
 

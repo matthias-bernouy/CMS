@@ -10,6 +10,7 @@ import type { AuthoredKind } from "../../fixtures/authored";
 export const AUTHORING_ARTIFACTS = [
     "claim-namespace",
     "list-namespaces",
+    "list-preparations",
     "get-connection",
     "prepare-collection",
     "prepare-contract",
@@ -52,7 +53,8 @@ export async function authoringFixture(
     const needsPreparation =
         capability.startsWith("publish-") ||
         (capability.startsWith("get-") && !["get-connection"].includes(capability)) ||
-        capability === "discard-preparation";
+        capability === "discard-preparation" ||
+        capability === "list-preparations";
     const prepared = needsPreparation
         ? requireRecord(await calls.fixture(`prepare-${kind}`, { sourceJson: source.sourceJson }))
         : null;
@@ -86,22 +88,24 @@ export async function authoringFixture(
             ? { namespace }
             : capability === "list-namespaces"
               ? { namespace, limit: 32 }
-              : capability.startsWith("prepare-")
-                ? { sourceJson: source.sourceJson }
-                : capability.startsWith("publish-")
-                  ? publication
-                  : capability === "discard-preparation"
-                    ? { preparationId: prepared!.preparationId }
-                    : capability === "get-publication-operation"
-                      ? { ...publication, operationId }
-                      : capability === "get-source-snapshot"
-                        ? { namespace, id: source.id, kind, version: source.version }
-                        : sources
-                          ? {
-                                namespace,
-                                version: source.version,
-                                [`${kind === "provider-manifest" ? "provider" : kind}Id`]: source.id,
-                            }
-                          : {};
+              : capability === "list-preparations"
+                ? { limit: 8 }
+                : capability.startsWith("prepare-")
+                  ? { sourceJson: source.sourceJson }
+                  : capability.startsWith("publish-")
+                    ? publication
+                    : capability === "discard-preparation"
+                      ? { preparationId: prepared!.preparationId }
+                      : capability === "get-publication-operation"
+                        ? { ...publication, operationId }
+                        : capability === "get-source-snapshot"
+                          ? { namespace, id: source.id, kind, version: source.version }
+                          : sources
+                            ? {
+                                  namespace,
+                                  version: source.version,
+                                  [`${kind === "provider-manifest" ? "provider" : kind}Id`]: source.id,
+                              }
+                            : {};
     return { ...calls, source, prepared, publication, input, complete };
 }

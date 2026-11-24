@@ -18,7 +18,7 @@ async function workspaces(root: string) {
 
 test("independent processes reserve only one remaining preparation slot", async () => {
     const root = await mkdtemp("/tmp/ulvia-preparation-processes-");
-    const module = new URL("../../../src/repository/authoring/preparations/workspace.ts", import.meta.url).href;
+    const module = new URL("../../../../src/repository/authoring/preparations/workspace.ts", import.meta.url).href;
     const source = `
         import { reservePreparationWorkspace, commitPreparationWorkspace } from ${JSON.stringify(module)};
         await Bun.stdin.text();

@@ -70,5 +70,5 @@ test("official MCP V1 exposes authoring, collection lifecycle, hosting and admin
             }
         }
     }
-    expect(tools).toBe(145);
+    expect(tools).toBe(146);
 });

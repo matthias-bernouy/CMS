@@ -8,7 +8,7 @@ import { requiredText } from "repository/application/authoring/core/input";
 export const discardPreparation = defineCapability({
     id: "discard-preparation",
     description:
-        "Discard one local unpublished collection, contract or Provider manifest preparation. Published releases are preserved.",
+        "Discard one explicitly selected local preparation, including a completed publication receipt. Remote published releases and retained sources are preserved. Keep preparations needed for publication recovery.",
     access: "admin",
     behavior: { effect: "command", execution: "sync", idempotency: "none", sensitive: true },
     bindings: [
@@ -30,7 +30,7 @@ export const discardPreparation = defineCapability({
             tool: {
                 name: "authoring_discard_preparation",
                 description:
-                    "Discard one local unpublished collection, contract or Provider manifest preparation. Published releases are preserved.",
+                    "Discard one explicitly selected local preparation, including a completed publication receipt. Remote published releases and retained sources are preserved. Keep preparations needed for publication recovery.",
             },
         },
     ],
