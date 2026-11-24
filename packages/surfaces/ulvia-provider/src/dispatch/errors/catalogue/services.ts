@@ -91,4 +91,52 @@ export const servicesMessages = {
         "The handler required for this operation is no longer available.",
         "Le traitement nécessaire à cette opération n’est plus disponible.",
     ],
+    DEFINITION_CONFLICT: [
+        "This definition already exists with different content.",
+        "Cette définition existe déjà avec un contenu différent.",
+    ],
+    SCHEMA_VERSION_CONFLICT: [
+        "This resource version already has a different schema. Publish a new version.",
+        "Cette version de ressource possède déjà un autre schéma. Publiez une nouvelle version.",
+    ],
+    DEFINITION_RETIRED: [
+        "This definition has been disabled for new work.",
+        "Cette définition est désactivée pour les nouveaux traitements.",
+    ],
+    DEFINITION_IN_USE: [
+        "This definition still has active consumers.",
+        "Cette définition possède encore des consommateurs actifs.",
+    ],
+    PUBLICATION_CONFLICT: [
+        "This occurrence was already accepted with different data.",
+        "Cette occurrence a déjà été acceptée avec des données différentes.",
+    ],
+    SUBSCRIPTION_CONFLICT: [
+        "This subscription identity is already reserved.",
+        "Cet identifiant d’abonnement est déjà réservé.",
+    ],
+    CAPACITY_EXCEEDED: [
+        "This event or subscription exceeds the delivery size limit. Reduce its data size.",
+        "Cet événement ou abonnement dépasse la taille limite de livraison. Réduisez la taille de ses données.",
+    ],
+    INVALID_DEFINITION: [
+        "The workflow is incompatible. Read its diagnostic path and correct the configuration.",
+        "Le workflow est incompatible. Consultez le chemin du diagnostic et corrigez sa configuration.",
+    ],
+    TRIGGER_CONFLICT: [
+        "This trigger identity is already used by another configuration.",
+        "Cet identifiant de déclencheur est déjà utilisé par une autre configuration.",
+    ],
+    RUN_CONFLICT: [
+        "This run identity already belongs to another execution.",
+        "Cet identifiant appartient déjà à une autre exécution.",
+    ],
+    DELIVERY_CONFLICT: [
+        "This delivery identity was already accepted with different content.",
+        "Cette livraison a déjà été acceptée avec un contenu différent.",
+    ],
+    VALUE_TOO_LARGE: [
+        "This workflow value exceeds the retained JSON limit.",
+        "Cette valeur de workflow dépasse la limite JSON conservée.",
+    ],
 } as const;

@@ -61,6 +61,8 @@ test("official MCP V1 exposes authoring, collection lifecycle, hosting and admin
                             "get-contract-upgrade",
                             "documentation.search",
                             "documentation.get",
+                            "repository.artifacts.search",
+                            "repository.artifacts.get",
                             "repository.search",
                             "repository.get",
                         ].includes(capability.id),
@@ -68,5 +70,5 @@ test("official MCP V1 exposes authoring, collection lifecycle, hosting and admin
             }
         }
     }
-    expect(tools).toBe(141);
+    expect(tools).toBe(146);
 });

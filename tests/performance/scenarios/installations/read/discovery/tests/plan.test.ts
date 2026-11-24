@@ -3,10 +3,10 @@ import { performanceCapabilityInventory } from "../../../../../capabilities/inve
 import { auditPlan, coverageMatrix } from "../../../../../capabilities/coverage";
 import { siteDiscoveryScenarios } from "../plan";
 
-test("all eight selected repository discovery variants have exact bindings, budgets and blocking omissions", async () => {
+test("all sixteen selected repository discovery variants have exact bindings, budgets and blocking omissions", async () => {
     const inventory = await performanceCapabilityInventory();
     const definitions = siteDiscoveryScenarios(inventory, "planning").map((row) => row.definition);
-    expect(definitions).toHaveLength(8);
+    expect(definitions).toHaveLength(16);
     const keys = new Set(definitions.flatMap((row) => row.obligations.map((obligation) => obligation.target)));
     const selected = { ...inventory, targets: inventory.targets.filter((row) => keys.has(row.key)) };
     const relevant = (variant: string) => ["large", "history", "invalidation"].includes(variant);

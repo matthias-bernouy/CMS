@@ -1,3 +1,4 @@
+import { compileEvents } from "ulvia-sdk/compiler/contracts/events";
 import { ownCapabilities } from "ulvia-sdk/compiler/contracts/capabilitySources";
 import { DEFAULT_RELEASE_LIMITS } from "@bernouy/ulvia-contracts";
 import type { ContractRelease } from "@bernouy/ulvia-contracts";
@@ -59,6 +60,7 @@ export function snapshotContracts(sources: readonly FeatureDefinition[]): readon
                 protocol: "ulvia-provider/v1",
                 schemaDialect: "ulvia-schema/v1",
                 capabilities: capabilities.map(compileCapability),
+                ...(source.events === undefined ? {} : { events: compileEvents(source.events) }),
             },
             documents: snapshotDocuments(source.documents),
             fixtures: snapshotFixtures(source.fixtures),

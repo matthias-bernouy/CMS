@@ -7,6 +7,11 @@ export const gatewayDispatchPrepareInputSchema = z.strictObject({
         contractId: contractString({ minLength: 1, maxLength: 193 }),
         contractVersion: contractString({ minLength: 5, maxLength: 64 }),
         capabilityId: contractString({ minLength: 1, maxLength: 160 }),
+        eventCausation: z
+            .array(contractString({ minLength: 64, maxLength: 64 }))
+            .max(32)
+            .readonly()
+            .optional(),
         systemServiceId: contractString({ maxLength: 128 }).optional(),
         sourceInstallationId: contractString({ maxLength: 128 }).optional(),
         bodyBytes: z.int().min(0).max(67108864).optional(),

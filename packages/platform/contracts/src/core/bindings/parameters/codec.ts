@@ -2,7 +2,7 @@ import type { HttpParameterValue } from "../../../interfaces/HttpBinding";
 import type { UlviaScalarSchema } from "../../../interfaces/UlviaSchema";
 import { canonicalizeIJson } from "../../protocol/canonical";
 import { parseStrictJson } from "../../protocol/json";
-import { SchemaValueError, validateSchemaValue } from "../../schema/validateValue";
+import { SchemaValueError, validateSchemaValue } from "../../language/schema/validateValue";
 
 const ENCODED_COMPONENT = /^(?:[A-Za-z0-9_.!~*'()-]|%[0-9A-Fa-f]{2})*$/;
 

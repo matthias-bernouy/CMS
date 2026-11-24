@@ -87,7 +87,7 @@ export class RemoteRepositoryWriter {
         const result =
             envelope.sourceJson === undefined
                 ? await this.connection.json(
-                      "v1/uploads/commit",
+                      envelope.kind === "workflow" ? "v1/artifacts/commit" : "v1/uploads/commit",
                       "POST",
                       { ...owner, uploadId: created.uploadId },
                       true,

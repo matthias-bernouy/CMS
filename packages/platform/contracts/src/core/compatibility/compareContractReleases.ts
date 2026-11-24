@@ -1,3 +1,4 @@
+import { compareEvents } from "../events/compare";
 import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../protocol/limits";
 import { deepFreeze } from "../protocol/values";
 import { compileContractBindings } from "../bindings/compileContractBindings";
@@ -11,6 +12,9 @@ import {
 } from "ulvia-contracts/core/compatibility/semver";
 
 export type CompatibilityIssueCode =
+    | "event_added"
+    | "event_removed"
+    | "event_changed"
     | "binding_changed"
     | "capability_added"
     | "capability_changed"
@@ -24,6 +28,7 @@ export type CompatibilityIssueCode =
 
 export interface CompatibilityIssue {
     readonly capabilityId?: string;
+    readonly eventId?: string;
     readonly code: CompatibilityIssueCode;
     readonly message: string;
     readonly path?: string;
@@ -108,6 +113,10 @@ export function compareContractReleases(
                 requiredBump: "minor",
             });
         }
+    }
+    for (const change of compareEvents(previous, next, limits.maxJsonDepth)) {
+        requiredBump = maxBump(requiredBump, change.requiredBump!);
+        issues.push(change);
     }
     const declaredBump = versionBump(previous.version, next.version);
     // A target's previews may evolve before stabilization. Publication must

@@ -32,7 +32,7 @@ export const getSourceSnapshot = defineCapability({
             },
         },
     ],
-    docs: ["overview.md", "collection-source.md", "contract-source.md"],
+    docs: ["overview.md", "sources/collection-source.md", "sources/contract-source.md"],
     input: getSourceSnapshotInputSchema,
     output: expandedSourceSnapshotSchema,
     errors,

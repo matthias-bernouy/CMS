@@ -37,7 +37,7 @@ export async function preparePublication(
                         } else {
                             assertCondition(out.uploadId === uploadId);
                         }
-                    } else if (capability === "publication-commit") {
+                    } else if (["publication-commit", "artifacts.commit"].includes(capability)) {
                         assertCondition(
                             out.digest === state.resource.digest && out.kind === "contract" && out.added === true,
                         );
@@ -52,7 +52,10 @@ export async function preparePublication(
                     }
                 }
             });
-            if (result.observation.validated && ["publication-commit", "publication-abort"].includes(capability)) {
+            if (
+                result.observation.validated &&
+                ["publication-commit", "artifacts.commit", "publication-abort"].includes(capability)
+            ) {
                 terminal = true;
             }
             return result.observation;

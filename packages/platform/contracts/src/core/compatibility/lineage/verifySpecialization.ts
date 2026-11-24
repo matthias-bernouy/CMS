@@ -1,6 +1,8 @@
+import { validateSchemaResolvers } from "ulvia-contracts/core/language/resolution/admission";
 import type { ContractRelease } from "ulvia-contracts/interfaces/ContractRelease";
 import type { CatalogueContractRelease } from "ulvia-contracts/interfaces/ContractReleaseReader";
 import { ReleaseValidationError } from "ulvia-contracts/core/protocol/errors";
+import { effectiveLineageEvents } from "./resolveLineage";
 import { validateDeprecationReferences } from "../../parsing/parseDeprecation";
 
 /** A specialization declares only additions and inherits its exact ancestors from the catalogue. */
@@ -23,6 +25,7 @@ export function verifySpecialization(release: ContractRelease, published: readon
     }
     const inheritedIds = new Set<string>();
     const capabilities = [...release.capabilities];
+    const lineage = [release];
     let ancestor = parentRecord;
     const visited = new Set<string>();
     while (ancestor) {
@@ -30,6 +33,7 @@ export function verifySpecialization(release: ContractRelease, published: readon
             throw new ReleaseValidationError("invalid_contract", "contract inheritance contains a cycle", "$.extends");
         }
         visited.add(ancestor.admission.release.contractId);
+        lineage.push(ancestor.admission.release);
         for (const capability of ancestor.admission.release.capabilities) {
             inheritedIds.add(capability.id);
             capabilities.push(capability);
@@ -61,4 +65,6 @@ export function verifySpecialization(release: ContractRelease, published: readon
         }
     }
     validateDeprecationReferences(capabilities);
+    validateDeprecationReferences(effectiveLineageEvents(lineage), false, "events");
+    validateSchemaResolvers({ capabilities, events: effectiveLineageEvents(lineage) });
 }

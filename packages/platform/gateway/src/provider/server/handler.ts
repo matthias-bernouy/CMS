@@ -1,3 +1,4 @@
+import type { SchemaVersionStore } from "cms-gateway/provider/resolution/interfaces";
 import { NOOP_LOGGER, type Logger } from "@bernouy/logging";
 import type { ResolvedContract } from "@bernouy/ulvia-contracts";
 import type { ProviderInvocationClaims } from "cms-gateway/protocol/ProviderInvocationToken";
@@ -9,6 +10,7 @@ export interface ProviderHandlerOptions {
     readonly contracts: readonly ResolvedContract[];
     readonly dispatcher: ProviderCapabilityRegistry;
     readonly logger?: Logger;
+    readonly schemaVersions?: SchemaVersionStore;
     /** Verify credentials, signed audience and exact release before returning host-owned scope. */
     authenticate(request: Request): Promise<{
         readonly claims: ProviderInvocationClaims;
@@ -32,6 +34,8 @@ export function createProviderHandler(options: ProviderHandlerOptions): (request
             verified,
             options.logger ?? NOOP_LOGGER,
             options.authorize,
+            undefined,
+            options.schemaVersions,
         );
         return (await relay(request, verified.claims)) ?? new Response(null, { status: 404 });
     };

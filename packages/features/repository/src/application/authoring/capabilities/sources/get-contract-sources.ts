@@ -30,7 +30,7 @@ export const getContractSources = defineCapability({
             },
         },
     ],
-    docs: ["overview.md", "artifact-authoring.md", "contract-source.md"],
+    docs: ["overview.md", "artifact-authoring.md", "sources/contract-source.md"],
     input: getContractSourcesInputSchema,
     output: sourceSnapshotSchema,
     errors,

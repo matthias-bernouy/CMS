@@ -33,7 +33,7 @@ export const getProviderManifestSources = defineCapability({
             },
         },
     ],
-    docs: ["overview.md", "artifact-authoring.md", "provider-manifest-source.md"],
+    docs: ["overview.md", "artifact-authoring.md", "sources/provider-manifest-source.md"],
     input: getProviderManifestSourcesInputSchema,
     output: sourceSnapshotSchema,
     errors,

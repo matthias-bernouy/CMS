@@ -2,7 +2,11 @@ import { DEFAULT_COLLECTION_LIMITS } from "repository/collections/core/limits";
 import { z } from "zod";
 import { contractString } from "@bernouy/ulvia-sdk";
 export const publicationYankInputSchema = z.strictObject({
-    kind: contractString({ minLength: 1, maxLength: 32, enum: ["collection", "contract", "provider-manifest"] }),
+    kind: contractString({
+        minLength: 1,
+        maxLength: 32,
+        enum: ["collection", "contract", "provider-manifest", "workflow"],
+    }),
     publisherId: contractString({ minLength: 1, maxLength: 96 }),
     id: contractString({ minLength: 1, maxLength: 193 }),
     version: contractString({ minLength: 1, maxLength: 128 }),
@@ -38,7 +42,11 @@ export const publicationCheckCollectionOutputSchema = z
     .readonly();
 
 export const publicationStateInputSchema = z.strictObject({
-    kind: contractString({ minLength: 1, maxLength: 32, enum: ["collection", "contract", "provider-manifest"] }),
+    kind: contractString({
+        minLength: 1,
+        maxLength: 32,
+        enum: ["collection", "contract", "provider-manifest", "workflow"],
+    }),
     publisherId: contractString({ minLength: 1, maxLength: 96 }),
     id: contractString({ minLength: 1, maxLength: 193 }),
     version: contractString({ minLength: 1, maxLength: 128 }),

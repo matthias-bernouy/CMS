@@ -1,3 +1,4 @@
+import { containsResolvedSchema } from "@bernouy/ulvia-contracts/resolution";
 import { operationJsonSchema } from "ulvia-sdk/provider/execution/operations";
 import { operationRegistrations } from "ulvia-sdk/provider/execution/registrations";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
@@ -38,6 +39,12 @@ export function registerProviderHandlers<Dependencies>(
               }
             : {}),
     });
+    if (
+        plan.some((entry) => entry.retainedOutputSchema && containsResolvedSchema(entry.retainedOutputSchema)) &&
+        !snapshot.resolveSchema
+    ) {
+        throw new TypeError("Retained dynamic outputs require a host-owned schema resolution authority");
+    }
     if (!snapshot.providerId || !snapshot.scope.siteId || !snapshot.scope.instanceId) {
         throw new TypeError("Exact Provider registration scope is required");
     }
@@ -56,6 +63,12 @@ export function registerProviderHandlers<Dependencies>(
         throw new TypeError("Default operations require a host-owned durable operation adapter");
     }
     for (const entry of plan.filter((entry) => entry.defaultOperation)) {
+        if (
+            (containsResolvedSchema(entry.capability.input) || containsResolvedSchema(entry.capability.output)) &&
+            !snapshot.resolveSchema
+        ) {
+            throw new TypeError("Dynamic durable workers require a host-owned schema resolution authority");
+        }
         if (!operationJsonSchema(entry.capability.input) || !operationJsonSchema(entry.capability.output)) {
             throw new TypeError("Default durable operations require JSON input and terminal output");
         }

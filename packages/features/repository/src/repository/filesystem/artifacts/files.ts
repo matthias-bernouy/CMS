@@ -9,7 +9,7 @@ import { ensureDurableDirectory } from "../core/durable";
 import { listDirectories, writeImmutableFile } from "../core/immutableFiles";
 import { isRepositoryIdentifier } from "@bernouy/ulvia-contracts/compatibility";
 
-export type ArtifactType = "contracts" | "providers";
+export type ArtifactType = "contracts" | "providers" | "workflows";
 export type StoredArtifact = {
     publisherId: string;
     id: string;

@@ -23,7 +23,7 @@ Call `configure-connection` with the PAT. The runtime controls the target origin
 - `prepare-provider-manifest`, `publish-provider-manifest` and `get-provider-manifest-sources` provide manifest authoring against exact contract pins.
 - `discard-preparation` removes an unpublished local preparation of any supported kind; published releases remain intact.
 
-Read [artifact authoring](artifact-authoring.md), [contract sources](contract-source.md) and [Provider manifest sources](provider-manifest-source.md) before these workflows.
+Read [artifact authoring](artifact-authoring.md), [contract sources](sources/contract-source.md) and [Provider manifest sources](sources/provider-manifest-source.md) before these workflows.
 
 Durable collection publication checks the current local administrator grant before queueing and again in recovered workers.
 

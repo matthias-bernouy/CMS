@@ -1,6 +1,11 @@
 import type { CapabilityDefinition } from "@bernouy/ulvia-contracts";
 import type { CapabilityOperationHandle } from "@bernouy/ulvia-contracts/protocol";
-import type { ProviderHandlerOptions, ProviderCapabilityInvocationContext } from "@bernouy/cms-gateway/provider/server";
+import type {
+    ProviderHandlerOptions,
+    ProviderCapabilityInvocationContext,
+    ProviderSchemaResolution,
+    SchemaVersionStore,
+} from "@bernouy/cms-gateway/provider/server";
 import type { AdmittedProviderManifest } from "@bernouy/ulvia-providers";
 import type { CapabilityFailure } from "ulvia-sdk/definitions/errors";
 import type { ResolvedContract } from "@bernouy/ulvia-contracts";
@@ -65,6 +70,8 @@ export interface ProviderRegistrationOptions {
         context: CapabilityFailurePresentationContext,
     ) => CapabilityFailurePresentation;
     readonly operations?: ProviderOperationAdapter;
+    readonly resolveSchema?: ProviderSchemaResolution;
+    readonly schemaVersions?: SchemaVersionStore;
     /** Host-owned durable deduplication for synchronous commands and complete alternative keyed handlers. */
     readonly executeKeyed?: (invocation: KeyedExecution, execute: () => Promise<unknown>) => Promise<unknown>;
 }

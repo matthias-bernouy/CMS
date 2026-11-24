@@ -1,3 +1,5 @@
+import { initiatorWorkflow } from "./initiator";
+import { prepareContactWorkflow } from "./workflow";
 import { expect, test } from "bun:test";
 import { mcpContainers } from "../containers";
 import { connectBrowser } from "../oauth";
@@ -82,6 +84,7 @@ integration(
             const formId = crypto.randomUUID();
             const authoring = {
                 ...draft,
+                fields: draft.fields.map((field) => (field.id === "textarea" ? { ...field, minLength: 1 } : field)),
                 notification: { ...draft.notification, recipients: [{ email: "forms@performance.test" }] },
             };
             await connection.call("ulvia/cms.forms", "forms.create", { formId, draft: authoring });
@@ -91,6 +94,7 @@ integration(
                 expectedRevision: 2,
                 availability: "open",
             });
+            const verifyWorkflow = await prepareContactWorkflow(call, formId, smtp);
             const receiptId = await submitInBrowser(f, connection, formId);
             const read = () => call("/submissions/get", { receiptId }, "QUERY");
             expect((await read()).answers).toEqual(answers);
@@ -101,6 +105,8 @@ integration(
             ) {
                 await Bun.sleep(100);
             }
+            await verifyWorkflow();
+            const observeInitiator = await initiatorWorkflow(call, formId);
             const mailbox = await smtp.control.mailbox("forms@performance.test");
             expect(mailbox.messages).toHaveLength(1);
             expect(mailbox.messages[0]!.raw).toContain(receiptId);
@@ -141,6 +147,8 @@ integration(
             // No CMS call wakes this instance: background discovery must drain its retained intent.
             await Bun.sleep(12000);
             let retained = await call("/submissions/get", { receiptId: input.attemptId }, "QUERY");
+            const anonymousEvent = await observeInitiator(input.attemptId);
+            expect(anonymousEvent.initiator.kind).toBe("anonymous");
             expect(retained.notifications[0].state).toBe("blocked");
             expect(retained.answers).toEqual(answers);
             await call("/configuration", configuration, "POST", "ulvia/cms.emailer.smtp");
@@ -164,6 +172,74 @@ integration(
             expect(retained.answers).toEqual(answers);
             expect(retained.notifications[0].state).toBe("accepted");
             expect((await read()).answers).toEqual(answers);
+            const authenticatedId = crypto.randomUUID();
+            await call("/forms/create", {
+                formId: authenticatedId,
+                draft: {
+                    ...authoring,
+                    accessMode: "authenticated",
+                    notification: { ...authoring.notification, enabled: false },
+                },
+            });
+            await call("/forms/publish", { formId: authenticatedId, expectedRevision: 1 });
+            await call(
+                "/forms/availability",
+                { formId: authenticatedId, expectedRevision: 2, availability: "open" },
+                "PUT",
+            );
+            const authenticatedOrigin = await initiatorWorkflow(call, authenticatedId);
+            const authenticatedInput = { ...input, formId: authenticatedId, attemptId: crypto.randomUUID() };
+            const submission = await api.request(
+                "ulvia/cms.forms",
+                "/forms/submit-authenticated",
+                "POST",
+                authenticatedInput,
+                member,
+            );
+            expect(submission.status, await submission.clone().text()).toBe(200);
+            await f.restartProvider(0);
+            const userEvent = await authenticatedOrigin(authenticatedInput.attemptId);
+            expect(userEvent.initiator.kind).toBe("user");
+            const resolution = await call(
+                "/initiators/resolve",
+                { reference: userEvent.initiator.reference, targetContractId: "ulvia/cms.forms" },
+                "QUERY",
+                "ulvia/cms.events",
+            );
+            expect(typeof resolution.subjectId).toBe("string");
+            expect(resolution.subjectId).not.toBe(member.accountId);
+            const memberResolution = await api.request(
+                "ulvia/cms.events",
+                "/initiators/resolve",
+                "QUERY",
+                { reference: userEvent.initiator.reference, targetContractId: "ulvia/cms.forms" },
+                member,
+            );
+            expect(memberResolution.status).toBe(403);
+            const foreignResolution = await repositoryApi(f.namedUrl).request(
+                "ulvia/cms.events",
+                "/initiators/resolve",
+                "QUERY",
+                { reference: userEvent.initiator.reference, targetContractId: "ulvia/cms.forms" },
+                foreign,
+            );
+            expect(foreignResolution.status).toBe(403);
+            const forged = await api.request(
+                "ulvia/cms.forms",
+                "/forms/submit-authenticated",
+                "POST",
+                { ...authenticatedInput, attemptId: crypto.randomUUID(), userId: actor.accountId },
+                member,
+            );
+            expect(forged.status).toBe(400);
+            const forbiddenCapture = await api.request(
+                "ulvia/cms.events",
+                "/initiators/capture",
+                "POST",
+                { contractId: "ulvia/cms.forms", eventType: "submission.created", occurrenceId: "fake" },
+                actor,
+            );
+            expect(forbiddenCapture.status).toBe(403);
         } catch (error) {
             throw new Error(`${String(error)}\n${await f.diagnostics()}`, { cause: error });
         } finally {

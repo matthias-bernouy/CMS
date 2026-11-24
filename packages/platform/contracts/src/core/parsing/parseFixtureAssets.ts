@@ -9,7 +9,7 @@ import {
     expectString,
     rejectUnknownKeys,
 } from "ulvia-contracts/core/protocol/values";
-import { MEDIA_TYPE_PATTERN } from "../schema/context";
+import { MEDIA_TYPE_PATTERN } from "../language/schema/context";
 import { parseIdentifier } from "./identifiers";
 
 export function parseFixtureAssets(

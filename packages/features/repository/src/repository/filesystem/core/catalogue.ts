@@ -60,7 +60,14 @@ export async function cataloguePage(
         )
         .digest("hex");
     const after = decodeCursor(cursor, type, fingerprint);
-    const idKey = type === "collections" ? "collectionId" : type === "contracts" ? "contractId" : "providerId";
+    const idKey =
+        type === "collections"
+            ? "collectionId"
+            : type === "contracts"
+              ? "contractId"
+              : type === "workflows"
+                ? "workflowId"
+                : "providerId";
     if (filters.latestPerResource && (type !== "collections" || filters.version !== undefined)) {
         throw new CatalogueInputError("Latest discovery requires collections without an exact version");
     }
@@ -194,6 +201,13 @@ function firstAfter(
 }
 
 function entryKey(type: RepositoryCatalogueType, entry: RepositoryCatalogueReference): string {
-    const idKey = type === "collections" ? "collectionId" : type === "contracts" ? "contractId" : "providerId";
+    const idKey =
+        type === "collections"
+            ? "collectionId"
+            : type === "contracts"
+              ? "contractId"
+              : type === "workflows"
+                ? "workflowId"
+                : "providerId";
     return `${entry.publisherId}\0${entry[idKey]}\0${entry.version}`;
 }

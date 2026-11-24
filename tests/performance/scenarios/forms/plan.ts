@@ -5,6 +5,8 @@ import { prepareForms } from "./prepare";
 import type { CapabilityInventory } from "../../capabilities/types";
 const capabilities = [
     "forms.create",
+    "forms.describe-submission",
+    "forms.list-submission-sources",
     "forms.get",
     "forms.list",
     "forms.update-draft",

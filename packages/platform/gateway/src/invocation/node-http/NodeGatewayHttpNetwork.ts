@@ -147,6 +147,9 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
                           : {}),
                       ...(request.authentication.subjectId ? { subjectId: request.authentication.subjectId } : {}),
                       ...(request.authentication.actorKind ? { actorKind: request.authentication.actorKind } : {}),
+                      ...(request.authentication.eventCausation
+                          ? { eventCausation: request.authentication.eventCausation }
+                          : {}),
                       ...(request.authentication.systemServiceId
                           ? { systemServiceId: request.authentication.systemServiceId }
                           : {}),

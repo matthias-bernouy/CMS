@@ -70,6 +70,12 @@
         },
         {
             "path": "../../features/forms"
+        },
+        {
+            "path": "../../features/events"
+        },
+        {
+            "path": "../../features/workflows"
         }
     ]
 }

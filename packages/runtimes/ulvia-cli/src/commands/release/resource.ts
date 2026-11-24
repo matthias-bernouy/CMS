@@ -1,3 +1,5 @@
+import { admitWorkflowManifest, verifyWorkflowRequirements } from "@bernouy/workflows/manifest";
+import type { AdmittedWorkflowManifest } from "@bernouy/workflows/manifest";
 import { resourceName } from "@bernouy/ulvia-contracts/protocol";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
@@ -6,6 +8,7 @@ import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { admitProviderManifestJson, type AdmittedProviderManifest } from "@bernouy/ulvia-providers";
 import type { AdmittedCollectionRelease } from "@bernouy/repository/collections";
 import {
+    LocalWorkflowReleases,
     LocalArtifactFiles,
     LocalCollectionRepository,
     LocalContractReleases,
@@ -18,6 +21,7 @@ import { FilesystemRepositorySourceStore } from "@bernouy/repository/repository/
 import type { ContentDiagnostic } from "@bernouy/content/page-document";
 
 export type PreparedResource =
+    | Readonly<{ kind: "workflow"; admission: AdmittedWorkflowManifest }>
     | Readonly<{ kind: "contract"; admission: AdmittedContractRelease }>
     | Readonly<{ kind: "provider-manifest"; admission: AdmittedProviderManifest }>
     | Readonly<{
@@ -46,6 +50,12 @@ export async function prepareResource(directory: string, contracts: ReleaseCatal
             admission,
         };
     }
+    if (definition.kind === "workflow") {
+        const admission = admitWorkflowManifest(source);
+        await verifyWorkflowRequirements(admission.manifest, contracts);
+        assertFolder(directory, admission.manifest.workflowId);
+        return { kind: "workflow", admission };
+    }
     if (definition.kind === "collection") {
         const captured = await captureCollectionSources(directory);
         const built = await compileCollectionSources(
@@ -57,7 +67,7 @@ export async function prepareResource(directory: string, contracts: ReleaseCatal
         assertFolder(directory, built.admission.release.collectionId);
         return { kind: "collection", ...built };
     }
-    throw new Error("definition.json must declare kind: collection, contract, or provider-manifest");
+    throw new Error("definition.json must declare kind: collection, contract, provider-manifest, or workflow");
 }
 
 export async function storeResource(
@@ -78,6 +88,9 @@ export async function storeResource(
         ).added;
     } else if (resource.kind === "provider-manifest") {
         added = (await new LocalProviderReleases(files, contracts, yanks).release(resource.admission.canonicalJson))
+            .added;
+    } else if (resource.kind === "workflow") {
+        added = (await new LocalWorkflowReleases(files, contracts, yanks).publish(resource.admission.canonicalJson))
             .added;
     } else {
         const { publisherId, collectionId, version } = resource.admission.release;
@@ -102,6 +115,9 @@ export function resourceCoordinate(resource: PreparedResource): string {
     if (resource.kind === "provider-manifest") {
         const { providerId, version } = resource.admission.manifest;
         return `provider ${providerId}@${version}`;
+    }
+    if (resource.kind === "workflow") {
+        return `workflow ${resource.admission.manifest.workflowId}@${resource.admission.manifest.version}`;
     }
     if (resource.kind === "contract") {
         const { contractId, version } = resource.admission.release;

@@ -9,6 +9,7 @@ test("timed-out transports retain bounded permits while logical shutdown complet
     for (let index = 0; index < 3; index++) {
         const id = crypto.randomUUID();
         records.set(id, {
+            event: null,
             receiptId: id,
             formId: crypto.randomUUID(),
             formVersion: 1,

@@ -229,6 +229,9 @@ export class MongoFormsRepository extends MongoForms implements FormsRepository 
                   ? [Date.parse(intent.deadline!)]
                   : [],
         );
+        if (record.event?.dueAt) {
+            times.push(Date.parse(record.event.dueAt));
+        }
         if (!record.deleted) {
             times.push(Date.parse(record.expiresAt));
         }

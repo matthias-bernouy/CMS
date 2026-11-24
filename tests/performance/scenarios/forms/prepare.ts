@@ -1,3 +1,5 @@
+import type { FormDraft } from "@bernouy/forms";
+import { prepareFormSchema } from "./schema";
 import { draft as baseDraft } from "../../../../packages/features/forms/tests/fixtures";
 import { formsTenant } from "./tenant";
 import { equal, listPage } from "./oracles";
@@ -53,7 +55,7 @@ export async function prepareForms(
                 close: tenant.close,
             };
         }
-        const draft = {
+        const draft: FormDraft = {
             ...baseDraft,
             fields: [{ id: "message", kind: "text", label: "Message" }],
             accessMode: capability === "forms.submit-authenticated" ? "authenticated" : "public",
@@ -63,6 +65,9 @@ export async function prepareForms(
         await tenant.call("forms.create", { formId, draft });
         await tenant.call("forms.publish", { formId, expectedRevision: 1 });
         let form = await tenant.call("forms.set-availability", { formId, expectedRevision: 2, availability: "open" });
+        if (["forms.describe-submission", "forms.list-submission-sources"].includes(capability)) {
+            return prepareFormSchema(tenant, capability, binding, variant, formId, draft);
+        }
         const answers = [{ fieldId: "message", kind: "text", text: "Retained performance answer" }];
         const submit = () =>
             tenant.call(capability === "forms.submit-authenticated" ? capability : "forms.submit", {

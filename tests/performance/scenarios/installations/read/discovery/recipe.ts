@@ -23,7 +23,7 @@ export async function prepareSiteDiscovery(
     index: number,
 ): Promise<PreparedSample> {
     await state.tenant.prepare();
-    const searching = capability === "repository.search";
+    const searching = capability.endsWith(".search");
     const invalidating = profile === "invalidation";
     const latest = () => state.resources.filter((row) => row.index === 0).at(-1)!;
     const old = latest();

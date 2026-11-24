@@ -20,6 +20,7 @@ export function captureLineage(feature: FeatureDefinition) {
         lineage.push({
             contractId: current.contractId,
             version: current.version,
+            events: (current.events ?? []).map(({ id, sensitive }) => ({ id, sensitive })),
             capabilities: own.map((capability) => ({
                 id: capability.id,
                 access: capability.access,
@@ -49,6 +50,17 @@ export function assertSourceLineage(
         const source = lineage[index]!;
         if (source.contractId !== release.contractId || source.version !== release.version) {
             throw new SdkDefinitionError("Implementation lineage differs from its build artifact");
+        }
+        if (
+            source.events.length !== (release.events ?? []).length ||
+            source.events.some(
+                (event) =>
+                    !(release.events ?? []).some(
+                        (admitted) => admitted.id === event.id && admitted.sensitive === event.sensitive,
+                    ),
+            )
+        ) {
+            throw new SdkDefinitionError("Implementation event declarations differ from its build artifact");
         }
         if (source.capabilities.length !== release.capabilities.length) {
             throw new SdkDefinitionError("Implementation capability coverage differs from its build artifact");

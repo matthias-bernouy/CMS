@@ -23,10 +23,13 @@ export interface GatewayInvocation {
         endpoint: string;
         accountId: string;
         instanceId: string;
+        version?: string;
+        digest?: string;
     }>;
     readonly requestContext?: GatewayRequestContext;
     readonly signal?: AbortSignal;
     readonly trace?: TraceContext;
+    readonly eventCausation?: readonly string[];
     readonly siteId: string;
     readonly contractId: string;
     readonly capabilityId: string;
@@ -89,6 +92,7 @@ export interface GatewayTransportRequest {
     readonly authorityReads?: GatewayAuthorityReads;
     readonly actorKind?: "anonymous" | "user" | "administrator";
     readonly trace?: TraceContext;
+    readonly eventCausation?: readonly string[];
     readonly delegation?: DelegationContext;
     readonly delegated?: {
         readonly ticket: string;

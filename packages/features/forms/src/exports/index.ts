@@ -10,3 +10,9 @@ export type { FormsRepository, SubmissionRecord, NotificationIntent } from "form
 export type { FormsServices, FormsDelivery } from "forms/interfaces/services";
 
 export { NotificationWorker } from "forms/notifications/NotificationWorker";
+
+export { describeSubmissionFields, submissionValues, answerProperty } from "forms/core/events/schema";
+
+export { SubmissionEventWorker } from "forms/core/events/SubmissionEventWorker";
+export type { FormsSubmissionEvents } from "forms/interfaces/services";
+export type { FormEventIntent } from "forms/interfaces/repository";

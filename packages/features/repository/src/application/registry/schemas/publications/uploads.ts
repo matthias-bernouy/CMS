@@ -34,6 +34,18 @@ export const publicationBeginOutputSchema = z
     })
     .readonly();
 
+export const artifactCommitOutputSchema = z
+    .strictObject({
+        kind: contractString({
+            minLength: 1,
+            maxLength: 32,
+            enum: ["collection", "contract", "provider-manifest", "workflow"],
+        }),
+        added: z.boolean(),
+        digest: contractString({ minLength: 1, maxLength: 71 }),
+    })
+    .readonly();
+
 export const publicationCommitOutputSchema = z
     .strictObject({
         kind: contractString({ minLength: 1, maxLength: 32, enum: ["collection", "contract", "provider-manifest"] }),

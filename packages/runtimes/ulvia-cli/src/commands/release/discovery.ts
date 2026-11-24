@@ -4,7 +4,7 @@ import { readOptionalJsonSourceRecord } from "@bernouy/repository/repository/aut
 
 export type ResourceSource = Readonly<{
     directory: string;
-    kind: "contract" | "provider-manifest" | "collection" | "sdk";
+    kind: "contract" | "provider-manifest" | "collection" | "workflow" | "sdk";
 }>;
 const MAX_RESOURCES = 256;
 const MAX_DIRECTORIES = 4096;
@@ -65,7 +65,7 @@ export async function discoverResources(root: string): Promise<readonly Resource
         const definition = await readOptionalJsonSourceRecord(definitionPath, directory);
         if (definition) {
             const kind = definition.value.kind;
-            if (kind !== "contract" && kind !== "provider-manifest" && kind !== "collection") {
+            if (kind !== "contract" && kind !== "provider-manifest" && kind !== "collection" && kind !== "workflow") {
                 throw new Error(`Unsupported release root kind at ${directory}`);
             }
             resources.push({ directory, kind });

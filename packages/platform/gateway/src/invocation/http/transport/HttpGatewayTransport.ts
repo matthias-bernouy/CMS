@@ -43,6 +43,7 @@ export interface GatewayHttpExchange extends PreparedHttpInvocation {
               readonly subjectId?: string;
               readonly actorKind?: GatewayTransportRequest["actorKind"];
               readonly systemServiceId?: string;
+              readonly eventCausation?: readonly string[];
               readonly sourceInstallationId?: string;
               readonly sourceCredentialFingerprint?: string;
               readonly rootRequestId?: string;
@@ -138,6 +139,7 @@ export class HttpGatewayTransport implements GatewayTransport {
                 ...(request.rootRequestId ? { rootRequestId: request.rootRequestId } : {}),
                 ...(request.subjectId ? { subjectId: request.subjectId } : {}),
                 ...(request.actorKind ? { actorKind: request.actorKind } : {}),
+                ...(request.eventCausation ? { eventCausation: request.eventCausation } : {}),
                 ...(request.systemServiceId ? { systemServiceId: request.systemServiceId } : {}),
                 ...(request.sourceInstallationId
                     ? {

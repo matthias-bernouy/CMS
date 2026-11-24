@@ -4,11 +4,11 @@ import { answerSchema } from "forms/application/schemas/public";
 import type { FormField } from "forms/application/schemas/fields";
 import type { FormAnswer } from "forms/application/schemas/public";
 
-import { fail } from "forms/core/validationError";
-import { validateFields } from "forms/core/fieldValidation";
-import { validDate } from "forms/core/validationDate";
-export { validateFields } from "forms/core/fieldValidation";
-export { FormsValidationError } from "forms/core/validationError";
+import { fail } from "forms/core/validation/validationError";
+import { validateFields } from "forms/core/validation/fieldValidation";
+import { validDate } from "forms/core/validation/validationDate";
+export { validateFields } from "forms/core/validation/fieldValidation";
+export { FormsValidationError } from "forms/core/validation/validationError";
 const emailSchema = contractString({ format: "email", maxLength: 320 });
 export function validateAnswers(
     fields: readonly FormField[],

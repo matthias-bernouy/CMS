@@ -1,3 +1,4 @@
+import { eventServiceAuthorized } from "../../native/eventServices";
 import { GatewayAuthorityReads } from "@bernouy/cms-gateway";
 import { assertInvocationScope } from "./scope";
 import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
@@ -50,6 +51,15 @@ export function createInvocationIssuer(
             !instanceId
         ) {
             throw Object.assign(new Error("Gateway invocation route is unavailable"), { code: "route_not_found" });
+        }
+        if (
+            (input.systemServiceId?.startsWith("cms-events-") || input.systemServiceId === "cms-workflows-schema") &&
+            !eventServiceAuthorized(
+                input.systemServiceId,
+                release.capabilities.find(({ id }) => id === input.capabilityId)!,
+            )
+        ) {
+            throw Object.assign(new Error("Event service scope is invalid"), { status: 403 });
         }
         const readiness = getProviderInstallationReadiness(route.installation, new Date().toISOString(), 300_000);
         if (
@@ -198,6 +208,7 @@ export function createInvocationIssuer(
                     ...(delegation
                         ? { delegationTicket: delegation.ticket, delegationExpiresAt: delegation.expiresAt }
                         : {}),
+                    ...(input.eventCausation ? { eventCausation: input.eventCausation } : {}),
                     ...(input.systemServiceId ? { systemServiceId: input.systemServiceId } : {}),
                     ...(input.sourceInstallationId ? { sourceInstallationId: input.sourceInstallationId } : {}),
                     connectionId: input.installationId,

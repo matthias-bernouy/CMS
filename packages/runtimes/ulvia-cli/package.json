@@ -24,7 +24,8 @@
         "@bernouy/ulvia-providers": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
-        "@bernouy/browser-capture": "workspace:*"
+        "@bernouy/browser-capture": "workspace:*",
+        "@bernouy/workflows": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

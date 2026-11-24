@@ -94,10 +94,19 @@ export function repositoryPublications(ports: RepositoryCapabilityPorts) {
             const result = await ports.uploads.commit(input.uploadId, (envelope) =>
                 ports.registry.buildCollection!(envelope, (publish) => owned(input, accountId, publish), signal),
             );
-            return { kind: result.kind, added: result.added, digest: result.digest };
+            if (result.kind !== "collection") {
+                throw new RepositoryRequestError("REJECTED", "A source build returned a different artifact kind");
+            }
+            return { kind: "collection" as const, added: result.added, digest: result.digest };
         },
-        commit: (input: PublicationStatusInput, accountId?: string) =>
-            owned(input, accountId, async () => {
+        commit: (input: PublicationStatusInput, accountId?: string, includeWorkflows = false) =>
+            owned(input, accountId, async (manifest) => {
+                if (manifest.kind === "workflow" && !includeWorkflows) {
+                    throw new RepositoryRequestError(
+                        "REJECTED",
+                        "Workflow uploads require the artifact commit capability",
+                    );
+                }
                 const result = await ports.uploads.commit(input.uploadId, (envelope) =>
                     ports.registry.publish(envelope),
                 );

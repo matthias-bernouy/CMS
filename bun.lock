@@ -14,6 +14,7 @@
         "@bernouy/email-templates": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/files": "workspace:*",
+        "@bernouy/forms": "workspace:*",
         "@bernouy/hosting": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
@@ -29,6 +30,7 @@
         "@bernouy/ulvia-provider": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
+        "@bernouy/workflows": "workspace:*",
         "@biomejs/biome": "2.6.4",
         "@types/bun": "1.4.4",
         "@typescript/typescript6": "6.0.2",
@@ -135,6 +137,19 @@
         "typescript": "^7.0.2",
       },
     },
+    "packages/features/events": {
+      "name": "@bernouy/cms-events",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.8.0",
+        "typescript": "^7.0.2",
+      },
+    },
     "packages/features/files": {
       "name": "@bernouy/files",
       "version": "1.0.0",
@@ -155,6 +170,8 @@
       "name": "@bernouy/forms",
       "version": "1.0.0",
       "dependencies": {
+        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
       },
       "peerDependencies": {
@@ -207,6 +224,7 @@
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
+        "@bernouy/workflows": "workspace:*",
         "css-tree": "^3.2.1",
         "htmlparser2": "^12.0.0",
         "linkedom": "^0.18.15",
@@ -231,6 +249,21 @@
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
+        "typescript": "^7.0.2",
+      },
+    },
+    "packages/features/workflows": {
+      "name": "@bernouy/workflows",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/cms-events": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/envelope-crypto": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/ulvia-sdk": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.8.0",
         "typescript": "^7.0.2",
       },
     },
@@ -427,6 +460,7 @@
         "@bernouy/ulvia-provider": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
+        "@bernouy/workflows": "workspace:*",
         "playwright": "^1.64.1",
       },
       "peerDependencies": {
@@ -440,6 +474,7 @@
         "@bernouy/auth": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/browser-capture": "workspace:*",
+        "@bernouy/cms-events": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/content": "workspace:*",
         "@bernouy/documentation": "workspace:*",
@@ -464,6 +499,7 @@
         "@bernouy/ulvia-provider": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
+        "@bernouy/workflows": "workspace:*",
         "mongodb": "^7.8.0",
       },
       "peerDependencies": {
@@ -493,6 +529,7 @@
       "dependencies": {
         "@bernouy/auth": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
+        "@bernouy/cms-events": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/content": "workspace:*",
         "@bernouy/documentation": "workspace:*",
@@ -509,6 +546,7 @@
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
+        "@bernouy/workflows": "workspace:*",
       },
       "devDependencies": {
         "@bernouy/browser-capture": "workspace:*",
@@ -531,6 +569,8 @@
     "@bernouy/cms-edge": ["@bernouy/cms-edge@workspace:packages/surfaces/cms-edge"],
 
     "@bernouy/cms-edge-server": ["@bernouy/cms-edge-server@workspace:packages/runtimes/cms-edge-server"],
+
+    "@bernouy/cms-events": ["@bernouy/cms-events@workspace:packages/features/events"],
 
     "@bernouy/cms-gateway": ["@bernouy/cms-gateway@workspace:packages/platform/gateway"],
 
@@ -585,6 +625,8 @@
     "@bernouy/ulvia-providers": ["@bernouy/ulvia-providers@workspace:packages/platform/providers"],
 
     "@bernouy/ulvia-sdk": ["@bernouy/ulvia-sdk@workspace:packages/platform/sdk"],
+
+    "@bernouy/workflows": ["@bernouy/workflows@workspace:packages/features/workflows"],
 
     "@bernouy/zip": ["@bernouy/zip@workspace:packages/foundation/zip"],
 

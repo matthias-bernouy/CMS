@@ -79,3 +79,9 @@ export const prepareCollectionOutputSchema = z
         }).optional(),
     })
     .readonly();
+
+export const prepareWorkflowOutputSchema = prepareContractOutputSchema
+    .unwrap()
+    .omit({ contractId: true })
+    .extend({ workflowId: contractString({ maxLength: 225 }).optional() })
+    .readonly();

@@ -7,7 +7,7 @@ import type { UlviaSchema } from "../../interfaces/UlviaSchema";
 import { ReleaseValidationError } from "../protocol/errors";
 import type { ReleaseLimits } from "../protocol/limits";
 import { expectArray, expectRecord, optionalString, rejectUnknownKeys } from "../protocol/values";
-import { SchemaValueError, validateSchemaValue } from "../schema/validateValue";
+import { SchemaValueError, validateSchemaValue } from "../language/schema/validateValue";
 import { parseErrorCode, parseIdentifier } from "./identifiers";
 
 export function parseMocks(

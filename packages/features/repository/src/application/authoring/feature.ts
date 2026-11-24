@@ -1,3 +1,6 @@
+import { prepareWorkflow } from "./capabilities/preparations/prepare-workflow";
+import { publishWorkflow } from "./capabilities/publication/publish-workflow";
+import { getWorkflowSources } from "./capabilities/sources/get-workflow-sources";
 import { capturePreparedExample } from "./capabilities/preparations/capture-example";
 import { getSourceSnapshot } from "./capabilities/sources/get-source-snapshot";
 import { publishCollectionOperation } from "./capabilities/publication/publish-collection-operation";
@@ -24,12 +27,15 @@ export const authoringFeature = defineFeature({
     name: "CMS Authoring",
     description:
         "Prepare immutable collection, contract and Provider manifest sources and publish through a pinned Repository account connection.",
-    version: "1.3.0",
+    version: "1.4.0",
     publisherId: "ulvia",
     catalogue: { icon: "package", categories: ["administration", "authoring"] },
     documents: new URL("../../../docs/authoring/", import.meta.url),
     mapError: mapAuthoringError,
     capabilities: [
+        prepareWorkflow,
+        publishWorkflow,
+        getWorkflowSources,
         capturePreparedExample,
         getSourceSnapshot,
         prepareContract,

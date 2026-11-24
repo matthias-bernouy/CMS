@@ -24,6 +24,7 @@ export interface ProviderInvocationIssue {
     readonly capabilityId: string;
     readonly subjectId?: string;
     readonly systemServiceId?: string;
+    readonly eventCausation?: readonly string[];
     readonly sourceInstallationId?: string;
     readonly sourceCredentialFingerprint?: string;
     readonly delegatedTicket?: string;
@@ -42,6 +43,7 @@ export type ProviderInvocationClaims = Readonly<{
     capabilityId: string;
     subjectId?: string;
     systemServiceId?: string;
+    eventCausation?: readonly string[];
     sourceInstallationId?: string;
     rootRequestId?: string;
     delegationTicket?: string;
@@ -77,6 +79,7 @@ export function signProviderInvocationToken(secret: string, claims: ProviderInvo
         ...(claims.trace ? ["trace"] : []),
         ...(claims.actorKind ? ["actorKind"] : []),
         ...(claims.subjectId ? ["subjectId"] : []),
+        ...(claims.eventCausation ? ["eventCausation"] : []),
         ...(claims.systemServiceId ? ["systemServiceId"] : []),
         ...(claims.sourceInstallationId ? ["sourceInstallationId"] : []),
         ...(claims.rootRequestId ? ["rootRequestId"] : []),
@@ -86,10 +89,21 @@ export function signProviderInvocationToken(secret: string, claims: ProviderInvo
     assertClaims(claims);
     const header: ProviderInvocationHeader = { version: TOKEN_VERSION, keyId: providerInvocationKeyId(secret) };
     const encodedHeader = encodeJson(header);
-    const encodedClaims = encodeJson(claims);
+    const encodedClaims = encodeJson({
+        ...claims,
+        ...(claims.eventCausation
+            ? {
+                  eventCausation: Buffer.from(claims.eventCausation.join(""), "hex").toString("base64url"),
+              }
+            : {}),
+    });
     const signed = `${encodedHeader}.${encodedClaims}`;
     const signature = createHmac("sha256", secret).update(domainSeparated(signed)).digest("base64url");
-    return `${signed}.${signature}`;
+    const token = `${signed}.${signature}`;
+    if (token.length > MAX_TOKEN_BYTES) {
+        throw new TypeError("Provider invocation token exceeds its budget.");
+    }
+    return token;
 }
 
 export function verifyProviderInvocationToken(
@@ -170,12 +184,26 @@ function parseClaims(value: string): ProviderInvocationClaims {
         ...(Object.hasOwn(parsed, "trace") ? ["trace"] : []),
         ...(Object.hasOwn(parsed, "actorKind") ? ["actorKind"] : []),
         ...(Object.hasOwn(parsed, "subjectId") ? ["subjectId"] : []),
+        ...(Object.hasOwn(parsed, "eventCausation") ? ["eventCausation"] : []),
         ...(Object.hasOwn(parsed, "systemServiceId") ? ["systemServiceId"] : []),
         ...(Object.hasOwn(parsed, "sourceInstallationId") ? ["sourceInstallationId"] : []),
         ...(Object.hasOwn(parsed, "rootRequestId") ? ["rootRequestId"] : []),
         ...(Object.hasOwn(parsed, "delegationTicket") ? ["delegationTicket", "delegationExpiresAt"] : []),
         ...(Object.hasOwn(parsed, "connectionId") ? ["connectionId"] : []),
     ]);
+    if (Object.hasOwn(parsed, "eventCausation")) {
+        if (typeof parsed.eventCausation !== "string") {
+            throw new TypeError("Invalid event causation encoding");
+        }
+        const encoded = parsed.eventCausation;
+        const bytes = encoded === "" ? Buffer.alloc(0) : decodeBase64Url(encoded, 1024);
+        if (bytes.length % 32 !== 0) {
+            throw new TypeError("Invalid event causation encoding");
+        }
+        parsed.eventCausation = Array.from({ length: bytes.length / 32 }, (_, index) =>
+            bytes.subarray(index * 32, (index + 1) * 32).toString("hex"),
+        );
+    }
     const claims = parsed as Record<string, unknown>;
     assertClaims(claims);
     return claims as ProviderInvocationClaims;
@@ -189,6 +217,10 @@ function assertClaims(value: Readonly<Record<string, unknown>>): asserts value i
                 value.systemServiceId !== undefined ||
                 (value.sourceInstallationId !== undefined && value.rootRequestId === undefined))) ||
         (value.trace !== undefined && (!isTraceContext(value.trace) || value.trace.spanId !== value.requestId)) ||
+        (value.eventCausation !== undefined &&
+            (!Array.isArray(value.eventCausation) ||
+                value.eventCausation.length > 32 ||
+                value.eventCausation.some((entry) => typeof entry !== "string" || !/^[a-f0-9]{64}$/u.test(entry)))) ||
         value.version !== TOKEN_VERSION ||
         typeof value.requestId !== "string" ||
         !REQUEST_ID.test(value.requestId) ||
@@ -236,8 +268,8 @@ function assertClaims(value: Readonly<Record<string, unknown>>): asserts value i
 }
 
 function parseJsonSegment(value: string): Record<string, unknown> {
-    const bytes = decodeBase64Url(value, 2_048);
-    const parsed = parseStrictJson(bytes, 2_048, 4);
+    const bytes = decodeBase64Url(value, 3_072);
+    const parsed = parseStrictJson(bytes, 3_072, 4);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
         throw new TypeError("Provider invocation token JSON is invalid.");
     }

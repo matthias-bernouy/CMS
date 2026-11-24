@@ -31,7 +31,7 @@ export const publishContract = defineCapability({
             },
         },
     ],
-    docs: ["overview.md", "artifact-authoring.md", "contract-source.md"],
+    docs: ["overview.md", "artifact-authoring.md", "sources/contract-source.md"],
     input: publishInputSchema,
     output: publishContractOutputSchema,
     errors,

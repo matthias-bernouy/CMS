@@ -76,7 +76,7 @@ export async function readUploadResult(path: string): Promise<RepositoryPublicat
     const value = JSON.parse(bytes) as RepositoryPublicationResult;
     if (
         !value ||
-        !["collection", "contract", "provider-manifest"].includes(value.kind) ||
+        !["collection", "contract", "provider-manifest", "workflow"].includes(value.kind) ||
         typeof value.added !== "boolean" ||
         !isSha256Digest(value.digest)
     ) {

@@ -1,6 +1,7 @@
 import { RESOURCE_HEADER, parseResourceMetadata } from "cms-gateway/invocation/resource/metadata";
 import { encodeSessionEffect, SESSION_EFFECT_HEADER } from "cms-gateway/protocol/TrustedCapabilityEffects";
 import type { GatewayResponseEffect } from "cms-gateway/protocol/TrustedCapabilityEffects";
+import { validateSchemaEnvelope } from "@bernouy/ulvia-contracts/resolution";
 import { validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import type { HttpBoundCapability as CapabilityDefinition } from "./routes";
 import type {
@@ -38,7 +39,7 @@ export function validateProviderInput(
         throw new TypeError("Binary body does not match the admitted binding.");
     }
     if (!binaryProperty) {
-        validateSchemaValue(capability.input, input);
+        validateSchemaEnvelope(capability.input, input);
         return;
     }
     const properties = Object.fromEntries(

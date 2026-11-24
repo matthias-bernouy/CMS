@@ -1,3 +1,4 @@
+import { parseWorkflowManifest } from "@bernouy/workflows/manifest";
 import type { RepositoryFetch } from "repository/repository-http/getBytes";
 import { contractAssetDefinitions } from "@bernouy/ulvia-contracts/documentation";
 import { isSha256Digest } from "@bernouy/binary-media";
@@ -79,7 +80,7 @@ export class RemoteRepositoryClient {
     }
 
     private async assets(coordinate: RemoteCoordinate, canonicalJson: string, assetSink?: RepositoryAssetDownloadSink) {
-        if (coordinate.kind === "provider-manifest") {
+        if (coordinate.kind === "provider-manifest" || coordinate.kind === "workflow") {
             return [];
         }
         const definitions =
@@ -177,6 +178,10 @@ function readCoordinate(kind: RepositoryArtifactKind, canonicalJson: string): Om
     if (kind === "contract") {
         const release = parseContractReleaseJson(canonicalJson);
         return { publisherId: release.publisherId, id: release.contractId, version: release.version };
+    }
+    if (kind === "workflow") {
+        const manifest = parseWorkflowManifest(canonicalJson);
+        return { publisherId: manifest.publisherId, id: manifest.workflowId, version: manifest.version };
     }
     const manifest = parseProviderManifestJson(canonicalJson);
     return {

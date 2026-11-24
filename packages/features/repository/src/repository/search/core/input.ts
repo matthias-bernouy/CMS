@@ -35,10 +35,10 @@ export function searchQuery(value: unknown): RepositorySearchQuery {
         input.kinds !== undefined &&
         (!Array.isArray(input.kinds) ||
             input.kinds.length < 1 ||
-            input.kinds.length > 4 ||
+            input.kinds.length > 5 ||
             new Set(input.kinds).size !== input.kinds.length ||
             Array.from(input.kinds).some(
-                (kind) => !["collection", "bloc", "contract", "provider-manifest"].includes(kind),
+                (kind) => !["collection", "bloc", "contract", "provider-manifest", "workflow"].includes(kind),
             ))
     ) {
         throw new RepositoryDiscoveryError("INVALID_INPUT", "Invalid repository resource kinds");
@@ -70,7 +70,7 @@ export function searchQuery(value: unknown): RepositorySearchQuery {
 export function resourceReference(value: unknown): RepositoryResourceReference {
     const input = object(value, ["kind", "publisherId", "id", "version", "digest"]);
     if (
-        !["collection", "contract", "provider-manifest"].includes(input.kind as string) ||
+        !["collection", "contract", "provider-manifest", "workflow"].includes(input.kind as string) ||
         typeof input.publisherId !== "string" ||
         !isRepositoryIdentifier(input.publisherId) ||
         typeof input.id !== "string" ||

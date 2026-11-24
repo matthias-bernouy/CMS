@@ -9,23 +9,25 @@ import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repositor
 
 // Reviewed current releases; historical execution compatibility is verified separately.
 const releaseDigests = {
-    "ulvia/cms.email-templates": "sha256:bc8ced246180f12a2b5942560167611c5391a74be273ee5e23f209aa931f7c8c",
-    "ulvia/cluster.logs": "sha256:72097b513bf036bc8ad7192f4be59651420dd99c659be631e46b5b33eaf62132",
-    "ulvia/cms.forms": "sha256:83e5b09ff6018c681f6aeb36f7d6894cbe90d41382a8f10b6dd60a2def01c490",
     "ulvia/cms.emailer": "sha256:a235f01b1fec08716ea722caccc6bc56974b15e449b2f41b0559e4ea686b70ed",
     "ulvia/cms.emailer.smtp": "sha256:ae8b92cd8a685c163229e1c2326c6a687546dd2488dc88a4295eff30e6b256c1",
+    "ulvia/cms.email-templates": "sha256:bc8ced246180f12a2b5942560167611c5391a74be273ee5e23f209aa931f7c8c",
+    "ulvia/cms.forms": "sha256:d6d2a9b383d934c7cc3677e98a89cfb7236920f0afdbdf7d380db37a47e19af5",
+    "ulvia/cms.events": "sha256:efb8e3c17c04a2f49a8ced1afae86a4d5a8d820c45c8d6c9ecd354d0c7903c43",
+    "ulvia/cms.workflows": "sha256:262ff8272e540a5ee6f641f4416a2435a77015dea6bf9ed0330f8a6edd1ba30d",
     "ulvia/cms.access": "sha256:873f01fadd4ade91abfc05fd2347c532b3d70bd5c5a6aeb987059f567bc3d9ef",
     "ulvia/cms.content": "sha256:67bbdbb098558cb027bd6b7a737ad5907928d85fd03fe3112918ac2699c44b08",
-    "ulvia/cms.authoring": "sha256:695b32aadb19f580cd6b90387cbf7ca4142f13c75b019892f3f3b33095319c9a",
+    "ulvia/cms.authoring": "sha256:d1f954b3844c6599063f39d7167b1a4ad79cf799a86fdb69ce75bff3e55ea790",
     "ulvia/cms.secrets": "sha256:358b2e7e889f656320dd824a698c425a500211ea80695d120e5f4effe1255c08",
     "ulvia/cms.files": "sha256:f5be7d20f375d96cc97d4454bdb570fc87fabe755dff1850cbaeb26e508809a8",
     "ulvia/cms.observability": "sha256:113758c81e4cdc774bba95c8f136a3a9650be5b6d59412ef51383bd15dd2de45",
     "ulvia/provider.connections": "sha256:0cfc85a809d4078e5e95adc94d023d65fa6d626074093f1a880090ce02b8f9f2",
-    "ulvia/repository": "sha256:216131fbd6fa34c015c8dbdb1e1954d6217ba7b85e44d6f51d137d5b21979409",
+    "ulvia/repository": "sha256:c2e3601ce24023ba367a8bc7b98d0692364697ecc6e57f25d506b75aa268b907",
+    "ulvia/cms.installations": "sha256:2551e03e6d8075a0eaf42244f1bce4dba4a24f284b4acd03af007193a46c75c9",
     "ulvia/cms.hosting": "sha256:3fff2f35423060e511f08519f0c48ee4e6413352fc04f55bbe47f15112f4d766",
-    "ulvia/cms.installations": "sha256:d6e8e6608db7737cd0b64c2d4e47b6dfa33231e345ab798d4e7a8a351b0b73b3",
-    "ulvia/provider.tls": "sha256:41dbd3a81aa4d4d6eea2053c5dc7f097ac7003cd683a0c86341fbc4fb5bafa01",
     "ulvia/provider.routing": "sha256:0e312b93bdd939df59e4b837aba02be5f0b750485cf88db41fcec0411cdd9437",
+    "ulvia/cluster.logs": "sha256:72097b513bf036bc8ad7192f4be59651420dd99c659be631e46b5b33eaf62132",
+    "ulvia/provider.tls": "sha256:41dbd3a81aa4d4d6eea2053c5dc7f097ac7003cd683a0c86341fbc4fb5bafa01",
     "ulvia/provider.cms-instances": "sha256:789d38661b21df1db1b36f4c616aa21c5d3456d235c5ee85555c1691b4f80f1b",
 } as const;
 
@@ -41,8 +43,8 @@ test("generated manifest claims the exact SDK implementation inventory", async (
     const compiled = await compileOfficialFeatures();
     await publishContractSet(catalogue, compiled.contracts);
     const manifest = await compileOfficialManifest(catalogue, compiled);
-    expect(manifest.manifest.version).toBe("1.11.0");
-    expect(manifest.manifest.implementations).toHaveLength(16);
+    expect(manifest.manifest.version).toBe("1.12.0");
+    expect(manifest.manifest.implementations).toHaveLength(18);
     expect(
         manifest.manifest.implementations
             .find((pin) => pin.contractId === "ulvia/cms.forms")!
@@ -52,6 +54,7 @@ test("generated manifest claims the exact SDK implementation inventory", async (
             })),
     ).toEqual([
         { contractId: "ulvia/cms.emailer", capabilityId: "emailer.send", versionRange: "^1.0.0", optional: false },
+        { contractId: "ulvia/cms.events", capabilityId: "events.publish", versionRange: "^1.0.0", optional: false },
     ]);
     for (const implementation of manifest.manifest.implementations) {
         expect(implementation.digest).toBe(releaseDigests[implementation.contractId as keyof typeof releaseDigests]);
@@ -108,15 +111,15 @@ test("prior Content, Repository, Authoring and Installations releases retain exa
     }
 });
 
-test("Installations 1.6 preserves 1.5 and adds compatible explicit contract selection", async () => {
+test("Installations 1.7 preserves 1.6 and adds compatible artifact discovery and schema authority", async () => {
     const current = (await compileOfficialFeatures()).contracts.find(
         ({ release }) => release.contractId === "ulvia/cms.installations",
     )!;
     const previous = (await compileRetainedFeatures()).find((build) =>
-        build.implementations.some((pin) => pin.contractId === "ulvia/cms.installations" && pin.version === "1.5.0"),
+        build.implementations.some((pin) => pin.contractId === "ulvia/cms.installations" && pin.version === "1.6.0"),
     )!.contracts[0]!;
-    expect(previous.digest).toBe("sha256:b4e244c4c5187e96b3efe142f8b9e5b8f188bb84921f511895e88f8755c139d8");
-    expect(current.release.version).toBe("1.6.0");
+    expect(previous.digest).toBe("sha256:d6e8e6608db7737cd0b64c2d4e47b6dfa33231e345ab798d4e7a8a351b0b73b3");
+    expect(current.release.version).toBe("1.7.0");
     expect(compareContractReleases(previous.release, current.release)).toMatchObject({
         validEvolution: true,
         consumerCompatible: true,
@@ -124,9 +127,11 @@ test("Installations 1.6 preserves 1.5 and adds compatible explicit contract sele
         declaredBump: "minor",
     });
     const oldIds = new Set(previous.release.capabilities.map(({ id }) => id));
-    expect(current.release.capabilities.filter(({ id }) => oldIds.has(id))).toEqual([...previous.release.capabilities]);
+    expect(current.release.capabilities.filter(({ id }) => oldIds.has(id)).map(({ id }) => id)).toEqual([...oldIds]);
     expect(current.release.capabilities.filter(({ id }) => !oldIds.has(id)).map(({ id }) => id)).toEqual([
-        "select-contract",
+        "gateway.schemas.seal",
+        "repository.artifacts.get",
+        "repository.artifacts.search",
     ]);
 });
 

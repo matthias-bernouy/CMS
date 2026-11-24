@@ -41,12 +41,12 @@ test("recursive release prepares the SDK contracts and provider without collecti
     const source = resolve(import.meta.dir, "../../../../../../infra/releases");
     try {
         await f.run(["release", source, "--recursive"]);
-        expect(await f.files.list("contracts")).toHaveLength(18);
+        expect(await f.files.list("contracts")).toHaveLength(20);
         expect(await f.files.list("providers")).toHaveLength(1);
         const collections = await new LocalCollectionRepository(join(f.data, "repository")).list();
         expect(collections).toEqual([]);
-        expect(f.output[18]).toStartWith("+ provider ulvia/primary-provider@");
-        expect(f.output.at(-1)).toBe("Prepared 19 local releases.");
+        expect(f.output[20]).toStartWith("+ provider ulvia/primary-provider@");
+        expect(f.output.at(-1)).toBe("Prepared 21 local releases.");
     } finally {
         await f.close();
     }

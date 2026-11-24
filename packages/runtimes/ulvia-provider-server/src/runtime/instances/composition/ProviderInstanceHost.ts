@@ -1,3 +1,8 @@
+import { MongoSchemaVersions } from "@bernouy/cms-gateway/provider/schema-mongo";
+import { composeEvents } from "../../recovery/events/composition";
+import { composeWorkflows } from "../../recovery/workflows/composition";
+import { workflowAuthority } from "../../recovery/workflows/authority";
+import { WorkflowError } from "@bernouy/workflows";
 import { composeAccountTemplates } from "../../authentication/templates/compose";
 import { composeForms } from "../../recovery/forms/composition";
 import { createCaptureServices } from "../../content/captures/services";
@@ -386,6 +391,9 @@ export class ProviderInstanceHost {
         let operations: ProviderOperationExecutor | undefined;
         let operationRecovery: RecoverySupervisor | undefined;
         let formsRecovery: RecoverySupervisor | undefined;
+        let automationRecovery: RecoverySupervisor | undefined;
+        let eventRuntime: Awaited<ReturnType<typeof composeEvents>> | undefined;
+        let workflowRuntime: Awaited<ReturnType<typeof composeWorkflows>> | undefined;
         let formsRuntime: Awaited<ReturnType<typeof composeForms>> | undefined;
         let documentation: CmsDocumentation | undefined;
         let documentationTimer: ReturnType<typeof setInterval> | undefined;
@@ -421,8 +429,49 @@ export class ProviderInstanceHost {
                 },
                 this.transport?.network,
             );
+            if (plan.contracts.some((pin) => pin.contractId === "ulvia/cms.events")) {
+                eventRuntime = await composeEvents({
+                    stores,
+                    gateway,
+                    instanceId: instance.id,
+                    providerId: this.support.providerId,
+                    administrator: workflowAuthority(gateway, instance.id, this.support.providerId).administrator,
+                });
+            }
+            if (plan.contracts.some((pin) => pin.contractId === "ulvia/cms.workflows")) {
+                if (!eventRuntime) {
+                    throw new Error("Workflow requires selected Events");
+                }
+                const source = new HttpRepositoryDiscovery(repository.id, repository.url, {
+                    request,
+                    allowInsecureHttp: repository.allowInsecureHttp,
+                });
+                workflowRuntime = await composeWorkflows({
+                    events: eventRuntime.services,
+                    stores,
+                    gateway,
+                    instanceId: instance.id,
+                    providerId: this.support.providerId,
+                    artifacts: {
+                        async read(reference) {
+                            if (reference.repositoryId !== source.id) {
+                                throw new WorkflowError("INVALID_INPUT");
+                            }
+                            const bytes = await source.read({
+                                kind: "workflow",
+                                publisherId: reference.publisherId,
+                                id: reference.workflowId,
+                                version: reference.version,
+                                digest: reference.digest,
+                            });
+                            return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+                        },
+                    },
+                });
+            }
             if (plan.contracts.some((pin) => pin.contractId === "ulvia/cms.forms")) {
                 formsRuntime = await composeForms({
+                    events: eventRuntime?.services,
                     instanceId: instance.id,
                     providerId: this.support.providerId,
                     stores,
@@ -565,6 +614,8 @@ export class ProviderInstanceHost {
                     hosting: this.hosting,
                     emailer: stores.emailer,
                     formsServices: formsRuntime?.services,
+                    eventServices: eventRuntime?.services,
+                    workflowServices: workflowRuntime?.services,
                     secrets: stores.cmsSecrets,
                     files: stores.providerFiles,
                     workspace: fileWorkspace,
@@ -635,6 +686,19 @@ export class ProviderInstanceHost {
                 );
                 await formsRecovery.start(false);
             }
+            if (eventRuntime || workflowRuntime) {
+                automationRecovery = new RecoverySupervisor(
+                    async (limit) => {
+                        return (
+                            ((await eventRuntime?.recover(limit)) ?? 0) + ((await workflowRuntime?.tick(limit)) ?? 0)
+                        );
+                    },
+                    5000,
+                    25,
+                    (error) => instanceLogger.error("automation.recovery.failed", {}, error),
+                );
+                await automationRecovery.start(false);
+            }
             connectInstanceDiagnostics(diagnostics, stores, gateway, instance.id);
             const composition = {
                 stores,
@@ -669,6 +733,9 @@ export class ProviderInstanceHost {
                     closeInstanceComposition({
                         documentationTimer,
                         recovery: operationRecovery,
+                        automationRecovery,
+                        events: eventRuntime,
+                        workflows: workflowRuntime,
                         formsRecovery,
                         forms: formsRuntime,
                         operations,
@@ -683,6 +750,7 @@ export class ProviderInstanceHost {
                     logger: instanceLogger,
                     report,
                     dispatcher,
+                    schemaVersions: new MongoSchemaVersions(stores.db),
                     authorizeInvocation: createNativeInvocationAuthorizer({
                         siteId: SITE_ID,
                         report,
@@ -707,6 +775,9 @@ export class ProviderInstanceHost {
                 await closeInstanceComposition({
                     documentationTimer,
                     recovery: operationRecovery,
+                    automationRecovery,
+                    events: eventRuntime,
+                    workflows: workflowRuntime,
                     formsRecovery,
                     forms: formsRuntime,
                     operations,

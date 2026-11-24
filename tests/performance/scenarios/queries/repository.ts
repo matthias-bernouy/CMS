@@ -1,7 +1,7 @@
 import { assertCondition } from "./types";
 import type { QueryCase } from "./types";
 
-export const repositoryQueries: readonly QueryCase[] = [
+const baseRepositoryQueries: readonly QueryCase[] = [
     {
         family: "repository",
         capability: "repository-info",
@@ -61,4 +61,14 @@ export const repositoryQueries: readonly QueryCase[] = [
         }),
         assert: (out) => assertCondition(Object.keys(out).length > 0),
     },
+];
+
+export const repositoryQueries: readonly QueryCase[] = [
+    ...baseRepositoryQueries,
+    ...baseRepositoryQueries
+        .filter((recipe) => ["catalogue-list", "catalogue-search"].includes(recipe.capability))
+        .map((recipe) => ({
+            ...recipe,
+            capability: recipe.capability === "catalogue-list" ? "artifacts.list" : "artifacts.search",
+        })),
 ];

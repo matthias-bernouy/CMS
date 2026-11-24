@@ -3,7 +3,7 @@ import { capability } from "./inventory";
 import type { ContractParentReference } from "@bernouy/ulvia-contracts";
 import { resourceRuntimeNamespace } from "@bernouy/ulvia-contracts/protocol";
 
-export type AuthoredKind = "collection" | "contract" | "provider-manifest";
+export type AuthoredKind = "collection" | "contract" | "provider-manifest" | "workflow";
 
 /** Pure authored files: admission and publication still happen through the real CMS capabilities. */
 export function authoredFixture(
@@ -24,31 +24,66 @@ export function authoredFixture(
         return { kind, namespace, id, version, sourceJson };
     }
     const definition =
-        kind === "contract"
+        kind === "workflow"
             ? {
                   kind,
-                  protocol: "ulvia-provider/v1",
-                  schemaDialect: "ulvia-schema/v1",
+                  format: "ulvia-workflow-manifest/v1",
+                  workflowId: id,
                   publisherId: namespace,
-                  contractId: id,
-                  name: "Controlled performance contract",
+                  name: "Controlled workflow",
                   version,
+                  requirements: [
+                      {
+                          contractId: implementation.contractId,
+                          versionRange: `^${implementation.version}`,
+                          capabilityIds: ["site.get"],
+                          eventIds: [],
+                      },
+                  ],
+                  definition: {
+                      format: "ulvia-workflow/v1",
+                      parametersSchema: { type: "object", properties: {}, required: [] },
+                      inputSchema: { type: "object", properties: {}, required: [] },
+                      outputSchema: { type: "boolean" },
+                      entry: "read",
+                      steps: [
+                          {
+                              id: "read",
+                              kind: "call",
+                              target: { contractId: implementation.contractId, capabilityId: "site.get" },
+                              input: { kind: "literal", value: {} },
+                              next: null,
+                              onError: {},
+                          },
+                      ],
+                      output: { kind: "literal", value: true },
+                  },
               }
-            : {
-                  kind,
-                  protocol: "ulvia-provider/v1",
-                  schemaDialect: "ulvia-schema/v1",
-                  providerId: id,
-                  name: "Controlled performance Provider",
-                  version,
-                  provenance: { publisherId: namespace, publishedAt: "2026-11-17T00:00:00.000Z" },
-                  buildVersionRange: "^1.0.0",
-                  endpoint: { allowedOrigins: ["https://performance.invalid"] },
-                  configuration: { type: "object", properties: {}, required: [] },
-                  credentialSlots: [],
-                  requires: [],
-                  implementations: [{ ...implementation, requires: [] }],
-              };
+            : kind === "contract"
+              ? {
+                    kind,
+                    protocol: "ulvia-provider/v1",
+                    schemaDialect: "ulvia-schema/v1",
+                    publisherId: namespace,
+                    contractId: id,
+                    name: "Controlled performance contract",
+                    version,
+                }
+              : {
+                    kind,
+                    protocol: "ulvia-provider/v1",
+                    schemaDialect: "ulvia-schema/v1",
+                    providerId: id,
+                    name: "Controlled performance Provider",
+                    version,
+                    provenance: { publisherId: namespace, publishedAt: "2026-11-17T00:00:00.000Z" },
+                    buildVersionRange: "^1.0.0",
+                    endpoint: { allowedOrigins: ["https://performance.invalid"] },
+                    configuration: { type: "object", properties: {}, required: [] },
+                    credentialSlots: [],
+                    requires: [],
+                    implementations: [{ ...implementation, requires: [] }],
+                };
     const files = [
         { path: "definition.json", content: JSON.stringify(definition) },
         ...(kind === "contract" ? [{ path: "capabilities/read.json", content: JSON.stringify(capability()) }] : []),

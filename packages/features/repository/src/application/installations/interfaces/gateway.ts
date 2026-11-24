@@ -1,3 +1,4 @@
+import type { GatewaySchemaVersions } from "@bernouy/cms-gateway";
 import type { CatalogueContractRelease } from "@bernouy/ulvia-contracts/catalogue";
 import type {
     ProviderCommandPreparation,
@@ -30,6 +31,7 @@ export interface InstallationGateway {
     readonly identities: ProviderIdentityService;
     readonly routes: GatewayRouteResolver;
     readonly commandAudit: GatewayCommandAuditStore;
+    readonly schemaVersions?: GatewaySchemaVersions;
     readonly providers?: ProviderAccess;
     readonly delegations?: GatewayDelegationAuthority;
     readonly invocations: {

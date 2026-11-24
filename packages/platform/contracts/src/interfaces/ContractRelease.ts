@@ -1,3 +1,4 @@
+import type { ContractEventDefinition } from "./ContractEvent";
 import type { CapabilityBinding } from "./CapabilityBinding";
 import type { UlviaObjectSchema, UlviaSchema } from "./UlviaSchema";
 import type { ReleaseDigest } from "../core/admission/digest";
@@ -78,6 +79,7 @@ export interface ContractDocumentationDefinition {
 }
 
 interface CapabilityCommon {
+    readonly schemaResolver?: { readonly selector: UlviaObjectSchema };
     readonly docs?: readonly string[];
     readonly id: string;
     readonly description?: string;
@@ -98,6 +100,7 @@ export interface ContractRelease {
     readonly documentation?: readonly ContractDocumentationDefinition[];
     readonly catalogue?: ContractCatalogueMetadata;
     readonly capabilities: readonly CapabilityDefinition[];
+    readonly events?: readonly ContractEventDefinition[];
     readonly fixtureAssets?: readonly ContractFixtureAssetDefinition[];
     readonly contractId: string;
     readonly description?: string;

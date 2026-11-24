@@ -12,7 +12,7 @@ export async function prepareCollectionReader(
 ): Promise<PreparedSample> {
     const state = await context.collection();
     let first: unknown;
-    if (capability === "repository.get") {
+    if (["repository.get", "repository.artifacts.get"].includes(capability)) {
         const downloaded = await context.registry("ulvia/repository", "release-download", "http", {
             kind: state.reference.kind,
             publisherId: state.reference.publisherId,

@@ -76,6 +76,7 @@ export class NotificationWorker {
                     ...record,
                     revision: record.revision + 1,
                     deleted: true,
+                    event: null,
                     answers: [],
                     notification: null,
                     intents: [],

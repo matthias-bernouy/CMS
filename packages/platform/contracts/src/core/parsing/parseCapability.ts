@@ -19,8 +19,8 @@ import type {
     ContractFixtureAssetDefinition,
 } from "../../interfaces/ContractRelease";
 import type { UlviaObjectSchema, UlviaSchema } from "../../interfaces/UlviaSchema";
-import { type SchemaParseState } from "../schema/context";
-import { parseSchemaAt } from "../schema/parseSchema";
+import { type SchemaParseState } from "../language/schema/context";
+import { parseSchemaAt } from "../language/schema/parseSchema";
 import { parseErrorCode, parseIdentifier } from "./identifiers";
 import { validateMcpSchemas } from "./bindings/schemas";
 import { parseCapabilityBindings } from "ulvia-contracts/core/parsing/bindings/index";
@@ -57,6 +57,7 @@ export function parseCapability(
             "bindings",
             "mocks",
             "responseEffects",
+            "schemaResolver",
         ],
         path,
         "invalid_contract",
@@ -75,6 +76,16 @@ export function parseCapability(
             "capability input root must be non-nullable",
             `${path}.input.nullable`,
         );
+    }
+    let schemaResolver: CapabilityDefinition["schemaResolver"];
+    if (record.schemaResolver !== undefined) {
+        const role = expectRecord(record.schemaResolver, `${path}.schemaResolver`, "invalid_contract");
+        rejectUnknownKeys(role, ["selector"], `${path}.schemaResolver`, "invalid_contract");
+        const selector = parseSchemaAt(role.selector, `${path}.schemaResolver.selector`, schemaState, 1);
+        if (selector.type !== "object") {
+            throw new ReleaseValidationError("invalid_contract", "resolver selector must be an object", path);
+        }
+        schemaResolver = { selector };
     }
     const description = optionalString(record.description, `${path}.description`, "invalid_contract", 4096);
     const output = parseSchemaAt(record.output, `${path}.output`, schemaState, 1);
@@ -108,6 +119,7 @@ export function parseCapability(
         ...(description ? { description } : {}),
         access: enumValue(record.access, `${path}.access`, ACCESS_LEVELS),
         behavior,
+        ...(schemaResolver ? { schemaResolver } : {}),
         input: input as UlviaObjectSchema,
         output,
         errors,

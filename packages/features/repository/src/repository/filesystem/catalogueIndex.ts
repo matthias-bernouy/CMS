@@ -1,3 +1,4 @@
+import { LocalWorkflowReleases } from "./artifacts/workflows";
 import type { CollectionReferenceScope } from "./artifacts/discovery/collectionReferences";
 import type { CollectionVerifier } from "repository/collections/sources/verification";
 import { LatestCollectionCatalogue } from "./artifacts/discovery/latestCatalogue";
@@ -15,7 +16,7 @@ import { LocalProviderReleases } from "./providers";
 import { LocalRepositoryYanks } from "./yanks";
 import { compareCatalogueKeys } from "./core/catalogue";
 
-export type RepositoryCatalogueType = "collections" | "contracts" | "providers";
+export type RepositoryCatalogueType = "collections" | "contracts" | "providers" | "workflows";
 export type RepositoryCatalogueEntry = RepositoryCatalogueMetadata &
     Readonly<{
         publisherId: string;
@@ -24,12 +25,13 @@ export type RepositoryCatalogueEntry = RepositoryCatalogueMetadata &
         collectionId?: string;
         contractId?: string;
         providerId?: string;
+        workflowId?: string;
     }>;
 import type { RepositoryCatalogueMetadata } from "repository/application/registry/interfaces/outputs";
 
 export type RepositoryCatalogueReference = Pick<
     RepositoryCatalogueEntry,
-    "publisherId" | "version" | "collectionId" | "contractId" | "providerId"
+    "publisherId" | "version" | "collectionId" | "contractId" | "providerId" | "workflowId"
 >;
 
 export interface RepositoryCatalogueReader {
@@ -48,6 +50,7 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
     private readonly collections: LocalCollectionRepository;
     private readonly contracts: LocalContractReleases;
     private readonly providers: LocalProviderReleases;
+    private readonly workflows: LocalWorkflowReleases;
     private readonly latest: LatestCollectionCatalogue;
     private readonly recipes: RecipeCatalogue;
     private readonly yanks: LocalRepositoryYanks;
@@ -63,6 +66,7 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
         this.recipes = new RecipeCatalogue(root, () => this.latest.read("stable"));
         this.contracts = new LocalContractReleases(files, this.yanks);
         this.providers = new LocalProviderReleases(files, this.contracts, this.yanks);
+        this.workflows = new LocalWorkflowReleases(files, this.contracts, this.yanks);
     }
 
     invalidate(): void {
@@ -124,12 +128,13 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
     }
 
     private async build(): Promise<Snapshot> {
-        const [collections, contracts, providers] = await Promise.all([
+        const [collections, contracts, providers, workflows] = await Promise.all([
             this.collectionEntries(),
             this.contractEntries(),
             this.providerEntries(),
+            this.workflowEntries(),
         ]);
-        return Object.freeze({ collections, contracts, providers });
+        return Object.freeze({ collections, contracts, providers, workflows });
     }
 
     private async collectionEntries(): Promise<readonly RepositoryCatalogueEntry[]> {
@@ -176,6 +181,21 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
         return sorted(entries, "contractId");
     }
 
+    private async workflowEntries(): Promise<readonly RepositoryCatalogueEntry[]> {
+        return sorted(
+            (await this.workflows.listMetadata()).map(({ manifest, digest, publishedAt }) => ({
+                publisherId: manifest.publisherId,
+                workflowId: manifest.workflowId,
+                version: manifest.version,
+                digest,
+                name: manifest.name,
+                description: manifest.description ?? "",
+                publishedAt,
+            })),
+            "workflowId",
+        );
+    }
+
     private async providerEntries(): Promise<readonly RepositoryCatalogueEntry[]> {
         const entries = (await (await this.providers.catalogue()).list())
             .filter((record) => !record.yank)
@@ -193,11 +213,14 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
 
 function sorted(
     entries: RepositoryCatalogueEntry[],
-    idKey: "collectionId" | "contractId" | "providerId",
+    idKey: "collectionId" | "contractId" | "providerId" | "workflowId",
 ): readonly RepositoryCatalogueEntry[] {
     return Object.freeze(entries.sort((left, right) => compareCatalogueKeys(key(left, idKey), key(right, idKey))));
 }
 
-function key(entry: RepositoryCatalogueEntry, idKey: "collectionId" | "contractId" | "providerId"): string {
+function key(
+    entry: RepositoryCatalogueEntry,
+    idKey: "collectionId" | "contractId" | "providerId" | "workflowId",
+): string {
     return `${entry.publisherId}\0${entry[idKey]}\0${entry.version}`;
 }

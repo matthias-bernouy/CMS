@@ -36,13 +36,13 @@ Ulvia CMS installation runtime.
 - Lifecycle commands must never start the Edge, Provider, or MongoDB directly;
   it only manages their production-shaped containers.
 - `release` reads an explicit authored resource folder and dispatches by its
-  `definition.json` kind: collection, contract, or provider-manifest. It stores
+  `definition.json` kind: collection, contract, provider-manifest, or workflow. It stores
   immutable releases below the persistent user data directory. Provider
   manifests require their exact contract releases locally; release never probes
   a provider or handles credentials.
 - `release --recursive` discovers bounded authored resource roots and stops at
   each owning definition. Reject symbolic links and duplicate coordinates. Plan
-  contracts against the local catalogue before providers and collections, and
+  contracts against the local catalogue before providers, collections and Workflow manifests, and
   validate all authored sources before storing the batch. Keep writes atomic per
   resource; the batch is not a cross-resource transaction. Never implicitly push.
 - Collection release sources merge recursive JSON fragments below each
@@ -73,7 +73,7 @@ Ulvia CMS installation runtime.
 - Local release storage contains admitted immutable releases; publishing must never serve authored folders directly.
 - `push` infers one local release kind from its coordinate; an explicit kind
   resolves collisions. `push all` sends every non-yanked local cached release,
-  ordered by contract dependencies, then providers and collection dependencies.
+  ordered by contract dependencies, then providers, collection dependencies and Workflow manifests.
   Validate all local artifacts and account namespace credentials before the first upload. Stop
   on failure; exact retries are idempotent and the batch is not transactional.
   `pull` transfers one explicitly typed exact release.

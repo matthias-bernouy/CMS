@@ -88,6 +88,12 @@
             ],
             "forms/*": [
                 "./packages/features/forms/src/*"
+            ],
+            "cms-events/*": [
+                "./packages/features/events/src/*"
+            ],
+            "workflows/*": [
+                "./packages/features/workflows/src/*"
             ]
         }
     }

@@ -92,3 +92,5 @@ count bounds before changing installation state. Existing reads retain their
 original output schemas; use the newer detail operation for larger catalogues.
 Content 1.1 adds `localization.texts.read` and `theme.read` for catalogues up to
 8,192 entries with the same administrator authorization and filtering semantics.
+
+The `gateway.schemas.seal` capability belongs to the trusted Edge control channel. Ordinary administrator and Provider invocations do not grant its control authority. It confirms one validated resolver descriptor against an exact current target and actor; `SCHEMA_VERSION_CONFLICT` means the resource schema changed without a new version. Source identity comes from the selected installation, never from schema payload fields.

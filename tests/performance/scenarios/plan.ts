@@ -1,3 +1,4 @@
+import { workflowScenarios } from "./workflows/plan";
 import { formsScenarios } from "./forms/plan";
 import { queryScenarios } from "./queries/plan";
 import { pageScenarios } from "./pages/plan";
@@ -50,6 +51,7 @@ export function assessmentScenarios(inventory: CapabilityInventory, fixture: str
         ...emailScenarios(inventory, fixture, tenants),
         ...emailTemplateScenarios(inventory, fixture),
         ...formsScenarios(inventory, fixture),
+        ...workflowScenarios(inventory, fixture),
         ...hostingScenarios(inventory, fixture, hosting),
         ...hostingTechnicalScenarios(inventory, fixture, hosting),
         ...readerScenarios(inventory, fixture),

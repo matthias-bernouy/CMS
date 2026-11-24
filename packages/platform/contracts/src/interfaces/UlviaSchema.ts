@@ -58,6 +58,33 @@ export interface UlviaBinarySchema extends UlviaSchemaBase {
     readonly maxBytes: number;
 }
 
+/** Paths are JSON pointers into the complete value being validated, or the capability's input. */
+export interface UlviaSchemaReference {
+    readonly source: "value" | "input";
+    readonly path: string;
+}
+/** A contract-owned synchronous query supplies the concrete JSON schema for this field. */
+export interface UlviaResolvedSchema extends UlviaSchemaBase {
+    readonly type: "resolved";
+    readonly resolver: string;
+    readonly selector: Readonly<Record<string, UlviaSchemaReference>>;
+    readonly version?: UlviaSchemaReference;
+    readonly choices?: string;
+}
+export interface SchemaField {
+    readonly id: string;
+    readonly property: string;
+    readonly label: string;
+    readonly sensitive: boolean;
+}
+export interface SchemaDescriptor {
+    readonly resourceId: string;
+    readonly version: string;
+    readonly digest: string;
+    readonly schema: UlviaSchema;
+    readonly fields: readonly SchemaField[];
+}
+
 export type UlviaSchema =
     | UlviaArraySchema
     | UlviaBinarySchema
@@ -66,6 +93,7 @@ export type UlviaSchema =
     | UlviaNullSchema
     | UlviaNumberSchema
     | UlviaObjectSchema
-    | UlviaStringSchema;
+    | UlviaStringSchema
+    | UlviaResolvedSchema;
 
 export type UlviaScalarSchema = UlviaBooleanSchema | UlviaNullSchema | UlviaNumberSchema | UlviaStringSchema;

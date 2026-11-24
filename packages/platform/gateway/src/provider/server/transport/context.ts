@@ -49,6 +49,7 @@ export function providerInvocationContext(
         ...(claims.connectionId ? { connectionId: claims.connectionId } : {}),
         providerId: scope.providerId,
         ...(claims.subjectId ? { subjectId: claims.subjectId } : {}),
+        ...(claims.eventCausation ? { eventCausation: claims.eventCausation } : {}),
         ...(claims.systemServiceId ? { systemServiceId: claims.systemServiceId } : {}),
         ...(claims.sourceInstallationId ? { sourceInstallationId: claims.sourceInstallationId } : {}),
         ...(controlAuthority ? { controlAuthority: true as const } : {}),

@@ -12,7 +12,8 @@
         "./compatibility": "./src/exports/compatibility.ts",
         "./documentation": "./src/exports/documentation.ts",
         "./protocol": "./src/exports/protocol.ts",
-        "./schema": "./src/exports/schema.ts",
+        "./resolution": "./src/exports/language/resolution.ts",
+        "./schema": "./src/exports/language/schema.ts",
         "./validation": "./src/exports/validation.ts"
     },
     "dependencies": {

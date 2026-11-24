@@ -22,6 +22,7 @@ export const fieldSchema = z.strictObject({
     label: contractString({ minLength: 1, maxLength: 65536 }),
     helpText: contractString({ maxLength: 65536 }).optional(),
     required: z.boolean().optional(),
+    sensitive: z.boolean().optional(),
     minLength: z.int().min(0).max(Number.MAX_SAFE_INTEGER).optional(),
     maxLength: z.int().min(0).max(Number.MAX_SAFE_INTEGER).optional(),
     min: z.number().optional(),

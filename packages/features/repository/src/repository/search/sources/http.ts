@@ -26,16 +26,21 @@ export class HttpRepositoryDiscovery implements RepositoryDiscoverySource {
     async search(query: RepositorySearchQuery): Promise<RepositorySearchPage> {
         const input = searchQuery(query);
         try {
-            const bytes = await getRepositoryBytes(this.base, "v1/search", "Discovery", {
-                maxBytes: 8 * 1024 * 1024,
-                request: (url, init) =>
-                    (this.options.request ?? fetch)(url, {
-                        ...init,
-                        method: "QUERY",
-                        headers: { ...init.headers, "Content-Type": "application/json" },
-                        body: JSON.stringify(input),
-                    }),
-            });
+            const bytes = await getRepositoryBytes(
+                this.base,
+                input.kinds?.includes("workflow") || input.kinds === undefined ? "v1/artifacts/search" : "v1/search",
+                "Discovery",
+                {
+                    maxBytes: 8 * 1024 * 1024,
+                    request: (url, init) =>
+                        (this.options.request ?? fetch)(url, {
+                            ...init,
+                            method: "QUERY",
+                            headers: { ...init.headers, "Content-Type": "application/json" },
+                            body: JSON.stringify(input),
+                        }),
+                },
+            );
             try {
                 const output = parseStrictJson(bytes, 8 * 1024 * 1024, 16);
                 return searchPage(output);

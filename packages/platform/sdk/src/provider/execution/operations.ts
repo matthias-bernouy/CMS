@@ -1,3 +1,5 @@
+import { containsResolvedSchema } from "@bernouy/ulvia-contracts/resolution";
+import { projectRetainedOutput } from "./projection";
 import type { UlviaSchema } from "@bernouy/ulvia-contracts/schema";
 import type { ProviderCapabilityInvocationContext, ProviderRoute } from "@bernouy/cms-gateway/provider/server";
 import type { RuntimeCapabilityPlan } from "ulvia-sdk/compiler/plan";
@@ -71,14 +73,23 @@ export function bindOperation<Dependencies>(
             }
             selectedRoute(routes, entry.contractId, entry.capability.id, context, claims, true);
             context.signal?.throwIfAborted();
-            validateSchemaValue(entry.capability.input, input);
+            const resolve = async (schema: UlviaSchema, value: unknown) => {
+                if (!containsResolvedSchema(schema)) {
+                    return schema;
+                }
+                if (!options.resolveSchema) {
+                    throw new TypeError("Dynamic workers require a host schema resolution authority");
+                }
+                return options.resolveSchema(entry.capability, schema, value, input, context);
+            };
+            validateSchemaValue(await resolve(entry.capability.input, input), input);
             if (storedGuard) {
                 await storedGuard(input, context);
             }
             context.signal?.throwIfAborted();
-            const output = await execute(input, context);
+            const output = await projectRetainedOutput(entry, await execute(input, context), resolve);
             context.signal?.throwIfAborted();
-            validateSchemaValue(entry.capability.output, output);
+            validateSchemaValue(await resolve(entry.capability.output, output), output);
             return output;
         },
     };

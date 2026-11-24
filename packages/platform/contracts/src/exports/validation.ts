@@ -5,4 +5,4 @@ export { parseSemVer } from "ulvia-contracts/core/parsing/identifiers";
 export { expectRecord } from "ulvia-contracts/core/protocol/values";
 export { expectString } from "ulvia-contracts/core/protocol/values";
 export { rejectUnknownKeys } from "ulvia-contracts/core/protocol/values";
-export { matchesStringFormat } from "ulvia-contracts/core/schema/formats";
+export { matchesStringFormat } from "ulvia-contracts/core/language/schema/formats";

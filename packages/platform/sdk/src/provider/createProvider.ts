@@ -15,6 +15,14 @@ export function createProvider<Dependencies>(
     if (!scope.siteId || !scope.instanceId || typeof options.authorize !== "function") {
         throw new TypeError("Provider scope and explicit authorization policy are required");
     }
+    if (
+        build.implementedContracts.some(({ capabilities }) =>
+            capabilities.some(({ definition }) => definition.schemaResolver),
+        ) &&
+        !options.schemaVersions
+    ) {
+        throw new TypeError("Schema resolver capabilities require a host-owned durable version store");
+    }
     const verifiedRequests = new WeakMap<Request, ProviderInvocationClaims>();
     const claimsFor = (context: ProviderCapabilityInvocationContext) => {
         const request = context.http?.transportRequest;
@@ -43,6 +51,7 @@ export function createProvider<Dependencies>(
         dispatcher,
         ...(logger ? { logger } : {}),
         authorize,
+        schemaVersions: runtimeOptions.schemaVersions,
         authenticate: async (request) => {
             try {
                 const verified = await authenticate(request);

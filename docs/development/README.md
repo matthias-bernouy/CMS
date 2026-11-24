@@ -354,3 +354,5 @@ for review, authority, limits and recovery guarantees.
 
 [Gateway control performance](gateway-control-performance.md) describes the admitted
 compact-route protocol, bounded definition cache and revision-fenced MCP index.
+
+[Event initiators](event-initiators.md) describes verified optional provenance, scoped identity resolution and deferred publication.

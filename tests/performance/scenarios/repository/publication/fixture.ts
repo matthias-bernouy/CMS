@@ -12,6 +12,7 @@ export const CONTRACT_PUBLICATION = [
     "publication-asset",
     "publication-status",
     "publication-commit",
+    "artifacts.commit",
     "publication-abort",
     "publication-yank",
     "release-download",
@@ -58,7 +59,7 @@ export async function publicationFixture(
             contentDigest: resource.asset.digest,
         });
     }
-    const committed = !stagedOnly && capability !== "publication-commit";
+    const committed = !stagedOnly && !["publication-commit", "artifacts.commit"].includes(capability);
     if (committed) {
         const result = await calls.fixture("publication-commit", uploadScope);
         assertCondition(result.kind === "contract" && result.digest === resource.digest && result.added === true);

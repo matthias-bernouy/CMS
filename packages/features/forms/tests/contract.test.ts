@@ -24,12 +24,16 @@ test("all eleven field kinds have closed typed answers with no coercion", () => 
     expect(validRequest({ value: "x".repeat(65536) })).toBe(false);
 });
 
-test("the feature compiles to the fifteen declared HTTP/MCP capabilities", async () => {
+test("the feature compiles to business capabilities and the two standard HTTP schema queries", async () => {
     const compiled = await compileContract(formsFeature);
     expect(compiled.release.contractId).toBe("ulvia/cms.forms");
-    expect(compiled.release.capabilities).toHaveLength(15);
-    expect(compiled.release.capabilities.filter((capability) => capability.access === "admin")).toHaveLength(12);
-    for (const capability of compiled.release.capabilities.filter((item) => item.access === "admin")) {
+    expect(compiled.release.capabilities).toHaveLength(17);
+    expect(compiled.release.capabilities.filter((capability) => capability.access === "admin")).toHaveLength(14);
+    for (const capability of compiled.release.capabilities.filter(
+        (item) =>
+            item.access === "admin" &&
+            !["forms.describe-submission", "forms.list-submission-sources"].includes(item.id),
+    )) {
         expect(capability.bindings.some((binding) => binding.transport === "mcp")).toBe(true);
     }
 });

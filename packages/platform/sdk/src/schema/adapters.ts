@@ -11,6 +11,7 @@ import type {
     UlviaStringSchema,
     UlviaBinarySchema,
     UlviaMapSchema,
+    UlviaResolvedSchema,
 } from "@bernouy/ulvia-contracts/schema";
 
 type RegisteredSchema =
@@ -85,4 +86,15 @@ export function contractMap<Value extends z.ZodType>(
 
 export function registeredSchema(schema: $ZodType): RegisteredSchema | undefined {
     return registered.get(schema._zod.def);
+}
+
+/** Runtime-selected JSON. The execution boundary must resolve it before accepting data. */
+export function contractResolved(
+    definition: Omit<UlviaResolvedSchema, "type" | "nullable">,
+): z.ZodType<unknown, unknown> {
+    const schema = parseUlviaSchema({ ...definition, type: "resolved" });
+    // Zod carries the declaration; accepting the value belongs to asynchronous native validation.
+    const validator = z.custom<unknown>();
+    registered.set(validator._zod.def, { kind: "wire", schema });
+    return validator;
 }

@@ -15,7 +15,7 @@ test("Repository defines every current exact mandatory binding and variant witho
         .map((row) => row.definition)
         .filter((row) => row.obligations.every((item) => scoped.targets.some((target) => target.key === item.target)));
     const added = registryReadScenarios(inventory, "registry-unit-plan");
-    expect(added).toHaveLength(12);
+    expect(added).toHaveLength(18);
     expect(auditPlan(scoped, definitions)).toEqual([]);
     expect(coverageMatrix(scoped, definitions, []).every((row) => row.status === "unattempted")).toBe(true);
     expect(

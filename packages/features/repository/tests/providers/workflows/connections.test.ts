@@ -126,3 +126,41 @@ test("retrying an approval after an observation failure probes current readiness
     expect(approved.observed).toBe(true);
     expect(current!.observation!.report.implementations.every((item) => item.status === "unavailable")).toBe(true);
 });
+
+test.each(["enabled", "disabled", "revoked", "reconnected"] as const)(
+    "concurrent observation is reconciled only for the unchanged %s approval",
+    async (status) => {
+        const f = await fixture();
+        const preview = await f.create().preview(f.input, "admin-a");
+        const original = f.site.lifecycle.observe.bind(f.site.lifecycle);
+        const observe = spyOn(f.site.lifecycle, "observe").mockImplementationOnce(async (scope, revision, report) => {
+            const stored = await original(scope, revision, report);
+            if (status === "disabled" || status === "revoked") {
+                await f.site.installations.setStatus(scope, stored.revision, status);
+            } else if (status === "reconnected") {
+                const replacement = await f.create().preview(
+                    {
+                        ...f.input,
+                        installationId: scope.installationId,
+                        revision: stored.revision,
+                        token: "different-provider-credential",
+                    },
+                    "admin-a",
+                );
+                await f.create().approve(replacement.ticket, "admin-a");
+            }
+            return original(scope, revision, report);
+        });
+        try {
+            const result = await f.create().approve(preview.ticket, "admin-a");
+            expect(result.observed).toBe(status === "enabled");
+            const current = await f.site.installations.get({ siteId, installationId: result.installationId });
+            expect(current!.installation.status).toBe(status === "reconnected" ? "enabled" : status);
+            if (status === "enabled" || status === "reconnected") {
+                expect(current!.observation).toBeDefined();
+            }
+        } finally {
+            observe.mockRestore();
+        }
+    },
+);

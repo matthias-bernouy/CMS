@@ -61,7 +61,10 @@ export function parsePublicationUpload(bytes: Uint8Array): PublicationUploadMani
     ) {
         throw new RepositoryRequestError("REJECTED", "Collection asset declarations exceed the collection limits");
     }
-    if (totalBytes > MAX_PUBLICATION_BUNDLE_BYTES || (value.kind === "provider-manifest" && assets.length)) {
+    if (
+        totalBytes > MAX_PUBLICATION_BUNDLE_BYTES ||
+        (["provider-manifest", "workflow"].includes(value.kind) && assets.length)
+    ) {
         throw new RepositoryRequestError("REJECTED", "Publication asset bundle exceeds its limits");
     }
     return {
@@ -144,7 +147,7 @@ function isPublicationAssetId(value: string): boolean {
 }
 
 function isKind(value: unknown): value is RepositoryArtifactKind {
-    return value === "collection" || value === "contract" || value === "provider-manifest";
+    return value === "collection" || value === "contract" || value === "provider-manifest" || value === "workflow";
 }
 
 function plainRecord(value: unknown): value is Record<string, unknown> {

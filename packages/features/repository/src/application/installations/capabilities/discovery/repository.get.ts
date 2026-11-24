@@ -2,7 +2,7 @@ import { defineCapability } from "repository/application/installations/capabilit
 import {
     repositoryGetInputSchema,
     repositoryGetOutputSchema,
-} from "repository/application/installations/schemas/discovery/repository.get";
+} from "repository/application/installations/schemas/discovery/base/repository.get";
 import { repositoryGetErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { required } from "repository/application/installations/core/gateway/requirements";
 export const repositoryGet = defineCapability({
@@ -45,5 +45,11 @@ export const repositoryGet = defineCapability({
     input: repositoryGetInputSchema,
     output: repositoryGetOutputSchema,
     errors,
-    execute: async ({ services, input }) => required(services.discovery).get(input),
+    execute: async ({ services, input }) => {
+        const result = await required(services.discovery).get(input);
+        if (result.reference.kind !== input.reference.kind) {
+            throw new Error("Repository inspection returned a different resource kind");
+        }
+        return { ...result, reference: { ...result.reference, kind: input.reference.kind } };
+    },
 });

@@ -1,3 +1,7 @@
+import { formsEventServices } from "./events";
+import { SubmissionEventWorker } from "@bernouy/forms";
+import type { EventServices } from "@bernouy/cms-events";
+import { withSiteWriteFence } from "@bernouy/repository/upgrades";
 import { providerCredentialFingerprint } from "@bernouy/cms-gateway/access/providers";
 import { FormsService, SubmissionService, NotificationWorker, FormsError } from "@bernouy/forms";
 import type { FormsServices, FormsDelivery } from "@bernouy/forms";
@@ -9,6 +13,7 @@ import type { ProviderStores } from "../../stores/providerStores";
 
 /** Only Forms selects the current Emailer; transport/configuration stay in their existing owners. */
 export async function composeForms(options: {
+    events?: EventServices;
     instanceId: string;
     providerId: string;
     stores: ProviderStores;
@@ -77,10 +82,18 @@ export async function composeForms(options: {
             }
         },
     };
-    const forms = new FormsService(store, delivery.available);
+    const eventSupport = options.events ? formsEventServices(options, options.events, store) : undefined;
+    const forms = withSiteWriteFence(
+        new FormsService(store, delivery.available, Date.now),
+        stores.upgradeStorage,
+        "default",
+        ["create", "update", "publish", "availability", "archive"],
+    );
+    const eventWorker = eventSupport ? new SubmissionEventWorker(store, eventSupport.publication) : undefined;
     const services: FormsServices = {
         forms,
-        submissions: new SubmissionService(store, forms),
+        captureInitiator: eventSupport?.captureInitiator,
+        submissions: new SubmissionService(store, forms, Date.now, eventSupport?.publication),
         principal(context) {
             if (!context.connectionId) {
                 throw new FormsError("CORE_UNAVAILABLE");
@@ -114,5 +127,17 @@ export async function composeForms(options: {
         },
     };
     const worker = new NotificationWorker(instanceId, store, delivery);
-    return { services, tick: async () => ((await storage.hasWork()) ? worker.tick() : 0), stop: () => worker.stop() };
+    return {
+        services,
+        async tick() {
+            if (!(await storage.hasWork())) {
+                return 0;
+            }
+            return ((await eventWorker?.tick()) ?? 0) + (await worker.tick());
+        },
+        async stop() {
+            await eventWorker?.stop();
+            await worker.stop();
+        },
+    };
 }

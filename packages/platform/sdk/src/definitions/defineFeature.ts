@@ -9,5 +9,6 @@ export function defineFeature<const Definition extends FeatureDefinition>(
     return Object.freeze({
         ...definition,
         capabilities: Object.freeze([...definition.capabilities]),
+        ...(definition.events === undefined ? {} : { events: Object.freeze([...definition.events]) }),
     }) as Readonly<Definition>;
 }

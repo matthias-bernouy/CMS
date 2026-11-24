@@ -1,8 +1,9 @@
+import { establishedReference } from "repository/application/registry/capabilities/catalogue/reference";
 import { defineCapability } from "repository/application/installations/capabilities/policy/define";
 import {
     repositorySearchInputSchema,
     repositorySearchOutputSchema,
-} from "repository/application/installations/schemas/discovery/repository.search";
+} from "repository/application/installations/schemas/discovery/base/repository.search";
 import { repositoryGetErrors as errors } from "repository/application/installations/schemas/common/failures";
 import { required } from "repository/application/installations/core/gateway/requirements";
 export const repositorySearch = defineCapability({
@@ -45,5 +46,14 @@ export const repositorySearch = defineCapability({
     input: repositorySearchInputSchema,
     output: repositorySearchOutputSchema,
     errors,
-    execute: async ({ services, input }) => required(services.discovery).search(input),
+    execute: async ({ services, input }) => {
+        const result = await required(services.discovery).search({
+            ...input,
+            kinds: input.kinds ?? ["collection", "bloc", "contract", "provider-manifest"],
+        });
+        return {
+            ...result,
+            results: result.results.map((entry) => ({ ...entry, reference: establishedReference(entry.reference) })),
+        };
+    },
 });

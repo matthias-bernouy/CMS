@@ -33,6 +33,7 @@ export function createEdgeGateway(
         ...(commandSettled ? { commandSettled } : {}),
         ...gatewayObservability(logger),
         routes,
+        schemaVersions: { seal: (input) => control.sealSchema(input) },
         delegations: control.delegations,
         identities: new ControlProviderIdentityService(control),
         commandAudit: new ControlGatewayAuditStore(control),

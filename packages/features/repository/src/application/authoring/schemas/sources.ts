@@ -31,7 +31,7 @@ export const getSourceSnapshotInputSchema = z.strictObject({
     namespace: contractString({ maxLength: 96 }),
     id: contractString({ maxLength: 193 }),
     version: contractString({ maxLength: 64 }),
-    kind: contractString({ enum: ["collection", "contract", "provider-manifest"], maxLength: 17 }),
+    kind: contractString({ enum: ["collection", "contract", "provider-manifest", "workflow"], maxLength: 17 }),
 });
 export const expandedSourceSnapshotSchema = z
     .strictObject({
@@ -40,3 +40,7 @@ export const expandedSourceSnapshotSchema = z
     })
     .readonly()
     .nullable();
+
+export const getWorkflowSourcesInputSchema = getContractSourcesInputSchema
+    .omit({ contractId: true })
+    .extend({ workflowId: contractString({ maxLength: 225 }) });

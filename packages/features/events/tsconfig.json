@@ -1,0 +1,29 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "cms-events/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../../platform/sdk"
+        },
+        {
+            "path": "../../platform/contracts"
+        },
+        {
+            "path": "../../platform/gateway"
+        },
+        {
+            "path": "../../foundation/resource-identity"
+        }
+    ]
+}

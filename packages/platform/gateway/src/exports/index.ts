@@ -36,3 +36,5 @@ export { GatewayAuthorityReads } from "cms-gateway/invocation/core/dispatch/Gate
 export type { GatewayDispatch } from "cms-gateway/invocation/interfaces/Dispatch";
 
 export { prepareDispatch as prepareGatewayDispatch } from "cms-gateway/invocation/core/dispatch/prepareDispatch";
+
+export type { GatewaySchemaSeal, GatewaySchemaVersions } from "cms-gateway/invocation/interfaces/SchemaVersions";

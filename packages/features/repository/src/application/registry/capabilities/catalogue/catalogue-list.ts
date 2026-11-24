@@ -2,7 +2,7 @@ import { defineCapability } from "repository/application/registry/capabilities/d
 import {
     catalogueListInputSchema,
     catalogueListOutputSchema,
-} from "repository/application/registry/schemas/catalogue/listing";
+} from "repository/application/registry/schemas/catalogue/catalogue-list";
 import { assetDownloadErrors as errors } from "repository/application/registry/schemas/errors";
 export const catalogueList = defineCapability({
     id: "catalogue-list",
@@ -28,5 +28,16 @@ export const catalogueList = defineCapability({
     input: catalogueListInputSchema,
     output: catalogueListOutputSchema,
     errors,
-    execute: ({ services, input, context }) => services.repository.reads.catalogue(input, context.signal),
+    execute: async ({ services, input, context }) => {
+        const result = await services.repository.reads.catalogue(input, context.signal);
+        return {
+            ...result,
+            releases: result.releases.map((entry) => {
+                if (entry.kind !== input.kind) {
+                    throw new Error("Catalogue response kind does not match its requested scope");
+                }
+                return { ...entry, kind: input.kind };
+            }),
+        };
+    },
 });

@@ -1,3 +1,4 @@
+import { admitWorkflowManifest, verifyWorkflowRequirements } from "@bernouy/workflows/manifest";
 import { collectionSourceAssets } from "@bernouy/repository/repository/publication";
 import {
     LocalArtifactFiles,
@@ -96,6 +97,10 @@ export async function releaseBatch(
                 kind: "provider-manifest",
                 admission: await admitProviderManifestJson(resource.admission.canonicalJson, catalogue),
             });
+        } else if (resource.kind === "workflow") {
+            const admission = admitWorkflowManifest(resource.admission.canonicalJson);
+            await verifyWorkflowRequirements(admission.manifest, catalogue);
+            remaining.push({ kind: "workflow", admission });
         } else if (resource.kind === "collection") {
             const built = await compileCollectionSources(
                 join(tmpdir(), "ulvia-collection-builds"),

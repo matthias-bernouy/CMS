@@ -4,6 +4,9 @@ type Stoppable = Readonly<{ stop(): Promise<void> }>;
 type InstanceResources = Readonly<{
     documentationTimer?: ReturnType<typeof setInterval>;
     recovery?: Stoppable;
+    automationRecovery?: Stoppable;
+    events?: Stoppable;
+    workflows?: Stoppable;
     formsRecovery?: Stoppable;
     forms?: Stoppable;
     operations?: Stoppable;
@@ -18,6 +21,9 @@ export async function closeInstanceComposition(resources: InstanceResources): Pr
     clearInterval(resources.documentationTimer);
     const errors: unknown[] = [];
     for (const dispose of [
+        () => resources.automationRecovery?.stop(),
+        () => resources.workflows?.stop(),
+        () => resources.events?.stop(),
         () => resources.formsRecovery?.stop(),
         () => resources.forms?.stop(),
         () => resources.recovery?.stop(),

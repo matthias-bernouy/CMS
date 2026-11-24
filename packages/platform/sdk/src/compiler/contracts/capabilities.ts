@@ -12,11 +12,16 @@ export function compileCapability(capability: CapabilitySource): CapabilityDefin
             `$.capabilities[${JSON.stringify(id)}]`,
         );
     }
+    const selector = capability.schemaResolver ? compileSchema(capability.schemaResolver.selector) : undefined;
+    if (selector && (selector.type !== "object" || selector.nullable)) {
+        throw new SdkDefinitionError("Resolver selectors must be nonnullable objects");
+    }
     return structuredClone({
         id,
         access,
         behavior,
         bindings,
+        ...(selector?.type === "object" ? { schemaResolver: { selector } } : {}),
         ...(deprecation === undefined ? {} : { deprecation }),
         ...(responseEffects === undefined ? {} : { responseEffects }),
         ...(capability.description === undefined ? {} : { description: capability.description }),

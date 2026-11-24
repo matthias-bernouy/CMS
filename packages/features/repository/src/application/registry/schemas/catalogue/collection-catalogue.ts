@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { contractString } from "@bernouy/ulvia-sdk";
-import { catalogueListOutputSchema } from "repository/application/registry/schemas/catalogue/listing";
+import { catalogueListOutputSchema } from "repository/application/registry/schemas/catalogue/catalogue-list";
 import { assetDownloadErrors } from "repository/application/registry/schemas/errors";
 export const collectionCatalogueInputSchema = z.strictObject({
     "limit": z.int().min(1).max(256),

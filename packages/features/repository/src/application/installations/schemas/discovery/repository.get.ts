@@ -6,7 +6,7 @@ export const repositoryGetInputSchema = z.strictObject({
         kind: contractString({
             minLength: 1,
             maxLength: 32,
-            enum: ["collection", "contract", "provider-manifest"],
+            enum: ["collection", "contract", "provider-manifest", "workflow"],
         }),
         publisherId: contractString({ minLength: 1, maxLength: 96 }),
         id: contractString({ minLength: 1, maxLength: 193 }),
@@ -24,7 +24,7 @@ export const repositoryGetOutputSchema = z.strictObject({
         kind: contractString({
             minLength: 1,
             maxLength: 32,
-            enum: ["collection", "contract", "provider-manifest"],
+            enum: ["collection", "contract", "provider-manifest", "workflow"],
         }),
         publisherId: contractString({ minLength: 1, maxLength: 96 }),
         id: contractString({ minLength: 1, maxLength: 193 }),

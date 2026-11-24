@@ -57,7 +57,7 @@ export function formatCoordinate(value: RemoteCoordinate): string {
 export function remoteUsage(action: RemoteAction): string {
     return action === "push"
         ? "Usage: ulvia push <publisher/id@version | all> [--repository <url>] (add a kind before the coordinate only to resolve ambiguity)"
-        : `Usage: ulvia ${action} <collection|contract|provider> <publisher/id@version> [--repository <url>]${action === "yank" ? " --reason <text>" : ""}`;
+        : `Usage: ulvia ${action} <collection|contract|provider|workflow> <publisher/id@version> [--repository <url>]${action === "yank" ? " --reason <text>" : ""}`;
 }
 
 function parseCoordinate(value: string): Omit<RemoteCoordinate, "kind"> {
@@ -82,10 +82,10 @@ function normalizeKind(value: string): RepositoryArtifactKind {
     if (value === "provider") {
         return "provider-manifest";
     }
-    if (value === "collection" || value === "contract") {
+    if (value === "collection" || value === "contract" || value === "workflow") {
         return value;
     }
-    throw new Error("Repository kind must be collection, contract, or provider");
+    throw new Error("Repository kind must be collection, contract, provider, or workflow");
 }
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;

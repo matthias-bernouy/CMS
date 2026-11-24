@@ -1,3 +1,4 @@
+import { schemaDescriptorWire } from "@bernouy/ulvia-sdk";
 import { expect, test } from "bun:test";
 import { installationsFeature } from "@bernouy/repository/features/installations";
 import { executeCapability } from "@bernouy/ulvia-sdk/local";
@@ -12,6 +13,25 @@ const denied = { code: "FORBIDDEN", output: { message: "The installation request
 test("all gateway control executors refuse untrusted actors before inspecting service ports", async () => {
     const examples = {
         "gateway.audit.append": { event: "{}" },
+        "gateway.schemas.seal": {
+            actor: { kind: "anonymous" },
+            target: {
+                installationId: "installation",
+                contractId: "example/forms",
+                capabilityId: "describe",
+                version: "1.0.0",
+                digest: "sha256:" + "a".repeat(64),
+                endpoint: "https://forms.example",
+                accountId: "account",
+                instanceId: "instance",
+            },
+            descriptor: schemaDescriptorWire({
+                resourceId: "contact",
+                version: "1",
+                schema: { type: "boolean" },
+                fields: [],
+            }),
+        },
         "gateway.delegation.close": { context: { siteId: "site-a", ticket: "t", requestId: "req" } },
         "gateway.delegation.issue": {
             source: {

@@ -20,7 +20,8 @@ export async function prepareReleaseModule(directory: string): Promise<readonly 
         !resources.length ||
         resources.length > 256 ||
         resources.some(
-            (resource) => !resource || !["contract", "provider-manifest", "collection"].includes(resource.kind),
+            (resource) =>
+                !resource || !["contract", "provider-manifest", "collection", "workflow"].includes(resource.kind),
         )
     ) {
         throw new TypeError("Release module must prepare between 1 and 256 admitted resources");

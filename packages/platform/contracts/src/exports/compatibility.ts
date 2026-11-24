@@ -23,3 +23,5 @@ export {
 } from "ulvia-contracts/core/compatibility/versionRange";
 export { isCanonicalSemVer, isRepositoryIdentifier } from "ulvia-contracts/core/parsing/identifiers";
 export { firstSchemaSubsetViolation } from "ulvia-contracts/core/compatibility/schemaAcceptance";
+
+export { firstProjectedOutputViolation } from "ulvia-contracts/core/compatibility/schema/projectedOutput";

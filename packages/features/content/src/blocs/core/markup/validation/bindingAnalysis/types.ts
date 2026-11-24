@@ -1,4 +1,6 @@
+import type { UlviaResolvedSchema } from "@bernouy/ulvia-contracts/schema";
 export type BindingValueSchema =
+    | UlviaResolvedSchema
     | {
           readonly type: "string";
           readonly enum?: readonly string[];

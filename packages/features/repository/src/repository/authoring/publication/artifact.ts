@@ -98,5 +98,7 @@ export async function publishPreparedArtifact(
     };
     return kind === "contract"
         ? { ...common, kind, contractId: prepared.id }
-        : { ...common, kind, providerId: prepared.id };
+        : kind === "workflow"
+          ? { ...common, kind, workflowId: prepared.id }
+          : { ...common, kind, providerId: prepared.id };
 }

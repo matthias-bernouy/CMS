@@ -7,6 +7,12 @@ export function mcpSchema(schema: UlviaSchema): McpJsonSchema {
     const { nullable, description, ...shape } = schema as UlviaSchema & { nullable?: true };
     let result: McpJsonSchema;
     switch (shape.type) {
+        case "resolved":
+            result = {
+                "x-ulvia-resolved": shape,
+                description: "JSON validated against the schema selected by the declared resolver",
+            };
+            break;
         case "binary":
             result = {
                 type: "string",
