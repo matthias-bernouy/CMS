@@ -91,3 +91,19 @@ Terminal succeeded/failed/cancelled runs are purged after seven days, including 
 
 
 Run-value scopes are registered before encrypted chunk writes and marked accepted after durable run/inbox insertion. Unaccepted scopes older than seven days are checked in bounded pages. Cleanup first reserves an otherwise absent run identity with a durable tombstone; a concurrent real run insert wins or is refused atomically. Existing accepted/waiting/suspended runs are preserved even if their scope-acceptance update was interrupted. Orphan cleanup resumes from its pending marker and also removes chunks whose root write never completed. The same cold-instance metadata discovery opens instances with due orphan scopes or interrupted cleanup.
+
+## Shared authoring and optional official workflows
+
+`@bernouy/ulvia-workflows` owns the Platform language, graph validation and manifest
+admission. The SDK exports pure `defineWorkflow` authoring and build-only
+`compileWorkflow`; the feature engine reuses those same validators. No SDK import
+depends on a feature runtime. Contract requirements still require catalogue
+witnesses, and instance publication still resolves current dynamic schemas.
+
+`@bernouy/official-workflows` supplies the optional
+`ulvia/form-submission-email@1.0.0` artifact through the CLI-generated catalogue.
+Its presence does not install or activate a trigger. Forms 2.x emits Events and
+retains answers without any Emailer worker or notification settings. The official
+workflow renders an explicitly selected Email Template publication before invoking
+Emailer. It passes submission metadata; approved answer mappings require an
+explicit custom variant. See [catalogue usage](../../packages/features/workflow-library/README.md).

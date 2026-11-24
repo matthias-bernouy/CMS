@@ -20,6 +20,7 @@
         "@bernouy/image-processing": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "@bernouy/observability": "workspace:*",
+        "@bernouy/official-workflows": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/repository": "workspace:*",
         "@bernouy/resource-identity": "workspace:*",
@@ -252,6 +253,13 @@
         "typescript": "^7.0.2",
       },
     },
+    "packages/features/workflow-library": {
+      "name": "@bernouy/official-workflows",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/ulvia-sdk": "workspace:*",
+      },
+    },
     "packages/features/workflows": {
       "name": "@bernouy/workflows",
       "version": "1.0.0",
@@ -261,6 +269,7 @@
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-sdk": "workspace:*",
+        "@bernouy/ulvia-workflows": "workspace:*",
       },
       "peerDependencies": {
         "mongodb": "^7.8.0",
@@ -427,6 +436,15 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
+        "@bernouy/ulvia-workflows": "workspace:*",
+        "zod": "4.6.7",
+      },
+    },
+    "packages/platform/workflow-language": {
+      "name": "@bernouy/ulvia-workflows",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/ulvia-contracts": "workspace:*",
         "zod": "4.6.7",
       },
     },
@@ -455,6 +473,7 @@
         "@bernouy/content": "workspace:*",
         "@bernouy/hosting": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/official-workflows": "workspace:*",
         "@bernouy/repository": "workspace:*",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
@@ -600,6 +619,8 @@
 
     "@bernouy/observability": ["@bernouy/observability@workspace:packages/features/observability"],
 
+    "@bernouy/official-workflows": ["@bernouy/official-workflows@workspace:packages/features/workflow-library"],
+
     "@bernouy/rate-limiter": ["@bernouy/rate-limiter@workspace:packages/foundation/rate-limiter"],
 
     "@bernouy/repository": ["@bernouy/repository@workspace:packages/features/repository"],
@@ -625,6 +646,8 @@
     "@bernouy/ulvia-providers": ["@bernouy/ulvia-providers@workspace:packages/platform/providers"],
 
     "@bernouy/ulvia-sdk": ["@bernouy/ulvia-sdk@workspace:packages/platform/sdk"],
+
+    "@bernouy/ulvia-workflows": ["@bernouy/ulvia-workflows@workspace:packages/platform/workflow-language"],
 
     "@bernouy/workflows": ["@bernouy/workflows@workspace:packages/features/workflows"],
 

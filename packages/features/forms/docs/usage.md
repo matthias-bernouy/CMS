@@ -1,9 +1,9 @@
 # Configure and use Forms
 
-Forms is optional. Select `ulvia/cms.forms` from an admitted Provider offering the
-contract, together with its required `ulvia/cms.emailer:emailer.send` capability.
-The official implementation requires compatible Emailer 1.x, including admitted
-specializations such as SMTP. Forms owns answers; Emailer owns delivery.
+Forms is optional. Select `ulvia/cms.forms` 2.x from an admitted Provider. Its
+submission Event publication requires `ulvia/cms.events:events.publish`; Emailer
+is not a Forms requirement. Forms owns definitions, retained answers and durable
+submission Event intents. Workflows own downstream actions such as notifications.
 
 Create a closed draft with `forms.create`, supplying a random UUID `formId` and
 complete `draft`. Keep that identifier when retrying the same creation. Fields
@@ -14,26 +14,34 @@ Each answer is a closed object with `fieldId`, `kind` and exactly its typed valu
 zero and false are values. Required consent must be true.
 
 Draft configuration includes locale, labels/help, validation constraints, public or
-authenticated access, opening/closing instants, retention days, visitor messages,
-and notification settings. Notification recipients and templates remain private.
-Set `notification.enabled` false to retain answers without scheduling email.
+authenticated access, opening/closing instants, retention days and visitor messages.
+There are no notification recipients, templates or email settings in a Form.
 
 Read the current revision before `forms.update-draft`, `forms.publish`,
 `forms.set-availability` or `forms.archive`. Publish returns an immutable version
 identified by its source revision. Publishing alone leaves availability unchanged.
-Later draft changes do not reinterpret retained answers or notifications.
+Later draft changes do not reinterpret retained answers.
 
 Read `forms.get-public-definition` to obtain fields, current `formVersion` and
 `accepting`. Submit through `forms.submit` or `forms.submit-authenticated` matching
-`accessMode`, with a random UUID `attemptId`. Reuse that identifier only for the
-same attempt and exact input. A success acknowledges durable storage independently
-of email. Refresh on a version/availability refusal before asking the visitor to retry.
+`accessMode`, with a random UUID `attemptId`. Reuse it only for the same attempt
+and exact input. Success acknowledges durable answers and their Event intent,
+independently of downstream effects. Refresh after a version/availability refusal.
 
 Administrator HTTP/MCP capabilities read/list submissions, set new/read/processed/
-spam status, retry notifications or erase local payload. Follow `next` until absent,
-including after an empty visible page. Lists contain summaries without answers.
-An unknown send is not automatically repeated; retry explicitly accepts duplicate
-risk. Deletion cannot recall email already engaged with a transport.
+spam status or erase local payload. Follow `next` until absent, including after an
+empty visible page. Lists contain summaries without answers. Background retention
+erases expired answers while minimal receipts preserve seven-day replay protection.
+Deleting local answers does not recall published Events or downstream effects.
 
-Technical request/storage/page/rate bounds protect resources. They do not impose
-independent totals on forms, publications, submissions, fields, choices or recipients.
+`submission.created` carries the form/version, submission ID, receipt time and
+schema-resolved answers. Workflows select `formId`; publication resolves the exact
+answer schema. Sensitive fields are filtered before delivery. Verified initiator
+metadata is retained independently of the business payload.
+
+For email, install and configure the optional official
+`ulvia/form-submission-email` Workflow, then explicitly publish and activate it.
+It uses an immutable Email Template publication and the selected Emailer. Its
+standard variables are `submissionId`, `formId` and `receivedAt`. Map permitted
+answer fields explicitly in a custom variant; no automatic answer dump is sent.
+Notification diagnostics, retries and uncertain effects belong to Workflow runs.

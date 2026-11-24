@@ -6,10 +6,8 @@ export { fieldKinds, fieldSchema, fieldsSchema } from "forms/application/schemas
 export { draftSchema } from "forms/application/schemas/authoring";
 export type { FormDraft, FormRecord, FormVersion } from "forms/application/schemas/authoring";
 export type { FormAnswer, SubmissionInput } from "forms/application/schemas/public";
-export type { FormsRepository, SubmissionRecord, NotificationIntent } from "forms/interfaces/repository";
-export type { FormsServices, FormsDelivery } from "forms/interfaces/services";
-
-export { NotificationWorker } from "forms/notifications/NotificationWorker";
+export type { FormsRepository, SubmissionRecord } from "forms/interfaces/repository";
+export type { FormsServices } from "forms/interfaces/services";
 
 export { describeSubmissionFields, submissionValues, answerProperty } from "forms/core/events/schema";
 

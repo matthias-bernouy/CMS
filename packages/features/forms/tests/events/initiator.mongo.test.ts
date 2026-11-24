@@ -13,12 +13,9 @@ integration(
         try {
             const db = fixture.client.db(`origin_${crypto.randomUUID().replaceAll("-", "")}`);
             const store = await MongoFormsRepository.open(db);
-            const forms = new FormsService(store, async () => true);
+            const forms = new FormsService(store);
             const formId = crypto.randomUUID();
-            await forms.create(
-                { formId, draft: { ...draft, notification: { ...draft.notification, enabled: false } } },
-                "admin",
-            );
+            await forms.create({ formId, draft }, "admin");
             await forms.publish({ formId, expectedRevision: 1 });
             await forms.availability({ formId, expectedRevision: 2, availability: "open" });
             let captures = 0;

@@ -9,7 +9,6 @@ export class FormsError extends Error {
             | "VERSION_CONFLICT"
             | "SUBMISSION_NOT_ALLOWED"
             | "SUBMISSION_GONE"
-            | "EMAILER_UNAVAILABLE"
             | "RATE_LIMITED"
             | "CORE_UNAVAILABLE",
     ) {

@@ -59,7 +59,6 @@ export async function prepareForms(
             ...baseDraft,
             fields: [{ id: "message", kind: "text", label: "Message" }],
             accessMode: capability === "forms.submit-authenticated" ? "authenticated" : "public",
-            notification: { ...baseDraft.notification, enabled: capability === "submissions.retry-notification" },
         };
         const formId = crypto.randomUUID();
         await tenant.call("forms.create", { formId, draft });
@@ -102,17 +101,6 @@ export async function prepareForms(
                 } else {
                     ids.push(String(ack.receiptId));
                 }
-            }
-        }
-        if (capability === "submissions.retry-notification") {
-            for (let attempt = 0; attempt < 150; attempt++) {
-                receipt = await tenant.call("submissions.get", { receiptId: receipt!.receiptId });
-                const notifications = receipt.notifications;
-                assertCondition(Array.isArray(notifications));
-                if (["blocked", "failed"].includes(String(requireRecord(notifications[0]).state))) {
-                    break;
-                }
-                await Bun.sleep(100);
             }
         }
         if (variant === "invalidation") {
@@ -163,13 +151,6 @@ export async function prepareForms(
                 receiptId: receipt?.receiptId,
                 expectedRevision: receipt?.revision,
                 status: "processed",
-            },
-            "submissions.retry-notification": {
-                receiptId: receipt?.receiptId,
-                expectedRevision: receipt?.revision,
-                index: 0,
-                intentGeneration: 1,
-                acceptDuplicateRisk: false,
             },
             "submissions.delete": { receiptId: receipt?.receiptId },
         };
@@ -228,11 +209,6 @@ export async function prepareForms(
                         (await tenant.call("submissions.get", { receiptId: receipt!.receiptId })).status ===
                             "processed",
                     );
-                }
-                if (capability === "submissions.retry-notification") {
-                    const notifications = (await tenant.call("submissions.get", { receiptId: receipt!.receiptId }))
-                        .notifications;
-                    assertCondition(Array.isArray(notifications) && requireRecord(notifications[0]).generation === 2);
                 }
                 if (capability === "submissions.delete") {
                     assertCondition(result.deleted === true);

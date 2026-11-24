@@ -96,7 +96,7 @@ export const archive = defineCapability({
 });
 export const publicDefinition = defineCapability({
     id: "forms.get-public-definition",
-    description: "Read public fields and current availability without private notification settings.",
+    description: "Read public fields and current availability without private retention settings.",
     access: "public",
     behavior: { ...query, sensitive: false },
     input: publicDefinitionInputSchema,

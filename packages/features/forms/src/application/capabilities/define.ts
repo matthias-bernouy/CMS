@@ -15,7 +15,6 @@ export const errors = {
     VERSION_CONFLICT: { retryable: false, output },
     SUBMISSION_NOT_ALLOWED: { retryable: false, output },
     SUBMISSION_GONE: { retryable: false, output },
-    EMAILER_UNAVAILABLE: { retryable: false, output },
     RATE_LIMITED: { retryable: true, output },
     CORE_UNAVAILABLE: { retryable: true, output },
 };
@@ -28,7 +27,6 @@ const errorStatuses = {
     VERSION_CONFLICT: 409,
     SUBMISSION_NOT_ALLOWED: 403,
     SUBMISSION_GONE: 410,
-    EMAILER_UNAVAILABLE: 409,
     RATE_LIMITED: 429,
     CORE_UNAVAILABLE: 503,
 };

@@ -15,14 +15,6 @@ export interface FormsServices {
         connectionId?: string;
     }): string;
 }
-export interface FormsDelivery {
-    available(): Promise<boolean>;
-    send(
-        input: { toEmail: string; subject: string; text: string },
-        key: string,
-    ): Promise<"accepted" | "blocked" | "failed" | "unknown">;
-}
-
 /** The intent is inserted in the same document as the accepted answers. */
 export interface FormsSubmissionEvents {
     prepare(causation: readonly string[], initiatorProof?: string): Promise<FormEventIntent | null>;

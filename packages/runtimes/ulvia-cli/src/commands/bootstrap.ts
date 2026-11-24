@@ -6,11 +6,13 @@ import {
     LocalArtifactFiles,
     LocalContractReleases,
     LocalProviderReleases,
+    LocalWorkflowReleases,
     withRepositoryWriteLock,
 } from "@bernouy/repository/repository/filesystem";
 
 type BootstrapIndex = Readonly<{
     contracts: readonly string[];
+    workflows: readonly string[];
     provider: string;
 }>;
 
@@ -34,6 +36,9 @@ export async function bootstrapOfficialRepository(
             );
             await contracts.publish(source, assets);
         }
+        for (const path of index.workflows) {
+            await new LocalWorkflowReleases(files, contracts).publish(await readFile(join(root, path), "utf8"));
+        }
         await new LocalProviderReleases(files, contracts).release(await readFile(join(root, index.provider), "utf8"));
     });
 }
@@ -44,9 +49,10 @@ function parseBootstrapIndex(value: unknown): BootstrapIndex {
     }
     const index = value as Record<string, unknown>;
     const contracts = index.contracts;
+    const workflows = index.workflows;
     const keys = Object.keys(index).toSorted();
     if (
-        keys.join(",") !== "contracts,provider" ||
+        keys.join(",") !== "contracts,provider,workflows" ||
         !Array.isArray(contracts) ||
         contracts.length === 0 ||
         contracts.length > 128 ||
@@ -54,12 +60,19 @@ function parseBootstrapIndex(value: unknown): BootstrapIndex {
             (path) => typeof path !== "string" || !/^contracts\/(?:cms\/)?[a-z0-9.-]+\/definition\.json$/u.test(path),
         ) ||
         new Set(contracts).size !== contracts.length ||
+        !Array.isArray(workflows) ||
+        workflows.length > 128 ||
+        workflows.some(
+            (path) => typeof path !== "string" || !/^workflows\/[a-z0-9.-]+\/definition\.json$/u.test(path),
+        ) ||
+        new Set(workflows).size !== workflows.length ||
         index.provider !== "providers/primary-provider/definition.json"
     ) {
         throw new Error("Official bootstrap index is invalid");
     }
     return {
         contracts,
+        workflows,
         provider: index.provider,
     } as BootstrapIndex;
 }

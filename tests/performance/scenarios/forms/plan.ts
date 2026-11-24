@@ -19,7 +19,6 @@ const capabilities = [
     "submissions.get",
     "submissions.list",
     "submissions.set-status",
-    "submissions.retry-notification",
     "submissions.delete",
 ];
 export function formsScenarios(inventory: CapabilityInventory, fixture: string) {

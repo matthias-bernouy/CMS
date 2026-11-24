@@ -32,20 +32,11 @@ export const submissionStatusInputSchema = z.strictObject({
     expectedRevision: revisionSchema,
     status: submissionStatusSchema,
 });
-export const submissionRetryInputSchema = z.strictObject({
-    receiptId: uuidSchema,
-    expectedRevision: revisionSchema,
-    index: z.int().min(0).max(8191),
-    intentGeneration: revisionSchema,
-    acceptDuplicateRisk: z.boolean(),
-});
 export const submissionDeleteInputSchema = z.strictObject({ receiptId: uuidSchema });
 export const submissionChangeAckSchema = z.strictObject({ receiptId: uuidSchema, revision: revisionSchema });
 export const submissionDeleteAckSchema = z.strictObject({
     receiptId: uuidSchema,
     deleted: z.boolean(),
-    deliveryMayComplete: z.boolean(),
 });
 export type SubmissionStatusInput = z.infer<typeof submissionStatusInputSchema>;
-export type SubmissionRetryInput = z.infer<typeof submissionRetryInputSchema>;
 export type SubmissionListInputDto = z.infer<typeof submissionListInputSchema>;

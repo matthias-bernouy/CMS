@@ -40,20 +40,7 @@ const submissionRecordSchema = z.strictObject({
     status: submissionStatusSchema,
     revision: revisionSchema,
     answers: z.array(answerSchema).max(8192),
-    notification: z.strictObject({ subject: z.string().max(998), text: z.string().max(131072) }).nullable(),
-    intents: z
-        .array(
-            z.strictObject({
-                email: z.string().max(320),
-                state: z.enum(["pending", "sending", "accepted", "blocked", "failed", "unknown"]),
-                generation: revisionSchema,
-                lease: uuidSchema.nullable(),
-                deadline: date.nullable(),
-            }),
-        )
-        .max(8192),
     deleted: z.boolean(),
-    deliveryMayComplete: z.boolean(),
     lastAdmin: z.strictObject({ revision: revisionSchema, digest: z.string().length(64) }).nullable(),
 });
 export function submissionRecord(value: unknown): SubmissionRecord {
@@ -63,11 +50,7 @@ export function submissionRecord(value: unknown): SubmissionRecord {
         (record.event !== null &&
             ((record.event.state === "sending") !== (record.event.token !== null) ||
                 ["pending", "sending"].includes(record.event.state) !== (record.event.dueAt !== null))) ||
-        (record.deleted && (record.answers.length || record.notification || record.intents.length || record.event)) ||
-        (!record.deleted && (record.notification === null) !== (record.intents.length === 0)) ||
-        record.intents.some(
-            (intent) => (intent.state === "sending") !== (intent.lease !== null && intent.deadline !== null),
-        )
+        (record.deleted && (record.answers.length > 0 || record.event !== null))
     ) {
         throw new FormsError("CORE_UNAVAILABLE");
     }

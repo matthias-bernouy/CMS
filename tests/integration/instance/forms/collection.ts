@@ -74,7 +74,7 @@ export async function buildCollection() {
                 requires: ["forms.submit", "forms.get-public-definition"].map((capabilityId) => ({
                     contractId: "ulvia/cms.forms",
                     capabilityId,
-                    versionRange: "^1.0.0",
+                    versionRange: "^2.0.0",
                 })),
             }),
             json(join(directory, "translations", "en", "base.json"), {

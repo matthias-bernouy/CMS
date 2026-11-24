@@ -112,7 +112,6 @@ const COMMANDS: Readonly<Record<string, Readonly<Record<string, "purge" | "neutr
         "forms.submit": "neutral",
         "forms.submit-authenticated": "neutral",
         "submissions.set-status": "neutral",
-        "submissions.retry-notification": "neutral",
         "submissions.delete": "neutral",
     },
     "ulvia/cms.emailer": {

@@ -64,7 +64,8 @@ Provider remain surfaces; documentation search remains a feature.
 | `@bernouy/email` (`features/email/base`) | Provider-neutral outbound email delivery interface. |
 | `@bernouy/cms-events` | Contract-derived event sources, authorized publication, owner-scoped subscriptions and durable asynchronous delivery; explicit Mongo adapter. |
 | `@bernouy/workflows` | Portable Workflow manifests, instance installation, typed immutable plans, administrator-owned triggers and recoverable JSON execution; explicit Mongo adapters. |
-| `@bernouy/forms` | Configurable forms, immutable publications, typed retained submissions, resource event schemas, durable submission events and injected Emailer notifications; optional Mongo adapter. |
+| `@bernouy/official-workflows` | Optional SDK-authored Workflow catalogue; no automatic activation. |
+| `@bernouy/forms` | Configurable forms, immutable publications, typed retained submissions, dynamic event schemas, durable submission events and payload retention; optional Mongo adapter. |
 | `@bernouy/email-smtp` (`features/email/smtp`) | SMTP-specific administration, secret-backed configuration and the official Nodemailer implementation. |
 | `@bernouy/auth` | Provider-owned accounts, local credentials, PATs, persistent opaque sessions, account lifecycle and authentication email composition. It exposes no HTTP routes. |
 
@@ -111,3 +112,5 @@ See [workspace architecture](README.md) for dependency direction and
 `@bernouy/email-templates` owns reusable email drafts, immutable publications and
 bounded pure rendering. Access owns account-purpose associations and installation
 sources; Emailer owns delivery. See [email templates](email-templates.md).
+
+`@bernouy/ulvia-workflows` (Platform) owns the shared declarative Workflow language and manifest admission used by SDK builds and the feature engine.

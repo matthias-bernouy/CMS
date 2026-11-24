@@ -13,9 +13,9 @@ integration(
         try {
             const db = fixture.client.db("forms_lists");
             const store = await MongoFormsRepository.open(db);
-            const forms = new FormsService(store, async () => true);
+            const forms = new FormsService(store);
             const service = new SubmissionService(store, forms);
-            const minimal = { ...draft, fields: [], notification: { ...draft.notification, enabled: false } };
+            const minimal = { ...draft, fields: [] };
             const formIds: string[] = [];
             for (let index = 0; index < 101; index++) {
                 const formId = crypto.randomUUID();

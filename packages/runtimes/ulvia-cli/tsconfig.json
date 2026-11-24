@@ -55,6 +55,9 @@
         },
         {
             "path": "../../features/workflows"
+        },
+        {
+            "path": "../../features/workflow-library"
         }
     ]
 }

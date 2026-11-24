@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/forms",
     "version": "1.0.0",
-    "description": "Configurable forms, retained submissions and Emailer notifications.",
+    "description": "Configurable forms, retained submissions and durable business Events.",
     "license": "MIT",
     "type": "module",
     "exports": {

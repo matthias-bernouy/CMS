@@ -84,7 +84,7 @@ export async function prepareDomain(
         const formId = crypto.randomUUID();
         await selected.forms.call("forms.create", {
             formId,
-            draft: { ...draft, accessMode: "authenticated", notification: { ...draft.notification, enabled: false } },
+            draft: { ...draft, accessMode: "authenticated" },
         });
         await selected.forms.call("forms.publish", { formId, expectedRevision: 1 });
         const observe = await initiatorWorkflow(async (path, input, _method, contractId) => {

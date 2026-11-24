@@ -7,7 +7,6 @@ import {
     submissionListInputSchema,
     submissionListOutputSchema,
     submissionStatusInputSchema,
-    submissionRetryInputSchema,
     submissionDeleteInputSchema,
     submissionChangeAckSchema,
     submissionDeleteAckSchema,
@@ -22,18 +21,6 @@ const output = z.strictObject({
     status: submissionStatusSchema,
     revision: revisionSchema,
     answers: z.array(answerSchema).max(8192),
-    notifications: z
-        .array(
-            z.strictObject({
-                index: z.int().min(0).max(8191),
-                generation: revisionSchema,
-                state: contractString({
-                    enum: ["pending", "sending", "accepted", "blocked", "failed", "unknown"] as const,
-                    maxLength: 8,
-                }),
-            }),
-        )
-        .max(8192),
 });
 export const submit = defineCapability({
     id: "forms.submit",
@@ -73,7 +60,7 @@ export const submitAuthenticated = defineCapability({
 });
 export const get = defineCapability({
     id: "submissions.get",
-    description: "Read retained answers and notification outcomes.",
+    description: "Read retained answers and submission status.",
     access: "admin",
     behavior: query,
     input: submissionDeleteInputSchema,
@@ -104,21 +91,10 @@ export const status = defineCapability({
     bindings: [http("PUT", "/submissions/status"), mcp],
     execute: ({ input, services }) => services.submissions.status(input),
 });
-export const retry = defineCapability({
-    id: "submissions.retry-notification",
-    description:
-        "Retry a blocked or failed notification; unknown delivery requires explicit duplicate-risk acceptance.",
-    access: "admin",
-    behavior: command,
-    input: submissionRetryInputSchema,
-    output: submissionChangeAckSchema,
-    errors,
-    bindings: [http("POST", "/submissions/retry-notification"), mcp],
-    execute: ({ input, services }) => services.submissions.retry(input),
-});
 export const remove = defineCapability({
     id: "submissions.delete",
-    description: "Erase local payload. A previously committed send may still complete.",
+    description:
+        "Erase the local submission payload and pending Event intent. Already published Events and Workflow effects have their own lifecycle.",
     access: "admin",
     behavior: command,
     input: submissionDeleteInputSchema,

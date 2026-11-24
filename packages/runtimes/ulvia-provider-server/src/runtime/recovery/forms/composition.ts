@@ -2,16 +2,14 @@ import { formsEventServices } from "./events";
 import { SubmissionEventWorker } from "@bernouy/forms";
 import type { EventServices } from "@bernouy/cms-events";
 import { withSiteWriteFence } from "@bernouy/repository/upgrades";
-import { providerCredentialFingerprint } from "@bernouy/cms-gateway/access/providers";
-import { FormsService, SubmissionService, NotificationWorker, FormsError } from "@bernouy/forms";
-import type { FormsServices, FormsDelivery } from "@bernouy/forms";
+import { FormsService, SubmissionService, FormsError } from "@bernouy/forms";
+import type { FormsServices } from "@bernouy/forms";
 import { formsRepository } from "./repository";
-import { ProviderClientError } from "@bernouy/cms-gateway/provider";
 import type { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
 import type { createProviderGateway } from "../../gateway/createProviderGateway";
 import type { ProviderStores } from "../../stores/providerStores";
 
-/** Only Forms selects the current Emailer; transport/configuration stay in their existing owners. */
+/** Forms retains answers and emits business Events; workflows own downstream effects. */
 export async function composeForms(options: {
     events?: EventServices;
     instanceId: string;
@@ -20,76 +18,18 @@ export async function composeForms(options: {
     gateway: Awaited<ReturnType<typeof createProviderGateway>>;
     connections: ProviderConnections;
 }) {
-    const { stores, gateway, connections, instanceId } = options;
+    const { stores, instanceId } = options;
     const storage = formsRepository(stores.db);
     const store = storage.repository;
-    const selected = async () => {
-        const route = await gateway.routes.resolve("default", "ulvia/cms.forms");
-        if (
-            !route ||
-            route.installation.installation.accountId !== instanceId ||
-            route.installation.installation.providerId !== options.providerId ||
-            !(await gateway.routes.isCurrent(route))
-        ) {
-            return undefined;
-        }
-        const connection = await connections.get(route.selection.installationId);
-        const mail = await gateway.routes.resolve("default", "ulvia/cms.emailer");
-        if (!connection || !mail || !(await gateway.routes.isCurrent(mail))) {
-            return undefined;
-        }
-        try {
-            await gateway.invoker.assertAuthorized({
-                siteId: "default",
-                contractId: "ulvia/cms.emailer",
-                capabilityId: "emailer.send",
-                // The generic probe validates keyed-command metadata without dispatching it.
-                idempotencyKey: "forms-availability-probe",
-                actor: {
-                    kind: "provider",
-                    installationId: route.selection.installationId,
-                    credentialFingerprint: providerCredentialFingerprint(connection.token),
-                },
-            });
-            return { connection, release: mail.requestedRelease.admission.release };
-        } catch {
-            return undefined;
-        }
-    };
-    const delivery: FormsDelivery = {
-        available: async () => Boolean(await selected()),
-        async send(input, key) {
-            const target = await selected();
-            if (!target) {
-                return "blocked";
-            }
-            try {
-                const result = await connections
-                    .client(target.connection.connectionId, true)
-                    .invoke(target.release, "emailer.send", input, { authority: "provider", idempotencyKey: key });
-                return result.output &&
-                    typeof result.output === "object" &&
-                    "sent" in result.output &&
-                    result.output.sent === true
-                    ? "accepted"
-                    : "unknown";
-            } catch (error) {
-                return error instanceof ProviderClientError && error.code === "EMAIL_DISABLED"
-                    ? "blocked"
-                    : error instanceof ProviderClientError && error.code === "INVALID_INPUT"
-                      ? "failed"
-                      : "unknown";
-            }
-        },
-    };
     const eventSupport = options.events ? formsEventServices(options, options.events, store) : undefined;
-    const forms = withSiteWriteFence(
-        new FormsService(store, delivery.available, Date.now),
-        stores.upgradeStorage,
-        "default",
-        ["create", "update", "publish", "availability", "archive"],
-    );
-    const eventWorker = eventSupport ? new SubmissionEventWorker(store, eventSupport.publication) : undefined;
+    const forms = withSiteWriteFence(new FormsService(store, Date.now), stores.upgradeStorage, "default", [
+        "create",
+        "update",
+        "publish",
+        "availability",
+        "archive",
+    ]);
+    const eventWorker = new SubmissionEventWorker(store, eventSupport?.publication);
     const services: FormsServices = {
         forms,
         captureInitiator: eventSupport?.captureInitiator,
@@ -126,18 +66,16 @@ export async function composeForms(options: {
             throw new FormsError("SUBMISSION_NOT_ALLOWED");
         },
     };
-    const worker = new NotificationWorker(instanceId, store, delivery);
     return {
         services,
         async tick() {
             if (!(await storage.hasWork())) {
                 return 0;
             }
-            return ((await eventWorker?.tick()) ?? 0) + (await worker.tick());
+            return (await eventWorker?.tick()) ?? 0;
         },
         async stop() {
             await eventWorker?.stop();
-            await worker.stop();
         },
     };
 }

@@ -22,6 +22,12 @@ test("official releases require only the SDK inventory without scanning an autho
         expect(read.mock.calls.some(([path]) => String(path).includes("official-repository"))).toBe(false);
         expect(read.mock.calls.some(([path]) => String(path).endsWith("official-repository/contracts"))).toBe(false);
         expect(resources.filter((resource) => resource.kind === "provider-manifest")).toHaveLength(1);
+        const workflows = resources.filter((resource) => resource.kind === "workflow");
+        expect(workflows).toHaveLength(1);
+        expect(workflows[0]!.admission.manifest.workflowId).toBe("ulvia/form-submission-email");
+        const forms = features.implementations.find(({ contractId }) => contractId === "ulvia/cms.forms")!;
+        expect(forms.version).toBe("2.0.0");
+        expect(forms.requires.some(({ contractId }) => contractId === "ulvia/cms.emailer")).toBe(false);
     } finally {
         read.mockRestore();
     }

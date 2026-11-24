@@ -22,7 +22,7 @@ const fields: readonly FormField[] = [
 ];
 test("Forms declares a contract-owned standard schema resolver", async () => {
     const admission = await compileContract(formsFeature);
-    expect(admission.release.version).toBe("1.1.0");
+    expect(admission.release.version).toBe("2.0.0");
     const event = admission.release.events![0]!;
     expect(event.filterKeys).toEqual(["formId"]);
     expect(event.schema.type === "object" && event.schema.properties.answers).toMatchObject({

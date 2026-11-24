@@ -1,6 +1,6 @@
 # Development And Validation
 
-See [optional Forms](forms.md) for explicit selection, persistence, notification recovery and validation.
+See [optional Forms](forms.md) for explicit selection, persistence, Event recovery and validation.
 
 See [visual captures](visual-captures.md) for MCP images and isolated browser prerequisites.
 

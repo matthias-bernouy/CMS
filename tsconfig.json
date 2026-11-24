@@ -108,6 +108,12 @@
         },
         {
             "path": "packages/features/workflows"
+        },
+        {
+            "path": "packages/platform/workflow-language"
+        },
+        {
+            "path": "packages/features/workflow-library"
         }
     ]
 }

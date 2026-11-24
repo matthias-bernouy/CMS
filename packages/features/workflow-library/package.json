@@ -1,0 +1,13 @@
+{
+    "name": "@bernouy/official-workflows",
+    "version": "1.0.0",
+    "type": "module",
+    "license": "MIT",
+    "description": "Optional official declarative Workflow catalogue. No automatic installation or activation.",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "dependencies": {
+        "@bernouy/ulvia-sdk": "workspace:*"
+    }
+}

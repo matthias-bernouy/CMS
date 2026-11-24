@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "providerId": "ulvia/primary-provider",
     "name": "Ulvia Provider",
-    "version": "1.12.0",
+    "version": "1.13.0",
     "provenance": {
         "publisherId": "ulvia",
         "publishedAt": "2026-11-23T00:00:00Z"

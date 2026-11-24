@@ -6,7 +6,7 @@ export class SubmissionEventWorker {
     private active?: Promise<number>;
     constructor(
         private readonly store: FormsRepository,
-        private readonly events: FormsSubmissionEvents,
+        private readonly events?: FormsSubmissionEvents,
     ) {}
     tick(): Promise<number> {
         if (this.stopped) {
@@ -27,12 +27,18 @@ export class SubmissionEventWorker {
             if (this.stopped) {
                 break;
             }
-            if (
-                !intent?.dueAt ||
-                Date.parse(intent.dueAt) > Date.now() ||
-                record.deleted ||
-                Date.parse(record.expiresAt) <= Date.now()
-            ) {
+            if (record.deleted) {
+                continue;
+            }
+            if (Date.parse(record.expiresAt) <= Date.now()) {
+                await this.store.replace(
+                    { ...record, revision: record.revision + 1, deleted: true, event: null, answers: [] },
+                    record.revision,
+                );
+                count++;
+                continue;
+            }
+            if (!this.events || !intent?.dueAt || Date.parse(intent.dueAt) > Date.now()) {
                 continue;
             }
             const token = crypto.randomUUID();

@@ -32,12 +32,5 @@ export const draft = draftSchema.parse({
     accessMode: "public",
     retentionDays: 1,
     fields,
-    notification: {
-        enabled: true,
-        recipients: [{ email: "admin@example.test" }],
-        subjectTemplate: "New submission",
-        textTemplate: "{{submission.id}}",
-        includeAnswers: true,
-    },
     messages: { success: "Received", closed: "Closed" },
 });

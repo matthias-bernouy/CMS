@@ -12,7 +12,7 @@ const releaseDigests = {
     "ulvia/cms.emailer": "sha256:a235f01b1fec08716ea722caccc6bc56974b15e449b2f41b0559e4ea686b70ed",
     "ulvia/cms.emailer.smtp": "sha256:ae8b92cd8a685c163229e1c2326c6a687546dd2488dc88a4295eff30e6b256c1",
     "ulvia/cms.email-templates": "sha256:bc8ced246180f12a2b5942560167611c5391a74be273ee5e23f209aa931f7c8c",
-    "ulvia/cms.forms": "sha256:d6d2a9b383d934c7cc3677e98a89cfb7236920f0afdbdf7d380db37a47e19af5",
+    "ulvia/cms.forms": "sha256:a7ee3291528dce1ae1b522c8d6b553558d70cb798f6eded7ac45c30ff08745d2",
     "ulvia/cms.events": "sha256:efb8e3c17c04a2f49a8ced1afae86a4d5a8d820c45c8d6c9ecd354d0c7903c43",
     "ulvia/cms.workflows": "sha256:262ff8272e540a5ee6f641f4416a2435a77015dea6bf9ed0330f8a6edd1ba30d",
     "ulvia/cms.access": "sha256:873f01fadd4ade91abfc05fd2347c532b3d70bd5c5a6aeb987059f567bc3d9ef",
@@ -43,7 +43,7 @@ test("generated manifest claims the exact SDK implementation inventory", async (
     const compiled = await compileOfficialFeatures();
     await publishContractSet(catalogue, compiled.contracts);
     const manifest = await compileOfficialManifest(catalogue, compiled);
-    expect(manifest.manifest.version).toBe("1.12.0");
+    expect(manifest.manifest.version).toBe("1.13.0");
     expect(manifest.manifest.implementations).toHaveLength(18);
     expect(
         manifest.manifest.implementations
@@ -53,7 +53,6 @@ test("generated manifest claims the exact SDK implementation inventory", async (
                 versionRange: String(versionRange),
             })),
     ).toEqual([
-        { contractId: "ulvia/cms.emailer", capabilityId: "emailer.send", versionRange: "^1.0.0", optional: false },
         { contractId: "ulvia/cms.events", capabilityId: "events.publish", versionRange: "^1.0.0", optional: false },
     ]);
     for (const implementation of manifest.manifest.implementations) {
@@ -151,4 +150,11 @@ test("Access 1.1 preserves the exact 1.0 capability definitions and adds only em
     });
     const ids = new Set(previous.release.capabilities.map(({ id }) => id));
     expect(current.release.capabilities.filter(({ id }) => ids.has(id))).toEqual([...previous.release.capabilities]);
+});
+
+test("Forms 1.x snapshots remain archived without claiming an executable compatibility adapter", async () => {
+    const retained = await compileRetainedFeatures();
+    expect(
+        retained.some((build) => build.implementations.some(({ contractId }) => contractId === "ulvia/cms.forms")),
+    ).toBe(false);
 });

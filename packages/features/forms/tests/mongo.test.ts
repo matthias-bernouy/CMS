@@ -1,9 +1,8 @@
 import { beforeAll, afterAll, describe, expect, test } from "bun:test";
 import { contentMongo } from "../../../../tests/integration/content/mongo";
 import { MongoFormsRepository } from "../src/exports/mongo";
-import { FormsService, SubmissionService, NotificationWorker } from "../src/exports/index";
+import { FormsService, SubmissionService, SubmissionEventWorker } from "../src/exports/index";
 import { draft, answers } from "./fixtures";
-import type { FormsDelivery } from "../src/exports/index";
 
 const enabled = process.env.ULVIA_RUN_FORMS_MONGO === "1";
 describe.skipIf(!enabled)("Forms standalone Mongo lifecycle", () => {
@@ -19,16 +18,13 @@ describe.skipIf(!enabled)("Forms standalone Mongo lifecycle", () => {
         expect(await MongoFormsRepository.hasWork(db)).toBe(false);
         expect(await db.listCollections().toArray()).toEqual([]);
     });
-    const setup = async (notify = true) => {
+    const setup = async () => {
         const db = fixture.client.db(`forms_${crypto.randomUUID().replaceAll("-", "")}`);
         const store = await MongoFormsRepository.open(db);
-        const forms = new FormsService(store, async () => true);
+        const forms = new FormsService(store);
         const submissions = new SubmissionService(store, forms);
         const formId = crypto.randomUUID();
-        await forms.create(
-            { formId, draft: { ...draft, notification: { ...draft.notification, enabled: notify } } },
-            "admin",
-        );
+        await forms.create({ formId, draft }, "admin");
         const published = await forms.publish({ formId, expectedRevision: 1 });
         await forms.availability({ formId, expectedRevision: 2, availability: "open" });
         const input = {
@@ -73,15 +69,15 @@ describe.skipIf(!enabled)("Forms standalone Mongo lifecycle", () => {
         await expect(f.submissions.submit(f.input, "visitor", "public")).rejects.toThrow("FORM_CLOSED");
         expect(await f.db.collection("form_submissions").countDocuments()).toBe(0);
     });
-    test("disabled notifications keep answers, private state updates and deletion erase payload", async () => {
-        const f = await setup(false);
+    test("answers persist without Emailer; private state updates and deletion erase payload", async () => {
+        const f = await setup();
         const ack = await f.submissions.submit(f.input, "visitor", "public");
-        expect((await f.store.submission(ack.receiptId)).notification).toBeNull();
-        expect((await f.submissions.get(ack.receiptId)).notifications).toEqual([]);
+        expect(await f.store.submission(ack.receiptId)).not.toHaveProperty("notification");
+        expect(await f.submissions.get(ack.receiptId)).not.toHaveProperty("notifications");
         await f.submissions.status({ receiptId: ack.receiptId, expectedRevision: 1, status: "processed" });
         expect((await f.submissions.get(ack.receiptId)).status).toBe("processed");
         const deleted = await f.submissions.delete(ack.receiptId);
-        expect(deleted).toEqual({ receiptId: ack.receiptId, deleted: true, deliveryMayComplete: false });
+        expect(deleted).toEqual({ receiptId: ack.receiptId, deleted: true });
         expect(await f.submissions.delete(ack.receiptId)).toEqual(deleted);
         const raw = await f.db.collection("form_submissions").findOne({});
         expect(JSON.stringify(raw)).not.toContain("a@example.com");
@@ -89,36 +85,22 @@ describe.skipIf(!enabled)("Forms standalone Mongo lifecycle", () => {
         await expect(f.submissions.get(ack.receiptId)).rejects.toThrow("SUBMISSION_GONE");
         await expect(f.submissions.submit(f.input, "visitor", "public")).rejects.toThrow("SUBMISSION_GONE");
     });
-    test("delivery uncertainty is retained and manual retry requires duplicate-risk acceptance", async () => {
+    test("background retention erases expired payload while preserving replay protection", async () => {
         const f = await setup();
-        const ack = await f.submissions.submit(f.input, "visitor", "public");
-        let calls = 0;
-        const delivery: FormsDelivery = {
-            available: async () => true,
-            send: async () => {
-                calls++;
-                return "unknown";
-            },
-        };
-        const worker = new NotificationWorker("fixture", f.store, delivery);
-        await worker.tick();
-        expect(calls).toBe(1);
-        let current = await f.submissions.get(ack.receiptId);
-        expect(current.notifications[0]!.state).toBe("unknown");
-        await worker.tick();
-        expect(calls).toBe(1);
-        const retry = {
-            receiptId: ack.receiptId,
-            expectedRevision: current.revision,
-            index: 0,
-            intentGeneration: 1,
-            acceptDuplicateRisk: false,
-        };
-        await expect(f.submissions.retry(retry)).rejects.toThrow("REVISION_CONFLICT");
-        await f.submissions.retry({ ...retry, acceptDuplicateRisk: true });
-        await f.submissions.retry({ ...retry, acceptDuplicateRisk: true });
-        current = await f.submissions.get(ack.receiptId);
-        expect(current.notifications[0]!.generation).toBe(2);
+        await f.submissions.submit(f.input, "visitor", "public");
+        const retained = await f.store.submission(f.input.attemptId);
+        await f.store.replace(
+            { ...retained, revision: retained.revision + 1, expiresAt: new Date(Date.now() - 1000).toISOString() },
+            retained.revision,
+        );
+        const worker = new SubmissionEventWorker(f.store);
+        expect(await worker.tick()).toBe(1);
+        const record = await f.store.replay(f.input.attemptId);
+        expect(record!.deleted).toBe(true);
+        expect(record!.answers).toEqual([]);
+        expect(record!.event).toBeNull();
+        expect(await worker.tick()).toBe(0);
         await worker.stop();
+        await expect(f.submissions.submit(f.input, "visitor", "public")).rejects.toThrow("SUBMISSION_GONE");
     });
 });

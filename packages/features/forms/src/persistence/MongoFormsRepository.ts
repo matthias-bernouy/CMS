@@ -90,18 +90,20 @@ export class MongoFormsRepository extends MongoForms implements FormsRepository 
         const record = submissionRecord(raw);
         const row = this.document(record);
         this.size(row, 262144);
-        // Reserve future per-recipient lease strings and revision growth before storing answers.
+        // Reserve revision growth and the Event publication lease before storing answers.
         this.size(
             this.document({
                 ...record,
                 revision: Number.MAX_SAFE_INTEGER,
-                intents: record.intents.map((intent) => ({
-                    ...intent,
-                    state: "sending",
-                    generation: Number.MAX_SAFE_INTEGER,
-                    lease: crypto.randomUUID(),
-                    deadline: "9999-12-31T23:59:59.999Z",
-                })),
+                event: record.event
+                    ? {
+                          ...record.event,
+                          state: "sending",
+                          attempts: Number.MAX_SAFE_INTEGER,
+                          token: crypto.randomUUID(),
+                          dueAt: "9999-12-31T23:59:59.999Z",
+                      }
+                    : null,
             }),
             262144,
         );
@@ -222,13 +224,7 @@ export class MongoFormsRepository extends MongoForms implements FormsRepository 
         return rows.map((row) => submissionRecord(row.record));
     }
     private document(record: SubmissionRecord): Stored {
-        const times = record.intents.flatMap((intent) =>
-            intent.state === "pending"
-                ? [Date.now()]
-                : intent.state === "sending"
-                  ? [Date.parse(intent.deadline!)]
-                  : [],
-        );
+        const times: number[] = [];
         if (record.event?.dueAt) {
             times.push(Date.parse(record.event.dueAt));
         }

@@ -16,6 +16,7 @@
         "@bernouy/binary-media": "workspace:*",
         "zod": "4.6.7",
         "@bernouy/ulvia-providers": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*"
+        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/ulvia-workflows": "workspace:*"
     }
 }

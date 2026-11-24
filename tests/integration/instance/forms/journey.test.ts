@@ -12,7 +12,7 @@ import type { SmtpService } from "../../../performance/harness/services/smtp/cli
 
 const integration = process.env.ULVIA_RUN_FORMS_JOURNEY === "1" ? test : test.skip;
 integration(
-    "optional Forms selection, eleven browser fields, selected Emailer delivery and cold durable recovery",
+    "optional Forms selection, eleven browser fields, optional Workflow Emailer delivery and cold durable recovery",
     async () => {
         const images = {
             edge: process.env.ULVIA_MCP_EDGE_DOCKER_IMAGE!,
@@ -55,7 +55,7 @@ integration(
             await connection.refreshTools();
             expect(
                 connection.tools.filter((tool) => tool._meta["io.ulvia/contract"] === "ulvia/cms.forms"),
-            ).toHaveLength(12);
+            ).toHaveLength(11);
             const control = await repositoryApi(f.control.origin).session(
                 f.control.administrator.email,
                 f.control.administrator.password,
@@ -80,12 +80,10 @@ integration(
                 smtp: smtp.connection,
             };
             const member = await api.signup("member@performance.test", "Member-strong-password-123!");
-            await call("/configuration", configuration, "POST", "ulvia/cms.emailer.smtp");
             const formId = crypto.randomUUID();
             const authoring = {
                 ...draft,
                 fields: draft.fields.map((field) => (field.id === "textarea" ? { ...field, minLength: 1 } : field)),
-                notification: { ...draft.notification, recipients: [{ email: "forms@performance.test" }] },
             };
             await connection.call("ulvia/cms.forms", "forms.create", { formId, draft: authoring });
             await connection.call("ulvia/cms.forms", "forms.publish", { formId, expectedRevision: 1 });
@@ -94,26 +92,20 @@ integration(
                 expectedRevision: 2,
                 availability: "open",
             });
+            await call("/configuration", configuration, "POST", "ulvia/cms.emailer.smtp");
             const verifyWorkflow = await prepareContactWorkflow(call, formId, smtp);
             const receiptId = await submitInBrowser(f, connection, formId);
             const read = () => call("/submissions/get", { receiptId }, "QUERY");
             expect((await read()).answers).toEqual(answers);
-            for (
-                let tries = 0;
-                tries < 200 && !(await smtp.control.mailbox("forms@performance.test")).messages.length;
-                tries++
-            ) {
-                await Bun.sleep(100);
-            }
             await verifyWorkflow();
             const observeInitiator = await initiatorWorkflow(call, formId);
-            const mailbox = await smtp.control.mailbox("forms@performance.test");
+            const mailbox = await smtp.control.mailbox("workflow@performance.test");
             expect(mailbox.messages).toHaveLength(1);
             expect(mailbox.messages[0]!.raw).toContain(receiptId);
             const publicDefinition = await api.request("ulvia/cms.forms", "/forms/public-definition", "QUERY", {
                 formId,
             });
-            expect(JSON.stringify(await publicDefinition.json())).not.toContain("forms@performance.test");
+            expect(JSON.stringify(await publicDefinition.json())).not.toContain("workflow@performance.test");
             for (const credentials of [{}, member]) {
                 const refused = await api.request(
                     "ulvia/cms.forms",
@@ -136,7 +128,6 @@ integration(
                 foreign,
             );
             expect([404, 410]).toContain(foreignId.status);
-            await call("/configuration", { ...configuration, enabled: false }, "POST", "ulvia/cms.emailer.smtp");
             const input = { formId, formVersion: 1, attemptId: crypto.randomUUID(), answers };
             const accepted = await api.request("ulvia/cms.forms", "/forms/submit", "POST", input);
             expect(accepted.status, await accepted.clone().text()).toBe(200);
@@ -149,28 +140,11 @@ integration(
             let retained = await call("/submissions/get", { receiptId: input.attemptId }, "QUERY");
             const anonymousEvent = await observeInitiator(input.attemptId);
             expect(anonymousEvent.initiator.kind).toBe("anonymous");
-            expect(retained.notifications[0].state).toBe("blocked");
+            expect(retained).not.toHaveProperty("notifications");
             expect(retained.answers).toEqual(answers);
-            await call("/configuration", configuration, "POST", "ulvia/cms.emailer.smtp");
-            await call("/submissions/retry-notification", {
-                receiptId: input.attemptId,
-                expectedRevision: retained.revision,
-                index: 0,
-                intentGeneration: 1,
-                acceptDuplicateRisk: false,
-            });
-            await f.restartProvider(0);
-            for (
-                let tries = 0;
-                tries < 250 && (await smtp.control.mailbox("forms@performance.test")).messages.length < 2;
-                tries++
-            ) {
-                await Bun.sleep(100);
-            }
-            expect((await smtp.control.mailbox("forms@performance.test")).messages).toHaveLength(2);
-            retained = await call("/submissions/get", { receiptId: input.attemptId }, "QUERY");
-            expect(retained.answers).toEqual(answers);
-            expect(retained.notifications[0].state).toBe("accepted");
+            await verifyWorkflow(2);
+            expect((await smtp.control.mailbox("workflow@performance.test")).messages).toHaveLength(2);
+            expect((await smtp.control.mailbox("forms@performance.test")).messages).toHaveLength(0);
             expect((await read()).answers).toEqual(answers);
             const authenticatedId = crypto.randomUUID();
             await call("/forms/create", {
@@ -178,7 +152,6 @@ integration(
                 draft: {
                     ...authoring,
                     accessMode: "authenticated",
-                    notification: { ...authoring.notification, enabled: false },
                 },
             });
             await call("/forms/publish", { formId: authenticatedId, expectedRevision: 1 });
@@ -200,6 +173,7 @@ integration(
             await f.restartProvider(0);
             const userEvent = await authenticatedOrigin(authenticatedInput.attemptId);
             expect(userEvent.initiator.kind).toBe("user");
+            expect((await smtp.control.mailbox("workflow@performance.test")).messages).toHaveLength(2);
             const resolution = await call(
                 "/initiators/resolve",
                 { reference: userEvent.initiator.reference, targetContractId: "ulvia/cms.forms" },

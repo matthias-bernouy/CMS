@@ -8,14 +8,12 @@ import type {
 } from "forms/application/schemas/authoring";
 import { validateFields } from "forms/core/validation";
 import { validRequest } from "forms/core/inputBounds";
-import { validateTemplates } from "forms/notifications/templates";
 import { FormsError } from "forms/core/errors";
 import type { FormsRepository } from "forms/interfaces/repository";
 
 export class FormsService {
     constructor(
         private readonly repository: FormsRepository,
-        private readonly emailerAvailable: () => Promise<boolean>,
         private readonly now = Date.now,
     ) {}
     async create(input: CreateInput, principal: string) {
@@ -49,10 +47,6 @@ export class FormsService {
             throw new FormsError("FORM_CLOSED");
         }
         this.validate(current.draft);
-        const notification = current.draft.notification;
-        if (notification.enabled && (!(await this.emailerAvailable()) || notification.recipients.length === 0)) {
-            throw new FormsError("EMAILER_UNAVAILABLE");
-        }
         return this.repository.publish(input.formId, input.expectedRevision);
     }
     async availability(input: AvailabilityInput) {
@@ -96,13 +90,6 @@ export class FormsService {
             throw new FormsError("INVALID_INPUT");
         }
         validateFields(parsed.fields);
-        validateTemplates(parsed);
-        if (
-            new Set(parsed.notification.recipients.map(({ email }) => email.toLowerCase())).size !==
-            parsed.notification.recipients.length
-        ) {
-            throw new FormsError("INVALID_INPUT");
-        }
         for (const date of [parsed.opensAt, parsed.closesAt]) {
             if (
                 date !== undefined &&

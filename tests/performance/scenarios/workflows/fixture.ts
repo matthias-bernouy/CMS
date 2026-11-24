@@ -7,7 +7,7 @@ export async function domainSource(context: WorkflowContext) {
     const formId = crypto.randomUUID();
     await forms.call("forms.create", {
         formId,
-        draft: { ...draft, notification: { ...draft.notification, enabled: false } },
+        draft,
     });
     await forms.call("forms.publish", { formId, expectedRevision: 1 });
     const source = await context.fresh.fixture(

@@ -7,6 +7,9 @@ import { buildOfficialBootstrapArtifacts, writeOfficialBootstrapArtifacts } from
 import {
     FilesystemCollectionRepository,
     FilesystemProviderRepository,
+    LocalArtifactFiles,
+    LocalContractReleases,
+    LocalWorkflowReleases,
 } from "@bernouy/repository/repository/filesystem";
 
 let compiled: ReturnType<typeof buildOfficialBootstrapArtifacts> | undefined;
@@ -44,6 +47,12 @@ test("SDK bootstrap retains the exact system APIs without a collection index", a
         const providers = new FilesystemProviderRepository("core", repository);
         expect(await providers.list("contract")).toHaveLength(20);
         expect(await providers.list("provider-manifest")).toHaveLength(1);
+        const files = new LocalArtifactFiles(repository);
+        const workflows = new LocalWorkflowReleases(files, new LocalContractReleases(files));
+        const rows = await workflows.listMetadata();
+        expect(rows).toHaveLength(1);
+        expect(rows[0]!.manifest.workflowId).toBe("ulvia/form-submission-email");
+        expect(Object.keys(artifacts.workflows)).toEqual(["ulvia/form-submission-email"]);
     } finally {
         await rm(root, { recursive: true, force: true });
     }

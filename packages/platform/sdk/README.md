@@ -353,3 +353,10 @@ retained receivers still apply their original bounds. Output schemas and other
 execution fields remain exact. Hosts must supply their own bounded retention policy;
 unknown or conflicting pins refuse before handler registration. See the
 [runtime attachment guide](../../../docs/development/sdk-runtime.md).
+
+Workflow artifacts use `defineWorkflow` at the SDK root and `compileWorkflow` from
+`@bernouy/ulvia-sdk/build`. Definitions use native Ulvia schemas and declarative
+expressions. Definition snapshots perform no effects; compilation validates the
+shared language and graph and returns immutable canonical JSON/digest. Instance
+contract/schema resolution, authorization, installation and activation remain
+separate runtime operations. See the [official catalogue](../../features/workflow-library/README.md).

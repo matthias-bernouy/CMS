@@ -1,0 +1,14 @@
+{
+    "name": "@bernouy/ulvia-workflows",
+    "version": "1.0.0",
+    "description": "Shared declarative Ulvia Workflow language, validation and immutable admission.",
+    "license": "MIT",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "dependencies": {
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "zod": "4.6.7"
+    }
+}

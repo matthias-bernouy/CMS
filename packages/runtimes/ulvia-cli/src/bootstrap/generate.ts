@@ -11,6 +11,7 @@ export type OfficialBootstrapArtifacts = Readonly<{
     runtimeArtifact: ImplementationArtifact;
     contracts: Readonly<Record<string, string>>;
     contractAssets: readonly { contractId: string; id: string; bytes: Uint8Array }[];
+    workflows: Readonly<Record<string, string>>;
     provider: string;
     providerDigest: string;
 }>;
@@ -18,9 +19,13 @@ export type OfficialBootstrapArtifacts = Readonly<{
 export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstrapArtifacts> {
     const resources = await prepareOfficialResources();
     const contracts: Record<string, string> = {};
+    const workflows: Record<string, string> = {};
     const contractAssets: { contractId: string; id: string; bytes: Uint8Array }[] = [];
     const provider = resources.find((resource) => resource.kind === "provider-manifest")!.admission;
     for (const resource of resources) {
+        if (resource.kind === "workflow") {
+            workflows[resource.admission.manifest.workflowId] = resource.admission.canonicalJson;
+        }
         if (resource.kind === "contract") {
             const { admission } = resource;
             contracts[admission.release.contractId] = admission.canonicalJson;
@@ -37,6 +42,7 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
     return {
         runtimeArtifact: createImplementationArtifact(await compileOfficialFeatures()),
         contracts,
+        workflows,
         contractAssets,
         provider: provider.canonicalJson,
         providerDigest: provider.digest,
@@ -63,9 +69,18 @@ export async function writeOfficialBootstrapArtifacts(
             : `contracts/${resourceName(asset.contractId)}`;
         await writeBytes(root, `${contractRoot}/${asset.id}`, asset.bytes);
     }
+    const workflowPaths: string[] = [];
+    for (const [id, bytes] of Object.entries(artifacts.workflows)) {
+        const path = `workflows/${resourceName(id)}/definition.json`;
+        workflowPaths.push(path);
+        await writeArtifact(root, path, bytes);
+    }
     const provider = "providers/primary-provider/definition.json";
     await writeArtifact(root, provider, artifacts.provider);
-    await writeFile(join(root, "index.json"), `${JSON.stringify({ contracts: contractPaths, provider }, null, 4)}\n`);
+    await writeFile(
+        join(root, "index.json"),
+        `${JSON.stringify({ contracts: contractPaths, workflows: workflowPaths, provider }, null, 4)}\n`,
+    );
     await writeArtifact(root, "feature-runtime.json", JSON.stringify(artifacts.runtimeArtifact, null, 4));
     await bootstrapOfficialRepository(join(root, "repository"), root);
 }

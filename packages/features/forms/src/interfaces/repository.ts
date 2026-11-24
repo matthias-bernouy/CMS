@@ -8,16 +8,6 @@ import type {
 } from "forms/application/schemas/authoring";
 import type { SubmissionInput } from "forms/application/schemas/public";
 import type { SubmissionListInputDto, SubmissionStatus } from "forms/application/schemas/submissions";
-import type { FormsNotification } from "forms/notifications/interfaces/FormsDelivery";
-
-type NotificationState = "pending" | "sending" | "accepted" | "blocked" | "failed" | "unknown";
-export interface NotificationIntent {
-    email: string;
-    state: NotificationState;
-    generation: number;
-    lease: string | null;
-    deadline: string | null;
-}
 export interface FormEventIntent {
     readonly initiatorProof: string | null;
     readonly installationId: string;
@@ -41,10 +31,7 @@ export interface SubmissionRecord {
     status: SubmissionStatus;
     revision: number;
     answers: SubmissionInput["answers"];
-    notification: FormsNotification | null;
-    intents: NotificationIntent[];
     deleted: boolean;
-    deliveryMayComplete: boolean;
     lastAdmin: { revision: number; digest: string } | null;
 }
 type SubmissionPage = {

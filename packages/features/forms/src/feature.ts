@@ -7,10 +7,10 @@ import { FormsError } from "forms/core/errors";
 import { FormsValidationError } from "forms/core/validation";
 export const formsFeature = defineFeature({
     contractId: "ulvia/cms.forms",
-    version: "1.1.0",
+    version: "2.0.0",
     publisherId: "ulvia",
     name: "CMS Forms",
-    description: "Configurable forms, retained submissions and independent email notifications.",
+    description: "Configurable forms, retained submissions and durable business Events.",
     catalogue: { icon: "form", categories: ["content"] },
     documents: new URL("../docs/", import.meta.url),
     events: [submissionCreated],
@@ -30,7 +30,6 @@ export const formsFeature = defineFeature({
         submissions.get,
         submissions.list,
         submissions.status,
-        submissions.retry,
         submissions.remove,
     ],
     mapError: (error) =>

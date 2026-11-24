@@ -92,3 +92,6 @@ export {
 export type { SchemaChoices } from "ulvia-sdk/definitions/protocols/schema-resolution/schemas";
 
 export { schemaDescriptorWire } from "@bernouy/ulvia-contracts/resolution";
+
+export { defineWorkflow } from "ulvia-sdk/definitions/protocols/workflows/defineWorkflow";
+export type { WorkflowManifest, WorkflowDefinition, WorkflowStep, WorkflowExpression } from "@bernouy/ulvia-workflows";

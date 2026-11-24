@@ -3,14 +3,9 @@ import { fingerprint } from "forms/persistence/identity";
 import { FormsError } from "forms/core/errors";
 import { validateAnswers } from "forms/core/validation";
 import { validRequest } from "forms/core/inputBounds";
-import { composeNotification } from "forms/notifications/templates/render";
 import { submissionInputSchema } from "forms/application/schemas/public";
 import type { SubmissionInput } from "forms/application/schemas/public";
-import type {
-    SubmissionListInputDto,
-    SubmissionStatusInput,
-    SubmissionRetryInput,
-} from "forms/application/schemas/submissions";
+import type { SubmissionListInputDto, SubmissionStatusInput } from "forms/application/schemas/submissions";
 import type { FormsRepository, SubmissionRecord } from "forms/interfaces/repository";
 import type { FormsService } from "forms/core/FormsService";
 
@@ -70,9 +65,6 @@ export class SubmissionService {
             throw new FormsError("INVALID_INPUT");
         }
         const receivedAt = new Date(time).toISOString();
-        const notification = draft.notification.enabled
-            ? composeNotification(draft, input, input.attemptId, receivedAt)
-            : null;
         const event = this.events ? await this.events.prepare(causation, await captureInitiator?.()) : null;
         const record: SubmissionRecord = {
             event,
@@ -87,18 +79,7 @@ export class SubmissionService {
             status: "new",
             revision: 1,
             answers: input.answers,
-            notification,
-            intents: draft.notification.enabled
-                ? draft.notification.recipients.map(({ email }) => ({
-                      email,
-                      state: "pending",
-                      generation: 1,
-                      lease: null,
-                      deadline: null,
-                  }))
-                : [],
             deleted: false,
-            deliveryMayComplete: false,
             lastAdmin: null,
         };
         return this.ack(await this.repository.insert(record), principal, digest);
@@ -117,18 +98,12 @@ export class SubmissionService {
             event: _event,
             principal: _principal,
             digest: _digest,
-            notification: _notification,
-            intents,
             deleted: _deleted,
             replayExpiresAt: _replay,
             lastAdmin: _admin,
-            deliveryMayComplete: _delivery,
             ...record
         } = await this.repository.submission(receiptId);
-        return {
-            ...record,
-            notifications: intents.map(({ generation, state }, index) => ({ index, generation, state })),
-        };
+        return record;
     }
     list(input: SubmissionListInputDto) {
         return this.repository.submissions(input);
@@ -145,51 +120,20 @@ export class SubmissionService {
             lastAdmin: { revision: input.expectedRevision, digest },
         });
     }
-    async retry(input: SubmissionRetryInput) {
-        const record = await this.repository.submission(input.receiptId);
-        const digest = await fingerprint(input);
-        if (record.lastAdmin?.revision === input.expectedRevision && record.lastAdmin.digest === digest) {
-            return { receiptId: input.receiptId, revision: input.expectedRevision + 1 };
-        }
-        const intent = record.intents[input.index];
-        if (
-            !intent ||
-            intent.generation !== input.intentGeneration ||
-            !["blocked", "failed", "unknown"].includes(intent.state) ||
-            (intent.state === "unknown" && !input.acceptDuplicateRisk)
-        ) {
-            throw new FormsError("REVISION_CONFLICT");
-        }
-        return this.change(record, input.expectedRevision, {
-            ...record,
-            lastAdmin: { revision: input.expectedRevision, digest },
-            intents: record.intents.map((item, index) =>
-                index === input.index
-                    ? { ...item, state: "pending", generation: item.generation + 1, lease: null, deadline: null }
-                    : item,
-            ),
-        });
-    }
     async delete(receiptId: string) {
         const record = await this.repository.replay(receiptId);
         if (!record) {
             throw new FormsError("SUBMISSION_GONE");
         }
-        const deliveryMayComplete =
-            record.deliveryMayComplete ||
-            record.intents.some(({ state }) => ["sending", "accepted", "unknown"].includes(state));
         if (!record.deleted) {
             await this.change(record, record.revision, {
                 ...record,
                 deleted: true,
                 event: null,
                 answers: [],
-                notification: null,
-                intents: [],
-                deliveryMayComplete,
             });
         }
-        return { receiptId, deleted: true, deliveryMayComplete };
+        return { receiptId, deleted: true };
     }
     private async change(record: SubmissionRecord, revision: number, next: SubmissionRecord) {
         if (

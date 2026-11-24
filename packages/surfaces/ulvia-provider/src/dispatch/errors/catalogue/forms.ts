@@ -13,8 +13,4 @@ export const formsMessages = {
         "This submission is unavailable or its retention period expired.",
         "Cette réponse n’est pas disponible ou sa durée de conservation est dépassée.",
     ],
-    EMAILER_UNAVAILABLE: [
-        "A compatible Emailer must be selected before publishing notifications.",
-        "Un Emailer compatible doit être sélectionné avant de publier les notifications.",
-    ],
 } as const;

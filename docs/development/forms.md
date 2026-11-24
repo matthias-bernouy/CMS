@@ -1,71 +1,64 @@
-# Optional Forms
+# Optional Forms 2.x
 
 `@bernouy/forms` owns configurable drafts, immutable publications, retained
-submissions and notification intents. `ulvia/cms.forms@1.0.0` has fifteen
-capabilities. Administration has HTTP and MCP bindings; public definition and
-submission have HTTP bindings only. All eleven field kinds use closed typed
-objects. No visual form editor or prefabricated collection is shipped.
+submissions and durable `submission.created` intents. `ulvia/cms.forms@2.0.0`
+has sixteen capabilities. Administration uses HTTP/MCP; public submission and
+schema resolution use their declared HTTP bindings. No form editor is bundled.
 
-## Selection
+## Selection and breaking change
 
-The official Provider offers Forms but fresh ordinary and Control instances do
-not select it. Discover a ready exact candidate through Installations
-`list-provider-installations`, then invoke `select-contract` with its
-`installationId`, `contractId`, `version` and `digest`. Installations 1.6 adds
-this generic administrator action over the existing domain service. It preserves
-unrelated selections and validates approved implementations, readiness,
-dependencies and the host's protected selections before committing. The exact
-Installations 1.5 executor remains available for existing selections.
+Forms remains optional. Discover and select an exact approved implementation
+through Installations. Forms requires Events publication, not Emailer. The
+2.0.0 contract removes `draft.notification`, notification outcomes,
+`submissions.retry-notification`, `EMAILER_UNAVAILABLE` and the email-specific
+`deliveryMayComplete` deletion result. Forms retains no recipient/template state.
 
-The official Forms implementation requires BASE `ulvia/cms.emailer` capability
-`emailer.send`, range `^1.0.0`. The runtime invokes the currently selected
-compatible Emailer through its existing verified Provider authority. Forms does
-not select SMTP. A reviewed system upgrade can add the offered implementation
-without selecting it. An existing explicit Forms selection is retained.
+There is no automatic conversion of Forms 1.x state, reads or aliases. Existing
+1.x pins are not executable on the new runtime. This includes announced Provider
+implementations even when Forms is not selected: runtime recovery checks every
+advertised exact implementation, so such an existing instance can refuse the new
+image before administration is available. Historical 1.x release bytes
+remain archived under the surface's `compatibility/archived/forms-v1.json`,
+outside the active retained-executor inventory. No Forms 1.x data migration tool is supplied in this change. Existing data needs
+a separately reviewed migration or fresh state before an instance can use 2.x;
+merely replacing an image is not a migration. New installations use the fresh
+2.x contract and state format.
 
-## Persistence and delivery
+## Persistence and recovery
 
 The Mongo adapter uses majority reads and journaled majority writes with atomic
-single-document changes on standalone Mongo. Publication identifiers are source
-revisions. A candidate becomes visible through the form head and is sealed before
-a later publication advances it; earlier publications retain their exact draft.
-Creation uses a caller-generated `formId`; submission uses an `attemptId` UUID.
-Retained input/principal hashes distinguish exact retries from conflicting reuse.
-An accepted receipt follows durable answer and notification-intent storage.
+single-document changes on standalone Mongo. Submission receipt, validated answers
+and Event intent are inserted together. Original initiator proof and causation
+survive retries. The stable submission receipt is the Event occurrence identity.
+Exact replay does not capture a second origin or insert another intent.
 
-Notification states are `pending`, `sending`, `accepted`, `blocked`, `failed`
-and `unknown`. A persisted send lease precedes transport invocation. A timeout or
-expired lease becomes unknown, never an automatic resend. An administrator can
-retry blocked/failed outcomes, and must accept duplicate risk for unknown ones.
-Emailer acceptance does not prove inbox delivery. An already-started send may
-complete after local deletion. A stalled transport retains its concurrency permit
-until it settles, while logical worker shutdown can finish after its deadline.
+The background worker publishes Event intents with bounded batches of twenty-five
+records and clears expired answers/intents, even without an Event publication port.
+Receipts retain seven-day replay protection. While the Provider is down, payload
+erasure waits for recovery or Mongo TTL; private reads refuse expiry immediately.
+Mongo TTL is asynchronous. Deletion erases unclaimed local intents. An in-progress Event publication may
+still finish; deletion cannot undo an accepted Event or a downstream effect.
 
-Recovery scans at most fifty instance metadata records per ten-second tick and
-opens an instance only when its indexed Forms work probe is due. Unused instances
-do not receive Forms collections. The worker erases expired payload and
-intents on its next due tick; opaque retry metadata has a seven-day replay window.
-While the Provider is down, erasure waits for recovery or Mongo TTL, whose document
-deadline is the later of payload expiry and replay expiry. TTL removal itself is
-asynchronous. Private reads refuse expired payload immediately. This does not
-promise erasure from external mailboxes or backups.
+Submission BSON remains bounded at 256 KiB, reserving maximum Event lease/attempt
+and revision growth. Form/request bounds remain 64 KiB. Summary lists retain one
+projected `limit + 1` read and page sizes up to one hundred. The per-form admission
+guard remains six hundred attempts per minute. It is not per-client fairness.
+Normal submit/read paths add no Emailer probes; form publication no longer resolves
+or authorizes Emailer. All notification calls move to an explicitly active Workflow.
 
-## Technical bounds and validation
+## Optional notification workflow
 
-There are no form, publication or submission count quotas. Request JSON and form
-BSON have a 64 KiB representation bound; submission BSON has a 256 KiB bound,
-including reserved intent growth. Lists read at most `limit + 1` projected records
-with page sizes up to one hundred. Notification work reads at most twenty-five
-records per tick, with eight outstanding transports per process and two per
-instance. Per-form public admission allows six hundred attempts per minute;
-this is a technical rate guard, not per-client fairness or a distributed ingress
-limiter. No per-client protection is claimed by this change.
+The generated local catalogue includes `ulvia/form-submission-email@1.0.0` from
+`@bernouy/official-workflows`. It requires Forms 2.x, Email Templates 1.x and Emailer
+1.x. Configure the form, recipient and an exact template publication, then validate,
+publish and activate using the ordinary Workflow administration APIs. No automatic
+activation or remote publication occurs. Template variables are `submissionId`,
+`formId`, `receivedAt`; answer fields require explicit custom mappings.
 
-`bun run verify` includes `packages/features/forms/tests/mongo.test.ts` against
-standalone Mongo and `tests/integration/instance/forms/journey.test.ts` against
-local candidate images. The latter authors a test-only collection using existing
-Content bindings, selects Forms through Installations, submits all field kinds
-in Chromium, observes controlled SMTP delivery, checks private access refusals,
-and restarts the Provider with retained notification work. The static performance
-plan has real recipes for the new capabilities; timing campaigns remain the
-separate `bun run perf` command.
+Failures and uncertain sends belong to Workflow run diagnostics/reconciliation.
+Forms acceptance is independent of those effects. See the
+[catalogue guide](../../packages/features/workflow-library/README.md).
+
+`bun run verify` covers standalone Mongo persistence/retention and the native
+Forms/Event/Workflow/SMTP browser journey, including isolation, replay and Provider
+restart. Real performance measurements remain separate under `bun run perf`.

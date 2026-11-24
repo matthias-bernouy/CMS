@@ -5,13 +5,6 @@ export const uuidSchema = contractString({ format: "uuid", maxLength: 36 });
 export const revisionSchema = z.int().min(1).max(Number.MAX_SAFE_INTEGER);
 export const accessModeSchema = contractString({ enum: ["public", "authenticated"] as const, maxLength: 13 });
 const availabilitySchema = contractString({ enum: ["closed", "open", "archived"] as const, maxLength: 8 });
-const notificationSchema = z.strictObject({
-    enabled: z.boolean(),
-    recipients: z.array(z.strictObject({ email: contractString({ format: "email", maxLength: 320 }) })).max(8192),
-    subjectTemplate: contractString({ maxLength: 65536 }),
-    textTemplate: contractString({ maxLength: 65536 }),
-    includeAnswers: z.boolean(),
-});
 export const draftSchema = z.strictObject({
     title: contractString({ minLength: 1, maxLength: 65536 }),
     locale: contractString({ minLength: 1, maxLength: 65536 }),
@@ -21,7 +14,6 @@ export const draftSchema = z.strictObject({
     retentionDays: z.int().min(1).max(Number.MAX_SAFE_INTEGER),
     opensAt: contractString({ maxLength: 24 }).optional(),
     closesAt: contractString({ maxLength: 24 }).optional(),
-    notification: notificationSchema,
     messages: z.strictObject({
         success: contractString({ maxLength: 65536 }),
         closed: contractString({ maxLength: 65536 }),

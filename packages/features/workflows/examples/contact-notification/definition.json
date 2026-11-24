@@ -9,7 +9,7 @@
     "requirements": [
         {
             "contractId": "ulvia/cms.forms",
-            "versionRange": "^1.1.0",
+            "versionRange": "^2.0.0",
             "capabilityIds": [],
             "eventIds": [
                 "submission.created"

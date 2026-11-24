@@ -63,6 +63,7 @@
         "linkedom": "^0.18.15",
         "@bernouy/email-templates": "workspace:*",
         "@bernouy/workflows": "workspace:*",
-        "@bernouy/forms": "workspace:*"
+        "@bernouy/forms": "workspace:*",
+        "@bernouy/official-workflows": "workspace:*"
     }
 }
