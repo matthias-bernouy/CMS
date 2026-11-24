@@ -2,7 +2,11 @@ import { z } from "zod";
 import { contractString } from "@bernouy/ulvia-sdk";
 import { catalogueMetadataSchema } from "repository/application/registry/schemas/catalogue/metadata";
 export const catalogueListInputSchema = z.strictObject({
-    kind: contractString({ minLength: 1, maxLength: 32, enum: ["collection", "contract", "provider-manifest"] }),
+    kind: contractString({
+        minLength: 1,
+        maxLength: 32,
+        enum: ["collection", "contract", "provider-manifest", "workflow"],
+    }),
     limit: z.int().min(1).max(256),
     cursor: contractString({ minLength: 1, maxLength: 1024 }).optional(),
     publisherId: contractString({ minLength: 1, maxLength: 96 }).optional(),
@@ -20,7 +24,7 @@ export const catalogueListOutputSchema = z
                         kind: contractString({
                             minLength: 1,
                             maxLength: 32,
-                            enum: ["collection", "contract", "provider-manifest"],
+                            enum: ["collection", "contract", "provider-manifest", "workflow"],
                         }),
                         publisherId: contractString({ minLength: 1, maxLength: 96 }),
                         id: contractString({ minLength: 1, maxLength: 193 }),

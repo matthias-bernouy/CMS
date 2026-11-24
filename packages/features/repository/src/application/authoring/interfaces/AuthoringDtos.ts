@@ -5,6 +5,7 @@ import type {
     namespaceInventorySchema,
 } from "repository/application/authoring/schemas/namespaces";
 import type {
+    publishWorkflowOutputSchema,
     publishContractOutputSchema,
     publishProviderManifestOutputSchema,
     publishCollectionOutputSchema,
@@ -16,4 +17,5 @@ export type NamespaceAccess = NamespaceInventoryPage["items"][number];
 export type ContractPublication = z.output<typeof publishContractOutputSchema>;
 export type ProviderManifestPublication = z.output<typeof publishProviderManifestOutputSchema>;
 export type CollectionPublication = z.output<typeof publishCollectionOutputSchema>;
-export type ArtifactPublication = ContractPublication | ProviderManifestPublication;
+export type WorkflowPublication = z.output<typeof publishWorkflowOutputSchema>;
+export type ArtifactPublication = ContractPublication | ProviderManifestPublication | WorkflowPublication;

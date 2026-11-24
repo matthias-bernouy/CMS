@@ -10,7 +10,7 @@ export async function verifyDiscoveryPages(
     expected: readonly PublishedResource[],
     exact: PublishedResource,
 ) {
-    const search = capability === "catalogue-search";
+    const search = ["catalogue-search", "artifacts.search"].includes(capability);
     for (let restart = 0; restart < 2; restart++) {
         let cursor: string | undefined;
         let firstCursor: string | undefined;

@@ -50,3 +50,14 @@ test("signed Provider provenance and connection cannot coexist with user or syst
         "claims",
     );
 });
+
+test("bounded signed event ancestry survives a Provider hop without expanding the token contract", () => {
+    const eventCausation = Array.from({ length: 32 }, (_, index) => index.toString(16).padStart(64, "0"));
+    const token = signProviderInvocationToken(SECRET, { ...claims, eventCausation });
+    expect(token.length).toBeLessThanOrEqual(4096);
+    expect(verifyProviderInvocationToken(token, SECRET, NOW).eventCausation).toEqual(eventCausation);
+    expect(() =>
+        signProviderInvocationToken(SECRET, { ...claims, eventCausation: [...eventCausation, "a".repeat(64)] }),
+    ).toThrow();
+    expect(() => signProviderInvocationToken(SECRET, { ...claims, eventCausation: ["not-a-hash"] })).toThrow();
+});

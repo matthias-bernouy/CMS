@@ -67,6 +67,7 @@ export function parseSourceSnapshot(
         sourcePath(asset.path, kind);
         if (
             kind === "provider-manifest" ||
+            kind === "workflow" ||
             !asset.path.startsWith(kind === "contract" ? "fixtures/" : "assets/") ||
             Object.keys(asset).some(
                 (key) =>

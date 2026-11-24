@@ -1,3 +1,6 @@
+import { artifactsList } from "./capabilities/catalogue/artifacts-list";
+import { artifactsSearch } from "./capabilities/catalogue/artifacts-search";
+import { artifactCommit } from "./capabilities/publications/uploads/artifacts-commit";
 import { sourceRead } from "./capabilities/sources/source-read";
 import { bootstrapRecipes } from "./capabilities/catalogue/bootstrap-recipes";
 import { publicationBuild } from "./capabilities/builds/publication-build";
@@ -9,10 +12,10 @@ import { namespaceClaim } from "repository/application/registry/capabilities/nam
 import { namespaceSuspend } from "repository/application/registry/capabilities/namespaces/namespace-suspend";
 import { namespaceTransfer } from "repository/application/registry/capabilities/namespaces/namespace-transfer";
 import { artifactSourcePut } from "repository/application/registry/capabilities/sources/artifact-source-put";
-import { publicationAbort } from "repository/application/registry/capabilities/publications/publication-abort";
-import { publicationAsset } from "repository/application/registry/capabilities/publications/publication-asset";
-import { publicationBegin } from "repository/application/registry/capabilities/publications/publication-begin";
-import { publicationCommit } from "repository/application/registry/capabilities/publications/publication-commit";
+import { publicationAbort } from "repository/application/registry/capabilities/publications/uploads/publication-abort";
+import { publicationAsset } from "repository/application/registry/capabilities/publications/uploads/publication-asset";
+import { publicationBegin } from "repository/application/registry/capabilities/publications/uploads/publication-begin";
+import { publicationCommit } from "repository/application/registry/capabilities/publications/uploads/publication-commit";
 import { publicationYank } from "repository/application/registry/capabilities/publications/publication-yank";
 import { sourcePut } from "repository/application/registry/capabilities/sources/source-put";
 import { artifactSourceGet } from "repository/application/registry/capabilities/sources/artifact-source-get";
@@ -31,11 +34,14 @@ export const repositoryFeature = defineFeature({
     contractId: "ulvia/repository",
     name: "Ulvia Repository",
     description: "Public discovery and account-owned namespaces for immutable contracts, providers and collections.",
-    version: "1.3.0",
+    version: "1.4.0",
     publisherId: "ulvia",
     documents: new URL("../../../docs/repository/", import.meta.url),
     mapError: mapRepositoryError,
     capabilities: [
+        artifactsList,
+        artifactsSearch,
+        artifactCommit,
         bootstrapRecipes,
         sourceRead,
         collectionCatalogue,

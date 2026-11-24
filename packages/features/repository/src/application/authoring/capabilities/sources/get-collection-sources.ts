@@ -34,7 +34,7 @@ export const getCollectionSources = defineCapability({
             },
         },
     ],
-    docs: ["overview.md", "collection-authoring.md", "collection-source.md"],
+    docs: ["overview.md", "collection-authoring.md", "sources/collection-source.md"],
     input: getCollectionSourcesInputSchema,
     output: sourceSnapshotSchema,
     errors,

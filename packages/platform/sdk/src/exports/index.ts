@@ -4,6 +4,8 @@ export {
     resourceResponse,
     ProviderResourceResponse,
 } from "@bernouy/cms-gateway/provider/responses";
+export { defineEvent } from "ulvia-sdk/definitions/protocols/events/defineEvent";
+export type { EventDefinition, EventPayload } from "ulvia-sdk/interfaces/events";
 export { z } from "zod";
 export { defineCapability } from "ulvia-sdk/definitions/defineCapability";
 export { createCapabilityDefiner as capabilitiesFor } from "ulvia-sdk/definitions/capabilityDefiner";
@@ -22,7 +24,7 @@ export type {
     CapabilityServiceRequirement,
 } from "ulvia-sdk/interfaces/execution";
 export { defineFeature } from "ulvia-sdk/definitions/defineFeature";
-export { contractString, contractMap, contractBinary } from "ulvia-sdk/schema/adapters";
+export { contractString, contractMap, contractResolved, contractBinary } from "ulvia-sdk/schema/adapters";
 export { implementContract, defineProvider } from "ulvia-sdk/definitions/defineProvider";
 export { capabilityError, isCapabilityFailure } from "ulvia-sdk/definitions/errors";
 export type { CapabilityFailure } from "ulvia-sdk/definitions/errors";
@@ -58,3 +60,35 @@ export type {
     FeatureCapabilities,
     FeatureFixtureSource,
 } from "ulvia-sdk/interfaces/features";
+
+export {
+    eventMessageReceiversFor,
+    defineEventMessageReceiver,
+} from "ulvia-sdk/definitions/protocols/events/messageReceiver";
+export {
+    createDomainEventPublisher,
+    DomainEventPublicationFailure,
+} from "ulvia-sdk/definitions/protocols/events/producer";
+export type {
+    DomainEventPublication,
+    DomainEventOutbox,
+    PendingDomainEvent,
+} from "ulvia-sdk/definitions/protocols/events/producer";
+
+export { eventsFor } from "ulvia-sdk/definitions/protocols/events/emitter";
+
+export { schemaResolversFor } from "ulvia-sdk/definitions/protocols/schema-resolution/resolvers";
+
+export {
+    schemaSelectorSchema,
+    schemaDescriptorSchema,
+} from "ulvia-sdk/definitions/protocols/schema-resolution/schemas";
+
+export { schemaChoicesFor } from "ulvia-sdk/definitions/protocols/schema-resolution/resolvers";
+export {
+    schemaChoicesInputSchema,
+    schemaChoicesOutputSchema,
+} from "ulvia-sdk/definitions/protocols/schema-resolution/schemas";
+export type { SchemaChoices } from "ulvia-sdk/definitions/protocols/schema-resolution/schemas";
+
+export { schemaDescriptorWire } from "@bernouy/ulvia-contracts/resolution";

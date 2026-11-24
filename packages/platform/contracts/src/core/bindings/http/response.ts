@@ -1,5 +1,5 @@
 import { ReleaseValidationError } from "../../protocol/errors";
-import { MEDIA_TYPE_PATTERN } from "../../schema/context";
+import { MEDIA_TYPE_PATTERN } from "../../language/schema/context";
 import type { CapabilityErrorDefinition, CapabilityExecution } from "../../../interfaces/ContractRelease";
 import type { CompiledHttpResponse, HttpResponseBinding } from "../../../interfaces/HttpBinding";
 import type { UlviaSchema } from "../../../interfaces/UlviaSchema";

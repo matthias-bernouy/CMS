@@ -1,3 +1,4 @@
+import { eventServiceAuthorized } from "./native/eventServices";
 import type { Subject } from "@bernouy/auth";
 import type { ContractSelectionStore } from "@bernouy/repository/providers/selections";
 import type { GatewayRouteResolver } from "@bernouy/cms-gateway";
@@ -32,6 +33,7 @@ export async function createProviderGatewayAccess(
     });
     const isAdministratorId = async (subjectId: string) => (await administrators.get(subjectId)).enabled;
     const authorize: CapabilityGatewayOptions["authorize"] = async (actor, capability, route) =>
+        (actor.kind === "system" && eventServiceAuthorized(actor.serviceId, capability)) ||
         (actor.kind === "system" &&
             actor.serviceId === "cms-gateway" &&
             route.selection.contractId === "ulvia/cms.access" &&

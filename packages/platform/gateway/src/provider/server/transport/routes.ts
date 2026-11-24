@@ -9,6 +9,7 @@ export type HttpBoundCapability = CapabilityDefinition & {
 
 export type ProviderRoute = {
     readonly dispatchContractId?: string;
+    readonly declaringContractId?: string;
     readonly contractId: string;
     readonly contractVersion: string;
     readonly capability: HttpBoundCapability;
@@ -17,10 +18,10 @@ export type ProviderRoute = {
 
 export function compileProviderRoutes(releases: readonly ResolvedContract[]): readonly ProviderRoute[] {
     const routes = releases.flatMap(({ release, capabilities }) =>
-        capabilities.flatMap(({ definition: capability }) => {
+        capabilities.flatMap(({ definition: capability, owner }) => {
             return capabilityBindings(capability).flatMap((binding) =>
                 binding.transport === "http"
-                    ? [compileRoute(release.contractId, release.version, { ...capability, binding })]
+                    ? [compileRoute(release.contractId, release.version, { ...capability, binding }, owner.contractId)]
                     : [],
             );
         }),
@@ -53,7 +54,13 @@ export function compileProviderRoutes(releases: readonly ResolvedContract[]): re
                         );
                     }
                     aliases.set(key, {
-                        ...compileRoute(release.contractId, release.version, { ...capability, binding }),
+                        ...compileRoute(
+                            release.contractId,
+                            release.version,
+                            { ...capability, binding },
+                            contract.capabilities.find(({ definition }) => definition.id === capability.id)!.owner
+                                .contractId,
+                        ),
                         dispatchContractId: contract.release.contractId,
                     });
                 }
@@ -65,7 +72,12 @@ export function compileProviderRoutes(releases: readonly ResolvedContract[]): re
     return Object.freeze(routes);
 }
 
-function compileRoute(contractId: string, contractVersion: string, capability: HttpBoundCapability): ProviderRoute {
+function compileRoute(
+    contractId: string,
+    contractVersion: string,
+    capability: HttpBoundCapability,
+    declaringContractId: string,
+): ProviderRoute {
     const names: string[] = [];
     const escaped = capability.binding.path.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
     const pattern = escaped.replace(/\\\{([A-Za-z][A-Za-z0-9_-]*)\\\}/gu, (_match, name: string) => {
@@ -75,6 +87,7 @@ function compileRoute(contractId: string, contractVersion: string, capability: H
     const expression = new RegExp(`^${pattern}$`, "u");
     return {
         contractId,
+        declaringContractId,
         contractVersion,
         capability,
         match(method, path) {

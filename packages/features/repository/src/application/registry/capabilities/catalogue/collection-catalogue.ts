@@ -28,5 +28,16 @@ export const collectionCatalogue = defineCapability({
     input: collectionCatalogueInputSchema,
     output: catalogueListOutputSchema,
     errors: assetDownloadErrors,
-    execute: ({ services, input, context }) => services.repository.reads.collectionCatalogue(input, context.signal),
+    execute: async ({ services, input, context }) => {
+        const result = await services.repository.reads.collectionCatalogue(input, context.signal);
+        return {
+            ...result,
+            releases: result.releases.map((entry) => {
+                if (entry.kind !== "collection") {
+                    throw new Error("Collection catalogue returned a different artifact kind");
+                }
+                return { ...entry, kind: "collection" as const };
+            }),
+        };
+    },
 });

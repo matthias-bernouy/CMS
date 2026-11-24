@@ -14,6 +14,7 @@ export function authoringReadScenarios(inventory: CapabilityInventory, fixture: 
     return [
         "get-collection-sources",
         "get-contract-sources",
+        "get-workflow-sources",
         "get-provider-manifest-sources",
         "get-source-snapshot",
         "get-publication-operation",
@@ -25,13 +26,15 @@ export function authoringReadScenarios(inventory: CapabilityInventory, fixture: 
         assertCondition(target, "source-reader-inventory-stale");
         const kinds: readonly AuthoredKind[] =
             capability === "get-source-snapshot"
-                ? ["collection", "contract", "provider-manifest"]
+                ? ["collection", "contract", "provider-manifest", "workflow"]
                 : [
-                      capability.includes("provider-manifest")
-                          ? "provider-manifest"
-                          : capability.includes("contract")
-                            ? "contract"
-                            : "collection",
+                      capability.includes("workflow")
+                          ? "workflow"
+                          : capability.includes("provider-manifest")
+                            ? "provider-manifest"
+                            : capability.includes("contract")
+                              ? "contract"
+                              : "collection",
                   ];
         const variants: readonly Variant[] =
             capability === "get-publication-operation" ? ["invalidation"] : ["large", "history", "invalidation"];

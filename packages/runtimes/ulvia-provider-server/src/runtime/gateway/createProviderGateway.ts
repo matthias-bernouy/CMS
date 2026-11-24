@@ -1,3 +1,5 @@
+import { createSchemaVersionAuthority } from "./native/schemaVersions";
+import { MongoSchemaVersions } from "@bernouy/cms-gateway/provider/schema-mongo";
 import { authorizeCatalogue } from "./providers/authority/authorizeCatalogue";
 import { createCommandPreparer } from "./providers/authority/prepareCommand";
 import type { GatewayActor } from "@bernouy/cms-gateway";
@@ -81,7 +83,14 @@ export async function createProviderGateway(
         invoker: () => invoker,
         checkAuthority: (route, capabilityId) => catalogue.checkAuthority(route, capabilityId),
     });
+    const schemaVersions = createSchemaVersionAuthority(
+        siteId,
+        routes,
+        { assertAuthorized: (value) => invoker.assertAuthorized(value) },
+        new MongoSchemaVersions(db),
+    );
     invoker = new CapabilityGateway({
+        schemaVersions,
         ...gatewayObservability(stores.logger),
         delegations,
         transportFencesRoute: true,
@@ -223,6 +232,7 @@ export async function createProviderGateway(
         routes,
         invoker,
         commandAudit,
+        schemaVersions,
         invocations: {
             issue: issueInvocation,
             prepare: prepareInvocation,

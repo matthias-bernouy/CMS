@@ -170,7 +170,7 @@ function validCoordinate(value: string): boolean {
     const [kind, publisher, id, version, extra] = value.split("\0");
     return (
         extra === undefined &&
-        ["collection", "contract", "provider-manifest"].includes(kind!) &&
+        ["collection", "contract", "provider-manifest", "workflow"].includes(kind!) &&
         isResourceId(id) &&
         resourcePublisher(id) === publisher &&
         isCanonicalSemVer(version)

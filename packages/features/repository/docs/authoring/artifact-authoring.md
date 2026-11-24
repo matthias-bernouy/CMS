@@ -9,7 +9,7 @@ not contain or deploy its server code.
 
 Use a complete source snapshot with files: [{path, content}] and optional exact
 fixture asset references. Each content is a string. Follow
-[contract sources](contract-source.md) or [Provider manifest sources](provider-manifest-source.md).
+[contract sources](sources/contract-source.md) or [Provider manifest sources](sources/provider-manifest-source.md).
 Use prepare-contract or prepare-provider-manifest. Preparation writes only a
 private, instance-scoped temporary workspace; it does not import dependencies
 into the CMS, install resources or publish anything.

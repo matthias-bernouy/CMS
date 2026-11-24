@@ -102,6 +102,12 @@
         },
         {
             "path": "packages/features/forms"
+        },
+        {
+            "path": "packages/features/events"
+        },
+        {
+            "path": "packages/features/workflows"
         }
     ]
 }

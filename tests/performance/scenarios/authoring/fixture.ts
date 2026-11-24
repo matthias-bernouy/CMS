@@ -13,14 +13,17 @@ export const AUTHORING_ARTIFACTS = [
     "get-connection",
     "prepare-collection",
     "prepare-contract",
+    "prepare-workflow",
     "prepare-provider-manifest",
     "publish-collection",
     "publish-contract",
+    "publish-workflow",
     "publish-provider-manifest",
     "publish-collection-operation",
     "get-publication-operation",
     "get-collection-sources",
     "get-contract-sources",
+    "get-workflow-sources",
     "get-provider-manifest-sources",
     "get-source-snapshot",
     "discard-preparation",
@@ -34,11 +37,13 @@ export async function authoringFixture(
     const calls = authoringCalls(client);
     const suffix = randomUUID().replaceAll("-", "");
     const namespace = capability === "claim-namespace" ? `performance-${suffix}` : "performance-authoring";
-    const kind: AuthoredKind = capability.includes("provider-manifest")
-        ? "provider-manifest"
-        : capability.includes("contract")
-          ? "contract"
-          : "collection";
+    const kind: AuthoredKind = capability.includes("workflow")
+        ? "workflow"
+        : capability.includes("provider-manifest")
+          ? "provider-manifest"
+          : capability.includes("contract")
+            ? "contract"
+            : "collection";
     const source = authoredFixture(kind, namespace, implementation, suffix);
     if (capability !== "claim-namespace") {
         const owned = requireRecord(await calls.fixture("claim-namespace", { namespace }));

@@ -18,19 +18,19 @@ export async function prepareDiscoveryRead(
         capability === "collection-catalogue"
             ? "collection"
             : (["collection", "contract", "provider-manifest"][index % 3] as PublicKind);
-    const latest = capability !== "catalogue-list";
+    const latest = !["catalogue-list", "artifacts.list"].includes(capability);
     const selected = () => state.visible(kind, latest);
     const input = () => ({
         limit: 16,
         publisherId: state.scope.namespace,
-        ...(capability === "catalogue-list"
+        ...(["catalogue-list", "artifacts.list"].includes(capability)
             ? { kind, channel: "stable" }
-            : capability === "catalogue-search"
+            : ["catalogue-search", "artifacts.search"].includes(capability)
               ? { query: selected()[0]!.reference.id, kinds: [kind], channel: "stable" }
               : { channel: "stable" }),
     });
     const oracle = () =>
-        capability === "catalogue-search"
+        ["catalogue-search", "artifacts.search"].includes(capability)
             ? searchOracle(selected(), selected()[0]!, true)
             : catalogueOracle(selected(), 0);
     let priorRevision: unknown;
@@ -48,7 +48,7 @@ export async function prepareDiscoveryRead(
             return (
                 await read.call(capability, "http", request, (value) => {
                     oracle()(value);
-                    if (capability === "catalogue-search" && profile === "invalidation") {
+                    if (["catalogue-search", "artifacts.search"].includes(capability) && profile === "invalidation") {
                         assertCondition(
                             requireRecord(value).revision !== priorRevision,
                             "registry-search-stale-revision",

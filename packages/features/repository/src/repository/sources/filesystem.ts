@@ -95,7 +95,7 @@ export class FilesystemRepositorySourceStore implements RepositorySourceStore {
     }
     private artifactPath(kind: ArtifactSourceKind, namespace: string, id: string, version: string) {
         this.path(namespace, id, version);
-        if (kind !== "contract" && kind !== "provider-manifest") {
+        if (kind !== "contract" && kind !== "provider-manifest" && kind !== "workflow") {
             throw new RepositoryRequestError("REJECTED", "Invalid source kind");
         }
         return join(this.root, "artifact-source-snapshots", kind, namespace, resourceName(id), `${version}.json`);

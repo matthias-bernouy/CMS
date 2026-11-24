@@ -26,6 +26,7 @@ export function unitProvider<Dependencies>(
                 version: 1,
                 requestId: crypto.randomUUID(),
                 instanceId: "instance:test",
+                connectionId: "install-unit",
                 contractId,
                 contractVersion: version,
                 capabilityId,

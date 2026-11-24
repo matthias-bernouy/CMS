@@ -25,8 +25,8 @@ test("review pins the shipped manifest, preserves enabled Registry and binds sou
         f.installed.installation.endpoint,
     );
     expect(review.source.manifest.version).toBe("1.2.0");
-    expect(review.target.manifest.version).toBe("1.11.0");
-    expect(review.target.contracts.find(({ contractId }) => contractId === "ulvia/repository")?.version).toBe("1.3.0");
+    expect(review.target.manifest.version).toBe("1.12.0");
+    expect(review.target.contracts.find(({ contractId }) => contractId === "ulvia/repository")?.version).toBe("1.4.0");
     expect(review.planDigest).toMatch(/^sha256:[a-f0-9]{64}$/u);
     const other = await reviewSystemUpgrade(
         f.instance,

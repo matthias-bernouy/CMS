@@ -11,6 +11,8 @@ export function registryReadScenarios(inventory: CapabilityInventory, fixture: s
     const fresh = freshTenants(inventory);
     return [
         "catalogue-list",
+        "artifacts.list",
+        "artifacts.search",
         "catalogue-search",
         "collection-catalogue",
         "bootstrap-recipes",
@@ -21,9 +23,13 @@ export function registryReadScenarios(inventory: CapabilityInventory, fixture: s
             (row) => !row.retained && row.release.contractId === "ulvia/repository" && row.definition.id === capability,
         );
         assertCondition(target, "registry-read-inventory-stale");
-        const variants: readonly Variant[] = ["catalogue-list", "catalogue-search", "collection-catalogue"].includes(
-            capability,
-        )
+        const variants: readonly Variant[] = [
+            "catalogue-list",
+            "catalogue-search",
+            "collection-catalogue",
+            "artifacts.list",
+            "artifacts.search",
+        ].includes(capability)
             ? ["large", "history", "invalidation"]
             : ["invalidation"];
         return target.definition.bindings

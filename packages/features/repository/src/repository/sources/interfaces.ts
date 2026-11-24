@@ -1,7 +1,7 @@
 import type { SourceReadOutput } from "repository/application/registry/interfaces/outputs";
 export type RepositorySourceSnapshot = NonNullable<SourceReadOutput>;
 
-export type ArtifactSourceKind = "contract" | "provider-manifest";
+export type ArtifactSourceKind = "contract" | "provider-manifest" | "workflow";
 
 export interface RepositorySourceStore {
     get(namespace: string, collectionId: string, version: string): Promise<RepositorySourceSnapshot | null>;

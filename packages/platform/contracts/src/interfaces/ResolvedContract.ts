@@ -3,6 +3,7 @@ import type {
     ContractParentReference,
     ContractRelease,
 } from "ulvia-contracts/interfaces/ContractRelease";
+import type { ContractEventDefinition } from "./ContractEvent";
 import type { ReleaseDigest } from "../core/admission/digest";
 
 /** An executable view, separate from the immutable authored artifact. */
@@ -11,10 +12,16 @@ export interface ResolvedCapability {
     readonly definition: CapabilityDefinition;
 }
 
+export interface ResolvedEvent {
+    readonly owner: ContractParentReference;
+    readonly definition: ContractEventDefinition;
+}
+
 export interface ResolvedContract {
     readonly release: ContractRelease;
     readonly digest: ReleaseDigest;
     /** Concrete release first, followed by its exact ancestors. */
     readonly lineage: readonly Readonly<{ release: ContractRelease; digest: ReleaseDigest }>[];
     readonly capabilities: readonly ResolvedCapability[];
+    readonly events: readonly ResolvedEvent[];
 }

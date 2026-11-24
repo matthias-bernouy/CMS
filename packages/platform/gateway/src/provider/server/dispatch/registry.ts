@@ -31,6 +31,7 @@ export interface ProviderCapabilityInvocationContext {
     readonly providerId: string;
     readonly subjectId?: string;
     readonly systemServiceId?: string;
+    readonly eventCausation?: readonly string[];
     readonly sourceInstallationId?: string;
     readonly connectionId?: string;
     readonly controlAuthority?: true;

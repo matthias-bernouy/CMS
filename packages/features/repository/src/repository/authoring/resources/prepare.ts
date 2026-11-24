@@ -29,7 +29,12 @@ export async function prepareRemoteArtifact(
         AUTHORING_SOURCE_LIMITS.snapshotBytes,
         AUTHORING_SOURCE_LIMITS.jsonDepth,
     ) as Record<string, unknown>;
-    const id = kind === "contract" ? definition.contractId : definition.providerId;
+    const id =
+        kind === "contract"
+            ? definition.contractId
+            : kind === "workflow"
+              ? definition.workflowId
+              : definition.providerId;
     if (definition.kind !== kind || !isResourceId(id)) {
         throw new Error("Invalid artifact kind or identifier");
     }
@@ -75,7 +80,11 @@ export async function prepareRemoteArtifact(
             version: artifact.version,
             digest: artifact.digest,
             sourceDigest: prepared.sourceDigest,
-            ...(kind === "contract" ? { contractId: artifact.id } : { providerId: artifact.id }),
+            ...(kind === "contract"
+                ? { contractId: artifact.id }
+                : kind === "workflow"
+                  ? { workflowId: artifact.id }
+                  : { providerId: artifact.id }),
             repositoryId: publisher.repositorySourceId,
             diagnostics: [],
         };

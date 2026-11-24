@@ -1,3 +1,6 @@
+import { gatewaySchemaSeal } from "./capabilities/gateway/resolution/gateway.schemas.seal";
+import { repositoryArtifactsSearch } from "./capabilities/discovery/artifacts/repository.search";
+import { repositoryArtifactsGet } from "./capabilities/discovery/artifacts/repository.get";
 import { selectContract } from "repository/application/installations/capabilities/providers/reads/select-contract";
 import { gatewayMcpAuthorized } from "repository/application/installations/capabilities/gateway/routing/gateway.mcp.authorized";
 import { gatewayCommandPrepare } from "repository/application/installations/capabilities/gateway/invocation/gateway.command.prepare";
@@ -67,12 +70,14 @@ export const installationsFeature = defineFeature({
     name: "CMS Installations",
     description:
         "Inspect and administer the collection installations, provider installations and contract selections of one CMS instance.",
-    version: "1.6.0",
+    version: "1.7.0",
     publisherId: "ulvia",
     catalogue: { icon: "installations", categories: ["administration", "content", "infrastructure"] },
     documents: new URL("../../../docs/installations/", import.meta.url),
     mapError: mapInstallationError,
     capabilities: [
+        repositoryArtifactsSearch,
+        repositoryArtifactsGet,
         selectContract,
         listInstalledCollections,
         configureCollection,
@@ -101,6 +106,7 @@ export const installationsFeature = defineFeature({
         gatewayInvocationIssue,
         pairProviderConnection,
         gatewayCommandPrepare,
+        gatewaySchemaSeal,
         gatewayDispatchPrepare,
         gatewayProviderPrepare,
         previewProviderConnection,

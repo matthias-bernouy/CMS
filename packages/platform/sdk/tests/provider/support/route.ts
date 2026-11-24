@@ -7,9 +7,10 @@ export function observedRoute<Dependencies>(
     origin: string,
     SITE: string,
     INSTANCE: string,
+    contractId = "example/notes",
 ): GatewayRoute {
     const now = new Date().toISOString();
-    const release = build.contracts.find((value) => value.release.contractId === "example/notes")!;
+    const release = build.contracts.find((value) => value.release.contractId === contractId)!;
     const row = { admission: release, publishedAt: now };
     return {
         selection: {

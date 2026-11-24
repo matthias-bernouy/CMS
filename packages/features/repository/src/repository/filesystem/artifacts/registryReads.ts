@@ -1,3 +1,4 @@
+import { LocalWorkflowReleases } from "./workflows";
 import { catalogueListOutputSchema } from "repository/application/registry/schemas/catalogue/listing";
 import type { RepositoryCatalogueEntry, RepositoryCatalogueReference } from "../catalogueIndex";
 import {
@@ -22,6 +23,7 @@ export class FilesystemRegistryReads {
     private readonly collections: LocalCollectionRepository;
     private readonly contracts: LocalContractReleases;
     private readonly providers: LocalProviderReleases;
+    private readonly workflows: LocalWorkflowReleases;
 
     constructor(
         root: string,
@@ -31,13 +33,20 @@ export class FilesystemRegistryReads {
         this.collections = new LocalCollectionRepository(root, verifier);
         this.contracts = new LocalContractReleases(new LocalArtifactFiles(root));
         this.providers = new LocalProviderReleases(new LocalArtifactFiles(root), this.contracts);
+        this.workflows = new LocalWorkflowReleases(new LocalArtifactFiles(root), this.contracts);
     }
 
     async catalogue(input: Parameters<RepositoryCapabilityPorts["catalogue"]>[0], signal?: AbortSignal) {
         try {
             signal?.throwIfAborted();
             const type =
-                input.kind === "collection" ? "collections" : input.kind === "contract" ? "contracts" : "providers";
+                input.kind === "collection"
+                    ? "collections"
+                    : input.kind === "contract"
+                      ? "contracts"
+                      : input.kind === "workflow"
+                        ? "workflows"
+                        : "providers";
             const page = await cataloguePage(type, this.index, String(input.limit), input.cursor ?? null, false, input);
             const hydrated = [];
             for (const entry of page.releases) {
@@ -50,7 +59,7 @@ export class FilesystemRegistryReads {
             }
             return catalogueListOutputSchema.parse({
                 releases: hydrated.map((entry) => {
-                    const { publisherId, collectionId, contractId, providerId, version } = entry;
+                    const { publisherId, collectionId, contractId, providerId, workflowId, version } = entry;
                     const digest = Reflect.get(entry, "digest");
                     const metadata = Object.fromEntries(
                         Object.entries(entry).filter(
@@ -60,12 +69,13 @@ export class FilesystemRegistryReads {
                                     "collectionId",
                                     "contractId",
                                     "providerId",
+                                    "workflowId",
                                     "version",
                                     "digest",
                                 ].includes(key),
                         ),
                     );
-                    const id = collectionId ?? contractId ?? providerId;
+                    const id = collectionId ?? contractId ?? providerId ?? workflowId;
                     if (!id) {
                         throw new RepositoryRequestError("REJECTED", "Invalid catalogue coordinate");
                     }
@@ -122,7 +132,9 @@ export class FilesystemRegistryReads {
             ? this.collections.getMetadata(publisherId, id, version)
             : coordinate.kind === "contract"
               ? this.contracts.getMetadata(publisherId, id, version)
-              : this.providers.getMetadata(publisherId, id, version));
+              : coordinate.kind === "workflow"
+                ? this.workflows.getMetadata(publisherId, id, version)
+                : this.providers.getMetadata(publisherId, id, version));
         if (!metadata) {
             return null;
         }
@@ -137,7 +149,7 @@ export class FilesystemRegistryReads {
 
     async asset(coordinate: RemoteCoordinate, assetId: string) {
         const { publisherId, id, version } = coordinate;
-        if (coordinate.kind === "provider-manifest") {
+        if (coordinate.kind === "provider-manifest" || coordinate.kind === "workflow") {
             return null;
         }
         const asset = await (coordinate.kind === "collection"

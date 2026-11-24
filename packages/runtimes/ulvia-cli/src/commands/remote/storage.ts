@@ -1,3 +1,4 @@
+import { admitWorkflowManifest } from "@bernouy/workflows/manifest";
 import { collectionSourceAssets } from "@bernouy/repository/repository/publication";
 import { FilesystemRepositorySourceStore } from "@bernouy/repository/repository/sources";
 import { contractAssetDefinitions } from "@bernouy/ulvia-contracts/documentation";
@@ -6,6 +7,7 @@ import { admitProviderManifestJson } from "@bernouy/ulvia-providers";
 import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
 import { admitCollectionReleaseJson } from "@bernouy/repository/collections";
 import {
+    LocalWorkflowReleases,
     LocalArtifactFiles,
     LocalCollectionRepository,
     LocalContractReleases,
@@ -52,7 +54,8 @@ export async function loadLocal(root: string, coordinate: RemoteCoordinate, read
         };
     }
     const files = new LocalArtifactFiles(root);
-    const type = coordinate.kind === "contract" ? "contracts" : "providers";
+    const type =
+        coordinate.kind === "contract" ? "contracts" : coordinate.kind === "workflow" ? "workflows" : "providers";
     const bytes = await files.get(type, coordinate.publisherId, coordinate.id, coordinate.version);
     if (!bytes) {
         throw new Error(`Local ${coordinate.kind} release not found`);
@@ -73,6 +76,20 @@ export async function loadLocal(root: string, coordinate: RemoteCoordinate, read
                 canonicalJson,
                 assets,
             } satisfies PublicationEnvelope,
+        };
+    }
+    if (coordinate.kind === "workflow") {
+        const admission = await new LocalWorkflowReleases(files, contracts, yanks).getMetadata(
+            coordinate.publisherId,
+            coordinate.id,
+            coordinate.version,
+        );
+        if (!admission || admission.canonicalJson !== canonicalJson) {
+            throw new Error("Local workflow release is corrupt");
+        }
+        return {
+            digest: admission.digest,
+            envelope: { kind: coordinate.kind, canonicalJson, assets: [] } satisfies PublicationEnvelope,
         };
     }
     const record = await (await new LocalProviderReleases(files, contracts, yanks).catalogue()).get(
@@ -105,6 +122,14 @@ export async function storeLocal(
             : await admitContractReleaseJson(remote.canonicalJson);
         assertDigest(admission.digest, remote.expectedDigest);
         return (await contracts.publish(remote.canonicalJson, remote.assets)).added;
+    }
+    if (remote.kind === "workflow") {
+        if (remote.assets.length) {
+            throw new Error("Workflow manifests cannot contain executable assets");
+        }
+        const admission = admitWorkflowManifest(remote.canonicalJson);
+        assertDigest(admission.digest, remote.expectedDigest);
+        return (await new LocalWorkflowReleases(files, contracts, yanks).publish(remote.canonicalJson)).added;
     }
     const admission = await admitProviderManifestJson(remote.canonicalJson, await contracts.catalogue());
     assertDigest(admission.digest, remote.expectedDigest);

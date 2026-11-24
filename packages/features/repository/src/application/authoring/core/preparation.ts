@@ -3,7 +3,7 @@ import type { AuthoringService } from "repository/application/authoring/interfac
 /** An invalid authored candidate remains a successful diagnostic result, without publishing anything. */
 export async function prepareCandidate(
     authoring: AuthoringService,
-    kind: "collection" | "contract" | "provider-manifest",
+    kind: "collection" | "contract" | "provider-manifest" | "workflow",
     sourceJson: string,
 ) {
     try {

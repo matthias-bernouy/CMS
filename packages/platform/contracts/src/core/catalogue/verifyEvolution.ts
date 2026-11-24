@@ -1,3 +1,4 @@
+import { verifyEventLifecycle } from "../events/lifecycle";
 import type { ContractRelease } from "ulvia-contracts/interfaces/ContractRelease";
 import type { CatalogueContractRelease } from "ulvia-contracts/interfaces/ContractReleaseReader";
 import type { ReleaseLimits } from "ulvia-contracts/core/protocol/limits";
@@ -40,6 +41,7 @@ export function verifyEvolution(
         }
     }
     verifyCapabilityLifecycle(next, published, ancestry, limits);
+    verifyEventLifecycle(next, published, ancestry, limits);
 }
 
 import { verifyCapabilityLifecycle } from "./lifecycle/verify";

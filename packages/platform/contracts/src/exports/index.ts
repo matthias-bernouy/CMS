@@ -1,3 +1,5 @@
+export type { ContractEventDefinition } from "ulvia-contracts/interfaces/ContractEvent";
+export { isJsonEventSchema } from "ulvia-contracts/core/events/schema";
 export { computeReleaseDigest, isReleaseDigest, type ReleaseDigest } from "ulvia-contracts/core/admission/digest";
 export { ReleaseValidationError, type ReleaseValidationCode } from "ulvia-contracts/core/protocol/errors";
 export { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "ulvia-contracts/core/protocol/limits";
@@ -33,10 +35,20 @@ export { parseContractRelease, parseContractReleaseJson } from "ulvia-contracts/
 export {
     resolveContract,
     effectiveLineageCapabilities,
+    effectiveLineageEvents,
     findImplementedContract,
     resolveContractLineage,
 } from "ulvia-contracts/core/compatibility/lineage/resolveLineage";
 
 export type { CapabilityBinding, McpBindingDefinition } from "ulvia-contracts/interfaces/CapabilityBinding";
 
-export type { ResolvedContract, ResolvedCapability } from "ulvia-contracts/interfaces/ResolvedContract";
+export type { ResolvedContract, ResolvedCapability, ResolvedEvent } from "ulvia-contracts/interfaces/ResolvedContract";
+
+export type { SchemaDescriptor, SchemaField } from "ulvia-contracts/interfaces/UlviaSchema";
+export {
+    RESOLVED_SCHEMA_LIMITS,
+    schemaResolverInputSchema,
+    schemaDescriptorOutputSchema,
+    schemaChoicesInputSchema,
+    schemaChoicesOutputSchema,
+} from "ulvia-contracts/core/language/resolution/protocol";

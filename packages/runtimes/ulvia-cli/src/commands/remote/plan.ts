@@ -1,5 +1,6 @@
 import type { LocalCollectionRepository } from "@bernouy/repository/repository/filesystem";
 import {
+    LocalWorkflowReleases,
     LocalArtifactFiles,
     LocalContractReleases,
     LocalProviderReleases,
@@ -43,6 +44,14 @@ export async function allLocalCoordinates(
         if (!(await yanks.get(coordinate.kind, coordinate.publisherId, coordinate.id, coordinate.version))) {
             coordinates.push(coordinate);
         }
+    }
+    for (const { manifest } of await new LocalWorkflowReleases(files, contracts, yanks).listMetadata()) {
+        coordinates.push({
+            kind: "workflow",
+            publisherId: manifest.publisherId,
+            id: manifest.workflowId,
+            version: manifest.version,
+        });
     }
     return coordinates;
 }

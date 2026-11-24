@@ -1,3 +1,4 @@
+import type { EventDefinition } from "ulvia-sdk/interfaces/events";
 import type { ContractRelease } from "@bernouy/ulvia-contracts";
 import type { CapabilitySource } from "ulvia-sdk/interfaces/capabilities";
 import type { CapabilityServices } from "ulvia-sdk/interfaces/execution";
@@ -16,6 +17,7 @@ export type FeatureCapabilities<Capabilities extends readonly CapabilitySource[]
 export interface FeatureDefinition<Capabilities extends readonly CapabilitySource[] = readonly CapabilitySource[]>
     extends Pick<ContractRelease, "contractId" | "name" | "publisherId" | "version" | "description" | "catalogue"> {
     readonly capabilities: Capabilities;
+    readonly events?: readonly EventDefinition[];
     readonly mapError?: FeatureErrorMapper;
     readonly extends?: FeatureDefinition;
     readonly documents?: Readonly<Record<string, string>> | URL;

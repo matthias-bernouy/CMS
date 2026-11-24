@@ -1,3 +1,5 @@
+import type { EventServices } from "@bernouy/cms-events";
+import type { WorkflowServices } from "@bernouy/workflows";
 import type { EmailTemplateServices } from "@bernouy/email-templates/feature";
 import type { FormsServices } from "@bernouy/forms";
 import type { RoutingServices } from "@bernouy/hosting/routing";
@@ -58,7 +60,11 @@ export type UlviaProviderFeatureServices = Partial<
         ProviderConnectionServices &
         RepositoryServices &
         InstallationServices
-> & { readonly formsServices?: FormsServices };
+> & {
+    readonly formsServices?: FormsServices;
+    readonly eventServices?: EventServices;
+    readonly workflowServices?: WorkflowServices;
+};
 
 export type UlviaProviderDependencies = CmsContentDependencies &
     CmsCollectionDependencies &

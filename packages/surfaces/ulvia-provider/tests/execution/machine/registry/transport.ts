@@ -88,7 +88,8 @@ export async function repositoryTransport(
                 schema.type === "object" ||
                 schema.type === "array" ||
                 schema.type === "map" ||
-                schema.type === "binary"
+                schema.type === "binary" ||
+                schema.type === "resolved"
             ) {
                 throw new Error("Admitted HTTP parameters must be scalar");
             }

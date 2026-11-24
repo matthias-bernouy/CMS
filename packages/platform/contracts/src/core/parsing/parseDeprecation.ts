@@ -1,7 +1,7 @@
 import { ReleaseValidationError } from "../protocol/errors";
 import { expectRecord, expectString, rejectUnknownKeys } from "../protocol/values";
 import type { CapabilityDeprecation } from "../../interfaces/ContractRelease";
-import { matchesStringFormat } from "../schema/formats";
+import { matchesStringFormat } from "../language/schema/formats";
 import { parseIdentifier } from "./identifiers";
 
 export function parseCapabilityDeprecation(value: unknown, path: string): CapabilityDeprecation {
@@ -45,26 +45,27 @@ function parseDateTime(value: unknown, path: string): string | undefined {
     return value;
 }
 
-import type { ContractRelease } from "../../interfaces/ContractRelease";
+type DeprecatedDefinition = Readonly<{ id: string; deprecation?: CapabilityDeprecation }>;
 export function validateDeprecationReferences(
-    capabilities: ContractRelease["capabilities"],
+    capabilities: readonly DeprecatedDefinition[],
     unresolvedParent = false,
+    kind: "capabilities" | "events" = "capabilities",
 ): void {
-    rejectDeprecationCycles(capabilities);
+    rejectDeprecationCycles(capabilities, kind);
     const ids = new Set(capabilities.map((capability) => capability.id));
     for (const capability of capabilities) {
         const replacement = capability.deprecation?.replacedBy;
         if (replacement && ((!unresolvedParent && !ids.has(replacement)) || replacement === capability.id)) {
             throw new ReleaseValidationError(
                 "invalid_contract",
-                `replacement ${JSON.stringify(replacement)} must identify another capability in the release`,
-                `$.capabilities.${capability.id}.deprecation.replacedBy`,
+                `replacement ${JSON.stringify(replacement)} must identify another ${kind === "events" ? "event" : "capability"} in the release`,
+                `$.${kind}.${capability.id}.deprecation.replacedBy`,
             );
         }
     }
 }
 
-function rejectDeprecationCycles(capabilities: ContractRelease["capabilities"]): void {
+function rejectDeprecationCycles(capabilities: readonly DeprecatedDefinition[], kind: "capabilities" | "events"): void {
     const byId = new Map(capabilities.map((capability) => [capability.id, capability]));
     const completed = new Set<string>();
     for (const capability of capabilities) {
@@ -74,8 +75,8 @@ function rejectDeprecationCycles(capabilities: ContractRelease["capabilities"]):
             if (visited.has(current)) {
                 throw new ReleaseValidationError(
                     "invalid_contract",
-                    "capability deprecation contains a replacement cycle",
-                    `$.capabilities.${capability.id}.deprecation`,
+                    `${kind} deprecation contains a replacement cycle`,
+                    `$.${kind}.${capability.id}.deprecation`,
                 );
             }
             visited.add(current);

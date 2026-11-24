@@ -28,7 +28,10 @@
         "./observability": "./src/exports/observability/index.ts",
         "./observability/node": "./src/exports/observability/node.ts",
         "./testing": "./src/exports/testing.ts",
-        "./provider/responses": "./src/provider/server/dispatch/responses.ts"
+        "./provider/responses": "./src/provider/server/dispatch/responses.ts",
+        "./events": "./src/exports/protocol/events.ts",
+        "./events/mongo": "./src/exports/protocol/event-mongo.ts",
+        "./provider/schema-mongo": "./src/provider/resolution/MongoSchemaVersions.ts"
     },
     "dependencies": {
         "@bernouy/http-runner": "workspace:*",

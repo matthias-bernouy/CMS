@@ -15,9 +15,10 @@ export function createProviderContractRelay(...args: Parameters<typeof createGen
             ["gateway.route.get", "gateway.route.snapshot", "gateway.mcp.resolve"].includes(claims.capabilityId)
                 ? routeResponse(request, response)
                 : Promise.resolve(response),
+        schemaVersions,
     ] = args;
-    const logged = createGenericRelay(routes, dispatcher, scope, logger, authorize, transform);
-    const quiet = createGenericRelay(routes, dispatcher, scope, NOOP_LOGGER, authorize, transform);
+    const logged = createGenericRelay(routes, dispatcher, scope, logger, authorize, transform, schemaVersions);
+    const quiet = createGenericRelay(routes, dispatcher, scope, NOOP_LOGGER, authorize, transform, schemaVersions);
     return async (...invocation: Parameters<typeof logged>) => {
         const response = await (invocation[1].contractId === "ulvia/cms.observability" ? quiet : logged)(...invocation);
         return localizeFailureResponse(response, invocation[0], invocation[1], routes);

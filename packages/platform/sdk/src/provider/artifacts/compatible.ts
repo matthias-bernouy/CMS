@@ -1,6 +1,12 @@
+import { sameRetainedSensitivity } from "./sensitivity";
+import {
+    firstSchemaSubsetViolation,
+    firstProjectedOutputViolation,
+    parseVersionRange,
+} from "@bernouy/ulvia-contracts/compatibility";
 import { verifyStoredContractReleaseJson, resolveContract } from "@bernouy/ulvia-contracts";
 import type { CapabilityDefinition } from "@bernouy/ulvia-contracts";
-import type { CompiledImplementations } from "ulvia-sdk/interfaces/providers";
+import type { ProviderRequirement, CompiledImplementations } from "ulvia-sdk/interfaces/providers";
 import type { ImplementationRelease } from "ulvia-sdk/interfaces/runtime";
 import { storeProviderPlan } from "ulvia-sdk/compiler/plan";
 import { buildCatalogue } from "ulvia-sdk/compiler/catalogue";
@@ -13,16 +19,30 @@ import { SdkDefinitionError } from "ulvia-sdk/schema/errors";
 export async function loadCompatibleImplementation<Dependencies>(
     build: CompiledImplementations<Dependencies>,
     sourceInput: ImplementationRelease,
-    retained: Readonly<{ canonicalJson: string; digest: string }>,
+    retained: Readonly<{ canonicalJson: string; digest: string; requires?: readonly ProviderRequirement[] }>,
 ): Promise<CompiledImplementations<Dependencies>> {
     const source = Object.freeze({ ...sourceInput });
     const selected = selectImplementations(build, [source]);
     const captured = [...selected.plan];
-    const metadata = parseImplementationArtifact({
+    const artifact = parseImplementationArtifact({
         kind: "ulvia-sdk-runtime/v1",
         contracts: [{ canonicalJson: retained.canonicalJson, digest: retained.digest }],
-        implementations: [],
-    }).contracts[0]!;
+        implementations: retained.requires
+            ? [
+                  {
+                      ...build.implementations.find(
+                          (claim) => claim.contractId === source.contractId && claim.digest === source.digest,
+                      )!,
+                      requires: retained.requires,
+                  },
+              ]
+            : [],
+    });
+    const metadata = artifact.contracts[0]!;
+    const retainedRequires = artifact.implementations[0]?.requires.map((entry) => ({
+        ...entry,
+        versionRange: parseVersionRange(entry.versionRange, "$.requires.versionRange"),
+    }));
     const admission = await verifyStoredContractReleaseJson(metadata.canonicalJson, metadata.digest);
     if (admission.release.contractId !== source.contractId || admission.canonicalJson !== metadata.canonicalJson) {
         throw new SdkDefinitionError("Retained implementation identity differs from its source");
@@ -37,8 +57,7 @@ export async function loadCompatibleImplementation<Dependencies>(
         const entry = captured.find((entry) => entry.capability.id === capability.id);
         if (
             !entry ||
-            capabilityExecutionSignature(entry.capability, capability.input) !==
-                capabilityExecutionSignature(capability)
+            capabilityExecutionSignature(entry.capability, capability) !== capabilityExecutionSignature(capability)
         ) {
             throw new SdkDefinitionError(`Retained capability differs from its executor: ${capability.id}`);
         }
@@ -51,6 +70,11 @@ export async function loadCompatibleImplementation<Dependencies>(
             .map(({ release, digest }) => ({ contractId: release.contractId, version: release.version, digest }));
         return Object.freeze({
             ...entry,
+            ...(capability.output.type !== "binary" &&
+            canonicalizeIJson(schemaDocumentation(entry.capability.output)) !==
+                canonicalizeIJson(schemaDocumentation(capability.output))
+                ? { retainedOutputSchema: entry.capability.output }
+                : {}),
             contractId: view.release.contractId,
             version: view.release.version,
             capability,
@@ -68,20 +92,36 @@ export async function loadCompatibleImplementation<Dependencies>(
             view.lineage.map(({ digest }) => admissions.find((entry) => entry.digest === digest)!),
         ),
         implementedContracts: Object.freeze([view]),
-        implementations: Object.freeze([{ ...original, version: view.release.version, digest: view.digest }]),
+        implementations: Object.freeze([
+            {
+                ...original,
+                ...(retainedRequires ? { requires: retainedRequires } : {}),
+                version: view.release.version,
+                digest: view.digest,
+            },
+        ]),
     }) as CompiledImplementations<Dependencies>;
     storeProviderPlan(compatible, plan);
     return compatible;
 }
 
 /** Ignore explanatory metadata only; business fields named description remain part of the API. */
-function capabilityExecutionSignature(
-    capability: CapabilityDefinition,
-    retainedInput?: CapabilityDefinition["input"],
-): string {
+function capabilityExecutionSignature(capability: CapabilityDefinition, retained?: CapabilityDefinition): string {
     const value = structuredClone(capability) as unknown as Record<string, unknown>;
-    if (retainedInput) {
-        value.input = compatibleInputBounds(value.input, retainedInput);
+    if (retained) {
+        if (
+            sameRetainedSensitivity(retained.input, capability.input) &&
+            !firstSchemaSubsetViolation(retained.input, capability.input, "$.input")
+        ) {
+            value.input = structuredClone(retained.input);
+        }
+        if (
+            capability.output.type !== "binary" &&
+            sameRetainedSensitivity(retained.output, capability.output) &&
+            !firstProjectedOutputViolation(capability.output, retained.output, "$.output")
+        ) {
+            value.output = structuredClone(retained.output);
+        }
     }
     delete value.description;
     delete value.docs;
@@ -105,26 +145,5 @@ function schemaDocumentation(value: unknown): unknown {
         Object.entries(record)
             .filter(([key]) => key !== "description" || typeof record.type !== "string")
             .map(([key, child]) => [key, schemaDocumentation(child)]),
-    );
-}
-
-/** Only larger input string/binary ceilings are safe to reuse with an older receiver. */
-function compatibleInputBounds(current: unknown, retained: unknown): unknown {
-    if (Array.isArray(current) && Array.isArray(retained)) {
-        return current.map((value, index) => compatibleInputBounds(value, retained[index]));
-    }
-    if (!current || typeof current !== "object" || !retained || typeof retained !== "object") {
-        return current;
-    }
-    const value = current as Record<string, unknown>;
-    const old = retained as Record<string, unknown>;
-    const ceiling = value.type === "string" ? "maxLength" : value.type === "binary" ? "maxBytes" : null;
-    return Object.fromEntries(
-        Object.entries(value).map(([key, item]) => [
-            key,
-            key === ceiling && typeof item === "number" && typeof old[key] === "number" && old[key] <= item
-                ? old[key]
-                : compatibleInputBounds(item, old[key]),
-        ]),
     );
 }

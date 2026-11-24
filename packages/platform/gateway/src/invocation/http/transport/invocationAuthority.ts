@@ -16,6 +16,7 @@ export function invocationAuthority(request: GatewayHttpExchange): ProviderInvoc
         capabilityId: authority.capabilityId,
         ...(authority.subjectId ? { subjectId: authority.subjectId } : {}),
         ...(authority.actorKind ? { actorKind: authority.actorKind } : {}),
+        ...(authority.eventCausation ? { eventCausation: authority.eventCausation } : {}),
         ...(authority.systemServiceId ? { systemServiceId: authority.systemServiceId } : {}),
         ...(authority.sourceInstallationId
             ? {

@@ -62,7 +62,7 @@ export class FormsService {
         }
         return this.repository.change(input.formId, input.expectedRevision, { availability: input.availability });
     }
-    archive(input: CasInput) {
+    async archive(input: CasInput) {
         return this.repository.change(input.formId, input.expectedRevision, { availability: "archived" });
     }
     async publicDefinition(formId: string) {

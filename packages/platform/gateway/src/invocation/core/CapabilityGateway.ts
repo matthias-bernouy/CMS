@@ -1,3 +1,6 @@
+import type { GatewaySchemaVersions } from "../interfaces/SchemaVersions";
+import { resolveInvocationSchema, validateResolverResult } from "./validation/schemas";
+import { validateSchemaEnvelope } from "@bernouy/ulvia-contracts/resolution";
 import type { GatewayAuthorityReads } from "./dispatch/GatewayAuthorityReads";
 import type { GatewayDispatch } from "../interfaces/Dispatch";
 import { prepareDispatch } from "./dispatch/prepareDispatch";
@@ -26,7 +29,7 @@ import {
 } from "cms-gateway/invocation/core/GatewayError";
 import { resolveRoute } from "cms-gateway/invocation/core/resolveRoute";
 import { snapshotInvocation } from "cms-gateway/invocation/core/snapshotInvocation";
-import { validateResponse } from "cms-gateway/invocation/core/validateResponse";
+import { validateResponse } from "cms-gateway/invocation/core/validation/response";
 import type {
     GatewayCommandAuditEvent,
     GatewayCommandAuditStage,
@@ -63,6 +66,7 @@ export interface CapabilityGatewayOptions {
     readonly identities?: ProviderIdentityService;
     /** Required for command capabilities. Commands fail closed before dispatch when audit is unavailable. */
     readonly commandAudit?: GatewayCommandAuditStore;
+    readonly schemaVersions?: GatewaySchemaVersions;
     readonly now?: () => string;
     readonly maxObservationAgeMs?: number;
     /**
@@ -160,12 +164,34 @@ export class CapabilityGateway implements GatewayAccessProbe {
             (expected.installationId !== installed.id ||
                 expected.endpoint !== installed.endpoint ||
                 expected.accountId !== installed.accountId ||
-                expected.instanceId !== route.installation.observation?.report.instanceId)
+                expected.instanceId !== route.installation.observation?.report.instanceId ||
+                (expected.version !== undefined && expected.version !== release.version) ||
+                (expected.digest !== undefined && expected.digest !== route.requestedRelease.admission.digest))
         ) {
             throw new GatewayError("stale_route", "Selected Provider no longer matches the resource association");
         }
         assertActorCredentialTarget(invocation, capability);
         const input = snapshotInput(invocation.input, capability);
+        const resolvedInput = await resolveInvocationSchema(
+            capability.input,
+            input,
+            input,
+            release,
+            invocation,
+            (call) => this.invoke(call),
+            {
+                route,
+                routes: this.#options.routes,
+                now: this.#now(),
+                maxObservationAgeMs: this.#options.maxObservationAgeMs ?? 60000,
+            },
+        );
+        if (resolvedInput !== capability.input) {
+            snapshotInput(input, { ...capability, input: resolvedInput as typeof capability.input });
+        }
+        if (resolvedInput !== capability.input && !(await this.#options.routes.isCurrent(route))) {
+            throw new GatewayError("stale_route", "Selection changed during schema resolution");
+        }
         tracker.update({
             requestBytes:
                 invocation.binaryBody?.contentLength ?? new TextEncoder().encode(JSON.stringify(input)).byteLength,
@@ -333,6 +359,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
                     invocation.actor.kind === "administrator")
                     ? { actorKind: invocation.actor.kind }
                     : {}),
+                ...(invocation.eventCausation ? { eventCausation: invocation.eventCausation } : {}),
                 ...(invocation.actor.kind === "system" ? { systemServiceId: invocation.actor.serviceId } : {}),
                 ...(invocation.actor.kind === "provider"
                     ? {
@@ -347,7 +374,54 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 throw new GatewayError("stale_route", "selection or installation changed during invocation");
             }
             tracker.enter("validation");
-            result = validateResponse(capability, response, requestId, invocation.metadataOnly);
+            const outputSchema =
+                !response.errorCode && capability.behavior.execution === "sync"
+                    ? await resolveInvocationSchema(
+                          capability.output,
+                          response.output,
+                          input,
+                          release,
+                          invocation,
+                          (call) => this.invoke(call),
+                          {
+                              route,
+                              routes: this.#options.routes,
+                              now: this.#now(),
+                              maxObservationAgeMs: this.#options.maxObservationAgeMs ?? 60000,
+                          },
+                      )
+                    : capability.output;
+            result = validateResponse(
+                { ...capability, output: outputSchema },
+                response,
+                requestId,
+                invocation.metadataOnly,
+            );
+            if (result.kind === "success") {
+                const descriptor = validateResolverResult(capability, input, result.output);
+                if (descriptor) {
+                    if (!this.#options.schemaVersions) {
+                        throw new GatewayError(
+                            "invalid_provider_response",
+                            "A CMS schema version authority is required",
+                        );
+                    }
+                    await this.#options.schemaVersions.seal({
+                        actor: invocation.actor,
+                        descriptor,
+                        target: {
+                            installationId: route.selection.installationId,
+                            contractId: invocation.contractId,
+                            capabilityId: capability.id,
+                            version: release.version,
+                            digest: route.requestedRelease.admission.digest,
+                            endpoint: route.installation.installation.endpoint,
+                            accountId: route.installation.installation.accountId,
+                            instanceId: route.installation.observation!.report.instanceId,
+                        },
+                    });
+                }
+            }
             if (isCommand) {
                 await this.#auditCommand(
                     commandAuditEvent(
@@ -397,7 +471,10 @@ export class CapabilityGateway implements GatewayAccessProbe {
                     requestId,
                 );
             }
-            if (error instanceof GatewayError) {
+            if (
+                error instanceof GatewayError ||
+                (error instanceof Error && "code" in error && error.code === "SCHEMA_VERSION_CONFLICT")
+            ) {
                 throw error;
             }
             throw new GatewayError("transport_failure", "provider transport failed");
@@ -604,7 +681,7 @@ function snapshotInput(value: unknown, capability: CapabilityDefinition): Readon
             .filter(([, schema]) => schema.type === "binary")
             .map(([name]) => name);
         if (binaryProperties.length === 0) {
-            validateSchemaValue(capability.input, value);
+            validateSchemaEnvelope(capability.input, value);
             return input;
         }
         if (!value || typeof value !== "object" || Array.isArray(value)) {

@@ -40,3 +40,12 @@ export const publishCollectionOutputSchema = z
         added: z.boolean(),
     })
     .readonly();
+
+export const publishWorkflowOutputSchema = publishContractOutputSchema
+    .unwrap()
+    .omit({ contractId: true, kind: true })
+    .extend({
+        workflowId: contractString({ maxLength: 225 }),
+        kind: contractString({ maxLength: 8, enum: ["workflow"] as const }),
+    })
+    .readonly();

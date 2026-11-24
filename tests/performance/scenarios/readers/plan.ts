@@ -8,6 +8,7 @@ import type { CapabilityInventory } from "../../capabilities/types";
 const READERS = [
     "documentation.get",
     "repository.get",
+    "repository.artifacts.get",
     "get-collection-release",
     "list-collection-releases",
     "get-provider-installation",

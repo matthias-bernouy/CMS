@@ -18,7 +18,18 @@ export interface NotificationIntent {
     lease: string | null;
     deadline: string | null;
 }
+export interface FormEventIntent {
+    readonly initiatorProof: string | null;
+    readonly installationId: string;
+    readonly definitionId: string;
+    readonly causation: readonly string[];
+    readonly state: "pending" | "sending" | "accepted" | "failed";
+    readonly attempts: number;
+    readonly token: string | null;
+    readonly dueAt: string | null;
+}
 export interface SubmissionRecord {
+    event: FormEventIntent | null;
     receiptId: string;
     formId: string;
     formVersion: number;

@@ -9,10 +9,11 @@ export async function inferLocalCoordinate(
 ): Promise<RemoteCoordinate> {
     const files = new LocalArtifactFiles(root);
     const { publisherId, id, version } = coordinate;
-    const [contract, provider, collection] = await Promise.all([
+    const [contract, provider, collection, workflow] = await Promise.all([
         files.get("contracts", publisherId, id, version),
         files.get("providers", publisherId, id, version),
         collections.getMetadata(publisherId, id, version),
+        files.get("workflows", publisherId, id, version),
     ]);
     const candidates: RemoteCoordinate[] = [];
     if (contract) {
@@ -24,10 +25,13 @@ export async function inferLocalCoordinate(
     if (collection) {
         candidates.push({ publisherId, id, version, kind: "collection" });
     }
+    if (workflow) {
+        candidates.push({ publisherId, id, version, kind: "workflow" });
+    }
     if (candidates.length !== 1) {
         throw new Error(
             candidates.length
-                ? "Ambiguous local release: add collection, contract or provider before the coordinate."
+                ? "Ambiguous local release: add collection, contract, provider or workflow before the coordinate."
                 : "Local release not found. Prepare it with ulvia release before pushing.",
         );
     }

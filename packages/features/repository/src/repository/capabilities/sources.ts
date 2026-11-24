@@ -22,7 +22,10 @@ export function repositorySources(ports: RepositoryCapabilityPorts) {
             }
             const id = "collectionId" in input ? input.collectionId : input.id;
             if (
-                ("kind" in input && input.kind !== "contract" && input.kind !== "provider-manifest") ||
+                ("kind" in input &&
+                    input.kind !== "contract" &&
+                    input.kind !== "provider-manifest" &&
+                    input.kind !== "workflow") ||
                 !isResourceId(id) ||
                 resourcePublisher(id) !== input.namespace
             ) {

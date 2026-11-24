@@ -1,3 +1,5 @@
+import type { GatewaySchemaSeal } from "@bernouy/cms-gateway";
+import { schemaDescriptorWire, SchemaResolutionError } from "@bernouy/ulvia-contracts/resolution";
 import { decodeCommandPreparation, rejectUnstartedCommand } from "./control/commandPreparation";
 import { ControlProviderError } from "./control/errors";
 import type { ProviderCommandStart } from "@bernouy/cms-gateway/protocol";
@@ -36,6 +38,28 @@ export class ControlProviderClient {
         this.delegations = new ControlDelegationAuthority((...args) => this.invoke(...args), this.roots);
     }
 
+    async sealSchema(input: GatewaySchemaSeal): Promise<void> {
+        try {
+            const wire = schemaDescriptorWire(input.descriptor);
+            if (wire.digest !== input.descriptor.digest) {
+                throw new SchemaResolutionError("INVALID_SCHEMA_DESCRIPTOR");
+            }
+            const result = requiredResponse(
+                await this.invoke("gateway.schemas.seal", "POST", "/gateway/schemas/seal", {
+                    ...input,
+                    descriptor: wire,
+                }),
+            );
+            if (result.sealed !== true) {
+                throw new TypeError("Schema authority did not confirm its durable seal");
+            }
+        } catch (error) {
+            if (error instanceof ControlProviderError && error.status === 409) {
+                throw new SchemaResolutionError("SCHEMA_VERSION_CONFLICT");
+            }
+            throw error;
+        }
+    }
     async prepareProviderDispatch(input: ProviderMachinePreparation): Promise<PreparedProviderMachine> {
         return this.withClosures(input, async (value) => {
             const response = requiredResponse(

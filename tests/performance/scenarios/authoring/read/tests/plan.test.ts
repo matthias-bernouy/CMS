@@ -15,7 +15,7 @@ test("Authoring defines every current mandatory binding and variant without coun
         .map((row) => row.definition)
         .filter((row) => row.obligations.every((item) => scoped.targets.some((target) => target.key === item.target)));
     const added = authoringReadScenarios(inventory, "unit-source-plan");
-    expect(added).toHaveLength(26);
+    expect(added).toHaveLength(32);
     expect(auditPlan(scoped, definitions)).toEqual([]);
     expect(coverageMatrix(scoped, definitions, []).every((row) => row.status === "unattempted")).toBe(true);
     expect(

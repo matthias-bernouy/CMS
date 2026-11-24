@@ -112,7 +112,10 @@ export async function exerciseCmsAuthoring(
     expect((await invalid.json()).error.code).toBe("INVALID_INPUT");
     expect(await (await call("/get-connection", undefined, "GET")).json()).toEqual(connection);
     expect((await call("/claim-namespace", { namespace: "journey.cms" })).status).toBe(200);
-    const guide = await readFile(resolve("packages/features/repository/docs/authoring/collection-source.md"), "utf8");
+    const guide = await readFile(
+        resolve("packages/features/repository/docs/authoring/sources/collection-source.md"),
+        "utf8",
+    );
     const sourceJson = JSON.stringify(
         JSON.parse(guide.split("```json\n")[1]!.split("```")[0]!.replaceAll("your-namespace", "journey.cms")),
     );

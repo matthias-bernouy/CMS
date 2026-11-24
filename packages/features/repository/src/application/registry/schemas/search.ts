@@ -7,10 +7,10 @@ export const catalogueSearchInputSchema = z.strictObject({
             contractString({
                 minLength: 1,
                 maxLength: 32,
-                enum: ["collection", "bloc", "contract", "provider-manifest"],
+                enum: ["collection", "bloc", "contract", "provider-manifest", "workflow"],
             }),
         )
-        .max(4)
+        .max(5)
         .readonly()
         .optional(),
     publisherId: contractString({ minLength: 1, maxLength: 96 }).optional(),
@@ -34,7 +34,7 @@ export const catalogueSearchOutputSchema = z
                                 kind: contractString({
                                     minLength: 1,
                                     maxLength: 32,
-                                    enum: ["collection", "contract", "provider-manifest"],
+                                    enum: ["collection", "contract", "provider-manifest", "workflow"],
                                 }),
                                 publisherId: contractString({ minLength: 1, maxLength: 96 }),
                                 id: contractString({ minLength: 1, maxLength: 193 }),

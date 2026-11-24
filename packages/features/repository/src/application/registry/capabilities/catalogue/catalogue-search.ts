@@ -1,8 +1,9 @@
+import { establishedReference } from "./reference";
 import { defineCapability } from "repository/application/registry/capabilities/define";
 import {
     catalogueSearchInputSchema,
     catalogueSearchOutputSchema,
-} from "repository/application/registry/schemas/search";
+} from "repository/application/registry/schemas/catalogue/catalogue-search";
 import { catalogueSearchErrors as errors } from "repository/application/registry/schemas/errors";
 export const catalogueSearch = defineCapability({
     id: "catalogue-search",
@@ -36,5 +37,14 @@ export const catalogueSearch = defineCapability({
     input: catalogueSearchInputSchema,
     output: catalogueSearchOutputSchema,
     errors,
-    execute: ({ services, input }) => services.repository.reads.search(input),
+    execute: async ({ services, input }) => {
+        const result = await services.repository.reads.search({
+            ...input,
+            kinds: input.kinds ?? ["collection", "bloc", "contract", "provider-manifest"],
+        });
+        return {
+            ...result,
+            results: result.results.map((entry) => ({ ...entry, reference: establishedReference(entry.reference) })),
+        };
+    },
 });

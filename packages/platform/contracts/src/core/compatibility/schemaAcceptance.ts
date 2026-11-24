@@ -1,5 +1,6 @@
+import { canonicalizeIJson } from "../protocol/canonical";
 import type { UlviaSchema, UlviaStringSchema } from "../../interfaces/UlviaSchema";
-import { matchesStringFormat } from "../schema/formats";
+import { matchesStringFormat } from "../language/schema/formats";
 import { guaranteesObjectProperty } from "./schema/objectPresence";
 
 /** Returns the first path where source values are not proven valid for target. */
@@ -101,6 +102,10 @@ export function firstSchemaSubsetViolation(source: UlviaSchema, target: UlviaSch
             }
             return null;
         }
+        case "resolved":
+            return target.type === "resolved" && canonicalizeIJson(source) === canonicalizeIJson(target)
+                ? null
+                : `${path}.resolved`;
         case "string":
             return target.type === "string" ? stringViolation(source, target, path) : `${path}.type`;
     }

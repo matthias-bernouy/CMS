@@ -14,6 +14,21 @@ const date = z
             /^\d{4}-/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value,
     );
 const submissionRecordSchema = z.strictObject({
+    event: z
+        .strictObject({
+            initiatorProof: z.string().min(1).max(2048).nullable(),
+            installationId: z.string().min(1).max(128),
+            definitionId: z.string().regex(/^[a-f0-9]{64}$/u),
+            causation: z
+                .array(z.string().regex(/^[a-f0-9]{64}$/u))
+                .max(32)
+                .readonly(),
+            state: z.enum(["pending", "sending", "accepted", "failed"]),
+            attempts: z.int().min(0).max(9007199254740991),
+            token: uuidSchema.nullable(),
+            dueAt: date.nullable(),
+        })
+        .nullable(),
     receiptId: uuidSchema,
     formId: uuidSchema,
     formVersion: revisionSchema,
@@ -45,7 +60,10 @@ export function submissionRecord(value: unknown): SubmissionRecord {
     const record = submissionRecordSchema.parse(value);
     if (
         !lossless(record) ||
-        (record.deleted && (record.answers.length || record.notification || record.intents.length)) ||
+        (record.event !== null &&
+            ((record.event.state === "sending") !== (record.event.token !== null) ||
+                ["pending", "sending"].includes(record.event.state) !== (record.event.dueAt !== null))) ||
+        (record.deleted && (record.answers.length || record.notification || record.intents.length || record.event)) ||
         (!record.deleted && (record.notification === null) !== (record.intents.length === 0)) ||
         record.intents.some(
             (intent) => (intent.state === "sending") !== (intent.lease !== null && intent.deadline !== null),

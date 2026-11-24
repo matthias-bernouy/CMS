@@ -1,3 +1,5 @@
+import { eventsImplementation } from "./implementations/automation/events";
+import { workflowsImplementation } from "./implementations/automation/workflows";
 import { emailTemplatesImplementation } from "./implementations/communication/templates";
 import { routingImplementation } from "./implementations/provider/routing";
 import { clusterLogsImplementation } from "./implementations/provider/clusterLogs";
@@ -6,11 +8,11 @@ import { hostingImplementation } from "./implementations/provider/hosting";
 import { installationsImplementation } from "./implementations/repository/installations";
 import { repositoryImplementation } from "./implementations/repository/registry";
 import { authoringImplementation } from "./implementations/repository/authoring";
-import { contentImplementation } from "./implementations/content";
-import { accessImplementation } from "./implementations/access";
+import { contentImplementation } from "./implementations/content/content";
+import { accessImplementation } from "./implementations/security/access";
 import { observabilityImplementation } from "./implementations/observability";
-import { filesImplementation } from "./implementations/files";
-import { secretsImplementation } from "./implementations/secrets";
+import { filesImplementation } from "./implementations/content/files";
+import { secretsImplementation } from "./implementations/security/secrets";
 import { smtpEmailerImplementation, formsImplementation } from "./implementations/communication/emailer";
 
 import { providerConnectionsImplementation } from "./implementations/provider/connections";
@@ -27,6 +29,8 @@ const officialFeatureInventory: readonly OfficialFeatureSource[] = Object.freeze
     { implementation: smtpEmailerImplementation },
     { implementation: emailTemplatesImplementation },
     { implementation: formsImplementation },
+    { implementation: eventsImplementation },
+    { implementation: workflowsImplementation },
     { implementation: accessImplementation },
     { implementation: contentImplementation },
     { implementation: authoringImplementation },

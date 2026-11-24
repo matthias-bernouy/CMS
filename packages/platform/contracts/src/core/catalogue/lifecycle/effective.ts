@@ -1,3 +1,4 @@
+import type { ContractEventDefinition } from "ulvia-contracts/interfaces/ContractEvent";
 import type { CapabilityDefinition, ContractRelease } from "../../../interfaces/ContractRelease";
 import type { AdmittedContractRelease } from "../../admission/admitContractRelease";
 import { ReleaseValidationError } from "../../protocol/errors";
@@ -7,7 +8,22 @@ export function effectiveCapabilities(
     release: ContractRelease,
     index: ReadonlyMap<string, AdmittedContractRelease>,
 ): ReadonlyMap<string, CapabilityDefinition> {
-    const capabilities = new Map<string, CapabilityDefinition>();
+    return effectiveDefinitions(release, index, (entry) => entry.capabilities);
+}
+
+export function effectiveEvents(
+    release: ContractRelease,
+    index: ReadonlyMap<string, AdmittedContractRelease>,
+): ReadonlyMap<string, ContractEventDefinition> {
+    return effectiveDefinitions(release, index, (entry) => entry.events ?? []);
+}
+
+function effectiveDefinitions<Definition extends { readonly id: string }>(
+    release: ContractRelease,
+    index: ReadonlyMap<string, AdmittedContractRelease>,
+    own: (release: ContractRelease) => readonly Definition[],
+): ReadonlyMap<string, Definition> {
+    const capabilities = new Map<string, Definition>();
     const visited = new Set<string>();
     let current = release;
     for (;;) {
@@ -15,11 +31,11 @@ export function effectiveCapabilities(
             throw new ReleaseValidationError("invalid_contract", "contract inheritance contains a cycle", "$.extends");
         }
         visited.add(current.contractId);
-        for (const capability of current.capabilities) {
+        for (const capability of own(current)) {
             if (capabilities.has(capability.id)) {
                 throw new ReleaseValidationError(
                     "invalid_contract",
-                    "specialization redeclares an inherited capability",
+                    "specialization redeclares an inherited definition",
                 );
             }
             capabilities.set(capability.id, capability);

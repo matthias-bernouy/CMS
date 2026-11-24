@@ -1,7 +1,7 @@
 # Design a reusable Bloc
 
 Use this procedure when creating or redesigning a Bloc or collection example.
-Read [the source format](collection-source.md) and
+Read [the source format](sources/collection-source.md) and
 [the preparation workflow](collection-authoring.md) for exact authoring rules.
 For a copied website, also follow [Reproduce an existing site](site-reproduction.md)
 before extracting markup.

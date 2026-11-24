@@ -1,3 +1,7 @@
+import { SchemaResolutionError } from "@bernouy/ulvia-contracts/resolution";
+import { SchemaValueError } from "@bernouy/ulvia-contracts/schema";
+import { receiverSchemaResolution } from "cms-gateway/provider/resolution/receiver";
+import type { SchemaVersionStore } from "cms-gateway/provider/resolution/interfaces";
 import { runWithTraceContext } from "@bernouy/logging/tracing";
 import { projectSchemaValue, validateSchemaValue } from "@bernouy/ulvia-contracts/schema";
 import { parseCapabilityOperationHandle } from "@bernouy/ulvia-contracts/protocol";
@@ -28,6 +32,7 @@ export function createProviderContractRelay(
         claims: ProviderInvocationClaims,
         controlAuthority: boolean,
     ) => Promise<Response>,
+    schemaVersions?: SchemaVersionStore,
 ): (request: Request, claims: ProviderInvocationClaims, controlAuthority?: boolean) => Promise<Response | null> {
     const relay = async (
         request: Request,
@@ -77,11 +82,31 @@ export function createProviderContractRelay(
                 true,
             );
         }
+        let executionStarted = false;
         try {
             if (!(await authorize(claims, controlAuthority))) {
                 return new Response(null, { status: 403, headers: { "Cache-Control": "no-store" } });
             }
+            const resolution = receiverSchemaResolution(
+                routes,
+                dispatcher,
+                claims,
+                context,
+                authorize,
+                controlAuthority,
+                schemaVersions,
+            );
+            await resolution.validateResolverInput(capability, input);
+            const inputSchema = await resolution.schema(capability.input, input, input);
+            if (inputSchema !== capability.input) {
+                validateProviderInput(
+                    { ...capability, input: inputSchema as typeof capability.input },
+                    input,
+                    Boolean(context.binaryBody),
+                );
+            }
             const dispatchStartedAt = performance.now();
+            executionStarted = true;
             const dispatched = await dispatcher.invoke(
                 selected.route.dispatchContractId ?? contractId,
                 capability.id,
@@ -142,7 +167,11 @@ export function createProviderContractRelay(
             if (capability.behavior.execution === "operation") {
                 parseCapabilityOperationHandle(output);
             } else {
-                validateSchemaValue(capability.output, output);
+                if (capability.schemaResolver) {
+                    await resolution.seal(capability, output, input);
+                }
+                const schema = await resolution.schema(capability.output, output, input);
+                validateSchemaValue(schema, output);
             }
             const response = successResponse(request.method, capability, output, responseEffect, adapted?.status);
             for (const [name, value] of Object.entries(adapted?.headers ?? {})) {
@@ -152,7 +181,27 @@ export function createProviderContractRelay(
                 response.headers.set("content-language", representation.contentLanguage);
             }
             return transformResponse ? await transformResponse(request, response, claims, controlAuthority) : response;
-        } catch (cause) {
+        } catch (failure) {
+            if (
+                !executionStarted &&
+                (failure instanceof SchemaValueError ||
+                    (failure instanceof SchemaResolutionError && failure.code === "INVALID_SELECTOR"))
+            ) {
+                return inputFailureResponse(request, 400, failure, claims.requestId, true);
+            }
+            const cause =
+                failure instanceof SchemaResolutionError &&
+                failure.code === "SCHEMA_VERSION_CONFLICT" &&
+                capability.schemaResolver &&
+                capability.errors.some(({ code }) => code === failure.code)
+                    ? new ProviderCapabilityDispatchError(
+                          failure.code,
+                          capability.binding.response.errorStatuses[failure.code]!,
+                          failure.message,
+                          {},
+                          { message: "The schema changed without a new resource version." },
+                      )
+                    : failure;
             if (cause instanceof ProviderCapabilityDispatchError) {
                 const status = capability.binding.response.errorStatuses[cause.code];
                 const definition = capability.errors.find((error) => error.code === cause.code);

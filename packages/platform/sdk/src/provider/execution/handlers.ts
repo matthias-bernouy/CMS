@@ -1,3 +1,4 @@
+import { projectRetainedOutput } from "./projection";
 import { selectedRoute } from "ulvia-sdk/provider/execution/routes";
 import { bindOperation } from "ulvia-sdk/provider/execution/operations";
 import { presentedHandler } from "ulvia-sdk/provider/execution/presentation";
@@ -44,7 +45,15 @@ export function bindHandler<Dependencies>(
     const invoke: ProviderCapabilityHandler = async (input, context) => {
         const lease = binaryInputLease(entry.capability, context);
         try {
-            const run = () => execute(input, lease.context);
+            const run = async () =>
+                projectRetainedOutput(
+                    entry,
+                    await execute(input, lease.context),
+                    options.resolveSchema
+                        ? (schema, value) =>
+                              options.resolveSchema!(entry.capability, schema, value, input, lease.context)
+                        : undefined,
+                );
             if (guard) {
                 await guard(input, lease.context);
             }

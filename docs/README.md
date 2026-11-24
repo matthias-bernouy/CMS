@@ -10,12 +10,14 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   shared services, public HTTPS, upgrades and backups.
 - [Workspace architecture](architecture/README.md): layers, dependency rules,
   domain boundaries and runtime composition.
+- [Events and Workflow manifests](architecture/events-workflows.md): typed business events, resource schemas, portable installations and suspension/recovery.
 - [Contract documentation](architecture/contract-documentation.md): versioned
   Markdown, capability links, hybrid search and agent verification guidance.
 - [Package map](architecture/packages.md): every current workspace package and
   its responsibility.
 - [Imports](architecture/imports.md): public exports, local aliases, adapters and
   browser boundaries.
+- [Resolved schemas](development/resolved-schemas.md): shared event/capability typing, typed resolvers and host guarantees.
 - [Development](development/README.md): local startup, builds and validation.
 - [Shared hosting validation](development/shared-hosting-validation.md): requirement
   evidence, reproducible checks and deployment limits for the fresh baseline.
@@ -69,6 +71,10 @@ completed browser journey or deployment.
 - [Files and responsive images](images/README.md).
 - [UI contracts](quality/ui-contracts.md): binding ownership, browser request
   diagnostics, source/form checks and current scanner limitations.
+- [Events and Workflow end-to-end verification — 2026-11-24](quality/2026-11-24-workflows-e2e.md): functional journeys, corrections, browser evidence and unresolved measured-performance failures.
+- [Shared resolved schemas review — 2026-11-24](quality/2026-11-24-resolved-schemas.md): shared Event/capability typing, durable authority, explicit filters and validation evidence.
+- [Events and Workflow reliability review — 2026-11-24](quality/2026-11-24-events-workflows-reliability.md): trigger generations, source identity, publication recovery, batched fanout, schema seals and retention evidence.
+- [Events and Workflow implementation review — 2026-11-23](quality/2026-11-23-events-workflows-review.md): scope, tested authority/recovery boundaries and full verification evidence.
 - [Email Templates upgrade and rendering review — 2026-11-21](quality/2026-11-21-email-templates-upgrade-review.md):
   previous-release upgrades, durable initialization, disabled email and render allocation bounds.
 - [Email Templates storage review — 2026-11-21](quality/2026-11-21-email-templates-storage-review.md):

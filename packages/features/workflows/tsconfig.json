@@ -1,0 +1,32 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "workflows/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../../platform/sdk"
+        },
+        {
+            "path": "../../platform/contracts"
+        },
+        {
+            "path": "../../platform/gateway"
+        },
+        {
+            "path": "../../foundation/envelope-crypto"
+        },
+        {
+            "path": "../events"
+        }
+    ]
+}

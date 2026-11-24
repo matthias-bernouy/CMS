@@ -4,7 +4,7 @@ Collection preparation validates source. Publication creates an immutable Reposi
 
 ## Inspect and prepare sources
 
-For a new collection, start with [the complete source example](collection-source.md). `sourceJson` is one serialized object containing `files: [{path, content}]` and optional `assets`; each file's `content` is a string, including JSON files. The tool's string input schema does not describe this nested format.
+For a new collection, start with [the complete source example](sources/collection-source.md). `sourceJson` is one serialized object containing `files: [{path, content}]` and optional `assets`; each file's `content` is a string, including JSON files. The tool's string input schema does not describe this nested format.
 
 Before publishing, read `get-connection`. If necessary, use `configure-connection` with a PAT created by the target Repository account. Use `list-namespaces` to inspect its live inventory, or `claim-namespace` to claim an available name. Only active owned namespaces permit publication. The encrypted PAT remains on the server and is never returned by these tools.
 
@@ -16,7 +16,7 @@ exposes its compiled resources, including any `runtime.viewJS`, without granting
 access to the original `bloc.ts` files. For example, reading Mossa's sources
 requires ownership of the `ulvia` namespace. Unavailable sources do not imply
 that third-party collections cannot use JavaScript; follow the
-[behavior source format](collection-source.md#optional-javascript-behavior).
+[behavior source format](sources/collection-source.md#optional-javascript-behavior).
 A null snapshot means no retained sources were returned; report that condition
 instead of treating compiled release data as the original source tree.
 

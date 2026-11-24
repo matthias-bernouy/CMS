@@ -1,3 +1,4 @@
+import type { WorkflowManifest } from "@bernouy/workflows/manifest";
 import type { CollectionRelease } from "repository/collections/interfaces/CollectionRelease";
 import { resolveCollectionTranslation } from "repository/collections/core/texts/translationCatalogue";
 import type { ContractRelease } from "@bernouy/ulvia-contracts";
@@ -91,5 +92,22 @@ export function providerRow(
         [],
         manifest.implementations.map((implementation) => implementation.contractId),
         implementedDescriptions,
+    );
+}
+
+export function workflowRow(manifest: WorkflowManifest, digest: string): RepositorySearchRow {
+    return searchRow(
+        {
+            kind: "workflow",
+            publisherId: manifest.publisherId,
+            id: manifest.workflowId,
+            version: manifest.version,
+            digest,
+        },
+        manifest.name,
+        manifest.description ?? "",
+        ["automation"],
+        manifest.requirements.map(({ contractId }) => contractId),
+        manifest.documentation ?? "",
     );
 }

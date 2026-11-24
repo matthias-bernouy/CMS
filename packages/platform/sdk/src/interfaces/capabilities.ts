@@ -47,6 +47,7 @@ export interface CapabilityExposure {
     readonly bindings: readonly CapabilityBinding[];
     readonly deprecation?: CapabilityDeprecation;
     readonly responseEffects?: readonly CapabilityResponseEffect[];
+    readonly schemaResolver?: { readonly selector: z.ZodObject };
 }
 
 export interface CapabilityDefinition<

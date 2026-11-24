@@ -5,7 +5,7 @@ site", or "recopier ce site". Preserve the requested appearance and content
 through reusable Blocs and editable Pages. The reference DOM is evidence about
 the result, not a specification for collection boundaries.
 
-Read [Bloc design](bloc-design.md), [the source format](collection-source.md) and
+Read [Bloc design](bloc-design.md), [the source format](sources/collection-source.md) and
 [collection preparation](collection-authoring.md). Search Content documentation
 for "Design an editable page" and "Review rendered page design". Use the exact
 selected capability schemas; guides do not add capabilities or authorization.

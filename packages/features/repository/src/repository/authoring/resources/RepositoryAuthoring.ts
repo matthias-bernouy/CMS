@@ -1,4 +1,5 @@
 import type {
+    WorkflowPublication,
     ContractPublication,
     ProviderManifestPublication,
     ArtifactPublication,
@@ -35,6 +36,7 @@ export class RepositoryAuthoring extends CollectionAuthoring {
             throw new CollectionPreparationError(message, [{ code: `${kind}.invalid`, severity: "error", message }]);
         }
     }
+    publishArtifact(kind: "workflow", id: string, expectedDigest: string): Promise<WorkflowPublication>;
     publishArtifact(kind: "contract", id: string, expectedDigest: string): Promise<ContractPublication>;
     publishArtifact(
         kind: "provider-manifest",

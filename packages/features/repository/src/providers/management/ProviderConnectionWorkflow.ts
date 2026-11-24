@@ -1,3 +1,4 @@
+import { canonicalizeIJson } from "@bernouy/ulvia-contracts/protocol";
 import { previewProviderAuthority } from "@bernouy/ulvia-providers/validation";
 import {
     memoryConnectionDrafts,
@@ -216,7 +217,14 @@ export class ProviderConnectionWorkflow {
                 observed = true;
             }
         } catch {
-            // The approved connection stays valid and Health exposes the missing observation.
+            // A concurrent observation or lost acknowledgement can already have completed this exact approval.
+            const current = await this.gateway.installations
+                .get({ siteId: this.gateway.siteId, installationId: installed.installation.id })
+                .catch(() => null);
+            observed = Boolean(
+                current?.observation &&
+                    canonicalizeIJson(current.installation) === canonicalizeIJson(installed.installation),
+            );
         }
         return {
             installationId: installed.installation.id,

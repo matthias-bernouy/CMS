@@ -1,3 +1,4 @@
+import type { SchemaVersionStore } from "@bernouy/cms-gateway/provider/server";
 import { retainResponseResource } from "@bernouy/http-runner";
 import type { HttpMethod, Runner } from "@bernouy/http-runner";
 import type { Logger } from "@bernouy/logging";
@@ -14,6 +15,7 @@ export type UlviaProviderInstanceRuntime = Readonly<{
     report: ProviderRuntimeReport;
     dispatcher: ProviderCapabilityRegistry;
     logger?: Logger;
+    schemaVersions?: SchemaVersionStore;
     authorizeInvocation?: (claims: ProviderInvocationClaims, controlAuthority?: boolean) => Promise<boolean>;
 }>;
 
@@ -91,6 +93,8 @@ export class UlviaProvider {
                             },
                             runtime.logger ?? options.logger,
                             runtime.authorizeInvocation,
+                            undefined,
+                            runtime.schemaVersions,
                         );
                         relays.set(runtime.dispatcher, relay);
                     }

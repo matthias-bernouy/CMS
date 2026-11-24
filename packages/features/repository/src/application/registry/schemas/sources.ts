@@ -8,7 +8,7 @@ export const artifactSourcePutInputSchema = z.strictObject({
     sourceJson: contractString({ maxLength: AUTHORING_SOURCE_LIMITS.snapshotBytes, sensitive: true }),
     releaseDigest: contractString({ maxLength: 71 }),
     namespaceRevision: z.int().min(1),
-    kind: contractString({ enum: ["contract", "provider-manifest"], maxLength: 17 }),
+    kind: contractString({ enum: ["contract", "provider-manifest", "workflow"], maxLength: 17 }),
 });
 
 export const sourcePutInputSchema = z.strictObject({
@@ -25,7 +25,7 @@ export const artifactSourceGetInputSchema = z.strictObject({
     id: contractString({ maxLength: 193 }),
     version: contractString({ maxLength: 64 }),
     namespaceRevision: z.int().min(1),
-    kind: contractString({ enum: ["contract", "provider-manifest"], maxLength: 17 }),
+    kind: contractString({ enum: ["contract", "provider-manifest", "workflow"], maxLength: 17 }),
 });
 
 export const artifactSourceGetOutputSchema = z
@@ -48,7 +48,7 @@ export const sourceReadInputSchema = z.strictObject({
     id: contractString({ maxLength: 193 }),
     version: contractString({ maxLength: 64 }),
     namespaceRevision: z.int().min(1),
-    kind: contractString({ enum: ["collection", "contract", "provider-manifest"], maxLength: 17 }),
+    kind: contractString({ enum: ["collection", "contract", "provider-manifest", "workflow"], maxLength: 17 }),
 });
 export const sourceReadOutputSchema = z
     .strictObject({

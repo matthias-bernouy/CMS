@@ -15,13 +15,16 @@ interface ReceiptFields {
 export type PublicationReceipt = ReceiptFields &
     (
         | { readonly schema: "ulvia.collection-publication.v1" }
-        | { readonly schema: "ulvia.artifact-publication.v1"; readonly kind: "contract" | "provider-manifest" }
+        | {
+              readonly schema: "ulvia.artifact-publication.v1";
+              readonly kind: "contract" | "provider-manifest" | "workflow";
+          }
     );
 export async function readReceipt(
     path: string,
     digest: string,
     credential: RepositoryNamespaceCredential,
-    kind: "collection" | "contract" | "provider-manifest" = "collection",
+    kind: "collection" | "contract" | "provider-manifest" | "workflow" = "collection",
 ): Promise<PublicationReceipt | null> {
     const file = join(path, "publication.json");
     const info = await stat(file).catch((error: NodeJS.ErrnoException) => {

@@ -1,0 +1,25 @@
+{
+    "name": "@bernouy/workflows",
+    "version": "1.0.0",
+    "description": "Declarative installable workflows and recoverable JSON capability execution.",
+    "license": "MIT",
+    "type": "module",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./feature": "./src/feature.ts",
+        "./mongo": "./src/exports/mongo.ts",
+        "./mapping": "./src/exports/mapping.ts",
+        "./manifest": "./src/exports/manifest.ts"
+    },
+    "dependencies": {
+        "@bernouy/ulvia-sdk": "workspace:*",
+        "@bernouy/ulvia-contracts": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/envelope-crypto": "workspace:*",
+        "@bernouy/cms-events": "workspace:*"
+    },
+    "peerDependencies": {
+        "mongodb": "^7.8.0",
+        "typescript": "^7.0.2"
+    }
+}

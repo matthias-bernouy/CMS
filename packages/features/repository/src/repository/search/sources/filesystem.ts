@@ -1,3 +1,4 @@
+import { LocalWorkflowReleases } from "../../filesystem/artifacts/workflows";
 import { RepositoryDiscoveryError } from "../core/errors";
 import { latestReleaseRows } from "../core/corpus";
 import { sha256Digest } from "@bernouy/binary-media";
@@ -7,7 +8,7 @@ import { LocalCollectionRepository } from "../../filesystem/artifacts/collection
 import { LocalArtifactFiles } from "../../filesystem/artifacts/files";
 import { LocalContractReleases } from "../../filesystem/contracts";
 import { LocalProviderReleases } from "../../filesystem/providers";
-import { collectionRows, contractRow, providerRow } from "./rows";
+import { collectionRows, contractRow, providerRow, workflowRow } from "./rows";
 import type { RepositorySearchSnapshot, RepositorySearchRow } from "../interfaces";
 
 /** Derived metadata only: never reads collection assets or contract documentation bodies. */
@@ -15,6 +16,7 @@ export class FilesystemRepositorySearchSource {
     private readonly collections: LocalCollectionRepository;
     private readonly contracts: LocalContractReleases;
     private readonly providers: LocalProviderReleases;
+    private readonly workflows: LocalWorkflowReleases;
     private current?: {
         catalogues: readonly (readonly RepositoryCatalogueEntry[])[];
         snapshot: RepositorySearchSnapshot;
@@ -28,12 +30,14 @@ export class FilesystemRepositorySearchSource {
         this.collections = new LocalCollectionRepository(root);
         this.contracts = new LocalContractReleases(files);
         this.providers = new LocalProviderReleases(files, this.contracts);
+        this.workflows = new LocalWorkflowReleases(files, this.contracts);
     }
     async load(): Promise<RepositorySearchSnapshot> {
         const catalogues = await Promise.all([
             this.index.list("collections"),
             this.index.list("contracts"),
             this.index.list("providers"),
+            this.index.list("workflows"),
         ]);
         if (this.current && catalogues.every((catalogue, index) => catalogue === this.current!.catalogues[index])) {
             return this.current.snapshot;
@@ -60,8 +64,8 @@ export class FilesystemRepositorySearchSource {
         catalogues: readonly (readonly RepositoryCatalogueEntry[])[],
         revision: string,
     ): Promise<RepositorySearchSnapshot> {
-        const kinds = ["collection", "contract", "provider-manifest"] as const;
-        const idKeys = ["collectionId", "contractId", "providerId"] as const;
+        const kinds = ["collection", "contract", "provider-manifest", "workflow"] as const;
+        const idKeys = ["collectionId", "contractId", "providerId", "workflowId"] as const;
         const selected = catalogues.map((entries, index) =>
             latestReleaseRows(
                 entries.map((entry) => ({
@@ -143,6 +147,13 @@ export class FilesystemRepositorySearchSource {
                         .join("\n"),
                 ),
             ]);
+        }
+        for (const entry of selected[3]!) {
+            const artifact = await this.workflows.getMetadata(entry.publisherId, entry.workflowId!, entry.version);
+            if (!artifact || artifact.digest !== entry.digest) {
+                throw new RepositoryDiscoveryError("RELEASE_MISMATCH", "Workflow catalogue changed while indexing");
+            }
+            append([workflowRow(artifact.manifest, artifact.digest)]);
         }
         return { revision, rows };
     }

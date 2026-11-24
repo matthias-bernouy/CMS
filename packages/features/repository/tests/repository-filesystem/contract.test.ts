@@ -10,6 +10,8 @@ const compiled = resolve(
 const publicCapabilities = new Set([
     "repository-info",
     "bootstrap-recipes",
+    "artifacts.list",
+    "artifacts.search",
     "catalogue-list",
     "collection-catalogue",
     "catalogue-search",
@@ -21,9 +23,9 @@ const publicCapabilities = new Set([
 
 test("the official Registry release uses authenticated account operations and has no signing bindings", async () => {
     const artifact = await admitContractReleaseJson(await readFile(compiled));
-    expect(artifact.release.version).toBe("1.3.0");
-    expect(artifact.release.capabilities).toHaveLength(27);
-    expect(artifact.bindings).toHaveLength(27);
+    expect(artifact.release.version).toBe("1.4.0");
+    expect(artifact.release.capabilities).toHaveLength(30);
+    expect(artifact.bindings).toHaveLength(30);
     for (const capability of artifact.release.capabilities) {
         expect(capability.access).toBe(publicCapabilities.has(capability.id) ? "public" : "authenticated");
         expect(capability.bindings.every((binding) => binding.transport === "http")).toBe(true);
@@ -38,5 +40,5 @@ test("the official Registry release uses authenticated account operations and ha
 
 test("Registry SDK generation pins the reviewed indexed-discovery release digest", async () => {
     const artifact = await admitContractReleaseJson(await readFile(compiled));
-    expect(artifact.digest).toBe("sha256:216131fbd6fa34c015c8dbdb1e1954d6217ba7b85e44d6f51d137d5b21979409");
+    expect(artifact.digest).toBe("sha256:c2e3601ce24023ba367a8bc7b98d0692364697ecc6e57f25d506b75aa268b907");
 });

@@ -34,7 +34,7 @@ export const publishProviderManifest = defineCapability({
             },
         },
     ],
-    docs: ["overview.md", "artifact-authoring.md", "provider-manifest-source.md"],
+    docs: ["overview.md", "artifact-authoring.md", "sources/provider-manifest-source.md"],
     input: publishInputSchema,
     output: publishProviderManifestOutputSchema,
     errors,

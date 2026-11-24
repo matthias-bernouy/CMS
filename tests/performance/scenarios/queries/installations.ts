@@ -1,7 +1,7 @@
 import { assertCondition } from "./types";
 import type { QueryCase } from "./types";
 
-export const installationQueries: readonly QueryCase[] = [
+const baseInstallationQueries: readonly QueryCase[] = [
     {
         family: "installations",
         capability: "capabilities.describe",
@@ -90,4 +90,11 @@ export const installationQueries: readonly QueryCase[] = [
         input: () => ({ query: "smoke", limit: 10 }),
         assert: (out) => assertCondition(Array.isArray(out.results) && out.results.length > 0),
     },
+];
+
+export const installationQueries: readonly QueryCase[] = [
+    ...baseInstallationQueries,
+    ...baseInstallationQueries
+        .filter((recipe) => recipe.capability === "repository.search")
+        .map((recipe) => ({ ...recipe, capability: "repository.artifacts.search" })),
 ];

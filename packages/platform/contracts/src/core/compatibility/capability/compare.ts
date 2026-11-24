@@ -24,6 +24,12 @@ export function compareCapability(
     ) {
         changes.push(major("capability_changed", `${path}.responseEffects`, "capability response effects changed"));
     }
+    if (
+        fingerprint(previous.schemaResolver ?? null, maxJsonDepth) !==
+        fingerprint(next.schemaResolver ?? null, maxJsonDepth)
+    ) {
+        changes.push(major("capability_changed", `${path}.schemaResolver`, "schema resolver protocol changed"));
+    }
     const inputChange = compareSchema(previous.input, next.input, `${path}.input`, "input", maxJsonDepth);
     if (inputChange) {
         changes.push(inputChange);

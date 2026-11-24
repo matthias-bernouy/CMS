@@ -30,7 +30,7 @@ export const prepareContract = defineCapability({
             },
         },
     ],
-    docs: ["overview.md", "artifact-authoring.md", "contract-source.md"],
+    docs: ["overview.md", "artifact-authoring.md", "sources/contract-source.md"],
     input: prepareInputSchema,
     output: prepareContractOutputSchema,
     errors,

@@ -1,10 +1,35 @@
+import type { Db } from "mongodb";
 import { MongoFormsRepository } from "@bernouy/forms/mongo";
 import type { ProviderInstanceRegistry } from "@bernouy/ulvia-provider";
 import type { MongoClient } from "mongodb";
 import type { ProviderInstanceHost } from "../../instances/composition/ProviderInstanceHost";
 import { instanceDatabaseName } from "../../stores/storageRoots";
 
-/** One indexed metadata page per tick; idle instances are opened only for due Forms work. */
+async function automationWork(db: Db) {
+    const probes = [
+        ["event_membership_heads", { _id: "default", pending: { $exists: true } }],
+        ["event_publications", { siteId: "default", pending: true }],
+        ["domain_event_outbox", { siteId: "default", dueAt: { $type: "date" } }],
+        [
+            "workflow_runs",
+            { status: { $in: ["queued", "running", "waiting"] }, dueAt: { $lt: Number.MAX_SAFE_INTEGER } },
+        ],
+        ["workflow_triggers", { state: { $in: ["active", "preparing", "suspending", "deleting"] } }],
+        ["workflow_installations", { state: "removing" }],
+        ["workflow_installations", { pendingPublication: { $gt: 0 } }],
+        ["workflow_runs", { orphanPurgePending: true }],
+        ["workflow_value_scopes", { accepted: false, createdAt: { $lte: new Date(Date.now() - 604800000) } }],
+        ["workflow_runs", { purgeAt: { $lte: new Date() } }],
+        ["workflow_definitions", { "publication.revision": { $exists: true } }],
+    ] as const;
+    for (const [name, filter] of probes) {
+        if (await db.collection<{ _id: string }>(name).findOne(filter, { projection: { _id: 1 }, maxTimeMS: 2000 })) {
+            return true;
+        }
+    }
+    return false;
+}
+/** One bounded metadata page per tick; only retained business work or active trigger validation opens an instance. */
 export class FormsDiscovery {
     private cursor: string | null = null;
     private stopped = false;
@@ -41,7 +66,8 @@ export class FormsDiscovery {
                 continue;
             }
             try {
-                if (!(await MongoFormsRepository.hasWork(this.mongo.db(instanceDatabaseName(instance.storageKey))))) {
+                const db = this.mongo.db(instanceDatabaseName(instance.storageKey));
+                if (!(await MongoFormsRepository.hasWork(db)) && !(await automationWork(db))) {
                     continue;
                 }
                 const lease = await this.host.runtime(instance);

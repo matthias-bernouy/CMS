@@ -29,6 +29,7 @@ export const formsImplementation = implementFeature(formsFeature, {
         return dependencies.formsServices;
     },
     requires: [
+        { contractId: "ulvia/cms.events", capabilityId: "events.publish", versionRange: "^1.0.0", optional: false },
         { contractId: "ulvia/cms.emailer", capabilityId: "emailer.send", versionRange: "^1.0.0", optional: false },
     ],
 });

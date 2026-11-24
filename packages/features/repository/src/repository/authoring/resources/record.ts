@@ -61,14 +61,18 @@ export async function readArtifactPreparation(root: string, kind: AuthoredArtifa
         }
         const canonical = parseStrictJson(value.canonicalJson, 8 * 1024 * 1024, 64) as Record<string, unknown>;
         const owner =
-            kind === "contract"
+            kind !== "provider-manifest"
                 ? canonical.publisherId
                 : (canonical.provenance as Record<string, unknown>)?.publisherId;
         if (
             canonical.kind !== kind ||
             canonical.version !== value.version ||
             owner !== value.publisherId ||
-            (kind === "contract" ? canonical.contractId : canonical.providerId) !== value.id
+            (kind === "contract"
+                ? canonical.contractId
+                : kind === "workflow"
+                  ? canonical.workflowId
+                  : canonical.providerId) !== value.id
         ) {
             throw refuse();
         }

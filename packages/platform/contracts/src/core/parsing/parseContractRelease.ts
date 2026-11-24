@@ -1,3 +1,5 @@
+import { validateSchemaResolvers } from "ulvia-contracts/core/language/resolution/admission";
+import { parseContractEvents } from "../events/parse";
 import { resourcePublisher } from "./resources";
 import { parseDocumentation } from "../../documentation/manifest";
 import { assertIJson, canonicalIJsonBytes } from "../protocol/canonical";
@@ -13,7 +15,7 @@ import {
     rejectUnknownKeys,
 } from "../protocol/values";
 import type { ContractRelease } from "../../interfaces/ContractRelease";
-import { createSchemaState } from "../schema/context";
+import { createSchemaState } from "../language/schema/context";
 import { parseCapability } from "./parseCapability";
 import {
     parsePublisherIdentifier,
@@ -42,6 +44,7 @@ export function parseContractRelease(
             "publisherId",
             "catalogue",
             "capabilities",
+            "events",
             "fixtureAssets",
             "documentation",
         ],
@@ -52,7 +55,7 @@ export function parseContractRelease(
     expectLiteral(record.protocol, "ulvia-provider/v1", "$.protocol");
     expectLiteral(record.schemaDialect, "ulvia-schema/v1", "$.schemaDialect");
     const source = expectArray(record.capabilities, "$.capabilities", "invalid_contract");
-    if (source.length === 0 || source.length > limits.maxCapabilities) {
+    if (source.length > limits.maxCapabilities) {
         throw new ReleaseValidationError(
             "invalid_contract",
             `capabilities must contain between 1 and ${limits.maxCapabilities} entries`,
@@ -67,8 +70,12 @@ export function parseContractRelease(
     const capabilities = source.map((capability, index) =>
         parseCapability(capability, `$.capabilities[${index}]`, limits, schemaState, assetsById, referencedAssets),
     );
+    const events = parseContractEvents(record.events, schemaState, record.extends !== undefined);
+    if (source.length === 0 && !events?.length) {
+        throw new ReleaseValidationError("invalid_contract", "a contract must declare capabilities or events", "$");
+    }
     const docPaths = new Set(documentation?.map((doc) => doc.path));
-    for (const capability of capabilities) {
+    for (const capability of [...capabilities, ...(events ?? [])]) {
         for (const path of capability.docs ?? []) {
             if (!docPaths.has(path)) {
                 throw new ReleaseValidationError("invalid_contract", `missing capability documentation: ${path}`);
@@ -101,6 +108,7 @@ export function parseContractRelease(
         publisherId: parsePublisherIdentifier(record.publisherId, "$.publisherId"),
         ...(catalogue ? { catalogue } : {}),
         capabilities,
+        ...(events === undefined ? {} : { events }),
         ...(documentation === undefined ? {} : { documentation }),
         ...(fixtureAssets === undefined ? {} : { fixtureAssets }),
     };
@@ -112,6 +120,7 @@ export function parseContractRelease(
         );
     }
     validateResponseEffectAuthority(release);
+    validateSchemaResolvers(release, Boolean(parent));
     if (canonicalIJsonBytes(release, limits.maxJsonDepth).byteLength > limits.maxDocumentBytes) {
         throw new ReleaseValidationError(
             "body_limit_exceeded",

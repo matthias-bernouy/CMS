@@ -165,6 +165,10 @@ export function resolveFixtureContract(admission: AdmittedContractRelease): Reso
         release,
         digest,
         lineage: [{ release, digest }],
+        events: (release.events ?? []).map((definition) => ({
+            owner: { contractId: release.contractId, version: release.version, digest },
+            definition,
+        })),
         capabilities: release.capabilities.map((definition) => ({
             owner: { contractId: release.contractId, version: release.version, digest },
             definition,

@@ -1,3 +1,4 @@
+import { LocalWorkflowReleases } from "../artifacts/workflows";
 import { collectionSourceAssets } from "../../publication/sourceAssets";
 import { buildCollectionBundle, publishBuiltCollection, publishCollectionBundle } from "../builds/collections";
 import { createHash } from "node:crypto";
@@ -41,6 +42,15 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
             if (envelope.kind === "contract") {
                 const { added, admission } = await contracts.publish(envelope.canonicalJson, envelope.assets);
                 return result(envelope.kind, admission.release, admission.digest, added);
+            }
+            if (envelope.kind === "workflow") {
+                if (envelope.assets.length || envelope.sourceJson !== undefined) {
+                    throw new RepositoryRequestError("REJECTED", "Workflow manifests cannot contain executable assets");
+                }
+                const { added, admission } = await new LocalWorkflowReleases(files, contracts, yanks).publish(
+                    envelope.canonicalJson,
+                );
+                return result("workflow", admission.manifest, admission.digest, added);
             }
             if (envelope.assets.length) {
                 throw new RepositoryRequestError("REJECTED", "Provider manifests cannot contain assets");
@@ -156,7 +166,8 @@ async function assertPublished(root: string, coordinate: RemoteCoordinate): Prom
         return;
     }
     const files = new LocalArtifactFiles(root);
-    const type = coordinate.kind === "contract" ? "contracts" : "providers";
+    const type =
+        coordinate.kind === "contract" ? "contracts" : coordinate.kind === "workflow" ? "workflows" : "providers";
     if (!(await files.get(type, coordinate.publisherId, coordinate.id, coordinate.version))) {
         throw new RepositoryRequestError("NOT_FOUND", `${coordinate.kind} release is not published`);
     }

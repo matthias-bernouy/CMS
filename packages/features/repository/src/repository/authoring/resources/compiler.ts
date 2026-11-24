@@ -1,3 +1,4 @@
+import { admitWorkflowManifest, verifyWorkflowRequirements } from "@bernouy/workflows/manifest";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { resolveContractLineage } from "@bernouy/ulvia-contracts";
@@ -9,7 +10,7 @@ import type { AuthoringHost } from "../preparations/prepare";
 import { prepareContractSource } from "./source/contract";
 import { preparationCatalogue } from "./dependencies/catalogue";
 
-export type AuthoredArtifactKind = "contract" | "provider-manifest";
+export type AuthoredArtifactKind = "contract" | "provider-manifest" | "workflow";
 export interface PreparedArtifact extends PublicationEnvelope {
     readonly kind: AuthoredArtifactKind;
     readonly digest: string;
@@ -25,6 +26,19 @@ export async function compileArtifact(
     directory: string,
 ): Promise<PreparedArtifact> {
     const catalogue = preparationCatalogue(host.contracts, publisher);
+    if (kind === "workflow") {
+        const admission = admitWorkflowManifest(await readFile(join(directory, "definition.json"), "utf8"));
+        await verifyWorkflowRequirements(admission.manifest, catalogue);
+        return {
+            kind,
+            digest: admission.digest,
+            canonicalJson: admission.canonicalJson,
+            publisherId: admission.manifest.publisherId,
+            id: admission.manifest.workflowId,
+            version: admission.manifest.version,
+            assets: [],
+        };
+    }
     if (kind === "contract") {
         const { admission } = await prepareContractSource(directory);
         const lineage = await resolveContractLineage(catalogue, admission.release);

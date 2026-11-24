@@ -1,3 +1,5 @@
+import { freshTenants } from "../installations/fresh";
+import { prepareGatewaySchema } from "./schema";
 import { prepareGatewayCommand } from "./command";
 import { lifecycleScenarios } from "../lifecycle";
 import { gatewayContext } from "./context";
@@ -14,6 +16,7 @@ const GATEWAY_CAPABILITIES = [
     "gateway.mcp.resolve",
     "gateway.mcp.authorized",
     "gateway.command.prepare",
+    "gateway.schemas.seal",
     "gateway.identity.resolve",
     "gateway.audit.append",
     "gateway.invocation.issue",
@@ -21,13 +24,21 @@ const GATEWAY_CAPABILITIES = [
 ] as const;
 
 export function gatewayScenarios(inventory: CapabilityInventory, fixture: string) {
+    const fresh = freshTenants(inventory);
     const control = lifecycleScenarios(
         inventory,
         fixture,
         "gateway-control",
         "ulvia/cms.installations",
         GATEWAY_CAPABILITIES,
-        async (environment, capability) => {
+        async (environment, capability, obligation) => {
+            if (capability === "gateway.schemas.seal") {
+                return prepareGatewaySchema(
+                    inventory,
+                    environment,
+                    await fresh(environment, obligation.binding, false),
+                );
+            }
             const context = await gatewayContext(inventory, environment);
             if (capability === "gateway.command.prepare") {
                 return prepareGatewayCommand(context);

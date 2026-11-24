@@ -237,6 +237,7 @@ export async function createProviderStores(
             secretCrypto,
             `provider-return-connections:${env.instanceId}`,
         ),
+        fieldCrypto,
         runtimeSessionSecret: env.CMS_SESSION_SECRET,
         collections,
         collectionUpgrades,

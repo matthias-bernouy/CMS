@@ -1,3 +1,5 @@
+import { validateSchemaResolvers } from "ulvia-contracts/core/language/resolution/admission";
+import type { ContractEventDefinition } from "ulvia-contracts/interfaces/ContractEvent";
 import type { AdmittedContractRelease } from "../../admission/admitContractRelease";
 import type { ResolvedContract } from "../../../interfaces/ResolvedContract";
 import type { CapabilityDefinition, ContractRelease } from "ulvia-contracts/interfaces/ContractRelease";
@@ -31,6 +33,11 @@ export async function resolveContractLineage(
         visited.add(current.contractId);
     }
     validateDeprecationReferences(effectiveLineageCapabilities(lineage));
+    validateDeprecationReferences(effectiveLineageEvents(lineage), false, "events");
+    validateSchemaResolvers({
+        capabilities: effectiveLineageCapabilities(lineage),
+        events: effectiveLineageEvents(lineage),
+    });
     return Object.freeze(lineage);
 }
 
@@ -47,6 +54,18 @@ export async function findImplementedContract(
 /** Resolves the effective capability set in declaration order, from root to concrete additions. */
 export function effectiveLineageCapabilities(lineage: readonly ContractRelease[]): readonly CapabilityDefinition[] {
     return Object.freeze(lineage.toReversed().flatMap((release) => release.capabilities));
+}
+
+export function effectiveLineageEvents(lineage: readonly ContractRelease[]): readonly ContractEventDefinition[] {
+    const events = lineage.toReversed().flatMap((release) => release.events ?? []);
+    if (new Set(events.map(({ id }) => id)).size !== events.length) {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            "specialization cannot redeclare an inherited event",
+            "$.events",
+        );
+    }
+    return Object.freeze(events);
 }
 
 /** Preserve published bytes and ownership while resolving the effective execution surface. */
@@ -74,5 +93,15 @@ export async function resolveContract(
         digest: admission.digest,
         lineage: Object.freeze(lineage),
         capabilities: Object.freeze(capabilities),
+        events: Object.freeze(
+            lineage.toReversed().flatMap(({ release, digest }) =>
+                (release.events ?? []).map((definition) =>
+                    Object.freeze({
+                        owner: Object.freeze({ contractId: release.contractId, version: release.version, digest }),
+                        definition,
+                    }),
+                ),
+            ),
+        ),
     });
 }

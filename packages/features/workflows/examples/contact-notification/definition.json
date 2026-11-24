@@ -1,0 +1,131 @@
+{
+    "kind": "workflow",
+    "format": "ulvia-workflow-manifest/v1",
+    "workflowId": "example/contact-notification",
+    "publisherId": "example",
+    "name": "Contact notification",
+    "version": "1.0.0",
+    "description": "Send the selected form message to an instance-configured recipient.",
+    "requirements": [
+        {
+            "contractId": "ulvia/cms.forms",
+            "versionRange": "^1.1.0",
+            "capabilityIds": [],
+            "eventIds": [
+                "submission.created"
+            ]
+        },
+        {
+            "contractId": "ulvia/cms.emailer",
+            "versionRange": "^1.0.0",
+            "capabilityIds": [
+                "emailer.send"
+            ],
+            "eventIds": []
+        }
+    ],
+    "definition": {
+        "format": "ulvia-workflow/v1",
+        "parametersSchema": {
+            "type": "object",
+            "properties": {
+                "formId": {
+                    "type": "string",
+                    "maxLength": 36,
+                    "format": "uuid"
+                },
+                "recipient": {
+                    "type": "string",
+                    "maxLength": 320,
+                    "format": "email"
+                }
+            },
+            "required": [
+                "formId",
+                "recipient"
+            ]
+        },
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
+        "outputSchema": {
+            "type": "boolean"
+        },
+        "trigger": {
+            "kind": "event",
+            "contractId": "ulvia/cms.forms",
+            "eventType": "submission.created",
+            "filter": {
+                "kind": "object",
+                "fields": {
+                    "formId": {
+                        "kind": "parameter",
+                        "path": "/formId"
+                    }
+                }
+            }
+        },
+        "entry": "has-data",
+        "steps": [
+            {
+                "id": "has-data",
+                "kind": "condition",
+                "test": {
+                    "kind": "exists",
+                    "value": {
+                        "kind": "trigger",
+                        "path": "/data"
+                    }
+                },
+                "then": "has-message",
+                "otherwise": null
+            },
+            {
+                "id": "has-message",
+                "kind": "condition",
+                "test": {
+                    "kind": "exists",
+                    "value": {
+                        "kind": "trigger",
+                        "path": "/data/answers/textarea"
+                    }
+                },
+                "then": "notify",
+                "otherwise": null
+            },
+            {
+                "id": "notify",
+                "kind": "call",
+                "target": {
+                    "contractId": "ulvia/cms.emailer",
+                    "capabilityId": "emailer.send"
+                },
+                "input": {
+                    "kind": "object",
+                    "fields": {
+                        "toEmail": {
+                            "kind": "parameter",
+                            "path": "/recipient"
+                        },
+                        "subject": {
+                            "kind": "literal",
+                            "value": "Contact form message"
+                        },
+                        "text": {
+                            "kind": "trigger",
+                            "path": "/data/answers/textarea"
+                        }
+                    }
+                },
+                "next": null,
+                "onError": {}
+            }
+        ],
+        "output": {
+            "kind": "literal",
+            "value": true
+        }
+    }
+}

@@ -70,3 +70,21 @@ defineFeature({
     ],
 });
 void [invalidInput, invalidOutput, invalidHandler, booleanOperation, errorOperation, unknownError];
+
+import { defineEvent, eventsFor } from "@bernouy/ulvia-sdk";
+const eventFeature = defineFeature({
+    contractId: "example/payments",
+    publisherId: "example",
+    name: "Payments",
+    version: "1.0.0",
+    capabilities: [],
+    events: [
+        defineEvent({ id: "payment.succeeded", sensitive: false, schema: z.strictObject({ amount: z.number() }) }),
+    ],
+});
+const eventEmitter = eventsFor(eventFeature, { enqueue: async () => {} });
+void eventEmitter.emit("payment.succeeded", "payment-1", { amount: 1 });
+// @ts-expect-error Event payloads derive from the declared schema.
+void eventEmitter.emit("payment.succeeded", "payment-1", { amount: "invalid" });
+// @ts-expect-error Undeclared event IDs cannot be emitted.
+void eventEmitter.emit("payment.unknown", "payment-1", { amount: 1 });

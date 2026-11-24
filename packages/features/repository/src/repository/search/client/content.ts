@@ -1,3 +1,4 @@
+import { verifyStoredWorkflowManifest } from "@bernouy/workflows/manifest";
 import { RepositoryDiscoveryError } from "../core/errors";
 import { CollectionValidationError } from "repository/collections/core/errors";
 import { ReleaseValidationError } from "@bernouy/ulvia-contracts";
@@ -56,6 +57,19 @@ export async function readResourceContent(
                 throw new RepositoryDiscoveryError("RELEASE_MISMATCH");
             }
             payload = artifact.release;
+        } else if (reference.kind === "workflow") {
+            const artifact = verifyStoredWorkflowManifest(
+                new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+                reference.digest,
+            );
+            if (
+                artifact.manifest.publisherId !== reference.publisherId ||
+                artifact.manifest.workflowId !== reference.id ||
+                artifact.manifest.version !== reference.version
+            ) {
+                throw new RepositoryDiscoveryError("RELEASE_MISMATCH");
+            }
+            payload = artifact.manifest;
         } else {
             const artifact = await verifyStoredProviderManifestJson(bytes, reference.digest as `sha256:${string}`);
             if (

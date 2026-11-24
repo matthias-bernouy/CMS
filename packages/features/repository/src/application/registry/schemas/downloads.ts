@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { contractString, contractBinary } from "@bernouy/ulvia-sdk";
 export const assetDownloadInputSchema = z.strictObject({
-    kind: contractString({ minLength: 1, maxLength: 32, enum: ["collection", "contract", "provider-manifest"] }),
+    kind: contractString({
+        minLength: 1,
+        maxLength: 32,
+        enum: ["collection", "contract", "provider-manifest", "workflow"],
+    }),
     publisherId: contractString({ minLength: 1, maxLength: 96 }),
     id: contractString({ minLength: 1, maxLength: 193 }),
     version: contractString({ minLength: 1, maxLength: 128 }),

@@ -30,3 +30,5 @@ export {
     type RepositoryArtifactKind,
     type RepositoryYank,
 } from "repository/repository/filesystem/yanks";
+
+export { LocalWorkflowReleases } from "repository/repository/filesystem/artifacts/workflows";

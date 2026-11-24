@@ -1,3 +1,4 @@
+import type { UlviaSchema } from "@bernouy/ulvia-contracts/schema";
 import type { CapabilityDefinition } from "@bernouy/ulvia-contracts";
 import type { CompiledImplementations } from "ulvia-sdk/interfaces/providers";
 import type { CapabilitySource } from "ulvia-sdk/interfaces/capabilities";
@@ -8,6 +9,8 @@ export interface RuntimeCapabilityPlan<Dependencies> {
     readonly version: string;
     readonly requests: readonly Readonly<{ contractId: string; version: string; digest: string }>[];
     readonly defaultOperation: boolean;
+    /** Trusted compatible attachment validates this source shape before projecting to the selected old release. */
+    readonly retainedOutputSchema?: UlviaSchema;
     readonly capability: CapabilityDefinition;
     readonly source: CapabilitySource;
     readonly createHandler: (dependencies: Dependencies) => unknown;

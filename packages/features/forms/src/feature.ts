@@ -1,3 +1,5 @@
+import { submissionCreated } from "forms/core/events/definition";
+import { describeSubmission, listSubmissionSources } from "forms/application/capabilities/event-schema";
 import { defineFeature, z } from "@bernouy/ulvia-sdk";
 import * as forms from "forms/application/capabilities/forms";
 import * as submissions from "forms/application/capabilities/submissions";
@@ -5,13 +7,16 @@ import { FormsError } from "forms/core/errors";
 import { FormsValidationError } from "forms/core/validation";
 export const formsFeature = defineFeature({
     contractId: "ulvia/cms.forms",
-    version: "1.0.0",
+    version: "1.1.0",
     publisherId: "ulvia",
     name: "CMS Forms",
     description: "Configurable forms, retained submissions and independent email notifications.",
     catalogue: { icon: "form", categories: ["content"] },
     documents: new URL("../docs/", import.meta.url),
+    events: [submissionCreated],
     capabilities: [
+        describeSubmission,
+        listSubmissionSources,
         forms.create,
         forms.get,
         forms.list,

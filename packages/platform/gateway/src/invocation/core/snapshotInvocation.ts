@@ -18,6 +18,7 @@ const INVOCATION_FIELDS = new Set([
     "requestContext",
     "signal",
     "trace",
+    "eventCausation",
     "contractId",
     "capabilityId",
     "input",
@@ -75,7 +76,13 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
         expectedTarget !== undefined &&
         (!expectedTarget ||
             typeof expectedTarget !== "object" ||
-            Object.keys(expectedTarget).length !== 4 ||
+            Object.keys(expectedTarget).some(
+                (key) => !["installationId", "endpoint", "accountId", "instanceId", "version", "digest"].includes(key),
+            ) ||
+            (expectedTarget.version !== undefined &&
+                (typeof expectedTarget.version !== "string" || expectedTarget.version.length > 64)) ||
+            (expectedTarget.digest !== undefined &&
+                (typeof expectedTarget.digest !== "string" || !/^sha256:[a-f0-9]{64}$/u.test(expectedTarget.digest))) ||
             [
                 expectedTarget.installationId,
                 expectedTarget.endpoint,
@@ -93,6 +100,15 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
     ) {
         throw new GatewayError("not_authorized", "delegation requires an authenticated source Provider");
     }
+    if (
+        value.eventCausation !== undefined &&
+        (!Array.isArray(value.eventCausation) ||
+            value.eventCausation.length > 32 ||
+            value.eventCausation.some((entry) => typeof entry !== "string" || !/^[a-f0-9]{64}$/u.test(entry)))
+    ) {
+        throw new GatewayError("invalid_input", "Invalid event causation");
+    }
+    const eventCausation = value.eventCausation ? [...value.eventCausation] : undefined;
     const idempotencyKey = snapshotIdempotencyKey(value.idempotencyKey);
     const actorCredential = snapshotActorCredential(value.actorCredential);
     try {
@@ -109,6 +125,7 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
             ...(target ? { expectedTarget: target } : {}),
             ...(value.requestContext ? { requestContext: snapshotRequestContext(value.requestContext) } : {}),
             ...(value.signal ? { signal: value.signal } : {}),
+            ...(eventCausation ? { eventCausation } : {}),
             ...(value.trace ? { trace: { ...value.trace } } : {}),
             contractId: value.contractId,
             capabilityId: value.capabilityId,

@@ -101,8 +101,19 @@ try {
         );
         instanceHost.repositoryCreation = {
             create: async (instance, expectedRevision, administratorId) => {
-                const { source, target } = await instanceHost.registryPlan(instance);
-                return provisioner.createRepository(instance.id, source, target, expectedRevision, administratorId);
+                try {
+                    const { source, target } = await instanceHost.registryPlan(instance);
+                    return await provisioner.createRepository(
+                        instance.id,
+                        source,
+                        target,
+                        expectedRevision,
+                        administratorId,
+                    );
+                } catch (error) {
+                    logger.error("provider.registry.creation.failed", { instanceId: instance.id }, error);
+                    throw error;
+                }
             },
             read: (instance) => provisioner.repositoryCreation(instance),
         };

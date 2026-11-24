@@ -15,3 +15,9 @@ export { decodeProviderContractInput } from "cms-gateway/provider/server/transpo
 export { createProviderHandler, type ProviderHandlerOptions } from "cms-gateway/provider/server/handler";
 
 export { evaluateHttpPreconditions, type HttpValidators } from "@bernouy/http-runner";
+
+export type {
+    SchemaVersionScope,
+    SchemaVersionStore,
+    ProviderSchemaResolution,
+} from "cms-gateway/provider/resolution/interfaces";

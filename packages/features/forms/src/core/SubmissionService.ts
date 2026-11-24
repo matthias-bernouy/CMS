@@ -1,3 +1,4 @@
+import type { FormsSubmissionEvents } from "forms/interfaces/services";
 import { fingerprint } from "forms/persistence/identity";
 import { FormsError } from "forms/core/errors";
 import { validateAnswers } from "forms/core/validation";
@@ -18,8 +19,15 @@ export class SubmissionService {
         private readonly repository: FormsRepository,
         private readonly forms: FormsService,
         private readonly now = Date.now,
+        private readonly events?: FormsSubmissionEvents,
     ) {}
-    async submit(raw: SubmissionInput, principal: string, access: "public" | "authenticated") {
+    async submit(
+        raw: SubmissionInput,
+        principal: string,
+        access: "public" | "authenticated",
+        causation: readonly string[] = [],
+        captureInitiator?: () => Promise<string | undefined>,
+    ) {
         const input = submissionInputSchema.parse(raw);
         if (!validRequest(raw) || input.honeypot) {
             throw new FormsError("INVALID_INPUT");
@@ -65,7 +73,9 @@ export class SubmissionService {
         const notification = draft.notification.enabled
             ? composeNotification(draft, input, input.attemptId, receivedAt)
             : null;
+        const event = this.events ? await this.events.prepare(causation, await captureInitiator?.()) : null;
         const record: SubmissionRecord = {
+            event,
             receiptId: input.attemptId,
             formId: input.formId,
             formVersion: input.formVersion,
@@ -104,6 +114,7 @@ export class SubmissionService {
     }
     async get(receiptId: string) {
         const {
+            event: _event,
             principal: _principal,
             digest: _digest,
             notification: _notification,
@@ -171,6 +182,7 @@ export class SubmissionService {
             await this.change(record, record.revision, {
                 ...record,
                 deleted: true,
+                event: null,
                 answers: [],
                 notification: null,
                 intents: [],

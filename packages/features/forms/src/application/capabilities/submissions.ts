@@ -45,7 +45,13 @@ export const submit = defineCapability({
     errors,
     bindings: [http("POST", "/forms/submit")],
     execute: ({ input, services, context }) =>
-        services.submissions.submit(input, services.principal(context), "public"),
+        services.submissions.submit(
+            input,
+            services.principal(context),
+            "public",
+            context.eventCausation,
+            () => services.captureInitiator?.(context, input.attemptId) ?? Promise.resolve(undefined),
+        ),
 });
 export const submitAuthenticated = defineCapability({
     id: "forms.submit-authenticated",
@@ -57,7 +63,13 @@ export const submitAuthenticated = defineCapability({
     errors,
     bindings: [http("POST", "/forms/submit-authenticated")],
     execute: ({ input, services, context }) =>
-        services.submissions.submit(input, services.principal(context), "authenticated"),
+        services.submissions.submit(
+            input,
+            services.principal(context),
+            "authenticated",
+            context.eventCausation,
+            () => services.captureInitiator?.(context, input.attemptId) ?? Promise.resolve(undefined),
+        ),
 });
 export const get = defineCapability({
     id: "submissions.get",
