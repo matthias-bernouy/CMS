@@ -3,6 +3,7 @@ import { retainedSourceSnapshot } from "../preparations/source/retained";
 import { AUTHORING_SOURCE_LIMITS, CONTRACT_SOURCE_ASSET_LIMITS } from "../preparations/source/limits";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
+import { PREPARATION_TTL_MS } from "../preparations/limits";
 import { isResourceId, resourceName, parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import type { CollectionPublisher } from "../CollectionAuthoring";
 import type { AuthoringHost } from "../preparations/prepare";
@@ -68,7 +69,7 @@ export async function prepareRemoteArtifact(
             canonicalJson: artifact.canonicalJson,
             sourceJson: retained,
             sourceDigest: sourceDigest(retained),
-            expiresAt: Date.now() + 7 * 86400_000,
+            expiresAt: Date.now() + PREPARATION_TTL_MS,
             repositoryOrigin: new URL(publisher.repositoryUrl).origin,
             repositoryId: status.repositoryId,
         };

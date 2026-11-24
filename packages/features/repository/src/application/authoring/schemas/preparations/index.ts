@@ -2,6 +2,7 @@ import { AUTHORING_SOURCE_LIMITS } from "repository/repository/authoring/prepara
 import { z } from "zod";
 import { contractString } from "@bernouy/ulvia-sdk";
 import { authoringDiagnosticSchema } from "repository/application/authoring/schemas/common";
+import { preparationQuotaSchema } from "./inventory";
 export const prepareInputSchema = z.strictObject({
     sourceJson: contractString({
         maxLength: AUTHORING_SOURCE_LIMITS.snapshotBytes,
@@ -15,6 +16,7 @@ export const prepareContractOutputSchema = z
     .strictObject({
         valid: z.boolean().describe("Publish only when valid is true and a preparationId and digest were returned."),
         diagnostics: z.array(authoringDiagnosticSchema).max(16).readonly(),
+        quota: preparationQuotaSchema.optional(),
         repositoryId: contractString({ maxLength: 96 }).optional(),
         publisherId: contractString({ maxLength: 96 }).optional(),
         version: contractString({ maxLength: 64 }).optional(),
@@ -29,6 +31,7 @@ export const prepareProviderManifestOutputSchema = z
     .strictObject({
         valid: z.boolean().describe("Publish only when valid is true and a preparationId and digest were returned."),
         diagnostics: z.array(authoringDiagnosticSchema).max(16).readonly(),
+        quota: preparationQuotaSchema.optional(),
         repositoryId: contractString({ maxLength: 96 }).optional(),
         publisherId: contractString({ maxLength: 96 }).optional(),
         version: contractString({ maxLength: 64 }).optional(),
@@ -62,6 +65,7 @@ export const prepareCollectionOutputSchema = z
     .strictObject({
         valid: z.boolean().describe("Publish only when valid is true and a preparationId and digest were returned."),
         diagnostics: z.array(authoringDiagnosticSchema).max(16).readonly(),
+        quota: preparationQuotaSchema.optional(),
         repositoryId: contractString({ maxLength: 96 }).optional(),
         publisherId: contractString({ maxLength: 96 }).optional(),
         collectionId: contractString({ maxLength: 193 }).optional(),

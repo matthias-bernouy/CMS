@@ -17,7 +17,7 @@ const releaseDigests = {
     "ulvia/cms.workflows": "sha256:262ff8272e540a5ee6f641f4416a2435a77015dea6bf9ed0330f8a6edd1ba30d",
     "ulvia/cms.access": "sha256:3e8189f1023bf4be12c3385aa113bbe806022b5cf2903d88d80e27b2e394fc3c",
     "ulvia/cms.content": "sha256:67bbdbb098558cb027bd6b7a737ad5907928d85fd03fe3112918ac2699c44b08",
-    "ulvia/cms.authoring": "sha256:d1f954b3844c6599063f39d7167b1a4ad79cf799a86fdb69ce75bff3e55ea790",
+    "ulvia/cms.authoring": "sha256:4c986d7100711dfa8282fbe0116ef5ef7fb89a7d7558e6ca4f61c009fa6e17e5",
     "ulvia/cms.secrets": "sha256:358b2e7e889f656320dd824a698c425a500211ea80695d120e5f4effe1255c08",
     "ulvia/cms.files": "sha256:f5be7d20f375d96cc97d4454bdb570fc87fabe755dff1850cbaeb26e508809a8",
     "ulvia/cms.observability": "sha256:113758c81e4cdc774bba95c8f136a3a9650be5b6d59412ef51383bd15dd2de45",
@@ -43,7 +43,7 @@ test("generated manifest claims the exact SDK implementation inventory", async (
     const compiled = await compileOfficialFeatures();
     await publishContractSet(catalogue, compiled.contracts);
     const manifest = await compileOfficialManifest(catalogue, compiled);
-    expect(manifest.manifest.version).toBe("1.14.0");
+    expect(manifest.manifest.version).toBe("1.15.0");
     expect(manifest.manifest.implementations).toHaveLength(18);
     expect(
         manifest.manifest.implementations

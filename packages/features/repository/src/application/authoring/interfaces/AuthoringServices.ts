@@ -9,6 +9,7 @@ export type AuthoringService = Pick<
     | "configureConnection"
     | "disconnectConnection"
     | "listNamespaces"
+    | "listPreparations"
     | "claim"
     | "prepare"
     | "publish"

@@ -13,6 +13,7 @@ import {
     collectionBrowserRiskDigest,
 } from "repository/collections/core/validation/browserCapabilities";
 import { randomUUID } from "node:crypto";
+import { PREPARATION_TTL_MS } from "./limits";
 import {
     reservePreparationWorkspace,
     commitPreparationWorkspace,
@@ -59,7 +60,7 @@ export async function prepareRemoteCollection(
             sourceDigest: sourceDigest(retainedSources),
             directory: resourceName(collectionId),
             canonicalJson: artifact.canonicalJson,
-            expiresAt: Date.now() + 7 * 86400_000,
+            expiresAt: Date.now() + PREPARATION_TTL_MS,
             repositoryId: preflight.repositoryId,
             repositoryOrigin: preflight.origin,
         });

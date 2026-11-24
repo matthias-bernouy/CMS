@@ -1,24 +1,26 @@
 import { mkdtemp, readdir, stat, rm, rename } from "node:fs/promises";
 import { join } from "node:path";
 import { withRepositoryWriteLock } from "../../filesystem/core/lock";
+import { PREPARATION_ID, PREPARATION_LIMIT, PREPARATION_TTL_MS } from "./limits";
+import { PreparationQuotaError } from "./errors";
 
 /** Reserve a slot before compiling; all authoring kinds share this process-safe budget. */
 export function reservePreparationWorkspace(root: string): Promise<string> {
     return withRepositoryWriteLock(root, async () => {
         let retained = 0;
         for (const entry of await readdir(root, { withFileTypes: true })) {
-            if (!entry.isDirectory() || !/^(?:prepare-|[a-f0-9-]{36}$)/u.test(entry.name)) {
+            if (!entry.isDirectory() || (!entry.name.startsWith("prepare-") && !PREPARATION_ID.test(entry.name))) {
                 continue;
             }
             const path = join(root, entry.name);
-            if ((await stat(path)).mtimeMs < Date.now() - 7 * 86400_000) {
+            if ((await stat(path)).mtimeMs < Date.now() - PREPARATION_TTL_MS) {
                 await rm(path, { recursive: true, force: true });
             } else {
                 retained += 1;
             }
         }
-        if (retained >= 64) {
-            throw new Error("Prepared resource limit reached; remove an old preparation before adding more");
+        if (retained >= PREPARATION_LIMIT) {
+            throw new PreparationQuotaError(retained);
         }
         return mkdtemp(join(root, "prepare-"));
     });

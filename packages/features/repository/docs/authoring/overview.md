@@ -21,7 +21,8 @@ Call `configure-connection` with the PAT. The runtime controls the target origin
 - `get-collection-sources` reads the private source snapshot for a namespace currently owned by the configured Repository account.
 - `prepare-contract`, `publish-contract` and `get-contract-sources` provide the equivalent contract workflow, including versioned Markdown documentation and fixture assets.
 - `prepare-provider-manifest`, `publish-provider-manifest` and `get-provider-manifest-sources` provide manifest authoring against exact contract pins.
-- `discard-preparation` removes an unpublished local preparation of any supported kind; published releases remain intact.
+- `list-preparations` lists local preparation IDs, resource identities, expiration and publication state. Follow `nextCursor`; the page limit is eight. No Repository account connection is required.
+- `discard-preparation` explicitly removes a selected local preparation of any supported kind, including completed publication receipts; remote published releases and their retained sources remain intact.
 
 Read [artifact authoring](artifact-authoring.md), [contract sources](sources/contract-source.md) and [Provider manifest sources](sources/provider-manifest-source.md) before these workflows.
 
@@ -30,6 +31,22 @@ Durable collection publication checks the current local administrator grant befo
 The remote Repository checks account ownership and namespace revision for every protected upload stage. Namespace transfer, token expiration or token revocation can prevent an in-progress publication from completing. Reconnecting to another account does not transfer ownership or resume another account's upload.
 
 ## Errors and verification
+
+All authoring kinds share 64 unexpired workspaces, including work in progress.
+On `valid: false` with diagnostic code `preparation.quota_exceeded`, inspect
+`quota.limit` and `quota.count`, then call `list-preparations`. Prefer a completed
+`published` preparation after verifying its remote release and sources. Select
+its `preparationId`, call `discard-preparation`, and retry preparation. Cleanup
+is explicit; successful publication retains its local receipt for exact retries.
+
+`sources-pending` means publication recovery still needs the preparation.
+`not-recorded` means no local publication receipt exists; it does not prove that
+a previously interrupted remote publication failed. `unreadable` entries still
+return an ID for deliberate cleanup, with unknown kind/resource/version. Inspect
+remote state before discarding uncertain work. Active compilation reservations
+contribute to `quota.inProgress` and have no discardable preparation ID yet.
+Listing does not expire, delete or repair preparations; expiry cleanup occurs
+when reserving a new workspace. A cursor remains usable after its item is deleted.
 
 Discover the selected capability schemas before calling tools. Documentation does not grant execution rights. Branch on declared error codes rather than translated messages. A transport failure can leave a mutation outcome unknown; inspect remote state before repeating it.
 

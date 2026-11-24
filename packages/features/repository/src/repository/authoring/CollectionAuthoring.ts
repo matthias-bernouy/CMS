@@ -18,6 +18,8 @@ export {
 } from "repository/repository/authoring/preparations/errors";
 import type { RepositoryNamespaceCredential } from "repository/repository/publication/transport/credentials";
 import { discardPreparationWorkspace } from "./preparations/workspace";
+import { listPreparations } from "./preparations/inventory/list";
+import type { PreparationInventoryQuery } from "repository/application/authoring/interfaces/AuthoringDtos";
 
 export interface CollectionPublisher {
     readonly repositoryUrl: string;
@@ -99,6 +101,9 @@ export class CollectionAuthoring {
     async discard(id: string) {
         await discardPreparationWorkspace(this.host.root, this.path(id));
         return { discarded: true };
+    }
+    listPreparations(input: PreparationInventoryQuery = {}) {
+        return listPreparations(this.host.root, input);
     }
     private path(id: string) {
         if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/u.test(id)) {

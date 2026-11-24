@@ -1,5 +1,6 @@
 import { RepositoryRequestError } from "../../core/errors";
 import type { ContentDiagnostic } from "@bernouy/content/page-document";
+import { PREPARATION_LIMIT } from "./limits";
 
 export class CollectionPreparationError extends Error {
     constructor(
@@ -8,6 +9,15 @@ export class CollectionPreparationError extends Error {
     ) {
         super(message);
         this.name = "CollectionPreparationError";
+    }
+}
+
+export class PreparationQuotaError extends CollectionPreparationError {
+    readonly limit = PREPARATION_LIMIT;
+    constructor(readonly count: number) {
+        const message = `Prepared resource limit reached (${count}/${PREPARATION_LIMIT}). Call list-preparations, then discard-preparation with an explicitly selected preparationId; retry after in-progress preparations finish if no completed preparation is listed.`;
+        super(message, [{ code: "preparation.quota_exceeded", severity: "error", message }]);
+        this.name = "PreparationQuotaError";
     }
 }
 

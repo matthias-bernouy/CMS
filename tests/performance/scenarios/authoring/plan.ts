@@ -6,6 +6,7 @@ import { prepareAuthoring } from "./recipes";
 import { prepareConnection, prepareConnectionRead } from "./connection";
 import { withClaimPublisher } from "./ownership";
 import { authoringReadScenarios } from "./read/plan";
+import { preparePreparationRead } from "./read/preparations";
 import type { CapabilityInventory } from "../../capabilities/types";
 
 export function authoringScenarios(inventory: CapabilityInventory, fixture: string) {
@@ -61,5 +62,20 @@ export function authoringScenarios(inventory: CapabilityInventory, fixture: stri
         ...connections,
         ...readers,
         ...authoringReadScenarios(inventory, fixture),
+        ...lifecycleScenarios(
+            inventory,
+            fixture,
+            "preparation-read",
+            "ulvia/cms.authoring",
+            ["list-preparations"],
+            (environment, _capability, obligation) =>
+                preparePreparationRead(
+                    scenarioClient(inventory, environment.main),
+                    obligation.binding,
+                    implementation,
+                    obligation.variant,
+                ),
+            ["large", "history", "invalidation"],
+        ),
     ];
 }

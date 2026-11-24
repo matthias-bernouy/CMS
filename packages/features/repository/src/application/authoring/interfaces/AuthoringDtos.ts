@@ -1,4 +1,7 @@
 import type { z } from "zod";
+import type { preparationInventoryInputSchema, preparationInventorySchema } from "../schemas/preparations/inventory";
+export type PreparationInventoryQuery = z.input<typeof preparationInventoryInputSchema>;
+export type PreparationInventoryPage = z.output<typeof preparationInventorySchema>;
 import type { connectionStatusSchema } from "repository/application/authoring/schemas/connection";
 import type {
     namespaceInventoryInputSchema,

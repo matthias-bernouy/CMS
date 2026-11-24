@@ -13,6 +13,7 @@ export function authoringServices(service: Partial<AuthoringService> = {}): Auth
             configureConnection: method(service.configureConnection, service),
             disconnectConnection: method(service.disconnectConnection, service),
             listNamespaces: method(service.listNamespaces, service),
+            listPreparations: method(service.listPreparations, service),
             claim: method(service.claim, service),
             prepare: method(service.prepare, service),
             publish: method(service.publish, service),

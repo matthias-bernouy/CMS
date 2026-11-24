@@ -1,4 +1,4 @@
-import { CollectionPreparationError } from "repository/repository/authoring/preparations/errors";
+import { CollectionPreparationError, PreparationQuotaError } from "repository/repository/authoring/preparations/errors";
 import type { AuthoringService } from "repository/application/authoring/interfaces/AuthoringServices";
 /** An invalid authored candidate remains a successful diagnostic result, without publishing anything. */
 export async function prepareCandidate(
@@ -18,6 +18,16 @@ export async function prepareCandidate(
         }
         return {
             valid: false as const,
+            ...(error instanceof PreparationQuotaError
+                ? {
+                      quota: {
+                          limit: error.limit,
+                          count: error.count,
+                          listCapability: "list-preparations" as const,
+                          discardCapability: "discard-preparation" as const,
+                      },
+                  }
+                : {}),
             diagnostics: error.diagnostics ?? [
                 { code: `${kind}.invalid`, severity: "error" as const, message: error.message },
             ],

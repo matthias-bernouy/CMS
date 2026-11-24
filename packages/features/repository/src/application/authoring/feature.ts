@@ -22,12 +22,13 @@ import { getProviderManifestSources } from "repository/application/authoring/cap
 import { getCollectionSources } from "repository/application/authoring/capabilities/sources/get-collection-sources";
 import { getConnection } from "repository/application/authoring/capabilities/connection/get-connection";
 import { listNamespaces } from "repository/application/authoring/capabilities/namespaces/list-namespaces";
+import { listPreparations } from "./capabilities/preparations/list-preparations";
 export const authoringFeature = defineFeature({
     contractId: "ulvia/cms.authoring",
     name: "CMS Authoring",
     description:
         "Prepare immutable collection, contract and Provider manifest sources and publish through a pinned Repository account connection.",
-    version: "1.4.0",
+    version: "1.5.0",
     publisherId: "ulvia",
     catalogue: { icon: "package", categories: ["administration", "authoring"] },
     documents: new URL("../../../docs/authoring/", import.meta.url),
@@ -55,6 +56,7 @@ export const authoringFeature = defineFeature({
         getCollectionSources,
         getConnection,
         listNamespaces,
+        listPreparations,
     ],
 });
 export type {
