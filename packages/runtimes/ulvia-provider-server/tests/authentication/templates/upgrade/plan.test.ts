@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { reviewSystemUpgrade } from "../../../../src/runtime/instances/system/execution/upgrades";
 import { previousInstance } from "./fixture";
 
-test("the exact 1.9 to 1.11 review adds mandatory Templates and offers optional Forms and retains ordinary/Control families", async () => {
+test("the exact 1.9 upgrade adds mandatory Templates and Events, offers optional Forms and retains ordinary/Control families", async () => {
     for (const control of [false, true]) {
         const f = await previousInstance(control);
         const before = structuredClone(f.installed);
@@ -38,7 +38,7 @@ test("the exact 1.9 to 1.11 review adds mandatory Templates and offers optional 
             review.target.contracts
                 .filter((pin) => !review.source.contracts.some((old) => old.contractId === pin.contractId))
                 .map(({ contractId }) => contractId),
-        ).toEqual(["ulvia/cms.email-templates", "ulvia/cms.forms"]);
+        ).toEqual(["ulvia/cms.email-templates", "ulvia/cms.events", "ulvia/cms.forms"]);
         expect(review.target.contracts.some(({ contractId }) => contractId === "ulvia/cms.hosting")).toBe(control);
         expect(review.target.contracts.some(({ contractId }) => contractId === "ulvia/repository")).toBe(false);
         expect(
