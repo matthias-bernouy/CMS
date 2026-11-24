@@ -107,3 +107,49 @@ retains answers without any Emailer worker or notification settings. The officia
 workflow renders an explicitly selected Email Template publication before invoking
 Emailer. It passes submission metadata; approved answer mappings require an
 explicit custom variant. See [catalogue usage](../../packages/features/workflow-library/README.md).
+
+## Access business facts
+
+Access 1.2 owns two typed business facts. All new CMS memberships emit
+`account.created`; only a first real link/reset proof emits
+`account.email-verified`. Account security emails and token/session recovery remain
+Access operations. Optional catalogue workflows notify a team or welcome a proven
+member; neither activates automatically.
+
+`@bernouy/auth` provides the source journal contract, in-memory test adapter,
+`AccountEventWorker` and `./mongo` adapter. Mongo embeds creation intent in the
+same `$setOnInsert` as the membership and proof intent in the same first-proof CAS
+as credential verification. These writes use majority+journal acknowledgement;
+standalone Mongo is supported. A separate permanent proof marker avoids emitting
+again after the transient intent has been acknowledged. No cross-collection
+transaction is claimed. A crash before verification commits produces no proof fact;
+a crash after it commits leaves an intent for recovery.
+
+Each membership receives a random opaque `accountRef`, independently of its raw
+login subject. Reference lookup is a unique indexed read of creation time and
+encrypted email, performed only by the ADMIN `get-event-account` capability.
+References grant no authority, do not resolve in another instance, and are removed
+with membership deletion. Explicit first-proof registration can assign a reference
+to an existing membership without backfilling creation events. Concurrent
+registrations use one CAS and read the winning reference.
+
+The runtime enables capture from the exact admitted Access event declarations,
+not merely a version range. Retained Access 1.0/1.1 preserve their dependency lists
+and acquire no publication behavior. Recovery discovers a mandatory format marker
+then probes indexed due intents without loading account profiles. A cold database
+without that marker is left untouched. A hydrated worker reads two projected
+pages of at most 13 intents each, handles at most 25, and checks current membership
+reference before dispatch. Claims use 30-second leases and fenced acknowledgement.
+Lost replies retry the same occurrence ID and canonical payload. Source publication
+retries for 24 hours from the business timestamp with delays from five seconds to
+one hour, then retains a small expired diagnostic on the source document. This
+handoff precedes the broker's independent acceptance/delivery policy. No FIFO or
+exactly-once SMTP delivery is promised. An effect already dispatched can complete
+after membership deletion.
+
+The source payload contains no email, raw subject, password or recovery token.
+Private journal ownership metadata stays in Auth storage. Gateway causal ancestry
+is captured across async account operations and republished without actor authority;
+the affected default executors preserve it through signup, password login and email
+confirmation/reset. Direct host users of the Auth stores must carry their own
+trusted context with `withAccountEventCausation` when invoked by an automation.

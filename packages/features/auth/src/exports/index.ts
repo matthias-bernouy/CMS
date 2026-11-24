@@ -85,3 +85,19 @@ export {
     SESSION_ABSOLUTE_TIMEOUT_SECONDS,
     MAX_ACCOUNT_SESSIONS,
 } from "auth/sessions/core/sessionPolicy";
+
+export { AccountEventWorker } from "auth/accounts/events/AccountEventWorker";
+export { InMemoryAccountEventStore } from "auth/accounts/events/memory";
+export type {
+    AccountEventRecording,
+    AccountEventType,
+    AccountEventIntent,
+    AccountEventRecord,
+    AccountEventStore,
+    AccountEventPublisher,
+    EmailVerificationEvidence,
+} from "auth/accounts/events/interfaces";
+
+export { withAccountEventCausation } from "auth/accounts/events/context";
+
+export type { AccountEventProfile, AccountEventProfiles } from "auth/accounts/events/interfaces";

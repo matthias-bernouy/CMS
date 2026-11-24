@@ -1,3 +1,7 @@
+import { emailVerifiedIntent, verificationEvidence } from "auth/accounts/events/intent";
+import type { EmailVerificationEvidence, AccountEventRecording } from "auth/accounts/events/interfaces";
+import type { InMemoryAccountEventStore } from "auth/accounts/events/memory";
+import { internalUserId } from "auth/accounts/core/SubjectResolver";
 import { randomUUIDv7 } from "bun";
 import type { Identity } from "auth/accounts/interfaces/UsersRepository";
 import type {
@@ -7,9 +11,11 @@ import type {
 } from "auth/providers/interfaces/LocalCredentialStore";
 import { dummyPasswordVerify } from "auth/providers/core/local/passwordTiming";
 
-type StoredCredential = LocalCredential & { hash: string };
+type StoredCredential = LocalCredential & { hash: string; accountEmailProof?: EmailVerificationEvidence };
 
 export type InMemoryLocalCredentialStoreOptions = {
+    events?: InMemoryAccountEventStore;
+    recording?: AccountEventRecording;
     /**
      * Optional deterministic subjects for explicitly seeded local accounts.
      * Other accounts keep their random UUIDv7 subject.
@@ -27,7 +33,7 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
     private _emailToSub = new Map<string, string>();
     private readonly _seededSubjects: ReadonlyMap<string, string>;
 
-    constructor(options: InMemoryLocalCredentialStoreOptions = {}) {
+    constructor(private readonly options: InMemoryLocalCredentialStoreOptions = {}) {
         this._seededSubjects = new Map(
             Object.entries(options.seededSubjects ?? {}).map(([email, sub]) => [email.trim().toLowerCase(), sub]),
         );
@@ -89,12 +95,30 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
         return true;
     }
 
-    async markEmailVerified(sub: string): Promise<boolean> {
+    async markEmailVerified(sub: string, evidence?: EmailVerificationEvidence): Promise<boolean> {
         const rec = this._bySub.get(sub);
         if (!rec) {
             return false;
         }
         const now = new Date();
+        if (evidence) {
+            const proof = verificationEvidence.parse(evidence);
+            if (
+                rec.accountEmailProof?.accountCreatedAt !== proof.accountCreatedAt ||
+                (proof.accountRef !== undefined && rec.accountEmailProof.accountRef !== proof.accountRef)
+            ) {
+                const intent = this.options.recording?.enabled("account.email-verified")
+                    ? emailVerifiedIntent(internalUserId("local", sub), proof, now)
+                    : undefined;
+                if (intent && !this.options.events) {
+                    throw new TypeError("Account Event journal is required");
+                }
+                rec.accountEmailProof = proof;
+                if (intent) {
+                    this.options.events!.record("credential", sub, intent);
+                }
+            }
+        }
         rec.emailVerifiedAt = now;
         rec.updatedAt = now;
         return true;
@@ -111,6 +135,7 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
         if (!rec) {
             return false;
         }
+        this.options.events?.remove("credential", sub);
         this._bySub.delete(sub);
         this._emailToSub.delete(rec.email);
         return true;

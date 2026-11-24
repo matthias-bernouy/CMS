@@ -15,7 +15,7 @@ const releaseDigests = {
     "ulvia/cms.forms": "sha256:a7ee3291528dce1ae1b522c8d6b553558d70cb798f6eded7ac45c30ff08745d2",
     "ulvia/cms.events": "sha256:efb8e3c17c04a2f49a8ced1afae86a4d5a8d820c45c8d6c9ecd354d0c7903c43",
     "ulvia/cms.workflows": "sha256:262ff8272e540a5ee6f641f4416a2435a77015dea6bf9ed0330f8a6edd1ba30d",
-    "ulvia/cms.access": "sha256:873f01fadd4ade91abfc05fd2347c532b3d70bd5c5a6aeb987059f567bc3d9ef",
+    "ulvia/cms.access": "sha256:3e8189f1023bf4be12c3385aa113bbe806022b5cf2903d88d80e27b2e394fc3c",
     "ulvia/cms.content": "sha256:67bbdbb098558cb027bd6b7a737ad5907928d85fd03fe3112918ac2699c44b08",
     "ulvia/cms.authoring": "sha256:d1f954b3844c6599063f39d7167b1a4ad79cf799a86fdb69ce75bff3e55ea790",
     "ulvia/cms.secrets": "sha256:358b2e7e889f656320dd824a698c425a500211ea80695d120e5f4effe1255c08",
@@ -43,7 +43,7 @@ test("generated manifest claims the exact SDK implementation inventory", async (
     const compiled = await compileOfficialFeatures();
     await publishContractSet(catalogue, compiled.contracts);
     const manifest = await compileOfficialManifest(catalogue, compiled);
-    expect(manifest.manifest.version).toBe("1.13.0");
+    expect(manifest.manifest.version).toBe("1.14.0");
     expect(manifest.manifest.implementations).toHaveLength(18);
     expect(
         manifest.manifest.implementations
@@ -134,7 +134,7 @@ test("Installations 1.7 preserves 1.6 and adds compatible artifact discovery and
     ]);
 });
 
-test("Access 1.1 preserves the exact 1.0 capability definitions and adds only email associations", async () => {
+test("Access 1.2 preserves prior capabilities and adds business events with an opaque ADMIN profile query", async () => {
     const previous = (await compileRetainedFeatures()).find(
         (build) => build.contracts[0]?.release.contractId === "ulvia/cms.access",
     )!.contracts[0]!;
@@ -157,4 +157,27 @@ test("Forms 1.x snapshots remain archived without claiming an executable compati
     expect(
         retained.some((build) => build.implementations.some(({ contractId }) => contractId === "ulvia/cms.forms")),
     ).toBe(false);
+});
+
+test("Access 1.1 retains exact definitions and dependencies without acquiring business events", async () => {
+    const previous = (await compileRetainedFeatures()).find(
+        (build) =>
+            build.contracts[0]?.release.contractId === "ulvia/cms.access" &&
+            build.contracts[0]?.release.version === "1.1.0",
+    )!;
+    expect(previous.contracts[0]!.digest).toBe(
+        "sha256:873f01fadd4ade91abfc05fd2347c532b3d70bd5c5a6aeb987059f567bc3d9ef",
+    );
+    expect(previous.contracts[0]!.release.events ?? []).toHaveLength(0);
+    expect(previous.implementations[0]!.requires.some((row) => row.contractId === "ulvia/cms.events")).toBe(false);
+    const current = (await compileOfficialFeatures()).contracts.find(
+        (row) => row.release.contractId === "ulvia/cms.access",
+    )!;
+    expect(current.release.events!.map((row) => row.id)).toEqual(["account.created", "account.email-verified"]);
+    expect(current.release.capabilities).toHaveLength(27);
+    expect(compareContractReleases(previous.contracts[0]!.release, current.release)).toMatchObject({
+        validEvolution: true,
+        consumerCompatible: true,
+        requiredBump: "minor",
+    });
 });

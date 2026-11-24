@@ -1,3 +1,4 @@
+import { composeAccountEvents } from "../../recovery/accounts/composition";
 import { MongoSchemaVersions } from "@bernouy/cms-gateway/provider/schema-mongo";
 import { composeEvents } from "../../recovery/events/composition";
 import { composeWorkflows } from "../../recovery/workflows/composition";
@@ -392,6 +393,7 @@ export class ProviderInstanceHost {
         let operationRecovery: RecoverySupervisor | undefined;
         let formsRecovery: RecoverySupervisor | undefined;
         let automationRecovery: RecoverySupervisor | undefined;
+        let accountEventsRuntime: ReturnType<typeof composeAccountEvents> | undefined;
         let eventRuntime: Awaited<ReturnType<typeof composeEvents>> | undefined;
         let workflowRuntime: Awaited<ReturnType<typeof composeWorkflows>> | undefined;
         let formsRuntime: Awaited<ReturnType<typeof composeForms>> | undefined;
@@ -436,6 +438,23 @@ export class ProviderInstanceHost {
                     instanceId: instance.id,
                     providerId: this.support.providerId,
                     administrator: workflowAuthority(gateway, instance.id, this.support.providerId).administrator,
+                });
+            }
+            const accessEvents =
+                contracts
+                    .find(({ release }) => release.contractId === "ulvia/cms.access")
+                    ?.events.map(({ definition }) => definition.id) ?? [];
+            stores.configureAccountEvents(accessEvents);
+            if (accessEvents.length) {
+                if (!eventRuntime) {
+                    throw new Error("Access business Events require selected Events");
+                }
+                accountEventsRuntime = composeAccountEvents({
+                    stores,
+                    gateway,
+                    events: eventRuntime.services,
+                    instanceId: instance.id,
+                    providerId: this.support.providerId,
                 });
             }
             if (plan.contracts.some((pin) => pin.contractId === "ulvia/cms.workflows")) {
@@ -640,6 +659,7 @@ export class ProviderInstanceHost {
                         Date.now,
                         stores.oauthPublicLimiter,
                     ),
+                    accountEventProfiles: { get: (reference) => stores.accountEvents.profile(reference) },
                     accountEmailTemplates: accountTemplates.accountEmailTemplates,
                     authentication: authentication.auth,
                     accountLifecycle: authentication.accountLifecycle,
@@ -686,11 +706,13 @@ export class ProviderInstanceHost {
                 );
                 await formsRecovery.start(false);
             }
-            if (eventRuntime || workflowRuntime) {
+            if (eventRuntime || workflowRuntime || accountEventsRuntime) {
                 automationRecovery = new RecoverySupervisor(
                     async (limit) => {
                         return (
-                            ((await eventRuntime?.recover(limit)) ?? 0) + ((await workflowRuntime?.tick(limit)) ?? 0)
+                            ((await accountEventsRuntime?.tick()) ?? 0) +
+                            ((await eventRuntime?.recover(limit)) ?? 0) +
+                            ((await workflowRuntime?.tick(limit)) ?? 0)
                         );
                     },
                     5000,
@@ -734,6 +756,7 @@ export class ProviderInstanceHost {
                         documentationTimer,
                         recovery: operationRecovery,
                         automationRecovery,
+                        accounts: accountEventsRuntime,
                         events: eventRuntime,
                         workflows: workflowRuntime,
                         formsRecovery,
@@ -776,6 +799,7 @@ export class ProviderInstanceHost {
                     documentationTimer,
                     recovery: operationRecovery,
                     automationRecovery,
+                    accounts: accountEventsRuntime,
                     events: eventRuntime,
                     workflows: workflowRuntime,
                     formsRecovery,

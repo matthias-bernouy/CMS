@@ -1,3 +1,5 @@
+import { accountCreatedIntent } from "auth/accounts/events/intent";
+import type { AccountEventIntent, AccountEventRecording } from "auth/accounts/events/interfaces";
 import type { Collection, Db } from "mongodb";
 import type { EncryptedBlob } from "@bernouy/envelope-crypto";
 import type {
@@ -19,10 +21,12 @@ import type { FieldCrypto } from "@bernouy/envelope-crypto";
  * not possible, so `list` sorts by `createdAt` /
  * `lastSeenAt` and `search` is an exact email match.
  */
-export type MongoUsersConfig = { collectionPrefix?: string };
+export type MongoUsersConfig = { collectionPrefix?: string; events?: AccountEventRecording };
 
 type UserDoc = {
     _id: string;
+    accessAccountReference?: string;
+    accessAccountCreatedEvent?: AccountEventIntent;
     createdAt: Date;
     lastSeenAt: Date;
     provider?: string; // provenance (not PII): "local", "google"…
@@ -32,6 +36,7 @@ type UserDoc = {
 
 export class MongoUsersRepository implements UsersRepository {
     private readonly _prefix: string;
+    private readonly events?: AccountEventRecording;
 
     constructor(
         private readonly db: Db,
@@ -39,14 +44,22 @@ export class MongoUsersRepository implements UsersRepository {
         config: MongoUsersConfig = {},
     ) {
         this._prefix = config.collectionPrefix ?? "";
+        this.events = config.events;
     }
 
     private get col(): Collection<UserDoc> {
-        return this.db.collection<UserDoc>(this._prefix + "users");
+        return this.db.collection<UserDoc>(this._prefix + "users", {
+            writeConcern: { w: "majority", j: true },
+            readConcern: { level: "majority" },
+        });
     }
 
     async upsert(identity: Identity): Promise<TUser> {
         const now = new Date();
+        const accountRef = crypto.randomUUID();
+        const intent = this.events?.enabled("account.created")
+            ? accountCreatedIntent(identity.sub, identity.provider, now, accountRef)
+            : undefined;
         const $set: Partial<UserDoc> = { lastSeenAt: now };
         if (identity.email !== undefined) {
             $set.emailEnc = await this.fieldCrypto.encrypt(identity.email);
@@ -57,7 +70,14 @@ export class MongoUsersRepository implements UsersRepository {
         }
         const d = await this.col.findOneAndUpdate(
             { _id: identity.sub },
-            { $set, $setOnInsert: { createdAt: now } },
+            {
+                $set,
+                $setOnInsert: {
+                    createdAt: now,
+                    accessAccountReference: accountRef,
+                    ...(intent ? { accessAccountCreatedEvent: intent } : {}),
+                },
+            },
             { upsert: true, returnDocument: "after" },
         );
         return this._fromDoc(d!);

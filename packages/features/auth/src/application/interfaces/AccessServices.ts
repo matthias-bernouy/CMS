@@ -1,3 +1,4 @@
+import type { AccountEventProfiles } from "auth/accounts/events/interfaces";
 import type { AccountEmailTemplates } from "auth/email/templates/AccountEmailTemplates";
 import type { UsersRepository } from "auth/accounts/interfaces/UsersRepository";
 import type { LocalCredentialStore } from "auth/providers/interfaces/LocalCredentialStore";
@@ -9,6 +10,7 @@ import type { McpAuthorization } from "auth/oauth/core/McpAuthorization";
 import type { AccessGovernance } from "auth/application/interfaces/AccessGovernance";
 
 export interface AccessServices {
+    readonly accountEventProfiles?: AccountEventProfiles;
     readonly accountEmailTemplates: Pick<AccountEmailTemplates, "get" | "update">;
     readonly users: UsersRepository;
     readonly credentials: LocalCredentialStore;

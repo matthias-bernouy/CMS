@@ -1,3 +1,4 @@
+import type { EmailVerificationEvidence } from "auth/accounts/events/interfaces";
 import type { AuthEmailComposer } from "auth/email/interfaces/AuthEmailComposer";
 import type { AuthTokenStore } from "auth/tokens/one-time/interfaces/AuthTokenStore";
 import type { Emailer } from "@bernouy/email";
@@ -11,6 +12,11 @@ export type VerificationTarget = {
 };
 
 export type PublicAuthFlowConfig = {
+    prepareEmailVerificationEvidence?(
+        accountId: string,
+        createdAt: string,
+        method: EmailVerificationEvidence["method"],
+    ): Promise<EmailVerificationEvidence>;
     credentials: LocalCredentialStore;
     users: UsersRepository;
     tokens: AuthTokenStore;

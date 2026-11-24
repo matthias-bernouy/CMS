@@ -19,6 +19,7 @@ export async function createInstanceAuth(
         rateLimit: stores.rateLimit,
     });
     const shared = {
+        prepareEmailVerificationEvidence: stores.prepareEmailVerificationEvidence,
         revokeSessionsForSub: (sub: string) => sessions.revokeForSub(sub),
         credentials: stores.credentials,
         users: stores.users,

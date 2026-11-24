@@ -32,7 +32,7 @@ test("the exact 1.9 to 1.11 review adds mandatory Templates and offers optional 
         );
         expect(review.target.manifest.version).toBe("1.13.0");
         expect(review.target.contracts.find(({ contractId }) => contractId === "ulvia/cms.access")?.version).toBe(
-            "1.1.0",
+            "1.2.0",
         );
         expect(
             review.target.contracts

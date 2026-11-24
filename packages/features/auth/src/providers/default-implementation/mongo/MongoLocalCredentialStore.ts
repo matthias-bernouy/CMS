@@ -1,3 +1,10 @@
+import { emailVerifiedIntent, verificationEvidence } from "auth/accounts/events/intent";
+import type {
+    AccountEventIntent,
+    AccountEventRecording,
+    EmailVerificationEvidence,
+} from "auth/accounts/events/interfaces";
+import { internalUserId } from "auth/accounts/core/SubjectResolver";
 import { randomUUIDv7 } from "bun";
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type { EncryptedBlob } from "@bernouy/envelope-crypto";
@@ -22,10 +29,12 @@ import { dummyPasswordVerify } from "auth/providers/core/local/passwordTiming";
  *
  * Call `init()` once at boot to create the unique `emailIndex` index.
  */
-export type MongoLocalCredentialConfig = { collectionPrefix?: string };
+export type MongoLocalCredentialConfig = { collectionPrefix?: string; events?: AccountEventRecording };
 
 type CredentialDoc = {
     _id: string;
+    accessAccountVerifiedEvent?: AccountEventIntent;
+    accountEmailProof?: EmailVerificationEvidence;
     emailEnc: EncryptedBlob;
     emailIndex: string; // unique HMAC(email)
     hash: string; // argon2id password hash
@@ -36,6 +45,7 @@ type CredentialDoc = {
 
 export class MongoLocalCredentialStore implements LocalCredentialStore {
     private readonly _prefix: string;
+    private readonly events?: AccountEventRecording;
 
     constructor(
         private readonly db: Db,
@@ -43,6 +53,7 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
         config: MongoLocalCredentialConfig = {},
     ) {
         this._prefix = config.collectionPrefix ?? "";
+        this.events = config.events;
     }
 
     async init(): Promise<void> {
@@ -50,7 +61,10 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
     }
 
     private get col(): Collection<CredentialDoc> {
-        return this.db.collection<CredentialDoc>(this._prefix + "credentials");
+        return this.db.collection<CredentialDoc>(this._prefix + "credentials", {
+            writeConcern: { w: "majority", j: true },
+            readConcern: { level: "majority" },
+        });
     }
 
     async create(input: NewCredential): Promise<Identity> {
@@ -112,12 +126,36 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
         return r.matchedCount === 1;
     }
 
-    async markEmailVerified(sub: string): Promise<boolean> {
-        const r = await this.col.updateOne(
-            { _id: sub },
-            { $set: { emailVerifiedAt: new Date(), updatedAt: new Date() } },
-        );
-        return r.matchedCount === 1;
+    async markEmailVerified(sub: string, evidence?: EmailVerificationEvidence): Promise<boolean> {
+        const now = new Date();
+        if (evidence) {
+            const proof = verificationEvidence.parse(evidence);
+            const intent = this.events?.enabled("account.email-verified")
+                ? emailVerifiedIntent(internalUserId("local", sub), proof, now)
+                : undefined;
+            const captured = await this.col.updateOne(
+                {
+                    _id: sub,
+                    $or: [
+                        { "accountEmailProof.accountCreatedAt": { $ne: proof.accountCreatedAt } },
+                        ...(proof.accountRef ? [{ "accountEmailProof.accountRef": { $ne: proof.accountRef } }] : []),
+                    ],
+                },
+                {
+                    $set: {
+                        emailVerifiedAt: now,
+                        updatedAt: now,
+                        accountEmailProof: proof,
+                        ...(intent ? { accessAccountVerifiedEvent: intent } : {}),
+                    },
+                },
+            );
+            if (captured.matchedCount === 1) {
+                return true;
+            }
+        }
+        const result = await this.col.updateOne({ _id: sub }, { $set: { emailVerifiedAt: now, updatedAt: now } });
+        return result.matchedCount === 1;
     }
 
     async getByEmail(email: string): Promise<LocalCredential | null> {

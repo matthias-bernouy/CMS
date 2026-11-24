@@ -64,10 +64,18 @@ export async function requestEmailVerification(
 
 export async function confirmEmailVerification(cfg: PublicAuthFlowConfig, input: { token: string }): Promise<void> {
     await withReservedToken(cfg, "email_verification", requireToken(input.token), "verify-email", async (sub) => {
-        if (!(await hasActivatedMembership(cfg, sub))) {
+        const member = await cfg.users.getBySub(internalUserId("local", sub));
+        if (!member) {
             throw new AuthValidationError("token", "invalid or expired", { code: "auth.token" });
         }
-        const marked = await cfg.credentials.markEmailVerified(sub);
+        const marked = await cfg.credentials.markEmailVerified(
+            sub,
+            (await cfg.prepareEmailVerificationEvidence?.(
+                member.sub,
+                member.createdAt.toISOString(),
+                "email-link",
+            )) ?? { method: "email-link", accountCreatedAt: member.createdAt.toISOString() },
+        );
         if (!marked) {
             throw new AuthValidationError("token", "credential not found", { code: "auth.token" });
         }
@@ -94,7 +102,8 @@ export async function confirmPasswordReset(
     const token = requireToken(input.token);
     validatePassword(input.password);
     await withReservedToken(cfg, "password_reset", token, `set-password:${input.password}`, async (sub) => {
-        if (!(await hasActivatedMembership(cfg, sub))) {
+        const member = await cfg.users.getBySub(internalUserId("local", sub));
+        if (!member) {
             throw new AuthValidationError("token", "invalid or expired", { code: "auth.token" });
         }
         await cfg.revokeSessionsForSub(internalUserId("local", sub));
@@ -102,7 +111,14 @@ export async function confirmPasswordReset(
         if (!changed) {
             throw new AuthValidationError("token", "credential not found", { code: "auth.token" });
         }
-        await cfg.credentials.markEmailVerified(sub);
+        await cfg.credentials.markEmailVerified(
+            sub,
+            (await cfg.prepareEmailVerificationEvidence?.(
+                member.sub,
+                member.createdAt.toISOString(),
+                "password-reset",
+            )) ?? { method: "password-reset", accountCreatedAt: member.createdAt.toISOString() },
+        );
         await cfg.revokeSessionsForSub(internalUserId("local", sub));
     });
 }

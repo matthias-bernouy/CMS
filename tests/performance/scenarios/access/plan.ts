@@ -1,3 +1,4 @@
+import { prepareEventProfile } from "./events";
 import { lifecycleScenarios } from "../lifecycle";
 import { scenarioClient } from "../../harness/clients/session";
 import { ACCESS_LIFECYCLE } from "./fixture";
@@ -75,6 +76,15 @@ export function accessScenarios(inventory: CapabilityInventory, fixture: string,
         ["invalidation"],
     );
     return [
+        ...lifecycleScenarios(
+            inventory,
+            fixture,
+            "access-event-profile",
+            "ulvia/cms.access",
+            ["get-event-account"],
+            (environment, _capability, obligation) => prepareEventProfile(inventory, environment, obligation.variant),
+            ["nominal", "cold", "warm", "concurrent", "invalidation"],
+        ),
         ...accounts,
         ...oauth,
         ...recovery,

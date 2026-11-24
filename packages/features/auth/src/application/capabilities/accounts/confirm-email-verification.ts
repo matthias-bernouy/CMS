@@ -1,3 +1,4 @@
+import { withAccountEventCausation } from "auth/accounts/events/context";
 import { defineCapability } from "auth/application/capabilities/define";
 import { requiredText } from "auth/application/core/access/input";
 import { confirmEmailVerificationInputSchema, confirmedSchema } from "auth/application/schemas/accounts";
@@ -26,8 +27,9 @@ export const confirmEmailVerification = defineCapability({
     input: confirmEmailVerificationInputSchema,
     output: confirmedSchema,
     errors,
-    execute: async ({ input, services }) => {
-        await services.accountLifecycle.confirmEmailVerification({ token: requiredText(input.token) });
-        return { confirmed: true };
-    },
+    execute: async ({ input, services, context }) =>
+        withAccountEventCausation(context.eventCausation, async () => {
+            await services.accountLifecycle.confirmEmailVerification({ token: requiredText(input.token) });
+            return { confirmed: true };
+        }),
 });

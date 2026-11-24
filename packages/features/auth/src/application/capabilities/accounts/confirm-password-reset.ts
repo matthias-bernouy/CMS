@@ -1,3 +1,4 @@
+import { withAccountEventCausation } from "auth/accounts/events/context";
 import { defineCapability } from "auth/application/capabilities/define";
 import { requiredText } from "auth/application/core/access/input";
 import { confirmPasswordResetInputSchema, confirmedSchema } from "auth/application/schemas/accounts";
@@ -26,11 +27,12 @@ export const confirmPasswordReset = defineCapability({
     input: confirmPasswordResetInputSchema,
     output: confirmedSchema,
     errors,
-    execute: async ({ input, services }) => {
-        await services.accountLifecycle.confirmPasswordReset({
-            token: requiredText(input.token),
-            password: requiredText(input.password),
-        });
-        return { confirmed: true };
-    },
+    execute: async ({ input, services, context }) =>
+        withAccountEventCausation(context.eventCausation, async () => {
+            await services.accountLifecycle.confirmPasswordReset({
+                token: requiredText(input.token),
+                password: requiredText(input.password),
+            });
+            return { confirmed: true };
+        }),
 });

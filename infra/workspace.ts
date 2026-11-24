@@ -73,6 +73,7 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
             args: [
                 "bun",
                 "test",
+                "packages/features/auth/tests/accounts/events/mongo.test.ts",
                 "packages/features/forms/tests/mongo.test.ts",
                 "packages/features/forms/tests/mongo-lists.test.ts",
                 "packages/features/forms/tests/events/initiator.mongo.test.ts",
@@ -80,13 +81,23 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
                 "packages/features/workflows/tests/mongo.test.ts",
                 "packages/features/workflows/tests/resources/mongo-installations.test.ts",
             ],
-            env: { ULVIA_RUN_FORMS_MONGO: "1", ULVIA_RUN_EVENTS_MONGO: "1", ULVIA_RUN_WORKFLOWS_MONGO: "1" },
+            env: {
+                ULVIA_RUN_ACCESS_EVENTS_MONGO: "1",
+                ULVIA_RUN_FORMS_MONGO: "1",
+                ULVIA_RUN_EVENTS_MONGO: "1",
+                ULVIA_RUN_WORKFLOWS_MONGO: "1",
+            },
             continueOnFailure: true,
         },
         { args: ["bun", "x", "tsc", "--project", "tests/performance/tsconfig.json"] },
         { args: ["bun", "run", "tests/performance/command/check.ts"] },
         { args: ["bun", "run", "tests/performance/compatibility/run.ts"], continueOnFailure: true },
         candidateImageStep(candidateVersion),
+        {
+            args: ["bun", "test", "tests/integration/instance/accounts/journey.test.ts"],
+            env: { ...candidateImages, ULVIA_RUN_ACCESS_EVENTS_JOURNEY: "1" },
+            continueOnFailure: true,
+        },
         {
             args: ["bun", "test", "tests/integration/instance/forms/journey.test.ts"],
             env: { ...candidateImages, ULVIA_RUN_FORMS_JOURNEY: "1" },

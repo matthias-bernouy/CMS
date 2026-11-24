@@ -1,3 +1,4 @@
+import { MongoAccountEventStore } from "@bernouy/auth/mongo";
 import type { Db } from "mongodb";
 import { MongoFormsRepository } from "@bernouy/forms/mongo";
 import type { ProviderInstanceRegistry } from "@bernouy/ulvia-provider";
@@ -67,7 +68,11 @@ export class FormsDiscovery {
             }
             try {
                 const db = this.mongo.db(instanceDatabaseName(instance.storageKey));
-                if (!(await MongoFormsRepository.hasWork(db)) && !(await automationWork(db))) {
+                if (
+                    !(await MongoFormsRepository.hasWork(db)) &&
+                    !(await MongoAccountEventStore.hasWork(db)) &&
+                    !(await automationWork(db))
+                ) {
                     continue;
                 }
                 const lease = await this.host.runtime(instance);

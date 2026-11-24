@@ -5,6 +5,7 @@ import type { UlviaProviderFeatureServices } from "../../../../ports/index";
 export const accessImplementation = implementFeature(accessFeature, {
     services: (dependencies: UlviaProviderFeatureServices) => {
         const {
+            accountEventProfiles,
             accountEmailTemplates,
             users,
             credentials,
@@ -28,6 +29,7 @@ export const accessImplementation = implementFeature(accessFeature, {
             throw new TypeError("Access requires injected account, authentication, MCP and governance services");
         }
         return {
+            accountEventProfiles,
             accountEmailTemplates,
             users,
             credentials,
@@ -40,6 +42,7 @@ export const accessImplementation = implementFeature(accessFeature, {
         };
     },
     requires: [
+        { contractId: "ulvia/cms.events", versionRange: "^1.0.0", capabilityId: "events.publish", optional: false },
         {
             contractId: "ulvia/cms.email-templates",
             versionRange: "^1.0.0",

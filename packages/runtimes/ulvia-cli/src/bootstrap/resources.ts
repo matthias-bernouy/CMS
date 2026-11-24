@@ -1,4 +1,4 @@
-import { formSubmissionEmail } from "@bernouy/official-workflows";
+import { formSubmissionEmail, accountCreatedEmail, accountWelcomeEmail } from "@bernouy/official-workflows";
 import { compileWorkflow } from "@bernouy/ulvia-sdk/build";
 import { verifyWorkflowRequirements } from "@bernouy/workflows/manifest";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/repository/contracts/catalogue";
@@ -12,8 +12,10 @@ export async function prepareOfficialResources(): Promise<readonly PreparedResou
     const ordered = await publishContractSet(catalogue, features.contracts);
     const resources: PreparedResource[] = ordered.map((admission) => ({ kind: "contract", admission }));
     resources.push({ kind: "provider-manifest", admission: await compileOfficialManifest(catalogue, features) });
-    const workflow = compileWorkflow(formSubmissionEmail);
-    await verifyWorkflowRequirements(workflow.manifest, catalogue);
-    resources.push({ kind: "workflow", admission: workflow });
+    for (const definition of [formSubmissionEmail, accountCreatedEmail, accountWelcomeEmail]) {
+        const workflow = compileWorkflow(definition);
+        await verifyWorkflowRequirements(workflow.manifest, catalogue);
+        resources.push({ kind: "workflow", admission: workflow });
+    }
     return resources;
 }

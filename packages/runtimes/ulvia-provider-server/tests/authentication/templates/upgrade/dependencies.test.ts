@@ -14,6 +14,7 @@ test("system upgrades close transitive implementation dependencies through inher
         "ulvia/cms.access",
         "ulvia/cms.email-templates",
         "ulvia/cms.emailer.smtp",
+        "ulvia/cms.events",
         "ulvia/cms.forms",
         "ulvia/cms.secrets",
     ]);

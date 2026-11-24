@@ -1,3 +1,6 @@
+import { accountCreatedIntent } from "auth/accounts/events/intent";
+import type { AccountEventRecording } from "auth/accounts/events/interfaces";
+import type { InMemoryAccountEventStore } from "auth/accounts/events/memory";
 import type {
     UsersRepository,
     Identity,
@@ -15,14 +18,28 @@ import type {
  * Reads return shallow copies so callers can't mutate stored rows.
  */
 export class InMemoryUsersRepository implements UsersRepository {
+    constructor(
+        private readonly options: { events?: InMemoryAccountEventStore; recording?: AccountEventRecording } = {},
+    ) {}
     private _users = new Map<string, TUser>(); // by sub
 
     async upsert(identity: Identity): Promise<TUser> {
         const now = new Date();
+        const accountRef = crypto.randomUUID();
         const cur = this._users.get(identity.sub);
         if (!cur) {
+            const intent = this.options.recording?.enabled("account.created")
+                ? accountCreatedIntent(identity.sub, identity.provider, now, accountRef)
+                : undefined;
+            if (intent && !this.options.events) {
+                throw new TypeError("Account Event journal is required");
+            }
             const created: TUser = { ...identity, createdAt: now, lastSeenAt: now };
+            this.options.events?.bindMemberReference(identity.sub, accountRef, now.toISOString());
             this._users.set(identity.sub, created);
+            if (intent) {
+                this.options.events!.record("member", identity.sub, intent);
+            }
             return clone(created);
         }
         // Only update fields the identity actually carries — a re-login without
@@ -45,6 +62,7 @@ export class InMemoryUsersRepository implements UsersRepository {
     }
 
     async delete(sub: string): Promise<boolean> {
+        this.options.events?.remove("member", sub);
         return this._users.delete(sub);
     }
 

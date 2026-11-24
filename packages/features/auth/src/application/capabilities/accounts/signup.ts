@@ -1,3 +1,4 @@
+import { withAccountEventCausation } from "auth/accounts/events/context";
 import { defineCapability } from "auth/application/capabilities/define";
 import { requiredText } from "auth/application/core/access/input";
 import { signupInputSchema, signupOutputSchema } from "auth/application/schemas/accounts";
@@ -26,11 +27,12 @@ export const signup = defineCapability({
     input: signupInputSchema,
     output: signupOutputSchema,
     errors,
-    execute: async ({ input, services }) => {
-        await services.accountLifecycle.signup({
-            email: requiredText(input.email),
-            password: requiredText(input.password),
-        });
-        return { accepted: true };
-    },
+    execute: async ({ input, services, context }) =>
+        withAccountEventCausation(context.eventCausation, async () => {
+            await services.accountLifecycle.signup({
+                email: requiredText(input.email),
+                password: requiredText(input.password),
+            });
+            return { accepted: true };
+        }),
 });

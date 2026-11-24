@@ -1,3 +1,5 @@
+import { MongoAccountEventStore } from "@bernouy/auth/mongo";
+import type { AccountEventRecording } from "@bernouy/auth";
 import { EmailTemplates } from "@bernouy/email-templates";
 import { MongoTemplateStore } from "@bernouy/email-templates/mongo";
 import { MongoAccountEmailConfigurationStore } from "@bernouy/auth/mongo";
@@ -186,8 +188,15 @@ export async function createProviderStores(
         FILES_FENCED_MUTATIONS,
     );
 
-    const users = new MongoUsersRepository(db, fieldCrypto);
-    const credentials = new MongoLocalCredentialStore(db, fieldCrypto);
+    const accountEventTypes = new Set<string>();
+    const accountEventRecording: AccountEventRecording = { enabled: (type) => accountEventTypes.has(type) };
+    const accountEvents = new MongoAccountEventStore(db, "", fieldCrypto);
+    await accountEvents.init().catch(async (error) => {
+        await mongo.close();
+        throw error;
+    });
+    const users = new MongoUsersRepository(db, fieldCrypto, { events: accountEventRecording });
+    const credentials = new MongoLocalCredentialStore(db, fieldCrypto, { events: accountEventRecording });
     await credentials.init();
     const pats = new MongoPatRepository(db);
     await pats.init();
@@ -250,6 +259,21 @@ export async function createProviderStores(
         providerFiles,
         users,
         credentials,
+        accountEvents,
+        prepareEmailVerificationEvidence: async (
+            id: string,
+            createdAt: string,
+            method: "email-link" | "password-reset",
+        ) =>
+            accountEventRecording.enabled("account.email-verified")
+                ? accountEvents.emailEvidence(id, createdAt, method)
+                : { method, accountCreatedAt: createdAt },
+        configureAccountEvents(types: readonly string[]) {
+            accountEventTypes.clear();
+            for (const type of types) {
+                accountEventTypes.add(type);
+            }
+        },
         pats,
         sessions,
         authTokens,

@@ -1,3 +1,4 @@
+import { withAccountEventCausation } from "auth/accounts/events/context";
 import { defineCapability } from "auth/application/capabilities/define";
 import { AccessError } from "auth/application/core/access/errors";
 import { capabilityResponse } from "@bernouy/ulvia-sdk";
@@ -28,26 +29,27 @@ export const loginPassword = defineCapability({
     input: loginPasswordInputSchema,
     output: loginPasswordOutputSchema,
     errors,
-    execute: async ({ input, services }) => {
-        const result = await services.authentication.authenticate(
-            typeof input.email === "string" ? input.email : undefined,
-            typeof input.password === "string" ? input.password : undefined,
-        );
-        if (!result.ok) {
-            throw new AccessError(result.error === "rate_limited" ? "RATE_LIMITED" : "INVALID_CREDENTIALS");
-        }
-        const administrator = await services.governance.administrators.get(result.subject.identifier);
-        return capabilityResponse(
-            {
-                subjectId: result.subject.identifier,
-                administrator: administrator.enabled,
-            },
-            {
-                type: "session",
-                operation: "establish",
-                token: result.session.token,
-                expiresAt: result.session.expiresAt,
-            },
-        );
-    },
+    execute: async ({ input, services, context }) =>
+        withAccountEventCausation(context.eventCausation, async () => {
+            const result = await services.authentication.authenticate(
+                typeof input.email === "string" ? input.email : undefined,
+                typeof input.password === "string" ? input.password : undefined,
+            );
+            if (!result.ok) {
+                throw new AccessError(result.error === "rate_limited" ? "RATE_LIMITED" : "INVALID_CREDENTIALS");
+            }
+            const administrator = await services.governance.administrators.get(result.subject.identifier);
+            return capabilityResponse(
+                {
+                    subjectId: result.subject.identifier,
+                    administrator: administrator.enabled,
+                },
+                {
+                    type: "session",
+                    operation: "establish",
+                    token: result.session.token,
+                    expiresAt: result.session.expiresAt,
+                },
+            );
+        }),
 });

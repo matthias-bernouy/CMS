@@ -50,9 +50,17 @@ test("SDK bootstrap retains the exact system APIs without a collection index", a
         const files = new LocalArtifactFiles(repository);
         const workflows = new LocalWorkflowReleases(files, new LocalContractReleases(files));
         const rows = await workflows.listMetadata();
-        expect(rows).toHaveLength(1);
-        expect(rows[0]!.manifest.workflowId).toBe("ulvia/form-submission-email");
-        expect(Object.keys(artifacts.workflows)).toEqual(["ulvia/form-submission-email"]);
+        expect(rows).toHaveLength(3);
+        expect(rows.map((row) => row.manifest.workflowId).sort()).toEqual([
+            "ulvia/account-created-email",
+            "ulvia/account-welcome-email",
+            "ulvia/form-submission-email",
+        ]);
+        expect(Object.keys(artifacts.workflows).sort()).toEqual([
+            "ulvia/account-created-email",
+            "ulvia/account-welcome-email",
+            "ulvia/form-submission-email",
+        ]);
     } finally {
         await rm(root, { recursive: true, force: true });
     }

@@ -6,6 +6,7 @@ type InstanceResources = Readonly<{
     recovery?: Stoppable;
     automationRecovery?: Stoppable;
     events?: Stoppable;
+    accounts?: Stoppable;
     workflows?: Stoppable;
     formsRecovery?: Stoppable;
     forms?: Stoppable;
@@ -22,6 +23,7 @@ export async function closeInstanceComposition(resources: InstanceResources): Pr
     const errors: unknown[] = [];
     for (const dispose of [
         () => resources.automationRecovery?.stop(),
+        () => resources.accounts?.stop(),
         () => resources.workflows?.stop(),
         () => resources.events?.stop(),
         () => resources.formsRecovery?.stop(),

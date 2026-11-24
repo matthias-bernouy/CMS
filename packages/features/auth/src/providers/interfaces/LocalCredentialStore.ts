@@ -1,3 +1,4 @@
+import type { EmailVerificationEvidence } from "auth/accounts/events/interfaces";
 import type { Identity } from "auth/accounts/interfaces/UsersRepository";
 
 /**
@@ -45,7 +46,7 @@ export interface LocalCredentialStore {
     setPassword(sub: string, password: string): Promise<boolean>;
 
     /** Mark the login email as verified. `false` when unknown. */
-    markEmailVerified(sub: string): Promise<boolean>;
+    markEmailVerified(sub: string, evidence?: EmailVerificationEvidence): Promise<boolean>;
 
     /** Lookup by login handle (no secret returned). */
     getByEmail(email: string): Promise<LocalCredential | null>;
