@@ -13,6 +13,7 @@ test("offline error documents escape host branding and have no scripts, forms or
         }
     }
     expect(() => createHttpErrorPages(" ")).toThrow();
+    expect(() => createHttpErrorPages("Ulvia", 'en" onclick="alert(1)' as never)).toThrow();
     expect(() => createHttpErrorPages("x".repeat(81))).toThrow();
 });
 test("language preferences honor region, weight, order, exclusions and explicit page language", () => {

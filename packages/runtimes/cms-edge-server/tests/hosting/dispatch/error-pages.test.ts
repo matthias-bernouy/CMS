@@ -19,7 +19,7 @@ test("unknown and unavailable hosts serve localized generic Pages without constr
             throw new Error("must not open a tenant");
         },
         NOOP_LOGGER,
-        { maxEntries: 2, maxPending: 2 },
+        { maxEntries: 2, maxPending: 2, maxWaiters: 4 },
     );
     try {
         for (const [host, status] of [
