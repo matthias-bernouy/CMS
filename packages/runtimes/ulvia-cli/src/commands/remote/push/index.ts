@@ -1,7 +1,8 @@
+import { PublicationPushError } from "./failure";
 import { RemoteRepositoryClient, type RemoteCoordinate } from "@bernouy/repository/repository/publication";
 import { type RepositoryNamespaceCredential } from "@bernouy/repository/repository/namespaces";
-import { formatCoordinate, type RemoteSelection } from "./arguments";
-import { loadLocal, type LocalPushReads } from "./storage";
+import { formatCoordinate, type RemoteSelection } from "../arguments";
+import { loadLocal, type LocalPushReads } from "../storage";
 import {
     LocalArtifactFiles,
     LocalCollectionRepository,
@@ -9,9 +10,9 @@ import {
     LocalRepositoryYanks,
 } from "@bernouy/repository/repository/filesystem";
 import type { ReleaseCatalogue } from "@bernouy/repository/contracts/catalogue";
-import { inferLocalCoordinate } from "./selection";
-import { allLocalCoordinates } from "./plan";
-import { remoteRepositoryCredential } from "../namespace/credentials";
+import { inferLocalCoordinate } from "../selection";
+import { allLocalCoordinates } from "../plan";
+import { remoteRepositoryCredential } from "../../namespace/credentials";
 
 export async function pushCommand(
     selection: RemoteSelection,
@@ -94,10 +95,7 @@ async function publishPrepared(
             completed++;
             log(`${result.added ? "+" : "="} ${formatCoordinate(coordinate)} (${result.digest})`);
         } catch (error) {
-            throw new Error(
-                `Push stopped at ${formatCoordinate(coordinate)} (${completed}/${prepared.length} completed): ${error instanceof Error ? error.message : "Publication failed"}`,
-                { cause: error },
-            );
+            throw new PublicationPushError(coordinate, local.envelope, url, completed, prepared.length, error);
         }
     }
     if (batch) {

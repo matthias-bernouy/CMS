@@ -1,3 +1,5 @@
+export { PublicationPushError } from "../commands/remote/push/failure";
+
 import { preparePush } from "../commands/remote/push";
 import { clientConfigDirectory, readClientConfig } from "../runtime/repository/config";
 

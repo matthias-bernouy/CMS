@@ -1,8 +1,7 @@
+import { publicationResponseError, publicationPhase } from "./diagnostics";
 import type { RepositoryFetch } from "repository/repository-http/getBytes";
-import { COLLECTION_PUBLICATION_ISSUES } from "repository/collections/core/errors";
-import type { CollectionPublicationCode, CollectionPublicationResource } from "repository/collections/core/errors";
 import { RepositoryRequestError } from "../../core/errors";
-import { RepositoryHttpError, repositoryErrorBody } from "repository/repository-http/errors";
+import { repositoryErrorBody } from "repository/repository-http/errors";
 import { parseStrictJson } from "@bernouy/ulvia-contracts/protocol";
 import { boundedResponseBytes, repositoryUrl } from "./index";
 import type { RepositoryConnectionCredential } from "./credentials";
@@ -51,56 +50,13 @@ export class RepositoryConnection {
             },
             authenticated,
         );
-        return this.readJson(response, maximum);
+        return this.readJson(response, maximum, publicationPhase(path));
     }
 
-    async readJson(response: Response, maximum = 1024 * 1024): Promise<unknown> {
+    async readJson(response: Response, maximum = 1024 * 1024, phase?: string): Promise<unknown> {
         if (!response.ok) {
             const body = await repositoryErrorBody(response);
-            if (response.status === 409 && body) {
-                try {
-                    const value = parseStrictJson(body, 4096, 8) as {
-                        error?: {
-                            code?: unknown;
-                            output?: { publicationCode?: unknown; publicationResource?: unknown };
-                        };
-                    };
-                    const code = value?.error?.output?.publicationCode;
-                    if (
-                        value?.error?.code === "REJECTED" &&
-                        typeof code === "string" &&
-                        Object.hasOwn(COLLECTION_PUBLICATION_ISSUES, code)
-                    ) {
-                        const publicationCode = code as CollectionPublicationCode;
-                        const candidate = value.error?.output?.publicationResource as
-                            | CollectionPublicationResource
-                            | undefined;
-                        const resource =
-                            candidate &&
-                            ["bloc", "theme-token", "configuration", "text", "asset", "state"].includes(
-                                candidate.kind,
-                            ) &&
-                            typeof candidate.id === "string" &&
-                            /^[a-zA-Z0-9][a-zA-Z0-9._/-]{0,511}$/u.test(candidate.id)
-                                ? { kind: candidate.kind, id: candidate.id }
-                                : undefined;
-                        throw new RepositoryRequestError(
-                            "REJECTED",
-                            `${resource ? `${resource.kind} ${resource.id}: ` : ""}${COLLECTION_PUBLICATION_ISSUES[publicationCode]}`,
-                            publicationCode,
-                            resource,
-                        );
-                    }
-                } catch (error) {
-                    if (error instanceof RepositoryRequestError) {
-                        throw error;
-                    }
-                }
-            }
-            if (response.status >= 400 && response.status < 500) {
-                throw new RepositoryRequestError("REJECTED", `Repository request failed (${response.status})`);
-            }
-            throw new RepositoryHttpError(response.status);
+            throw publicationResponseError(response, body, phase);
         }
         return response.status === 204
             ? null

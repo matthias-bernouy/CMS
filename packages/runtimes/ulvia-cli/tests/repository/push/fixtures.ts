@@ -17,7 +17,7 @@ export async function pushFixture() {
         remoteFiles: new LocalArtifactFiles(f.remote),
         async contract(
             id: string,
-            options: { parent?: string; publisher?: string; version?: string; group?: string } = {},
+            options: { parent?: string; publisher?: string; version?: string; events?: boolean; group?: string } = {},
         ) {
             const directory = join(source, options.group ?? "", id);
             const parent = options.parent
@@ -40,6 +40,17 @@ export async function pushFixture() {
                 version: options.version ?? "1.0.0",
                 publisherId: options.publisher ?? "ulvia",
                 name: "Push contract",
+                ...(options.events
+                    ? {
+                          events: [
+                              {
+                                  id: "example.created",
+                                  sensitive: false,
+                                  schema: { type: "object", properties: {}, required: [] },
+                              },
+                          ],
+                      }
+                    : {}),
                 capabilities: [
                     {
                         id: parent ? "child.ping" : "ping",

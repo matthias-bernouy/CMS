@@ -158,6 +158,17 @@ receipts missing image identities or the catalogue fingerprint require a new bui
 stack share the distribution version; contract and manifest versions remain independent.
 Prereleases use npm's `next` tag; stable versions use `latest`.
 
+Expected Repository upload refusals stop `publish` with the exact release,
+completed count, receiving origin and failed transfer phase. Declared publication
+reasons are reconstructed locally; otherwise the CLI reports the HTTP status,
+recognized remote code and safe `x-ulvia-request-id` when present. It does not
+print arbitrary remote messages. A contract containing events receives an explicit
+possible runtime-compatibility hint for an opaque 409. This is not proof of the
+cause: an older Repository may discard the validation reason in both its response
+and journal. Publishing newer catalogue releases does not update the receiving
+Provider runtime; update the receiving stack before retrying formats it cannot admit.
+Expected Repository push failures exit with status 1 before Docker/npm publication.
+
 ## Instance integration verification
 
 [Workspace tests](../../tests/README.md) groups the cross-component journeys and

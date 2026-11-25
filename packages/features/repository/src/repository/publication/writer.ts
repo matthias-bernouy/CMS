@@ -54,6 +54,8 @@ export class RemoteRepositoryWriter {
                 },
                 true,
             ),
+            undefined,
+            "upload preparation",
         );
         if (!uploadReceipt(created)) {
             throw new Error("Repository returned an invalid publication upload receipt");
@@ -78,10 +80,10 @@ export class RemoteRepositoryWriter {
                     },
                     true,
                 );
-                await response.body?.cancel();
                 if (!response.ok) {
-                    throw new Error(`Repository asset upload failed (${response.status})`);
+                    await this.connection.readJson(response, undefined, "asset upload");
                 }
+                await response.body?.cancel();
             },
         );
         const result =

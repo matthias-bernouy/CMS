@@ -22,6 +22,8 @@ export async function publishSourceBuild(
             },
             true,
         ),
+        undefined,
+        "source build",
     );
     const operationId = (receipt as { operationId?: unknown })?.operationId;
     if (typeof operationId !== "string" || !/^[a-f0-9-]{36}$/u.test(operationId)) {
@@ -45,6 +47,8 @@ export async function publishSourceBuild(
             if (operation.errorOutput) {
                 await connection.readJson(
                     Response.json({ error: { code: "REJECTED", output: operation.errorOutput } }, { status: 409 }),
+                    undefined,
+                    "source build",
                 );
             }
             throw new RepositoryRequestError(

@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from "node:util";
 import { join, resolve } from "node:path";
 import { withRepositoryWriteLock } from "@bernouy/repository/repository/filesystem/lock";
-import { prepareReleasePublication } from "@bernouy/ulvia-cli/publication";
+import { prepareReleasePublication, PublicationPushError } from "@bernouy/ulvia-cli/publication";
 import { command } from "../process";
 import { inspectImages } from "../images/inspection";
 import { readReceipt } from "./receipt";
@@ -50,5 +50,14 @@ export async function publishDistribution(
 if (import.meta.main) {
     const version = distributionVersion(Bun.argv.slice(2), true)!;
     const root = resolve(import.meta.dir, "../..");
-    await withRepositoryWriteLock(join(root, "artifacts/distributions"), () => publishDistribution(root, version));
+    try {
+        await withRepositoryWriteLock(join(root, "artifacts/distributions"), () => publishDistribution(root, version));
+    } catch (error) {
+        if (!(error instanceof PublicationPushError)) {
+            throw error;
+        }
+        console.error(error.message);
+        console.error("Distribution stopped before Docker image and npm publication.");
+        process.exitCode = 1;
+    }
 }
