@@ -5,6 +5,7 @@ export async function readMaintenanceResource(
     response: Response,
     signal: AbortSignal,
     reserve: (bytes: number) => void,
+    kind: "visual" | "html" = "visual",
 ) {
     const contentType = response.headers.get("content-type") ?? "application/octet-stream";
     const reader = response.body?.getReader();
@@ -18,9 +19,11 @@ export async function readMaintenanceResource(
         signal.throwIfAborted();
         if (
             response.status !== 200 ||
-            !/^(?:text\/css(?:;|$)|image\/|font\/|application\/(?:font-|vnd\.ms-fontobject|octet-stream))/iu.test(
-                contentType,
-            )
+            !(kind === "html"
+                ? /^text\/html(?:;|$)/iu.test(contentType)
+                : /^(?:text\/css(?:;|$)|image\/|font\/|application\/(?:font-|vnd\.ms-fontobject|octet-stream))/iu.test(
+                      contentType,
+                  ))
         ) {
             throw new Error("Maintenance Page resource is not a publicly available visual resource");
         }
@@ -32,7 +35,7 @@ export async function readMaintenanceResource(
             }
             length += part.value.byteLength;
             reserve(part.value.byteLength);
-            if (length > MAINTENANCE_LIMITS.resourceBytes) {
+            if (length > (kind === "html" ? MAINTENANCE_LIMITS.bytes : MAINTENANCE_LIMITS.resourceBytes)) {
                 throw new Error("Maintenance resource exceeds its byte limit");
             }
             chunks.push(part.value);

@@ -99,8 +99,10 @@ recovery access retain their existing policies. Preparation allows at most 64
 local resources, 1 MiB per resource and 4 MiB total, with a 15-second abort signal.
 Active snapshots have no expiry. Terminal snapshots expire after 24 hours so
 resources can finish loading after completion. This presentation covers reviewed
-site release switches; system instance/image downtime still requires a separate
-hosting-level delivery path.
+site release switches. Complete `ulvia upgrade` operations reuse the Content
+freezer through an independent static proxy and a disk snapshot outside Mongo;
+see [deployment lifecycle](../development/deployment-lifecycle.md#protected-upgrades-and-complete-rollback)
+for capture, TLS, restart and listener-handoff limits.
 
 The switch does not rewrite, republish or roll back Page documents. Replacing
 Page-authored Blocs remains a separate future editorial operation. Site changes

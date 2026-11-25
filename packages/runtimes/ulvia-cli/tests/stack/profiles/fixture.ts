@@ -60,7 +60,17 @@ export async function profileCliFixture() {
             return new Response(null, { status: 404 });
         },
     });
-    const proxy = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response("ready") });
+    const proxy = Bun.serve({
+        hostname: "127.0.0.1",
+        port: 0,
+        async fetch() {
+            const maintenance = await Bun.file(join(root, "frontend.json")).exists();
+            return new Response("ready", {
+                status: maintenance ? 503 : 200,
+                headers: maintenance ? { "ulvia-maintenance": "upgrade" } : {},
+            });
+        },
+    });
     return {
         root,
         state,

@@ -1,3 +1,4 @@
+import { verifyPresentation } from "./presentation";
 import { expect } from "bun:test";
 import { runCommand } from "../../../../../src/runtime/process";
 import { until, journal } from "../database";
@@ -40,6 +41,7 @@ export async function crashProvider(f: UpgradeFixture, data: HistoricalData) {
             return false;
         }
     });
+    await verifyPresentation(f);
     const refused = await fetch(`http://127.0.0.1:${f.environment.ULVIA_PROVIDER_PORT}/forms/v2/get`, {
         method: "QUERY",
         body: "{}",

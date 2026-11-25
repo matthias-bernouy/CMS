@@ -77,10 +77,39 @@ never loaded. Unknown recipes, unsupported exact releases, active transitions an
 incompatible consumers refuse explicitly.
 
 A normal upgrade takes both installation and local Repository native write locks,
-records `.maintenance.json`, stops all services, captures a cold checkpoint and
-verifies it. The default destination is a new private directory next to the data
+records `.maintenance.json`, prepares public maintenance Pages, switches to an
+independent static frontend, stops all business services, captures a cold
+checkpoint and verifies it. The default destination is a new private directory next to the data
 root, under `<data-root>.backups/`. `--backup-directory` selects a new absolute
 external directory. A missing or incomplete receipt cannot authorize restoration.
+
+The frontend uses a private `<checkpoint>.presentation/` companion directory,
+outside the data root and Mongo. Before interruption, a read-only target-image
+worker reads published Page references and fetches the source release's public
+HTML anonymously through the private hosting proxy. It tries `serverError`, then
+`notFound`, then the integrated generic Page. Redirects, private/draft Pages and
+signed resources cannot enter the shared snapshot. Content's existing freezer
+removes scripts, disables forms and copies local CSS/images/fonts with the same
+4 MiB/64-resource per-site bounds. Preparation is bounded to 1024 sites, 4096
+domains and 256 MiB overall; refusals occur before stopping services.
+
+A separate Caddy container, pinned to the applied release, serves GET/HEAD with
+503, `Retry-After: 60`, no-store and noindex. Frozen resources return 200 with their
+media type; other methods return a generic 503 JSON refusal. Active domains and
+aliases are isolated by site, and unknown HTTP hosts receive generic HTML. Matching,
+currently valid certificates and keys are copied privately and loaded read-only;
+missing certificates for HTTPS-ready domains refuse before interruption. The
+frontend requires neither Mongo, Provider nor Edge, makes no backend calls and
+does not renew certificates. Its restart policy survives CLI process death.
+
+The normal Caddy admin API is disabled, so entry and exit require a brief listener
+handoff; this is not a zero-downtime TCP or in-flight asset guarantee. The static
+frontend stays up during cold copy, conversion and backend recovery. Rollback
+keeps it outside the containers stopped for restoration, then hands public ports
+back after backend readiness. Pre-opening recovery never exposes migrated state.
+The private companion directory contains public renderings and sensitive TLS keys;
+retain/delete it with its checkpoint, only after maintenance completes. Standalone
+backups without that companion retain their existing stop/start behavior.
 
 Only MongoDB is reopened for the target image's maintenance plan and approved
 recipes. The planner scans logical instances independently; no shared database

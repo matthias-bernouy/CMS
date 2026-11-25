@@ -1,4 +1,4 @@
-import { pauseProvider, activateProvider, releaseProvider } from "./activation";
+import { pauseProvider, activateProvider } from "./activation";
 import { removeOwnedContainers } from "./containers";
 import { newBackupLocation } from "./backup/snapshot";
 import { mkdir } from "node:fs/promises";
@@ -8,7 +8,10 @@ import { readMaintenance, saveMaintenance, clearMaintenance } from "./journal";
 import { createSnapshot } from "./backup/snapshot";
 import { stopDeployments, restoreInstallationBackup } from "./backup/operations";
 import { deploymentProject } from "../stack/orchestration/deployment/artifacts";
-import { composeUp } from "../stack/orchestration/compose";
+import { preparePresentation } from "./presentation/prepare";
+import { startPresentation, stopPresentation } from "./presentation/frontend";
+import { openInstallation } from "./presentation/open";
+import { composeStop, composeUp } from "../stack/orchestration/compose";
 import { releaseMaintenance, assertMaintenanceImage } from "./migration";
 import { executeDeployment } from "../stack/orchestration/deployment/execute";
 import type { LocalServicesState, DeploymentOperation } from "../stack/orchestration/state";
@@ -28,17 +31,29 @@ export async function protectedUpgrade(
         if (journal.target?.id !== target.id) {
             throw new Error("Resume the exact recorded upgrade target");
         }
+        await startPresentation(paths, journal.backup, journal.applied);
         if (journal.phase === "opening") {
-            await executeDeployment(paths, journal.applied, { kind: "upgrade", phase: "prepared", target }, log, () =>
-                activateProvider(paths, target),
-            );
+            try {
+                await executeDeployment(
+                    paths,
+                    journal.applied,
+                    { kind: "upgrade", phase: "prepared", target },
+                    log,
+                    async () => {
+                        await activateProvider(paths, target);
+                        await stopPresentation(paths);
+                    },
+                );
+            } catch (error) {
+                await startPresentation(paths, journal.backup, journal.applied);
+                throw error;
+            }
             await clearMaintenance(paths);
             return;
         }
         if (["quiescing", "backup"].includes(journal.phase)) {
             await removeOwnedContainers(paths);
-            await releaseProvider(paths);
-            await composeUp(await deploymentProject(paths, journal.applied));
+            await openInstallation(paths, journal.backup, journal.applied);
             await clearMaintenance(paths);
             throw new Error("Interrupted backup left data unchanged. Run ulvia upgrade again");
         }
@@ -65,6 +80,10 @@ export async function protectedUpgrade(
     };
     await saveMaintenance(paths, journal);
     try {
+        await preparePresentation(paths, destination, applied, target);
+        log("Public maintenance Pages captured and validated.");
+        await composeStop(await deploymentProject(paths, applied), ["proxy"]);
+        await startPresentation(paths, destination, applied);
         await stopDeployments(paths, journal.previous);
         await pauseProvider(paths);
         journal = { ...journal, phase: "backup" };
@@ -88,11 +107,13 @@ export async function protectedUpgrade(
             journal = { ...journal!, phase: "opening" };
             await saveMaintenance(paths, journal);
             await activateProvider(paths, target);
+            await stopPresentation(paths);
         });
         await clearMaintenance(paths);
     } catch (error) {
         const phase = (await readMaintenance(paths))?.phase;
         if (phase === "opening") {
+            await startPresentation(paths, destination, applied);
             log(
                 "Traffic opening has begun. No automatic data rollback is allowed; resume ulvia upgrade or request an explicit backup restore.",
             );
@@ -100,8 +121,7 @@ export async function protectedUpgrade(
         }
         if (phase === "quiescing" || phase === "backup") {
             // No schema writes occurred; an incomplete snapshot cannot authorize a restore.
-            await releaseProvider(paths);
-            await composeUp(await deploymentProject(paths, applied));
+            await openInstallation(paths, destination, applied);
             await clearMaintenance(paths);
             throw error;
         }

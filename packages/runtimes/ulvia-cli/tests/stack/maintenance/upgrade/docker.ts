@@ -19,9 +19,15 @@ if (import.meta.main) {
         stderr: "inherit",
     });
     const code = await child.exited;
-    const barrier = process.env.ULVIA_UPGRADE_PROXY_BARRIER;
+    const backup = process.env.ULVIA_UPGRADE_BACKUP_BARRIER;
+    const coldCopy = args[0] === "run" && args.includes("-e") && JSON.parse(args.at(-1)!).mode === "create";
+    const barrier = coldCopy ? backup : process.env.ULVIA_UPGRADE_PROXY_BARRIER;
     const up = args.indexOf("up");
-    if (code === 0 && barrier && up >= 0 && args.slice(up).includes("--no-deps") && args.at(-1) === "proxy") {
+    if (
+        code === 0 &&
+        barrier &&
+        (coldCopy || (up >= 0 && args.slice(up).includes("--no-deps") && args.at(-1) === "proxy"))
+    ) {
         await writeFile(`${barrier}.ready`, "ready");
         const deadline = Date.now() + 60000;
         while (!(await Bun.file(`${barrier}.release`).exists())) {

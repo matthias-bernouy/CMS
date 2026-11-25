@@ -36,8 +36,11 @@ business baseline. A retained file and runtime keys are also checked.
 
 All image metadata, container operations, persistence and HTTP responses come from
 real Docker/services. The test-only Docker transport intercepts only acquisition
-of locally built target tags and the proxy-return barrier. It does not fabricate
-image inspections, Docker health, migration output or service responses. These
+of locally built target tags and the cold-copy/proxy-return barriers. It does not fabricate
+image inspections, Docker health, migration output or service responses. A second
+return barrier holds the actual completed cold-copy command so the journey can
+assert that Mongo, Provider and Edge are stopped while the public error Page and
+its frozen stylesheet remain available. These
 controls live entirely in test code; no production failure hook is added.
 
 ## Running and retained evidence
@@ -65,6 +68,7 @@ and data are removed at the end. These checkpoints include test credentials and
 must be treated as private; they do not contain user installation data.
 
 The first successful targeted run passed 200 assertions in about 182 seconds.
+The extended maintenance-presentation run passed 250 assertions in about 194 seconds.
 This is process-crash coverage on standalone Mongo, not a machine-power-loss or
 storage-controller failure test. It covers this exact historical source and the
 current candidate, not every historical distribution or Mongo major change.

@@ -26,3 +26,5 @@ export {
     type ContentDeliveryOptions,
 } from "content/pages/delivery/ContentDelivery";
 export { prepareMaintenancePage } from "content/pages/delivery/maintenance/prepare";
+
+export { captureMaintenancePage } from "content/pages/delivery/maintenance/capture";

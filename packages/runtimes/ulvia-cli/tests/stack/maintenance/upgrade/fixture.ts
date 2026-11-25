@@ -1,3 +1,5 @@
+import { runCommand } from "../../../../src/runtime/process";
+import { localServicesIdentity } from "../../../../src/runtime/stack/orchestration/state";
 import { ownedContainers } from "./containers";
 import { upgradeDockerPath } from "./docker";
 import { mkdtemp, mkdir, cp, chmod, open, rm, symlink } from "node:fs/promises";
@@ -115,6 +117,15 @@ export async function upgradeFixture() {
                 kill();
             }
             await Bun.sleep(100);
+            await runCommand(
+                [
+                    environment.ULVIA_UPGRADE_REAL_DOCKER,
+                    "rm",
+                    "--force",
+                    `${localServicesIdentity(paths).projectName}-maintenance`,
+                ],
+                { allowFailure: true },
+            );
             await runtime.remove();
             // Retain logs and checkpoints as crash evidence; discard disposable live data only.
             await rm(paths.data, { recursive: true, force: true });

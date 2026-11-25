@@ -1,4 +1,5 @@
-import { releaseProvider } from "../activation";
+import { startPresentation } from "../presentation/frontend";
+import { openInstallation } from "../presentation/open";
 import { removeOwnedContainers } from "../containers";
 import { resolve } from "node:path";
 import { readDeploymentState } from "../../stack/orchestration/state";
@@ -89,14 +90,14 @@ export async function restoreInstallationBackup(
         journal = { ...journal, phase: "rollback-stopping" };
         await saveMaintenance(paths, journal);
         await removeOwnedContainers(paths);
+        await startPresentation(paths, backup, saved.state);
         journal = { ...journal, phase: "rollback-restoring" };
         await saveMaintenance(paths, journal);
         await treeInContainer("restore", paths, backup, pinnedOfficialImageReference(saved.state.images.provider));
         journal = { ...journal, phase: "rollback-opening" };
         await saveMaintenance(paths, journal);
     }
-    await releaseProvider(paths);
-    await composeUp(await deploymentProject(paths, saved.state));
+    await openInstallation(paths, backup, saved.state);
     await clearMaintenance(paths);
     log(`Restored stack ${saved.state.release.version} and installation data from ${saved.record.createdAt}.`);
 }

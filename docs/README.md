@@ -71,6 +71,7 @@ completed browser journey or deployment.
 - [Files and responsive images](images/README.md).
 - [UI contracts](quality/ui-contracts.md): binding ownership, browser request
   diagnostics, source/form checks and current scanner limitations.
+- [System upgrade maintenance Pages — 2026-11-25](quality/2026-11-25-system-upgrade-maintenance-pages.md): independent proxy snapshots, public capture, TLS and crash recovery evidence.
 - [Access business Events review — 2026-11-24](quality/2026-11-24-access-business-events.md): opaque account references, ADMIN profile reads, optional email workflows, atomic capture and recovery evidence.
 - [Events and Workflow end-to-end verification — 2026-11-24](quality/2026-11-24-workflows-e2e.md): functional journeys, corrections, browser evidence and unresolved measured-performance failures.
 - [Shared resolved schemas review — 2026-11-24](quality/2026-11-24-resolved-schemas.md): shared Event/capability typing, durable authority, explicit filters and validation evidence.

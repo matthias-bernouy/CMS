@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { createHash } from "node:crypto";
-import { appendFile, readFile, writeFile } from "node:fs/promises";
+import { appendFile, readFile, writeFile, mkdir, rm } from "node:fs/promises";
 
 export const fakeDockerFixturePath = import.meta.path;
 if (import.meta.main) {
@@ -51,13 +51,36 @@ if (import.meta.main) {
                 },
             ]),
         );
+    } else if (args[0] === "container" && args[1] === "inspect") {
+        const front = await readFile(`${root}/frontend.json`, "utf8").catch(() => null);
+        if (!front) {
+            process.exit(1);
+        }
+        process.stdout.write(front);
     } else if (args[0] === "ps") {
         process.stdout.write(
             Object.values(containers)
+                .filter(
+                    (row: any) =>
+                        !args.includes("label=com.docker.compose.service=proxy") ||
+                        (row.Service === "proxy" && row.State === "running"),
+                )
                 .map((row: any) => (args.includes("{{.ID}}") ? row.ID : `${row.ID}\t${row.Service}`))
                 .join("\n"),
         );
     } else if (args[0] === "run") {
+        if (args.includes("caddy")) {
+            if (!args.includes("validate")) {
+                const labels = Object.fromEntries(
+                    args.flatMap((arg, i) => (arg === "--label" ? [args[i + 1]!.split("=")] : [])),
+                );
+                await writeFile(
+                    `${root}/frontend.json`,
+                    JSON.stringify([{ Id: "f".repeat(64), Config: { Labels: labels }, State: { Running: true } }]),
+                );
+            }
+            process.exit(0);
+        }
         const mounts = args.filter((arg) => arg.startsWith("type=bind,src="));
         const input = JSON.parse(args.at(-1)!);
         for (const mount of mounts) {
@@ -75,6 +98,9 @@ if (import.meta.main) {
         );
         process.exit(await child.exited);
     } else if (["stop", "rm"].includes(args[0]!)) {
+        if (args.includes("f".repeat(64))) {
+            await rm(`${root}/frontend.json`, { force: true });
+        }
         for (const [key, row] of Object.entries(containers) as [string, any][]) {
             if (args.includes(row.ID)) {
                 if (args[0] === "rm") {
@@ -99,7 +125,15 @@ if (import.meta.main) {
             : [];
         const services = ["proxy", "mongo", "provider", "mongo-provision", ...edges];
         const up = args.indexOf("up");
-        if (
+        if (args.some((arg) => arg.endsWith("/maintenance/presentation/index.ts"))) {
+            const mount = args[args.indexOf("--volume") + 1]!.split(":")[0]!;
+            await mkdir(`${mount}/sites`);
+            await writeFile(
+                `${mount}/pages.json`,
+                JSON.stringify({ schema: "ulvia.maintenance-pages/v1", sites: [], tlsHosts: [] }),
+                { mode: 0o600 },
+            );
+        } else if (
             args.includes("src/maintenance/upgrade.ts") ||
             args.some((arg) => arg.endsWith("/src/maintenance/upgrade.ts"))
         ) {
@@ -159,8 +193,11 @@ if (import.meta.main) {
                 }
             }
         } else if (args.includes("stop")) {
+            const selected = args.slice(args.indexOf("stop") + 1);
             for (const row of Object.values(containers) as any[]) {
-                row.State = "exited";
+                if (!selected.length || selected.includes(row.Service)) {
+                    row.State = "exited";
+                }
             }
         } else if (args.includes("start")) {
             for (const row of Object.values(containers) as any[]) {

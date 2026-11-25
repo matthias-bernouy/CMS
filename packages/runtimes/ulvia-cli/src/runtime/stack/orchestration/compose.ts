@@ -50,8 +50,8 @@ export function composeWorker(project: ComposeProject, args: readonly string[]) 
     return compose(project, args, false);
 }
 
-export async function composeStop(project: ComposeProject): Promise<void> {
-    await compose(project, ["stop"], true);
+export async function composeStop(project: ComposeProject, services: readonly string[] = []): Promise<void> {
+    await compose(project, ["stop", ...services], true);
 }
 
 export async function composeDown(project: ComposeProject): Promise<void> {

@@ -51,7 +51,8 @@
                 "src/checkRetention.ts",
                 "src/maintenance/index.ts",
                 "tests/hosting/tls/run.ts",
-                "src/maintenance/upgrade.ts"
+                "src/maintenance/upgrade.ts",
+                "src/maintenance/presentation/index.ts"
             ]
         },
         "packages/platform/sdk": {

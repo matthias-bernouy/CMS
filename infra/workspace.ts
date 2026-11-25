@@ -95,6 +95,11 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
         { args: ["bun", "x", "tsc", "--project", "tests/performance/tsconfig.json"] },
         { args: ["bun", "run", "tests/performance/command/check.ts"] },
         { args: ["bun", "run", "tests/performance/compatibility/run.ts"], continueOnFailure: true },
+        {
+            args: ["bun", "test", "packages/runtimes/ulvia-cli/tests/stack/maintenance/presentation"],
+            env: { ULVIA_RUN_MAINTENANCE_FRONTEND: "1" },
+            continueOnFailure: true,
+        },
         candidateImageStep(candidateVersion),
         { args: ["bun", "run", "packages/runtimes/ulvia-cli/tests/stack/maintenance/upgrade/historical.ts"] },
         {

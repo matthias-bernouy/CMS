@@ -113,7 +113,7 @@ smoke(
             expect(status.some((line) => line.startsWith("edge-1: running / healthy"))).toBe(true);
             expect(status.some((line) => line.startsWith("edge-2:"))).toBe(false);
             console.info("[edge-smoke] complete cold backup, integrity verification and exact deployment rollback");
-            await verifyNativeBackup(environment, options.log);
+            await verifyNativeBackup(environment, options.log, primary);
             await runCli(["stop"], options);
             const stopped: string[] = [];
             await runCli(["status"], { environment, log: (message) => stopped.push(message) });

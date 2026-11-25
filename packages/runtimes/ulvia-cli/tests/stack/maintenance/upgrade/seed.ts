@@ -1,3 +1,4 @@
+import { seedPresentation } from "./faults/presentation";
 import { database, until } from "./database";
 import { expect } from "bun:test";
 import { chromium } from "playwright";
@@ -33,6 +34,7 @@ export async function seedHistorical(f: UpgradeFixture) {
         expect(response.status, await response.clone().text()).toBe(200);
         return response.json();
     };
+    await seedPresentation((path, method, input) => api.request("ulvia/cms.content", path, method, input, actor));
     const notification = {
         enabled: false,
         recipients: [{ email: "archive@example.test" }],

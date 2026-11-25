@@ -1,3 +1,5 @@
+import { configureNativeErrorPage, observeNativeMaintenance } from "./presentation/observer";
+import type { HostedSite } from "../edgeSmoke/setup";
 import { withRepositoryWriteLock } from "@bernouy/repository/repository/filesystem/lock";
 import { resolveUlviaPaths } from "../../../src/runtime/paths";
 import { readDeploymentState } from "../../../src/runtime/stack/orchestration/state";
@@ -11,6 +13,7 @@ import { runCli } from "../../../src/cli";
 export async function verifyNativeBackup(
     environment: Record<string, string | undefined>,
     log: (message: string) => void,
+    site: HostedSite,
 ) {
     const data = environment.ULVIA_DATA_DIR!,
         backup = `${data}-checkpoint`,
@@ -21,6 +24,7 @@ export async function verifyNativeBackup(
     const key = await readFile(join(data, "services/provider-operator-token"), "utf8");
     const inode = (await stat(join(data, ".write-lock"))).ino;
     try {
+        await configureNativeErrorPage(site);
         await writeFile(sentinel, "checkpoint");
         await runCli(["backup", "create", backup], options);
         await runCli(["backup", "verify", backup], options);
@@ -29,11 +33,16 @@ export async function verifyNativeBackup(
         const paths = resolveUlviaPaths(environment);
         const source = (await readDeploymentState(paths))!.applied!;
         const target = await prepareDeployment(paths, source.installation, source.release, source.images);
-        await withRepositoryWriteLock(paths.data, () =>
-            withRepositoryWriteLock(paths.repository, () =>
-                protectedUpgrade(paths, source, target, log, upgradeBackup),
-            ),
-        );
+        const stopObserving = observeNativeMaintenance(site);
+        try {
+            await withRepositoryWriteLock(paths.data, () =>
+                withRepositoryWriteLock(paths.repository, () =>
+                    protectedUpgrade(paths, source, target, log, upgradeBackup),
+                ),
+            );
+        } finally {
+            await stopObserving();
+        }
         expect((await readDeploymentState(paths))?.applied?.id).toBe(target.id);
         expect(await Bun.file(join(data, ".maintenance.json")).exists()).toBe(false);
         expect(await Bun.file(join(data, "services/credentials/maintenance.json")).exists()).toBe(false);
