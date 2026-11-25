@@ -83,6 +83,25 @@ Uncertain commit outcomes keep maintenance active until an exact-state resume
 can resolve them. Repeating the same completed request is idempotent; changed
 retry targets reject. Collection switches do not claim or synchronize Page routes.
 
+Before a reviewed contract or collection switch becomes active, the Provider
+prepares a public static maintenance representation from the published
+`serverError` Page, then `notFound`, then integrated HTML if neither can be
+rendered safely. Content freezes local visual dependencies (including CSS and
+fonts), removes scripts and disables forms. Restricted/draft Pages and signed
+Files URLs cannot enter this shared representation. External resource URLs stay
+external and are never fetched by the preparation process.
+
+The host persists this representation separately from domain upgrade intents,
+so a cold Edge or restarted Provider can serve it through ordinary Content
+resource delivery. Public Page requests receive HTML with status 503,
+`Retry-After: 60`, `Cache-Control: no-store` and noindex headers; API refusals and
+recovery access retain their existing policies. Preparation allows at most 64
+local resources, 1 MiB per resource and 4 MiB total, with a 15-second abort signal.
+Active snapshots have no expiry. Terminal snapshots expire after 24 hours so
+resources can finish loading after completion. This presentation covers reviewed
+site release switches; system instance/image downtime still requires a separate
+hosting-level delivery path.
+
 The switch does not rewrite, republish or roll back Page documents. Replacing
 Page-authored Blocs remains a separate future editorial operation. Site changes
 between review and apply invalidate the plan. A collection uninstall is not yet

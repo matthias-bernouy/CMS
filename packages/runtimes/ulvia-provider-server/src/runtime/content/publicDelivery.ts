@@ -15,6 +15,7 @@ import type { ProviderStores } from "../stores/providerStores";
 import type { createProviderGateway } from "../gateway/createProviderGateway";
 import { editorialPages } from "./editorialPages";
 import { resolveSvgSources } from "./inlineSvg";
+import { configureMaintenancePages } from "./maintenance/configure";
 
 export function createPublicDelivery(
     stores: ProviderStores,
@@ -24,6 +25,7 @@ export function createPublicDelivery(
 ): Pick<CmsContentDependencies, "publicDelivery" | "contentQuery"> & {
     captureDelivery: (context: ProviderCapabilityInvocationContext) => ContentDelivery;
 } {
+    configureMaintenancePages(stores, gateway, publicUrl);
     const cache = new InMemoryCache();
     const readSelectionRevision = async () =>
         (await stores.executionState.read(gateway.siteId, [])).selections?.revision ?? 0;
@@ -59,12 +61,14 @@ export function createPublicDelivery(
             editorialPages: editorialPages(stores.repo),
             resolveContributedAssets: (input) => resolveInstalledCollectionAssets(input, assets, ""),
             serveCollectionAsset: (request) => serveInstalledCollectionAsset(request, assets, ""),
-            guard: (request) =>
-                collectionMaintenanceResponse(request, {
+            guard: async (request) =>
+                (await stores.maintenancePages.resource(request)) ??
+                (await collectionMaintenanceResponse(request, {
                     siteId: gateway.siteId,
                     upgrades: stores.upgradeStorage,
                     basePath: "",
-                }),
+                    pageResponse: (request, active) => stores.maintenancePages.page(request, active.id),
+                })),
             resolveSvgSources: (sources) =>
                 resolveSvgSources({ cache, assets, client: client(context), release }, sources),
             pageCapabilities: {

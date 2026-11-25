@@ -1,5 +1,6 @@
 import type { Middleware } from "@bernouy/http-runner";
 import type { SiteUpgradeStorage } from "repository/site-upgrades/interfaces";
+import type { SiteUpgradeActive } from "repository/site-upgrades/interfaces";
 
 const AVAILABLE_PREFIXES = ["/login", "/_content/assets", "/_content/collections"];
 const AVAILABLE_PATHS = new Set([
@@ -19,7 +20,12 @@ const RECOVERY_CAPABILITIES = new Set([
     "ulvia/cms.installations/resume-contract-upgrade",
 ]);
 
-type MaintenanceOptions = { siteId: string; upgrades: Pick<SiteUpgradeStorage, "getActive">; basePath: string };
+type MaintenanceOptions = {
+    siteId: string;
+    upgrades: Pick<SiteUpgradeStorage, "getActive">;
+    basePath: string;
+    pageResponse?: (request: Request, upgrade: SiteUpgradeActive) => Promise<Response | null>;
+};
 export function createCollectionMaintenanceGuard(options: MaintenanceOptions): Middleware {
     return async (request, next) => (await collectionMaintenanceResponse(request, options)) ?? next();
 }
@@ -33,6 +39,13 @@ export async function collectionMaintenanceResponse(
     if (!active || isAvailableDuringMaintenance(path)) {
         return null;
     }
+    if (!["GET", "HEAD"].includes(request.method) || path.startsWith("/.cms/")) {
+        return maintenanceJson(path, active);
+    }
+    return (await options.pageResponse?.(request, active)) ?? maintenanceJson(path, active);
+}
+
+function maintenanceJson(path: string, active: SiteUpgradeActive): Response {
     return Response.json(
         { code: "site_maintenance", upgradeId: active.id, status: active.status },
         {

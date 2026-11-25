@@ -1,4 +1,6 @@
 export type { default as ContentDeliveryHost, DeliveryActor } from "content/pages/delivery/interfaces";
+export type { MaintenancePage, MaintenanceResource } from "content/pages/delivery/maintenance/interfaces";
+export { MAINTENANCE_HTML, MAINTENANCE_LIMITS } from "content/pages/delivery/maintenance/limits";
 export {
     parseResolvePathRequest,
     publicPathRequest,
@@ -23,3 +25,4 @@ export {
     isContentReservedPath,
     type ContentDeliveryOptions,
 } from "content/pages/delivery/ContentDelivery";
+export { prepareMaintenancePage } from "content/pages/delivery/maintenance/prepare";

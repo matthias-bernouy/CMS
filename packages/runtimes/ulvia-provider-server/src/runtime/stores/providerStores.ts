@@ -62,6 +62,8 @@ import { EncryptedConnectionDrafts } from "../gateway/providers/connections/Encr
 import { MongoCmsSecretResolutionReader } from "./secrets/MongoCmsSecretResolutionReader";
 import { createContractSecretStores } from "./secrets/contractSecretStores";
 import { ConfiguredSmtpEmailer } from "@bernouy/email-smtp/nodemailer";
+import { MaintenancePages } from "../content/maintenance/MaintenancePages";
+import { withMaintenancePages } from "../content/maintenance/storage";
 
 const SCOPE_ID = "default";
 
@@ -96,7 +98,9 @@ export async function createProviderStores(
     });
     const releases = new MongoReleaseCatalogue(db);
     const manifests = new MongoProviderManifestCatalogue(db, releases);
-    const upgradeStorage = new MongoSiteUpgradeStorage(db);
+    const maintenancePages = new MaintenancePages(db, SCOPE_ID);
+    await maintenancePages.init();
+    const upgradeStorage = withMaintenancePages(new MongoSiteUpgradeStorage(db), maintenancePages, logger);
     await upgradeStorage.init();
     const rawInstallations = new MongoProviderInstallationStore(db, manifests, () => new Date().toISOString());
     await rawInstallations.init();
@@ -254,6 +258,7 @@ export async function createProviderStores(
         createInitialization,
         upgradeStorage,
         mongo,
+        maintenancePages,
         db,
         repo,
         providerFiles,
