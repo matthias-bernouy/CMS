@@ -92,7 +92,7 @@ async function renderIndexedPage(
     }
     if (indexing.kind === "unavailable") {
         reportPageFailure(delivery, "indexing", cachePath, new Error(indexing.reason));
-        return renderRef(request, delivery, "serverError", 503, "Service unavailable");
+        return renderRef(request, delivery, "serverError", 503, "Service unavailable", language);
     }
     return renderWithFallbacks(
         request,
@@ -173,7 +173,7 @@ async function renderWithFallbacks(
             throw error;
         }
         reportPageFailure(delivery, "render", cachePath, error);
-        return renderRef(request, delivery, "serverError", 500, "Internal server error");
+        return renderRef(request, delivery, "serverError", 500, "Internal server error", metadata.language);
     }
 }
 

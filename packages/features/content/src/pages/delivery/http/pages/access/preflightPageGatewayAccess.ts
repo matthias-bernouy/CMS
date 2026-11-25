@@ -1,3 +1,4 @@
+import { defaultErrorResponse } from "../defaultError";
 import type { RenderablePage, RenderingSettings } from "@bernouy/content/rendering";
 import { pageRequiresCapabilityAnalysis } from "content/pages/delivery/access/PageCapabilityAnalyzer";
 import type ContentDeliveryHost from "content/pages/delivery/interfaces";
@@ -24,11 +25,11 @@ export async function preflightPageGatewayAccess(
 ): Promise<PageAccessDecision> {
     const capabilityDecision = await capabilityAccess(renderable, delivery);
     if (capabilityDecision.response) {
-        return capabilityDecision;
+        return unavailable(request);
     }
     const settings = renderingSettings ?? (await delivery.content.getRenderingSettings().catch(() => null));
     if (!settings) {
-        return unavailable();
+        return unavailable(request);
     }
     const isLoginPage = settings.site.login !== null && samePageReference(settings.site.login, renderable.reference);
     const pageAccess =
@@ -93,7 +94,7 @@ async function authorizeAccess(
     }
     const actor = await resolveRequestActor(delivery, request).catch(() => null);
     if (!actor) {
-        return unavailable();
+        return unavailable(request);
     }
     if (required === "authenticated" && actor.kind === "anonymous") {
         return { access: required, cacheable: false, response: await accessDenied(request, delivery, settings, 401) };
@@ -117,14 +118,13 @@ function highestAccess(left: PageAccess, right: PageAccess): PageAccess {
     return rank[left] >= rank[right] ? left : right;
 }
 
-function unavailable(): PageAccessDecision {
+function unavailable(
+    request: Pick<Request, "method"> & Partial<Pick<Request, "headers">> = { method: "GET" },
+): PageAccessDecision {
     return {
         access: "public",
         cacheable: false,
-        response: new Response("Service unavailable", {
-            status: 503,
-            headers: { "cache-control": "no-store" },
-        }),
+        response: defaultErrorResponse(request, 503, "Service unavailable", "5"),
     };
 }
 
@@ -140,13 +140,13 @@ async function accessDenied(
         const loginRef = settings.site.login;
         const loginPath = loginRef ? await delivery.content.resolvePageReference(loginRef) : null;
         if (loginRef && !loginPath) {
-            return unavailable().response!;
+            return unavailable(request).response!;
         }
         if (loginPath === url.pathname) {
             return new Response("Unauthorized", { status, headers: { "cache-control": "no-store" } });
         }
         if (!loginPath) {
-            return unavailable().response!;
+            return unavailable(request).response!;
         }
         const location = `${loginPath}?returnTo=${encodeURIComponent(returnTo)}`;
         return new Response(null, { status: 302, headers: { Location: location, "cache-control": "no-store" } });

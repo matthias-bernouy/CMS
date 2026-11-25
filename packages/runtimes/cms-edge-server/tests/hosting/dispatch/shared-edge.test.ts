@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { NOOP_LOGGER } from "@bernouy/logging";
-import { SharedEdge } from "../../src/runtime/hosting/SharedEdge";
+import { SharedEdge } from "../../../src/runtime/hosting/SharedEdge";
 import type { EdgeRoute } from "@bernouy/hosting/routing";
 
 function fixture() {

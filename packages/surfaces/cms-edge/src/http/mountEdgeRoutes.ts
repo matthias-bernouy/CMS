@@ -1,3 +1,4 @@
+import { publicErrorResponse } from "./errorPages";
 import type EdgeCms from "cms-edge/EdgeCms";
 import {
     CMS_CAPABILITY_CALL_ROUTE,
@@ -84,7 +85,7 @@ export function mountEdgeRoutes(edge: EdgeCms): void {
                 );
             } catch (error) {
                 edge.logger.error("edge.resource.failed", {}, error);
-                return new Response("Service unavailable", { status: 503, headers: { "cache-control": "no-store" } });
+                return publicErrorResponse(request, 503);
             }
         });
     }

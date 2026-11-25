@@ -1,3 +1,4 @@
+import { publicErrorResponse } from "@bernouy/cms-edge";
 import { isIP } from "node:net";
 import { getRequestIP, setRequestIP, retainResponseResource, requestId } from "@bernouy/http-runner";
 import type { EdgeRoute } from "@bernouy/hosting/routing";
@@ -50,13 +51,13 @@ export class SharedEdge {
         try {
             const route = await this.routing.resolve(hostname);
             if (!route) {
-                return refusal(404);
+                return publicErrorResponse(request, 404);
             }
             const origin = new URL(route.origin);
             const normalized = new URL(url);
             normalized.hostname = hostname;
             if (origin.hostname !== hostname || origin.host !== normalized.host) {
-                return refusal(404);
+                return publicErrorResponse(request, 404);
             }
             // Admitted contract endpoints retain their original logical origin for
             // Provider callbacks and origin-bound Repository credentials. Public
@@ -93,7 +94,7 @@ export class SharedEdge {
                 { hostname, requestId: requestId(request), ...this.contexts.snapshot() },
                 error,
             );
-            return refusal(503);
+            return publicErrorResponse(request, 503);
         }
     }
 }

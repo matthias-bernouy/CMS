@@ -1,6 +1,10 @@
-import { MAINTENANCE_HTML } from "@bernouy/content/public-delivery";
+import { defaultMaintenancePage } from "./defaultPage";
 import type { MaintenancePages } from "./model";
-export function maintenanceConfiguration(pages: MaintenancePages, certificates: number) {
+export function maintenanceConfiguration(
+    pages: MaintenancePages,
+    certificates: number,
+    defaultSites: ReadonlySet<string> = new Set(),
+) {
     const headers = {
         handler: "headers",
         response: {
@@ -16,12 +20,6 @@ export function maintenanceConfiguration(pages: MaintenancePages, certificates: 
             },
         },
     };
-    const html = (body: string) => ({
-        handler: "static_response",
-        status_code: 503,
-        body,
-        headers: { "Content-Type": ["text/html; charset=utf-8"] },
-    });
     const routes = [
         {
             match: [{ not: [{ method: ["GET", "HEAD"] }] }],
@@ -35,42 +33,48 @@ export function maintenanceConfiguration(pages: MaintenancePages, certificates: 
             ],
             terminal: true,
         },
-        ...pages.sites.map((site) => ({
-            match: [{ host: site.hosts }],
-            terminal: true,
-            handle: [
-                {
-                    handler: "subroute",
-                    routes: [
-                        ...site.resources.map((type, index) => ({
-                            match: [{ path: [`/_content/maintenance/${site.id}/${index}`] }],
-                            terminal: true,
-                            handle: [
-                                { handler: "headers", response: { set: { "Content-Type": [type] } } },
-                                { handler: "rewrite", uri: `/${index}` },
-                                { handler: "file_server", root: `/snapshot/sites/${site.id}`, canonical_uris: false },
-                            ],
-                        })),
-                        {
-                            handle: [
-                                {
-                                    handler: "headers",
-                                    response: { set: { "Content-Type": ["text/html; charset=utf-8"] } },
-                                },
-                                { handler: "rewrite", uri: "/page.html" },
-                                {
-                                    handler: "file_server",
-                                    root: `/snapshot/sites/${site.id}`,
-                                    status_code: "503",
-                                    canonical_uris: false,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        })),
-        { handle: [html(MAINTENANCE_HTML)] },
+        ...pages.sites
+            .filter((site) => !defaultSites.has(site.id))
+            .map((site) => ({
+                match: [{ host: site.hosts }],
+                terminal: true,
+                handle: [
+                    {
+                        handler: "subroute",
+                        routes: [
+                            ...site.resources.map((type, index) => ({
+                                match: [{ path: [`/_content/maintenance/${site.id}/${index}`] }],
+                                terminal: true,
+                                handle: [
+                                    { handler: "headers", response: { set: { "Content-Type": [type] } } },
+                                    { handler: "rewrite", uri: `/${index}` },
+                                    {
+                                        handler: "file_server",
+                                        root: `/snapshot/sites/${site.id}`,
+                                        canonical_uris: false,
+                                    },
+                                ],
+                            })),
+                            {
+                                handle: [
+                                    {
+                                        handler: "headers",
+                                        response: { set: { "Content-Type": ["text/html; charset=utf-8"] } },
+                                    },
+                                    { handler: "rewrite", uri: "/page.html" },
+                                    {
+                                        handler: "file_server",
+                                        root: `/snapshot/sites/${site.id}`,
+                                        status_code: "503",
+                                        canonical_uris: false,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            })),
+        defaultMaintenancePage(),
     ];
     const server = (listen: string[], tls = false) => ({
         listen,

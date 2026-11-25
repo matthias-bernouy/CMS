@@ -1,24 +1,15 @@
 import { pageRequiresCapabilityAnalysis } from "content/pages/delivery/access/PageCapabilityAnalyzer";
 import type ContentDeliveryHost from "content/pages/delivery/interfaces";
-import { cachedResponseAsync, compress, sendCompressed } from "@bernouy/http-runner";
+import { cachedResponseAsync, sendCompressed } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS } from "@bernouy/content/rendering";
 import { renderPage } from "content/pages/delivery/html/renderPage";
 import { makeRuntimeRenderContext } from "content/pages/delivery/html/runtimeContext";
 
-const TEXT_FALLBACKS = new Map<string, ReturnType<typeof compress>>();
-
-function textFallbackEntry(text: string) {
-    let entry = TEXT_FALLBACKS.get(text);
-    if (!entry) {
-        entry = compress(text, "text/plain; charset=utf-8");
-        TEXT_FALLBACKS.set(text, entry);
-    }
-    return entry;
-}
+import { defaultErrorResponse } from "./defaultError";
 
 /**
  * Render a configured system fallback page
- * with the given HTTP status. Falls back to plain text when:
+ * with the given HTTP status. Falls back to a built-in error document when:
  *  - no ref is configured
  *  - the referenced page no longer exists
  *  - the fallback render itself throws (no recursion on errors)
@@ -52,7 +43,7 @@ export async function renderRef(
                         (required === "authenticated" && actor.kind !== "anonymous") ||
                         (required === "admin" && actor.kind === "administrator"));
                 if (!permitted) {
-                    return sendCompressed(req, textFallbackEntry(fallbackText), "no-store", { status });
+                    return defaultErrorResponse(req, status, fallbackText, undefined, language);
                 }
 
                 const { page } = renderable;
@@ -86,5 +77,5 @@ export async function renderRef(
     } catch (error) {
         delivery.logger.error("delivery.page.fallback.failed", { field }, error);
     }
-    return sendCompressed(req, textFallbackEntry(fallbackText), status === 410 ? "no-store" : undefined, { status });
+    return defaultErrorResponse(req, status, fallbackText, undefined, language);
 }

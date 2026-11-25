@@ -1,3 +1,4 @@
+import { defaultErrorResponse } from "./defaultError";
 import { PageRenderInputsChanged } from "content/application/core/pageRenderInputs";
 import type ContentDeliveryHost from "content/pages/delivery/interfaces";
 import { isValidRegisteredPagePath } from "@bernouy/content/page-path";
@@ -34,10 +35,7 @@ async function servePageRequest(req: Request, delivery: ContentDeliveryHost, ret
     try {
         const storedRoute = renderInputs?.route ?? (await delivery.content.resolveRenderableRoute(pathname));
         if (storedRoute?.kind === "updating") {
-            return new Response("Service unavailable", {
-                status: 503,
-                headers: { "Cache-Control": "no-store", "Retry-After": "5" },
-            });
+            return defaultErrorResponse(req, 503, "Service unavailable", "5");
         }
         if (storedRoute?.kind === "gone") {
             return renderRef(req, delivery, "notFound", 410, "Page not found", storedRoute.language);
@@ -71,10 +69,7 @@ async function servePageRequest(req: Request, delivery: ContentDeliveryHost, ret
         if (retry) {
             return servePageRequest(req, delivery, false);
         }
-        return new Response("Service unavailable", {
-            status: 503,
-            headers: { "cache-control": "no-store", "retry-after": "5" },
-        });
+        return defaultErrorResponse(req, 503, "Service unavailable", "5");
     } finally {
         if (renderInputs && "close" in renderInputs) {
             renderInputs.close();
@@ -99,10 +94,7 @@ async function serveEditorialRoute(
     }
     const actor = await resolveRequestActor(delivery, request).catch(() => null);
     if (!actor) {
-        return new Response("Service unavailable", {
-            status: 503,
-            headers: { "Cache-Control": "no-store" },
-        });
+        return defaultErrorResponse(request, 503, "Service unavailable", "5");
     }
     if (actor.kind !== "administrator") {
         return renderRef(request, delivery, "notFound", 404, "Page not found");
@@ -112,10 +104,7 @@ async function serveEditorialRoute(
         route = await delivery.editorialPages.resolveRoute(pathname);
     } catch (error) {
         delivery.logger.error("delivery.page.editorial-route.failed", { pathname }, error);
-        return new Response("Service unavailable", {
-            status: 503,
-            headers: { "Cache-Control": "no-store" },
-        });
+        return defaultErrorResponse(request, 503, "Service unavailable", "5");
     }
     if (!route) {
         return renderRef(request, delivery, "notFound", 404, "Page not found");

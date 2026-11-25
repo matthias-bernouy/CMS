@@ -41,7 +41,8 @@ describe("renderRef", () => {
         const res = await renderRef(new Request("http://site/missing"), edge, "notFound", 404, "Page not found");
 
         expect(res.status).toBe(404);
-        expect(await res.text()).toBe("Page not found");
+        expect(res.headers.get("content-type")).toContain("text/html");
+        expect(await res.text()).toContain("Nothing at this address.");
         expect(edge.calls).toEqual(["resolve:404", "render:/404"]);
     });
 
@@ -56,7 +57,8 @@ describe("renderRef", () => {
         );
 
         expect(res.status).toBe(500);
-        expect(await res.text()).toBe("Internal server error");
+        expect(res.headers.get("content-type")).toContain("text/html");
+        expect(await res.text()).toContain("Something went wrong.");
         expect(edge.calls).toEqual(["resolve:500", "render:/500"]);
     });
 
@@ -68,4 +70,28 @@ describe("renderRef", () => {
         expect(await res.text()).toBe("Forbidden");
         expect(edge.calls).toEqual(["resolve:forbidden", "render:/forbidden"]);
     });
+});
+
+test("built-in Pages follow browser preferences or a known Page language without reading drafts", async () => {
+    const delivery = edgeWithDraftFallback("serverError");
+    const request = new Request("https://site.test/private?secret=hidden", {
+        headers: { "accept-language": "en;q=0.4,fr-FR;q=0.9" },
+    });
+    const response = await renderRef(request, delivery, "serverError", 503, "Service unavailable");
+    expect(response.headers.get("content-language")).toBe("fr");
+    const html = await response.text();
+    expect(html).toContain("De retour dans un instant.");
+    expect(html).not.toContain("secret=hidden");
+    const english = await renderRef(request, delivery, "serverError", 503, "Service unavailable", "en");
+    expect(english.headers.get("content-language")).toBe("en");
+    expect(await english.text()).toContain("Back in a moment.");
+    const head = await renderRef(
+        new Request(request, { method: "HEAD" }),
+        delivery,
+        "serverError",
+        503,
+        "Service unavailable",
+    );
+    expect(head.body).toBeNull();
+    expect(head.headers.get("content-language")).toBe("fr");
 });

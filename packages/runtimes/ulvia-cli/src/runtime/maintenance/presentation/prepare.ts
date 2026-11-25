@@ -1,4 +1,5 @@
-import { mkdir, open } from "node:fs/promises";
+import { MAINTENANCE_HTML } from "@bernouy/content/public-delivery";
+import { mkdir, open, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { composeWorker } from "../../stack/orchestration/compose";
@@ -37,6 +38,12 @@ export async function preparePresentation(
         "/presentation",
     ]);
     const pages = await readPages(directory);
+    const defaultSites = new Set<string>();
+    for (const site of pages.sites) {
+        if ((await readFile(join(directory, "sites", site.id, "page.html"), "utf8")) === MAINTENANCE_HTML) {
+            defaultSites.add(site.id);
+        }
+    }
     const certificates = await copyPresentationCertificates(
         paths.proxy.certificates,
         join(directory, "certificates"),
@@ -44,7 +51,7 @@ export async function preparePresentation(
     );
     await atomicPrivateWrite(
         join(directory, "caddy.json"),
-        JSON.stringify(maintenanceConfiguration(pages, certificates)),
+        JSON.stringify(maintenanceConfiguration(pages, certificates, defaultSites)),
     );
     await runCommand([
         "docker",

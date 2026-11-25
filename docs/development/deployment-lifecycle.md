@@ -93,6 +93,12 @@ removes scripts, disables forms and copies local CSS/images/fonts with the same
 4 MiB/64-resource per-site bounds. Preparation is bounded to 1024 sites, 4096
 domains and 256 MiB overall; refusals occur before stopping services.
 
+When capture falls back to the code-owned default document, Caddy negotiates its
+French/English version from `Accept-Language`, including quality and zero-weight
+preferences. Authored snapshots remain unchanged. Only code-owned fallback HTML
+enters the templates handler; user-authored markup is never evaluated. See the
+[default error document review](../quality/2026-11-25-default-error-pages.md).
+
 A separate Caddy container, pinned to the applied release, serves GET/HEAD with
 503, `Retry-After: 60`, no-store and noindex. Frozen resources return 200 with their
 media type; other methods return a generic 503 JSON refusal. Active domains and
