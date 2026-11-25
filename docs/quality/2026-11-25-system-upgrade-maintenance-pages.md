@@ -47,12 +47,21 @@ and data while preserving static presentation. Opening resumes preserve new writ
 ## Evidence
 
 The targeted historical journey passed 250 assertions in about 194 seconds;
-the actual Caddy HTTP/HTTPS test passed 29 assertions. The four presentation
+the actual Caddy HTTP/HTTPS test passed 32 assertions, including Range and
+conditional requests. The four presentation
 tests, including production frontend restart and foreign-snapshot refusal, passed
-47 assertions. The static check passed
+50 assertions. The static check passed
 all ten gates. Logs are retained in this worktree's private
-`artifacts/maintenance-*.log` files. The complete verification result is recorded
-below after its run completes. Relevant tests are:
+`artifacts/maintenance-*.log` files.
+
+The complete `bun run verify` finished with exit code 0. Its general test stage
+passed 4693 tests (162 gated tests skipped there); dedicated stages then passed
+browser capture, real Mongo, the 250-assertion historical crash journey, Access
+(381 assertions), Forms (167 assertions), native Edge/backup/upgrade/restart
+(2471 assertions), and fresh/restarted ACME TLS (18/19 assertions). The dedicated
+four-test presentation run also passed after the certificate fixture extraction.
+`bun run check` passed all ten gates on the final code. No remote publication or
+installation against user data was performed. Relevant tests are:
 
 - Content `rendering/maintenance/capture.test.ts`: source HTML/resource capture,
   disabled forms/scripts, anonymous redirects, hidden sites, signed resources,

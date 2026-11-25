@@ -1,32 +1,14 @@
+import { createTestCertificate } from "./fixture";
 import { expect, test } from "bun:test";
-import { mkdtemp, mkdir, writeFile, readFile, rm, symlink, stat } from "node:fs/promises";
+import { mkdtemp, writeFile, readFile, rm, symlink, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { runCommand } from "../../../../src/runtime/process";
 import { copyPresentationCertificates } from "../../../../src/runtime/maintenance/presentation/certificates";
 
 test("only matching TLS pairs are copied privately, missing certificates and symlinks refuse", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-maintenance-cert-"));
     try {
-        await mkdir(join(root, "source"));
-        await runCommand([
-            "openssl",
-            "req",
-            "-x509",
-            "-newkey",
-            "rsa:2048",
-            "-nodes",
-            "-days",
-            "1",
-            "-subj",
-            "/CN=site.localhost",
-            "-addext",
-            "subjectAltName=DNS:site.localhost",
-            "-keyout",
-            join(root, "source/site.key"),
-            "-out",
-            join(root, "source/site.crt"),
-        ]);
+        await createTestCertificate(join(root, "source"), ["site.localhost"]);
         await writeFile(join(root, "source/account.json"), "ACME account secret");
         expect(await copyPresentationCertificates(join(root, "source"), join(root, "copy"), ["site.localhost"])).toBe(
             1,

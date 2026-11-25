@@ -68,7 +68,10 @@ and data are removed at the end. These checkpoints include test credentials and
 must be treated as private; they do not contain user installation data.
 
 The first successful targeted run passed 200 assertions in about 182 seconds.
-The extended maintenance-presentation run passed 250 assertions in about 194 seconds.
+The extended maintenance-presentation run passed 250 assertions in about 194 seconds;
+the complete verification repeated those 250 assertions successfully in about
+191 seconds. The full `bun run verify` completed with exit code 0, including the
+subsequent Access, Forms, native Edge/backup/restart and fresh/restarted TLS stages.
 This is process-crash coverage on standalone Mongo, not a machine-power-loss or
 storage-controller failure test. It covers this exact historical source and the
 current candidate, not every historical distribution or Mongo major change.

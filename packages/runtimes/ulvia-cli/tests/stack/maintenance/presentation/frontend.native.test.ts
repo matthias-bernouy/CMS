@@ -1,3 +1,4 @@
+import { createTestCertificate } from "./fixture";
 import { expect, test } from "bun:test";
 import { request } from "node:https";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
@@ -37,25 +38,7 @@ native(
                 await writeFile(join(dir, "1"), "png");
                 await writeFile(join(dir, "2"), "font");
             }
-            await mkdir(join(root, "source"));
-            await runCommand([
-                "openssl",
-                "req",
-                "-x509",
-                "-newkey",
-                "rsa:2048",
-                "-nodes",
-                "-days",
-                "1",
-                "-subj",
-                "/CN=one.localhost",
-                "-addext",
-                "subjectAltName=DNS:one.localhost,DNS:alias.localhost,DNS:two.localhost",
-                "-keyout",
-                join(root, "source/test.key"),
-                "-out",
-                join(root, "source/test.crt"),
-            ]);
+            await createTestCertificate(join(root, "source"), ["one.localhost", "alias.localhost", "two.localhost"]);
             const certs = await copyPresentationCertificates(join(root, "source"), join(root, "certificates"), [
                 "one.localhost",
                 "two.localhost",
@@ -134,7 +117,18 @@ native(
             const post = await get("one.localhost", "/", "POST");
             expect(post.status).toBe(503);
             expect(await post.json()).toEqual({ error: "installation_maintenance" });
-            const ca = await readFile(join(root, "source/test.crt"));
+            for (const headers of [
+                { range: "bytes=0-10" },
+                { "if-none-match": "*" },
+                { "if-modified-since": "Fri, 01 Jan 2100 00:00:00 GMT" },
+            ]) {
+                const response = await fetch(`http://127.0.0.1:${http}/`, {
+                    headers: { host: "one.localhost", ...headers },
+                });
+                expect(response.status).toBe(503);
+                await response.body?.cancel();
+            }
+            const ca = await readFile(join(root, "source/site.crt"));
             const tls = await new Promise<{ status: number | undefined; body: string }>((resolve, reject) => {
                 const req = request(
                     {
