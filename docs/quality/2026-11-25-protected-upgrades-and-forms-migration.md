@@ -130,3 +130,10 @@ require explicit Workflow configuration after migration. Full historical binary
 rollout and actual machine power loss were not replayed; source conversion and
 metadata recovery use standalone Mongo, while the native deployment journey uses
 current candidate images and separate failure-injection tests.
+
+
+A subsequent [historical binary crash journey](2026-11-25-historical-upgrade-crashes.md)
+now covers the historical Forms 1.1 binary, a partially committed migration,
+Provider death before activation and CLI death after activation. The limits above
+record the earlier verification; actual machine power loss remains outside the
+executed evidence.

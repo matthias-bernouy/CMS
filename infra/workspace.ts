@@ -96,6 +96,12 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
         { args: ["bun", "run", "tests/performance/command/check.ts"] },
         { args: ["bun", "run", "tests/performance/compatibility/run.ts"], continueOnFailure: true },
         candidateImageStep(candidateVersion),
+        { args: ["bun", "run", "packages/runtimes/ulvia-cli/tests/stack/maintenance/upgrade/historical.ts"] },
+        {
+            args: ["bun", "test", "packages/runtimes/ulvia-cli/tests/stack/maintenance/upgrade/journey.test.ts"],
+            env: { ...candidateImages, ULVIA_RUN_UPGRADE_CRASH_JOURNEY: "1" },
+            continueOnFailure: true,
+        },
         {
             args: ["bun", "test", "tests/integration/instance/accounts/journey.test.ts"],
             env: { ...candidateImages, ULVIA_RUN_ACCESS_EVENTS_JOURNEY: "1" },

@@ -158,3 +158,11 @@ cover filters, unauthenticated technical reads, cancellation and oversized lines
 The [native browser journey](../../packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts)
 uses actual containers and native CMS setup, captures and restores a complete cold checkpoint, verifies persisted CMS state
 after reopening, and applies a second Edge. `bun run verify` also runs delivery and ACME acceptance checks.
+
+
+The [historical upgrade crash journey](../../packages/runtimes/ulvia-cli/tests/stack/maintenance/upgrade/journey.test.ts)
+uses a pinned historical Forms 1.1 image and its API-created data, then upgrades to
+the current candidate. It kills the CLI/migration process during partial conversion,
+kills the new paused Provider before activation, and kills the CLI after new writes
+are accepted. See [reproduction and limits](../quality/2026-11-25-historical-upgrade-crashes.md).
+`verify` requires the historical Git object and Linux `setsid` for this stage.
