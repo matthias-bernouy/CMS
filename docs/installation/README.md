@@ -162,18 +162,43 @@ integrity. Provider and Edge image labels, compatibility and immutable repositor
 digests are checked before activation. Publish the CLI and both images with the
 same version before offering a release.
 
-Apply pending configuration before upgrading. Upgrades check Provider retained
-execution support, update the Provider, replace Edges in sequence and apply the
-proxy. MongoDB major changes and downgrades require an explicit migration. A
-failed operation retains its target and the previous successful snapshot;
-`status` reports actual service/image state and `upgrade` resumes the exact target.
-`start` refuses an unfinished operation. Recovery does not restore database or
-file contents. Contract and collection upgrades remain separate domain operations.
+Apply pending configuration before upgrading. Inspect the read-only maintenance
+plan, then run the protected upgrade:
 
-Stop all shared services before a filesystem backup. Preserve the complete
-matching data directory, including MongoDB, file storage and encryption material.
-Validate restores in isolation. Missing mandatory settings or keys over existing
-state refuse startup; no silent historical import or key regeneration occurs.
+```bash
+ulvia upgrade --version STACK_VERSION --plan
+ulvia upgrade --version STACK_VERSION
+```
+
+Upgrade stops writers, creates and verifies a complete cold checkpoint, runs the
+target image's known migrations, and checks the new Provider and Edges while
+business work remains paused. It automatically restores the previous data and
+exact deployment if this stage fails. Once activation begins, background effects
+may execute: later failures retain the target for `ulvia upgrade` recovery and
+never trigger automatic data rollback. `status` reports the recovery phase;
+`start` refuses an unfinished operation. MongoDB major changes and downgrades
+require an explicit migration. Contract/collection administration remains separate,
+except for the target image's explicitly supplied operator recipes such as Forms
+1.x → 2.0.
+
+Independent complete backup and explicit rollback are available:
+
+```bash
+ulvia backup create /absolute/private/checkpoint
+ulvia backup verify /absolute/private/checkpoint
+ulvia backup restore /absolute/private/checkpoint --yes
+```
+
+Creation briefly stops the shared installation. A backup includes Mongo, CMS
+files, keys, certificates, local catalogue, credentials and exact deployment
+snapshots. It is private plaintext and currently restores to the same absolute
+data path. Exact saved image digests must remain cached or retrievable; images
+are not exported. Rollback discards later local writes and cannot undo external
+emails. No automatic backup pruning occurs. See
+[deployment lifecycle](../development/deployment-lifecycle.md) for interruption
+recovery and limits, and [Forms migration](../development/forms.md) for email
+settings export and unresolved-send refusals. Validate restores in isolation.
+Missing mandatory settings or keys refuse startup; no implicit repair occurs.
 
 ```bash
 ulvia reset --yes

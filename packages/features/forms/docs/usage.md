@@ -5,7 +5,7 @@ submission Event publication requires `ulvia/cms.events:events.publish`; Emailer
 is not a Forms requirement. Forms owns definitions, retained answers and durable
 submission Event intents. Workflows own downstream actions such as notifications.
 
-Create a closed draft with `forms.create`, supplying a random UUID `formId` and
+Create a closed draft with `forms.create-v2`, supplying a random UUID `formId` and
 complete `draft`. Keep that identifier when retrying the same creation. Fields
 support text, textarea, email, tel, URL, number, date, checkbox, single-choice,
 multiple-choice and consent. Stable field/choice IDs identify answers, never labels.
@@ -17,13 +17,13 @@ Draft configuration includes locale, labels/help, validation constraints, public
 authenticated access, opening/closing instants, retention days and visitor messages.
 There are no notification recipients, templates or email settings in a Form.
 
-Read the current revision before `forms.update-draft`, `forms.publish`,
-`forms.set-availability` or `forms.archive`. Publish returns an immutable version
+Read the current revision before `forms.update-draft-v2`, `forms.publish-v2`,
+`forms.set-availability-v2` or `forms.archive-v2`. Publish returns an immutable version
 identified by its source revision. Publishing alone leaves availability unchanged.
 Later draft changes do not reinterpret retained answers.
 
-Read `forms.get-public-definition` to obtain fields, current `formVersion` and
-`accepting`. Submit through `forms.submit` or `forms.submit-authenticated` matching
+Read `forms.get-public-definition-v2` to obtain fields, current `formVersion` and
+`accepting`. Submit through `forms.submit-v2` or `forms.submit-authenticated-v2` matching
 `accessMode`, with a random UUID `attemptId`. Reuse it only for the same attempt
 and exact input. Success acknowledges durable answers and their Event intent,
 independently of downstream effects. Refresh after a version/availability refusal.

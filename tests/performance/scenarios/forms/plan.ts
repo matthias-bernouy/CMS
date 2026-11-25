@@ -4,22 +4,22 @@ import { freshTenants } from "../installations/fresh";
 import { prepareForms } from "./prepare";
 import type { CapabilityInventory } from "../../capabilities/types";
 const capabilities = [
-    "forms.create",
+    "forms.create-v2",
     "forms.describe-submission",
     "forms.list-submission-sources",
-    "forms.get",
-    "forms.list",
-    "forms.update-draft",
-    "forms.publish",
-    "forms.set-availability",
-    "forms.archive",
-    "forms.get-public-definition",
-    "forms.submit",
-    "forms.submit-authenticated",
-    "submissions.get",
-    "submissions.list",
-    "submissions.set-status",
-    "submissions.delete",
+    "forms.get-v2",
+    "forms.list-v2",
+    "forms.update-draft-v2",
+    "forms.publish-v2",
+    "forms.set-availability-v2",
+    "forms.archive-v2",
+    "forms.get-public-definition-v2",
+    "forms.submit-v2",
+    "forms.submit-authenticated-v2",
+    "submissions.get-v2",
+    "submissions.list-v2",
+    "submissions.set-status-v2",
+    "submissions.delete-v2",
 ];
 export function formsScenarios(inventory: CapabilityInventory, fixture: string) {
     const fresh = freshTenants(inventory);

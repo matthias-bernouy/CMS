@@ -1,3 +1,4 @@
+import { maintenancePaused } from "./maintenance";
 import { runWithoutRequestContext } from "@bernouy/http-runner/observability";
 
 const DEFAULT_INTERVAL_MS = 10_000;
@@ -46,6 +47,9 @@ export class RecoverySupervisor {
     }
 
     #trigger(): Promise<void> {
+        if (maintenancePaused()) {
+            return Promise.resolve();
+        }
         if (this.#running) {
             return this.#running;
         }
@@ -59,7 +63,7 @@ export class RecoverySupervisor {
     }
 
     async #drain(): Promise<void> {
-        while ((await this.recoverBatch(this.batchSize)) === this.batchSize) {
+        while (!maintenancePaused() && (await this.recoverBatch(this.batchSize)) === this.batchSize) {
             // Continue until the durable queue contains fewer than one full batch.
         }
     }

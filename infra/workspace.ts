@@ -77,6 +77,8 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
                 "packages/features/forms/tests/mongo.test.ts",
                 "packages/features/forms/tests/mongo-lists.test.ts",
                 "packages/features/forms/tests/events/initiator.mongo.test.ts",
+                "packages/features/forms/tests/migration/mongo.test.ts",
+                "packages/runtimes/ulvia-provider-server/tests/provider-contracts/native/bootstrap/migrations/forms.mongo.test.ts",
                 "packages/features/events/tests",
                 "packages/features/workflows/tests/mongo.test.ts",
                 "packages/features/workflows/tests/resources/mongo-installations.test.ts",
@@ -84,6 +86,7 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
             env: {
                 ULVIA_RUN_ACCESS_EVENTS_MONGO: "1",
                 ULVIA_RUN_FORMS_MONGO: "1",
+                ULVIA_RUN_FORMS_MIGRATION_MONGO: "1",
                 ULVIA_RUN_EVENTS_MONGO: "1",
                 ULVIA_RUN_WORKFLOWS_MONGO: "1",
             },

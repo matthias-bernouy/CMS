@@ -1,3 +1,6 @@
+import { protectedUpgrade } from "../../../maintenance/upgrade";
+import { readMaintenance } from "../../../maintenance/journal";
+import { releaseMaintenance, assertMaintenanceImage } from "../../../maintenance/migration";
 import { readDeploymentState } from "../state";
 import { loadOrCreateInstallationConfig } from "../../installation";
 import { defaultStackVersion } from "../../version";
@@ -17,7 +20,25 @@ export async function applyInstallation(
     log: (line: string) => void,
     version?: string,
     kind: "apply" | "upgrade" = "apply",
+    options: { plan?: boolean; backupDirectory?: string } = {},
 ): Promise<void> {
+    const maintenance = await readMaintenance(paths);
+    if (maintenance) {
+        if (
+            kind !== "upgrade" ||
+            maintenance.kind !== "upgrade" ||
+            !maintenance.target ||
+            (version && version !== maintenance.target.release.version)
+        ) {
+            throw new Error("Resume the recorded maintenance operation first");
+        }
+        if (options.plan) {
+            log(`Upgrade recovery: ${maintenance.phase}`);
+            return;
+        }
+        await protectedUpgrade(paths, maintenance.applied, maintenance.target, log);
+        return;
+    }
     const state = await readDeploymentState(paths);
     const desired = await loadOrCreateInstallationConfig(paths, environment);
     const applied = state?.applied ?? null;
@@ -44,6 +65,11 @@ export async function applyInstallation(
         ) {
             throw new Error(
                 `A deployment is pending. Restore its desired configuration and run ulvia ${operation.kind} to resume it`,
+            );
+        }
+        if (kind === "upgrade") {
+            throw new Error(
+                "This pending upgrade has no verified rollback checkpoint. Finish it with its original CLI or explicitly restore an installation backup",
             );
         }
         await Promise.all(Object.values(operation.target.images).map(ensureOfficialImage));
@@ -109,7 +135,21 @@ export async function applyInstallation(
         assertInfrastructureUpgrade(applied, target);
     }
     await prepareInfrastructureImages(target);
-    await executeDeployment(paths, applied, { kind, phase: "prepared", target }, log);
+    if (kind === "upgrade" && applied) {
+        if (options.plan) {
+            await assertMaintenanceImage(target);
+            const services = await inspectComposeServices(await deploymentProject(paths, applied));
+            if (!services.some((row) => row.service === "mongo" && row.state === "running")) {
+                throw new Error("Start the installation before inspecting an upgrade plan");
+            }
+            const plan = await releaseMaintenance(paths, target);
+            log(JSON.stringify({ targetVersion: target.release.version, ...plan }));
+            return;
+        }
+        await protectedUpgrade(paths, applied, target, log, options.backupDirectory);
+    } else {
+        await executeDeployment(paths, applied, { kind, phase: "prepared", target }, log);
+    }
     await announceControl(paths, target, log);
 }
 

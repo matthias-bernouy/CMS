@@ -37,7 +37,8 @@ LABEL org.opencontainers.image.title="Ulvia Provider" \
       org.opencontainers.image.revision="${VCS_REF}" \
       io.ulvia.component="provider" \
       io.ulvia.hosting-api="1" \
-      io.ulvia.stack-api="1"
+      io.ulvia.stack-api="1" \
+      io.ulvia.maintenance-api="1"
 
 WORKDIR /app
 COPY --from=embedding-model /opt/ulvia/models/ /opt/ulvia/models/

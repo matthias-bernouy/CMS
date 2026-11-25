@@ -85,9 +85,9 @@ integration(
                 ...draft,
                 fields: draft.fields.map((field) => (field.id === "textarea" ? { ...field, minLength: 1 } : field)),
             };
-            await connection.call("ulvia/cms.forms", "forms.create", { formId, draft: authoring });
-            await connection.call("ulvia/cms.forms", "forms.publish", { formId, expectedRevision: 1 });
-            await connection.call("ulvia/cms.forms", "forms.set-availability", {
+            await connection.call("ulvia/cms.forms", "forms.create-v2", { formId, draft: authoring });
+            await connection.call("ulvia/cms.forms", "forms.publish-v2", { formId, expectedRevision: 1 });
+            await connection.call("ulvia/cms.forms", "forms.set-availability-v2", {
                 formId,
                 expectedRevision: 2,
                 availability: "open",
@@ -95,21 +95,21 @@ integration(
             await call("/configuration", configuration, "POST", "ulvia/cms.emailer.smtp");
             const verifyWorkflow = await prepareContactWorkflow(call, formId, smtp);
             const receiptId = await submitInBrowser(f, connection, formId);
-            const read = () => call("/submissions/get", { receiptId }, "QUERY");
+            const read = () => call("/submissions/v2/get", { receiptId }, "QUERY");
             expect((await read()).answers).toEqual(answers);
             await verifyWorkflow();
             const observeInitiator = await initiatorWorkflow(call, formId);
             const mailbox = await smtp.control.mailbox("workflow@performance.test");
             expect(mailbox.messages).toHaveLength(1);
             expect(mailbox.messages[0]!.raw).toContain(receiptId);
-            const publicDefinition = await api.request("ulvia/cms.forms", "/forms/public-definition", "QUERY", {
+            const publicDefinition = await api.request("ulvia/cms.forms", "/forms/v2/public-definition", "QUERY", {
                 formId,
             });
             expect(JSON.stringify(await publicDefinition.json())).not.toContain("workflow@performance.test");
             for (const credentials of [{}, member]) {
                 const refused = await api.request(
                     "ulvia/cms.forms",
-                    "/submissions/get",
+                    "/submissions/v2/get",
                     "QUERY",
                     { receiptId },
                     credentials,
@@ -118,26 +118,32 @@ integration(
             }
             const foreign = await repositoryApi(f.namedUrl).session(f.administrator.email, f.administrator.password);
             await selectForms(f.namedUrl, foreign.cookie);
-            const refused = await api.request("ulvia/cms.forms", "/submissions/get", "QUERY", { receiptId }, foreign);
+            const refused = await api.request(
+                "ulvia/cms.forms",
+                "/submissions/v2/get",
+                "QUERY",
+                { receiptId },
+                foreign,
+            );
             expect([401, 403]).toContain(refused.status);
             const foreignId = await repositoryApi(f.namedUrl).request(
                 "ulvia/cms.forms",
-                "/submissions/get",
+                "/submissions/v2/get",
                 "QUERY",
                 { receiptId },
                 foreign,
             );
             expect([404, 410]).toContain(foreignId.status);
             const input = { formId, formVersion: 1, attemptId: crypto.randomUUID(), answers };
-            const accepted = await api.request("ulvia/cms.forms", "/forms/submit", "POST", input);
+            const accepted = await api.request("ulvia/cms.forms", "/forms/v2/submit", "POST", input);
             expect(accepted.status, await accepted.clone().text()).toBe(200);
-            expect(await (await api.request("ulvia/cms.forms", "/forms/submit", "POST", input)).json()).toEqual(
+            expect(await (await api.request("ulvia/cms.forms", "/forms/v2/submit", "POST", input)).json()).toEqual(
                 await accepted.json(),
             );
             await f.restartProvider(0);
             // No CMS call wakes this instance: background discovery must drain its retained intent.
             await Bun.sleep(12000);
-            let retained = await call("/submissions/get", { receiptId: input.attemptId }, "QUERY");
+            let retained = await call("/submissions/v2/get", { receiptId: input.attemptId }, "QUERY");
             const anonymousEvent = await observeInitiator(input.attemptId);
             expect(anonymousEvent.initiator.kind).toBe("anonymous");
             expect(retained).not.toHaveProperty("notifications");
@@ -147,16 +153,16 @@ integration(
             expect((await smtp.control.mailbox("forms@performance.test")).messages).toHaveLength(0);
             expect((await read()).answers).toEqual(answers);
             const authenticatedId = crypto.randomUUID();
-            await call("/forms/create", {
+            await call("/forms/v2/create", {
                 formId: authenticatedId,
                 draft: {
                     ...authoring,
                     accessMode: "authenticated",
                 },
             });
-            await call("/forms/publish", { formId: authenticatedId, expectedRevision: 1 });
+            await call("/forms/v2/publish", { formId: authenticatedId, expectedRevision: 1 });
             await call(
-                "/forms/availability",
+                "/forms/v2/availability",
                 { formId: authenticatedId, expectedRevision: 2, availability: "open" },
                 "PUT",
             );
@@ -164,7 +170,7 @@ integration(
             const authenticatedInput = { ...input, formId: authenticatedId, attemptId: crypto.randomUUID() };
             const submission = await api.request(
                 "ulvia/cms.forms",
-                "/forms/submit-authenticated",
+                "/forms/v2/submit-authenticated",
                 "POST",
                 authenticatedInput,
                 member,
@@ -200,7 +206,7 @@ integration(
             expect(foreignResolution.status).toBe(403);
             const forged = await api.request(
                 "ulvia/cms.forms",
-                "/forms/submit-authenticated",
+                "/forms/v2/submit-authenticated",
                 "POST",
                 { ...authenticatedInput, attemptId: crypto.randomUUID(), userId: actor.accountId },
                 member,

@@ -43,10 +43,10 @@ export function markup() {
     ];
     const outcomes = (name: string, success: string) =>
         `<div cms-match="${name}.outcome.kind"><span cms-case='"none"'></span><div cms-case='"success"'>${success}</div><p cms-case='"failure"' role="alert">${text("error")}</p><div cms-case='"error"'><div cms-match="${name}.outcome.code">${codes.map((code) => `<p cms-case='"${code}"' role="alert">${text("error")}</p>`).join("")}</div></div></div>`;
-    const nativeForm = `<form cms-mutation="ulvia/cms.forms:forms.submit as sent" cms-mutation-input='${JSON.stringify(submission)}' cms-mutation-reset="false">
+    const nativeForm = `<form cms-mutation="ulvia/cms.forms:forms.submit-v2 as sent" cms-mutation-input='${JSON.stringify(submission)}' cms-mutation-reset="false">
         ${fields.map((_field, index) => input(index)).join("\n")}
         <button type="submit">${text("send")}</button>
         ${outcomes("sent", `<p role="status">${text("sent")}</p>`)}
       </form>`;
-    return `<div><section cms-query="ulvia/cms.forms:forms.get-public-definition as form" cms-query-input='${JSON.stringify(form)}' cms-sync="@page:ulvia-dtest--forms-kit--definition" cms-sync-select="data.formVersion">${outcomes("form", '<p role="status">{{ form.data.title }}</p>')}</section>${nativeForm}</div>`;
+    return `<div><section cms-query="ulvia/cms.forms:forms.get-public-definition-v2 as form" cms-query-input='${JSON.stringify(form)}' cms-sync="@page:ulvia-dtest--forms-kit--definition" cms-sync-select="data.formVersion">${outcomes("form", '<p role="status">{{ form.data.title }}</p>')}</section>${nativeForm}</div>`;
 }

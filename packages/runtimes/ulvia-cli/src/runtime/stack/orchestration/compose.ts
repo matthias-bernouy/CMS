@@ -46,6 +46,10 @@ export async function checkProviderImageRetention(project: ComposeProject): Prom
     );
 }
 
+export function composeWorker(project: ComposeProject, args: readonly string[]) {
+    return compose(project, args, false);
+}
+
 export async function composeStop(project: ComposeProject): Promise<void> {
     await compose(project, ["stop"], true);
 }

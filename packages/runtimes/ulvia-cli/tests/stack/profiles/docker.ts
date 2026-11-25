@@ -44,6 +44,7 @@ if (import.meta.main) {
                             "io.ulvia.component": image.component,
                             "io.ulvia.stack-api": "1",
                             "io.ulvia.hosting-api": "1",
+                            "io.ulvia.maintenance-api": "1",
                             "org.opencontainers.image.version": image.version,
                         },
                     },
@@ -53,9 +54,37 @@ if (import.meta.main) {
     } else if (args[0] === "ps") {
         process.stdout.write(
             Object.values(containers)
-                .map((row: any) => `${row.ID}\t${row.Service}`)
+                .map((row: any) => (args.includes("{{.ID}}") ? row.ID : `${row.ID}\t${row.Service}`))
                 .join("\n"),
         );
+    } else if (args[0] === "run") {
+        const mounts = args.filter((arg) => arg.startsWith("type=bind,src="));
+        const input = JSON.parse(args.at(-1)!);
+        for (const mount of mounts) {
+            const fields = Object.fromEntries(mount.split(",").map((part) => part.split("=")));
+            if (fields.dst === "/data") {
+                input.data = fields.src;
+            }
+            if (fields.dst === "/backup") {
+                input.backup = fields.src;
+            }
+        }
+        const child = Bun.spawn(
+            [process.execPath, "--no-macros", "-e", args[args.indexOf("-e") + 1]!, JSON.stringify(input)],
+            { stdout: "inherit", stderr: "inherit" },
+        );
+        process.exit(await child.exited);
+    } else if (["stop", "rm"].includes(args[0]!)) {
+        for (const [key, row] of Object.entries(containers) as [string, any][]) {
+            if (args.includes(row.ID)) {
+                if (args[0] === "rm") {
+                    delete containers[key];
+                } else {
+                    row.State = "exited";
+                }
+            }
+        }
+        await writeFile(`${root}/containers.json`, JSON.stringify(containers));
     } else if (args[0] === "logs") {
         process.stdout.write('{"level":"info","message":"ready"}\n{"level":"error","message":"fixture error"}\n');
         if (args.includes("--follow")) {
@@ -70,7 +99,25 @@ if (import.meta.main) {
             : [];
         const services = ["proxy", "mongo", "provider", "mongo-provision", ...edges];
         const up = args.indexOf("up");
-        if (args.includes("ps")) {
+        if (
+            args.includes("src/maintenance/upgrade.ts") ||
+            args.some((arg) => arg.endsWith("/src/maintenance/upgrade.ts"))
+        ) {
+            if (process.env.ULVIA_TEST_MIGRATION_FAIL === "1") {
+                process.exit(1);
+            }
+            process.stdout.write(
+                JSON.stringify({
+                    schema: "ulvia.maintenance-plan/v1",
+                    digest: "a".repeat(64),
+                    instances: 0,
+                    forms: 0,
+                    versions: 0,
+                    submissions: 0,
+                    migrations: [],
+                }),
+            );
+        } else if (args.includes("ps")) {
             process.stdout.write(JSON.stringify(Object.values(containers)));
         } else if (up >= 0) {
             const explicit = args.slice(up + 1).filter((arg) => services.includes(arg));
@@ -83,7 +130,8 @@ if (import.meta.main) {
                           ? process.env.EDGE_IMAGE
                           : "infrastructure";
                 const failed =
-                    images[image!]?.version === process.env.ULVIA_TEST_DOCKER_FAIL_VERSION &&
+                    (service === "proxy" ? images[process.env.PROVIDER_IMAGE!]?.version : images[image!]?.version) ===
+                        process.env.ULVIA_TEST_DOCKER_FAIL_VERSION &&
                     (service === process.env.ULVIA_TEST_DOCKER_FAIL_COMPONENT ||
                         (service.startsWith("edge-") && process.env.ULVIA_TEST_DOCKER_FAIL_COMPONENT === "edge"));
                 const old = containers[service];

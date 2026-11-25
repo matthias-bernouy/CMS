@@ -7,7 +7,8 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./feature": "./src/feature.ts",
-        "./mongo": "./src/exports/mongo.ts"
+        "./mongo": "./src/exports/mongo.ts",
+        "./migration/mongo": "./src/exports/migration.ts"
     },
     "dependencies": {
         "@bernouy/ulvia-sdk": "workspace:*",

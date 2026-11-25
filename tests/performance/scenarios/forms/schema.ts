@@ -18,9 +18,9 @@ export async function prepareFormSchema(
     if (list && ["large", "history"].includes(variant)) {
         for (let index = 0; index < (variant === "large" ? 100 : 40); index++) {
             const id = crypto.randomUUID();
-            await tenant.call("forms.create", { formId: id, draft });
+            await tenant.call("forms.create-v2", { formId: id, draft });
             for (let revision = 1; revision <= (variant === "history" ? 3 : 1); revision++) {
-                await tenant.call("forms.publish", { formId: id, expectedRevision: revision });
+                await tenant.call("forms.publish-v2", { formId: id, expectedRevision: revision });
             }
             ids.push(id);
         }
@@ -38,8 +38,8 @@ export async function prepareFormSchema(
                       label: `Field ${index}`,
                   }))
                 : [...draft.fields, { id: "added", kind: "text", label: "Added" }];
-        await tenant.call("forms.update-draft", { formId, expectedRevision: 3, draft: { ...draft, fields } });
-        await tenant.call("forms.publish", { formId, expectedRevision: 4 });
+        await tenant.call("forms.update-draft-v2", { formId, expectedRevision: 3, draft: { ...draft, fields } });
+        await tenant.call("forms.publish-v2", { formId, expectedRevision: 4 });
     }
     let output: Readonly<Record<string, unknown>>;
     return {
@@ -70,7 +70,7 @@ export async function prepareFormSchema(
                 })
             ).observation,
         verify: async () => {
-            const current = await tenant.call("forms.get", { formId });
+            const current = await tenant.call("forms.get-v2", { formId });
             assertCondition(current.id === formId);
             if (!list) {
                 const exact = await tenant.call(capability, {

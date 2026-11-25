@@ -33,12 +33,19 @@ export async function profileCliFixture() {
         hostname: "127.0.0.1",
         port: 0,
         async fetch(request) {
+            const path = new URL(request.url).pathname;
+            if (path === "/readyz") {
+                const paused = await Bun.file(join(root, "data/services/credentials/maintenance.json")).exists();
+                return new Response(null, {
+                    status: 204,
+                    headers: { "ulvia-maintenance": paused ? "paused" : "active" },
+                });
+            }
             const expected = await readFile(join(root, "data/services/provider-operator-token"), "utf8");
             if (request.headers.get("authorization") !== `Bearer ${expected}`) {
                 state.unauthorized++;
                 return new Response(null, { status: 401 });
             }
-            const path = new URL(request.url).pathname;
             if (request.method === "POST" && path === "/ulvia/operator/instances") {
                 const input = await request.json();
                 state.creates.push(input);

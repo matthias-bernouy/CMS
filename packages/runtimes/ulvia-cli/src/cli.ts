@@ -13,7 +13,8 @@ Usage:
   ulvia repository login <url> [--token-stdin]
   ulvia repository logout
   ulvia namespace <list | claim | status | transfer | suspend> [options]
-  ulvia upgrade [--version <version>]
+  ulvia upgrade [--version <version>] [--plan] [--backup-directory <absolute-path>]
+  ulvia backup <create|verify|restore> <absolute-directory> [--yes]
   ulvia reset --yes
   ulvia release <resource-directory> [--recursive]
   ulvia preview <collection-directory> --output <new-directory> [--dependency <directory>] [--no-screenshots] [--serve]
@@ -34,6 +35,7 @@ Commands:
   repository   Manage a pinned Repository PAT connection
   namespace    Manage account-owned Repository namespaces
   upgrade      Deploy one coherent stack release (Provider, Edges, Caddy and MongoDB)
+  backup       Create, verify or restore an offline installation backup
   reset        Delete all instances, services data, and repository releases after --yes
   preview      Generate example frames, captures, and a local explorer
   capture-worker Run the native private Playwright worker independently of CMS services
@@ -140,4 +142,4 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     await pruneCommand(args.slice(1), repository, log);
 }
 
-const LOCAL_COMMANDS = new Set(["apply", "start", "stop", "status", "logs", "configure", "upgrade", "reset"]);
+const LOCAL_COMMANDS = new Set(["apply", "start", "stop", "status", "logs", "configure", "upgrade", "reset", "backup"]);

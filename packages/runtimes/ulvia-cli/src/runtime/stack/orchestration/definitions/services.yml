@@ -102,6 +102,7 @@ services:
             ULVIA_CONTROL_ORIGIN: ${ULVIA_CONTROL_ORIGIN}
             ULVIA_HOSTING_PROXY_URL: http://proxy:8080
             ULVIA_CONTROL_BOOTSTRAP_FILE: /run/ulvia/control-administrator.json
+            ULVIA_MAINTENANCE_FILE: /run/ulvia/maintenance.json
             ULVIA_EDGE_ROUTING_SECRET: ${ULVIA_EDGE_ROUTING_SECRET}
             ULVIA_HOSTING_MANAGED_SUFFIXES: ${ULVIA_HOSTING_MANAGED_SUFFIXES}
             ULVIA_TLS_ENTRYPOINTS: ${ULVIA_TLS_ENTRYPOINTS}

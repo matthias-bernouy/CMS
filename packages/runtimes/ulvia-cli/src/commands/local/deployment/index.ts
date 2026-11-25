@@ -1,3 +1,4 @@
+import { upgradeOptions } from "./upgradeOptions";
 import { applyInstallation } from "../../../runtime/stack/orchestration/deployment/apply";
 import { startLocalServices, stopLocalServices } from "../../../runtime/stack/orchestration/services";
 import { showInstallationStatus } from "./status";
@@ -31,7 +32,12 @@ export async function deploymentCommand(
         await showRuntimeLogs(paths, args, log);
         return;
     }
-    if (command === "apply" || command === "upgrade") {
+    if (command === "upgrade") {
+        const { version, ...options } = upgradeOptions(args);
+        await applyInstallation(paths, environment, log, version, "upgrade", options);
+        return;
+    }
+    if (command === "apply") {
         const version = parseDeploymentVersion(command, args);
         await applyInstallation(paths, environment, log, version, command);
         return;

@@ -1,3 +1,4 @@
+import { maintenancePaused } from "../maintenance";
 import { MongoAccountEventStore } from "@bernouy/auth/mongo";
 import type { Db } from "mongodb";
 import { MongoFormsRepository } from "@bernouy/forms/mongo";
@@ -48,7 +49,7 @@ export class FormsDiscovery {
         void this.tick();
     }
     private tick() {
-        if (this.stopped || this.pending) {
+        if (this.stopped || this.pending || maintenancePaused()) {
             return;
         }
         this.pending = this.scan()

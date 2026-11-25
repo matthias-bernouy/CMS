@@ -1,3 +1,4 @@
+import { maintenancePaused } from "../recovery/maintenance";
 import { EDGE_LEASE_PREFIX } from "@bernouy/hosting/routing";
 import type { RoutingAuthority } from "@bernouy/hosting/routing";
 import type { UlviaProviderOptions, ProviderInstanceRegistry } from "@bernouy/ulvia-provider";
@@ -48,10 +49,21 @@ export function mountUlviaProvider(options: {
         return instance?.status === "ready" && instance.revision === route.instanceRevision ? instance : null;
     };
     const runner = new BunRunner({ hostname: env.ULVIA_PROVIDER_HOST, logger, idleTimeoutSeconds: 60 });
+    runner.use(async (request, next) => {
+        const path = new URL(request.url).pathname;
+        const readinessRouting = request.method === "QUERY" && path === "/hosting/routing/resolve";
+        if (maintenancePaused() && !readinessRouting && !["/healthz", "/readyz"].includes(path)) {
+            return new Response("Installation maintenance", { status: 503, headers: { "retry-after": "1" } });
+        }
+        return next();
+    });
     runner.get("/healthz", () => new Response(null, { status: 204 }));
     runner.get("/readyz", async () => {
         try {
-            return new Response(null, { status: !options.readiness || (await options.readiness()) ? 204 : 503 });
+            return new Response(null, {
+                status: !options.readiness || (await options.readiness()) ? 204 : 503,
+                headers: { "ulvia-maintenance": maintenancePaused() ? "paused" : "active" },
+            });
         } catch {
             return new Response(null, { status: 503 });
         }

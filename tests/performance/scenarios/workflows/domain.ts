@@ -82,11 +82,11 @@ export async function prepareDomain(
     };
     if (capability === "initiators.resolve") {
         const formId = crypto.randomUUID();
-        await selected.forms.call("forms.create", {
+        await selected.forms.call("forms.create-v2", {
             formId,
             draft: { ...draft, accessMode: "authenticated" },
         });
-        await selected.forms.call("forms.publish", { formId, expectedRevision: 1 });
+        await selected.forms.call("forms.publish-v2", { formId, expectedRevision: 1 });
         const observe = await initiatorWorkflow(async (path, input, _method, contractId) => {
             const target = context.inventory.targets.find(
                 (entry) =>
@@ -97,13 +97,13 @@ export async function prepareDomain(
             assertCondition(target);
             return context.fresh.fixture(target.definition.id, input as Readonly<Record<string, unknown>>, contractId);
         }, formId);
-        await selected.forms.call("forms.set-availability", {
+        await selected.forms.call("forms.set-availability-v2", {
             formId,
             expectedRevision: 2,
             availability: "open",
         });
         const attemptId = crypto.randomUUID();
-        await selected.forms.call("forms.submit-authenticated", { formId, formVersion: 1, attemptId, answers });
+        await selected.forms.call("forms.submit-authenticated-v2", { formId, formVersion: 1, attemptId, answers });
         const event = await observe(attemptId);
         assertCondition(event.initiator.kind === "user");
         inputs[capability] = { reference: event.initiator.reference, targetContractId: "ulvia/cms.forms" };

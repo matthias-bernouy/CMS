@@ -5,11 +5,11 @@ import type { WorkflowContext } from "./context";
 export async function domainSource(context: WorkflowContext) {
     const forms = await formsTenant(context.inventory, context.fresh, "http");
     const formId = crypto.randomUUID();
-    await forms.call("forms.create", {
+    await forms.call("forms.create-v2", {
         formId,
         draft,
     });
-    await forms.call("forms.publish", { formId, expectedRevision: 1 });
+    await forms.call("forms.publish-v2", { formId, expectedRevision: 1 });
     const source = await context.fresh.fixture(
         "sources.resolve",
         { contractId: "ulvia/cms.forms", eventType: "submission.created" },

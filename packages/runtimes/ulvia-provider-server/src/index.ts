@@ -1,3 +1,4 @@
+import { startMaintenanceProbe, waitForMaintenanceRelease } from "./runtime/recovery/maintenance";
 import { FormsDiscovery } from "./runtime/recovery/forms/discovery";
 import { createRoutingRuntime } from "./runtime/instances/system/hosting/routingRuntime";
 import { ClusterLogs } from "@bernouy/observability/cluster";
@@ -42,6 +43,8 @@ try {
     }
     const env = readProviderRuntimeEnv(process.env);
     const hostingConfiguration = readHostingConfiguration(process.env);
+    const maintenance = await startMaintenanceProbe(env.ULVIA_MAINTENANCE_FILE);
+    const lifetime = new AbortController();
     await validateCmsStorageRoots(env.CMS_FILES_DIR);
 
     const mongo = new MongoClient(env.MONGO_URL, { monitorCommands: true });
@@ -202,13 +205,20 @@ try {
             logger.error("forms.discovery.failed", {}, error),
         );
         formsDiscovery.start();
-        operationRecovery = instanceHost
-            .recoverOperations(instances.scan(), async (instance) =>
-                new MongoProviderOperationStore(mongo.db(instanceDatabaseName(instance.storageKey))).hasPending(),
+        operationRecovery = waitForMaintenanceRelease(lifetime.signal)
+            .then((active) =>
+                active
+                    ? instanceHost.recoverOperations(instances.scan(), async (instance) =>
+                          new MongoProviderOperationStore(
+                              mongo.db(instanceDatabaseName(instance.storageKey)),
+                          ).hasPending(),
+                      )
+                    : 0,
             )
             .then(() => undefined)
             .catch((error) => logger.error("provider.operation.startup-recovery.failed", {}, error));
     } catch (error) {
+        lifetime.abort();
         await settleCleanup("startup", [
             ["tls-delivery", tlsDelivery?.stop()],
             ["forms-recovery", formsDiscovery?.stop()],
@@ -218,6 +228,7 @@ try {
             ["instances", host?.close()],
             ["database", mongo.close()],
         ]);
+        await maintenance.stop();
         throw error;
     }
 
@@ -227,6 +238,7 @@ try {
             return;
         }
         stopping = true;
+        lifetime.abort();
         logger.info("provider.stopping", { signal });
         const failures = [
             ...(await settleCleanup("shutdown-tls", [["tls-delivery", tlsDelivery?.stop()]])),
@@ -241,6 +253,7 @@ try {
                 ["database", mongo.close()],
             ])),
         ];
+        await maintenance.stop();
         if (failures.length > 0) {
             throw new AggregateError(failures, "Provider shutdown failed");
         }

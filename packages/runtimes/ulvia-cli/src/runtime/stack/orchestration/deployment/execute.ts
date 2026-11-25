@@ -11,6 +11,7 @@ export async function executeDeployment(
     applied: LocalServicesState | null,
     operation: DeploymentOperation,
     log: (line: string) => void,
+    beforeProxy?: () => Promise<void>,
 ): Promise<void> {
     const target = operation.target;
     const project = await deploymentProject(paths, target);
@@ -19,7 +20,7 @@ export async function executeDeployment(
     try {
         if (operation.kind === "upgrade") {
             if (applied) {
-                await composeUp(await deploymentProject(paths, applied), ["mongo"]);
+                await composeUp(project, ["mongo"]);
             }
             await checkProviderImageRetention(project);
         }
@@ -31,6 +32,7 @@ export async function executeDeployment(
                 await composeUp(project, [name]);
             }
             await saveDeploymentState(paths, applied, { ...operation, phase: "edges" });
+            await beforeProxy?.();
             await composeUp(project, ["proxy"]);
             await saveDeploymentState(paths, applied, { ...operation, phase: "proxy" });
         }

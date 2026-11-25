@@ -3,7 +3,7 @@ import { readFile, writeFile, stat, lstat, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { profileCliFixture } from "./fixture";
 
-test("CLI starts shared hosting, preserves credentials and data, scales Edges and resumes interrupted stack updates", async () => {
+test("CLI starts shared hosting, preserves credentials and data, scales Edges and rolls back preactivation upgrade failures", async () => {
     const fixture = await profileCliFixture();
     const { root, run, state } = fixture;
     const data = join(root, "data");
@@ -69,9 +69,10 @@ test("CLI starts shared hosting, preserves credentials and data, scales Edges an
             });
             expect(failed.exitCode).not.toBe(0);
             expect((await json(servicesPath)).applied).toEqual(scaled);
-            expect((await json(servicesPath)).operation.phase).toBe("failed");
+            expect((await json(servicesPath)).operation).toBeNull();
+            expect(failed.stderr).toContain("Previous installation restored");
         }
-        expect((await run(["upgrade"])).exitCode).toBe(0);
+        expect((await run(["upgrade", "--version", "0.2.0"])).exitCode).toBe(0);
         expect((await json(servicesPath)).operation).toBeNull();
         expect((await json(servicesPath)).applied.images.provider.version).toBe("0.2.0");
         expect((await json(servicesPath)).applied.images.edge.version).toBe("0.2.0");

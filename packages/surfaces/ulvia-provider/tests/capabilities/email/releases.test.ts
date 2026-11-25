@@ -12,7 +12,7 @@ const releaseDigests = {
     "ulvia/cms.emailer": "sha256:a235f01b1fec08716ea722caccc6bc56974b15e449b2f41b0559e4ea686b70ed",
     "ulvia/cms.emailer.smtp": "sha256:ae8b92cd8a685c163229e1c2326c6a687546dd2488dc88a4295eff30e6b256c1",
     "ulvia/cms.email-templates": "sha256:bc8ced246180f12a2b5942560167611c5391a74be273ee5e23f209aa931f7c8c",
-    "ulvia/cms.forms": "sha256:a7ee3291528dce1ae1b522c8d6b553558d70cb798f6eded7ac45c30ff08745d2",
+    "ulvia/cms.forms": "sha256:52f044ee58e200572f1953e7358b6446549acec38dcdcef5e63b02e64fe374b6",
     "ulvia/cms.events": "sha256:efb8e3c17c04a2f49a8ced1afae86a4d5a8d820c45c8d6c9ecd354d0c7903c43",
     "ulvia/cms.workflows": "sha256:262ff8272e540a5ee6f641f4416a2435a77015dea6bf9ed0330f8a6edd1ba30d",
     "ulvia/cms.access": "sha256:3e8189f1023bf4be12c3385aa113bbe806022b5cf2903d88d80e27b2e394fc3c",

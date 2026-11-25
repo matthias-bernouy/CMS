@@ -1,3 +1,4 @@
+import { maintenancePaused } from "../../../../recovery/maintenance";
 import { DomainTlsAuthority, DomainTlsReconciler } from "@bernouy/hosting/tls";
 import type { DomainRegistry, HostingDomainStore, HostingInstanceReader } from "@bernouy/hosting";
 import type { Logger } from "@bernouy/logging";
@@ -32,7 +33,11 @@ export async function composeTlsDelivery(
     const abort = new AbortController();
     let timer: ReturnType<typeof setInterval> | undefined;
     const run = () =>
-        reconciler.batch(abort.signal).catch((cause) => logger.error("hosting.tls.reconciliation.failed", {}, cause));
+        maintenancePaused()
+            ? Promise.resolve()
+            : reconciler
+                  .batch(abort.signal)
+                  .catch((cause) => logger.error("hosting.tls.reconciliation.failed", {}, cause));
     return {
         authority,
         start: () => {

@@ -1,3 +1,4 @@
+import { readMaintenance } from "../../../runtime/maintenance/journal";
 import { describeLocalServices } from "../../../runtime/stack/orchestration/services";
 import { loadInstallationConfig } from "../../../runtime/stack/installation";
 import { sameConfiguration } from "../../../runtime/stack/orchestration/deployment/apply";
@@ -7,6 +8,14 @@ import type { ComposeServiceState } from "../../../runtime/stack/orchestration/c
 import type { UlviaPaths } from "../../../runtime/paths";
 
 export async function showInstallationStatus(paths: UlviaPaths, log: (line: string) => void): Promise<void> {
+    const maintenance = await readMaintenance(paths);
+    if (maintenance) {
+        log(`Maintenance: ${maintenance.kind} (${maintenance.phase}); checkpoint ${maintenance.backup}`);
+        if (maintenance.phase === "rollback-restoring" || maintenance.phase === "rollback-stopping") {
+            log("Data restoration is incomplete; resume the recorded maintenance operation.");
+            return;
+        }
+    }
     const { state, services } = await describeLocalServices(paths);
     const applied = state?.applied;
     const target = state?.operation?.target ?? applied;

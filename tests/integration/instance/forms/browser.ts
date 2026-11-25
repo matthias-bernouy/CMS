@@ -46,7 +46,7 @@ export async function submitInBrowser(
                 }
             }
             const result = tab.waitForResponse(
-                (response) => response.url().includes("forms.submit") || response.url().endsWith("/forms/submit"),
+                (response) => response.url().includes("forms.submit-v2") || response.url().endsWith("/forms/v2/submit"),
             );
             await tab.getByRole("button", { name: "Send", exact: true }).click();
             const response = await result;

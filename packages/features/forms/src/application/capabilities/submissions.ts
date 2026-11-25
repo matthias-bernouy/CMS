@@ -23,14 +23,14 @@ const output = z.strictObject({
     answers: z.array(answerSchema).max(8192),
 });
 export const submit = defineCapability({
-    id: "forms.submit",
+    id: "forms.submit-v2",
     description: "Durably accept a public submission using a stable caller-generated attempt UUID.",
     access: "public",
     behavior: command,
     input: submissionInputSchema,
     output: submissionAckSchema,
     errors,
-    bindings: [http("POST", "/forms/submit")],
+    bindings: [http("POST", "/forms/v2/submit")],
     execute: ({ input, services, context }) =>
         services.submissions.submit(
             input,
@@ -41,14 +41,14 @@ export const submit = defineCapability({
         ),
 });
 export const submitAuthenticated = defineCapability({
-    id: "forms.submit-authenticated",
+    id: "forms.submit-authenticated-v2",
     description: "Durably accept an authenticated submission.",
     access: "authenticated",
     behavior: command,
     input: submissionInputSchema,
     output: submissionAckSchema,
     errors,
-    bindings: [http("POST", "/forms/submit-authenticated")],
+    bindings: [http("POST", "/forms/v2/submit-authenticated")],
     execute: ({ input, services, context }) =>
         services.submissions.submit(
             input,
@@ -59,40 +59,40 @@ export const submitAuthenticated = defineCapability({
         ),
 });
 export const get = defineCapability({
-    id: "submissions.get",
+    id: "submissions.get-v2",
     description: "Read retained answers and submission status.",
     access: "admin",
     behavior: query,
     input: submissionDeleteInputSchema,
     output,
     errors,
-    bindings: [http("QUERY", "/submissions/get"), mcp],
+    bindings: [http("QUERY", "/submissions/v2/get"), mcp],
     execute: ({ input, services }) => services.submissions.get(input.receiptId),
 });
 export const list = defineCapability({
-    id: "submissions.list",
+    id: "submissions.list-v2",
     description: "List retained summaries without answers.",
     access: "admin",
     behavior: query,
     input: submissionListInputSchema,
     output: submissionListOutputSchema,
     errors,
-    bindings: [http("QUERY", "/submissions/list"), mcp],
+    bindings: [http("QUERY", "/submissions/v2/list"), mcp],
     execute: ({ input, services }) => services.submissions.list(input),
 });
 export const status = defineCapability({
-    id: "submissions.set-status",
+    id: "submissions.set-status-v2",
     description: "Change a retained submission status at its current revision.",
     access: "admin",
     behavior: command,
     input: submissionStatusInputSchema,
     output: submissionChangeAckSchema,
     errors,
-    bindings: [http("PUT", "/submissions/status"), mcp],
+    bindings: [http("PUT", "/submissions/v2/status"), mcp],
     execute: ({ input, services }) => services.submissions.status(input),
 });
 export const remove = defineCapability({
-    id: "submissions.delete",
+    id: "submissions.delete-v2",
     description:
         "Erase the local submission payload and pending Event intent. Already published Events and Workflow effects have their own lifecycle.",
     access: "admin",
@@ -100,6 +100,6 @@ export const remove = defineCapability({
     input: submissionDeleteInputSchema,
     output: submissionDeleteAckSchema,
     errors,
-    bindings: [http("DELETE", "/submissions"), mcp],
+    bindings: [http("DELETE", "/submissions/v2"), mcp],
     execute: ({ input, services }) => services.submissions.delete(input.receiptId),
 });

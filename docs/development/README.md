@@ -1,5 +1,7 @@
 # Development And Validation
 
+See [deployment lifecycle](deployment-lifecycle.md) for protected upgrades, complete backups and rollback.
+
 See [optional Forms](forms.md) for explicit selection, persistence, Event recovery and validation.
 
 See [visual captures](visual-captures.md) for MCP images and isolated browser prerequisites.

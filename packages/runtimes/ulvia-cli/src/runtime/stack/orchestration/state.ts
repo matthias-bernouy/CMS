@@ -46,6 +46,9 @@ export async function readDeploymentState(paths: UlviaPaths): Promise<Deployment
     if (text === null) {
         return null;
     }
+    return parseDeploymentState(paths, text);
+}
+export function parseDeploymentState(paths: UlviaPaths, text: string): DeploymentState {
     try {
         const value = JSON.parse(text);
         if (

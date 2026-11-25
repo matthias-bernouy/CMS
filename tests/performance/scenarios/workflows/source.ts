@@ -9,15 +9,15 @@ export async function domainSource(context: WorkflowContext, variant: Variant) {
     if (["large", "history"].includes(variant)) {
         for (let index = 0; index < (variant === "large" ? 100 : 40); index++) {
             const formId = crypto.randomUUID();
-            await selected.forms.call("forms.create", {
+            await selected.forms.call("forms.create-v2", {
                 formId,
                 draft,
             });
-            await selected.forms.call("forms.publish", { formId, expectedRevision: 1 });
+            await selected.forms.call("forms.publish-v2", { formId, expectedRevision: 1 });
         }
         if (variant === "history") {
             for (let revision = 2; revision <= 8; revision++) {
-                await selected.forms.call("forms.publish", { formId: selected.formId, expectedRevision: revision });
+                await selected.forms.call("forms.publish-v2", { formId: selected.formId, expectedRevision: revision });
             }
         }
     }

@@ -69,6 +69,22 @@ test("a newer bundled CLI starts the old applied artifacts without changing imag
         expect(await readFile(join(f.root, "data/services/deployments", applied.id, "services.yml"), "utf8")).toContain(
             "caddy:2.11.9",
         );
+        // Exercise the serialized copy worker after full CLI bundling, with the old frozen release.
+        const checkpoint = join(f.root, "bundled-checkpoint");
+        for (const action of ["create", "verify"]) {
+            const backup = Bun.spawn([process.execPath, wrapper, "backup", action, checkpoint], {
+                env,
+                stdout: "pipe",
+                stderr: "pipe",
+            });
+            const [code, stderr] = await Promise.all([
+                backup.exited,
+                new Response(backup.stderr).text(),
+                new Response(backup.stdout).text(),
+            ]);
+            expect(code, stderr).toBe(0);
+        }
+        expect(await readFile(stackPath, "utf8")).toBe(state);
     } finally {
         await f.close();
     }

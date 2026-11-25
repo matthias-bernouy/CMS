@@ -58,18 +58,22 @@ export async function prepareForms(
         const draft: FormDraft = {
             ...baseDraft,
             fields: [{ id: "message", kind: "text", label: "Message" }],
-            accessMode: capability === "forms.submit-authenticated" ? "authenticated" : "public",
+            accessMode: capability === "forms.submit-authenticated-v2" ? "authenticated" : "public",
         };
         const formId = crypto.randomUUID();
-        await tenant.call("forms.create", { formId, draft });
-        await tenant.call("forms.publish", { formId, expectedRevision: 1 });
-        let form = await tenant.call("forms.set-availability", { formId, expectedRevision: 2, availability: "open" });
+        await tenant.call("forms.create-v2", { formId, draft });
+        await tenant.call("forms.publish-v2", { formId, expectedRevision: 1 });
+        let form = await tenant.call("forms.set-availability-v2", {
+            formId,
+            expectedRevision: 2,
+            availability: "open",
+        });
         if (["forms.describe-submission", "forms.list-submission-sources"].includes(capability)) {
             return prepareFormSchema(tenant, capability, binding, variant, formId, draft);
         }
         const answers = [{ fieldId: "message", kind: "text", text: "Retained performance answer" }];
         const submit = () =>
-            tenant.call(capability === "forms.submit-authenticated" ? capability : "forms.submit", {
+            tenant.call(capability === "forms.submit-authenticated-v2" ? capability : "forms.submit-v2", {
                 formId,
                 formVersion: 1,
                 attemptId: crypto.randomUUID(),
@@ -77,45 +81,45 @@ export async function prepareForms(
             });
         const ids: string[] = [];
         let receipt: Readonly<Record<string, unknown>> | undefined;
-        if (capability === "forms.list") {
+        if (capability === "forms.list-v2") {
             ids.push(formId);
             const count = variant === "large" ? 101 : variant === "history" ? 41 : 1;
             for (let index = 0; index < count; index++) {
                 const id = crypto.randomUUID();
-                await tenant.call("forms.create", { formId: id, draft });
+                await tenant.call("forms.create-v2", { formId: id, draft });
                 ids.push(id);
                 if (variant === "history") {
                     for (const revision of [1, 2, 3]) {
-                        await tenant.call("forms.publish", { formId: id, expectedRevision: revision });
+                        await tenant.call("forms.publish-v2", { formId: id, expectedRevision: revision });
                     }
                 }
             }
         } else if (capability.startsWith("submissions.")) {
             const count =
-                capability === "submissions.list" ? (variant === "large" ? 101 : variant === "history" ? 41 : 1) : 1;
+                capability === "submissions.list-v2" ? (variant === "large" ? 101 : variant === "history" ? 41 : 1) : 1;
             for (let index = 0; index < count; index++) {
                 const ack = await submit();
-                receipt = await tenant.call("submissions.get", { receiptId: ack.receiptId });
+                receipt = await tenant.call("submissions.get-v2", { receiptId: ack.receiptId });
                 if (variant === "history" && index % 2 === 0) {
-                    await tenant.call("submissions.delete", { receiptId: ack.receiptId });
+                    await tenant.call("submissions.delete-v2", { receiptId: ack.receiptId });
                 } else {
                     ids.push(String(ack.receiptId));
                 }
             }
         }
         if (variant === "invalidation") {
-            if (capability === "forms.list") {
+            if (capability === "forms.list-v2") {
                 const id = crypto.randomUUID();
-                await tenant.call("forms.list", { limit: 25 });
-                await tenant.call("forms.create", { formId: id, draft });
+                await tenant.call("forms.list-v2", { limit: 25 });
+                await tenant.call("forms.create-v2", { formId: id, draft });
                 ids.push(id);
-            } else if (capability === "submissions.list") {
+            } else if (capability === "submissions.list-v2") {
                 await tenant.call(capability, { formId, limit: 25 });
                 const ack = await submit();
                 ids.push(String(ack.receiptId));
-            } else if (capability === "submissions.get") {
+            } else if (capability === "submissions.get-v2") {
                 await tenant.call(capability, { receiptId: receipt!.receiptId });
-                await tenant.call("submissions.set-status", {
+                await tenant.call("submissions.set-status-v2", {
                     receiptId: receipt!.receiptId,
                     expectedRevision: receipt!.revision,
                     status: "read",
@@ -123,36 +127,36 @@ export async function prepareForms(
                 receipt = await tenant.call(capability, { receiptId: receipt!.receiptId });
             } else {
                 await tenant.call(capability, { formId });
-                form = await tenant.call("forms.update-draft", {
+                form = await tenant.call("forms.update-draft-v2", {
                     formId,
                     expectedRevision: 3,
                     draft: { ...draft, title: "Changed" },
                 });
-                if (capability === "forms.get-public-definition") {
-                    await tenant.call("forms.publish", { formId, expectedRevision: 4 });
-                    form = await tenant.call("forms.get", { formId });
+                if (capability === "forms.get-public-definition-v2") {
+                    await tenant.call("forms.publish-v2", { formId, expectedRevision: 4 });
+                    form = await tenant.call("forms.get-v2", { formId });
                 }
             }
         }
         const inputs: Record<string, Readonly<Record<string, unknown>>> = {
-            "forms.create": { formId: crypto.randomUUID(), draft },
-            "forms.get": { formId },
-            "forms.list": { limit: 25 },
-            "forms.update-draft": { formId, expectedRevision: 3, draft: { ...draft, title: "Updated" } },
-            "forms.publish": { formId, expectedRevision: 3 },
-            "forms.set-availability": { formId, expectedRevision: 3, availability: "closed" },
-            "forms.archive": { formId, expectedRevision: 3 },
-            "forms.get-public-definition": { formId },
-            "forms.submit": { formId, formVersion: 1, attemptId: crypto.randomUUID(), answers },
-            "forms.submit-authenticated": { formId, formVersion: 1, attemptId: crypto.randomUUID(), answers },
-            "submissions.get": { receiptId: receipt?.receiptId },
-            "submissions.list": { formId, limit: 25 },
-            "submissions.set-status": {
+            "forms.create-v2": { formId: crypto.randomUUID(), draft },
+            "forms.get-v2": { formId },
+            "forms.list-v2": { limit: 25 },
+            "forms.update-draft-v2": { formId, expectedRevision: 3, draft: { ...draft, title: "Updated" } },
+            "forms.publish-v2": { formId, expectedRevision: 3 },
+            "forms.set-availability-v2": { formId, expectedRevision: 3, availability: "closed" },
+            "forms.archive-v2": { formId, expectedRevision: 3 },
+            "forms.get-public-definition-v2": { formId },
+            "forms.submit-v2": { formId, formVersion: 1, attemptId: crypto.randomUUID(), answers },
+            "forms.submit-authenticated-v2": { formId, formVersion: 1, attemptId: crypto.randomUUID(), answers },
+            "submissions.get-v2": { receiptId: receipt?.receiptId },
+            "submissions.list-v2": { formId, limit: 25 },
+            "submissions.set-status-v2": {
                 receiptId: receipt?.receiptId,
                 expectedRevision: receipt?.revision,
                 status: "processed",
             },
-            "submissions.delete": { receiptId: receipt?.receiptId },
+            "submissions.delete-v2": { receiptId: receipt?.receiptId },
         };
         let result: Readonly<Record<string, unknown>> | undefined;
         return {
@@ -161,15 +165,15 @@ export async function prepareForms(
                     await tenant.client("ulvia/cms.forms", capability, binding, inputs[capability]!, (value) => {
                         result = requireRecord(value);
                         if (capability.endsWith(".list")) {
-                            listPage(result, ids, capability === "submissions.list");
+                            listPage(result, ids, capability === "submissions.list-v2");
                         }
-                        if (capability === "forms.get") {
+                        if (capability === "forms.get-v2") {
                             equal(result, form);
                         }
-                        if (capability === "submissions.get") {
+                        if (capability === "submissions.get-v2") {
                             equal(result, receipt);
                         }
-                        if (capability === "forms.get-public-definition") {
+                        if (capability === "forms.get-public-definition-v2") {
                             assertCondition(
                                 result.formVersion === form.currentVersion &&
                                     result.accepting === true &&
@@ -181,43 +185,43 @@ export async function prepareForms(
                 ).observation,
             verify: async () => {
                 assertCondition(result);
-                if (capability === "forms.create") {
-                    equal(requireRecord(await tenant.call("forms.get", { formId: result.formId })).draft, draft);
+                if (capability === "forms.create-v2") {
+                    equal(requireRecord(await tenant.call("forms.get-v2", { formId: result.formId })).draft, draft);
                 }
-                if (capability.startsWith("forms.submit")) {
+                if (capability.startsWith("forms.submit-v2")) {
                     assertCondition(result.received === true);
                     equal(
-                        requireRecord(await tenant.call("submissions.get", { receiptId: result.receiptId })).answers,
+                        requireRecord(await tenant.call("submissions.get-v2", { receiptId: result.receiptId })).answers,
                         answers,
                     );
                 }
-                if (["forms.update-draft", "forms.set-availability", "forms.archive"].includes(capability)) {
-                    equal(await tenant.call("forms.get", { formId }), result);
+                if (["forms.update-draft-v2", "forms.set-availability-v2", "forms.archive-v2"].includes(capability)) {
+                    equal(await tenant.call("forms.get-v2", { formId }), result);
                     assertCondition(result.revision === 4);
                 }
-                if (capability === "forms.publish") {
+                if (capability === "forms.publish-v2") {
                     assertCondition(result.version === 3);
                     equal(
                         requireRecord(
-                            (await tenant.call("forms.get", { formId, version: result.version })).publishedVersion,
+                            (await tenant.call("forms.get-v2", { formId, version: result.version })).publishedVersion,
                         ).draft,
                         draft,
                     );
                 }
-                if (capability === "submissions.set-status") {
+                if (capability === "submissions.set-status-v2") {
                     assertCondition(
-                        (await tenant.call("submissions.get", { receiptId: receipt!.receiptId })).status ===
+                        (await tenant.call("submissions.get-v2", { receiptId: receipt!.receiptId })).status ===
                             "processed",
                     );
                 }
-                if (capability === "submissions.delete") {
+                if (capability === "submissions.delete-v2") {
                     assertCondition(result.deleted === true);
-                    const read = await tenant.client("ulvia/cms.forms", "submissions.get", "http", {
+                    const read = await tenant.client("ulvia/cms.forms", "submissions.get-v2", "http", {
                         receiptId: receipt!.receiptId,
                     });
                     assertCondition(!read.observation.validated && read.observation.status === 410);
                 }
-                const foreign = await tenant.client("ulvia/cms.forms", "forms.get", "http", { formId }, undefined, {
+                const foreign = await tenant.client("ulvia/cms.forms", "forms.get-v2", "http", { formId }, undefined, {
                     httpCredentials: { cookie: environment.main.cookie },
                 });
                 assertCondition(!foreign.observation.validated && [401, 403].includes(foreign.observation.status));

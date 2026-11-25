@@ -1,3 +1,4 @@
+import { guardMaintenance } from "../../runtime/maintenance/journal";
 import type { UlviaPaths } from "../../runtime/paths";
 import { withRepositoryWriteLock } from "@bernouy/repository/repository/filesystem/lock";
 import { configureCommand } from "./configuration";
@@ -12,14 +13,19 @@ export async function localCommand(
     environment: Record<string, string | undefined>,
 ): Promise<void> {
     const mutates =
-        ["apply", "start", "stop", "configure", "upgrade", "reset"].includes(command) &&
+        ["apply", "start", "stop", "configure", "upgrade", "reset", "backup"].includes(command) &&
         !args.includes("--show") &&
         !args.includes("--help") &&
         !args.includes("-h");
-    const execute = () => dispatchLocalCommand(command, args, paths, log, environment);
+    const execute = async () => {
+        await guardMaintenance(paths, command);
+        return dispatchLocalCommand(command, args, paths, log, environment);
+    };
     if (mutates) {
         // Keep the root lock inode across reset; process death releases the native lease.
-        await withRepositoryWriteLock(paths.data, execute);
+        await withRepositoryWriteLock(paths.data, () =>
+            ["backup", "upgrade"].includes(command) ? withRepositoryWriteLock(paths.repository, execute) : execute(),
+        );
         return;
     }
     await execute();
@@ -32,6 +38,11 @@ async function dispatchLocalCommand(
     log: (message: string) => void,
     environment: Record<string, string | undefined>,
 ): Promise<void> {
+    if (command === "backup") {
+        const { backupCommand } = await import("../../runtime/maintenance/backup/command");
+        await backupCommand(args, paths, log);
+        return;
+    }
     if (command === "configure") {
         await configureCommand(args, paths, environment, log);
         return;

@@ -13,15 +13,15 @@ through Installations. Forms requires Events publication, not Emailer. The
 `submissions.retry-notification`, `EMAILER_UNAVAILABLE` and the email-specific
 `deliveryMayComplete` deletion result. Forms retains no recipient/template state.
 
-There is no automatic conversion of Forms 1.x state, reads or aliases. Existing
+Ordinary startup and readers do not convert Forms 1.x state or introduce aliases. Existing
 1.x pins are not executable on the new runtime. This includes announced Provider
 implementations even when Forms is not selected: runtime recovery checks every
 advertised exact implementation, so such an existing instance can refuse the new
 image before administration is available. Historical 1.x release bytes
 remain archived under the surface's `compatibility/archived/forms-v1.json`,
-outside the active retained-executor inventory. No Forms 1.x data migration tool is supplied in this change. Existing data needs
-a separately reviewed migration or fresh state before an instance can use 2.x;
-merely replacing an image is not a migration. New installations use the fresh
+outside the active retained-executor inventory. `ulvia upgrade` now owns an explicit offline migration for the exact archived
+Forms 1.0.0 and 1.1.0 releases. Unknown versions/digests refuse. Merely replacing
+an image outside that protected command remains insufficient. New installations use the fresh
 2.x contract and state format.
 
 ## Persistence and recovery
@@ -62,3 +62,45 @@ Forms acceptance is independent of those effects. See the
 `bun run verify` covers standalone Mongo persistence/retention and the native
 Forms/Event/Workflow/SMTP browser journey, including isolation, replay and Provider
 restart. Real performance measurements remain separate under `bun run perf`.
+
+
+## Explicit Forms 1.x migration
+
+Use `ulvia upgrade --version VERSION --plan` to inspect the target image's plan,
+then `ulvia upgrade --version VERSION` to perform its cold-backup migration.
+See [deployment lifecycle](deployment-lifecycle.md) for downtime, activation and
+rollback boundaries. No migration runs implicitly in a Forms reader or ordinary
+Provider startup. Forms 1.x receives no executable compatibility adapter.
+
+Form IDs, drafts, revisions, immutable publications, retained answers, statuses,
+receipt identities/nonces, original principals and replay deadlines are preserved.
+Legacy 1.0 submissions receive no synthesized historical Events; existing 1.1
+Event intents retain their original proof and causation. Email retry scheduling is
+removed. All email intents must be accepted, with no unresolved completion flag:
+`pending`, `sending`, `blocked`, `failed` and `unknown` refuse before conversion.
+Resolve these outcomes using the original image before retrying the upgrade.
+
+Draft and publication notification settings are exported privately under the
+checkpoint's `migration/forms-v1-email-settings.ndjson`. The export contains
+instance/form/publication references and settings, not submission answers.
+Nothing automatically creates or activates notification Workflows. Administrators
+must configure the official optional notification Workflow and verify its result.
+
+Capability identity is stable across releases: Forms 2 operations whose wire
+schema/error set changed use new `*-v2` IDs and `/forms/v2/...` or
+`/submissions/v2/...` HTTP bindings. Dynamic-schema resolver/choice capabilities
+and `submission.created` retain their compatible IDs. The migration admits a
+catalogue-only Forms 1.2.0 retirement release before Forms 2; it does not select or
+execute it. Historical immutable releases are retained and ordinary catalogue
+lifecycle checks remain enabled. SDK-generated metadata and current authored
+callers use the new IDs. Old collection consumers and active Forms 1.x Workflow
+call plans must be upgraded/retired and their runs finished before migration.
+
+The operator also updates the affected instance's native manifest approval,
+observations, exact selections and retained system plan. Foreign installations and tokens are retained. When native Forms is selected, existing denials move to the exact replacement
+`*-v2` action so renamed capabilities cannot reopen forbidden actions. Denials for
+fully retired operations without replacements are omitted because those operations
+no longer exist. Foreign Forms selections retain their original policy. Other simultaneously changed contracts must remain
+consumer-compatible. Incomplete instance/site transitions and incomplete usage
+inventories block the plan. The cold checkpoint recovers partial metadata/data
+writes; no Mongo replica set is required for this offline operation.

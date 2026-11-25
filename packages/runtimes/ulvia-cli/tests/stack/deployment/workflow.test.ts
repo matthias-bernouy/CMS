@@ -73,7 +73,7 @@ test("missing containers require apply; a corrupt recorded snapshot refuses with
     }
 });
 
-test("failed upgrades retain applied truth, refuse start/configuration changes and resume their exact target", async () => {
+test("a failure before activation restores the complete previous deployment and permits a fresh retry", async () => {
     const f = await profileCliFixture();
     try {
         expect((await f.run(["apply", "--version", "0.1.0"])).exitCode).toBe(0);
@@ -83,23 +83,40 @@ test("failed upgrades retain applied truth, refuse start/configuration changes a
             ULVIA_TEST_DOCKER_FAIL_COMPONENT: "edge",
         });
         expect(failed.exitCode).not.toBe(0);
-        const pending = await read(f.root, "data/services/stack.json");
-        expect(pending.applied).toEqual(previous.applied);
-        expect(pending.operation.target.release.version).toBe("0.2.0");
-        expect(pending.operation.phase).toBe("failed");
-        expect((await f.run(["start"])).stderr).toContain("ulvia upgrade");
-        expect((await f.run(["configure", "--edges", "3"])).exitCode).not.toBe(0);
-        expect((await f.run(["apply"])).exitCode).not.toBe(0);
-        const status = await f.run(["status"]);
-        expect(status.stdout).toContain("Stack release: 0.1.0");
-        expect(status.stdout).toContain("upgrade 0.2.0 (failed)");
-        expect(status.stdout).toContain("unhealthy");
-        expect((await f.run(["upgrade"])).exitCode).toBe(0);
+        expect(failed.stderr).toContain("Previous installation restored");
+        expect(await read(f.root, "data/services/stack.json")).toEqual(previous);
+        expect(await Bun.file(join(f.root, "data/.maintenance.json")).exists()).toBe(false);
+        expect((await f.run(["start"])).exitCode).toBe(0);
+        expect((await f.run(["upgrade", "--version", "0.2.0"])).exitCode).toBe(0);
         const recovered = await read(f.root, "data/services/stack.json");
         expect(recovered.operation).toBeNull();
-        expect(recovered.applied.id).toBe(pending.operation.target.id);
         expect(recovered.applied.images.provider.version).toBe("0.2.0");
         expect(recovered.applied.images.edge.version).toBe("0.2.0");
+    } finally {
+        await f.close();
+    }
+});
+test("a failure after activation retains the target and resumes without recopying the checkpoint", async () => {
+    const f = await profileCliFixture();
+    try {
+        expect((await f.run(["apply", "--version", "0.1.0"])).exitCode).toBe(0);
+        const previous = await read(f.root, "data/services/stack.json");
+        const failed = await f.run(["upgrade", "--version", "0.2.0"], {
+            ULVIA_TEST_DOCKER_FAIL_VERSION: "0.2.0",
+            ULVIA_TEST_DOCKER_FAIL_COMPONENT: "proxy",
+        });
+        expect(failed.exitCode).not.toBe(0);
+        expect(failed.stdout).toContain("No automatic data rollback");
+        const pending = await read(f.root, "data/services/stack.json");
+        expect(pending.applied).toEqual(previous.applied);
+        expect((await read(f.root, "data/.maintenance.json")).phase).toBe("opening");
+        await writeFile(join(f.root, "data/after-activation"), "must survive");
+        expect((await f.run(["start"])).exitCode).not.toBe(0);
+        expect((await f.run(["configure", "--edges", "3"])).exitCode).not.toBe(0);
+        expect((await f.run(["upgrade", "--version", "0.1.0"])).exitCode).not.toBe(0);
+        expect((await f.run(["upgrade"])).exitCode).toBe(0);
+        expect(await readFile(join(f.root, "data/after-activation"), "utf8")).toBe("must survive");
+        expect((await read(f.root, "data/services/stack.json")).applied.id).toBe(pending.operation.target.id);
     } finally {
         await f.close();
     }
