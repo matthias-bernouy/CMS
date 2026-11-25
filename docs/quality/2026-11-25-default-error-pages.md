@@ -58,8 +58,11 @@ assertions, including the actual pinned Caddy. Full verification is recorded in
 historical process crashes, Access, Forms, native Edge/backup/restart and fresh /
 restarted ACME TLS. That broad run covered the delivery/language changes; the final
 branding removal and copy revision then passed 24 focused tests / 324 assertions
-and all ten static gates. The final Provider image probe is recorded separately
-in `artifacts/default-errors-provider-current-tests.log`.
+and all ten static gates. Fresh local Provider and Edge images were then built from the final unbranded
+source as `0.1.0-default-errors`. Their offline in-image tests passed respectively
+10 tests / 135 assertions and 6 tests / 118 assertions. Logs are retained as
+`artifacts/default-errors-provider-current-tests.log` and
+`artifacts/default-errors-edge-current-tests.log`. These images were not pushed.
 
 Relevant tests:
 
