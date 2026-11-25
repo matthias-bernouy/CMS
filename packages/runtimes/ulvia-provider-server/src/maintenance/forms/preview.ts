@@ -22,9 +22,18 @@ export async function previewSelection(
     selected: StoredContractSelections,
     installation: ProviderInstallation,
 ) {
+    const before = await stores.manifests.get(source.manifest.providerId, source.manifest.version);
+    if (!before) {
+        throw new Error("FORMS_MIGRATION_SOURCE_MANIFEST_MISSING");
+    }
     const releases = new InMemoryReleaseCatalogue();
     const needed = new Map<string, { contractId: string; version: string }>();
-    for (const pin of [...source.contracts, ...selected.plan.selections]) {
+    // Revalidate the complete approved manifest, including declarations not selected on this site.
+    for (const pin of [
+        ...source.contracts,
+        ...selected.plan.selections,
+        ...before.admission.manifest.implementations,
+    ]) {
         needed.set(`${pin.contractId}@${pin.version}`, pin);
     }
     for (const pin of needed.values()) {
@@ -49,7 +58,7 @@ export async function previewSelection(
         [...needed.values()].map(async (pin) => {
             const row = await stores.releases.get(pin.contractId, pin.version);
             if (!row) {
-                throw new Error("Migration source release disappeared");
+                throw new Error(`FORMS_MIGRATION_SOURCE_RELEASE_MISSING:${pin.contractId}/${pin.version}`);
             }
             return row.admission;
         }),
@@ -98,10 +107,6 @@ export async function previewSelection(
     }
     verifyEvolution(targetForms.release, staged, DEFAULT_RELEASE_LIMITS);
     const manifests = new InMemoryProviderManifestCatalogue(releases);
-    const before = await stores.manifests.get(source.manifest.providerId, source.manifest.version);
-    if (!before) {
-        throw new Error("Migration source manifest disappeared");
-    }
     await manifests.publish(before.admission);
     const targetManifest = await manifests.publish(await admitProviderManifest(artifacts.manifest, releases));
     const changed = {

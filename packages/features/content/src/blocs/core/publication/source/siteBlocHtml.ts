@@ -97,7 +97,7 @@ function serializeNode(
     const controllerAttribute = behaviorController ? ` ${COMPOSITION_CONTROLLER_ATTRIBUTE}` : "";
     const native = isSiteBlocNativeStructureTag(node.tag);
     const serializedTag = native ? node.tag : (node.root ?? "div");
-    if (!isPlatformManagedNativeElementTag(serializedTag)) {
+    if (!native && !isPlatformManagedNativeElementTag(serializedTag)) {
         throw new Error(`Invalid native root "${serializedTag}" for site bloc "${node.tag}"`);
     }
     const blocAttribute = native ? "" : ` cms-bloc="${escapeAttribute(node.tag)}"`;

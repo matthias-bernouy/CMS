@@ -20,9 +20,11 @@ describe.skipIf(!enabled)("offline native Forms metadata migration", () => {
     afterAll(async () => {
         await mongo?.close();
     }, 30000);
-    test("both exact legacy versions are upgraded into ordinary executable Forms 2 metadata", async () => {
+    test("both legacy versions migrate with an unselected historical Registry claim", async () => {
         for (const version of ["1.0.0", "1.1.0"] as const) {
             const f = await migrationFixture(mongo.client, version);
+            expect(f.previousRegistry.release.version).toBe("1.3.0");
+            expect(f.selected.plan.selections.some((pin) => pin.contractId === "ulvia/repository")).toBe(false);
             const foreign = await selectForeignEmailer(f, true);
             await f.db.collection<{ _id: string; [key: string]: unknown }>("workflow_plans").insertOne({
                 _id: "workflow:1",
@@ -84,6 +86,11 @@ describe.skipIf(!enabled)("offline native Forms metadata migration", () => {
                 managedReleaseReader(mongo.client, support, f.endpoint),
                 new SystemBootstrap(f.bootstrap),
             );
+            expect(
+                (await f.stores.selections.get("default"))!.plan.selections.some(
+                    (pin) => pin.contractId === "ulvia/repository",
+                ),
+            ).toBe(false);
             expect((await formsMigrationPlan(mongo.client, f.artifacts, f.endpoint)).instances).toBe(0);
             await mongo.client.db().collection("ulvia_provider_instances").deleteOne({ id: instance.id });
             await f.db.dropDatabase();

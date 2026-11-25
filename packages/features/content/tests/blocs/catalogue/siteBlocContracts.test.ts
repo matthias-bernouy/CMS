@@ -30,6 +30,33 @@ describe("site Bloc contracts", () => {
         expect((await listCmsSiteBlocs(repository)).items).toHaveLength(1);
     });
 
+    test("publishes allowed inline rich text and retains component root restrictions", async () => {
+        const repository = new ValidatingContentRepository(new InMemoryContentRepository());
+        const content =
+            "<section><p>A <strong>bold</strong>, <em>emphasized</em> and <code>code</code> text.</p></section>";
+        const created = await createCmsSiteBloc(repository, {
+            tag: "site-rich-text",
+            name: "Rich text",
+            group: "Site",
+            content,
+        });
+        await publishCmsSiteBloc(repository, { tag: created.tag, revision: created.draftRevision });
+        expect((await repository.getBlocRecord(created.tag))?.artifact?.markupHTML).toBe(`${content}\n`);
+        const snapshot = (await repository.getBlocRecord(created.tag))!.siteDefinition!.published!;
+        expect(() =>
+            serializeSiteBlocMarkup({
+                ...snapshot,
+                structure: [{ kind: "bloc", tag: "fixture-component", root: "strong", attributes: {}, children: [] }],
+            }),
+        ).toThrow("Invalid native root");
+        expect(() =>
+            serializeSiteBlocMarkup({
+                ...snapshot,
+                structure: [{ kind: "bloc", tag: "strong", attributes: {}, children: [] }],
+            }),
+        ).toThrow("inside rich text");
+    });
+
     test("preserves the native root carrying a component Bloc", async () => {
         const structure = siteBlocStructureFromMarkup(
             '<section cms-bloc="ulvia--mossa--hero" tone="soft"><p>Welcome</p></section>',

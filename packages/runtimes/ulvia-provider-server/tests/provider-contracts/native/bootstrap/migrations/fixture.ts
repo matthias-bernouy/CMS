@@ -1,3 +1,7 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { admitContractBundleJson } from "@bernouy/ulvia-contracts";
+import { compileRetainedFeatures } from "@bernouy/ulvia-provider/build";
 import { formsMigrationContracts } from "@bernouy/forms/migration/mongo";
 import { publishContractSet } from "@bernouy/repository/contracts/catalogue";
 import { admitProviderManifest } from "@bernouy/ulvia-providers";
@@ -13,6 +17,18 @@ export async function migrationFixture(mongo: MongoClient, version: "1.0.0" | "1
     const bootstrap = await repositoryFixture();
     const artifacts = await loadSystemArtifacts(bootstrap.providers);
     const legacy = (await formsMigrationContracts()).find((item) => item.release.version === version)!;
+    const registrySnapshot = (await compileRetainedFeatures())
+        .flatMap((build) => build.contracts)
+        .find((row) => row.release.contractId === "ulvia/repository" && row.release.version === "1.3.0")!;
+    const previousRegistry = await admitContractBundleJson(
+        registrySnapshot.canonicalJson,
+        await Promise.all(
+            (registrySnapshot.release.documentation ?? []).map(async (document) => ({
+                id: `docs/${document.path}`,
+                bytes: await readFile(join(import.meta.dir, "registry-1.3", document.path)),
+            })),
+        ),
+    );
     const registry = new MongoProviderInstanceRegistry(mongo.db());
     await registry.init();
     const key = crypto.randomUUID().replaceAll("-", "");
@@ -21,13 +37,18 @@ export async function migrationFixture(mongo: MongoClient, version: "1.0.0" | "1
     await publishContractSet(stores.releases, [
         ...bootstrap.contracts.filter((row) => row.release.contractId !== "ulvia/cms.forms"),
         legacy,
+        previousRegistry,
     ]);
     const old = await admitProviderManifest(
         {
             ...artifacts.manifest,
             version: "1.14.99",
             implementations: artifacts.manifest.implementations.map((pin) =>
-                pin.contractId === "ulvia/cms.forms" ? { ...pin, version, digest: legacy.digest } : pin,
+                pin.contractId === "ulvia/cms.forms"
+                    ? { ...pin, version, digest: legacy.digest }
+                    : pin.contractId === "ulvia/repository"
+                      ? { ...pin, version: previousRegistry.release.version, digest: previousRegistry.digest }
+                      : pin,
             ),
         },
         stores.releases,
@@ -100,5 +121,5 @@ export async function migrationFixture(mongo: MongoClient, version: "1.0.0" | "1
         pins.map((pin) => ({ ...pin, installationId: approved.installation.id, siteId: "default" })),
         0,
     );
-    return { bootstrap, artifacts, registry, instance, db, stores, endpoint, selected, legacy };
+    return { bootstrap, artifacts, registry, instance, db, stores, endpoint, selected, legacy, previousRegistry };
 }
