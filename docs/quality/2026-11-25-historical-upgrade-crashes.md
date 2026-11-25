@@ -53,7 +53,9 @@ ULVIA_RUN_UPGRADE_CRASH_JOURNEY=1 bun test packages/runtimes/ulvia-cli/tests/sta
 
 The fixture requires the pinned historical Git object, frozen Bun dependencies,
 Linux `setsid`, Chromium and Docker with host access to its private bridge.
-Historical image labels are checked against the pinned commit. The Git checkout
+Historical image labels are checked against the pinned commit. Historical sources
+are cached under `~/.codex/test-fixtures/ulvia-upgrades/` outside the test workspace,
+so Bun's filename filters cannot accidentally run the historical test suite. The Git checkout
 must retain that history; missing source evidence fails rather than substituting
 a different release. No image or npm package is remotely published.
 

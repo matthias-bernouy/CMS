@@ -1,10 +1,11 @@
+import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { mkdir } from "node:fs/promises";
 import { runCommand } from "../../../../src/runtime/process";
 export const historicalCommit = "bde42cc0f20953190832f9b8258edf86c07154cd";
 export const historicalVersion = "0.1.0-upgrade-source";
 export const workspace = resolve(import.meta.dir, "../../../../../../..");
-export const historicalSource = join(workspace, "artifacts/upgrade-historical", historicalCommit);
+export const historicalSource = join(homedir(), ".codex/test-fixtures/ulvia-upgrades", historicalCommit);
 export async function prepareHistoricalSource() {
     if (!(await Bun.file(join(historicalSource, "package.json")).exists())) {
         await mkdir(historicalSource, { recursive: true });
