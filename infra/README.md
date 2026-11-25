@@ -34,11 +34,15 @@ contracts and assets under `artifacts/distributions/<version>/`.
 `distribution/` completes the existing CLI receipt with image identities and a
 single catalogue fingerprint, then orchestrates publication. The archive and sole
 receipt are written directly under the versioned distribution; there is no separate
-distribution manifest or duplicated CLI output. `publish` uses only that snapshot and the saved
-Repository publisher connection, then Docker/npm credentials. It publishes
-contracts, the Provider manifest, images and the exact CLI archive. Repeating an
-identical publication resumes safely after partial completion. It never compiles
-sources or discovers unrelated resources in the personal CLI cache.
+distribution manifest or duplicated CLI output. `publish` uses only that snapshot.
+Its `runtime` phase publishes and verifies the images and exact CLI archive under
+a preparation npm tag, without contacting the Ulvia Repository. Its `catalogue`
+phase verifies the published runtime, sends declarations through the saved
+Repository publisher connection, then promotes the npm release channel. The
+default `all` phase runs both. Repeating the same phase with identical artifacts
+reconciles partial completion. Publication never compiles sources or discovers
+unrelated resources in the personal CLI cache. See [phased publication](../docs/development/publication.md)
+for receiver upgrades, credentials, registry checks and concurrency limits.
 
 Contract and Provider manifest versions evolve independently of the distribution.
 Neither build nor publish upgrades running installations. The generic trusted

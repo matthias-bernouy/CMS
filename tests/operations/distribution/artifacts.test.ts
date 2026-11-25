@@ -136,3 +136,25 @@ test.each(["file", "directory"])("symbolic %s cannot redirect receipt reads or w
         await f.close();
     }
 });
+
+test.each(["component", "origin", "identity"])(
+    "catalogue publication refuses forged %s evidence before any registry request",
+    async (mode) => {
+        const f = await distributionFixture();
+        try {
+            const images = [...f.images];
+            images[0] = {
+                ...images[0]!,
+                ...(mode === "component"
+                    ? { component: "provider" as const }
+                    : mode === "origin"
+                      ? { reference: "docker.io/foreign/image:1.2.3" }
+                      : { id: "sha256:invalid" }),
+            };
+            await writeFile(receiptPath(f.destination, f.version), JSON.stringify({ ...f.receipt, images }));
+            await expect(readReceipt(f.destination, f.version)).rejects.toThrow("Invalid or modified");
+        } finally {
+            await f.close();
+        }
+    },
+);

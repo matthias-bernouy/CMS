@@ -19,6 +19,7 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   browser boundaries.
 - [Resolved schemas](development/resolved-schemas.md): shared event/capability typing, typed resolvers and host guarantees.
 - [Development](development/README.md): local startup, builds and validation.
+- [Phased distribution publication](development/publication.md): publish the exact runtime before catalogue admission and promote the npm channel after completion.
 - [Shared hosting validation](development/shared-hosting-validation.md): requirement
   evidence, reproducible checks and deployment limits for the fresh baseline.
 - [Infrastructure tooling](../infra/README.md): release packaging, images, models
@@ -71,6 +72,7 @@ completed browser journey or deployment.
 - [Files and responsive images](images/README.md).
 - [UI contracts](quality/ui-contracts.md): binding ownership, browser request
   diagnostics, source/form checks and current scanner limitations.
+- [Phased publication verification (2026-11-25)](quality/2026-11-25-publication-phases.md)
 - [Publication refusal diagnostics (2026-11-25)](quality/2026-11-25-publication-diagnostics.md)
 - [Default HTTP error documents — 2026-11-25](quality/2026-11-25-default-error-pages.md): unbranded offline design, French/English negotiation, host isolation and maintenance fallbacks.
 - [System upgrade maintenance Pages — 2026-11-25](quality/2026-11-25-system-upgrade-maintenance-pages.md): independent proxy snapshots, public capture, TLS and crash recovery evidence.

@@ -142,32 +142,26 @@ identities and one SHA-256 over the sorted catalogue paths and file hashes. It h
 no schema/dialect marker or duplicated resource inventory. This directory is ignored by Git.
 Builds never change the personal CLI release cache or running installations.
 
-`publish --version` consumes only that snapshot. It verifies all files, both image
-identities, the saved Repository connection and npm's existing version before
-publishing contracts in dependency order, the Provider manifest, both images, and
-finally the exact CLI tarball. Repository publication uses the connection established
-by `bun run ulvia -- repository login <url>`; Docker and npm use their normal
-external credentials. It never calls `push all` against the personal release cache.
+`publish --version` consumes only that snapshot. Its default `all` phase publishes
+and verifies the runtime (Provider/Edge images and exact CLI archive), then the
+catalogue, then the npm release channel. `--phase runtime` can publish without
+contacting the receiving Ulvia Repository; `--phase catalogue` verifies that runtime
+before publishing declarations and promoting `latest` or `next`. The runtime CLI
+is initially published under `runtime-<version>`, leaving both release channels
+unchanged. See [phased publication](publication.md) for exact commands and the
+bootstrap sequence when the receiving Repository needs a newer validator.
 
-The three destinations are not one transaction. On failure, repeat the same
-`publish --version`: Repository retries are idempotent, Docker retries push the
-same local images, and an existing npm version succeeds only when its SHA-512
-integrity matches the built archive. Changed artifacts or npm content conflicts fail.
-No build or source regeneration runs during publication. Incomplete or older build
-receipts missing image identities or the catalogue fingerprint require a new build. The CLI and initial Docker
-stack share the distribution version; contract and manifest versions remain independent.
-Prereleases use npm's `next` tag; stable versions use `latest`.
+The three destinations are not one transaction. A catalogue failure can leave the
+runtime publicly available. Retry the reported phase with the same saved build;
+confirmed identical publications are reused, conflicting bytes refuse. Publishing
+never regenerates source or deploys a server. Catalogue publication uses the saved
+Repository connection, Docker publication uses Docker credentials, Bun publishes
+the CLI archive and npm CLI promotes its channel only after catalogue success.
 
-Expected Repository upload refusals stop `publish` with the exact release,
-completed count, receiving origin and failed transfer phase. Declared publication
-reasons are reconstructed locally; otherwise the CLI reports the HTTP status,
-recognized remote code and safe `x-ulvia-request-id` when present. It does not
-print arbitrary remote messages. A contract containing events receives an explicit
-possible runtime-compatibility hint for an opaque 409. This is not proof of the
-cause: an older Repository may discard the validation reason in both its response
-and journal. Publishing newer catalogue releases does not update the receiving
-Provider runtime; update the receiving stack before retrying formats it cannot admit.
-Expected Repository push failures exit with status 1 before Docker/npm publication.
+Publication failures report the phase, exact release and batch progress when
+available. HTTP refusals preserve bounded status/code/request-ID facts and declared
+safe publication guidance. Arbitrary remote messages are not printed; an opaque
+contract-event refusal identifies receiver compatibility only as a possible cause.
 
 ## Instance integration verification
 

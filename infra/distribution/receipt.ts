@@ -1,5 +1,6 @@
 import { lstat, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { COMPONENTS, imageReference } from "../images/inspection";
 import type { ImageArtifact } from "../images/inspection";
 import { catalogueHash, fileHash } from "./files";
 
@@ -48,6 +49,12 @@ export async function readReceipt(root: string, version: string): Promise<BuildR
         receipt.archive !== archive ||
         !Array.isArray(receipt.images) ||
         receipt.images.length !== 2 ||
+        receipt.images.some(
+            (image, index) =>
+                image?.component !== COMPONENTS[index] ||
+                image.reference !== imageReference(COMPONENTS[index]!, version) ||
+                !/^sha256:[a-f0-9]{64}$/u.test(image.id),
+        ) ||
         receipt.sha256 !== (await fileHash(join(root, "cli", archive))) ||
         receipt.catalogueSha256 !== (await catalogueHash(join(root, "repository")))
     ) {

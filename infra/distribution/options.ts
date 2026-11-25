@@ -30,3 +30,23 @@ export function distributionRoot(root: string, version: string): string {
     }
     return join(root, "artifacts/distributions", version);
 }
+
+export type PublicationPhase = "all" | "runtime" | "catalogue";
+export function publicationOptions(args: readonly string[]): { version: string; phase: PublicationPhase } {
+    const usage = "Usage: bun run publish --version <version> [--phase all|runtime|catalogue]";
+    const values = new Map<string, string>();
+    for (let index = 0; index < args.length; index += 2) {
+        const key = args[index]!;
+        const value = args[index + 1];
+        if (!["--version", "--phase"].includes(key) || values.has(key) || !value || value.startsWith("--")) {
+            throw new Error(usage);
+        }
+        values.set(key, value);
+    }
+    const version = values.get("--version");
+    const phase = values.get("--phase") ?? "all";
+    if (!isReleaseVersion(version) || !["all", "runtime", "catalogue"].includes(phase)) {
+        throw new Error(usage);
+    }
+    return { version, phase: phase as PublicationPhase };
+}

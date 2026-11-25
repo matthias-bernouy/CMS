@@ -66,6 +66,11 @@ apply keep their recorded deployment recovery; they do not create automatic data
 backups. A pending upgrade from a CLI without the maintenance journal must be
 finished with that original CLI or recovered using an explicit complete backup.
 
+The publisher can make the exact runtime available before catalogue admission when
+the receiving Repository needs a newer validator. See [phased distribution
+publication](publication.md). This preserves explicit installation upgrades and
+does not perform deployment from the publisher.
+
 ## Protected upgrades and complete rollback
 
 `ulvia upgrade --version VERSION --plan` runs the target image's bounded, read-only
