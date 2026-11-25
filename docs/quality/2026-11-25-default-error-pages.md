@@ -3,7 +3,7 @@
 ## Behavior
 
 Public requests without a usable instance-owned error Page now receive a
-self-contained Ulvia HTML document. Missing/gone Pages keep 404/410, rendering
+self-contained HTML document. Missing/gone Pages keep 404/410, rendering
 failures keep 500, and unavailable content/hosting keeps 503. Configured published
 Pages retain priority and their existing access checks. Draft/private content does
 not become public. Unknown/inactive hosts never borrow another tenant's content.
@@ -11,7 +11,9 @@ Technical protocol refusals and non-Page methods retain their existing handling.
 
 The visual direction follows the public [Cyaxis site](https://cyaxis.fr/): white
 background, black typography, orange `#f4511e`, rectangular actions and generous
-spacing. The error document uses only inline CSS and system fonts. It has no
+spacing. The final copy uses direct labels such as “Page introuvable”, “Site indisponible”,
+“Page not found” and “Site unavailable”. The error document uses only inline CSS
+and system fonts. It has no
 scripts, external assets, forms or dependency on CMS persistence. Built-in links
 return to `/` or retry the current address without inserting request data.
 
@@ -27,8 +29,8 @@ this mechanism.
 ## Ownership and downtime
 
 `@bernouy/http-runner/html` owns the generic, browser-safe document factory,
-negotiation and static response helper. Callers provide the Ulvia brand; Foundation
-contains no CMS state. Content owns configured Page lookup and chooses the static
+negotiation and static response helper. Documents have no logo, brand name or
+platform credit, including in their HTML title. Foundation contains no CMS state. Content owns configured Page lookup and chooses the static
 fallback. The Edge surface owns public host/resource failure responses. The shared
 Edge runtime reuses that surface without importing Content or a renderer.
 
@@ -52,11 +54,16 @@ Initial `bun run check` passed all ten gates before edits. Focused delivery,
 Edge and hosting tests passed 139 tests / 915 assertions before the additional
 localized host tests. The targeted generic/maintenance run passed 11 tests / 202
 assertions, including the actual pinned Caddy. Full verification is recorded in
-`artifacts/default-errors-verify.log`; final completion is recorded below.
+`artifacts/default-errors-verify-final.log` and finished with exit code 0, including
+historical process crashes, Access, Forms, native Edge/backup/restart and fresh /
+restarted ACME TLS. That broad run covered the delivery/language changes; the final
+branding removal and copy revision then passed 24 focused tests / 324 assertions
+and all ten static gates. The final Provider image probe is recorded separately
+in `artifacts/default-errors-provider-current-tests.log`.
 
 Relevant tests:
 
-- Foundation `tests/http/errorDocument.test.ts`: HTML escaping, offline documents,
+- Foundation `tests/http/errorDocument.test.ts`: fixed unbranded documents, rejected unsupported languages,
   language ordering/quality/exclusions, HEAD, error status and safe headers.
 - Content `rendering/renderRef.test.ts`: private/draft refusal, language selection
   and explicit Page-language precedence without leaking request data.
@@ -64,6 +71,11 @@ Relevant tests:
   hosts, zero tenant construction, bodyless protocol refusals and private diagnostics.
 - CLI `maintenance/presentation/language.native.test.ts`: real Caddy negotiation,
   custom Page priority, template injection isolation and bodyless HEAD.
+
+Contract/collection maintenance also negotiates built-in defaults after reopening
+its persisted snapshot. That path keeps its single projected database read;
+authored snapshots are unchanged. The focused maintenance tests passed 8 tests
+and 57 assertions before the final copy revision.
 
 No new database, Gateway or network operation runs on the built-in response path.
 The existing Page-reference lookup is unchanged; Edge failures still fail before

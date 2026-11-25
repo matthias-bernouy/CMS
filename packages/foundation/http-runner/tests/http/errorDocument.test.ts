@@ -1,20 +1,19 @@
 import { expect, test } from "bun:test";
 import { createHttpErrorPages, staticErrorResponse, selectErrorLanguage } from "@bernouy/http-runner/html";
 
-test("offline error documents escape host branding and have no scripts, forms or external dependencies", () => {
+test("offline error documents have simple copy, no branding, scripts, forms or external dependencies", () => {
     for (const language of ["en", "fr"] as const) {
-        const pages = createHttpErrorPages('Example <script>alert(1)</script> "', language);
+        const pages = createHttpErrorPages(language);
         for (const [status, page] of Object.entries(pages)) {
             expect(page).toContain(`<html lang="${language}">`);
             expect(page).toContain(status);
-            expect(page).toContain("&lt;script&gt;");
+            expect(page.toLowerCase()).not.toContain("ulvia");
+            expect(page).not.toMatch(/Powered by|Propulsé par/u);
             expect(page).not.toContain("<script");
             expect(page).not.toMatch(/<form|https?:|src=/u);
         }
     }
-    expect(() => createHttpErrorPages(" ")).toThrow();
-    expect(() => createHttpErrorPages("Ulvia", 'en" onclick="alert(1)' as never)).toThrow();
-    expect(() => createHttpErrorPages("x".repeat(81))).toThrow();
+    expect(() => createHttpErrorPages('en" onclick="alert(1)' as never)).toThrow();
 });
 test("language preferences honor region, weight, order, exclusions and explicit page language", () => {
     for (const [header, expected] of [
@@ -36,7 +35,7 @@ test("language preferences honor region, weight, order, exclusions and explicit 
     expect(selectErrorLanguage("x".repeat(4097))).toBe("en");
 });
 test("HEAD is bodyless and conditional error requests retain their status and language", async () => {
-    const pages = createHttpErrorPages("Ulvia", "fr");
+    const pages = createHttpErrorPages("fr");
     for (const status of [404, 410, 500, 503] as const) {
         const request = new Request("http://site.test/<unsafe>?private=secret", { headers: { "if-none-match": "*" } });
         const response = staticErrorResponse(request, status, pages, undefined, "fr");

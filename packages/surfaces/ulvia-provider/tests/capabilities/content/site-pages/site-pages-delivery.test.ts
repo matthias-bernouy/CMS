@@ -68,7 +68,7 @@ test("MCP-selected error and login Pages are used by public Content delivery", a
     const cleared = await delivery.resolvePath({ path: "/missing", method: "GET", query: [] }, { kind: "anonymous" });
     expect(cleared.status).toBe(404);
     expect(cleared.headers.get("content-type")).toContain("text/html");
-    expect(await cleared.text()).toContain("Nothing at this address.");
+    expect(await cleared.text()).toContain("Page not found");
     const french = await delivery.resolvePath(
         { path: "/missing", method: "GET", query: [] },
         { kind: "anonymous" },
@@ -77,7 +77,7 @@ test("MCP-selected error and login Pages are used by public Content delivery", a
     );
     expect(french.status).toBe(404);
     expect(french.headers.get("content-language")).toBe("fr");
-    expect(await french.text()).toContain("Cette page s’est égarée.");
+    expect(await french.text()).toContain("Page introuvable");
     const noLogin = await delivery.resolvePath({ path: "/private", method: "GET", query: [] }, { kind: "anonymous" });
     expect(noLogin.status).toBe(503);
 });

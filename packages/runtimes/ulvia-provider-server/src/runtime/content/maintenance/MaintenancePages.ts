@@ -1,3 +1,4 @@
+import { createHttpErrorPages, selectErrorLanguage, staticErrorResponse } from "@bernouy/http-runner/html";
 import type { Collection, Db } from "mongodb";
 import { MAINTENANCE_HTML, MAINTENANCE_LIMITS } from "@bernouy/content/public-delivery";
 import type { MaintenancePage } from "@bernouy/content/public-delivery";
@@ -8,6 +9,7 @@ type StoredPage = {
     resources: { contentType: string; base64: string }[];
     expiresAt?: Date;
 };
+const DEFAULT_PAGES = { en: createHttpErrorPages(), fr: createHttpErrorPages("fr") };
 const PREFIX = "/_content/maintenance/";
 const HEADERS = { "cache-control": "no-store", "retry-after": "60", "x-robots-tag": "noindex, nofollow" };
 
@@ -103,6 +105,10 @@ export class MaintenancePages {
         const page = await this.pages.findOne({ _id: this.key(this.siteId, id) }, { projection: { html: 1 } });
         if (page && (typeof page.html !== "string" || Buffer.byteLength(page.html) > MAINTENANCE_LIMITS.bytes)) {
             throw new TypeError("Invalid persisted maintenance Page");
+        }
+        if (!page || page.html === MAINTENANCE_HTML) {
+            const language = selectErrorLanguage(request.headers.get("accept-language"));
+            return staticErrorResponse(request, 503, DEFAULT_PAGES[language], "60", language);
         }
         return new Response(request.method === "HEAD" ? null : (page?.html ?? MAINTENANCE_HTML), {
             status: 503,

@@ -42,7 +42,7 @@ describe("renderRef", () => {
 
         expect(res.status).toBe(404);
         expect(res.headers.get("content-type")).toContain("text/html");
-        expect(await res.text()).toContain("Nothing at this address.");
+        expect(await res.text()).toContain("Page not found");
         expect(edge.calls).toEqual(["resolve:404", "render:/404"]);
     });
 
@@ -58,7 +58,7 @@ describe("renderRef", () => {
 
         expect(res.status).toBe(500);
         expect(res.headers.get("content-type")).toContain("text/html");
-        expect(await res.text()).toContain("Something went wrong.");
+        expect(await res.text()).toContain("An error occurred");
         expect(edge.calls).toEqual(["resolve:500", "render:/500"]);
     });
 
@@ -80,11 +80,11 @@ test("built-in Pages follow browser preferences or a known Page language without
     const response = await renderRef(request, delivery, "serverError", 503, "Service unavailable");
     expect(response.headers.get("content-language")).toBe("fr");
     const html = await response.text();
-    expect(html).toContain("De retour dans un instant.");
+    expect(html).toContain("Site indisponible");
     expect(html).not.toContain("secret=hidden");
     const english = await renderRef(request, delivery, "serverError", 503, "Service unavailable", "en");
     expect(english.headers.get("content-language")).toBe("en");
-    expect(await english.text()).toContain("Back in a moment.");
+    expect(await english.text()).toContain("Site unavailable");
     const head = await renderRef(
         new Request(request, { method: "HEAD" }),
         delivery,

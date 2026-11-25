@@ -1,6 +1,6 @@
 import { createHttpErrorPages, staticErrorResponse, selectErrorLanguage } from "@bernouy/http-runner/html";
-export const DEFAULT_ERROR_PAGES = createHttpErrorPages("Ulvia");
-const PAGES = { en: DEFAULT_ERROR_PAGES, fr: createHttpErrorPages("Ulvia", "fr") };
+export const DEFAULT_ERROR_PAGES = createHttpErrorPages();
+const PAGES = { en: DEFAULT_ERROR_PAGES, fr: createHttpErrorPages("fr") };
 export function defaultErrorResponse(
     request: Pick<Request, "method"> & Partial<Pick<Request, "headers">>,
     status: number,

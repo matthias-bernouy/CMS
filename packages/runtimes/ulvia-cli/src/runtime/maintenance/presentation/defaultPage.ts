@@ -1,6 +1,6 @@
 import { createHttpErrorPages } from "@bernouy/http-runner/html";
-const en = createHttpErrorPages("Ulvia")[503];
-const fr = createHttpErrorPages("Ulvia", "fr")[503];
+const en = createHttpErrorPages()[503];
+const fr = createHttpErrorPages("fr")[503];
 /** Only code-owned documents enter this template. Authored snapshots are never evaluated. */
 export function defaultMaintenancePage() {
     const negotiate = `{{- $lang := "en" -}}{{- $best := 0.0 -}}{{- $header := .Req.Header.Get "Accept-Language" -}}

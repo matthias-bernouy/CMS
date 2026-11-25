@@ -72,3 +72,33 @@ test("failed and oversized preparation does not publish a partial snapshot", asy
     await f.pages.prepare("site", id);
     expect(f.rows.size).toBe(1);
 });
+
+test("contract maintenance negotiates built-in defaults after reopening, keeping authored snapshots intact", async () => {
+    const f = fixture();
+    await f.pages.prepare("site", id);
+    const reopened = f.reopen();
+    for (const method of ["GET", "HEAD"]) {
+        const input = new Request("https://site.test/article", {
+            method,
+            headers: { "accept-language": "en;q=0.5,fr-CA;q=0.9" },
+        });
+        const before = f.reads.length;
+        const response = (await reopened.page(input, id))!;
+        expect(f.reads.length - before).toBe(1);
+        expect(response.status).toBe(503);
+        expect(response.headers.get("content-language")).toBe("fr");
+        expect(response.headers.get("vary")).toBe("Accept-Language");
+        if (method === "HEAD") {
+            expect(response.body).toBeNull();
+        } else {
+            expect(await response.text()).toContain("Site indisponible");
+        }
+    }
+    const row = [...f.rows.values()][0]!;
+    row.html = "<html>Custom snapshot</html>";
+    const custom = (await reopened.page(
+        new Request("https://site.test/article", { headers: { "accept-language": "fr" } }),
+        id,
+    ))!;
+    expect(await custom.text()).toBe(row.html);
+});

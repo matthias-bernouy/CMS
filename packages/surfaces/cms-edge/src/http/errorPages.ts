@@ -1,6 +1,6 @@
 import { createHttpErrorPages, staticErrorResponse, selectErrorLanguage } from "@bernouy/http-runner/html";
 import { isEdgeReservedPath } from "./reservedPaths";
-const PAGES = { en: createHttpErrorPages("Ulvia"), fr: createHttpErrorPages("Ulvia", "fr") };
+const PAGES = { en: createHttpErrorPages(), fr: createHttpErrorPages("fr") };
 /** Public failures have an offline document; technical protocols retain their bodyless refusal. */
 export function publicErrorResponse(request: Request, status: 404 | 503) {
     const language = selectErrorLanguage(request.headers.get("accept-language"));
