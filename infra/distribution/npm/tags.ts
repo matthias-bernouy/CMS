@@ -1,12 +1,16 @@
+import { confirmNpm } from "./confirmation";
 import { compareSemVer } from "@bernouy/ulvia-contracts/compatibility";
 import { isReleaseVersion } from "../options";
-import { CLI_PACKAGE, NPM_REGISTRY, npmMetadata } from "./registry";
+import { CLI_PACKAGE, NPM_REGISTRY, npmMetadata, NpmMetadataUnavailableError } from "./registry";
 import type { NpmTransport } from "./registry";
 
 export async function promoteNpm(version: string, transport: NpmTransport): Promise<void> {
     const tag = version.includes("-") ? "next" : "latest";
-    async function current(): Promise<string | undefined> {
-        const values = await npmMetadata("-/package/@cyaxis%2Fulvia/dist-tags", transport);
+    async function current(signal?: AbortSignal): Promise<string | undefined> {
+        const values = await npmMetadata("-/package/@cyaxis%2Fulvia/dist-tags", transport, signal);
+        if (values === undefined) {
+            throw new NpmMetadataUnavailableError("npm dist-tags metadata is not yet visible");
+        }
         if (!values || typeof values !== "object" || Array.isArray(values) || Object.keys(values).length > 8192) {
             throw new Error("Invalid npm dist-tags response");
         }
@@ -37,7 +41,10 @@ export async function promoteNpm(version: string, transport: NpmTransport): Prom
     } catch (error) {
         uncertain = error;
     }
-    if ((await current()) !== version) {
-        throw new Error(`npm ${tag} promotion is not confirmed; retry the catalogue phase`, { cause: uncertain });
-    }
+    await confirmNpm(
+        async (signal) => (await current(signal)) === version,
+        `npm ${tag} promotion`,
+        transport.confirmation,
+        uncertain,
+    );
 }

@@ -9,7 +9,7 @@ test.each(["1.2.3", "1.2.3-beta.1"])(
         const f = await npmFixture(version);
         try {
             const publication = await prepareNpmPublication(f.archive, version, f.transport);
-            await expect(publication.verify()).rejects.toThrow("runtime phase first");
+            await expect(publication.verify()).rejects.toThrow("not confirmed after 20 minutes");
             await publication.publish();
             await publication.verify();
             expect(f.calls[0]).toContain(`runtime-${version}`);

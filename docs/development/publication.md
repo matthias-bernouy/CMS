@@ -85,6 +85,24 @@ lost acknowledgements reconciled by reading remote state. Failures report the
 phase and an explicit resume command; no cross-registry rollback is attempted.
 No local completion journal is trusted as evidence of a remote publication.
 
+After a CLI upload or npm channel write, confirmation polls public registry
+metadata with exponential delays from one second up to 30 seconds, for at most
+20 minutes per confirmation. Progress output distinguishes waiting from success.
+Missing metadata, transient connection failures and HTTP 429/500/502/503/504 can
+be retried during confirmation. HTTP authorization refusals, malformed metadata
+and mismatched archive integrity still fail immediately. Preflight read failures
+remain refusals before a write. Existing `no-cache` requests do not guarantee
+immediate availability: npm can process a newly uploaded package before exposing
+it. See [npm publish-time scanning](https://github.blog/changelog/2026-07-28-npm-publish-time-malware-scanning-and-dual-use-metadata/).
+
+Confirmation repeats reads, never the upload or channel write. An exhausted
+window leaves publication unconfirmed and reports the same-build resume command;
+it does not treat absence as permission to replace release bytes. A fresh process
+has no durable pending-upload journal: if a previous accepted version is still
+hidden, another invocation can attempt an upload, which npm's immutable-version
+rule must reject; it then reconciles through the same bounded reads. Once the
+matching version is visible, retries skip its upload.
+
 ## Registry checks and operating limits
 
 Docker publication checks the official public Docker Hub manifests against the

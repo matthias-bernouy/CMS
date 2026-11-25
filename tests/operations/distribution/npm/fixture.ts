@@ -9,7 +9,18 @@ export async function npmFixture(version = "1.2.3") {
     const calls: readonly string[][] = [];
     let stored = false;
     let uncertain = false;
+    let elapsed = 0;
+    const waits: number[] = [];
+    const messages: string[] = [];
     const transport: NpmTransport = {
+        confirmation: {
+            now: () => elapsed,
+            sleep: async (milliseconds) => {
+                waits.push(milliseconds);
+                elapsed += milliseconds;
+            },
+            report: (message) => messages.push(message),
+        },
         fetch: async (url, options) => {
             if (options.redirect !== "error") {
                 throw new Error("Redirect protection missing");
@@ -37,6 +48,9 @@ export async function npmFixture(version = "1.2.3") {
     return {
         ...f,
         integrity,
+        waits,
+        messages,
+        elapsed: () => elapsed,
         tags,
         calls,
         transport,
