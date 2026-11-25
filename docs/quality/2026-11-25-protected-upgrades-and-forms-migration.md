@@ -78,6 +78,29 @@ stages through `infra/workspace.ts`. Focused regression checks also covered the
 reviewed new Forms digest, changed upgrade failure expectations and portable
 source archive integrity. A real performance measurement campaign was not run.
 
+## Final verification
+
+`bun run verify` completed with exit code 0 on implementation commit `b579f8bb7`,
+rebased onto `3ad355e3e`, in the original task worktree on 2026-11-25. The retained
+operator log is `artifacts/forms-migration-verify-final.log` in that worktree.
+
+| Stage | Result |
+| --- | --- |
+| Static checks | 10 passed, including architecture, typecheck, style and dead code |
+| General test suite | 4,688 passed, 160 gated/skipped, zero failures across 1,271 files |
+| Dedicated collection browser tests | 4 passed |
+| Dedicated capture/browser tests | 11 passed |
+| Content/observability/email-template integration | 18 passed |
+| Access/Forms/Events/Workflow standalone Mongo | 39 passed, including migration and replacement-denial cases |
+| Native Access, Forms and complete hosting/backup journeys | All three passed |
+| Real HTTPS/ACME permission and certificate restart | Both passed |
+| Static performance inventory/harness | 314 executors, 2,343 scenarios, no missing definitions or budgets |
+
+The gated tests above are not claimed as executed by the general stage; dedicated
+stages explicitly opt into their supported Mongo/browser/native journeys. Native
+Forms completed with 195 assertions in this final run. Earlier assertion counts
+in this report describe the recorded first native run, not a deterministic budget.
+
 ## Boundaries and review notes
 
 Backup/restore authority is local operator filesystem/Docker access, not a tenant
