@@ -36,6 +36,11 @@ export function workspaceSteps(action: string | undefined, args: string[]): Work
             continueOnFailure: true,
         },
         {
+            args: ["bun", "test", "./tests/operations/distribution/images/native/publication.native.test.ts"],
+            env: { ULVIA_RUN_IMAGE_PUBLICATION: "1" },
+            continueOnFailure: true,
+        },
+        {
             args: ["bun", "test", "./tests/integration/collections/animations.browser.test.ts"],
             env: { ULVIA_RUN_COLLECTION_STYLE_BROWSER: "1" },
             continueOnFailure: true,

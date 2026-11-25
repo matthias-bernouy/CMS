@@ -12,7 +12,7 @@ export type ImageRegistryTransport = {
     run: (args: readonly string[], options?: CommandOptions) => Promise<unknown>;
 };
 
-/** Compare the registry's content-addressed config identity with the exact locally inspected build. */
+/** Match the inspected Docker store ID against the verified index, manifest or config address. */
 export async function remoteImageIdentity(
     image: ImageArtifact,
     request: RegistryFetch = fetch,
@@ -32,14 +32,15 @@ export async function remoteImageIdentity(
         return null;
     }
     const descriptor = runtimeDescriptor(root.value);
-    if (!descriptor) {
-        return imageConfig(root.value);
-    }
-    const manifest = await read(descriptor.digest, descriptor.size);
+    const manifest = descriptor ? await read(descriptor.digest, descriptor.size) : root;
     if (!manifest) {
         throw new Error("Published Docker image references a missing runtime manifest");
     }
-    return imageConfig(manifest.value);
+    const config = imageConfig(manifest.value);
+    if (image.id === root.digest || image.id === manifest.digest) {
+        return image.id;
+    }
+    return config;
 }
 
 export async function prepareImagePublication(

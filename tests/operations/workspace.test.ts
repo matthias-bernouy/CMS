@@ -11,6 +11,10 @@ test("verify retains functional acceptance and static performance guards without
     const steps = workspaceSteps("verify", []);
     expect(steps.filter(({ args }) => args.includes("infra/bootstrap.ts"))).toHaveLength(1);
     expect(steps.filter(({ args }) => args.includes("build:browser"))).toHaveLength(1);
+    expect(steps.find(({ env }) => env?.ULVIA_RUN_IMAGE_PUBLICATION === "1")).toMatchObject({
+        args: ["bun", "test", "./tests/operations/distribution/images/native/publication.native.test.ts"],
+        continueOnFailure: true,
+    });
     expect(steps.find(({ env }) => env?.ULVIA_RUN_EDGE_SMOKE === "1")?.args).toContain(
         "packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts",
     );

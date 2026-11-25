@@ -2,6 +2,11 @@
 
 Date: 2026-11-25. Base: `a1e964808` on `v1.0.23`.
 
+The config-only image-ID assumption below was subsequently corrected. See the
+[Docker identity correction](2026-11-25-docker-publication-identity.md) for the
+observed Docker 29 failure and the real local-registry regression journey.
+The results below describe the original patch and its earlier test scope.
+
 ## Implemented boundary
 
 The workspace publisher accepts `--phase runtime`, `--phase catalogue` and default

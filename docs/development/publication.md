@@ -88,11 +88,15 @@ No local completion journal is trusted as evidence of a remote publication.
 ## Registry checks and operating limits
 
 Docker publication checks the official public Docker Hub manifests against the
-image config SHA-256 recorded by local image inspection. Manifest bytes, their
-reported digests and referenced runtime manifests are checked; an existing tag
-with a different config identity is refused. Exactly one runtime platform per
-component is supported, with optional matching BuildKit attestation descriptors.
-Layer transfer and validation remain Docker's responsibility. Publication uses
+image ID recorded by local image inspection. Depending on Docker’s image store,
+that ID can address the OCI index, the runtime manifest, or its configuration.
+Manifest bytes, their reported digests and referenced runtime manifests are checked
+before matching the recorded ID against those verified addresses. A different
+index cannot satisfy an index-pinned receipt even when its runtime config is
+unchanged. Exactly one runtime platform per component is supported, with optional
+matching BuildKit attestation descriptors.
+Existing build receipts need no conversion or rebuild. Layer transfer and
+validation remain Docker's responsibility. Publication uses
 ordinary Docker credentials; public metadata reads use ephemeral pull grants
 restricted to the official repositories and fixed registry/auth origins, following the [Registry V2 API](https://distribution.github.io/distribution/spec/api/) and [token protocol](https://distribution.github.io/distribution/spec/auth/token/).
 

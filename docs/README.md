@@ -72,6 +72,7 @@ completed browser journey or deployment.
 - [Files and responsive images](images/README.md).
 - [UI contracts](quality/ui-contracts.md): binding ownership, browser request
   diagnostics, source/form checks and current scanner limitations.
+- [Docker publication identity correction (2026-11-25)](quality/2026-11-25-docker-publication-identity.md): real registry publication and exact-build retry coverage.
 - [Phased publication verification (2026-11-25)](quality/2026-11-25-publication-phases.md)
 - [Publication refusal diagnostics (2026-11-25)](quality/2026-11-25-publication-diagnostics.md)
 - [Default HTTP error documents — 2026-11-25](quality/2026-11-25-default-error-pages.md): unbranded offline design, French/English negotiation, host isolation and maintenance fallbacks.
