@@ -7,7 +7,7 @@ import type { EnvironmentProfile, ImageIdentity } from "../../reporting/types";
 export const RESOURCE_LIMITS = {
     provider: { cpus: 2, memoryBytes: 2 * 1024 ** 3 },
     edge: { cpus: 1, memoryBytes: 1024 ** 3 },
-    mongo: { cpus: 2, memoryBytes: 1024 ** 3 },
+    mongo: { cpus: 2, memoryBytes: 4 * 1024 ** 3 },
 } as const;
 
 export async function sourceProvenance(root = resolve(import.meta.dir, "../../../..")) {
