@@ -17,7 +17,7 @@ export {
     type NetworkBindingAttribute,
 } from "./networkBindingModel";
 
-const REQUEST_ATTRIBUTES: readonly NetworkBindingAttribute[] = ["src", "srcset"];
+const REQUEST_ATTRIBUTES: readonly NetworkBindingAttribute[] = ["src", "poster", "srcset"];
 const SELECTION_ATTRIBUTES: readonly NetworkBindingAttribute[] = ["sizes", "media"];
 const TEMPLATE_SELECTOR = "template";
 
@@ -112,7 +112,7 @@ export function writeNetworkBindingAttribute(
         return;
     }
 
-    if (networkGroupIsInert(element)) {
+    if (networkGroupIsInert(element) && (element.localName !== "video" || element.hasAttribute(inertName))) {
         element.setAttribute(inertName, value);
         element.removeAttribute(name);
         return;
@@ -124,18 +124,33 @@ export function writeNetworkBindingAttribute(
 
 /** Activates a validated same-site request URL only after its binding resolved. */
 export function activateResolvedNetworkBinding(element: Element, name: string, value: string | null): void {
-    if (!["iframe", "img"].includes(element.localName) || name !== inertAttributeName("src")) {
+    const attribute = name === inertAttributeName("poster") && element.localName === "video" ? "poster" : "src";
+    if (
+        !["iframe", "img", "video", "track", "source"].includes(element.localName) ||
+        name !== inertAttributeName(attribute)
+    ) {
         return;
     }
     const normalized = value ? normalizeInternalUrl(value) : null;
     if (!normalized) {
-        element.removeAttribute("src");
+        element.removeAttribute(attribute);
         return;
     }
-    element.setAttribute("src", normalized);
+    element.setAttribute(attribute, normalized);
 }
 
 function makeNetworkInert(element: Element): void {
+    if (element.localName === "video") {
+        // Film and poster are independent requests, unlike picture candidates.
+        for (const name of ["src", "poster"] as const) {
+            const value = readNetworkBindingAttribute(element, name);
+            if (isPendingRequestValue(value)) {
+                element.setAttribute(inertAttributeName(name), value!);
+                element.removeAttribute(name);
+            }
+        }
+        return;
+    }
     const authored = new Map(
         NETWORK_BINDING_ATTRIBUTES.map((name) => [name, readNetworkBindingAttribute(element, name)] as const),
     );

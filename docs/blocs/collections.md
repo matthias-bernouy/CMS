@@ -57,6 +57,7 @@ A retained Bloc may declare a bounded default slot accepting a
 `native-element`, such as an input or select enhanced by behavior. Root and
 child contracts each declare accepted native tags and constrained native
 attributes. This is ordinary slot validation, not a second content mechanism.
+See [native video](native-video.md) for video slots, site files and playback responsibilities.
 
 CSS is parsed, checked, and wrapped in
 `@scope ([cms-bloc="<id>"]) to (:scope [cms-bloc])` by the build. The lower

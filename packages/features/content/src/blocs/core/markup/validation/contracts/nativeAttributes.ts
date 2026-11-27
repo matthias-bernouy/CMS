@@ -64,6 +64,18 @@ const PLATFORM_NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> 
     ]),
     th: new Set(["scope"]),
     track: new Set(["src", "kind", "srclang", "label", "default"]),
+    video: new Set([
+        "src",
+        "poster",
+        "controls",
+        "muted",
+        "loop",
+        "playsinline",
+        "preload",
+        "autoplay",
+        "width",
+        "height",
+    ]),
 };
 
 const GLOBAL_RESERVED_SETTING_ATTRIBUTES = new Set([

@@ -62,6 +62,7 @@ export type ManagedNativeElementTag =
     | "summary"
     | "output"
     | "img"
+    | "video"
     | "svg"
     | "span";
 

@@ -73,12 +73,17 @@ export function validateSiteBlocDefaultContent(value: string, ownerTag?: string)
 /** Canonical fixed/default Bloc-document grammar shared by every Bloc producer. */
 export function validateBlocContentMarkup(
     value: string,
-    options: { readonly field: string; readonly kind: "default" | "fixed"; readonly ownerTag?: string },
+    options: {
+        readonly field: string;
+        readonly kind: "default" | "fixed";
+        readonly ownerTag?: string;
+        readonly parentTag?: string;
+    },
 ): BlocContentMarkupResult {
     const html = validateNativeMarkup(
         value,
         options.field,
-        options.kind === "default" ? options.ownerTag : undefined,
+        options.kind === "default" ? options.ownerTag : options.parentTag,
         {
             allowIncompleteMedia: options.kind === "default",
             rootIsComponentChild: options.kind === "default",

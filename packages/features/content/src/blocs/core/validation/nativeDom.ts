@@ -48,6 +48,12 @@ function elementIssue(
     options: NativeDomPolicyOptions,
 ): string | null {
     const tag = element.localName.toLowerCase();
+    if (tag === "track" && parentTag !== "video") {
+        return "native <track> must be a direct child of <video>";
+    }
+    if (tag === "video" && parentTag === "video") {
+        return "native <video> cannot contain another <video>";
+    }
     const bindingStructureIssue = bindingTreeIssue(element, parent);
     if (bindingStructureIssue) {
         return bindingStructureIssue;

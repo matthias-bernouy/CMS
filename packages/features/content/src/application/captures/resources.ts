@@ -34,12 +34,13 @@ export async function bundleCaptureResources(
         if (type.startsWith("text/html")) {
             const { document } = parseHTML(source);
             for (const element of document.querySelectorAll(
-                "script[src],link[href],img[src],source[src],video[poster],image[href]",
+                "script[src],link[href],img[src],source[src],video[src],video[poster],track[src],image[href]",
             )) {
-                const value =
-                    element.getAttribute("src") ?? element.getAttribute("poster") ?? element.getAttribute("href");
-                if (value) {
-                    add(new URL(value, url));
+                for (const name of ["src", "poster", "href"]) {
+                    const value = element.getAttribute(name);
+                    if (value) {
+                        add(new URL(value, url));
+                    }
                 }
             }
             for (const element of document.querySelectorAll("[srcset]")) {

@@ -27,7 +27,8 @@ describe("site bloc validation", () => {
         expect(validateBlocWrite({ ...artifact, root: { accepts: ["button", "a"] } }).root).toEqual({
             accepts: ["button", "a"],
         });
-        expect(() => validateBlocWrite({ ...artifact, root: { accepts: ["video"] as never[] } })).toThrow(/root/);
+        expect(() => validateBlocWrite({ ...artifact, root: { accepts: ["video"] } })).not.toThrow();
+        expect(() => validateBlocWrite({ ...artifact, root: { accepts: ["audio"] as never[] } })).toThrow(/root/);
         expect(
             validateBlocWrite({
                 ...artifact,

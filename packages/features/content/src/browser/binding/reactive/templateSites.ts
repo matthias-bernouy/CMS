@@ -54,6 +54,9 @@ export class AttributeSite implements LiveBindingSite {
             if (this.element.hasAttribute(this.name) !== present) {
                 this.element.toggleAttribute(this.name, present);
             }
+            if (this.element.localName === "video" && this.name === "muted") {
+                (this.element as HTMLVideoElement).muted = present;
+            }
             this.applyControl(next);
             return;
         }

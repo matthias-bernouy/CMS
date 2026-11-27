@@ -1,4 +1,9 @@
 const NATIVE_BOOLEAN_ATTRIBUTES = new Set([
+    "autoplay",
+    "controls",
+    "muted",
+    "loop",
+    "playsinline",
     "checked",
     "default",
     "disabled",

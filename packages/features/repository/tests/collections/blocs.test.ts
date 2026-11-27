@@ -53,7 +53,8 @@ describe("collection bloc admission", () => {
         expect(() => check([component({ root: "button" })])).toThrow("object");
         expect(() => check([component({ root: { accepts: [] } })])).toThrow("at least one");
         expect(() => check([component({ root: { accepts: ["a", "a"] } })])).toThrow("duplicate");
-        expect(() => check([component({ root: { accepts: ["video"] } })])).toThrow("must be one of");
+        expect(() => check([component({ root: { accepts: ["video"] } })])).not.toThrow();
+        expect(() => check([component({ root: { accepts: ["audio"] } })])).toThrow("must be one of");
         expect(() =>
             check([
                 component({

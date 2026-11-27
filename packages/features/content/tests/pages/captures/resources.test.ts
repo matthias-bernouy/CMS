@@ -34,31 +34,34 @@ test("bundling preserves visible URLs, inline scripts and CSS text instead of re
     expect(await document.files.get("style.css")!.text()).toBe(css);
     expect(document.files.has("image.png")).toBeTrue();
 });
-test("resource limits cancel a streamed body instead of retaining unbounded data", async () => {
-    let cancelled = false;
-    let count = 0;
-    await expect(
-        bundleCaptureResources(
-            '<img src="/_content/huge">',
-            "https://site.test",
-            "/page",
-            async () =>
-                new Response(
-                    new ReadableStream({
-                        pull(controller) {
-                            controller.enqueue(new Uint8Array(1024 * 1024));
-                            count++;
-                        },
-                        cancel() {
-                            cancelled = true;
-                        },
-                    }),
-                ),
-        ),
-    ).rejects.toThrow("LIMIT_EXCEEDED");
-    expect(cancelled).toBeTrue();
-    expect(count).toBeLessThan(70);
-});
+test.each(['<img src="/_content/huge">', '<video src="/_content/huge"></video>'])(
+    "resource limits cancel a streamed body: %s",
+    async (html) => {
+        let cancelled = false;
+        let count = 0;
+        await expect(
+            bundleCaptureResources(
+                html,
+                "https://site.test",
+                "/page",
+                async () =>
+                    new Response(
+                        new ReadableStream({
+                            pull(controller) {
+                                controller.enqueue(new Uint8Array(1024 * 1024));
+                                count++;
+                            },
+                            cancel() {
+                                cancelled = true;
+                            },
+                        }),
+                    ),
+            ),
+        ).rejects.toThrow("LIMIT_EXCEEDED");
+        expect(cancelled).toBeTrue();
+        expect(count).toBeLessThan(70);
+    },
+);
 
 test("Unicode Page entries retain their URL path and decoded resource key", async () => {
     const document = await bundleCaptureResources(
@@ -77,4 +80,19 @@ test("the root Page retains its exact URL and relative-resource base instead of 
     expect(document.path).toBe("");
     expect(await document.files.get("")!.text()).toBe(html);
     expect(document.files.has("photo.png")).toBeTrue();
+});
+
+test("video captures include each film, poster and caption once without external requests", async () => {
+    const reads: string[] = [];
+    const document = await bundleCaptureResources(
+        '<video src="/film.mp4" poster="/cover.webp"><track src="/captions.vtt"></video><video src="/film.mp4"><track src="https://outside.invalid/private"></video>',
+        "https://site.test",
+        "/film",
+        async (path) => {
+            reads.push(path);
+            return new Response("fixture bytes");
+        },
+    );
+    expect(reads).toEqual(["/film.mp4", "/cover.webp", "/captions.vtt"]);
+    expect(document.files.size).toBe(4);
 });

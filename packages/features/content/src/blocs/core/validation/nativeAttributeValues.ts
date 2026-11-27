@@ -1,3 +1,9 @@
+import {
+    nativeMediaAttributeIssue,
+    nativeMediaAttributeSetIssue,
+    isNativeMediaUrlAttribute,
+    isCmsMediaSource,
+} from "content/blocs/core/markup/validation/contracts/mediaAttributes";
 import { replaceContentTextExpressions } from "content/pages/core/rendering/contentTexts";
 import { isUserFacingTextAttribute } from "content/pages/core/rendering/userFacingTextAttributes";
 import { isSafeNavigationalUrl, normalizeInternalUrl } from "content/blocs/core/markup/security/safeUrl";
@@ -75,6 +81,9 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
     if (normalizedTag === "img" && normalizedAttribute === "src" && DYNAMIC_TOKEN.test(value) && !contributedAssetUrl) {
         return dynamicInternalUrlBindingIssue(value);
     }
+    if (isNativeMediaUrlAttribute(normalizedTag, normalizedAttribute) && DYNAMIC_TOKEN.test(value)) {
+        return dynamicInternalUrlBindingIssue(value);
+    }
     if (DYNAMIC_TOKEN.test(value) && isRuntimeBoundNativeAttribute(normalizedTag, normalizedAttribute)) {
         const issue = boundAttributeValueIssue(value, nativeAttributeBindingKind(normalizedAttribute));
         return issue === undefined ? `attribute "${attribute}" only accepts {{ expression }} bindings` : issue;
@@ -145,6 +154,9 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
     }
     if (normalizedTag === "svg") {
         return svgAttributeIssue(normalizedAttribute, value);
+    }
+    if (["video", "track", "source"].includes(normalizedTag)) {
+        return nativeMediaAttributeIssue(normalizedTag, normalizedAttribute, value);
     }
     return null;
 }
@@ -239,6 +251,12 @@ export function nativeAttributeSetIssue(tag: string, attributes: Readonly<Record
     }
 
     const normalizedTag = tag.toLowerCase();
+    if (normalizedTag === "track") {
+        const issue = nativeMediaAttributeSetIssue(normalizedAttributes);
+        if (issue) {
+            return issue;
+        }
+    }
     if (normalizedTag === "a") {
         const target = normalizedAttributes.target;
         const rel = normalizedAttributes.rel ?? "";
@@ -371,19 +389,10 @@ function svgAttributeIssue(attribute: string, value: string): string | null {
     return null;
 }
 
-export function isCmsMediaSource(value: string): boolean {
-    return (
-        value.startsWith("/") &&
-        !value.startsWith("//") &&
-        !/[\u0000-\u0020\u007F]/.test(value) &&
-        /\/\.cms\/call\/ulvia\/cms\.files\/files\/[^/?#]+\/[^/?#]+(?:\/representations\/(?:thumbnail|responsive)\/\d+\.webp)?(?:[?#].*)?$/.test(
-            value,
-        )
-    );
-}
-
 export function isContributedAssetSource(value: string): boolean {
     return /^\{\{\s*cms\.asset\.[a-z][a-z0-9.-]{0,95}\/[a-z][a-z0-9-]{0,95}\.[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*\s*\}\}$/u.test(
         value,
     );
 }
+
+export { isCmsMediaSource };

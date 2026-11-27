@@ -49,6 +49,7 @@ export const MANAGED_NATIVE_ELEMENT_TAGS = [
     "summary",
     "output",
     "img",
+    "video",
     "svg",
     "span",
 ] as const satisfies readonly ManagedNativeElementTag[];

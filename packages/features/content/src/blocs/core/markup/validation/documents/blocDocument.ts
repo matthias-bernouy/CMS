@@ -48,6 +48,10 @@ export function validateBlocDocument(
             field: "fixedContent",
             kind: "fixed",
             ownerTag: bloc.id,
+            parentTag:
+                bloc.kind === "component" && bloc.root.accepts.length === 1 && bloc.root.accepts[0] === "video"
+                    ? "video"
+                    : undefined,
         });
         validateFragment(fixed.html, bloc.id, known, unresolved, bloc.kind === "component");
         validateBindings(fixed.html, bindingOptions);
