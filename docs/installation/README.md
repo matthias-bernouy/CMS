@@ -9,7 +9,7 @@ integration coverage and deployment limits.
 ## 1. Prepare the server
 
 Install Docker Engine, its Compose plugin and Bun. The workspace toolchain uses
-Bun 1.4.4. Docker must run and be accessible to the account launching Ulvia.
+Bun 1.4.5. Docker must run and be accessible to the account launching Ulvia.
 
 - [Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
 - [Docker Compose plugin](https://docs.docker.com/compose/install/linux/)

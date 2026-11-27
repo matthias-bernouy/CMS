@@ -103,8 +103,8 @@ function packageManifest(releaseVersion: string): Record<string, unknown> {
         type: "module",
         bin: { ulvia: "dist/index.js" },
         files: ["dist/", ...CLI_DOCUMENTATION.map(({ target }) => target), "LICENSE"],
-        engines: { bun: ">=1.4.4" },
-        dependencies: { "css-tree": "3.2.1", playwright: "1.64.1" },
+        engines: { bun: ">=1.4.5" },
+        dependencies: { "css-tree": "3.2.1", playwright: "1.65.1" },
         publishConfig: { access: "public", registry: NPM_REGISTRY },
     };
 }

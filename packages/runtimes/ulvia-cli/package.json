@@ -19,7 +19,7 @@
         "@bernouy/content": "workspace:*",
         "@bernouy/repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
-        "playwright": "^1.64.1",
+        "playwright": "^1.65.1",
         "@bernouy/ulvia-contracts": "workspace:*",
         "@bernouy/ulvia-providers": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",

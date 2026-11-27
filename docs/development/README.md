@@ -6,7 +6,7 @@ See [optional Forms](forms.md) for explicit selection, persistence, Event recove
 
 See [visual captures](visual-captures.md) for MCP images and isolated browser prerequisites.
 
-Run workspace commands from the repository root. `package.json` pins Bun 1.4.4.
+Run workspace commands from the repository root. `package.json` pins Bun 1.4.5.
 In a fresh checkout or worktree, install the locked dependencies:
 
 ```bash

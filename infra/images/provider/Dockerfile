@@ -1,13 +1,13 @@
 # Ulvia Provider image. Build context: workspace root.
 
 # Independent of application sources: reuse both the layer and verified download cache.
-FROM oven/bun:1.4.4-debian@sha256:93d5032fe06d163427822dc1598f420363759bb18155c9cc90eb1be05a64a19e AS embedding-model
+FROM oven/bun:1.4.5-debian@sha256:3dddea58e1f8f2240eca906b023fedb944f9a8352515a35309fd0c879fe00aaa AS embedding-model
 WORKDIR /model-build
 COPY infra/models/ ./
 RUN --mount=type=cache,id=ulvia-embedding-models,target=/var/cache/ulvia-models,sharing=locked \
     bun run prepare.ts /opt/ulvia/models /var/cache/ulvia-models
 
-FROM oven/bun:1.4.4-debian@sha256:93d5032fe06d163427822dc1598f420363759bb18155c9cc90eb1be05a64a19e AS build
+FROM oven/bun:1.4.5-debian@sha256:3dddea58e1f8f2240eca906b023fedb944f9a8352515a35309fd0c879fe00aaa AS build
 
 WORKDIR /app
 COPY package.json bun.lock tsconfig.base.json tsconfig.json build.ts ./
@@ -24,7 +24,7 @@ RUN rm -rf /app/node_modules /app/packages/*/node_modules /app/packages/*/*/node
     /app/packages/runtimes/ulvia-cli/dist/bootstrap
 
 # ONNX Runtime's CPU bindings require glibc; the Provider's embedding model cannot run on musl.
-FROM oven/bun:1.4.4-debian@sha256:93d5032fe06d163427822dc1598f420363759bb18155c9cc90eb1be05a64a19e AS runtime
+FROM oven/bun:1.4.5-debian@sha256:3dddea58e1f8f2240eca906b023fedb944f9a8352515a35309fd0c879fe00aaa AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm -rf /var/lib/apt/lists/*
 

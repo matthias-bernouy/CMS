@@ -281,7 +281,7 @@ has been published. Collections are supplied and versioned by their authors.
 `ulvia preview <collection-directory> --output <new-directory> [--dependency <directory>] [--locale <locale>] [--theme-mode <light|dark>] [--no-screenshots] [--serve]`
 exports collection example frames, generated PNGs, an interactive local explorer and a
 provenance manifest. Screenshots require the Playwright Chromium browser
-(`bunx playwright@1.64.1 install chromium`). Dependencies and required contracts are
+(`bunx playwright@1.65.1 install chromium`). Dependencies and required contracts are
 resolved explicitly from local sources/cache; preview never publishes. See
 [collection examples](../../../docs/blocs/examples.md) for source and release formats.
 

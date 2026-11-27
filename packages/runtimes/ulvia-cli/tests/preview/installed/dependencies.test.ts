@@ -6,7 +6,7 @@ test("capture dependency mounts follow npm hoisting, nested installs and Bun lin
     for (const entry of [
         "/installation with spaces/node_modules/playwright/index.mjs",
         "/installation with spaces/node_modules/@cyaxis/ulvia/node_modules/playwright/index.mjs",
-        "/installation with spaces/node_modules/.bun/playwright@1.64.1/node_modules/playwright/index.mjs",
+        "/installation with spaces/node_modules/.bun/playwright@1.65.1/node_modules/playwright/index.mjs",
     ]) {
         expect(playwrightModulesDirectory(pathToFileURL(entry).href)).toBe("/installation with spaces/node_modules");
     }
